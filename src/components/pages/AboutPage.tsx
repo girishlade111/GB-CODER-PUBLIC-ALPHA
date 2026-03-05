@@ -1,565 +1,546 @@
 import React from 'react';
-import { Code2, Zap, Globe, Shield, TrendingUp, Users, Brain, Sparkles, Lightbulb, Wrench, FileText, Instagram, Linkedin, Github, Codepen, Mail, Link, CheckCircle, Star } from 'lucide-react';
+import { 
+  Code2, Zap, Globe, Shield, Users, Brain, Sparkles, Lightbulb, 
+  Wrench, Instagram, Linkedin, Github, Codepen, Mail, Link, 
+  CheckCircle, Rocket, Target, Award, Heart, ArrowRight, ExternalLink,
+  Layers, Palette, Smartphone, Clock
+} from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 
 const AboutPage: React.FC = () => {
   const { isDark } = useTheme();
 
-  const features = [
-    {
-      icon: <Code2 className="w-6 h-6" />,
-      title: "Write and run HTML, CSS, and JavaScript online",
-      color: "text-orange-500"
-    },
-    {
-      icon: <Globe className="w-6 h-6" />,
-      title: "Live preview of your frontend code",
-      color: "text-blue-500"
-    },
-    {
-      icon: <Brain className="w-6 h-6" />,
-      title: "AI suggestions to improve HTML, CSS, JS code",
-      color: "text-purple-500"
-    },
-    {
-      icon: <Sparkles className="w-6 h-6" />,
-      title: "Ask coding-related questions to AI in real-time",
-      color: "text-yellow-500"
-    },
-    {
-      icon: <Zap className="w-6 h-6" />,
-      title: "One-click code replace with AI-enhanced suggestions",
-      color: "text-green-500"
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      title: "Load local files and preview instantly",
-      color: "text-indigo-500"
-    }
-  ];
-
   const keyBenefits = [
     {
-      icon: <CheckCircle className="w-5 h-5 text-green-500" />,
-      text: "Free to use - Lifetime free access to all features"
+      icon: <CheckCircle className="w-5 h-5" />,
+      text: "Free to use - Lifetime free access",
+      color: "text-green-500",
+      bgColor: "bg-green-500/10"
     },
     {
-      icon: <Brain className="w-5 h-5 text-purple-500" />,
-      text: "AI powered - Intelligent code suggestions and enhancements"
+      icon: <Brain className="w-5 h-5" />,
+      text: "AI powered suggestions",
+      color: "text-purple-500",
+      bgColor: "bg-purple-500/10"
     },
     {
-      icon: <Wrench className="w-5 h-5 text-blue-500" />,
-      text: "Enhance existing codes with AI recommendations"
+      icon: <Zap className="w-5 h-5" />,
+      text: "One-click code enhancement",
+      color: "text-yellow-500",
+      bgColor: "bg-yellow-500/10"
     },
     {
-      icon: <Code2 className="w-5 h-5 text-orange-500" />,
-      text: "Compile and run codes directly in the browser"
+      icon: <Globe className="w-5 h-5" />,
+      text: "Live preview as you type",
+      color: "text-blue-500",
+      bgColor: "bg-blue-500/10"
     },
     {
-      icon: <Globe className="w-5 h-5 text-green-500" />,
-      text: "Live preview of written code as you type"
+      icon: <Shield className="w-5 h-5" />,
+      text: "No login required",
+      color: "text-red-500",
+      bgColor: "bg-red-500/10"
     },
     {
-      icon: <Shield className="w-5 h-5 text-red-500" />,
-      text: "No need login or sign up - Hassle free experience"
-    },
-    {
-      icon: <Sparkles className="w-5 h-5 text-yellow-500" />,
-      text: "Easy to use interface for all skill levels"
-    },
-    {
-      icon: <Star className="w-5 h-5 text-indigo-500" />,
-      text: "Generate code using AI with simple prompts"
-    },
-    {
-      icon: <Zap className="w-5 h-5 text-cyan-500" />,
-      text: "Ad free experience for uninterrupted coding"
+      icon: <Sparkles className="w-5 h-5" />,
+      text: "Ad-free experience",
+      color: "text-indigo-500",
+      bgColor: "bg-indigo-500/10"
     }
   ];
 
-  const aiFeatures = [
+  const coreFeatures = [
     {
-      icon: <Lightbulb className="w-8 h-8 text-yellow-500" />,
-      title: "Intelligent Code Suggestions",
-      description: "Get real-time AI-powered suggestions to improve your HTML, CSS, and JavaScript code with best practices, performance optimizations, and accessibility enhancements."
+      icon: <Code2 className="w-7 h-7" />,
+      title: "Write & Run Code",
+      description: "Edit HTML, CSS, and JavaScript in a professional Monaco-based editor",
+      color: "from-orange-500 to-red-500",
+      bgColor: "bg-orange-500/10"
     },
     {
-      icon: <Wrench className="w-8 h-8 text-blue-500" />,
-      title: "Automated Code Enhancement",
-      description: "Our AI analyzes your code and provides comprehensive enhancements with detailed explanations of each improvement made."
+      icon: <Brain className="w-7 h-7" />,
+      title: "AI Assistance",
+      description: "Get intelligent suggestions to improve and optimize your code",
+      color: "from-purple-500 to-pink-500",
+      bgColor: "bg-purple-500/10"
     },
     {
-      icon: <Brain className="w-8 h-8 text-purple-500" />,
-      title: "Context-Aware Recommendations",
-      description: "The AI understands the context of your code and provides relevant suggestions tailored to your specific implementation."
+      icon: <Globe className="w-7 h-7" />,
+      title: "Live Preview",
+      description: "See your changes in real-time with instant browser rendering",
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "bg-blue-500/10"
     },
     {
-      icon: <FileText className="w-8 h-8 text-green-500" />,
-      title: "Code Comparison & Review",
-      description: "Visual side-by-side comparison of your original code and AI-enhanced version with detailed change tracking."
+      icon: <Layers className="w-7 h-7" />,
+      title: "Project Management",
+      description: "Organize your work with projects and version history",
+      color: "from-green-500 to-emerald-500",
+      bgColor: "bg-green-500/10"
     }
   ];
 
-  const whyChooseUs = [
+  const aiCapabilities = [
     {
-      icon: <Brain className="w-8 h-8 text-purple-500" />,
-      title: "Advanced AI Integration",
-      description: "Cutting-edge AI technology that understands modern web development practices and provides actionable insights."
+      icon: <Lightbulb className="w-6 h-6" />,
+      title: "Smart Suggestions",
+      description: "Real-time AI-powered recommendations for better code"
     },
     {
-      icon: <Users className="w-8 h-8 text-blue-500" />,
-      title: "Developer Focused",
-      description: "Built by developers for developers – we know what you need to write better code faster."
+      icon: <Wrench className="w-6 h-6" />,
+      title: "Auto Enhancement",
+      description: "Automatically improve code quality and performance"
     },
     {
-      icon: <Globe className="w-8 h-8 text-green-500" />,
-      title: "Cross-Platform",
-      description: "Works in any browser, any device - no installation required. Code anywhere, anytime."
+      icon: <Target className="w-6 h-6" />,
+      title: "Context Aware",
+      description: "AI understands your code context for relevant suggestions"
     },
     {
-      icon: <Shield className="w-8 h-8 text-red-500" />,
-      title: "Secure and Private",
-      description: "Your code is yours. We do not store any user data. All processing happens in real-time without saving your code."
+      icon: <Award className="w-6 h-6" />,
+      title: "Best Practices",
+      description: "Learn and apply industry-standard coding patterns"
     }
   ];
 
-  const socialMedia = [
+  const stats = [
+    { value: "100%", label: "Browser-based", icon: <Globe className="w-5 h-5" /> },
+    { value: "0$", label: "Forever Free", icon: <Heart className="w-5 h-5" /> },
+    { value: "24/7", label: "Available", icon: <Clock className="w-5 h-5" /> },
+    { value: "∞", label: "Possibilities", icon: <Rocket className="w-5 h-5" /> }
+  ];
+
+  const socialLinks = [
     {
       name: "Instagram",
       url: "https://www.instagram.com/girish_lade_/",
-      icon: <Instagram className="w-5 h-5" />
+      icon: <Instagram className="w-5 h-5" />,
+      color: "hover:text-pink-500 hover:border-pink-500/50"
     },
     {
       name: "LinkedIn",
       url: "https://www.linkedin.com/in/girish-lade-075bba201/",
-      icon: <Linkedin className="w-5 h-5" />
+      icon: <Linkedin className="w-5 h-5" />,
+      color: "hover:text-blue-600 hover:border-blue-600/50"
     },
     {
       name: "GitHub",
       url: "https://github.com/girishlade111",
-      icon: <Github className="w-5 h-5" />
+      icon: <Github className="w-5 h-5" />,
+      color: "hover:text-gray-400 hover:border-gray-400/50"
     },
     {
       name: "Codepen",
       url: "https://codepen.io/Girish-Lade-the-looper",
-      icon: <Codepen className="w-5 h-5" />
+      icon: <Codepen className="w-5 h-5" />,
+      color: "hover:text-blue-500 hover:border-blue-500/50"
     },
     {
       name: "Email",
       url: "mailto:girishlade111@gmail.com",
-      icon: <Mail className="w-5 h-5" />
+      icon: <Mail className="w-5 h-5" />,
+      color: "hover:text-red-500 hover:border-red-500/50"
     }
   ];
 
-  const keywords = [
-    "Online code editor",
-    "Online compiler",
-    "Free code editor",
-    "Online IDE",
-    "JavaScript code runner",
-    "Online HTML CSS JS editor",
-    "AI code improvement tool",
-    "Online compiler for students",
-    "HTML CSS JavaScript live editor",
-    "AI-powered code editor",
-    "Code enhancement AI",
-    "Web development AI assistant",
-    "Smart code editor",
-    "Browser-based IDE",
-    "Real-time code preview"
-  ];
-
-  const longTailKeywords = [
-    "AI-powered online code editor with real-time suggestions",
-    "Free browser-based IDE for HTML CSS JavaScript development",
-    "Online compiler with AI code enhancement features",
-    "Smart code editor with live preview and AI assistance",
-    "Web development tool with artificial intelligence integration",
-    "Online JavaScript editor with AI-powered code suggestions",
-    "HTML CSS editor with real-time preview and AI optimization",
-    "Browser-based code compiler with AI enhancement capabilities",
-    "Free online IDE with artificial intelligence code assistant",
-    "Modern web development platform with AI integration"
-  ];
-
   return (
-    <div className={`min-h-screen transition-colors ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
-      }`}>
-      {/* SEO Meta Tags */}
-      <div style={{ display: 'none' }}>
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "AboutPage",
-            "name": "About GB Coder - AI-Powered Online Code Editor",
-            "description": "AI-powered online code editor & compiler for HTML, CSS, JS with live preview & smart suggestions. Fast, free & browser-based.",
-            "url": window.location.href,
-            "mainEntity": {
-              "@type": "Organization",
-              "name": "GB Coder",
-              "founder": "Girish Lade",
-              "foundingDate": "2024",
-              "description": "Smart online code editor and compiler with AI integration"
-            }
-          })}
-        </script>
-      </div>
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark ? 'bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950' : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'
+    }`}>
+      {/* Structured Data for SEO */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "AboutPage",
+          "name": "About GB Coder - AI-Powered Online Code Editor",
+          "description": "AI-powered online code editor & compiler for HTML, CSS, JS with live preview & smart suggestions",
+          "url": window.location.href,
+          "mainEntity": {
+            "@type": "Organization",
+            "name": "GB Coder",
+            "founder": "Girish Lade",
+            "foundingDate": "2024"
+          }
+        })}
+      </script>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-            GB Coder – AI-Powered Online Code Playground for Modern Web Developers
-          </h1>
-          <h2 className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed font-semibold">
-            Write, preview, debug, and enhance HTML, CSS, and JavaScript instantly using AI-driven automation.
-          </h2>
+      {/* Hero Section */}
+      <section className="relative overflow-hidden py-16 sm:py-24">
+        {/* Background decoration */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className={`absolute -top-40 -right-40 w-80 h-80 rounded-full blur-3xl opacity-20 ${
+            isDark ? 'bg-purple-600' : 'bg-purple-400'
+          }`} />
+          <div className={`absolute -bottom-40 -left-40 w-80 h-80 rounded-full blur-3xl opacity-20 ${
+            isDark ? 'bg-blue-600' : 'bg-blue-400'
+          }`} />
         </div>
 
-        {/* Key Benefits Section */}
-        <section className="mb-16">
-          <div className={`rounded-2xl p-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-            } shadow-lg`}>
-            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-              <Star className="w-8 h-8 text-yellow-500" />
-              Why Choose GB Coder?
-            </h2>
-            <p className="text-lg leading-relaxed mb-6">
-              Our platform offers a comprehensive set of features designed to make your coding experience
-              as smooth and productive as possible:
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            {/* Badge */}
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6 ${
+              isDark ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-purple-100 text-purple-700 border border-purple-200'
+            }`}>
+              <Sparkles className="w-4 h-4" />
+              AI-Powered Code Editor
+            </div>
+
+            {/* Main Heading */}
+            <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              Code Smarter with{' '}
+              <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                AI Assistance
+              </span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className={`text-xl sm:text-2xl max-w-3xl mx-auto mb-8 leading-relaxed ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Write, preview, and enhance HTML, CSS, and JavaScript instantly.
+              The modern way to build for the web.
             </p>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              {keyBenefits.map((benefit, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
-                  {benefit.icon}
-                  <span className="text-sm font-medium">{benefit.text}</span>
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap justify-center gap-4">
+              <button 
+                onClick={() => window.location.href = '/'}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+              >
+                Start Coding
+                <ArrowRight className="w-5 h-5" />
+              </button>
+              <a
+                href="https://ladestack.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center gap-2 px-6 py-3 font-semibold rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+                  isDark 
+                    ? 'border-gray-700 text-gray-300 hover:bg-gray-800' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Visit Website
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-12 border-y border-gray-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-3 ${
+                  isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'
+                }`}>
+                  {stat.icon}
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Who We Are Section */}
-        <section className="mb-16">
-          <div className={`rounded-2xl p-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-            } shadow-lg`}>
-            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-              <Users className="w-8 h-8 text-blue-500" />
-              Who We Are
-            </h2>
-            <p className="text-lg leading-relaxed mb-6">
-              We are a forward-thinking team of developers led by <strong>Girish Lade</strong>, an experienced programmer,
-              AI tools maker, and UI/UX engineer. Our mission is to make coding faster, smarter, and more accessible
-              using the power of artificial intelligence.
-            </p>
-            <p className="text-lg leading-relaxed mb-6">
-              Our tool is not just another online compiler. It's a full-featured AI-powered code editor, built for
-              modern developers who want to write, edit, preview, and optimize their HTML, CSS, and JavaScript code
-              with the help of smart AI.
-            </p>
-            {/* Professional Backlink to Main Website */}
-            <div className={`p-4 rounded-lg border-l-4 ${isDark ? 'bg-gray-700 border-blue-500' : 'bg-blue-50 border-blue-500'
-              }`}>
-              <p className="text-lg mb-2">
-                <span className="font-semibold">Visit our main website:</span>{' '}
-                <a
-                  href="https://ladestack.in"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium underline"
-                >
-                  ladestack.in
-                  <Link className="w-4 h-4" />
-                </a>
-              </p>
-              <p className="text-gray-600 dark:text-gray-300">
-                Explore more of our projects and services on our main portfolio website.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Social Media Section */}
-        <section className="mb-16">
-          <div className={`rounded-2xl p-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-            } shadow-lg`}>
-            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-              <Users className="w-8 h-8 text-purple-500" />
-              Connect With Us
-            </h2>
-            <p className="text-lg leading-relaxed mb-6">
-              Follow our journey and stay updated with the latest developments in AI-powered coding tools.
-              Connect with us on social media:
-            </p>
-
-            <div className="flex flex-wrap gap-4">
-              {socialMedia.map((social, index) => (
-                <a
-                  key={index}
-                  href={social.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isDark
-                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                    }`}
-                >
-                  {social.icon}
-                  <span className="font-medium">{social.name}</span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* AI Features Section */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-center">Powerful AI Features</h2>
-          <div className={`rounded-2xl p-8 mb-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-            } shadow-lg`}>
-            <p className="text-lg leading-relaxed mb-8">
-              Our AI-powered code editor leverages cutting-edge artificial intelligence to help you write better code faster.
-              With advanced machine learning algorithms, our tool provides intelligent suggestions, automated enhancements,
-              and comprehensive code reviews.
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
-              {aiFeatures.map((feature, index) => (
-                <div key={index} className={`p-6 rounded-xl ${isDark ? 'bg-gray-700 border border-gray-600' : 'bg-gray-50 border border-gray-200'
-                  }`}>
-                  <div className="flex items-center gap-4 mb-4">
-                    {feature.icon}
-                    <h3 className="text-xl font-bold">{feature.title}</h3>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                    {feature.description}
-                  </p>
+                <div className={`text-3xl font-bold mb-1 ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {stat.value}
                 </div>
-              ))}
-            </div>
-
-            <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-blue-50'
-              } border-l-4 border-blue-500`}>
-              <h3 className="text-xl font-bold mb-3">How Our AI Works</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Our AI analyzes your code in real-time, identifying opportunities for improvement in:
-              </p>
-              <ul className="grid md:grid-cols-2 gap-2 mb-4">
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Performance optimization
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Accessibility enhancements
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Best coding practices
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Modern syntax adoption
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Security improvements
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-500">✓</span>
-                  Code maintainability
-                </li>
-              </ul>
-              <p className="text-gray-600 dark:text-gray-300">
-                Each suggestion comes with a detailed explanation of why the change is beneficial and how it improves your code.
-              </p>
-            </div>
+                <div className={`text-sm ${
+                  isDark ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  {stat.label}
+                </div>
+              </div>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* What We Offer Section */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-center">What We Offer</h2>
-          <div className={`rounded-2xl p-8 mb-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-            } shadow-lg`}>
-            <p className="text-lg leading-relaxed mb-8">
-              Our platform is a smart online code editor and compiler created in 2024, built with performance,
-              simplicity, and productivity in mind.
+      {/* Core Features Section */}
+      <section className="py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className={`text-3xl sm:text-4xl font-bold mb-4 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              Everything You Need to Code
+            </h2>
+            <p className={`text-lg max-w-2xl mx-auto ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              A complete development environment in your browser
             </p>
-            <p className="text-lg font-semibold mb-6">
-              Here's what makes our online compiler and code editor different:
-            </p>
+          </div>
 
-            <div className="grid md:grid-cols-2 gap-4 mb-8">
-              {features.map((feature, index) => (
-                <div key={index} className="flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
-                  <div className={feature.color}>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {coreFeatures.map((feature, index) => (
+              <div
+                key={index}
+                className={`group p-6 rounded-2xl border transition-all duration-300 hover:scale-105 ${
+                  isDark 
+                    ? 'bg-gray-900/50 border-gray-800 hover:border-gray-700 hover:bg-gray-900' 
+                    : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-lg'
+                }`}
+              >
+                <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4 bg-gradient-to-br ${feature.color} ${feature.bgColor}`}>
+                  <div className={isDark ? 'text-white' : 'text-white'}>
                     {feature.icon}
                   </div>
-                  <span className="text-sm font-medium">{feature.title}</span>
                 </div>
-              ))}
-            </div>
-
-            <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-blue-50'
-              } border-l-4 border-blue-500`}>
-              <p className="text-lg font-medium mb-2">✅ No setup required – 100% browser-based</p>
-              <p className="text-gray-600 dark:text-gray-300">
-                Whether you're looking for a free code editor online, an online JavaScript code runner,
-                or an online HTML/CSS/JS editor with live preview, we've got you covered.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Why Choose Us Section */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-center">Why Choose Us?</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            {whyChooseUs.map((item, index) => (
-              <div key={index} className={`p-6 rounded-xl ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-                } shadow-lg hover:shadow-xl transition-shadow`}>
-                <div className="flex items-center gap-4 mb-4">
-                  {item.icon}
-                  <h3 className="text-xl font-bold">{item.title}</h3>
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                  {item.description}
+                <h3 className={`text-lg font-bold mb-2 ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {feature.title}
+                </h3>
+                <p className={`text-sm leading-relaxed ${
+                  isDark ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  {feature.description}
                 </p>
               </div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* SEO Optimization Section */}
-        <section className="mb-16">
-          <div className={`rounded-2xl p-8 ${isDark ? 'bg-gradient-to-r from-purple-900 to-indigo-900' : 'bg-gradient-to-r from-purple-50 to-indigo-50'
-            } border border-purple-200 dark:border-purple-700`}>
-            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-              <TrendingUp className="w-8 h-8 text-purple-500" />
-              Optimized for SEO and High Google Rankings
-            </h2>
-            <p className="text-lg mb-6">
-              We created this online IDE with SEO best practices in mind, targeting long-tail keywords like:
-            </p>
-            <ul className="space-y-2 mb-6">
-              {longTailKeywords.map((keyword, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></span>
-                  <span>{keyword}</span>
-                </li>
-              ))}
-            </ul>
-            <div className={`p-4 rounded-lg ${isDark ? 'bg-purple-800' : 'bg-purple-100'
-              }`}>
-              <h3 className="font-bold mb-2">Additional Target Keywords:</h3>
-              <div className="flex flex-wrap gap-2">
-                {keywords.map((keyword, index) => (
-                  <span key={index} className={`px-3 py-1 rounded-full text-sm ${isDark ? 'bg-purple-900 text-purple-200' : 'bg-purple-200 text-purple-800'
-                    }`}>
-                    {keyword}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Our Vision Section */}
-        <section className="mb-16">
-          <div className={`rounded-2xl p-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-            } shadow-lg`}>
-            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-              <Sparkles className="w-8 h-8 text-yellow-500" />
-              Our Vision
-            </h2>
-            <p className="text-lg leading-relaxed mb-4">
-              We envision a future where AI and coding tools merge to help every developer become more efficient.
-              Our AI code editor helps beginners and professionals alike to learn, improve, and ship better code faster.
-            </p>
-            <p className="text-lg leading-relaxed">
-              By integrating artificial intelligence directly into the development workflow, we're creating tools that
-              not only help you write code but also teach you to become a better developer. Our platform is designed to
-              be an educational resource as much as it is a productivity tool.
-            </p>
-          </div>
-        </section>
-
-        {/* Search-Optimized Features */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-center">Search-Optimized Features</h2>
-          <div className={`rounded-2xl p-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-            } shadow-lg`}>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-xl font-bold mb-4">Technical SEO</h3>
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✅</span>
-                    Keyword-optimized content
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✅</span>
-                    Fast loading
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✅</span>
-                    Mobile-friendly
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✅</span>
-                    Crawling-enabled metadata and schema
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✅</span>
-                    Proper H1, H2, meta tags
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold mb-4">Target Keywords</h3>
-                <div className="flex flex-wrap gap-2">
-                  {keywords.map((keyword, index) => (
-                    <span key={index} className={`px-3 py-1 rounded-full text-sm ${isDark ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
-                      }`}>
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Call to Action */}
-        <section className="mb-16">
-          <div className={`rounded-2xl p-8 text-center ${isDark ? 'bg-gradient-to-r from-blue-900 to-purple-900' : 'bg-gradient-to-r from-blue-50 to-purple-50'
-            } border border-blue-200 dark:border-blue-700`}>
-            <h2 className="text-3xl font-bold mb-6">Join the Future of Coding Today</h2>
-            <p className="text-lg mb-8 max-w-3xl mx-auto">
-              We invite you to try our free online code editor and compiler. Discover how AI can take your
-              coding skills to the next level. Experience the smartest way to edit HTML/CSS/JS online with
-              live preview and code improvement suggestions.
-            </p>
-            <p className="text-lg font-medium">
-              Whether you're a student, developer, or tech enthusiast – our AI code compiler is your new go-to tool.
-            </p>
-          </div>
-        </section>
-
-        {/* Legal Info */}
-        <section className="text-center">
-          <div className={`rounded-lg p-6 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-gray-100 border border-gray-200'
+      {/* Key Benefits Section */}
+      <section className={`py-16 sm:py-24 ${
+        isDark ? 'bg-gray-900/50' : 'bg-gray-50'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className={`text-3xl sm:text-4xl font-bold mb-4 ${
+              isDark ? 'text-white' : 'text-gray-900'
             }`}>
-            <h3 className="text-xl font-bold mb-4">Legal Info</h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              © 2024 - All rights reserved. Built and maintained by Girish Lade.
-              Unauthorized use or duplication of content is prohibited.
+              Why Developers Love GB Coder
+            </h2>
+            <p className={`text-lg max-w-2xl mx-auto ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Built for productivity, designed for simplicity
             </p>
           </div>
-        </section>
-      </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {keyBenefits.map((benefit, index) => (
+              <div
+                key={index}
+                className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-200 hover:scale-105 ${
+                  isDark 
+                    ? 'bg-gray-800/50 hover:bg-gray-800' 
+                    : 'bg-white hover:shadow-md'
+                }`}
+              >
+                <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${benefit.bgColor}`}>
+                  <div className={benefit.color}>
+                    {benefit.icon}
+                  </div>
+                </div>
+                <span className={`font-medium ${
+                  isDark ? 'text-gray-200' : 'text-gray-700'
+                }`}>
+                  {benefit.text}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* AI Capabilities Section */}
+      <section className="py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className={`text-3xl sm:text-4xl font-bold mb-4 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              Powered by Advanced AI
+            </h2>
+            <p className={`text-lg max-w-2xl mx-auto ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Intelligent features that help you write better code
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {aiCapabilities.map((capability, index) => (
+              <div
+                key={index}
+                className={`p-6 rounded-2xl border text-center transition-all duration-300 hover:scale-105 ${
+                  isDark 
+                    ? 'bg-gray-900/50 border-gray-800 hover:border-purple-500/50' 
+                    : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-lg'
+                }`}
+              >
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 ${
+                  isDark ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-100 text-purple-600'
+                }`}>
+                  {capability.icon}
+                </div>
+                <h3 className={`text-lg font-bold mb-2 ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {capability.title}
+                </h3>
+                <p className={`text-sm ${
+                  isDark ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  {capability.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* About Creator Section */}
+      <section className={`py-16 sm:py-24 ${
+        isDark ? 'bg-gradient-to-br from-purple-900/20 to-blue-900/20' : 'bg-gradient-to-br from-purple-50 to-blue-50'
+      }`}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6 ${
+            isDark ? 'bg-gradient-to-br from-purple-500 to-blue-500' : 'bg-gradient-to-br from-purple-400 to-blue-400'
+          }`}>
+            <Users className="w-8 h-8 text-white" />
+          </div>
+          
+          <h2 className={`text-3xl sm:text-4xl font-bold mb-6 ${
+            isDark ? 'text-white' : 'text-gray-900'
+          }`}>
+            Built by Developers, for Developers
+          </h2>
+          
+          <p className={`text-lg leading-relaxed mb-6 ${
+            isDark ? 'text-gray-300' : 'text-gray-700'
+          }`}>
+            GB Coder is created by <strong className="text-purple-500">Girish Lade</strong>, an experienced programmer, 
+            AI tools maker, and UI/UX engineer. Our mission is to make coding faster, smarter, and more accessible 
+            using the power of artificial intelligence.
+          </p>
+
+          <div className={`p-6 rounded-2xl border ${
+            isDark ? 'bg-gray-900/50 border-gray-800' : 'bg-white border-gray-200'
+          }`}>
+            <p className={`text-lg mb-4 ${
+              isDark ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              <span className="font-semibold">Explore more projects:</span>
+            </p>
+            <a
+              href="https://ladestack.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-purple-500 hover:text-purple-400 font-semibold text-lg transition-colors"
+            >
+              ladestack.in
+              <ExternalLink className="w-5 h-5" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Connect Section */}
+      <section className="py-16 sm:py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className={`text-3xl sm:text-4xl font-bold mb-4 ${
+            isDark ? 'text-white' : 'text-gray-900'
+          }`}>
+            Connect With Us
+          </h2>
+          <p className={`text-lg mb-8 ${
+            isDark ? 'text-gray-400' : 'text-gray-600'
+          }`}>
+            Follow our journey and stay updated
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-4">
+            {socialLinks.map((social, index) => (
+              <a
+                key={index}
+                href={social.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group flex items-center gap-2 px-5 py-3 rounded-xl border-2 font-medium transition-all duration-200 hover:scale-105 ${
+                  isDark 
+                    ? 'border-gray-800 text-gray-300 hover:bg-gray-800' 
+                    : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                } ${social.color}`}
+              >
+                {social.icon}
+                <span>{social.name}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 sm:py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className={`relative overflow-hidden rounded-3xl p-8 sm:p-12 text-center ${
+            isDark 
+              ? 'bg-gradient-to-br from-blue-900/50 via-purple-900/50 to-pink-900/50 border border-gray-800' 
+              : 'bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 border border-gray-200'
+          }`}>
+            {/* Background decoration */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-blue-500/10 blur-2xl" />
+              <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-purple-500/10 blur-2xl" />
+            </div>
+
+            <div className="relative">
+              <h2 className={`text-3xl sm:text-4xl font-bold mb-4 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
+                Ready to Code Smarter?
+              </h2>
+              <p className={`text-lg mb-8 max-w-2xl mx-auto ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Join developers who are already building better with AI assistance. 
+                Start coding for free, no signup required.
+              </p>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+              >
+                Open Editor
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer Info */}
+      <section className={`py-8 border-t ${
+        isDark ? 'border-gray-800' : 'border-gray-200'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className={`text-sm ${
+              isDark ? 'text-gray-500' : 'text-gray-600'
+            }`}>
+              © 2024 GB Coder. Built with ❤️ by Girish Lade.
+            </p>
+            <div className="flex items-center gap-6">
+              <a href="/privacy" className={`text-sm hover:underline ${
+                isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'
+              }`}>
+                Privacy Policy
+              </a>
+              <a href="/terms" className={`text-sm hover:underline ${
+                isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'
+              }`}>
+                Terms of Service
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
