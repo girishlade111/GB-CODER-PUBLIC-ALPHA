@@ -9,7 +9,8 @@
       "Bash(node:*)",
       "Bash(tail:*)",
       "Bash(grep:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(head:*)"
     ]
   }
 }
