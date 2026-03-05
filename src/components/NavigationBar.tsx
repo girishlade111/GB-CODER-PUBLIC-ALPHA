@@ -9,6 +9,7 @@ import {
   Sun,
   Moon,
   Settings,
+  Trash2,
 } from 'lucide-react';
 import { EditorLanguage } from '../types';
 import { useTheme } from '../hooks/useTheme';
@@ -21,6 +22,7 @@ interface NavigationBarProps {
   onExport: () => void;
   onExternalLibraryManagerToggle: () => void;
   onSettingsToggle: () => void;
+  onClear?: () => void;
   autoSaveEnabled: boolean;
   customActions?: React.ReactNode;
 }
@@ -32,6 +34,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   onExport,
   onExternalLibraryManagerToggle,
   onSettingsToggle,
+  onClear,
   autoSaveEnabled,
   customActions,
 }) => {
@@ -187,6 +190,21 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                             </span>
                           </button>
                         </div>
+                        {onClear && (
+                          <button
+                            onClick={() => {
+                              onClear();
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full mt-2 px-3 py-2.5 text-sm flex items-center gap-2 transition-colors rounded-lg ${isDark
+                              ? 'text-red-400 hover:bg-red-900/20'
+                              : 'text-red-600 hover:bg-red-50'
+                              }`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Clear All Code
+                          </button>
+                        )}
                       </div>
 
                       <div className={`border-t my-1 ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />

@@ -410,6 +410,28 @@ function App() {
     }
   };
 
+  const handleClearAll = async () => {
+    // Save current state to history before clearing
+    codeHistory.saveState({ html, css, javascript }, 'Clear all code');
+
+    // Clear all code completely
+    setHtml('');
+    setCss('');
+    setJavascript('');
+    setConsoleLogs([]);
+
+    // Clear auto-save data
+    localStorage.removeItem('gb-coder-autosave');
+    if (project.currentProject) {
+      localStorage.removeItem(`gb-coder-project-autosave-${project.currentProject.id}`);
+    }
+
+    // Reset project name if exists
+    if (project.currentProject) {
+      await project.updateProjectName('Untitled Project');
+    }
+  };
+
   const handleUndo = () => {
     const previousState = codeHistory.undo();
     if (previousState) {
@@ -570,6 +592,7 @@ function App() {
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
+          onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -629,6 +652,7 @@ function App() {
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
+          onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -689,6 +713,7 @@ function App() {
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
+          onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -747,6 +772,7 @@ function App() {
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
+          onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -780,6 +806,7 @@ function App() {
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
+          onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -813,6 +840,7 @@ function App() {
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
+          onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -846,6 +874,7 @@ function App() {
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
+          onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -879,6 +908,7 @@ function App() {
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
+          onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -913,6 +943,7 @@ function App() {
         onExport={() => downloadAsZip(html, css, javascript)}
         onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
         onSettingsToggle={handleSettingsToggle}
+        onClear={handleClearAll}
         autoSaveEnabled={autoSaveEnabled}
       />
 
