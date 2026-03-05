@@ -35,6 +35,13 @@ For contributors and those who want to understand the codebase.
 - **Setup**: How to run the project locally.
 - **Tech Stack**: Deep dive into the technologies used.
 
+### 6. [Vercel Web Analytics](docs/VERCEL_WEB_ANALYTICS.md)
+Get started with Vercel Web Analytics to track your application's performance.
+- **Setup Guide**: Step-by-step instructions for enabling analytics.
+- **Framework Integration**: Support for Next.js, React, Vue, Remix, Nuxt, SvelteKit, Astro, and more.
+- **Deployment**: Deploy to Vercel and view analytics data.
+- **Custom Events**: Track user interactions and custom metrics.
+
 ---
 
 ## 🚀 Quick Start
