@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 
 export type Theme = 'light' | 'dark';
@@ -8,7 +8,6 @@ export const useTheme = () => {
 
   useEffect(() => {
     const root = document.documentElement;
-    
     if (theme === 'dark') {
       root.classList.add('dark');
     } else {
@@ -16,20 +15,13 @@ export const useTheme = () => {
     }
   }, [theme]);
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    console.log(`Theme switched to ${newTheme}`);
-  };
-
-  const setThemeDirectly = (newTheme: Theme) => {
-    setTheme(newTheme);
-    console.log(`Theme set to ${newTheme}`);
-  };
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  }, [setTheme]);
 
   return {
     theme,
-    setTheme: setThemeDirectly,
+    setTheme,
     toggleTheme,
     isDark: theme === 'dark',
     isLight: theme === 'light'

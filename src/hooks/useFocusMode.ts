@@ -1,20 +1,12 @@
-import { useState, useEffect } from 'react';
-
-const FOCUS_MODE_KEY = 'gb-coder-focus-mode';
+import { useCallback } from 'react';
+import { useLocalStorage } from './useLocalStorage';
 
 export const useFocusMode = () => {
-    const [focusMode, setFocusMode] = useState<boolean>(() => {
-        const stored = localStorage.getItem(FOCUS_MODE_KEY);
-        return stored === 'true';
-    });
+    const [focusMode, setFocusMode] = useLocalStorage<boolean>('gb-coder-focus-mode', false);
 
-    useEffect(() => {
-        localStorage.setItem(FOCUS_MODE_KEY, String(focusMode));
-    }, [focusMode]);
-
-    const toggleFocusMode = () => {
-        setFocusMode(prev => !prev);
-    };
+    const toggleFocusMode = useCallback(() => {
+        setFocusMode((prev) => !prev);
+    }, [setFocusMode]);
 
     return { focusMode, toggleFocusMode };
 };

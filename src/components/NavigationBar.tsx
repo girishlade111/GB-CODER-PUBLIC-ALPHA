@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { EditorLanguage } from '../types';
 import { useTheme } from '../hooks/useTheme';
+import { useSettings } from '../hooks/useSettings';
 
 interface NavigationBarProps {
   onAutoSaveToggle: () => void;
@@ -35,6 +36,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   customActions,
 }) => {
   const { isDark } = useTheme();
+  const { updateSettings } = useSettings();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -237,9 +239,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                         <div className="space-y-1">
                           <button
                             onClick={() => {
-                              const newTheme = isDark ? 'light' : 'dark';
-                              localStorage.setItem('gb-coder-theme', newTheme);
-                              window.dispatchEvent(new CustomEvent('theme-change', { detail: newTheme }));
+                              updateSettings({ theme: isDark ? 'light' : 'dark' });
                               setIsDropdownOpen(false);
                             }}
                             className={`w-full px-3 py-2.5 text-left text-sm flex items-center gap-3 transition-colors rounded-lg ${isDark

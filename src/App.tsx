@@ -66,7 +66,7 @@ function App() {
   const [css, setCss] = useState(defaultCSS);
   const [javascript, setJavascript] = useState(defaultJS);
   const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
-  const { theme, isDark, setTheme, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
   const [snippets, setSnippets] = useLocalStorage<CodeSnippet[]>('gb-coder-snippets', []);
   const [selectionHistory, setSelectionHistory] = useState<HistoryItem[]>([]);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
@@ -296,12 +296,12 @@ function App() {
         break;
       case 'theme': {
         const newTheme = args[0] === 'light' ? 'light' : 'dark';
-        setTheme(newTheme);
+        updateSettings({ theme: newTheme });
         break;
       }
       case 'toggle':
         if (args[0] === 'theme') {
-          toggleTheme();
+          updateSettings({ theme: isDark ? 'light' : 'dark' });
         }
         break;
       case 'history':

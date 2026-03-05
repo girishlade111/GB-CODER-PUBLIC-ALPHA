@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { EditorLanguage } from '../types';
 
@@ -63,6 +63,17 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       onMount(editor, monaco);
     }
   };
+
+  // Imperatively update Monaco options when fontFamily / fontSize / readOnly change
+  useEffect(() => {
+    if (internalEditorRef.current) {
+      internalEditorRef.current.updateOptions({
+        fontSize,
+        fontFamily,
+        readOnly,
+      });
+    }
+  }, [fontSize, fontFamily, readOnly]);
 
   return (
     <div className="w-full h-full border border-gray-700 rounded-lg overflow-hidden">
