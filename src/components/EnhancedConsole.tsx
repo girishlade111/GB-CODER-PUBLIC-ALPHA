@@ -3,13 +3,10 @@ import {
   Terminal, Copy, Maximize2, Minimize2,
   Filter, Trash2, AlertCircle, Info,
   AlertTriangle, Bug, Zap, CheckCircle, Eye, EyeOff,
-  XCircle, Play, Sparkles, Cpu, HardDrive
+  XCircle, Play, Cpu, HardDrive
 } from 'lucide-react';
 import { LogLevel } from '../types/console.types';
 import { ConsoleLog } from '../types';
-import { aiErrorFixService } from '../services/aiErrorFixService';
-import AIErrorFixModal from './ui/AIErrorFixModal';
-import { ErrorFixResponse } from '../types';
 import TerminalConsolePanel from './Console/TerminalConsolePanel';
 
 interface EnhancedConsoleProps {
@@ -18,7 +15,6 @@ interface EnhancedConsoleProps {
   html: string;
   css: string;
   javascript: string;
-  onApplyErrorFix?: (fixedHtml: string, fixedCss: string, fixedJavascript: string) => void;
   className?: string;
 }
 
@@ -38,7 +34,6 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
   html,
   css,
   javascript,
-  onApplyErrorFix,
   className = '',
 }) => {
   // Core state
@@ -69,12 +64,6 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
     executionTime: 0
   });
   const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  // AI Error Fix state
-  const [fixModalOpen, setFixModalOpen] = useState(false);
-
-  const [fixResponse, setFixResponse] = useState<ErrorFixResponse | null>(null);
-  const [isFixLoading, setIsFixLoading] = useState(false);
 
   // Common refs
   const outputRef = useRef<HTMLDivElement>(null);
@@ -576,30 +565,6 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
     });
   };
 
-  // Handle AI error fix
-  const handleFixError = async (log: ConsoleLog) => {
-    try {
-      setIsFixLoading(true);
-
-      setFixModalOpen(true);
-
-      const response = await aiErrorFixService.fixError(
-        log.message,
-        html,
-        css,
-        javascript
-      );
-
-      setFixResponse(response);
-    } catch (error) {
-      console.error('Failed to get AI fix suggestion:', error);
-      setFixModalOpen(false);
-      setIsFixLoading(false);
-    } finally {
-      setIsFixLoading(false);
-    }
-  };
-
   return (
     <div className={`bg-gray-900 border border-gray-700 rounded-lg overflow-hidden transition-all duration-300 flex flex-col h-full min-h-0 ${isExpanded ? 'fixed inset-4 z-50' : 'relative'
       } ${className}`}>
@@ -779,16 +744,6 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
                       <pre className={`flex-1 whitespace-pre-wrap ${getLogColor(log.type)}`}>
                         {log.message}
                       </pre>
-                      {log.type === 'error' && (
-                        <button
-                          onClick={() => handleFixError(log)}
-                          className="flex-shrink-0 px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs flex items-center gap-1 transition-colors"
-                          title="Fix with AI"
-                        >
-                          <Sparkles className="w-3 h-3" />
-                          Fix with AI
-                        </button>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -901,23 +856,6 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
         )}
       </div>
 
-      {/* AI Error Fix Modal */}
-      <AIErrorFixModal
-        isOpen={fixModalOpen}
-        onClose={() => {
-          setFixModalOpen(false);
-          setIsFixLoading(false);
-        }}
-        fixResponse={fixResponse}
-        originalCode={{ html, css, javascript }}
-        onApplyFix={(fixedHtml, fixedCss, fixedJavascript) => {
-          if (onApplyErrorFix) {
-            onApplyErrorFix(fixedHtml, fixedCss, fixedJavascript);
-          }
-          setFixModalOpen(false);
-        }}
-        isLoading={isFixLoading}
-      />
     </div>
   );
 };

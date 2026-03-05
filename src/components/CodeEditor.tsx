@@ -47,24 +47,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   };
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
-    console.log('[CodeEditor] Editor mounted for language:', language);
-
-    // Store editor instance
     internalEditorRef.current = editor;
     if (editorRef) {
       editorRef.current = editor;
-      console.log('[CodeEditor] Editor ref set for', language);
     }
 
-    // Listen for selection changes
     if (onSelectionChange) {
-      console.log('[CodeEditor] Setting up selection change listener for', language);
-      editor.onDidChangeCursorSelection((e: any) => {
-        console.log('[CodeEditor] Selection changed in', language, 'editor!');
+      editor.onDidChangeCursorSelection(() => {
         onSelectionChange(editor);
       });
-    } else {
-      console.log('[CodeEditor] WARNING: No onSelectionChange callback provided for', language);
     }
 
     // Call parent onMount if provided
@@ -99,4 +90,4 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   );
 };
 
-export default CodeEditor;
+export default React.memo(CodeEditor);

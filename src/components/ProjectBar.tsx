@@ -1,12 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-    Save,
-    Copy,
     Download,
     FileText,
     ChevronDown,
     Plus,
-    Check,
     Loader2,
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
@@ -17,8 +14,6 @@ interface ProjectBarProps {
     currentProject: Project | null;
     projectList: ProjectMetadata[];
     isSaving: boolean;
-    onSave: () => Promise<boolean>;
-    onDuplicate: () => Promise<boolean>;
     onNewProject: () => void;
     onSwitchProject: (id: string) => void;
     onUpdateName: (name: string) => Promise<boolean>;
@@ -28,8 +23,6 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
     currentProject,
     projectList,
     isSaving,
-    onSave,
-    onDuplicate,
     onNewProject,
     onSwitchProject,
     onUpdateName,
@@ -38,8 +31,6 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [editedName, setEditedName] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
-    const [saveSuccess, setSaveSuccess] = useState(false);
-    const [duplicateSuccess, setDuplicateSuccess] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -93,22 +84,6 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
         } else if (e.key === 'Escape') {
             setIsEditing(false);
             setEditedName(currentProject?.name || '');
-        }
-    };
-
-    const handleSave = async () => {
-        const success = await onSave();
-        if (success) {
-            setSaveSuccess(true);
-            setTimeout(() => setSaveSuccess(false), 2000);
-        }
-    };
-
-    const handleDuplicate = async () => {
-        const success = await onDuplicate();
-        if (success) {
-            setDuplicateSuccess(true);
-            setTimeout(() => setDuplicateSuccess(false), 2000);
         }
     };
 
@@ -272,49 +247,6 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
 
                     {/* Right: Action Buttons */}
                     <div className="flex items-center gap-1 sm:gap-2">
-                        {/* Save Button */}
-                        <button
-                            onClick={handleSave}
-                            disabled={isSaving}
-                            className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 ${saveSuccess
-                                    ? 'bg-green-600 text-white'
-                                    : isDark
-                                        ? 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-700 disabled:text-gray-500'
-                                        : 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:text-gray-500'
-                                }`}
-                        >
-                            {isSaving ? (
-                                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                            ) : saveSuccess ? (
-                                <Check className="w-3 h-3 sm:w-4 sm:h-4" />
-                            ) : (
-                                <Save className="w-3 h-3 sm:w-4 sm:h-4" />
-                            )}
-                            <span className="hidden sm:inline">{saveSuccess ? 'Saved' : 'Save'}</span>
-                        </button>
-
-                        {/* Duplicate Button */}
-                        <button
-                            onClick={handleDuplicate}
-                            disabled={isSaving}
-                            className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 ${duplicateSuccess
-                                    ? 'bg-green-600 text-white'
-                                    : isDark
-                                        ? 'bg-gray-700 hover:bg-gray-600 text-white disabled:bg-gray-800 disabled:text-gray-600'
-                                        : 'bg-gray-200 hover:bg-gray-300 text-gray-900 disabled:bg-gray-100 disabled:text-gray-400'
-                                }`}
-                            title="Duplicate Project"
-                        >
-                            {duplicateSuccess ? (
-                                <Check className="w-3 h-3 sm:w-4 sm:h-4" />
-                            ) : (
-                                <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
-                            )}
-                            <span className="hidden md:inline">
-                                {duplicateSuccess ? 'Duplicated' : 'Duplicate'}
-                            </span>
-                        </button>
-
                         {/* Export ZIP Button */}
                         <button
                             onClick={handleExport}

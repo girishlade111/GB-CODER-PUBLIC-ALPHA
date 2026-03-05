@@ -5,16 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:terminal": "cd server && npm start",
+    "dev:server": "cd server && node index.js",
+    "dev:all": "concurrently --names \"SERVER,VITE\" --prefix-colors \"cyan,green\" \"cd server && node index.js\" \"vite\"",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "vercel-build": "vite build"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.2.1",
     "@monaco-editor/react": "^4.6.0",
-    "@supabase/supabase-js": "^2.87.1",
+    "axios": "^1.13.6",
     "diff": "^5.2.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.344.0",
@@ -35,6 +35,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.18",
+    "concurrently": "^9.2.1",
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",

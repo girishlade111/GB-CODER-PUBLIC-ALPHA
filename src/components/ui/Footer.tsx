@@ -1,21 +1,18 @@
 import React from 'react';
 import { useTheme } from '../../hooks/useTheme';
-import { Instagram, Linkedin, Github, Codepen, Mail, EyeOff } from 'lucide-react';
+import { Instagram, Linkedin, Github, Codepen, Mail } from 'lucide-react';
 
 interface FooterProps {
   focusMode?: boolean;
-  onToggleFocusMode?: () => void;
 }
 
-const Footer: React.FC<FooterProps> = ({ focusMode = false, onToggleFocusMode }) => {
+const Footer: React.FC<FooterProps> = ({ focusMode = false }) => {
   const { isDark } = useTheme();
 
   const handleNavigation = (view: string) => {
-    // Dispatch specific events that App.tsx listens for
     window.dispatchEvent(new CustomEvent(`navigate-to-${view}`));
   };
 
-  // Hide footer when Focus Mode is enabled
   if (focusMode) {
     return null;
   }
@@ -80,7 +77,7 @@ const Footer: React.FC<FooterProps> = ({ focusMode = false, onToggleFocusMode })
             © 2024 GB Coder. Created by Girish Lade in Mumbai, India.
           </div>
 
-          {/* Right: Social Icons & Focus Mode Toggle */}
+          {/* Right: Social Icons */}
           <div className="flex items-center gap-3">
             <a href="https://www.instagram.com/girish_lade_/" target="_blank" rel="noopener noreferrer"
               className={`transition-colors ${isDark ? 'hover:text-gray-100' : 'hover:text-gray-900'}`}
@@ -107,21 +104,6 @@ const Footer: React.FC<FooterProps> = ({ focusMode = false, onToggleFocusMode })
               aria-label="Email">
               <Mail className="w-4 h-4" />
             </a>
-
-            {/* Focus Mode Toggle */}
-            {onToggleFocusMode && (
-              <>
-                <span className={`mx-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>|</span>
-                <button
-                  onClick={onToggleFocusMode}
-                  className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-gray-800 hover:text-bright-white' : 'hover:bg-gray-200 hover:text-gray-900'}`}
-                  aria-label="Toggle Focus Mode"
-                  title="Focus Mode (Hide Footer)"
-                >
-                  <EyeOff className="w-4 h-4" />
-                </button>
-              </>
-            )}
           </div>
         </div>
 

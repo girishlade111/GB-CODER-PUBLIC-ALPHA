@@ -1,19 +1,16 @@
 import React, { useState, Suspense } from 'react';
-import { Eye, Terminal, Sparkles } from 'lucide-react';
+import { Eye, Terminal } from 'lucide-react';
 import PreviewPanel from './PreviewPanel';
-import { ConsoleLog, AISuggestion } from '../types';
+import { ConsoleLog } from '../types';
 
 // Lazy load heavy components
 const EnhancedConsole = React.lazy(() => import('./EnhancedConsole'));
-const AISuggestionPanel = React.lazy(() => import('./AISuggestionPanel'));
 
-type TabType = 'preview' | 'console' | 'suggestions';
+type TabType = 'preview' | 'console';
 
 interface TabbedRightPanelProps {
-    // Error and suggestion counts for badges
+    // Error count for badge
     errorCount: number;
-    suggestionCount: number;
-    showAISuggestions: boolean;
 
     // Preview Panel props
     html: string;
@@ -26,18 +23,10 @@ interface TabbedRightPanelProps {
     // Console props
     consoleLogs: ConsoleLog[];
     onClearConsole: () => void;
-    onApplyErrorFix?: (fixedHtml: string, fixedCss: string, fixedJavascript: string) => void;
-
-    // AI Suggestions props
-    aiSuggestions: AISuggestion[];
-    onApplySuggestion?: (suggestion: AISuggestion) => void;
-    onDismissSuggestion?: (suggestionId: string) => void;
 }
 
 const TabbedRightPanel: React.FC<TabbedRightPanelProps> = ({
     errorCount,
-    suggestionCount,
-    showAISuggestions,
     // Preview props
     html,
     css,
@@ -48,11 +37,6 @@ const TabbedRightPanel: React.FC<TabbedRightPanelProps> = ({
     // Console props
     consoleLogs,
     onClearConsole,
-    onApplyErrorFix,
-    // AI Suggestions props
-    aiSuggestions,
-    onApplySuggestion,
-    onDismissSuggestion,
 }) => {
     const [activeTab, setActiveTab] = useState<TabType>('preview');
 
@@ -69,24 +53,7 @@ const TabbedRightPanel: React.FC<TabbedRightPanelProps> = ({
             badge: errorCount > 0 ? errorCount : undefined,
             badgeColor: 'bg-red-500',
         },
-        {
-            id: 'suggestions',
-            label: 'AI Suggestions',
-            icon: <Sparkles className="w-4 h-4" />,
-            badge: suggestionCount > 0 ? suggestionCount : undefined,
-            badgeColor: 'bg-purple-500',
-        },
     ];
-
-    // Filter out AI Suggestions tab if disabled
-    const visibleTabs = showAISuggestions ? tabs : tabs.filter(tab => tab.id !== 'suggestions');
-
-    // If current tab is suggestions but it's hidden, switch to preview
-    React.useEffect(() => {
-        if (!showAISuggestions && activeTab === 'suggestions') {
-            setActiveTab('preview');
-        }
-    }, [showAISuggestions, activeTab]);
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -116,22 +83,11 @@ const TabbedRightPanel: React.FC<TabbedRightPanelProps> = ({
                                 html={html}
                                 css={css}
                                 javascript={javascript}
-                                onApplyErrorFix={onApplyErrorFix}
                                 className="flex-1"
                             />
                         </div>
                     </Suspense>
                 );
-            case 'suggestions':
-                return showAISuggestions ? (
-                    <Suspense fallback={null}>
-                        <AISuggestionPanel
-                            suggestions={aiSuggestions}
-                            onApplySuggestion={onApplySuggestion}
-                            onDismiss={onDismissSuggestion}
-                        />
-                    </Suspense>
-                ) : null;
             default:
                 return null;
         }
@@ -141,7 +97,7 @@ const TabbedRightPanel: React.FC<TabbedRightPanelProps> = ({
         <div className="flex flex-col h-full bg-matte-black border border-gray-700 rounded-lg overflow-hidden">
             {/* Tab Navigation */}
             <div className="flex items-center bg-dark-gray border-b border-gray-700">
-                {visibleTabs.map((tab) => (
+                {tabs.map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
@@ -181,4 +137,4 @@ const TabbedRightPanel: React.FC<TabbedRightPanelProps> = ({
     );
 };
 
-export default TabbedRightPanel;
+export default React.memo(TabbedRightPanel);

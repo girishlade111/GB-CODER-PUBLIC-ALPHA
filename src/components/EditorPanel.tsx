@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ChevronDown, Copy, Lock, Unlock, Wand2 } from 'lucide-react';
 import CodeEditor from './CodeEditor';
-import AISuggestButton from './AISuggestButton';
-import ExplainCodeButton from './ExplainCodeButton';
 import CopyToast from './ui/CopyToast';
 import { EditorLanguage } from '../types';
 import { useEditorActions } from '../hooks/useEditorActions';
@@ -13,17 +11,25 @@ interface EditorPanelProps {
   value: string;
   onChange: (value: string) => void;
   icon: React.ReactNode;
-  onAISuggest?: () => void;
-  isAILoading?: boolean;
   onFormat?: () => void;
   isFormatLoading?: boolean;
-  onExplain?: () => void;
-  isExplainLoading?: boolean;
   editorRef?: React.MutableRefObject<any>;
   onSelectionChange?: (editor: any) => void;
   fontFamily?: string;
   fontSize?: number;
 }
+
+const ACCEPTED_EXTENSIONS: Record<EditorLanguage, string[]> = {
+  html: ['.html', '.htm'],
+  css: ['.css'],
+  javascript: ['.js'],
+};
+
+const DROP_ERROR_MESSAGES: Record<EditorLanguage, string> = {
+  html: 'Only HTML files (.html) can be dropped here.',
+  css: 'Only CSS files (.css) are allowed in this section.',
+  javascript: 'Only JavaScript files (.js) are allowed here.',
+};
 
 const EditorPanel: React.FC<EditorPanelProps> = ({
   title,
@@ -31,18 +37,16 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
   value,
   onChange,
   icon,
-  onAISuggest,
-  isAILoading = false,
   onFormat,
   isFormatLoading = false,
-  onExplain,
-  isExplainLoading = false,
   editorRef,
   onSelectionChange,
   fontFamily,
   fontSize,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [dropError, setDropError] = useState<string | null>(null);
 
   const {
     isLocked,
@@ -63,8 +67,62 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
   const hasContent = value.trim().length > 0;
 
+  const isValidFile = useCallback((filename: string): boolean => {
+    const ext = '.' + filename.split('.').pop()?.toLowerCase();
+    return ACCEPTED_EXTENSIONS[language].includes(ext);
+  }, [language]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+    setDropError(null);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+
+    const file = files[0];
+    if (!isValidFile(file.name)) {
+      setDropError(DROP_ERROR_MESSAGES[language]);
+      setTimeout(() => setDropError(null), 4000);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const content = ev.target?.result as string;
+      if (content !== undefined) {
+        onChange(content);
+      }
+    };
+    reader.readAsText(file);
+  }, [isValidFile, language, onChange]);
+
   return (
-    <div className="bg-dark-gray border border-gray-700 rounded-lg overflow-hidden w-full">
+    <div
+      className={`bg-dark-gray border rounded-lg overflow-hidden w-full transition-colors ${
+        isDragOver
+          ? 'border-blue-500 ring-2 ring-blue-500/30'
+          : 'border-gray-700'
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div
         className="bg-matte-black px-4 py-3 border-b border-gray-700 flex items-center justify-between cursor-pointer hover:bg-dark-gray transition-colors"
         onClick={() => setIsCollapsed(!isCollapsed)}
@@ -124,6 +182,15 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
       {!isCollapsed && (
         <div className="relative">
+          {/* Drag overlay */}
+          {isDragOver && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-blue-900/40 border-2 border-dashed border-blue-400 rounded pointer-events-none">
+              <p className="text-blue-300 font-medium text-sm">
+                Drop {ACCEPTED_EXTENSIONS[language].join(', ')} file here
+              </p>
+            </div>
+          )}
+
           <div className="p-4">
             <CodeEditor
               language={language}
@@ -138,23 +205,13 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
             />
           </div>
 
-          {/* Floating Action Buttons (AI Suggest, Explain) */}
-          {onAISuggest && (
-            <AISuggestButton
-              language={language}
-              onSuggest={onAISuggest}
-              isLoading={isAILoading}
-              hasContent={hasContent}
-            />
-          )}
-          {onExplain && (
-            <ExplainCodeButton
-              language={language}
-              onExplain={onExplain}
-              isLoading={isExplainLoading}
-              hasContent={hasContent}
-            />
-          )}
+        </div>
+      )}
+
+      {/* Drop error message */}
+      {dropError && (
+        <div className="px-4 py-2 bg-red-900/60 border-t border-red-700 text-red-300 text-xs">
+          {dropError}
         </div>
       )}
 
@@ -170,4 +227,4 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
   );
 };
 
-export default EditorPanel;
+export default React.memo(EditorPanel);

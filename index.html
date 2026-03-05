@@ -338,16 +338,27 @@
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
   <script>
-    // Hide loading spinner once React loads
-    window.addEventListener('load', () => {
-      setTimeout(() => {
+    // Hide loading spinner once React mounts (not window.load which waits for ALL resources)
+    const _checkRoot = setInterval(() => {
+      const root = document.getElementById('root');
+      if (root && root.childNodes.length > 0) {
+        clearInterval(_checkRoot);
         const loading = document.getElementById('loading');
         if (loading) {
           loading.style.opacity = '0';
-          setTimeout(() => loading.remove(), 500);
+          setTimeout(() => loading.remove(), 400);
         }
-      }, 300);
-    });
+      }
+    }, 50);
+    // Fallback: remove after 5s no matter what
+    setTimeout(() => {
+      clearInterval(_checkRoot);
+      const loading = document.getElementById('loading');
+      if (loading) {
+        loading.style.opacity = '0';
+        setTimeout(() => loading.remove(), 400);
+      }
+    }, 5000);
   </script>
 </body>
 

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { X, Settings as SettingsIcon } from 'lucide-react';
 import { useSettings, EditorFontFamily, ThemeVariant } from '../hooks/useSettings';
 import { useTheme } from '../hooks/useTheme';
+import { useFocusMode } from '../hooks/useFocusMode';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -11,6 +12,7 @@ interface SettingsModalProps {
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     const { settings, updateSettings, resetSettings, getFontFamilyCSS } = useSettings();
     const { isDark } = useTheme();
+    const { focusMode, toggleFocusMode } = useFocusMode();
 
     // Close on Escape key
     useEffect(() => {
@@ -234,6 +236,42 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
                                 Debounce delay before updating the preview after code changes
                             </p>
+                        </div>
+                    </div>
+
+                    {/* Layout Settings Section */}
+                    <div>
+                        <h3
+                            className={`text-sm font-semibold uppercase tracking-wide mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'
+                                }`}
+                        >
+                            Layout Settings
+                        </h3>
+
+                        {/* Show Footer Toggle */}
+                        <div
+                            className={`flex items-center justify-between p-4 rounded-lg border ${isDark ? 'border-gray-700 bg-matte-black' : 'border-gray-300 bg-gray-50'
+                                }`}
+                        >
+                            <div className="flex-1">
+                                <div className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+                                    Show Footer
+                                </div>
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                                    Toggle the footer visibility. When hidden, the editor and preview expand to fill the space.
+                                </p>
+                            </div>
+                            <button
+                                onClick={toggleFocusMode}
+                                className={`relative ml-4 w-12 h-6 rounded-full transition-colors ${!focusMode ? 'bg-blue-600' : 'bg-gray-600'
+                                    }`}
+                                aria-label="Toggle footer visibility"
+                            >
+                                <div
+                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${!focusMode ? 'translate-x-6' : 'translate-x-0'
+                                        }`}
+                                />
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -34,7 +34,7 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+                maxAgeSeconds: 60 * 60 * 24 * 365,
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -46,7 +46,12 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    include: [
+      'react',
+      'react-dom',
+      'lucide-react',
+      '@monaco-editor/react',
+    ],
   },
   build: {
     target: 'esnext',
@@ -62,9 +67,6 @@ export default defineConfig({
             }
             if (id.includes('@monaco-editor')) {
               return 'monaco-editor';
-            }
-            if (id.includes('@google/generative-ai')) {
-              return 'ai-vendor';
             }
             if (id.includes('lucide-react')) {
               return 'ui-vendor';
@@ -98,5 +100,13 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 1000,
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
   },
 });
