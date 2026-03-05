@@ -1,0 +1,37 @@
+
+> gb-coder@0.0.0 build
+> vite build
+
+[36mvite v5.4.8 [32mbuilding for production...[36m[39m
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+transforming...
+[32mΓ£ô[39m 1671 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mregisterSW.js                       [39m[1m[2m    0.13 kB[22m[1m[22m
+[2mdist/[22m[32mmanifest.webmanifest                [39m[1m[2m    0.31 kB[22m[1m[22m
+[2mdist/[22m[32mindex.html                          [39m[1m[2m   11.51 kB[22m[1m[22m[2m Γöé gzip:   3.41 kB[22m
+[2mdist/[22m[32massets/favicon-CZsOJf9v.ico         [39m[1m[2m   15.41 kB[22m[1m[22m
+[2mdist/[22m[35massets/vendor-BAWOxs-m.css          [39m[1m[2m    4.31 kB[22m[1m[22m[2m Γöé gzip:   1.67 kB[22m
+[2mdist/[22m[35massets/index-LFPPJX2C.css           [39m[1m[2m   72.29 kB[22m[1m[22m[2m Γöé gzip:  11.40 kB[22m
+[2mdist/[22m[36massets/monaco-editor-CcVMUR-E.js    [39m[1m[2m    4.85 kB[22m[1m[22m[2m Γöé gzip:   2.02 kB[22m
+[2mdist/[22m[36massets/CodeHistoryPage-DhdnTvBW.js  [39m[1m[2m   13.30 kB[22m[1m[22m[2m Γöé gzip:   3.18 kB[22m
+[2mdist/[22m[36massets/ai-vendor-1VYGAsLl.js        [39m[1m[2m   17.38 kB[22m[1m[22m[2m Γöé gzip:   3.90 kB[22m
+[2mdist/[22m[36massets/phase2-critical-BKkfiVL4.js  [39m[1m[2m   84.26 kB[22m[1m[22m[2m Γöé gzip:  24.45 kB[22m
+[2mdist/[22m[36massets/index-BBxTodn0.js            [39m[1m[2m  137.06 kB[22m[1m[22m[2m Γöé gzip:  33.02 kB[22m
+[2mdist/[22m[36massets/react-vendor-Ct5h6bnv.js     [39m[1m[2m  165.66 kB[22m[1m[22m[2m Γöé gzip:  53.93 kB[22m
+[2mdist/[22m[36massets/phase3-deferred-DnMueCRT.js  [39m[1m[2m  239.39 kB[22m[1m[22m[2m Γöé gzip:  48.88 kB[22m
+[2mdist/[22m[36massets/vendor-DnDat_fc.js           [39m[1m[33m1,468.81 kB[39m[22m[2m Γöé gzip: 395.85 kB[22m
+
+(!) Some chunks are larger than 1000 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[32mΓ£ô built in 27.49s[39m
+
+PWA v1.1.0
+mode      generateSW
+precache  14 entries (2188.14 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-1d305bb8.js
