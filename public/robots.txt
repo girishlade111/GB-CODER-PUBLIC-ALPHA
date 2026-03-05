@@ -1,11 +1,44 @@
 # robots.txt for GB Coder
 # https://www.robotstxt.org/robotstxt.html
+# Last updated: 2025-03-05
 
+# Allow all search engines to crawl
 User-agent: *
 Allow: /
 
-# Crawl-delay to be respectful to servers
+# Specific rules for major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: Slurp
+Allow: /
 Crawl-delay: 1
 
-# Sitemap location
+# Block sensitive paths
+Disallow: /node_modules/
+Disallow: /src/
+Disallow: /api/
+Disallow: /server/
+
+# Allow important assets
+Allow: /public/
+Allow: /dist/
+Allow: /*.js$
+Allow: /*.css$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.svg$
+Allow: /*.ico$
+
+# Sitemap locations (primary and backup)
+Sitemap: https://gbcoder.com/sitemap.xml
 Sitemap: https://code.ladestack.in/sitemap.xml
+
+# Host
+Host: https://gbcoder.com

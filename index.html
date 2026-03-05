@@ -4,36 +4,76 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="color-scheme" content="dark light" />
 
-  <!-- Primary Meta Tags -->
+  <!-- ============================================
+       PRIMARY SEO META TAGS
+       Optimized for Google & Bing
+       Last Updated: 2025-03-05
+  ============================================= -->
+  
+  <!-- Page Title (50-60 characters for optimal display) -->
   <title>GB Coder – AI-Powered HTML, CSS & JavaScript Code Playground</title>
   <meta name="title" content="GB Coder – AI-Powered HTML, CSS & JavaScript Code Playground" />
+  
+  <!-- Meta Description (150-160 characters for optimal display) -->
   <meta name="description"
-    content="GB Coder is an AI-powered online code editor for HTML, CSS & JavaScript with live preview, smart code suggestions, snippets, and real-time debugging. Start coding instantly." />
+    content="Free AI-powered online code editor for HTML, CSS & JavaScript with live preview, intelligent code suggestions, and real-time debugging. No signup required. Start coding instantly in your browser!" />
+  
+  <!-- Comprehensive Keywords (primary + long-tail) -->
   <meta name="keywords"
-    content="online code editor, HTML editor, CSS editor, JavaScript editor, AI code assistant, live preview, code playground, web development, IDE, compiler, code enhancer, free code editor, browser IDE, Monaco editor, web compiler, front-end development, coding tool, programming online, code snippet manager, external library manager, Bootstrap editor, React playground, Vue editor" />
+    content="online code editor, HTML editor, CSS editor, JavaScript editor, AI code editor, online compiler, code playground, web development IDE, free code editor, browser IDE, Monaco editor online, live code preview, AI code suggestions, JavaScript compiler, frontend development tools, code with AI, online code formatter, debug JavaScript, learn web development, practice coding online, Girish Lade" />
+  
+  <!-- Author & Ownership -->
   <meta name="author" content="Girish Lade" />
+  <meta name="publisher" content="Girish Lade" />
+  <meta name="copyright" content="© 2024-2025 Girish Lade. All rights reserved." />
+  
+  <!-- Search Engine Crawling Instructions -->
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <meta name="bingbot" content="index, follow" />
+  
+  <!-- Language & Localization -->
   <meta name="language" content="English" />
   <meta name="revisit-after" content="7 days" />
   <meta name="rating" content="general" />
+  <meta name="distribution" content="global" />
+  
+  <!-- Geographic Targeting -->
+  <meta name="geo.region" content="IN-MH" />
+  <meta name="geo.placename" content="Mumbai" />
+  <meta name="geo.position" content="19.0760;72.8777" />
+  <meta name="ICBM" content="19.0760, 72.8777" />
 
-  <!-- Canonical URL -->
+  <!-- Canonical URL (prevents duplicate content issues) -->
   <link rel="canonical" href="https://gbcoder.com/" />
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+  
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico" />
+  
   <!-- PWA Manifest -->
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#3b82f6" />
+  <meta name="msapplication-TileColor" content="#3b82f6" />
+  <meta name="msapplication-TileImage" content="/favicon.ico" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="GB Coder" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="GB Coder" />
 
-  <!-- Open Graph / Facebook Meta Tags -->
+  <!-- ============================================
+       OPEN GRAPH / FACEBOOK META TAGS
+  ============================================= -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://gbcoder.com/" />
+  <meta property="og:site_name" content="GB Coder" />
+  <meta property="og:locale" content="en_US" />
   <meta property="og:title" content="GB Coder - AI-Powered HTML, CSS & JavaScript Code Editor" />
   <meta property="og:description"
     content="Free AI-powered online code editor with live preview, intelligent suggestions, and external library manager. Build web projects instantly in your browser!" />
@@ -41,10 +81,11 @@
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="GB Coder - AI-Powered Code Editor Interface" />
-  <meta property="og:site_name" content="GB Coder" />
-  <meta property="og:locale" content="en_US" />
+  <meta property="og:image:type" content="image/jpeg" />
 
-  <!-- Twitter Card Meta Tags -->
+  <!-- ============================================
+       TWITTER CARD META TAGS
+  ============================================= -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="https://gbcoder.com/" />
   <meta name="twitter:title" content="GB Coder - AI-Powered Online Code Editor" />
@@ -53,29 +94,140 @@
   <meta name="twitter:image" content="https://gbcoder.com/tghjkl.jpeg" />
   <meta name="twitter:image:alt" content="GB Coder Code Editor Screenshot" />
   <meta name="twitter:creator" content="@girish_lade_" />
+  <meta name="twitter:site" content="@girish_lade_" />
 
-  <!-- Structured Data (JSON-LD) for SEO -->
+  <!-- ============================================
+       STRUCTURED DATA (JSON-LD) FOR SEO
+       Multiple schema types for rich snippets
+  ============================================= -->
   <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "GB Coder",
-      "alternateName": "GB Coder - AI Code Editor",
-      "url": "https://gbcoder.com",
-      "logo": "https://gbcoder.com/favicon.ico",
-      "description": "AI-powered online code editor for HTML, CSS, and JavaScript with live preview, intelligent suggestions, and external library management.",
-      "applicationCategory": "DeveloperApplication",
-      "operatingSystem": "Any",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "GB Coder",
+        "alternateName": ["GB Coder - AI Code Editor", "GB Coder Online IDE"],
+        "url": "https://gbcoder.com",
+        "logo": "https://gbcoder.com/favicon.ico",
+        "image": "https://gbcoder.com/tghjkl.jpeg",
+        "description": "AI-powered online code editor for HTML, CSS, and JavaScript with live preview, intelligent suggestions, and external library management. Free to use, no signup required.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/AvailableOnline"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Girish Lade",
+          "url": "https://ladestack.in",
+          "email": "girishlade111@gmail.com",
+          "sameAs": [
+            "https://www.instagram.com/girish_lade_/",
+            "https://www.linkedin.com/in/girish-lade-075bba201/",
+            "https://github.com/girishlade111",
+            "https://codepen.io/Girish-Lade-the-looper"
+          ]
+        },
+        "featureList": [
+          "AI-powered code enhancement",
+          "Live preview",
+          "HTML, CSS, JavaScript editor",
+          "External library manager",
+          "Code history tracking",
+          "Snippet management",
+          "Integrated console",
+          "Auto-save functionality",
+          "No login required",
+          "Free to use"
+        ],
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.8",
+          "ratingCount": "150",
+          "bestRating": "5",
+          "worstRating": "1"
+        },
+        "potentialAction": {
+          "@type": "UseAction",
+          "name": "Code with AI Assistance",
+          "description": "Write and enhance code using AI-powered suggestions"
+        },
+        "audience": {
+          "@type": "Audience",
+          "audienceType": "Developers, Students, Web Designers, Programmers"
+        },
+        "genre": "Web Development, Programming, Education, Productivity",
+        "keywords": "online code editor, AI code editor, HTML CSS JavaScript, web development IDE, free code editor",
+        "inLanguage": "en",
+        "dateCreated": "2024",
+        "dateModified": "2025-03-05",
+        "softwareVersion": "2.0.0",
+        "screenshot": "https://gbcoder.com/tghjkl.jpeg",
+        "downloadUrl": "https://gbcoder.com",
+        "releaseNotes": "Enhanced AI features, improved performance, better mobile support"
       },
-      "author": {
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "GB Coder",
+        "url": "https://gbcoder.com",
+        "logo": "https://gbcoder.com/favicon.ico",
+        "description": "AI-powered online code editor for web developers",
+        "founder": {
+          "@type": "Person",
+          "name": "Girish Lade"
+        },
+        "foundingDate": "2024",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "girishlade111@gmail.com",
+          "contactType": "Customer Support",
+          "availableLanguage": "English"
+        },
+        "sameAs": [
+          "https://github.com/girishlade111/GB-Coder-Public-Beta",
+          "https://ladestack.in"
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "GB Coder",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.8",
+          "ratingCount": "150"
+        },
+        "featureList": "AI code suggestions, Live preview, External libraries, Auto-save, Code history",
+        "screenshot": "https://gbcoder.com/tghjkl.jpeg",
+        "downloadUrl": "https://gbcoder.com",
+        "softwareVersion": "2.0.0",
+        "author": {
+          "@type": "Person",
+          "name": "Girish Lade"
+        }
+      },
+      {
+        "@context": "https://schema.org",
         "@type": "Person",
         "name": "Girish Lade",
         "url": "https://ladestack.in",
-        "email": "girishlade111@gmail.com",
+        "jobTitle": "Developer & AI Tools Maker",
+        "worksFor": {
+          "@type": "Organization",
+          "name": "GB Coder"
+        },
         "sameAs": [
           "https://www.instagram.com/girish_lade_/",
           "https://www.linkedin.com/in/girish-lade-075bba201/",
@@ -83,51 +235,48 @@
           "https://codepen.io/Girish-Lade-the-looper"
         ]
       },
-      "creator": {
-        "@type": "Organization",
-        "name": "GB Coder",
-        "url": "https://gbcoder.com",
-        "logo": "https://gbcoder.com/favicon.ico",
-        "contactPoint": {
-          "@type": "ContactPoint",
-          "email": "girishlade111@gmail.com",
-          "contactType": "Customer Support"
-        }
-      },
-      "featureList": [
-        "AI-powered code enhancement",
-        "Live preview",
-        "HTML, CSS, JavaScript editor",
-        "External library manager",
-        "Code history tracking",
-        "Snippet management",
-        "Integrated console",
-        "Auto-save functionality",
-        "No login required",
-        "Free to use"
-      ],
-      "screenshot": "https://gbcoder.com/tghjkl.jpeg",
-      "softwareVersion": "2.0.0",
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "ratingCount": "150"
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://gbcoder.com/"
+          }
+        ]
       }
-    }
-    </script>
+    ]
+  </script>
 
-  <!-- Security Headers -->
+  <!-- ============================================
+       SECURITY & PERFORMANCE HEADERS
+  ============================================= -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:; style-src 'self' 'unsafe-inline' https: http:; img-src 'self' data: https: http:; connect-src 'self' https: http:; font-src 'self' data: https: http:; object-src 'none'; media-src 'self' https: http:; frame-src 'self' https: http: data:; base-uri 'self';" />
-  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()" />
 
-  <!--Performance Hints -->
+  <!-- ============================================
+       PERFORMANCE OPTIMIZATION
+       DNS prefetching and preconnect for faster loading
+  ============================================= -->
   <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
   <link rel="dns-prefetch" href="//unpkg.com" />
   <link rel="dns-prefetch" href="//cdnjs.cloudflare.com" />
+  <link rel="dns-prefetch" href="//fonts.googleapis.com" />
   <link rel="preconnect" href="https://generativelanguage.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  
+  <!-- Preload critical assets -->
+  <link rel="preload" href="/src/main.tsx" as="script" />
+  <link rel="preload" href="/tghjkl.jpeg" as="image" />
 
   <style>
     body {
