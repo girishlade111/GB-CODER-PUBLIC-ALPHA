@@ -74,9 +74,9 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
     <>
       {/* Main Navigation Bar — no drag events */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-40 backdrop-blur-sm border-b shadow-sm transition-all duration-200 ${isDark
-          ? 'bg-matte-black/95 border-gray-700'
-          : 'bg-white/95 border-gray-200'
+        className={`fixed top-0 left-0 right-0 z-40 backdrop-blur-sm border-b shadow-vscode-widget transition-all duration-200 ${isDark
+          ? 'bg-matte-black/98 border-gray-700'
+          : 'bg-white/98 border-gray-200'
           }`}
       >
         <div className="w-full mx-auto px-3 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
@@ -104,7 +104,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               {/* Settings Button */}
               <button
                 onClick={onSettingsToggle}
-                className={`p-2 sm:p-2.5 rounded-lg transition-all duration-200 hover:scale-105 ${isDark
+                className={`p-2 sm:p-2.5 rounded-lg transition-all duration-200 hover:brightness-125 active:brightness-90 ${isDark
                   ? 'text-bright-white hover:bg-dark-gray'
                   : 'text-gray-600 hover:bg-gray-100'
                   }`}
@@ -118,7 +118,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className={`p-2 sm:p-2.5 rounded-lg transition-all duration-200 hover:scale-105 ${isDropdownOpen
+                  className={`p-2 sm:p-2.5 rounded-lg transition-all duration-200 hover:brightness-125 active:brightness-90 ${isDropdownOpen
                     ? (isDark ? 'bg-dark-gray text-white' : 'bg-gray-100 text-black')
                     : (isDark
                       ? 'text-bright-white hover:bg-dark-gray'
@@ -134,7 +134,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
                 {/* Dropdown Content */}
                 {isDropdownOpen && (
-                  <div className={`absolute right-0 mt-2 w-72 sm:w-80 rounded-xl shadow-lg border z-50 animate-in slide-in-from-top-2 duration-200 overflow-hidden ${isDark
+                  <div className={`absolute right-0 mt-2 w-72 sm:w-80 rounded-xl shadow-vscode-widget border z-50 animate-slide-down overflow-hidden ${isDark
                     ? 'bg-dark-gray border-gray-700'
                     : 'bg-white border-gray-200'
                     }`}>
@@ -142,7 +142,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                     <div className="py-2 max-h-[calc(100vh-100px)] overflow-y-auto">
                       {/* Code Operations */}
                       <div className="px-4 py-3">
-                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'
+                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-gray-600 pl-2 ${isDark ? 'text-gray-400' : 'text-gray-500'
                           }`}>
                           Code Operations
                         </h4>
@@ -153,7 +153,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               setIsDropdownOpen(false);
                             }}
                             className={`px-3 py-2.5 text-sm flex items-center gap-2 transition-colors rounded-lg ${isDark
-                              ? 'text-gray-300 hover:bg-gray-700'
+                              ? 'text-gray-300 hover:bg-[#2a2d2e]'
                               : 'text-gray-700 hover:bg-gray-50'
                               }`}
                           >
@@ -187,11 +187,11 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                         </div>
                       </div>
 
-                      <div className={`border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />
+                      <div className={`border-t my-1 ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />
 
                       {/* File Management */}
                       <div className="px-4 py-3">
-                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'
+                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-gray-600 pl-2 ${isDark ? 'text-gray-400' : 'text-gray-500'
                           }`}>
                           Files
                         </h4>
@@ -202,7 +202,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               setIsDropdownOpen(false);
                             }}
                             className={`w-full px-3 py-2.5 text-left text-sm flex items-center gap-3 transition-colors rounded-lg ${isDark
-                              ? 'text-gray-300 hover:bg-gray-700'
+                              ? 'text-gray-300 hover:bg-[#2a2d2e]'
                               : 'text-gray-700 hover:bg-gray-50'
                               }`}
                           >
@@ -216,7 +216,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               setIsDropdownOpen(false);
                             }}
                             className={`w-full px-3 py-2.5 text-left text-sm flex items-center gap-3 transition-colors rounded-lg ${isDark
-                              ? 'text-gray-300 hover:bg-gray-700'
+                              ? 'text-gray-300 hover:bg-[#2a2d2e]'
                               : 'text-gray-700 hover:bg-gray-50'
                               }`}
                           >
@@ -226,11 +226,11 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                         </div>
                       </div>
 
-                      <div className={`border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />
+                      <div className={`border-t my-1 ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />
 
                       {/* Settings & Tools */}
                       <div className="px-4 py-3">
-                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'
+                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-gray-600 pl-2 ${isDark ? 'text-gray-400' : 'text-gray-500'
                           }`}>
                           Settings & Tools
                         </h4>
@@ -243,7 +243,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               setIsDropdownOpen(false);
                             }}
                             className={`w-full px-3 py-2.5 text-left text-sm flex items-center gap-3 transition-colors rounded-lg ${isDark
-                              ? 'text-gray-300 hover:bg-gray-700'
+                              ? 'text-gray-300 hover:bg-[#2a2d2e]'
                               : 'text-gray-700 hover:bg-gray-50'
                               }`}
                           >
@@ -257,7 +257,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               setIsDropdownOpen(false);
                             }}
                             className={`w-full px-3 py-2.5 text-left text-sm flex items-center gap-3 transition-colors rounded-lg ${isDark
-                              ? 'text-gray-300 hover:bg-gray-700'
+                              ? 'text-gray-300 hover:bg-[#2a2d2e]'
                               : 'text-gray-700 hover:bg-gray-50'
                               }`}
                           >

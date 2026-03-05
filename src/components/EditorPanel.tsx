@@ -114,7 +114,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
   return (
     <div
-      className={`bg-dark-gray border rounded-lg overflow-hidden w-full transition-colors ${
+      className={`bg-dark-gray border rounded-lg overflow-hidden w-full shadow-sm transition-colors ${
         isDragOver
           ? 'border-blue-500 ring-2 ring-blue-500/30'
           : 'border-gray-700'
@@ -124,7 +124,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
       onDrop={handleDrop}
     >
       <div
-        className="bg-matte-black px-4 py-3 border-b border-gray-700 flex items-center justify-between cursor-pointer hover:bg-dark-gray transition-colors"
+        className="bg-matte-black px-4 py-2.5 border-b border-gray-700 flex items-center justify-between cursor-pointer hover:bg-[#232324] transition-colors"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         {/* Left side: Icon, Title, File Label, Language Badge */}
@@ -132,7 +132,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           {icon}
           <h3 className="text-sm font-medium text-bright-white">{title}</h3>
           <span className="text-xs text-gray-500 font-mono">{fileName}</span>
-          <span className="text-xs bg-gray-700 text-gray-400 px-2 py-0.5 rounded uppercase">
+          <span className="text-[10px] tracking-wider font-semibold bg-gray-700 text-gray-400 px-2 py-0.5 rounded uppercase">
             {language}
           </span>
         </div>
@@ -144,7 +144,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
             <button
               onClick={handleFormat}
               disabled={!canFormat}
-              className="p-1.5 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed text-purple-400 hover:text-purple-300 rounded transition-all duration-200"
+              className="p-1.5 hover:bg-purple-900/30 disabled:opacity-40 disabled:cursor-not-allowed text-purple-400 hover:text-purple-300 rounded transition-all duration-200"
               title={`Format ${language.toUpperCase()} code (Prettier)`}
             >
               <Wand2 className={`w-4 h-4 ${isFormatLoading ? 'animate-spin' : ''}`} />
@@ -164,7 +164,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           {/* Lock/Unlock Button */}
           <button
             onClick={toggleLock}
-            className={`p-1.5 hover:bg-gray-700 rounded transition-all duration-200 ${isLocked ? 'text-amber-400 hover:text-amber-300' : 'text-gray-400 hover:text-bright-white'
+            className={`p-1.5 hover:bg-gray-700 rounded transition-all duration-200 ${isLocked ? 'text-amber-400 hover:text-amber-300 bg-amber-900/20' : 'text-gray-400 hover:text-bright-white'
               }`}
             title={isLocked ? 'Unlock editor (make editable)' : 'Lock editor (read-only)'}
           >
@@ -191,7 +191,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
             </div>
           )}
 
-          <div className="p-4">
+          <div className="p-2 sm:p-3">
             <CodeEditor
               language={language}
               value={value}

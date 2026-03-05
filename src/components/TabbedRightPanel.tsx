@@ -94,19 +94,19 @@ const TabbedRightPanel: React.FC<TabbedRightPanelProps> = ({
     };
 
     return (
-        <div className="flex flex-col h-full bg-matte-black border border-gray-700 rounded-lg overflow-hidden">
+        <div className="flex flex-col h-full bg-matte-black border border-gray-700 rounded-lg overflow-hidden shadow-sm">
             {/* Tab Navigation */}
-            <div className="flex items-center bg-dark-gray border-b border-gray-700">
+            <div className="flex items-center bg-dark-gray border-b border-gray-700 px-1">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`
-              flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200
+              flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all duration-200
               border-b-2 -mb-[1px]
               ${activeTab === tab.id
-                                ? 'text-white border-purple-500 bg-matte-black'
-                                : 'text-gray-400 border-transparent hover:text-gray-200 hover:bg-gray-750'
+                                ? 'text-white border-vscode-statusbar bg-matte-black'
+                                : 'text-gray-500 border-transparent hover:text-gray-200 hover:bg-[#2a2d2e]'
                             }
             `}
                         aria-selected={activeTab === tab.id}

@@ -45,11 +45,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-md"
             onClick={onClose}
         >
             <div
-                className={`relative w-full max-w-2xl mx-4 rounded-xl shadow-2xl border ${isDark ? 'bg-dark-gray border-gray-700' : 'bg-white border-gray-200'
+                className={`relative w-full max-w-2xl mx-4 rounded-xl shadow-vscode-modal animate-scale-in border ${isDark ? 'bg-dark-gray border-gray-700' : 'bg-white border-gray-200'
                     }`}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -79,7 +79,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     {/* Editor Settings Section */}
                     <div>
                         <h3
-                            className={`text-sm font-semibold uppercase tracking-wide mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'
+                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
                                 }`}
                         >
                             Editor Settings
@@ -141,7 +141,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     {/* Theme Settings Section */}
                     <div>
                         <h3
-                            className={`text-sm font-semibold uppercase tracking-wide mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'
+                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
                                 }`}
                         >
                             Theme
@@ -180,7 +180,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     {/* Behavior Settings Section */}
                     <div>
                         <h3
-                            className={`text-sm font-semibold uppercase tracking-wide mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'
+                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
                                 }`}
                         >
                             Behavior
@@ -242,7 +242,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     {/* Layout Settings Section */}
                     <div>
                         <h3
-                            className={`text-sm font-semibold uppercase tracking-wide mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'
+                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
                                 }`}
                         >
                             Layout Settings
@@ -292,7 +292,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     </button>
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                        className="px-6 py-2 bg-vscode-statusbar hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
                     >
                         Done
                     </button>

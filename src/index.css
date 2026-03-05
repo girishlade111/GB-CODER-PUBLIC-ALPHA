@@ -7,6 +7,48 @@
     border-radius: 0 !important;
 }
 
+/* VS Code-style transition presets */
+:root {
+    --transition-fast: 120ms ease-out;
+    --transition-normal: 200ms ease-out;
+    --transition-slow: 300ms ease-out;
+}
+
+/* Unified focus ring — VS Code blue */
+*:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 2px #007fd4 !important;
+}
+
+/* Global button press feedback */
+button {
+    transition: background-color var(--transition-fast),
+                color var(--transition-fast),
+                transform 60ms ease-out,
+                box-shadow var(--transition-fast);
+}
+button:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+/* VS Code-style scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(121, 121, 121, 0.4);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(121, 121, 121, 0.6);
+}
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 /* VS Code Dark Theme CSS Variables */
 :root {
     /* Background Colors */

@@ -569,11 +569,11 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
     <div className={`bg-gray-900 border border-gray-700 rounded-lg overflow-hidden transition-all duration-300 flex flex-col h-full min-h-0 ${isExpanded ? 'fixed inset-4 z-50' : 'relative'
       } ${className}`}>
       {/* Header */}
-      <div className="bg-dark-gray px-4 py-2 border-b border-gray-700 flex items-center justify-between">
+      <div className="bg-dark-gray px-3 py-1.5 border-b border-gray-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-green-400" />
-          <h2 className="text-sm font-medium text-gray-300">GB Console</h2>
-          <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded">
+          <h2 className="text-xs uppercase tracking-wide font-semibold text-gray-300">GB Console</h2>
+          <span className="text-[10px] bg-blue-600/80 text-white px-2 py-0.5 rounded">
             {activeMode === 'console' ? filteredBasicLogs.length :
               activeMode === 'validator' ? validationResults.length :
                 previewMessages.length} items
@@ -689,7 +689,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
             key={key}
             onClick={() => setActiveMode(key)}
             className={`px-4 py-2 text-sm border-r border-gray-700 flex items-center gap-2 ${activeMode === key
-              ? 'bg-matte-black text-white'
+              ? 'bg-matte-black text-white border-b-2 border-b-vscode-statusbar'
               : 'text-gray-400 hover:text-gray-200 hover:bg-gray-750'
               }`}
           >
@@ -701,7 +701,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
 
       {/* Filter Bar (Basic Console mode) */}
       {activeMode === 'console' && (
-        <div className="bg-dark-gray border-b border-gray-700 p-3">
+        <div className="bg-dark-gray border-b border-gray-700 px-3 py-2">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-gray-400" />
             <span className="text-sm text-gray-400 mr-1">Filter:</span>
@@ -709,7 +709,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
               <button
                 key={filter}
                 onClick={() => setBasicFilter(filter)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${basicFilter === filter
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${basicFilter === filter
                   ? 'bg-blue-600 text-white shadow-md border border-blue-500'
                   : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600 hover:border-gray-500'
                   }`}
@@ -730,14 +730,14 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
           {activeMode === 'console' && (
             <div ref={outputRef} className="bg-matte-black p-4 h-full overflow-y-auto font-mono text-sm">
               {filteredBasicLogs.length === 0 ? (
-                <div className="text-gray-500 italic text-center py-8">
+                <div className="text-gray-600 text-center py-12">
                   Console output will appear here...
                 </div>
               ) : (
                 <div className="space-y-1">
                   {filteredBasicLogs.map((log) => (
-                    <div key={log.id} className="flex items-start gap-2 py-1">
-                      <span className="text-gray-500 text-xs mt-0.5 flex-shrink-0">
+                    <div key={log.id} className="flex items-start gap-2 py-1 border-b border-gray-800/50">
+                      <span className="text-[10px] font-mono tabular-nums text-gray-500 mt-0.5 flex-shrink-0">
                         {new Date(log.timestamp).toLocaleTimeString()}
                       </span>
                       {getLogIcon(log.type)}
@@ -755,7 +755,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
           {activeMode === 'validator' && (
             <div className="bg-matte-black p-4 h-full overflow-y-auto">
               {validationResults.length === 0 ? (
-                <div className="text-gray-500 italic text-center py-8">
+                <div className="text-gray-600 text-center py-12">
                   No validation issues found.
                   <br />
                   <span className="text-xs">Code validation will appear here...</span>
@@ -803,7 +803,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
           {activeMode === 'preview' && (
             <div ref={outputRef} className="bg-matte-black p-4 h-full overflow-y-auto font-mono text-sm">
               {previewMessages.length === 0 ? (
-                <div className="text-gray-500 italic text-center py-8">
+                <div className="text-gray-600 text-center py-12">
                   Console output will appear here...
                   <br />
                   <span className="text-xs">Click Run or enable auto-run</span>
@@ -811,8 +811,8 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
               ) : (
                 <div className="space-y-1">
                   {previewMessages.map((msg) => (
-                    <div key={msg.id} className="flex items-start gap-2 py-1">
-                      <span className="text-gray-500 text-xs mt-0.5 flex-shrink-0">
+                    <div key={msg.id} className="flex items-start gap-2 py-1 border-b border-gray-800/50">
+                      <span className="text-[10px] font-mono tabular-nums text-gray-500 mt-0.5 flex-shrink-0">
                         {new Date(msg.timestamp).toLocaleTimeString()}
                       </span>
                       {getLogIcon(msg.type)}

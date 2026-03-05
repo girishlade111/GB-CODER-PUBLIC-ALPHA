@@ -16,9 +16,9 @@ const CopyToast: React.FC<CopyToastProps> = ({
     const Icon = type === 'success' ? Check : AlertCircle;
 
     return (
-        <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
+        <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
             <div
-                className={`${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[250px]`}
+                className={`${bgColor} text-white px-4 py-3 rounded-lg shadow-vscode-widget flex items-center gap-3 min-w-[250px]`}
             >
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 <span className="flex-1 font-medium text-sm">{message}</span>

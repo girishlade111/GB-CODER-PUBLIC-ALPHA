@@ -118,11 +118,11 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
 
     return (
         <div
-            className={`sticky top-14 sm:top-16 z-30 backdrop-blur-sm border-b transition-colors ${isDark ? 'bg-matte-black/95 border-gray-700' : 'bg-white/95 border-gray-200'
+            className={`sticky top-14 sm:top-16 z-30 backdrop-blur-sm border-b shadow-inner-subtle transition-colors ${isDark ? 'bg-matte-black/95 border-gray-700' : 'bg-white/95 border-gray-200'
                 }`}
         >
             <div className="w-full mx-auto px-3 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-                <div className="flex items-center justify-between h-12 sm:h-14 gap-2 sm:gap-4">
+                <div className="flex items-center justify-between h-11 sm:h-12 gap-2 sm:gap-4">
                     {/* Left: Project Name & Selector */}
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                         {/* Project Selector Dropdown */}
@@ -140,7 +140,7 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
 
                             {showDropdown && (
                                 <div
-                                    className={`absolute left-0 top-full mt-2 w-64 sm:w-80 rounded-lg shadow-lg border max-h-96 overflow-y-auto ${isDark ? 'bg-dark-gray border-gray-700' : 'bg-white border-gray-200'
+                                    className={`absolute left-0 top-full mt-2 w-64 sm:w-80 rounded-lg shadow-vscode-widget border max-h-96 overflow-y-auto animate-slide-down ${isDark ? 'bg-dark-gray border-gray-700' : 'bg-white border-gray-200'
                                         }`}
                                 >
                                     <div className="p-2">
@@ -176,8 +176,8 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
                                                     }}
                                                     className={`w-full px-3 py-2 text-left text-sm rounded-lg transition-colors ${project.id === currentProject.id
                                                             ? isDark
-                                                                ? 'bg-white text-black'
-                                                                : 'bg-black text-white'
+                                                                ? 'bg-white text-black border-l-2 border-vscode-statusbar'
+                                                                : 'bg-black text-white border-l-2 border-vscode-statusbar'
                                                             : isDark
                                                                 ? 'text-gray-300 hover:bg-gray-700'
                                                                 : 'text-gray-700 hover:bg-gray-100'
@@ -226,7 +226,7 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
                         ) : (
                             <button
                                 onClick={handleStartEdit}
-                                className={`px-2 py-1 text-sm sm:text-base font-semibold rounded transition-colors truncate ${isDark
+                                className={`px-2 py-1 text-sm sm:text-base font-semibold rounded transition-colors truncate hover:underline underline-offset-4 ${isDark
                                         ? 'text-bright-white hover:bg-gray-700'
                                         : 'text-gray-900 hover:bg-gray-100'
                                     }`}

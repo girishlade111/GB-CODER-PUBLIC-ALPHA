@@ -38,14 +38,14 @@ const SnippetsSidebar: React.FC<SnippetsSidebarProps> = ({
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+                className="fixed inset-0 bg-black/60 backdrop-blur-md z-40 transition-opacity"
                 onClick={onClose}
             />
 
             {/* Sidebar */}
-            <div className="fixed right-0 top-0 h-full w-full md:w-[400px] bg-matte-black border-l border-gray-800 shadow-2xl z-50 flex flex-col animate-slideIn">
+            <div className="fixed right-0 top-0 h-full w-full md:w-[400px] bg-matte-black border-l border-gray-800 shadow-vscode-modal z-50 flex flex-col animate-slideIn">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-matte-black">
+                <div className="flex items-center justify-between px-5 py-3 border-b border-gray-800 bg-matte-black">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-gray-800 rounded-lg">
                             <Sparkles className="w-5 h-5 text-white" />

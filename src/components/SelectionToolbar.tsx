@@ -63,7 +63,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
         <>
             {/* Main Toolbar */}
             <div
-                className={`fixed z-50 bg-dark-gray border rounded-lg shadow-2xl p-1.5 flex items-center gap-1.5 transition-all duration-300 ${isLoading ? 'border-purple-500 shadow-purple-500/20' : 'border-gray-600'
+                className={`fixed z-50 bg-dark-gray border rounded-lg shadow-vscode-toolbar p-1 flex items-center gap-1.5 transition-all duration-300 ${isLoading ? 'border-purple-500 shadow-purple-500/20' : 'border-gray-600'
                     }`}
                 style={{
                     top: `${position.top + 20}px`,
@@ -85,7 +85,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
                             key={op.type}
                             onClick={() => !isDisabled && onOperation(op.type)}
                             disabled={isDisabled}
-                            className={`relative p-2.5 rounded-md transition-all duration-200 ${isDisabled
+                            className={`relative p-2 rounded-md transition-all duration-200 ${isDisabled
                                     ? 'opacity-40 cursor-not-allowed'
                                     : `${op.color} hover:bg-gray-700`
                                 } ${isLoading && isCurrentOp ? 'bg-gray-700 ring-2 ring-purple-500' : ''}`}

@@ -96,7 +96,7 @@ const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({
   return (
     <div className="flex items-center gap-3">
       {/* Status Indicator */}
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm ${getStatusColor()}`}>
+      <div className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs ${getStatusColor()}`}>
         {getStatusIcon()}
         <span className="hidden sm:inline">{getStatusText()}</span>
       </div>
@@ -105,7 +105,7 @@ const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({
       <button
         onClick={onManualSave}
         disabled={isSaving}
-        className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors text-sm"
+        className="flex items-center gap-2 px-3 py-1.5 bg-vscode-statusbar hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors text-sm"
         title="Save manually"
       >
         <Save className="w-4 h-4" />

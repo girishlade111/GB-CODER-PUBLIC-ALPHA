@@ -575,7 +575,7 @@ function App() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setCurrentView('editor')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-vscode-statusbar hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Back to Editor
               </button>
@@ -634,7 +634,7 @@ function App() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setCurrentView('editor')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-vscode-statusbar hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Back to Editor
               </button>
@@ -694,7 +694,7 @@ function App() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setCurrentView('editor')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-vscode-statusbar hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Back to Editor
               </button>
@@ -752,7 +752,7 @@ function App() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setCurrentView('editor')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-vscode-statusbar hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Back to Editor
               </button>
@@ -785,7 +785,7 @@ function App() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setCurrentView('editor')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-vscode-statusbar hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Back to Editor
               </button>
@@ -818,7 +818,7 @@ function App() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setCurrentView('editor')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-vscode-statusbar hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Back to Editor
               </button>
@@ -851,7 +851,7 @@ function App() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setCurrentView('editor')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-vscode-statusbar hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Back to Editor
               </button>
@@ -884,7 +884,7 @@ function App() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setCurrentView('editor')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-vscode-statusbar hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Back to Editor
               </button>
@@ -919,10 +919,10 @@ function App() {
 
 
       {/* Main Content */}
-      <div className="flex-1 px-2 sm:px-4 lg:px-6 py-4">
-        <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`}>
+      <div className="flex-1 px-2 sm:px-3 lg:px-4 py-3">
+        <div className={`grid gap-2 lg:gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`}>
           {/* Left Panel - Editors */}
-          <div className="flex flex-col space-y-3 w-full min-h-0">
+          <div className="flex flex-col space-y-2 w-full min-h-0">
             <EditorPanel
               title="HTML"
               language="html"
