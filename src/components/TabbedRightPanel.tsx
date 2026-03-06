@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, forwardRef, useImperativeHandle, useRef } from 'react';
 import { Eye, Terminal } from 'lucide-react';
 import PreviewPanel from './PreviewPanel';
 import { ConsoleLog } from '../types';
@@ -25,7 +25,7 @@ interface TabbedRightPanelProps {
     onClearConsole: () => void;
 }
 
-const TabbedRightPanel: React.FC<TabbedRightPanelProps> = ({
+const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
     errorCount,
     // Preview props
     html,
@@ -37,8 +37,12 @@ const TabbedRightPanel: React.FC<TabbedRightPanelProps> = ({
     // Console props
     consoleLogs,
     onClearConsole,
-}) => {
+}, ref) => {
     const [activeTab, setActiveTab] = useState<TabType>('preview');
+    const internalRef = useRef<HTMLElement>(null);
+    
+    // Use the passed ref or internal ref
+    const previewRef = ref || internalRef;
 
     const tabs: { id: TabType; label: string; icon: React.ReactNode; badge?: number; badgeColor?: string }[] = [
         {
@@ -60,6 +64,7 @@ const TabbedRightPanel: React.FC<TabbedRightPanelProps> = ({
             case 'preview':
                 return (
                     <PreviewPanel
+                        ref={previewRef}
                         html={html}
                         css={css}
                         javascript={javascript}
@@ -135,6 +140,6 @@ const TabbedRightPanel: React.FC<TabbedRightPanelProps> = ({
             </div>
         </div>
     );
-};
+});
 
 export default React.memo(TabbedRightPanel);

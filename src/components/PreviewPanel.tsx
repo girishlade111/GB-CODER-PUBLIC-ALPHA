@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play } from 'lucide-react';
 import { ConsoleLog } from '../types';
 import { externalLibraryService } from '../services/externalLibraryService';
@@ -14,18 +14,24 @@ interface PreviewPanelProps {
   previewDelay?: number;
 }
 
-const PreviewPanel: React.FC<PreviewPanelProps> = ({
+const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   html,
   css,
   javascript,
   onConsoleLog,
   autoRunJS = true,
   previewDelay = 300,
-}) => {
+}, ref) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('desktop');
   const [manualRunTrigger, setManualRunTrigger] = useState(0);
+
+  // Expose the container div to parent components via ref
+  useImperativeHandle(ref, () => {
+    const container = document.getElementById('preview-container');
+    return container as HTMLDivElement;
+  });
 
   // Sanitize code input to prevent XSS attacks
   const sanitizeCode = (code: string, language: string): string => {
@@ -355,6 +361,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
           </div>
         )}
         <div
+          id="preview-container"
           className="transition-all duration-300 ease-in-out h-full"
           style={{
             width: getContainerWidth(),
@@ -404,6 +411,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
       )}
     </>
   );
-};
+});
 
 export default PreviewPanel;

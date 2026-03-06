@@ -23,6 +23,18 @@
 
 ## 🌟 Key Features
 
+### 🆕 **New Features (2026)**
+*   **💬 AI Chat Assistant**: Context-aware AI conversations about your code with Google Gemini
+*   **📸 Export & Share**: Screenshot capture, ZIP export, shareable URLs, CodePen/JSFiddle export
+*   **🎤 Voice Commands**: 10+ hands-free voice commands for coding (Chrome/Edge)
+*   **📐 Code Templates**: 6 pre-built templates (navbar, hero, cards, forms, animations)
+*   **📊 Code Statistics**: Real-time analytics with visual charts and complexity analysis
+*   **✅ Code Validation**: Real-time linting with 30+ rules and quality scoring
+*   **🎨 Custom Injection**: Add custom CSS/JS with 14 preset injections
+*   **🌓 Auto Theme Sync**: Automatic system theme synchronization
+*   **🔍 AI Debugging**: Integrated debugging assistance via AI Chat
+*   **🍞 Toast Notifications**: Enhanced UX with instant feedback notifications
+
 ### 🤖 **AI Intelligence & Assistance**
 *   **Smart Suggestions**: Context-aware code completions and recommendations powered by Google Gemini Pro.
 *   **Code Explanation**: Instant, detailed explanations for selected code blocks to aid learning and debugging.
@@ -47,12 +59,13 @@
 
 | Metric | Count | Details |
 | :--- | :---: | :--- |
-| **Components** | ~50 | UI & Feature Components (`.tsx`) |
-| **Logic Files** | ~48 | Hooks, Services, & Utils (`.ts`) |
-| **Dependencies** | 14 | Key production libraries |
+| **Components** | ~57 | UI & Feature Components (`.tsx`) |
+| **Logic Files** | ~55 | Hooks, Services, & Utils (`.ts`) |
+| **Dependencies** | 18 | Key production libraries |
 | **Dev Dependencies** | 17 | Build & tooling libraries |
 | **Styles** | Tailwind | Utility-first CSS architecture |
 | **State Management** | React Hooks | Custom hooks for complex state |
+| **New Features 2026** | 10 | Enhanced functionality |
 
 ---
 
@@ -70,8 +83,15 @@
 *   **Animations**: CSS Transitions & Custom Animations.
 
 ### **AI & Services**
-*   **AI Model**: Google Generative AI (`@google/generative-ai`) - Gemini Pro.
+*   **AI Model**: Google Generative AI (`@google/generative-ai`) - Gemini Pro for chat and code assistance.
+*   **Screenshot**: `html-to-image` - High-quality preview screenshots.
+*   **Notifications**: `react-hot-toast` - Toast notifications for user feedback.
 *   **Analytics**: `web-vitals`, `react-ga4` - Performance and usage tracking.
+
+### **New Libraries (2026)**
+*   **Voice Recognition**: Built-in Web Speech API - Hands-free voice commands.
+*   **Code Export**: `jszip` - ZIP file generation for project export.
+*   **Utilities**: `uuid` - Unique ID generation.
 
 ---
 
@@ -110,13 +130,15 @@ cp .env.example .env
 | :--- | :--- |
 | `VITE_GEMINI_API_KEY` | **Required**. Your Google Gemini API Key. Get it from [Google AI Studio](https://aistudio.google.com/app/apikey). |
 
-**Optional Flags:**
+**Optional Variables:**
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | `VITE_ENABLE_AI_SUGGESTIONS` | `true` | Toggle AI features. |
 | `VITE_ENABLE_EXTERNAL_LIBRARIES` | `true` | Toggle library manager. |
 | `VITE_DEV_PORT` | `5173` | Custom development port. |
+
+> 💡 **Note**: For AI Chat Assistant to work, you must set `VITE_GEMINI_API_KEY` in your `.env` file.
 
 ### **Running the Project**
 
@@ -159,6 +181,70 @@ GB-Coder-Public-Beta/
 ├── tsconfig.json          # TypeScript Configuration
 └── vite.config.ts         # Vite Configuration
 ```
+
+---
+
+## 🆕 New Features (2026)
+
+GB Coder has been enhanced with **10 powerful new features** to supercharge your coding experience:
+
+### 💬 AI Chat Assistant
+Chat with AI about your code in real-time. Get explanations, debugging help, and code generation.
+- **Button**: 💬 MessageSquare icon in navbar
+- **Requires**: `VITE_GEMINI_API_KEY` in `.env`
+- **Docs**: [FEATURES_SUMMARY.md](FEATURES_SUMMARY.md)
+
+### 📸 Export & Share
+Capture screenshots, export projects, and share your code with others.
+- **Formats**: PNG, JPEG, SVG, HTML, ZIP
+- **Share**: Generate shareable URLs, export to CodePen/JSFiddle
+- **Button**: 📸 Camera icon in navbar
+
+### 🎤 Voice Commands
+Control the editor with your voice using 10+ hands-free commands.
+- **Commands**: "Run code", "Clear console", "Format code", etc.
+- **Browser**: Chrome/Edge only (Web Speech API)
+- **Button**: 🎤 Mic icon in navbar
+
+### 📐 Code Templates
+Jumpstart your projects with 6 pre-built, production-ready templates.
+- **Templates**: Navbar, Hero, Cards, Forms, Animations, Utilities
+- **Features**: Search, filter, one-click load
+- **Button**: 📐 LayoutTemplate icon in navbar
+
+### 📊 Code Statistics
+Get real-time analytics and insights about your code.
+- **Metrics**: Lines, characters, patterns, complexity
+- **Visuals**: Charts, progress bars, breakdowns
+- **Button**: 📊 BarChart3 icon in navbar
+
+### ✅ Code Validation
+Catch errors and improve code quality with real-time linting.
+- **Rules**: 30+ validation rules for HTML, CSS, JS
+- **Score**: Quality score (0-100)
+- **Button**: ✅ CheckCircle icon in navbar
+
+### 🎨 Custom Injection
+Add custom CSS/JS to your preview with 14 preset injections.
+- **Presets**: Animations, debug tools, accessibility
+- **Custom**: Create and save your own injections
+- **Button**: ⚡ Zap icon in navbar
+
+### 🌓 Auto Theme Sync
+Automatically sync with your system's theme preference.
+- **Modes**: Light, Dark, System
+- **Button**: Built into settings
+
+### 🔍 AI Debugging
+Get intelligent debugging assistance through AI Chat.
+- **Features**: Error analysis, bug fixes, best practices
+- **Access**: Via AI Chat Assistant
+
+### 🍞 Toast Notifications
+Enhanced UX with instant feedback for all actions.
+- **Position**: Top-right corner
+- **Types**: Success, Error, Info
+- **Auto-dismiss**: 3 seconds
 
 ---
 

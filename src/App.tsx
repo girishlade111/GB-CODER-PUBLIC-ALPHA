@@ -1,11 +1,22 @@
 import React, { useState, useCallback, useEffect, Suspense, lazy } from 'react';
-import { Code2 } from 'lucide-react';
+import { Code2, MessageSquare, Mic, LayoutTemplate, BarChart3, CheckCircle, Zap } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
 import EditorPanel from './components/EditorPanel';
 import TabbedRightPanel from './components/TabbedRightPanel';
 import SaveStatusIndicator from './components/ui/SaveStatusIndicator';
 import Footer from './components/ui/Footer';
+
+// ===== NEW FEATURES IMPORTS =====
+import { Toaster } from 'react-hot-toast';
+import AIChatAssistant from './components/AIChatAssistant';
+import ExportShareMenu from './components/ExportShareMenu';
+import VoiceCommandPanel from './components/VoiceCommandPanel';
+import TemplateSelectorModal from './components/TemplateSelectorModal';
+import CodeStatsDashboard from './components/CodeStatsDashboard';
+import ValidationPanel from './components/ValidationPanel';
+import CustomInjectionManager from './components/CustomInjectionManager';
+import { CodeTemplate } from './services/codeTemplatesService';
 
 // Phase 2: High priority - lazy loaded after initial render
 const EnhancedConsole = lazy(() => import('./components/EnhancedConsole'));
@@ -79,6 +90,16 @@ function App() {
   const [showExtensionsMarketplace, setShowExtensionsMarketplace] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState<boolean>(false);
+
+  // ===== NEW FEATURES STATE =====
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [showVoiceCommands, setShowVoiceCommands] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+  const [showInjectionManager, setShowInjectionManager] = useState(false);
+  const [customInjectionCode, setCustomInjectionCode] = useState({ css: '', js: '' });
+  const previewRef = React.useRef<HTMLElement>(null);
 
   // Settings
   const { settings, updateSettings, getFontFamilyCSS } = useSettings();
@@ -249,6 +270,36 @@ function App() {
       }
     }
   }, [project.currentProject?.id]);
+
+  // ===== VOICE COMMAND HANDLER =====
+  useEffect(() => {
+    const handleVoiceCommand = (event: CustomEvent) => {
+      const { action, param } = event.detail;
+      
+      switch (action) {
+        case 'run':
+          handleCommand('run');
+          break;
+        case 'clear_console':
+          clearConsoleLogs();
+          break;
+        case 'format':
+          handleFormatHtml();
+          handleFormatCss();
+          handleFormatJavascript();
+          break;
+        case 'download':
+          downloadAsZip(html, css, javascript);
+          break;
+        case 'help':
+          setShowVoiceCommands(true);
+          break;
+      }
+    };
+
+    window.addEventListener('voice-command', handleVoiceCommand as EventListener);
+    return () => window.removeEventListener('voice-command', handleVoiceCommand as EventListener);
+  }, [html, css, javascript]);
 
   // External Library Manager handlers
   const handleExternalLibraryManagerToggle = () => {
@@ -515,6 +566,18 @@ function App() {
       setFormatLoadingStates(prev => ({ ...prev, javascript: false }));
     }
   };
+
+  // ===== NEW FEATURES HANDLERS =====
+  const handleLoadTemplate = useCallback((template: CodeTemplate) => {
+    codeHistory.saveState({ html, css, javascript }, `Loaded template: ${template.name}`);
+    setHtml(template.html);
+    setCss(template.css);
+    setJavascript(template.javascript);
+  }, [html, css, javascript]);
+
+  const handleUpdateInjections = useCallback((css: string, js: string) => {
+    setCustomInjectionCode({ css, js });
+  }, []);
 
   // Selection Operation Handlers
   const handleSelectionChange = useCallback((editor: any, language: EditorLanguage) => {
@@ -945,6 +1008,84 @@ function App() {
         onSettingsToggle={handleSettingsToggle}
         onClear={handleClearAll}
         autoSaveEnabled={autoSaveEnabled}
+        customActions={
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* AI Chat */}
+            <button
+              onClick={() => setShowAIChat(true)}
+              className={`p-2 rounded-lg transition-colors hidden sm:block ${
+                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+              }`}
+              title="AI Chat Assistant"
+            >
+              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Voice Commands */}
+            <button
+              onClick={() => setShowVoiceCommands(true)}
+              className={`p-2 rounded-lg transition-colors hidden sm:block ${
+                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+              }`}
+              title="Voice Commands"
+            >
+              <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Templates */}
+            <button
+              onClick={() => setShowTemplates(true)}
+              className={`p-2 rounded-lg transition-colors hidden sm:block ${
+                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+              }`}
+              title="Code Templates"
+            >
+              <LayoutTemplate className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Statistics */}
+            <button
+              onClick={() => setShowStats(true)}
+              className={`p-2 rounded-lg transition-colors hidden sm:block ${
+                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+              }`}
+              title="Code Statistics"
+            >
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Validation */}
+            <button
+              onClick={() => setShowValidation(true)}
+              className={`p-2 rounded-lg transition-colors hidden sm:block ${
+                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+              }`}
+              title="Code Validation"
+            >
+              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Custom Injection */}
+            <button
+              onClick={() => setShowInjectionManager(true)}
+              className={`p-2 rounded-lg transition-colors hidden sm:block ${
+                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+              }`}
+              title="Custom Code Injection"
+            >
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Export/Share Menu */}
+            <ExportShareMenu
+              previewRef={previewRef}
+              html={html}
+              css={css}
+              javascript={javascript}
+              externalLibraries={externalLibraries}
+            />
+          </div>
+        }
       />
 
 
@@ -1000,11 +1141,12 @@ function App() {
           {/* Right Panel - Tabbed Interface for Preview, Console, and AI Suggestions */}
           <div className="flex flex-col w-full h-full min-h-0">
             <TabbedRightPanel
+              ref={previewRef}
               errorCount={consoleLogs.filter(log => log.type === 'error').length}
               // Preview props
               html={html}
-              css={css}
-              javascript={javascript}
+              css={css + (customInjectionCode.css ? '\n\n/* Custom Injections */\n' + customInjectionCode.css : '')}
+              javascript={javascript + (customInjectionCode.js ? '\n\n// Custom Injections\n' + customInjectionCode.js : '')}
               onConsoleLog={handleConsoleLog}
               autoRunJS={settings.autoRunJS}
               previewDelay={settings.previewDelay}
@@ -1092,6 +1234,71 @@ function App() {
           />
         </Suspense>
       )}
+
+      {/* ===== NEW FEATURES MODALS ===== */}
+      
+      {/* AI Chat Assistant */}
+      <AIChatAssistant
+        isOpen={showAIChat}
+        onClose={() => setShowAIChat(false)}
+        html={html}
+        css={css}
+        javascript={javascript}
+        externalLibraries={externalLibraries}
+      />
+
+      {/* Voice Command Panel */}
+      <VoiceCommandPanel
+        isOpen={showVoiceCommands}
+        onClose={() => setShowVoiceCommands(false)}
+      />
+
+      {/* Template Selector */}
+      <TemplateSelectorModal
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        onLoadTemplate={handleLoadTemplate}
+      />
+
+      {/* Code Statistics Dashboard */}
+      <CodeStatsDashboard
+        html={html}
+        css={css}
+        javascript={javascript}
+        isOpen={showStats}
+        onClose={() => setShowStats(false)}
+      />
+
+      {/* Validation Panel */}
+      <ValidationPanel
+        html={html}
+        css={css}
+        javascript={javascript}
+        isOpen={showValidation}
+        onClose={() => setShowValidation(false)}
+      />
+
+      {/* Custom Injection Manager */}
+      <CustomInjectionManager
+        isOpen={showInjectionManager}
+        onClose={() => setShowInjectionManager(false)}
+        onUpdateInjections={handleUpdateInjections}
+      />
+
+      {/* Toast Notifications */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: isDark ? '#1a1a1a' : '#fff',
+            color: isDark ? '#fff' : '#000',
+            border: `1px solid ${isDark ? '#333' : '#eee'}`,
+          },
+          success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
+          error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+        }}
+      />
 
       {/* Selection Toolbar - Appears when code is selected */}
       {hasSelection && selection.position && (
