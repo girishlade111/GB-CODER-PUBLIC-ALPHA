@@ -95,13 +95,22 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
         version: '1.0.0',
       });
 
+      // Copy URL to clipboard
       const success = shareExportService.copyToClipboard(url);
+      
       if (success) {
         toast.success('Shareable URL copied to clipboard!');
         setCopiedItem('url');
         setTimeout(() => setCopiedItem(null), 2000);
       } else {
-        toast.error('Failed to copy URL');
+        // If copy fails, show the URL in a prompt for manual copying
+        const userConfirmed = window.confirm(
+          'Unable to copy URL automatically. Click OK to copy manually, or Cancel to close.',
+        );
+        if (userConfirmed) {
+          navigator.clipboard.writeText(url);
+          toast.success('URL copied!');
+        }
       }
     } catch (error: any) {
       console.error('Share URL error:', error);
