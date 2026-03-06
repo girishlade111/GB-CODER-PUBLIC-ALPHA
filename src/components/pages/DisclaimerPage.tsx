@@ -11,15 +11,18 @@ const DisclaimerPage: React.FC = () => {
     }, []);
 
     return (
-        <div className={`min-h-screen transition-colors ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
-            }`}>
+        <div className={`min-h-screen transition-colors ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-50'}`}>
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {/* Header */}
                 <div className="text-center mb-12">
                     <div className="flex justify-center mb-4">
-                        <AlertTriangle className={`w-16 h-16 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`} />
+                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                            <AlertTriangle className={`w-12 h-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                        </div>
                     </div>
-                    <h1 className="text-4xl font-bold mb-4">Disclaimer</h1>
+                    <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        Disclaimer
+                    </h1>
                     <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         Important information about using GB Coder
                     </p>
@@ -29,11 +32,10 @@ const DisclaimerPage: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <div className={`rounded-lg shadow-lg p-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-                    }`}>
+                <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                     {/* General Disclaimer */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">General Disclaimer</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>General Disclaimer</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder is provided "as is" for educational and development purposes. The information and tools provided on this platform are offered without any warranties of any kind, either express or implied.
                         </p>
@@ -44,20 +46,19 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* AI-Generated Code Disclaimer */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                            <Code className="w-6 h-6" />
+                        <h2 className={`text-2xl font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <Code className="w-6 h-6 text-gray-400" />
                             AI-Generated Code Disclaimer
                         </h2>
 
-                        <div className={`p-4 mb-4 rounded-lg border-l-4 border-yellow-500 ${isDark ? 'bg-yellow-900 bg-opacity-20' : 'bg-yellow-50'
-                            }`}>
-                            <p className="font-semibold mb-2">⚠️ Important Notice About AI Features</p>
+                        <div className={`p-4 mb-4 rounded-lg border-l-4 ${isDark ? 'bg-gray-700 border-gray-500' : 'bg-gray-100 border-gray-400'}`}>
+                            <p className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>⚠️ Important Notice About AI Features</p>
                             <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                 AI-powered features use Google Gemini AI and may produce code that is incorrect, insecure, or suboptimal.
                             </p>
                         </div>
 
-                        <h3 className="text-xl font-semibold mb-3 mt-4">AI Limitations:</h3>
+                        <h3 className={`text-xl font-semibold mb-3 mt-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>AI Limitations:</h3>
                         <ul className={`list-disc pl-6 mb-4 space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             <li><strong>Accuracy:</strong> AI suggestions may contain errors, bugs, or logical flaws</li>
                             <li><strong>Security:</strong> AI-generated code may have security vulnerabilities</li>
@@ -67,7 +68,7 @@ const DisclaimerPage: React.FC = () => {
                             <li><strong>License:</strong> AI may suggest code with licensing conflicts</li>
                         </ul>
 
-                        <h3 className="text-xl font-semibold mb-3 mt-4">Your Responsibility:</h3>
+                        <h3 className={`text-xl font-semibold mb-3 mt-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Your Responsibility:</h3>
                         <ul className={`list-disc pl-6 mb-4 space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             <li>Review and understand all AI-generated code before using it</li>
                             <li>Test thoroughly before deploying to production</li>
@@ -79,7 +80,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* No Warranty Disclaimer */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">No Warranty</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>No Warranty</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder makes no warranties or representations about:
                         </p>
@@ -94,8 +95,8 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* External Libraries Disclaimer */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                            <ExternalLink className="w-6 h-6" />
+                        <h2 className={`text-2xl font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <ExternalLink className="w-6 h-6 text-gray-400" />
                             External Libraries Disclaimer
                         </h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -113,8 +114,8 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Data Loss Disclaimer */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                            <Shield className="w-6 h-6" />
+                        <h2 className={`text-2xl font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <Shield className="w-6 h-6 text-gray-400" />
                             Data Loss Disclaimer
                         </h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -126,14 +127,14 @@ const DisclaimerPage: React.FC = () => {
                             <li><strong>Browser-Specific:</strong> Data is not synced across browsers or devices</li>
                             <li><strong>No Recovery:</strong> Once deleted, data cannot be recovered</li>
                         </ul>
-                        <p className={`mt-4 font-semibold ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                        <p className={`mt-4 font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             ⚠️ Always export important projects using the download feature!
                         </p>
                     </section>
 
                     {/* Service Availability Disclaimer */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">Service Availability</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Service Availability</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder is a free service and we make no guarantees about:
                         </p>
@@ -147,7 +148,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Educational Purpose */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">Educational Purpose</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Educational Purpose</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder is designed primarily for:
                         </p>
@@ -164,7 +165,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Third-Party Services */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">Third-Party Services</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Third-Party Services</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder integrates with third-party services:
                         </p>
@@ -180,7 +181,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Limitation of Liability */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">Limitation of Liability</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Limitation of Liability</h2>
                         <p className={`mb-4 font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder and its creator shall not be liable for:
                         </p>
@@ -196,7 +197,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* User Responsibility */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">Your Responsibility</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Your Responsibility</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             As a user of GB Coder, you are solely responsible for:
                         </p>
@@ -212,7 +213,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Updates to Disclaimer */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">Updates to This Disclaimer</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Updates to This Disclaimer</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             This disclaimer may be updated from time to time. Continued use of GB Coder after changes constitutes acceptance of the updated disclaimer.
                         </p>
@@ -220,12 +221,12 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Contact */}
                     <section>
-                        <h2 className="text-2xl font-semibold mb-4">Questions?</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Questions?</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             If you have questions about this disclaimer:
                         </p>
                         <ul className={`list-none space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                            <li><strong>Email:</strong> <a href="mailto:girishlade111@gmail.com" className="text-blue-500 hover:underline">girishlade111@gmail.com</a></li>
+                            <li><strong>Email:</strong> <a href="mailto:girishlade111@gmail.com" className="underline hover:text-gray-400">girishlade111@gmail.com</a></li>
                         </ul>
                     </section>
                 </div>

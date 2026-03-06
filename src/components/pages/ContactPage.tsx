@@ -49,12 +49,10 @@ const ContactPage: React.FC = () => {
             return;
         }
 
-        // Simulate form submission (client-side only)
         console.log('Form submitted:', formData);
         setFormStatus('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
 
-        // Reset success message after 5 seconds
         setTimeout(() => setFormStatus('idle'), 5000);
     };
 
@@ -63,13 +61,15 @@ const ContactPage: React.FC = () => {
     };
 
     return (
-        <div className={`min-h-screen transition-colors ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+        <div className={`min-h-screen transition-colors ${isDark ? 'bg-[#1e1e1e] text-gray-100' : 'bg-gray-50 text-gray-900'
             }`}>
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {/* Header */}
                 <div className="text-center mb-12">
                     <div className="flex justify-center mb-4">
-                        <Mail className={`w-16 h-16 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                            <Mail className={`w-12 h-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                        </div>
                     </div>
                     <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
                     <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -79,14 +79,16 @@ const ContactPage: React.FC = () => {
 
                 <div className="grid md:grid-cols-2 gap-8">
                     {/* Contact Form */}
-                    <div className={`rounded-lg shadow-lg p-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                    <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                         }`}>
                         <h2 className="text-2xl font-semibold mb-6">Send us a Message</h2>
 
                         {formStatus === 'success' && (
-                            <div className="mb-6 p-4 bg-green-500 bg-opacity-10 border border-green-500 rounded-lg flex items-center gap-2">
-                                <CheckCircle className="w-5 h-5 text-green-500" />
-                                <p className="text-green-500">
+                            <div className={`mb-6 p-4 rounded-lg border flex items-center gap-2 ${
+                                isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                            }`}>
+                                <CheckCircle className="w-5 h-5 text-gray-500" />
+                                <p className="text-gray-500">
                                     Thank you! Your message has been recorded. We'll get back to you soon.
                                 </p>
                             </div>
@@ -106,12 +108,12 @@ const ContactPage: React.FC = () => {
                                     value={formData.name}
                                     onChange={handleChange}
                                     className={`w-full px-4 py-2 rounded-lg border transition-colors ${isDark
-                                            ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                                            : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
-                                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
+                                            ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
+                                            : 'bg-white border-gray-300 text-gray-900 focus:border-gray-400'
+                                        } focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-20`}
                                     placeholder="Your name"
                                 />
-                                {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+                                {errors.name && <p className="mt-1 text-sm text-gray-500">{errors.name}</p>}
                             </div>
 
                             {/* Email */}
@@ -127,12 +129,12 @@ const ContactPage: React.FC = () => {
                                     value={formData.email}
                                     onChange={handleChange}
                                     className={`w-full px-4 py-2 rounded-lg border transition-colors ${isDark
-                                            ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                                            : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
-                                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
+                                            ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
+                                            : 'bg-white border-gray-300 text-gray-900 focus:border-gray-400'
+                                        } focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-20`}
                                     placeholder="your.email@example.com"
                                 />
-                                {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+                                {errors.email && <p className="mt-1 text-sm text-gray-500">{errors.email}</p>}
                             </div>
 
                             {/* Subject */}
@@ -148,12 +150,12 @@ const ContactPage: React.FC = () => {
                                     value={formData.subject}
                                     onChange={handleChange}
                                     className={`w-full px-4 py-2 rounded-lg border transition-colors ${isDark
-                                            ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                                            : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
-                                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
+                                            ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
+                                            : 'bg-white border-gray-300 text-gray-900 focus:border-gray-400'
+                                        } focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-20`}
                                     placeholder="What is this about?"
                                 />
-                                {errors.subject && <p className="mt-1 text-sm text-red-500">{errors.subject}</p>}
+                                {errors.subject && <p className="mt-1 text-sm text-gray-500">{errors.subject}</p>}
                             </div>
 
                             {/* Message */}
@@ -169,18 +171,22 @@ const ContactPage: React.FC = () => {
                                     onChange={handleChange}
                                     rows={5}
                                     className={`w-full px-4 py-2 rounded-lg border transition-colors resize-none ${isDark
-                                            ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500'
-                                            : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
-                                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
+                                            ? 'bg-gray-700 border-gray-600 text-white focus:border-gray-500'
+                                            : 'bg-white border-gray-300 text-gray-900 focus:border-gray-400'
+                                        } focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-20`}
                                     placeholder="Your message..."
                                 />
-                                {errors.message && <p className="mt-1 text-sm text-red-500">{errors.message}</p>}
+                                {errors.message && <p className="mt-1 text-sm text-gray-500">{errors.message}</p>}
                             </div>
 
                             {/* Submit Button */}
                             <button
                                 type="submit"
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                                className={`w-full font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                                    isDark
+                                        ? 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+                                        : 'bg-gray-900 hover:bg-gray-800 text-white'
+                                }`}
                             >
                                 <Send className="w-5 h-5" />
                                 Send Message
@@ -195,26 +201,28 @@ const ContactPage: React.FC = () => {
                     {/* Contact Information */}
                     <div className="space-y-6">
                         {/* Direct Contact */}
-                        <div className={`rounded-lg shadow-lg p-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                        <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                             }`}>
                             <h2 className="text-2xl font-semibold mb-6">Get in Touch</h2>
 
                             <div className="space-y-4">
                                 {/* Email */}
                                 <div className="flex items-start gap-4">
-                                    <Mail className={`w-6 h-6 mt-1 flex-shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                                    <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                                        <Mail className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                                    </div>
                                     <div className="flex-1">
                                         <p className="font-semibold mb-1">Email</p>
                                         <div className="flex items-center gap-2">
                                             <a
                                                 href="mailto:girishlade111@gmail.com"
-                                                className="text-blue-500 hover:underline"
+                                                className={`hover:underline ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
                                             >
                                                 girishlade111@gmail.com
                                             </a>
                                             <button
                                                 onClick={copyEmail}
-                                                className={`p-1 rounded hover:bg-gray-700 transition-colors`}
+                                                className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
                                                 title="Copy email"
                                             >
                                                 <Copy className="w-4 h-4" />
@@ -225,7 +233,9 @@ const ContactPage: React.FC = () => {
 
                                 {/* Location */}
                                 <div className="flex items-start gap-4">
-                                    <MapPin className={`w-6 h-6 mt-1 flex-shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                                    <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                                        <MapPin className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                                    </div>
                                     <div>
                                         <p className="font-semibold mb-1">Location</p>
                                         <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>Mumbai, India</p>
@@ -235,7 +245,7 @@ const ContactPage: React.FC = () => {
                         </div>
 
                         {/* Social Media */}
-                        <div className={`rounded-lg shadow-lg p-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                        <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                             }`}>
                             <h2 className="text-2xl font-semibold mb-6">Connect With Us</h2>
 
@@ -249,7 +259,7 @@ const ContactPage: React.FC = () => {
                                             : 'bg-gray-100 hover:bg-gray-200'
                                         }`}
                                 >
-                                    <Instagram className="w-6 h-6 text-pink-500" />
+                                    <Instagram className="w-5 h-5" />
                                     <span className="font-medium">Instagram</span>
                                 </a>
 
@@ -262,7 +272,7 @@ const ContactPage: React.FC = () => {
                                             : 'bg-gray-100 hover:bg-gray-200'
                                         }`}
                                 >
-                                    <Linkedin className="w-6 h-6 text-blue-600" />
+                                    <Linkedin className="w-5 h-5" />
                                     <span className="font-medium">LinkedIn</span>
                                 </a>
 
@@ -275,7 +285,7 @@ const ContactPage: React.FC = () => {
                                             : 'bg-gray-100 hover:bg-gray-200'
                                         }`}
                                 >
-                                    <Github className="w-6 h-6" />
+                                    <Github className="w-5 h-5" />
                                     <span className="font-medium">GitHub</span>
                                 </a>
 
@@ -288,17 +298,17 @@ const ContactPage: React.FC = () => {
                                             : 'bg-gray-100 hover:bg-gray-200'
                                         }`}
                                 >
-                                    <Codepen className="w-6 h-6" />
+                                    <Codepen className="w-5 h-5" />
                                     <span className="font-medium">CodePen</span>
                                 </a>
                             </div>
                         </div>
 
                         {/* Creator Info */}
-                        <div className={`rounded-lg shadow-lg p-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                        <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                             }`}>
                             <h2 className="text-2xl font-semibold mb-4">About the Creator</h2>
-                            <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                            <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
                                 GB Coder is created and maintained by <strong>Girish Lade</strong>, a passionate developer from Mumbai, India. Feel free to reach out for questions, feedback, or collaboration opportunities!
                             </p>
                         </div>

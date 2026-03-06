@@ -11,29 +11,28 @@ const PrivacyPolicyPage: React.FC = () => {
   }, []);
 
   return (
-    <div className={`min-h-screen transition-colors ${
-      isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
-    }`}>
+    <div className={`min-h-screen transition-colors ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-50'}`}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-4">
-            <Shield className={`w-16 h-16 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+            <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+              <Shield className={`w-12 h-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+            </div>
           </div>
-          <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
+          <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Privacy Policy
+          </h1>
           <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
             Last updated: November 20, 2024
           </p>
         </div>
 
         {/* Content */}
-        <div className={`rounded-lg shadow-lg p-8 ${
-          isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-        }`}>
+        <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           {/* Introduction */}
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-              <Globe className="w-6 h-6" />
+            <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Introduction
             </h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -46,12 +45,12 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Information We Collect */}
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-              <Database className="w-6 h-6" />
+            <h2 className={`text-2xl font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <Database className="w-6 h-6 text-gray-400" />
               Information We Collect
             </h2>
-            
-            <h3 className="text-xl font-semibold mb-3 mt-6">1. Information Stored Locally</h3>
+
+            <h3 className={`text-xl font-semibold mb-3 mt-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>1. Information Stored Locally</h3>
             <p className={`mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               GB Coder stores the following data locally in your browser using LocalStorage:
             </p>
@@ -66,7 +65,7 @@ const PrivacyPolicyPage: React.FC = () => {
               <strong>Important:</strong> This data is stored <strong>only on your device</strong> and is never transmitted to our servers or any third party.
             </p>
 
-            <h3 className="text-xl font-semibold mb-3 mt-6">2. Google Gemini AI API</h3>
+            <h3 className={`text-xl font-semibold mb-3 mt-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>2. Google Gemini AI API</h3>
             <p className={`mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               When you use AI features (code enhancement, suggestions, chat assistant), your code is sent to Google's Gemini AI API for processing. This includes:
             </p>
@@ -75,10 +74,10 @@ const PrivacyPolicyPage: React.FC = () => {
               <li>Chat messages sent to the AI assistant</li>
             </ul>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              This data is processed according to <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Google's Privacy Policy</a>. We use your own API key for AI features, which means the data is associated with your Google account, not ours.
+              This data is processed according to <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-400">Google's Privacy Policy</a>. We use your own API key for AI features, which means the data is associated with your Google account, not ours.
             </p>
 
-            <h3 className="text-xl font-semibold mb-3 mt-6">3. External Libraries (CDN)</h3>
+            <h3 className={`text-xl font-semibold mb-3 mt-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>3. External Libraries (CDN)</h3>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               When you add external libraries (Bootstrap, jQuery, etc.), these are loaded from third-party CDNs (jsDelivr, unpkg, cdnjs). These CDN providers may collect standard web analytics data such as IP addresses and usage statistics.
             </p>
@@ -86,8 +85,8 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* How We Use Your Information */}
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-              <Lock className="w-6 h-6" />
+            <h2 className={`text-2xl font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <Lock className="w-6 h-6 text-gray-400" />
               How We Use Your Information
             </h2>
             <p className={`mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -114,7 +113,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Data Storage and Security */}
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Data Storage and Security</h2>
+            <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Data Storage and Security</h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               All your code and preferences are stored locally in your browser's LocalStorage. This means:
             </p>
@@ -128,7 +127,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Your Rights and Choices */}
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Your Rights and Choices</h2>
+            <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Your Rights and Choices</h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               You have complete control over your data:
             </p>
@@ -142,12 +141,12 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Third-Party Services */}
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Third-Party Services</h2>
+            <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Third-Party Services</h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               GB Coder integrates with the following third-party services:
             </p>
             <ul className={`list-disc pl-6 mb-4 space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              <li><strong>Google Gemini AI:</strong> For AI-powered code assistance (privacy policy: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Google Privacy</a>)</li>
+              <li><strong>Google Gemini AI:</strong> For AI-powered code assistance (privacy policy: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-400">Google Privacy</a>)</li>
               <li><strong>CDN Providers:</strong> jsDelivr, unpkg, cdnjs for external libraries</li>
               <li><strong>Monaco Editor:</strong> Microsoft's open-source code editor component</li>
             </ul>
@@ -155,7 +154,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Children's Privacy */}
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Children's Privacy</h2>
+            <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Children's Privacy</h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               GB Coder is suitable for users of all ages. We do not knowingly collect personal information from children. Since we don't require registration and only use local storage, there is no collection of personally identifiable information.
             </p>
@@ -163,7 +162,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Changes to This Policy */}
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Changes to This Privacy Policy</h2>
+            <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Changes to This Privacy Policy</h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date.
             </p>
@@ -171,15 +170,15 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Contact Us */}
           <section>
-            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-              <Mail className="w-6 h-6" />
+            <h2 className={`text-2xl font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <Mail className="w-6 h-6 text-gray-400" />
               Contact Us
             </h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               If you have any questions about this Privacy Policy, please contact us:
             </p>
             <ul className={`list-none space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              <li><strong>Email:</strong> <a href="mailto:girishlade111@gmail.com" className="text-blue-500 hover:underline">girishlade111@gmail.com</a></li>
+              <li><strong>Email:</strong> <a href="mailto:girishlade111@gmail.com" className="underline hover:text-gray-400">girishlade111@gmail.com</a></li>
               <li><strong>Creator:</strong> Girish Lade</li>
               <li><strong>Location:</strong> Mumbai, India</li>
             </ul>

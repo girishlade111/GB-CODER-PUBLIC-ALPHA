@@ -25,7 +25,7 @@ const DocumentationPage: React.FC = () => {
     };
 
     return (
-        <div className={`min-h-screen transition-colors ${isDark ? 'bg-matte-black text-bright-white' : 'bg-bright-white text-matte-black'}`}>
+        <div className={`min-h-screen transition-colors ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-50'}`}>
             {/* SEO Meta */}
             <div style={{ display: 'none' }}>
                 <script type="application/ld+json">
@@ -43,31 +43,31 @@ const DocumentationPage: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
                 <div className="mb-12 text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                    <h1 className={`text-4xl md:text-5xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         GB Coder Documentation
                     </h1>
-                    <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                    <p className={`text-xl ${isDark ? 'text-gray-400' : 'text-gray-600'} max-w-3xl mx-auto`}>
                         Complete guide to all features, tools, and capabilities of the AI-powered code playground
                     </p>
                 </div>
 
                 {/* Search */}
-                <div className={`max-w-2xl mx-auto mb-12 relative ${isDark ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg`}>
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <div className={`max-w-2xl mx-auto mb-12 relative ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
                     <input
                         type="text"
                         placeholder="Search documentation..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className={`w-full pl-12 pr-4 py-3 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-black'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        className={`w-full pl-12 pr-4 py-3 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'} focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent`}
                     />
                 </div>
 
                 <div className="flex gap-8">
                     {/* Sidebar TOC */}
                     <aside className="hidden lg:block w-64 flex-shrink-0">
-                        <div className={`sticky top-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border rounded-lg p-4`}>
-                            <h3 className="font-bold mb-4 flex items-center gap-2">
+                        <div className={`sticky top-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-4`}>
+                            <h3 className={`font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 <Book className="w-5 h-5" />
                                 Table of Contents
                             </h3>
@@ -77,8 +77,8 @@ const DocumentationPage: React.FC = () => {
                                         key={section.id}
                                         onClick={() => scrollToSection(section.id)}
                                         className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 transition-colors ${activeSection === section.id
-                                            ? 'bg-blue-500 text-white'
-                                            : isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
+                                            ? isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-900'
+                                            : isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
                                             }`}
                                     >
                                         {section.icon}
@@ -93,15 +93,15 @@ const DocumentationPage: React.FC = () => {
                     <main className="flex-1 space-y-12">
                         {/* Getting Started */}
                         <section id="getting-started" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                                <Zap className="w-8 h-8 text-yellow-500" />
+                            <h2 className={`text-3xl font-bold mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                <Zap className="w-8 h-8 text-gray-400" />
                                 Getting Started
                             </h2>
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Quick Start</h3>
-                                    <p className="text-gray-400 mb-4">GB Coder is a browser-based code playground that requires no installation. Simply open the app and start coding!</p>
-                                    <ol className="list-decimal list-inside space-y-2 text-gray-400">
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Quick Start</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-4`}>GB Coder is a browser-based code playground that requires no installation. Simply open the app and start coding!</p>
+                                    <ol className={`list-decimal list-inside space-y-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                         <li>Choose a language panel (HTML, CSS, or JavaScript)</li>
                                         <li>Write your code in the Monaco editor</li>
                                         <li>See live preview update automatically</li>
@@ -111,10 +111,10 @@ const DocumentationPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Setup AI Features</h3>
-                                    <p className="text-gray-400 mb-3">To use AI-powered features, you need a Google Gemini API key:</p>
-                                    <ol className="list-decimal list-inside space-y-2 text-gray-400">
-                                        <li>Get your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Google AI Studio</a></li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Setup AI Features</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>To use AI-powered features, you need a Google Gemini API key:</p>
+                                    <ol className={`list-decimal list-inside space-y-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        <li>Get your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-300">Google AI Studio</a></li>
                                         <li>Open Settings (gear icon) in the navigation bar</li>
                                         <li>Enter your API key in the AI settings section</li>
                                         <li>Start using AI suggestions, chat, and enhancements</li>
@@ -125,64 +125,73 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Editor Features */}
                         <section id="editor" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                                <Code2 className="w-8 h-8 text-blue-500" />
+                            <h2 className={`text-3xl font-bold mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                <Code2 className="w-8 h-8 text-gray-400" />
                                 Editor Features
                             </h2>
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                                        <Star className="w-5 h-5 text-yellow-500" />
+                                    <h3 className={`text-xl font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        <Star className="w-5 h-5 text-gray-400" />
                                         Monaco Editor
                                     </h3>
-                                    <p className="text-gray-400 mb-3">Powered by the same engine as VS Code, featuring:</p>
-                                    <ul className="grid md:grid-cols-2 gap-2 text-gray-400">
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Syntax highlighting for HTML, CSS, JS</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />IntelliSense auto-completion</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Error detection and highlighting</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Code minimap for navigation</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Bracket matching and auto-closing</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Multi-cursor editing</li>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Powered by the same engine as VS Code, featuring:</p>
+                                    <ul className="grid md:grid-cols-2 gap-2">
+                                        {['Syntax highlighting for HTML, CSS, JS', 'IntelliSense auto-completion', 'Error detection and highlighting', 'Code minimap for navigation', 'Bracket matching and auto-closing', 'Multi-cursor editing'].map((item, i) => (
+                                            <li key={i} className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                                {item}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                                        <Wrench className="w-5 h-5 text-orange-500" />
+                                    <h3 className={`text-xl font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        <Wrench className="w-5 h-5 text-gray-400" />
                                         Code Formatting
                                     </h3>
-                                    <p className="text-gray-400 mb-3">Each editor panel has a Format button that beautifies your code:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Automatic indentation and spacing</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Consistent code style</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Line wrapping and organization</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Keyboard shortcut: Shift + Alt + F</li>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Each editor panel has a Format button that beautifies your code:</p>
+                                    <ul className="space-y-2">
+                                        {['Automatic indentation and spacing', 'Consistent code style', 'Line wrapping and organization', 'Keyboard shortcut: Shift + Alt + F'].map((item, i) => (
+                                            <li key={i} className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                                {item}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                                        <History className="w-5 h-5 text-purple-500" />
+                                    <h3 className={`text-xl font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        <History className="w-5 h-5 text-gray-400" />
                                         Undo/Redo & History
                                     </h3>
-                                    <p className="text-gray-400 mb-3">Comprehensive history tracking:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" /><strong>Ctrl+Z</strong>: Undo last change</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" /><strong>Ctrl+Y</strong>: Redo change</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />History Panel: View all snapshots</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Jump to any previous state</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Create manual snapshots</li>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Comprehensive history tracking:</p>
+                                    <ul className="space-y-2">
+                                        {['Ctrl+Z: Undo last change', 'Ctrl+Y: Redo change', 'History Panel: View all snapshots', 'Jump to any previous state', 'Create manual snapshots'].map((item, i) => (
+                                            <li key={i} className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                                {item}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Editor Actions</h3>
-                                    <p className="text-gray-400 mb-3">Each editor panel header includes:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Format:</strong> Auto-format code with proper indentation</li>
-                                        <li><strong className="text-white">Copy:</strong> Copy code to clipboard</li>
-                                        <li><strong className="text-white">Lock/Unlock:</strong> Make editor read-only</li>
-                                        <li><strong className="text-white">AI Suggest:</strong> Get AI-powered improvements</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Editor Actions</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Each editor panel header includes:</p>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Format', desc: 'Auto-format code with proper indentation' },
+                                            { label: 'Copy', desc: 'Copy code to clipboard' },
+                                            { label: 'Lock/Unlock', desc: 'Make editor read-only' },
+                                            { label: 'AI Suggest', desc: 'Get AI-powered improvements' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             </div>
@@ -190,58 +199,65 @@ const DocumentationPage: React.FC = () => {
 
                         {/* AI Features */}
                         <section id="ai" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                                <Brain className="w-8 h-8 text-purple-500" />
+                            <h2 className={`text-3xl font-bold mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                <Brain className="w-8 h-8 text-gray-400" />
                                 AI Features
                             </h2>
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                                        <Sparkles className="w-5 h-5 text-yellow-500" />
+                                    <h3 className={`text-xl font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        <Sparkles className="w-5 h-5 text-gray-400" />
                                         AI Chat Assistant
                                     </h3>
-                                    <p className="text-gray-400 mb-3">Interactive coding companion accessible from the sidebar:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Ask coding questions in natural language</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Request code snippets and examples</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Get debugging help</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Learn best practices and patterns</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Context-aware responses based on your code</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Chat history saved for reference</li>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Interactive coding companion accessible from the sidebar:</p>
+                                    <ul className="space-y-2">
+                                        {['Ask coding questions in natural language', 'Request code snippets and examples', 'Get debugging help', 'Learn best practices and patterns', 'Context-aware responses based on your code', 'Chat history saved for reference'].map((item, i) => (
+                                            <li key={i} className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                                {item}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                                        <Lightbulb className="w-5 h-5 text-blue-500" />
+                                    <h3 className={`text-xl font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        <Lightbulb className="w-5 h-5 text-gray-400" />
                                         Smart Suggestions
                                     </h3>
-                                    <p className="text-gray-400 mb-3">Real-time AI suggestions panel shows:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Performance optimizations</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Accessibility improvements</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Best practice recommendations</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Security enhancements</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Modern syntax updates</li>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Real-time AI suggestions panel shows:</p>
+                                    <ul className="space-y-2">
+                                        {['Performance optimizations', 'Accessibility improvements', 'Best practice recommendations', 'Security enhancements', 'Modern syntax updates'].map((item, i) => (
+                                            <li key={i} className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                                {item}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">AI Code Enhancement</h3>
-                                    <p className="text-gray-400 mb-3">Click "AI Suggest" on any editor to:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Analyze:</strong> AI reviews your entire code</li>
-                                        <li><strong className="text-white">Improve:</strong> Suggests optimized version</li>
-                                        <li><strong className="text-white">Compare:</strong> Side-by-side diff view</li>
-                                        <li><strong className="text-white">Apply:</strong> One-click to accept changes</li>
-                                        <li><strong className="text-white">Partial Apply:</strong> Select specific improvements</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>AI Code Enhancement</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Click "AI Suggest" on any editor to:</p>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Analyze', desc: 'AI reviews your entire code' },
+                                            { label: 'Improve', desc: 'Suggests optimized version' },
+                                            { label: 'Compare', desc: 'Side-by-side diff view' },
+                                            { label: 'Apply', desc: 'One-click to accept changes' },
+                                            { label: 'Partial Apply', desc: 'Select specific improvements' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Code Explanation</h3>
-                                    <p className="text-gray-400 mb-3">Understand any code block:</p>
-                                    <ol className="list-decimal list-inside space-y-2 text-gray-400">
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Code Explanation</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Understand any code block:</p>
+                                    <ol className={`list-decimal list-inside space-y-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                         <li>Select code in any editor</li>
                                         <li>Click "Explain Code" button</li>
                                         <li>Get detailed step-by-step explanation</li>
@@ -251,26 +267,33 @@ const DocumentationPage: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Selection Operations</h3>
-                                    <p className="text-gray-400 mb-3">Advanced AI operations on selected code:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Refactor:</strong> Improve code structure</li>
-                                        <li><strong className="text-white">Optimize:</strong> Performance improvements</li>
-                                        <li><strong className="text-white">Document:</strong> Generate comments</li>
-                                        <li><strong className="text-white">Debug:</strong> Find and fix issues</li>
-                                        <li><strong className="text-white">Convert:</strong> Transform syntax styles</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Selection Operations</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Advanced AI operations on selected code:</p>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Refactor', desc: 'Improve code structure' },
+                                            { label: 'Optimize', desc: 'Performance improvements' },
+                                            { label: 'Document', desc: 'Generate comments' },
+                                            { label: 'Debug', desc: 'Find and fix issues' },
+                                            { label: 'Convert', desc: 'Transform syntax styles' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">AI Error Fixing</h3>
-                                    <p className="text-gray-400 mb-3">Automatic error resolution:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Detects runtime errors in console</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />"Fix with AI" button on each error</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />AI analyzes error context and code</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Provides fix with explanation</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Apply fix or insert as comment</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>AI Error Fixing</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Automatic error resolution:</p>
+                                    <ul className="space-y-2">
+                                        {['Detects runtime errors in console', '"Fix with AI" button on each error', 'AI analyzes error context and code', 'Provides fix with explanation', 'Apply fix or insert as comment'].map((item, i) => (
+                                            <li key={i} className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                                {item}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             </div>
@@ -278,66 +301,86 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Preview & Console */}
                         <section id="preview" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                                <Eye className="w-8 h-8 text-green-500" />
+                            <h2 className={`text-3xl font-bold mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                <Eye className="w-8 h-8 text-gray-400" />
                                 Preview & Console
                             </h2>
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                                        <Layout className="w-5 h-5 text-blue-500" />
+                                    <h3 className={`text-xl font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        <Layout className="w-5 h-5 text-gray-400" />
                                         Live Preview
                                     </h3>
-                                    <p className="text-gray-400 mb-3">Real-time rendering with responsive controls:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Desktop Mode:</strong> Full-width view (default)</li>
-                                        <li><strong className="text-white">Tablet Mode:</strong> 768px viewport simulation</li>
-                                        <li><strong className="text-white">Mobile Mode:</strong> 375px viewport simulation</li>
-                                        <li><strong className="text-white">Fullscreen:</strong> Expand to full window</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Auto-refresh on code changes</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Iframe sandboxing for security</li>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Real-time rendering with responsive controls:</p>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Desktop Mode', desc: 'Full-width view (default)' },
+                                            { label: 'Tablet Mode', desc: '768px viewport simulation' },
+                                            { label: 'Mobile Mode', desc: '375px viewport simulation' },
+                                            { label: 'Fullscreen', desc: 'Expand to full window' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Auto-refresh on code changes
+                                        </li>
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Iframe sandboxing for security
+                                        </li>
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                                        <Terminal className="w-5 h-5 text-purple-500" />
+                                    <h3 className={`text-xl font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        <Terminal className="w-5 h-5 text-gray-400" />
                                         Enhanced Console
                                     </h3>
-                                    <p className="text-gray-400 mb-3">Professional-grade developer console:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Console Tab:</strong> Standard logging output</li>
-                                        <li><strong className="text-white">Advanced Tab:</strong> Command terminal interface</li>
-                                        <li><strong className="text-white">Validator Tab:</strong> HTML/CSS/JS validation</li>
-                                        <li><strong className="text-white">Preview Tab:</strong> Iframe console output</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Filter by INFO, WARN, ERROR</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Clear, copy, export logs</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Command history with Up/Down arrows</li>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Professional-grade developer console:</p>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Console Tab', desc: 'Standard logging output' },
+                                            { label: 'Advanced Tab', desc: 'Command terminal interface' },
+                                            { label: 'Validator Tab', desc: 'HTML/CSS/JS validation' },
+                                            { label: 'Preview Tab', desc: 'Iframe console output' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Filter by INFO, WARN, ERROR
+                                        </li>
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Clear, copy, export logs
+                                        </li>
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Console Commands</h3>
-                                    <p className="text-gray-400 mb-3">Available terminal commands:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><code className="bg-gray-700 px-2 py-1 rounded">clear</code> - Clear console output</li>
-                                        <li><code className="bg-gray-700 px-2 py-1 rounded">run</code> - Refresh preview</li>
-                                        <li><code className="bg-gray-700 px-2 py-1 rounded">download</code> - Export project as ZIP</li>
-                                        <li><code className="bg-gray-700 px-2 py-1 rounded">theme [dark|light]</code> - Change theme</li>
-                                        <li><code className="bg-gray-700 px-2 py-1 rounded">history</code> - View code history</li>
-                                        <li><code className="bg-gray-700 px-2 py-1 rounded">ai assistant</code> - Open AI chat</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Console Commands</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Available terminal commands:</p>
+                                    <ul className="space-y-2">
+                                        {['clear - Clear console output', 'run - Refresh preview', 'download - Export project as ZIP', 'theme [dark|light] - Change theme', 'history - View code history', 'ai assistant - Open AI chat'].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <code className={`${isDark ? 'bg-gray-700' : 'bg-gray-100'} px-2 py-1 rounded mr-2`}>{item.split(' - ')[0]}</code>
+                                                {item.split(' - ')[1]}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Code Validation</h3>
-                                    <p className="text-gray-400 mb-3">Real-time validation in Validator tab:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />HTML validation (unclosed tags, attributes)</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />CSS syntax checking</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />JavaScript error detection</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Auto-validate toggle</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Click to jump to error location</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Code Validation</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Real-time validation in Validator tab:</p>
+                                    <ul className="space-y-2">
+                                        {['HTML validation (unclosed tags, attributes)', 'CSS syntax checking', 'JavaScript error detection', 'Auto-validate toggle', 'Click to jump to error location'].map((item, i) => (
+                                            <li key={i} className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                                {item}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             </div>
@@ -345,47 +388,68 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Project Management */}
                         <section id="projects" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                                <FileText className="w-8 h-8 text-orange-500" />
+                            <h2 className={`text-3xl font-bold mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                <FileText className="w-8 h-8 text-gray-400" />
                                 Project Management
                             </h2>
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Project System</h3>
-                                    <p className="text-gray-400 mb-3">Organize your work into projects:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Create Project:</strong> Start new project with custom name</li>
-                                        <li><strong className="text-white">Switch Projects:</strong> Quick project selector</li>
-                                        <li><strong className="text-white">Rename:</strong> Update project name anytime</li>
-                                        <li><strong className="text-white">Duplicate:</strong> Clone existing project</li>
-                                        <li><strong className="text-white">Delete:</strong> Remove unwanted projects</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Projects stored in local storage</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Includes code, libraries, settings</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Project System</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Organize your work into projects:</p>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Create Project', desc: 'Start new project with custom name' },
+                                            { label: 'Switch Projects', desc: 'Quick project selector' },
+                                            { label: 'Rename', desc: 'Update project name anytime' },
+                                            { label: 'Duplicate', desc: 'Clone existing project' },
+                                            { label: 'Delete', desc: 'Remove unwanted projects' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Projects stored in local storage
+                                        </li>
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Includes code, libraries, settings
+                                        </li>
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Auto-Save</h3>
-                                    <p className="text-gray-400 mb-3">Your work is automatically saved:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Saves every 30 seconds</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Manual save with Ctrl+S</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Toggle auto-save in settings</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Save indicator shows status</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Per-project auto-save</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Auto-Save</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Your work is automatically saved:</p>
+                                    <ul className="space-y-2">
+                                        {['Saves every 30 seconds', 'Manual save with Ctrl+S', 'Toggle auto-save in settings', 'Save indicator shows status', 'Per-project auto-save'].map((item, i) => (
+                                            <li key={i} className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                                {item}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Export Options</h3>
-                                    <p className="text-gray-400 mb-3">Download your project:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Export as ZIP:</strong> Complete project bundle</li>
-                                        <li><strong className="text-white">Download HTML:</strong> Single HTML file</li>
-                                        <li><strong className="text-white">Download CSS:</strong> Stylesheet file</li>
-                                        <li><strong className="text-white">Download JS:</strong> JavaScript file</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Includes external libraries</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Ready for deployment</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Export Options</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Download your project:</p>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Export as ZIP', desc: 'Complete project bundle' },
+                                            { label: 'Download HTML', desc: 'Single HTML file' },
+                                            { label: 'Download CSS', desc: 'Stylesheet file' },
+                                            { label: 'Download JS', desc: 'JavaScript file' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Includes external libraries
+                                        </li>
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Ready for deployment
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
@@ -393,36 +457,49 @@ const DocumentationPage: React.FC = () => {
 
                         {/* File Management */}
                         <section id="files" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                                <Upload className="w-8 h-8 text-cyan-500" />
+                            <h2 className={`text-3xl font-bold mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                <Upload className="w-8 h-8 text-gray-400" />
                                 File Management
                             </h2>
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">File Upload</h3>
-                                    <p className="text-gray-400 mb-3">Import existing code:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Drag and drop files onto editor</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Click "Upload" button to browse</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Supports .html, .css, .js files</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Upload multiple files at once</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Auto-detects file type</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>File Upload</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Import existing code:</p>
+                                    <ul className="space-y-2">
+                                        {['Drag and drop files onto editor', 'Click "Upload" button to browse', 'Supports .html, .css, .js files', 'Upload multiple files at once', 'Auto-detects file type'].map((item, i) => (
+                                            <li key={i} className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                                {item}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                                        <Package className="w-5 h-5 text-indigo-500" />
+                                    <h3 className={`text-xl font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        <Package className="w-5 h-5 text-gray-400" />
                                         External Libraries
                                     </h3>
-                                    <p className="text-gray-400 mb-3">Add third-party libraries via CDN:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Popular Libraries:</strong> Bootstrap, Tailwind, jQuery, React, Vue, Alpine.js, HTMX, anime.js, Chart.js, Three.js</li>
-                                        <li><strong className="text-white">Custom CDN:</strong> Add any library URL</li>
-                                        <li><strong className="text-white">Auto-Inject:</strong> CSS in head, JS before your code</li>
-                                        <li><strong className="text-white">Manage:</strong> Reorder, enable/disable, remove</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Search and filter library list</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Version selection support</li>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Add third-party libraries via CDN:</p>
+                                    <ul className="space-y-2">
+                                        <li className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                            <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>Popular Libraries:</strong> Bootstrap, Tailwind, jQuery, React, Vue, Alpine.js, HTMX, anime.js, Chart.js, Three.js
+                                        </li>
+                                        <li className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                            <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>Custom CDN:</strong> Add any library URL
+                                        </li>
+                                        <li className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                            <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>Auto-Inject:</strong> CSS in head, JS before your code
+                                        </li>
+                                        <li className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                            <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>Manage:</strong> Reorder, enable/disable, remove
+                                        </li>
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Search and filter library list
+                                        </li>
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Version selection support
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
@@ -430,42 +507,68 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Settings */}
                         <section id="settings" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                                <Settings className="w-8 h-8 text-gray-500" />
+                            <h2 className={`text-3xl font-bold mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                <Settings className="w-8 h-8 text-gray-400" />
                                 Settings & Customization
                             </h2>
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Theme Options</h3>
-                                    <p className="text-gray-400 mb-3">Customize the appearance:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Dark Themes:</strong> Dark, Dark Blue, Dark Purple</li>
-                                        <li><strong className="text-white">Light Themes:</strong> Light, Light Blue, Light Purple</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Matte black & white design</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Applies to entire UI</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Persists between sessions</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Theme Options</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Customize the appearance:</p>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Dark Themes', desc: 'Dark, Dark Blue, Dark Purple' },
+                                            { label: 'Light Themes', desc: 'Light, Light Blue, Light Purple' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Matte black & white design
+                                        </li>
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Applies to entire UI
+                                        </li>
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Persists between sessions
+                                        </li>
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Editor Settings</h3>
-                                    <p className="text-gray-400 mb-3">Configure Monaco editor:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Font Family:</strong> Multiple monospace fonts</li>
-                                        <li><strong className="text-white">Font Size:</strong> 12px - 24px range</li>
-                                        <li><strong className="text-white">Auto-run JS:</strong> Toggle automatic execution</li>
-                                        <li><strong className="text-white">Preview Delay:</strong> 0-1500ms update delay</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Settings synced across all editors</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Editor Settings</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Configure Monaco editor:</p>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Font Family', desc: 'Multiple monospace fonts' },
+                                            { label: 'Font Size', desc: '12px - 24px range' },
+                                            { label: 'Auto-run JS', desc: 'Toggle automatic execution' },
+                                            { label: 'Preview Delay', desc: '0-1500ms update delay' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Settings synced across all editors
+                                        </li>
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Other Settings</h3>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Auto-Save:</strong> Enable/disable automatic saving</li>
-                                        <li><strong className="text-white">AI Suggestions:</strong> Toggle AI features globally</li>
-                                        <li><strong className="text-white">Console Filters:</strong> Show/hide log types</li>
-                                        <li><strong className="text-white">Layout:</strong> Resize panels to preference</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Other Settings</h3>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Auto-Save', desc: 'Enable/disable automatic saving' },
+                                            { label: 'AI Suggestions', desc: 'Toggle AI features globally' },
+                                            { label: 'Console Filters', desc: 'Show/hide log types' },
+                                            { label: 'Layout', desc: 'Resize panels to preference' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             </div>
@@ -473,43 +576,58 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Snippets */}
                         <section id="snippets" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                                <Package className="w-8 h-8 text-pink-500" />
+                            <h2 className={`text-3xl font-bold mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                <Package className="w-8 h-8 text-gray-400" />
                                 Code Snippets
                             </h2>
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Snippet System</h3>
-                                    <p className="text-gray-400 mb-3">Save and reuse code patterns:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Create:</strong> Save current code as snippet</li>
-                                        <li><strong className="text-white">Load:</strong> Replace editors with snippet code</li>
-                                        <li><strong className="text-white">Insert:</strong> Append snippet to existing code</li>
-                                        <li><strong className="text-white">Edit:</strong> Update snippet details</li>
-                                        <li><strong className="text-white">Delete:</strong> Remove unwanted snippets</li>
-                                        <li className="flex items-center gap-2"><ChevronRight className="w-4 h-4 text-green-500" />Organize with categories and tags</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Snippet System</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Save and reuse code patterns:</p>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Create', desc: 'Save current code as snippet' },
+                                            { label: 'Load', desc: 'Replace editors with snippet code' },
+                                            { label: 'Insert', desc: 'Append snippet to existing code' },
+                                            { label: 'Edit', desc: 'Update snippet details' },
+                                            { label: 'Delete', desc: 'Remove unwanted snippets' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
+                                        <li className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            <ChevronRight className="w-4 h-4 text-gray-500" />Organize with categories and tags
+                                        </li>
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Snippet Types</h3>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li><strong className="text-white">Full:</strong> Complete HTML/CSS/JS project</li>
-                                        <li><strong className="text-white">HTML Only:</strong> HTML snippets</li>
-                                        <li><strong className="text-white">CSS Only:</strong> Stylesheet snippets</li>
-                                        <li><strong className="text-white">JavaScript Only:</strong> Script snippets</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Snippet Types</h3>
+                                    <ul className="space-y-2">
+                                        {[
+                                            { label: 'Full', desc: 'Complete HTML/CSS/JS project' },
+                                            { label: 'HTML Only', desc: 'HTML snippets' },
+                                            { label: 'CSS Only', desc: 'Stylesheet snippets' },
+                                            { label: 'JavaScript Only', desc: 'Script snippets' }
+                                        ].map((item, i) => (
+                                            <li key={i} className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                                                <strong className={isDark ? 'text-gray-200' : 'text-gray-700'}>{item.label}:</strong> {item.desc}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Snippet Metadata</h3>
-                                    <p className="text-gray-400 mb-3">Each snippet includes:</p>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li>Name and description</li>
-                                        <li>Category for organization</li>
-                                        <li>Tags for searchability</li>
-                                        <li>Creation and update timestamps</li>
-                                        <li>Scope (private/public - future feature)</li>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Snippet Metadata</h3>
+                                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>Each snippet includes:</p>
+                                    <ul className="space-y-2">
+                                        {['Name and description', 'Category for organization', 'Tags for searchability', 'Creation and update timestamps', 'Scope (private/public - future feature)'].map((item, i) => (
+                                            <li key={i} className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                                {item}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             </div>
@@ -517,123 +635,52 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Keyboard Shortcuts */}
                         <section id="shortcuts" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                                <Keyboard className="w-8 h-8 text-yellow-500" />
+                            <h2 className={`text-3xl font-bold mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                <Keyboard className="w-8 h-8 text-gray-400" />
                                 Keyboard Shortcuts
                             </h2>
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Global Shortcuts</h3>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Global Shortcuts</h3>
                                     <div className="grid md:grid-cols-2 gap-4">
-                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-mono text-sm">Ctrl + S</span>
-                                                <span className="text-gray-400">Manual Save</span>
+                                        {[
+                                            { keys: 'Ctrl + S', desc: 'Manual Save' },
+                                            { keys: 'Ctrl + Z', desc: 'Undo' },
+                                            { keys: 'Ctrl + Y', desc: 'Redo' },
+                                            { keys: 'Shift + Alt + F', desc: 'Format Code' }
+                                        ].map((item, i) => (
+                                            <div key={i} className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                                                <div className="flex justify-between items-center">
+                                                    <span className={`font-mono text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{item.keys}</span>
+                                                    <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>{item.desc}</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-mono text-sm">Ctrl + Z</span>
-                                                <span className="text-gray-400">Undo</span>
-                                            </div>
-                                        </div>
-                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-mono text-sm">Ctrl + Y</span>
-                                                <span className="text-gray-400">Redo</span>
-                                            </div>
-                                        </div>
-                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-mono text-sm">Shift + Alt + F</span>
-                                                <span className="text-gray-400">Format Code</span>
-                                            </div>
-                                        </div>
+                                        ))}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-semibold mb-3">Editor Shortcuts</h3>
+                                    <h3 className={`text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Editor Shortcuts</h3>
                                     <div className="grid md:grid-cols-2 gap-4">
-                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-mono text-sm">Ctrl + F</span>
-                                                <span className="text-gray-400">Find</span>
+                                        {[
+                                            { keys: 'Ctrl + A', desc: 'Select All' },
+                                            { keys: 'Ctrl + C', desc: 'Copy' },
+                                            { keys: 'Ctrl + V', desc: 'Paste' },
+                                            { keys: 'Ctrl + /', desc: 'Toggle Comment' },
+                                            { keys: 'Ctrl + D', desc: 'Find Next Occurrence' },
+                                            { keys: 'Ctrl + F', desc: 'Find' },
+                                            { keys: 'Ctrl + H', desc: 'Replace' },
+                                            { keys: 'Alt + Up/Down', desc: 'Move Line' }
+                                        ].map((item, i) => (
+                                            <div key={i} className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                                                <div className="flex justify-between items-center">
+                                                    <span className={`font-mono text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{item.keys}</span>
+                                                    <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>{item.desc}</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-mono text-sm">Ctrl + H</span>
-                                                <span className="text-gray-400">Replace</span>
-                                            </div>
-                                        </div>
-                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-mono text-sm">Ctrl + /</span>
-                                                <span className="text-gray-400">Toggle Comment</span>
-                                            </div>
-                                        </div>
-                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-mono text-sm">Alt + Click</span>
-                                                <span className="text-gray-400">Multi-Cursor</span>
-                                            </div>
-                                        </div>
-                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-mono text-sm">F1</span>
-                                                <span className="text-gray-400">Command Palette</span>
-                                            </div>
-                                        </div>
-                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-mono text-sm">Tab</span>
-                                                <span className="text-gray-400">Accept Suggestion</span>
-                                            </div>
-                                        </div>
+                                        ))}
                                     </div>
                                 </div>
-
-                                <div>
-                                    <h3 className="text-xl font-semibold mb-3">Console Shortcuts</h3>
-                                    <ul className="space-y-2 text-gray-400">
-                                        <li className="flex items-center gap-2"><kbd className="bg-gray-700 px-2 py-1 rounded">↑</kbd> <span>Previous command</span></li>
-                                        <li className="flex items-center gap-2"><kbd className="bg-gray-700 px-2 py-1 rounded">↓</kbd> <span>Next command</span></li>
-                                        <li className="flex items-center gap-2"><kbd className="bg-gray-700 px-2 py-1 rounded">Enter</kbd> <span>Execute command</span></li>
-                                        <li className="flex items-center gap-2"><kbd className="bg-gray-700 px-2 py-1 rounded">Esc</kbd> <span>Clear input</span></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* FAQ */}
-                        <section className={`${isDark ? 'bg-gradient-to-br from-purple-900 to-blue-900 border-purple-700' : 'bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200'} border rounded-lg p-8`}>
-                            <h2 className="text-3xl font-bold mb-6">Frequently Asked Questions</h2>
-                            <div className="space-y-4">
-                                <details className={`${isDark ? 'bg-gray-800' : 'bg-white'} p-4 rounded-lg`}>
-                                    <summary className="font-semibold cursor-pointer">How do I save my work?</summary>
-                                    <p className="text-gray-400 mt-2">Your work auto-saves every 30 seconds to browser local storage. You can also manually save with Ctrl+S. Projects persist between sessions.</p>
-                                </details>
-                                <details className={`${isDark ? 'bg-gray-800' : 'bg-white'} p-4 rounded-lg`}>
-                                    <summary className="font-semibold cursor-pointer">Do I need to create an account?</summary>
-                                    <p className="text-gray-400 mt-2">No! GB Coder works completely in your browser without any login or sign-up required. All data is stored locally.</p>
-                                </details>
-                                <details className={`${isDark ? 'bg-gray-800' : 'bg-white'} p-4 rounded-lg`}>
-                                    <summary className="font-semibold cursor-pointer">How do I get AI features to work?</summary>
-                                    <p className="text-gray-400 mt-2">Get a free Google Gemini API key from Google AI Studio, then enter it in Settings. AI features will activate immediately.</p>
-                                </details>
-                                <details className={`${isDark ? 'bg-gray-800' : 'bg-white'} p-4 rounded-lg`}>
-                                    <summary className="font-semibold cursor-pointer">Can I use external libraries?</summary>
-                                    <p className="text-gray-400 mt-2">Yes! Open Settings → External Libraries to add popular libraries or custom CDN URLs. They'll automatically inject into your preview.</p>
-                                </details>
-                                <details className={`${isDark ? 'bg-gray-800' : 'bg-white'} p-4 rounded-lg`}>
-                                    <summary className="font-semibold cursor-pointer">How do I export my project?</summary>
-                                    <p className="text-gray-400 mt-2">Use the Download button to export as ZIP containing all files, or use console command "download". You can also download individual files.</p>
-                                </details>
-                                <details className={`${isDark ? 'bg-gray-800' : 'bg-white'} p-4 rounded-lg`}>
-                                    <summary className="font-semibold cursor-pointer">Is my code private?</summary>
-                                    <p className="text-gray-400 mt-2">Yes! Code is stored only in your browser's local storage. AI features send code to Google/OpenRouter only when you request suggestions.</p>
-                                </details>
                             </div>
                         </section>
                     </main>

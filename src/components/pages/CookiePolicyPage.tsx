@@ -11,26 +11,28 @@ const CookiePolicyPage: React.FC = () => {
     }, []);
 
     return (
-        <div className={`min-h-screen transition-colors ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
-            }`}>
+        <div className={`min-h-screen transition-colors ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-50'}`}>
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {/* Header */}
                 <div className="text-center mb-12">
                     <div className="flex justify-center mb-4">
-                        <Cookie className={`w-16 h-16 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                            <Cookie className={`w-12 h-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+                        </div>
                     </div>
-                    <h1 className="text-4xl font-bold mb-4">Cookie Policy</h1>
+                    <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        Cookie Policy
+                    </h1>
                     <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         Last updated: November 20, 2024
                     </p>
                 </div>
 
                 {/* Content */}
-                <div className={`rounded-lg shadow-lg p-8 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-                    }`}>
+                <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                     {/* Introduction */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">Introduction</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Introduction</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             This Cookie Policy explains how GB Coder uses cookies and similar technologies. Unlike most websites, GB Coder does <strong>not use traditional HTTP cookies</strong>. Instead, we use browser LocalStorage for essential functionality.
                         </p>
@@ -38,8 +40,8 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* What We Use */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                            <Database className="w-6 h-6" />
+                        <h2 className={`text-2xl font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <Database className="w-6 h-6 text-gray-400" />
                             What We Use Instead of Cookies
                         </h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -56,14 +58,14 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* What We Store */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">What We Store</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>What We Store</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             We store the following data in LocalStorage:
                         </p>
 
                         <div className="space-y-4">
                             <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                <h3 className="font-semibold mb-2">1. Code Content</h3>
+                                <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>1. Code Content</h3>
                                 <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     Your HTML, CSS, and JavaScript code is saved locally for persistence across sessions.
                                 </p>
@@ -73,7 +75,7 @@ const CookiePolicyPage: React.FC = () => {
                             </div>
 
                             <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                <h3 className="font-semibold mb-2">2. Theme Preferences</h3>
+                                <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>2. Theme Preferences</h3>
                                 <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     Your chosen theme (dark or light mode) to maintain consistency.
                                 </p>
@@ -83,7 +85,7 @@ const CookiePolicyPage: React.FC = () => {
                             </div>
 
                             <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                <h3 className="font-semibold mb-2">3. Code Snippets</h3>
+                                <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>3. Code Snippets</h3>
                                 <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     Your saved code snippets with names, descriptions, tags, and categories.
                                 </p>
@@ -93,7 +95,7 @@ const CookiePolicyPage: React.FC = () => {
                             </div>
 
                             <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                <h3 className="font-semibold mb-2">4. Code History</h3>
+                                <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>4. Code History</h3>
                                 <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     Undo/redo history for your code changes.
                                 </p>
@@ -103,7 +105,7 @@ const CookiePolicyPage: React.FC = () => {
                             </div>
 
                             <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                <h3 className="font-semibold mb-2">5. External Libraries</h3>
+                                <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>5. External Libraries</h3>
                                 <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     List of external CSS/JS libraries you've added (Bootstrap, jQuery, etc.).
                                 </p>
@@ -113,7 +115,7 @@ const CookiePolicyPage: React.FC = () => {
                             </div>
 
                             <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                                <h3 className="font-semibold mb-2">6. Settings</h3>
+                                <h3 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>6. Settings</h3>
                                 <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     Auto-save preferences and other editor settings.
                                 </p>
@@ -126,7 +128,7 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* Third-Party Cookies */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">Third-Party Cookies</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Third-Party Cookies</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder itself does not use cookies, but third-party services we integrate with may use cookies:
                         </p>
@@ -138,15 +140,15 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* How to Control */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                            <Settings className="w-6 h-6" />
+                        <h2 className={`text-2xl font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <Settings className="w-6 h-6 text-gray-400" />
                             How to Control LocalStorage
                         </h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             You have full control over LocalStorage data:
                         </p>
 
-                        <h3 className="text-xl font-semibold mb-3 mt-6">View Stored Data</h3>
+                        <h3 className={`text-xl font-semibold mb-3 mt-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>View Stored Data</h3>
                         <ol className={`list-decimal pl-6 mb-4 space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             <li>Open your browser's Developer Tools (F12 or Ctrl+Shift+I)</li>
                             <li>Go to the "Application" tab (Chrome) or "Storage" tab (Firefox)</li>
@@ -155,7 +157,7 @@ const CookiePolicyPage: React.FC = () => {
                             <li>View all stored keys and values</li>
                         </ol>
 
-                        <h3 className="text-xl font-semibold mb-3 mt-6">Delete Stored Data</h3>
+                        <h3 className={`text-xl font-semibold mb-3 mt-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>Delete Stored Data</h3>
                         <ol className={`list-decimal pl-6 mb-4 space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             <li><strong>Clear All Data:</strong> Browser Settings → Privacy → Clear browsing data → Check "Cookies and other site data"</li>
                             <li><strong>Clear Specific Keys:</strong> In Developer Tools → Application → Local Storage → Right-click key → Delete</li>
@@ -165,8 +167,8 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* Impact of Disabling */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                            <Trash2 className="w-6 h-6" />
+                        <h2 className={`text-2xl font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <Trash2 className="w-6 h-6 text-gray-400" />
                             Impact of Clearing LocalStorage
                         </h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -186,7 +188,7 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* Updates to Policy */}
                     <section className="mb-8">
-                        <h2 className="text-2xl font-semibold mb-4">Updates to This Policy</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Updates to This Policy</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             We may update this Cookie Policy from time to time. Changes will be posted on this page with an updated "Last updated" date.
                         </p>
@@ -194,12 +196,12 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* Contact */}
                     <section>
-                        <h2 className="text-2xl font-semibold mb-4">Contact Us</h2>
+                        <h2 className={`text-2xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Contact Us</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             Questions about our LocalStorage usage?
                         </p>
                         <ul className={`list-none space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                            <li><strong>Email:</strong> <a href="mailto:girishlade111@gmail.com" className="text-blue-500 hover:underline">girishlade111@gmail.com</a></li>
+                            <li><strong>Email:</strong> <a href="mailto:girishlade111@gmail.com" className="underline hover:text-gray-400">girishlade111@gmail.com</a></li>
                         </ul>
                     </section>
                 </div>
