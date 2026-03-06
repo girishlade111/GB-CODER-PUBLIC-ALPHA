@@ -702,24 +702,30 @@
        PERFORMANCE OPTIMIZATION
        DNS prefetching and preconnect for faster loading
   ============================================= -->
+  
+  <!-- DNS Prefetch for external domains -->
   <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
   <link rel="dns-prefetch" href="//unpkg.com" />
   <link rel="dns-prefetch" href="//cdnjs.cloudflare.com" />
   <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+  <link rel="dns-prefetch" href="//generativelanguage.googleapis.com" />
+  
+  <!-- Preconnect for critical origins -->
   <link rel="preconnect" href="https://generativelanguage.googleapis.com" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   
-  <!-- Preload critical assets -->
-  <link rel="preload" href="/src/main.tsx" as="script" />
-  <link rel="preload" href="/tghjkl.jpeg" as="image" />
+  <!-- Module preload for critical JS (will be filled by Vite) -->
+  <link rel="modulepreload" href="/src/main.tsx" />
 
+  <!-- Critical CSS inline for faster FCP -->
   <style>
     body {
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #000000;
+      background: #1e1e1e;
       color: #f9fafb;
     }
 
@@ -729,12 +735,12 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: #000000;
+      background: #1e1e1e;
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 9999;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.3s ease;
     }
 
     .loader-container {
@@ -893,6 +899,17 @@
         width: 2rem;
         height: 2rem;
         right: -1.5rem;
+      }
+    }
+    
+    /* Reduce motion for users who prefer it */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
       }
     }
   </style>
