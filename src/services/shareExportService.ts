@@ -324,3 +324,44 @@ Generated on: ${new Date().toLocaleDateString()}
 }
 
 export const shareExportService = ShareExportService.getInstance();
+
+export const generatePreviewShareURL = (
+  html: string,
+  css: string,
+  javascript: string
+): { url: string; encoded: string } => {
+  const shareUrl = shareExportService.generateShareableUrl({
+    html,
+    css,
+    javascript,
+    externalLibraries: [],
+    timestamp: Date.now(),
+    version: '1.0.0',
+  });
+  const encoded = new URL(shareUrl).searchParams.get('code') || '';
+
+  return {
+    url: `https://code.ladestack.in/preview?p=${encodeURIComponent(encoded)}`,
+    encoded,
+  };
+};
+
+export const decodePreviewURL = (
+  encodedString: string
+): { html: string; css: string; javascript: string } => {
+  try {
+    const decoded = shareExportService.loadFromUrl(encodedString);
+
+    if (!decoded) {
+      return { html: '', css: '', javascript: '' };
+    }
+
+    return {
+      html: decoded.html,
+      css: decoded.css,
+      javascript: decoded.javascript,
+    };
+  } catch {
+    return { html: '', css: '', javascript: '' };
+  }
+};
