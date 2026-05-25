@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ChevronDown, Copy, Lock, Unlock, Wand2 } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 import CopyToast from './ui/CopyToast';
-import { EditorLanguage } from '../types';
+import { EditorLanguage, JSEditorMode } from '../types';
 import { useEditorActions } from '../hooks/useEditorActions';
 
 interface EditorPanelProps {
@@ -17,19 +17,28 @@ interface EditorPanelProps {
   onSelectionChange?: (editor: any) => void;
   fontFamily?: string;
   fontSize?: number;
+  jsEditorMode?: JSEditorMode;
+  onJsEditorModeChange?: (mode: JSEditorMode) => void;
 }
 
 const ACCEPTED_EXTENSIONS: Record<EditorLanguage, string[]> = {
   html: ['.html', '.htm'],
   css: ['.css'],
-  javascript: ['.js'],
+  javascript: ['.js', '.ts', '.jsx', '.tsx'],
 };
 
 const DROP_ERROR_MESSAGES: Record<EditorLanguage, string> = {
   html: 'Only HTML files (.html) can be dropped here.',
   css: 'Only CSS files (.css) are allowed in this section.',
-  javascript: 'Only JavaScript files (.js) are allowed here.',
+  javascript: 'Only JavaScript, TypeScript, JSX, or TSX files are allowed here.',
 };
+
+const JS_MODE_OPTIONS: Array<{ value: JSEditorMode; label: string; badge: string }> = [
+  { value: 'javascript', label: 'JS', badge: 'JAVASCRIPT' },
+  { value: 'typescript', label: 'TS', badge: 'TYPESCRIPT' },
+  { value: 'jsx', label: 'JSX', badge: 'JSX' },
+  { value: 'tsx', label: 'TSX', badge: 'TSX' },
+];
 
 const EditorPanel: React.FC<EditorPanelProps> = ({
   title,
@@ -43,6 +52,8 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
   onSelectionChange,
   fontFamily,
   fontSize,
+  jsEditorMode = 'javascript',
+  onJsEditorModeChange,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -66,6 +77,10 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
   });
 
   const hasContent = value.trim().length > 0;
+  const isJavaScriptPanel = language === 'javascript';
+  const languageBadge = isJavaScriptPanel
+    ? JS_MODE_OPTIONS.find((option) => option.value === jsEditorMode)?.badge || 'JAVASCRIPT'
+    : language;
 
   const isValidFile = useCallback((filename: string): boolean => {
     const ext = '.' + filename.split('.').pop()?.toLowerCase();
@@ -133,8 +148,23 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           <h3 className="text-sm font-medium text-bright-white">{title}</h3>
           <span className="text-xs text-gray-500 font-mono">{fileName}</span>
           <span className="text-[10px] tracking-wider font-semibold bg-gray-700 text-gray-400 px-2 py-0.5 rounded uppercase">
-            {language}
+            {languageBadge}
           </span>
+          {isJavaScriptPanel && onJsEditorModeChange && (
+            <select
+              value={jsEditorMode}
+              onChange={(e) => onJsEditorModeChange(e.target.value as JSEditorMode)}
+              onClick={(e) => e.stopPropagation()}
+              className="h-6 bg-gray-800 border border-gray-600 text-gray-200 text-[11px] font-semibold rounded px-2 py-0.5 hover:border-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              title="JavaScript editor language mode"
+            >
+              {JS_MODE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Right side: Action Buttons + Collapse Icon */}
@@ -202,6 +232,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
               onSelectionChange={onSelectionChange}
               fontFamily={fontFamily}
               fontSize={fontSize}
+              jsEditorMode={jsEditorMode}
             />
           </div>
 
