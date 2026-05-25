@@ -87,6 +87,13 @@ const FEATURE_PROMPTS = {
     `[{"title":"...","description":"...","code":"...","type":"improvement|refactor|performance|security","impact":"high|medium|low"}]\n\n` +
     `\`\`\`${ctx}\n${code}\n\`\`\``,
 
+  inlineEdit: (code, instruction, ctx) =>
+    `You are a code editor assistant. The user has selected the following ${ctx} code and wants you to modify it according to their instruction. ` +
+    `Return ONLY the modified code - no explanation, no markdown backticks, no preamble. Preserve the original indentation. ` +
+    `If the instruction is unclear, make your best interpretation and apply it.\n\n` +
+    `Instruction:\n${instruction || ''}\n\n` +
+    `Selected code:\n${code || ''}`,
+
   chat: (userMessage, ctx, currentCode) => {
     const editorCtx = currentCode
       ? `\n\nCurrent editor state:\n` +
