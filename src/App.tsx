@@ -52,7 +52,7 @@ import SelectionToolbar from './components/SelectionToolbar';
 import SelectionSidebar from './components/SelectionSidebar';
 import { downloadAsZip } from './utils/downloadUtils';
 import * as monacoHelper from './utils/monacoSelectionHelper';
-import { CodeSnippet, ConsoleLog, EditorLanguage, HistoryItem, SnippetType, SnippetScope } from './types';
+import { CodeSnippet, ConsoleLog, EditorLanguage, HistoryItem, JSEditorMode, SnippetType, SnippetScope } from './types';
 import { migrateSnippets } from './utils/snippetUtils';
 import { externalLibraryService, ExternalLibrary } from './services/externalLibraryService';
 import { formattingService } from './services/formattingService';
@@ -76,6 +76,7 @@ function App() {
   const [html, setHtml] = useState(defaultHTML);
   const [css, setCss] = useState(defaultCSS);
   const [javascript, setJavascript] = useState(defaultJS);
+  const [jsEditorMode, setJsEditorMode] = useLocalStorage<JSEditorMode>('gb-coder-js-editor-mode', 'javascript');
   const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
   const { isDark } = useTheme();
   const [snippets, setSnippets] = useLocalStorage<CodeSnippet[]>('gb-coder-snippets', []);
@@ -1135,6 +1136,8 @@ function App() {
               onSelectionChange={(editor) => handleSelectionChange(editor, 'javascript')}
               fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
               fontSize={settings.editorFontSize}
+              jsEditorMode={jsEditorMode}
+              onJsEditorModeChange={setJsEditorMode}
             />
           </div>
 
