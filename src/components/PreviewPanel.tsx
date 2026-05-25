@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play } from 'lucide-react';
-import { ConsoleLog } from '../types';
+import * as ts from 'typescript';
+import { ConsoleLog, JSEditorMode } from '../types';
 import { externalLibraryService } from '../services/externalLibraryService';
 
 type ViewMode = 'desktop' | 'tablet' | 'mobile' | 'fullscreen';
@@ -9,6 +10,7 @@ interface PreviewPanelProps {
   html: string;
   css: string;
   javascript: string;
+  jsEditorMode?: JSEditorMode;
   onConsoleLog: (log: ConsoleLog) => void;
   autoRunJS?: boolean;
   previewDelay?: number;
@@ -18,6 +20,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   html,
   css,
   javascript,
+  jsEditorMode = 'javascript',
   onConsoleLog,
   autoRunJS = true,
   previewDelay = 300,
