@@ -129,6 +129,7 @@ function App() {
   const jsEditorRef = React.useRef<any>(null);
   const { selection, updateSelection, clearSelection, hasSelection } = useCodeSelection();
   const selectionOps = useSelectionOperations();
+  const codeWriter = useCodeWriter();
 
   // Code history for undo/redo functionality
   const codeHistory = useCodeHistory({ html, css, javascript });
