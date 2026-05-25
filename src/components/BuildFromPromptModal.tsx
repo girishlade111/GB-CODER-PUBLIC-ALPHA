@@ -230,7 +230,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
             value={promptText}
             onChange={(event) => {
               setPromptText(event.target.value.slice(0, MAX_PROMPT_LENGTH));
-              if (error) setError(false);
+              if (errorMessage) setErrorMessage(null);
             }}
             rows={4}
             maxLength={MAX_PROMPT_LENGTH}
@@ -250,7 +250,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
               type="button"
               onClick={() => {
                 setPromptText(chip);
-                setError(false);
+                setErrorMessage(null);
                 textareaRef.current?.focus();
               }}
               disabled={isLoading}
