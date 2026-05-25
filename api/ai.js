@@ -306,6 +306,10 @@ module.exports = async function handler(req, res) {
 
     // ── NON-STREAMING — all other features ────────────────────────────────
     const result = await callNvidiaAI(messages, { stream: false, temperature: 0.60 });
+    if (feature === 'inline-edit') {
+      return res.status(200).type('text/plain').send(result);
+    }
+
     return res.json({ result });
 
   } catch (err) {
