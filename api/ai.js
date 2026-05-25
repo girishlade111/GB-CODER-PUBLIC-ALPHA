@@ -112,7 +112,7 @@ const FEATURE_PROMPTS = {
 
 // ─── Build messages ───────────────────────────────────────────────────────────
 
-function buildMessages(feature, { code, selectedCode, userMessage, context, currentCode }) {
+function buildMessages(feature, { code, selectedCode, userMessage, instruction, context, currentCode }) {
   const ctx = context || 'javascript';
   let userContent;
   switch (feature) {
@@ -122,6 +122,7 @@ function buildMessages(feature, { code, selectedCode, userMessage, context, curr
     case 'optimize': userContent = FEATURE_PROMPTS.optimize(code || '', ctx); break;
     case 'enhance':  userContent = FEATURE_PROMPTS.enhance(code || '', ctx); break;
     case 'suggest':  userContent = FEATURE_PROMPTS.suggest(code || '', ctx); break;
+    case 'inline-edit': userContent = FEATURE_PROMPTS.inlineEdit(code || '', instruction || '', ctx); break;
     case 'chat':     userContent = FEATURE_PROMPTS.chat(userMessage || '', ctx, currentCode); break;
     default: throw new Error(`Unknown feature: ${feature}`);
   }
@@ -192,7 +193,7 @@ async function callNvidiaAI(messages, options = {}) {
 
 // ─── Valid features ───────────────────────────────────────────────────────────
 
-const VALID_FEATURES = new Set(['improve', 'explain', 'fix', 'optimize', 'enhance', 'suggest', 'chat']);
+const VALID_FEATURES = new Set(['improve', 'explain', 'fix', 'optimize', 'enhance', 'suggest', 'inline-edit', 'chat']);
 const MAX_BODY_LEN = 60_000;
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -218,7 +219,7 @@ module.exports = async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests — please wait a moment.' });
   }
 
-  const { feature, code, selectedCode, userMessage, context, currentCode, conversationHistory } = req.body || {};
+  const { feature, code, selectedCode, userMessage, instruction, context, currentCode, conversationHistory } = req.body || {};
 
   // Validate feature
   if (!feature || !VALID_FEATURES.has(feature)) {
