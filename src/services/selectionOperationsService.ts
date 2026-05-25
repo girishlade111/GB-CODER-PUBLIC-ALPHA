@@ -51,7 +51,7 @@ export class SelectionOperationsService {
       }
 
       return data?.result || 'AI returned an empty response. Please try again.';
-    } catch (error) {
+    } catch {
       return '🌐 Connection failed. Check your internet and try again.';
     }
   }
