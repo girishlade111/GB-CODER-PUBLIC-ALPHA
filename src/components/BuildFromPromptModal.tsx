@@ -70,6 +70,26 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
     requestAnimationFrame(() => textareaRef.current?.focus());
   }, [isOpen]);
 
+  // NEW: Show prompt-quality feedback even when the disabled button cannot be clicked.
+  useEffect(() => {
+    if (!promptText) {
+      setErrorMessage(null);
+      return;
+    }
+
+    const normalizedPrompt = promptText.trim();
+    const hasMeaningfulText = /[a-zA-Z0-9]/.test(normalizedPrompt);
+
+    if (normalizedPrompt.length < MIN_PROMPT_LENGTH || !hasMeaningfulText) {
+      setErrorMessage('Please describe what you want to build in more detail.');
+      return;
+    }
+
+    if (errorMessage === 'Please describe what you want to build in more detail.') {
+      setErrorMessage(null);
+    }
+  }, [promptText, errorMessage]);
+
   useEffect(() => {
     if (!isOpen) return;
 
