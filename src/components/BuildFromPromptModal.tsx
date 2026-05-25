@@ -186,7 +186,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
       setCooldownUntil(Date.now() + COOLDOWN_MS);
       onClose();
     } catch {
-      setError(true);
+      setErrorMessage('Generation failed — try rephrasing your prompt.');
     } finally {
       window.clearTimeout(timeoutId);
       setIsLoading(false);
