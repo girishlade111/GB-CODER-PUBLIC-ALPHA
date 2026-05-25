@@ -191,6 +191,30 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // /preview route detection — runs once on app init.
+  // Standalone share viewer: code.ladestack.in/preview?p=ENCODED_STRING
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.pathname !== '/preview') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('p');
+
+    if (!encoded) {
+      setCurrentView('preview-share-error');
+      return;
+    }
+
+    try {
+      const decoded = decodePreviewURL(encoded);
+      setPreviewShareCode(decoded);
+      setCurrentView('preview-share');
+    } catch (err) {
+      console.error('[Preview] Failed to decode preview URL:', err);
+      setCurrentView('preview-share-error');
+    }
+  }, []);
+
   // Handle navigation events
   React.useEffect(() => {
     const handleNavigateToAbout = () => setCurrentView('about');
