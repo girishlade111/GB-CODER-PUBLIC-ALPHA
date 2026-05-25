@@ -580,13 +580,13 @@ function App() {
     setJavascript(template.javascript);
   }, [html, css, javascript]);
 
-  const handleBuildFromPrompt = useCallback(async (generatedCode: { html: string; css: string; javascript: string }) => {
+  const handleBuildFromPrompt = useCallback(async (generatedHtml: string, generatedCss: string, generatedJavascript: string) => {
     codeHistory.saveState({ html, css, javascript }, 'Built from prompt');
     setConsoleLogs([]);
 
-    await codeWriter.writeCode(generatedCode.html, setHtml);
-    await codeWriter.writeCode(generatedCode.css, setCss);
-    await codeWriter.writeCode(generatedCode.javascript, setJavascript);
+    await codeWriter.writeCode(generatedHtml, setHtml);
+    await codeWriter.writeCode(generatedCss, setCss);
+    await codeWriter.writeCode(generatedJavascript, setJavascript);
   }, [codeHistory, codeWriter, html, css, javascript]);
 
   const handleUpdateInjections = useCallback((css: string, js: string) => {
@@ -1269,8 +1269,7 @@ function App() {
       <BuildFromPromptModal
         isOpen={showBuildPrompt}
         onClose={() => setShowBuildPrompt(false)}
-        currentCode={{ html, css, javascript }}
-        onBuild={handleBuildFromPrompt}
+        onGenerate={handleBuildFromPrompt}
       />
       
       {/* AI Chat Assistant */}
