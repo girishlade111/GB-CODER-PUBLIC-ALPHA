@@ -55,9 +55,73 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     return code; // JavaScript will be handled in the sandbox
   };
 
+  const escapeScriptContent = (code: string): string => {
+    return code.replace(/<\/script/gi, '<\\/script');
+  };
+
+  const prepareJavaScriptForPreview = () => {
+    const shouldTranspileTypeScript = jsEditorMode === 'typescript' || jsEditorMode === 'tsx';
+
+    if (!shouldTranspileTypeScript) {
+      return {
+        code: javascript,
+        compilationError: null as string | null,
+      };
+    }
+
+    try {
+      const result = ts.transpileModule(javascript, {
+        compilerOptions: {
+          target: ts.ScriptTarget.ES2015,
+          jsx: ts.JsxEmit.React,
+        },
+        reportDiagnostics: true,
+      });
+
+      const errorDiagnostic = result.diagnostics?.find(
+        (diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error
+      );
+
+      if (errorDiagnostic) {
+        throw new Error(ts.flattenDiagnosticMessageText(errorDiagnostic.messageText, '\n'));
+      }
+
+      return {
+        code: result.outputText,
+        compilationError: null as string | null,
+      };
+    } catch (error) {
+      return {
+        code: javascript,
+        compilationError: error instanceof Error ? error.message : 'Unknown TypeScript compilation error',
+      };
+    }
+  };
+
   const generatePreviewContent = () => {
     const sanitizedHtml = sanitizeCode(html, 'html');
     const sanitizedCss = sanitizeCode(css, 'css');
+    const usesBabel = jsEditorMode === 'jsx' || jsEditorMode === 'tsx';
+    const { code: executableJavascript, compilationError } = prepareJavaScriptForPreview();
+    const safeJavascript = escapeScriptContent(executableJavascript);
+    const compiledJavaScriptString = JSON.stringify(executableJavascript);
+    const compilationWarningScript = compilationError
+      ? `
+        console.warn('TypeScript compilation error — running raw code');
+        console.error(${JSON.stringify(compilationError)});
+      `
+      : '';
+    const jsxRuntimeScripts = usesBabel
+      ? `
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>`
+      : '';
+    const userCodeScript = usesBabel
+      ? `<script type="text/babel">
+${safeJavascript}
+</script>`
+      : '';
 
     // Get external libraries
     const externalLibraries = externalLibraryService.getLibraries();
@@ -72,6 +136,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:; object-src 'none';">
     <title>Preview</title>
     ${externalLibsHTML}
+    ${jsxRuntimeScripts}
     <style>
         body { 
             margin: 0; 
@@ -129,6 +194,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
         console.error = secureConsole.error;
         console.warn = secureConsole.warn;
         console.info = secureConsole.info;
+        ${compilationWarningScript}
         
         // Catch runtime errors with sanitized output
         window.addEventListener('error', (e) => {
@@ -163,9 +229,13 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
                     }
                 };
                 
+                ${usesBabel
+                  ? '// JSX/TSX user code is executed by Babel from the text/babel script tag below.'
+                  : `
                 // Execute sanitized JavaScript
-                const sanitizedJs = \`${javascript.replace(/</g, '\\u003c').replace(/>/g, '\\u003e')}\`;
+                const sanitizedJs = ${compiledJavaScriptString};
                 eval(sanitizedJs);
+                `}
                 
                 if (${externalLibraries.length} > 0) {
                     console.log('External libraries loaded successfully');
@@ -183,6 +253,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
             executeUserCode();
         }
     </script>
+    ${userCodeScript}
 </body>
 </html>`;
   };
@@ -202,7 +273,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
       refreshPreview();
     }, previewDelay);
     return () => clearTimeout(timeoutId);
-  }, [html, css, autoRunJS ? javascript : '', previewDelay, manualRunTrigger]);
+  }, [html, css, autoRunJS ? javascript : '', jsEditorMode, previewDelay, manualRunTrigger]);
 
   // Refresh preview when external libraries change
   useEffect(() => {

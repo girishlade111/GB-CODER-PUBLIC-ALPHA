@@ -1,7 +1,7 @@
 import React, { useState, Suspense, forwardRef, useImperativeHandle, useRef } from 'react';
 import { Eye, Terminal } from 'lucide-react';
 import PreviewPanel from './PreviewPanel';
-import { ConsoleLog } from '../types';
+import { ConsoleLog, JSEditorMode } from '../types';
 
 // Lazy load heavy components
 const EnhancedConsole = React.lazy(() => import('./EnhancedConsole'));
@@ -16,6 +16,7 @@ interface TabbedRightPanelProps {
     html: string;
     css: string;
     javascript: string;
+    jsEditorMode?: JSEditorMode;
     onConsoleLog: (log: ConsoleLog) => void;
     autoRunJS?: boolean;
     previewDelay?: number;
@@ -31,6 +32,7 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
     html,
     css,
     javascript,
+    jsEditorMode = 'javascript',
     onConsoleLog,
     autoRunJS = true,
     previewDelay = 300,
@@ -68,6 +70,7 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                         html={html}
                         css={css}
                         javascript={javascript}
+                        jsEditorMode={jsEditorMode}
                         onConsoleLog={onConsoleLog}
                         autoRunJS={autoRunJS}
                         previewDelay={previewDelay}
