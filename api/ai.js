@@ -87,21 +87,8 @@ const FEATURE_PROMPTS = {
     `[{"title":"...","description":"...","code":"...","type":"improvement|refactor|performance|security","impact":"high|medium|low"}]\n\n` +
     `\`\`\`${ctx}\n${code}\n\`\`\``,
 
-  generate: (userMessage, currentCode) => {
-    const editorCtx = currentCode
-      ? `\n\nCurrent editor state, if useful as context:\n` +
-        `HTML:\n\`\`\`html\n${currentCode.html || ''}\n\`\`\`\n` +
-        `CSS:\n\`\`\`css\n${currentCode.css || ''}\n\`\`\`\n` +
-        `JavaScript:\n\`\`\`javascript\n${currentCode.javascript || ''}\n\`\`\``
-      : '';
-
-    return (
-      `Build a complete browser-based UI from this prompt:\n${userMessage || ''}${editorCtx}\n\n` +
-      `Return ONLY valid JSON with exactly these string keys: "html", "css", "javascript". ` +
-      `Do not include markdown fences, explanations, comments outside the JSON, or extra keys. ` +
-      `Use plain HTML, CSS, and vanilla JavaScript only.`
-    );
-  },
+  generate: (prompt, context) =>
+    `Prompt:\n${prompt || ''}${context ? `\n\nContext:\n${context}` : ''}`,
 
   inlineEdit: (code, instruction, ctx) =>
     `Instruction:\n${instruction || ''}\n\n` +
@@ -125,7 +112,7 @@ const FEATURE_PROMPTS = {
 
 // ─── Build messages ───────────────────────────────────────────────────────────
 
-function buildMessages(feature, { code, selectedCode, userMessage, instruction, language, context, currentCode }) {
+function buildMessages(feature, { code, selectedCode, userMessage, prompt, instruction, language, context, currentCode }) {
   const ctx = context || language || 'javascript';
   let userContent;
   switch (feature) {
@@ -136,14 +123,27 @@ function buildMessages(feature, { code, selectedCode, userMessage, instruction, 
     case 'enhance':  userContent = FEATURE_PROMPTS.enhance(code || '', ctx); break;
     case 'suggest':  userContent = FEATURE_PROMPTS.suggest(code || '', ctx); break;
     case 'generate':
-      userContent = FEATURE_PROMPTS.generate(userMessage || '', currentCode);
+      userContent = FEATURE_PROMPTS.generate(prompt || '', context || '');
       return [
         {
           role: 'system',
-          content:
-            `You are a code generation assistant inside LadeStack Coder. ` +
-            `Generate complete, working browser code using only HTML, CSS, and vanilla JavaScript. ` +
-            `Return only strict JSON with the keys html, css, and javascript.`,
+          content: `You are an expert frontend developer. The user will describe a UI component,
+webpage, or web app they want to build. Your job is to generate complete,
+production-quality HTML, CSS, and JavaScript code for it.
+   
+Rules you must follow:
+- Return ONLY a valid JSON object with exactly three keys: html, css, javascript
+- Each key contains a complete code string for that file
+- html value: complete HTML body content only — no <html>, no <head>, no <body> tags,
+  no <style> tags, no <script> tags — just the inner body markup
+- css value: complete CSS — use modern CSS (custom properties, flexbox/grid)
+- javascript value: complete JavaScript — use const/let, arrow functions, no var,
+  no import/export statements (code runs directly in browser)
+- Use hover states, transitions, and basic responsiveness
+- If the prompt implies dark mode, implement it
+- If no specific styling is mentioned, use a modern, clean dark-themed design
+- Do NOT include any explanation, markdown backticks, or text outside the JSON object
+- The JSON must be parseable by JSON.parse() with no preprocessing`,
         },
         { role: 'user', content: userContent },
       ];
@@ -255,7 +255,7 @@ module.exports = async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests — please wait a moment.' });
   }
 
-  const { feature, code, selectedCode, userMessage, instruction, language, context, currentCode, conversationHistory } = req.body || {};
+  const { feature, code, selectedCode, userMessage, prompt, instruction, language, context, currentCode, conversationHistory } = req.body || {};
 
   // Validate feature
   if (!feature || !VALID_FEATURES.has(feature)) {
@@ -265,13 +265,13 @@ module.exports = async function handler(req, res) {
   }
 
   // Validate payload size
-  const totalLen = [code, selectedCode, userMessage, instruction, language, context, currentCode?.html, currentCode?.css, currentCode?.javascript].filter(Boolean).join('').length;
+  const totalLen = [code, selectedCode, userMessage, prompt, instruction, language, context, currentCode?.html, currentCode?.css, currentCode?.javascript].filter(Boolean).join('').length;
   if (totalLen > MAX_BODY_LEN) {
     return res.status(413).json({ error: 'Payload too large — please reduce the code size.' });
   }
 
   try {
-    const messages = buildMessages(feature, { code, selectedCode, userMessage, instruction, language, context, currentCode });
+    const messages = buildMessages(feature, { code, selectedCode, userMessage, prompt, instruction, language, context, currentCode });
 
     // Inject conversation history for chat
     if (feature === 'chat' && Array.isArray(conversationHistory) && conversationHistory.length > 0) {
@@ -341,6 +341,12 @@ module.exports = async function handler(req, res) {
     }
 
     // ── NON-STREAMING — all other features ────────────────────────────────
+    if (feature === 'generate') {
+      const result = await callNvidiaAI(messages, { stream: false, temperature: 0.60, maxTokens: 3000 });
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.status(200).send(result);
+    }
+
     const result = await callNvidiaAI(messages, { stream: false, temperature: 0.60 });
     if (feature === 'inline-edit') {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');

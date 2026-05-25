@@ -73,18 +73,31 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
         },
         body: JSON.stringify({
           feature: 'generate',
-          userMessage: userPrompt,
-          currentCode,
+          prompt: userPrompt,
+          context: `Current code:
+HTML:
+${currentCode.html}
+
+CSS:
+${currentCode.css}
+
+JavaScript:
+${currentCode.javascript}`,
         }),
       });
 
-      const data = await response.json().catch(() => null);
+      const responseText = await response.text();
 
       if (!response.ok) {
-        throw new Error(data?.error || 'Failed to generate code. Please try again.');
+        try {
+          const data = JSON.parse(responseText);
+          throw new Error(data?.error || 'Failed to generate code. Please try again.');
+        } catch {
+          throw new Error('Failed to generate code. Please try again.');
+        }
       }
 
-      const generatedCode = parseGeneratedCode(String(data?.result || ''));
+      const generatedCode = parseGeneratedCode(responseText);
       await onBuild(generatedCode);
       toast.success('Project built from prompt');
       onClose();
