@@ -229,13 +229,13 @@ module.exports = async function handler(req, res) {
   }
 
   // Validate payload size
-  const totalLen = [code, selectedCode, userMessage, context].filter(Boolean).join('').length;
+  const totalLen = [code, selectedCode, userMessage, instruction, context].filter(Boolean).join('').length;
   if (totalLen > MAX_BODY_LEN) {
     return res.status(413).json({ error: 'Payload too large — please reduce the code size.' });
   }
 
   try {
-    const messages = buildMessages(feature, { code, selectedCode, userMessage, context, currentCode });
+    const messages = buildMessages(feature, { code, selectedCode, userMessage, instruction, context, currentCode });
 
     // Inject conversation history for chat
     if (feature === 'chat' && Array.isArray(conversationHistory) && conversationHistory.length > 0) {
