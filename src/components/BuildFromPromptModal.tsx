@@ -93,6 +93,28 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
     return () => window.clearInterval(intervalId);
   }, [isLoading]);
 
+  // NEW: Keep a visible client-side cooldown countdown after a successful generation.
+  useEffect(() => {
+    if (!cooldownUntil) {
+      setCooldownSeconds(0);
+      return;
+    }
+
+    const updateCooldown = () => {
+      const remainingMs = cooldownUntil - Date.now();
+      const remainingSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+      setCooldownSeconds(remainingSeconds);
+
+      if (remainingSeconds === 0) {
+        setCooldownUntil(0);
+      }
+    };
+
+    updateCooldown();
+    const intervalId = window.setInterval(updateCooldown, 250);
+    return () => window.clearInterval(intervalId);
+  }, [cooldownUntil]);
+
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget && !isLoading) {
       onClose();
