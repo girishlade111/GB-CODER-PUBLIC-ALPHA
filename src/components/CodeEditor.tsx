@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
-import { EditorLanguage } from '../types';
+import { EditorLanguage, JSEditorMode } from '../types';
 
 interface CodeEditorProps {
   language: EditorLanguage;
@@ -13,6 +13,7 @@ interface CodeEditorProps {
   onSelectionChange?: (editor: any) => void;
   fontFamily?: string;
   fontSize?: number;
+  jsEditorMode?: JSEditorMode;
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
@@ -26,6 +27,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   onSelectionChange,
   fontFamily = 'JetBrains Mono, Monaco, Consolas, monospace',
   fontSize = 14,
+  jsEditorMode = 'javascript',
 }) => {
   const internalEditorRef = useRef<any>(null);
 
@@ -40,7 +42,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       case 'css':
         return 'css';
       case 'javascript':
-        return 'javascript';
+        return jsEditorMode === 'typescript' || jsEditorMode === 'tsx'
+          ? 'typescript'
+          : 'javascript';
       default:
         return 'plaintext';
     }
