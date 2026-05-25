@@ -120,6 +120,21 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
     }
   }, [html, css, javascript, externalLibraries]);
 
+  const handleSharePreviewUrl = useCallback(async () => {
+    try {
+      const { url } = generatePreviewShareURL(html, css, javascript);
+      await navigator.clipboard.writeText(url);
+      toast.success('🔗 Preview link copied! Share it anywhere.');
+      setCopiedItem('preview');
+      setTimeout(() => setCopiedItem(null), 2000);
+    } catch (error: any) {
+      console.error('Preview share URL error:', error);
+      toast.error(`Failed to copy preview link: ${error.message}`);
+    } finally {
+      setIsOpen(false);
+    }
+  }, [html, css, javascript]);
+
   const handleExportHTML = useCallback(() => {
     try {
       const content = shareExportService.exportAsSingleHTML(html, css, javascript);
@@ -196,6 +211,7 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
     {
       category: 'Share',
       items: [
+        { icon: copiedItem === 'preview' ? Check : Eye, label: 'Share Live Preview', onClick: handleSharePreviewUrl, copied: copiedItem === 'preview' },
         { icon: copiedItem === 'url' ? Check : Share2, label: 'Generate Share URL', onClick: handleShareUrl, copied: copiedItem === 'url' },
         { icon: ExternalLink, label: 'Export to CodePen', onClick: handleExportCodePen },
         { icon: ExternalLink, label: 'Export to JSFiddle', onClick: handleExportJSFiddle },
