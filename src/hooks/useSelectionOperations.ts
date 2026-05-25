@@ -2,6 +2,16 @@ import { useState, useCallback } from 'react';
 import { selectionOperationsService, SelectionOperationType, SelectionOperationResult } from '../services/selectionOperationsService';
 import { EditorLanguage } from '../types';
 
+const isServiceErrorMessage = (message: string): boolean => {
+    return [
+        " You're sending requests too fast. Wait a moment and try again.",
+        '🔴 AI service is temporarily unavailable. Please try again in a minute.',
+        '🌐 Connection failed. Check your internet and try again.',
+        ' Something went wrong. Please try again.',
+        'AI returned an empty response. Please try again.',
+    ].includes(message);
+};
+
 export const useSelectionOperations = () => {
     const [result, setResult] = useState<SelectionOperationResult | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -53,6 +63,11 @@ export const useSelectionOperations = () => {
             }
 
             console.log('[useSelectionOperations] Operation result:', operationResult);
+            if (isServiceErrorMessage(operationResult.explanation)) {
+                setError(operationResult.explanation);
+                return null;
+            }
+
             setResult(operationResult);
             return operationResult;
         } catch (err) {
