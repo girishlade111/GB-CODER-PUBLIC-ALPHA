@@ -39,16 +39,20 @@ export class SelectionOperationsService {
       }
 
       if (!response.ok) {
-        return data?.error || `AI request failed with status ${response.status}. Please try again.`;
+        if (response.status === 429) {
+          return " You're sending requests too fast. Wait a moment and try again.";
+        }
+
+        if (response.status === 500 || response.status === 503) {
+          return '🔴 AI service is temporarily unavailable. Please try again in a minute.';
+        }
+
+        return ' Something went wrong. Please try again.';
       }
 
       return data?.result || 'AI returned an empty response. Please try again.';
     } catch (error) {
-      if (error instanceof TypeError) {
-        return 'Unable to reach the AI service. Please check your connection and try again.';
-      }
-
-      return 'Something went wrong while contacting the AI service. Please try again.';
+      return '🌐 Connection failed. Check your internet and try again.';
     }
   }
 
