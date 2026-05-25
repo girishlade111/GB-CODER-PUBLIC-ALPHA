@@ -1264,6 +1264,14 @@ function App() {
       )}
 
       {/* ===== NEW FEATURES MODALS ===== */}
+
+      {/* Build from Prompt */}
+      <BuildFromPromptModal
+        isOpen={showBuildPrompt}
+        onClose={() => setShowBuildPrompt(false)}
+        currentCode={{ html, css, javascript }}
+        onBuild={handleBuildFromPrompt}
+      />
       
       {/* AI Chat Assistant */}
       <AIChatAssistant
