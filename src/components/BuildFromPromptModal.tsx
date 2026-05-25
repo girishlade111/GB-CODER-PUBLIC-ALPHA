@@ -286,9 +286,9 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
           </p>
         )}
 
-        {error && (
+        {errorMessage && (
           <div className="mt-3 rounded-lg border border-red-700 bg-red-900/20 px-3 py-2 text-sm text-red-300">
-            Generation failed — try rephrasing your prompt.{' '}
+            {errorMessage}{' '}
             <button
               type="button"
               onClick={handleTryAgain}
