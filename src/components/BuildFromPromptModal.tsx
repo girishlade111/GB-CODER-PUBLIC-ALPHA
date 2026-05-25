@@ -1,69 +1,115 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Code2, Loader2, Sparkles, X } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { useTheme } from '../hooks/useTheme';
-
-interface GeneratedCode {
-  html: string;
-  css: string;
-  javascript: string;
-}
+import { Loader2, Wand2, X } from 'lucide-react';
 
 interface BuildFromPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentCode: GeneratedCode;
-  onBuild: (code: GeneratedCode) => Promise<void> | void;
+  onGenerate: (html: string, css: string, javascript: string) => void;
 }
 
-const extractJsonObject = (text: string): string => {
-  const fencedMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fencedMatch?.[1] || text;
-  const firstBrace = candidate.indexOf('{');
-  const lastBrace = candidate.lastIndexOf('}');
+const QUICK_START_PROMPTS = [
+  'Login form with glassmorphism',
+  'Dark mode todo app with localStorage',
+  'CSS animation showcase',
+  'Product landing page hero section',
+  'Interactive calculator',
+  'Developer portfolio hero',
+];
 
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-    throw new Error('AI response did not contain JSON code output.');
+const LOADING_MESSAGES = [
+  'Reading your prompt...',
+  'Writing HTML structure...',
+  'Styling with CSS...',
+  'Adding JavaScript logic...',
+  'Almost ready...',
+];
+
+const MAX_PROMPT_LENGTH = 500;
+const MIN_PROMPT_LENGTH = 10;
+const COOLDOWN_MS = 5000;
+const TIMEOUT_MS = 45000;
+
+const parseGeneratedCode = (responseText: string) => {
+  try {
+    return JSON.parse(responseText);
+  } catch {
+    const firstBrace = responseText.indexOf('{');
+    const lastBrace = responseText.lastIndexOf('}');
+
+    if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+      throw new Error('No JSON object found in response.');
+    }
+
+    return JSON.parse(responseText.slice(firstBrace, lastBrace + 1));
   }
-
-  return candidate.slice(firstBrace, lastBrace + 1);
-};
-
-const parseGeneratedCode = (result: string): GeneratedCode => {
-  const parsed = JSON.parse(extractJsonObject(result));
-
-  return {
-    html: String(parsed.html || ''),
-    css: String(parsed.css || ''),
-    javascript: String(parsed.javascript || ''),
-  };
 };
 
 const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
   isOpen,
   onClose,
-  currentCode,
-  onBuild,
+  onGenerate,
 }) => {
-  const { isDark } = useTheme();
-  const [prompt, setPrompt] = useState('');
+  const [promptText, setPromptText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [error, setError] = useState(false);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const isPromptValid = promptText.trim().length >= MIN_PROMPT_LENGTH;
+  const isCoolingDown = Date.now() < cooldownUntil;
+  const isGenerateDisabled = !isPromptValid || isLoading || isCoolingDown || error;
 
   useEffect(() => {
-    if (isOpen) {
-      setError(null);
-      requestAnimationFrame(() => inputRef.current?.focus());
-    }
+    if (!isOpen) return;
+
+    setError(false);
+    setLoadingMessageIndex(0);
+    requestAnimationFrame(() => textareaRef.current?.focus());
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isLoading) return;
+
+    const intervalId = window.setInterval(() => {
+      setLoadingMessageIndex((current) => (current + 1) % LOADING_MESSAGES.length);
+    }, 1500);
+
+    return () => window.clearInterval(intervalId);
+  }, [isLoading]);
+
+  const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget && !isLoading) {
+      onClose();
+    }
+  };
+
+  const handleTryAgain = () => {
+    setError(false);
+  };
+
   const handleGenerate = async () => {
-    const userPrompt = prompt.trim();
-    if (!userPrompt || isLoading) return;
+    if (isGenerateDisabled) return;
 
     setIsLoading(true);
-    setError(null);
+    setError(false);
+    setLoadingMessageIndex(0);
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
       const response = await fetch('/api/ai', {
@@ -73,133 +119,143 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
         },
         body: JSON.stringify({
           feature: 'generate',
-          prompt: userPrompt,
-          context: `Current code:
-HTML:
-${currentCode.html}
-
-CSS:
-${currentCode.css}
-
-JavaScript:
-${currentCode.javascript}`,
+          prompt: promptText.trim(),
         }),
+        signal: controller.signal,
       });
 
       const responseText = await response.text();
 
       if (!response.ok) {
-        try {
-          const data = JSON.parse(responseText);
-          throw new Error(data?.error || 'Failed to generate code. Please try again.');
-        } catch {
-          throw new Error('Failed to generate code. Please try again.');
-        }
+        throw new Error('Generation request failed.');
       }
 
-      const generatedCode = parseGeneratedCode(responseText);
-      await onBuild(generatedCode);
-      toast.success('Project built from prompt');
-      onClose();
-      setPrompt('');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to generate code. Please try again.';
-      setError(message);
-      toast.error(message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      const parsed = parseGeneratedCode(responseText);
+      const html = String(parsed.html ?? '');
+      const css = String(parsed.css ?? '');
+      const javascript = String(parsed.javascript ?? '');
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-      event.preventDefault();
-      handleGenerate();
+      onGenerate(html, css, javascript);
+      setCooldownUntil(Date.now() + COOLDOWN_MS);
+      onClose();
+    } catch {
+      setError(true);
+    } finally {
+      window.clearTimeout(timeoutId);
+      setIsLoading(false);
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div
-        className={`w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden border ${
-          isDark ? 'bg-matte-black border-gray-700' : 'bg-white border-gray-200'
-        }`}
-      >
-        <div className={`flex items-center justify-between p-4 border-b ${
-          isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
-        }`}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl">
-              <Sparkles className="w-6 h-6 text-white" />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      onClick={handleOverlayClick}
+    >
+      <div className="w-full max-w-[560px] rounded-xl border border-gray-700 bg-matte-black p-5 shadow-2xl">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="rounded-lg bg-violet-600/20 p-2 text-violet-300">
+              <Wand2 className="h-5 w-5" />
             </div>
             <div>
-              <h2 className={`text-lg font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
-                Build from Prompt
-              </h2>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Generate HTML, CSS, and JavaScript into the editor
+              <h2 className="text-lg font-semibold text-bright-white">Build with AI</h2>
+              <p className="mt-1 text-sm text-gray-400">
+                Describe what you want to build in plain English
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={isLoading}
-            className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${
-              isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-            }`}
+            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Close Build with AI modal"
             title="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className={`p-5 space-y-4 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className="relative">
           <textarea
-            ref={inputRef}
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-            onKeyDown={handleKeyDown}
+            ref={textareaRef}
+            value={promptText}
+            onChange={(event) => {
+              setPromptText(event.target.value.slice(0, MAX_PROMPT_LENGTH));
+              if (error) setError(false);
+            }}
+            rows={4}
+            maxLength={MAX_PROMPT_LENGTH}
             disabled={isLoading}
-            rows={8}
-            placeholder="Describe the app or component you want to build..."
-            className={`w-full resize-none rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-60 ${
-              isDark
-                ? 'bg-gray-800 text-gray-100 placeholder-gray-500 border border-gray-700'
-                : 'bg-white text-gray-900 placeholder-gray-400 border border-gray-200'
-            }`}
+            placeholder="Example: A glassmorphism login form with animated gradient background and smooth input focus effects"
+            className="min-h-[120px] w-full resize-y rounded-lg border border-gray-700 bg-dark-gray px-4 py-3 pb-8 text-sm text-bright-white placeholder-gray-500 outline-none transition-colors focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 disabled:cursor-not-allowed disabled:opacity-60"
           />
-
-          {error && (
-            <div className="rounded-lg border border-red-700 bg-red-900/20 px-4 py-3 text-sm text-red-300">
-              {error}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between gap-3">
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              Ctrl+Enter to generate
-            </p>
-            <button
-              onClick={handleGenerate}
-              disabled={!prompt.trim() || isLoading}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all flex items-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Building...
-                </>
-              ) : (
-                <>
-                  <Code2 className="w-4 h-4" />
-                  Build
-                </>
-              )}
-            </button>
+          <div className="absolute bottom-3 right-3 text-xs text-gray-500">
+            {promptText.length} / {MAX_PROMPT_LENGTH}
           </div>
         </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {QUICK_START_PROMPTS.map((chip) => (
+            <button
+              key={chip}
+              type="button"
+              onClick={() => {
+                setPromptText(chip);
+                setError(false);
+                textareaRef.current?.focus();
+              }}
+              disabled={isLoading}
+              className="rounded-full border border-gray-700 bg-dark-gray px-3 py-1.5 text-xs text-gray-300 transition-colors hover:border-violet-500/70 hover:bg-violet-500/10 hover:text-violet-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={isGenerateDisabled}
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-950/30 transition-all hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-400 disabled:shadow-none"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Wand2 className="h-4 w-4" />
+              Generate Code
+            </>
+          )}
+        </button>
+
+        {isLoading && (
+          <p className="mt-3 text-center text-sm text-violet-300">
+            {LOADING_MESSAGES[loadingMessageIndex]}
+          </p>
+        )}
+
+        {error && (
+          <div className="mt-3 rounded-lg border border-red-700 bg-red-900/20 px-3 py-2 text-sm text-red-300">
+            Generation failed — try rephrasing your prompt.{' '}
+            <button
+              type="button"
+              onClick={handleTryAgain}
+              className="font-medium text-red-200 underline underline-offset-2 hover:text-white"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        <p className="mt-4 text-xs text-gray-500">
+          {' '}
+          Your current code is auto-saved before generation
+        </p>
       </div>
     </div>
   );
