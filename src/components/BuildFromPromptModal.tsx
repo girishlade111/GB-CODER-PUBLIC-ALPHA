@@ -26,7 +26,7 @@ const LOADING_MESSAGES = [
 
 const MAX_PROMPT_LENGTH = 500;
 const MIN_PROMPT_LENGTH = 10;
-const COOLDOWN_MS = 5000;
+const COOLDOWN_MS = 8000;
 const TIMEOUT_MS = 45000;
 
 const parseGeneratedCode = (responseText: string) => {
@@ -54,10 +54,12 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
   const [error, setError] = useState(false);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [lastGeneratedPrompt, setLastGeneratedPrompt] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isPromptValid = promptText.trim().length >= MIN_PROMPT_LENGTH;
-  const isCoolingDown = Date.now() < cooldownUntil;
+  const isCoolingDown = cooldownSeconds > 0;
   const isGenerateDisabled = !isPromptValid || isLoading || isCoolingDown || error;
 
   useEffect(() => {
