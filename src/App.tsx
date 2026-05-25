@@ -581,13 +581,22 @@ function App() {
     setJavascript(template.javascript);
   }, [html, css, javascript]);
 
-  const handleBuildFromPrompt = useCallback((newHtml: string, newCss: string, newJavascript: string) => {
+  const handleBuildFromPrompt = useCallback(async (newHtml: string, newCss: string, newJavascript: string) => {
     codeHistory.saveState({ html, css, javascript }, 'Built from prompt');
     setConsoleLogs([]);
-    setHtml(newHtml);
-    setCss(newCss);
-    setJavascript(newJavascript);
-    toast.success(' Built from prompt! Edit freely or generate again.');
+    setIsBuildAnimating(true);
+    setHtml('');
+    setCss('');
+    setJavascript('');
+
+    try {
+      await codeWriter.writeCode(newHtml, setHtml);
+      await codeWriter.writeCode(newCss, setCss);
+      await codeWriter.writeCode(newJavascript, setJavascript);
+      toast.success(' Built from prompt! Edit freely or generate again.');
+    } finally {
+      setIsBuildAnimating(false);
+    }
   }, [autoSave, codeHistory, html, css, javascript]);
 
   const handleUpdateInjections = useCallback((css: string, js: string) => {
@@ -1176,7 +1185,7 @@ function App() {
               jsEditorMode={jsEditorMode}
               onConsoleLog={handleConsoleLog}
               autoRunJS={settings.autoRunJS}
-              previewDelay={settings.previewDelay}
+              previewDelay={isBuildAnimating ? 60000 : settings.previewDelay}
               // Console props
               consoleLogs={consoleLogs}
               onClearConsole={clearConsoleLogs}
