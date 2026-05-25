@@ -60,7 +60,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
 
   const isPromptValid = promptText.trim().length >= MIN_PROMPT_LENGTH;
   const isCoolingDown = cooldownSeconds > 0;
-  const isGenerateDisabled = !isPromptValid || isLoading || isCoolingDown || error;
+  const isGenerateDisabled = !isPromptValid || isLoading || isCoolingDown;
 
   useEffect(() => {
     if (!isOpen) return;
