@@ -57,6 +57,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [lastGeneratedPrompt, setLastGeneratedPrompt] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const isPromptValid = promptText.trim().length >= MIN_PROMPT_LENGTH;
   const isCoolingDown = cooldownSeconds > 0;
@@ -102,6 +103,15 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
+
+  // NEW: Abort an in-flight generation when the modal is closed or unmounted.
+  useEffect(() => {
+    if (isOpen) return;
+
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsLoading(false);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isLoading) return;
@@ -171,6 +181,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
     setLoadingMessageIndex(0);
 
     const controller = new AbortController();
+    abortControllerRef.current = controller;
     const timeoutId = window.setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
@@ -201,14 +212,21 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
       const css = parsedCss.trim() ? parsedCss : '.container { padding: 20px; }';
       const javascript = parsedJavascript.trim() ? parsedJavascript : '';
 
+      if (controller.signal.aborted) return;
+
       onGenerate(html, css, javascript);
       setLastGeneratedPrompt(normalizedPrompt);
       setCooldownUntil(Date.now() + COOLDOWN_MS);
       onClose();
     } catch {
-      setErrorMessage('Generation failed — try rephrasing your prompt.');
+      if (!controller.signal.aborted) {
+        setErrorMessage('Generation failed — try rephrasing your prompt.');
+      }
     } finally {
       window.clearTimeout(timeoutId);
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
       setIsLoading(false);
     }
   };
