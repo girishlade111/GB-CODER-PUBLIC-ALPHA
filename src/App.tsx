@@ -97,6 +97,7 @@ function App() {
   // ===== NEW FEATURES STATE =====
   const [showAIChat, setShowAIChat] = useState(false);
   const [showBuildFromPrompt, setShowBuildFromPrompt] = useState(false);
+  const [isBuildAnimating, setIsBuildAnimating] = useState(false);
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStats, setShowStats] = useState(false);
