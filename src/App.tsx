@@ -59,9 +59,11 @@ import { migrateSnippets } from './utils/snippetUtils';
 import { externalLibraryService, ExternalLibrary } from './services/externalLibraryService';
 import { formattingService } from './services/formattingService';
 import { SelectionOperationType } from './services/selectionOperationsService';
+import { decodePreviewURL } from './services/shareExportService';
+import PreviewSharePage from './components/PreviewSharePage';
 
 
-type AppView = 'editor' | 'history' | 'about' | 'documentation' | 'privacy' | 'terms' | 'cookies' | 'disclaimer' | 'contact';
+type AppView = 'editor' | 'history' | 'about' | 'documentation' | 'privacy' | 'terms' | 'cookies' | 'disclaimer' | 'contact' | 'preview-share' | 'preview-share-error';
 
 const defaultHTML = `<div class="container">
 </div>`;
@@ -88,6 +90,7 @@ function App() {
   const [autoSaveEnabled, setAutoSaveEnabled] = useLocalStorage<boolean>('gb-coder-autosave-enabled', true);
   const [showSnippets, setShowSnippets] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<AppView>('editor');
+  const [previewShareCode, setPreviewShareCode] = useState<{ html: string; css: string; javascript: string } | null>(null);
   const [showExternalLibraryManager, setShowExternalLibraryManager] = useState<boolean>(false);
   const [externalLibraries, setExternalLibraries] = useState<ExternalLibrary[]>([]);
   const [showExtensionsMarketplace, setShowExtensionsMarketplace] = useState<boolean>(false);
