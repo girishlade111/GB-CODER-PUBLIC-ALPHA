@@ -8,7 +8,7 @@ import SaveStatusIndicator from './components/ui/SaveStatusIndicator';
 import Footer from './components/ui/Footer';
 
 // ===== NEW FEATURES IMPORTS =====
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import AIChatAssistant from './components/AIChatAssistant';
 import ExportShareMenu from './components/ExportShareMenu';
 import VoiceCommandPanel from './components/VoiceCommandPanel';
@@ -1032,17 +1032,6 @@ function App() {
         autoSaveEnabled={autoSaveEnabled}
         customActions={
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* Build from Prompt */}
-            <button
-              onClick={() => setShowBuildPrompt(true)}
-              className={`p-2 rounded-lg transition-colors hidden sm:block ${
-                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-              }`}
-              title="Build from Prompt"
-            >
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-
             {/* AI Chat */}
             <button
               onClick={() => setShowAIChat(true)}
@@ -1275,8 +1264,8 @@ function App() {
 
       {/* Build from Prompt */}
       <BuildFromPromptModal
-        isOpen={showBuildPrompt}
-        onClose={() => setShowBuildPrompt(false)}
+        isOpen={showBuildFromPrompt}
+        onClose={() => setShowBuildFromPrompt(false)}
         onGenerate={handleBuildFromPrompt}
       />
       
