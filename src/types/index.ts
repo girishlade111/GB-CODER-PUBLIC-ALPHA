@@ -76,6 +76,7 @@ export interface TerminalState {
 export type Theme = 'dark' | 'light';
 
 export type EditorLanguage = 'html' | 'css' | 'javascript';
+export type JSEditorMode = 'javascript' | 'typescript' | 'jsx' | 'tsx';
 
 // Selection Operation Types
 export type SelectionOperationType = 'explain' | 'debug' | 'optimize' | 'improveUI';
