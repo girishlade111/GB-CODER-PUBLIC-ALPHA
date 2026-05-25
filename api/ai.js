@@ -88,9 +88,6 @@ const FEATURE_PROMPTS = {
     `\`\`\`${ctx}\n${code}\n\`\`\``,
 
   inlineEdit: (code, instruction, ctx) =>
-    `You are a code editor assistant. The user has selected the following ${ctx} code and wants you to modify it according to their instruction. ` +
-    `Return ONLY the modified code - no explanation, no markdown backticks, no preamble. Preserve the original indentation. ` +
-    `If the instruction is unclear, make your best interpretation and apply it.\n\n` +
     `Instruction:\n${instruction || ''}\n\n` +
     `Selected code:\n${code || ''}`,
 
@@ -122,7 +119,18 @@ function buildMessages(feature, { code, selectedCode, userMessage, instruction, 
     case 'optimize': userContent = FEATURE_PROMPTS.optimize(code || '', ctx); break;
     case 'enhance':  userContent = FEATURE_PROMPTS.enhance(code || '', ctx); break;
     case 'suggest':  userContent = FEATURE_PROMPTS.suggest(code || '', ctx); break;
-    case 'inline-edit': userContent = FEATURE_PROMPTS.inlineEdit(code || '', instruction || '', ctx); break;
+    case 'inline-edit':
+      userContent = FEATURE_PROMPTS.inlineEdit(code || '', instruction || '', ctx);
+      return [
+        {
+          role: 'system',
+          content:
+            `You are a code editor assistant. The user has selected the following ${ctx} code and wants you to modify it according to their instruction. ` +
+            `Return ONLY the modified code - no explanation, no markdown backticks, no preamble. Preserve the original indentation. ` +
+            `If the instruction is unclear, make your best interpretation and apply it.`,
+        },
+        { role: 'user', content: userContent },
+      ];
     case 'chat':     userContent = FEATURE_PROMPTS.chat(userMessage || '', ctx, currentCode); break;
     default: throw new Error(`Unknown feature: ${feature}`);
   }
@@ -307,7 +315,8 @@ module.exports = async function handler(req, res) {
     // ── NON-STREAMING — all other features ────────────────────────────────
     const result = await callNvidiaAI(messages, { stream: false, temperature: 0.60 });
     if (feature === 'inline-edit') {
-      return res.status(200).type('text/plain').send(result);
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.status(200).send(result);
     }
 
     return res.json({ result });
