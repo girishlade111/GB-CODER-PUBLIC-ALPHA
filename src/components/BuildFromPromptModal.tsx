@@ -146,7 +146,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
   }, [cooldownUntil]);
 
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.target === event.currentTarget && !isLoading) {
+    if (event.target === event.currentTarget) {
       onClose();
     }
   };
