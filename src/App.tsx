@@ -1150,6 +1150,7 @@ function App() {
               html={html}
               css={css + (customInjectionCode.css ? '\n\n/* Custom Injections */\n' + customInjectionCode.css : '')}
               javascript={javascript + (customInjectionCode.js ? '\n\n// Custom Injections\n' + customInjectionCode.js : '')}
+              jsEditorMode={jsEditorMode}
               onConsoleLog={handleConsoleLog}
               autoRunJS={settings.autoRunJS}
               previewDelay={settings.previewDelay}
