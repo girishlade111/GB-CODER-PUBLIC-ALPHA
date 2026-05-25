@@ -664,6 +664,7 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
+          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
@@ -724,6 +725,7 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
+          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
@@ -785,6 +787,7 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
+          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
@@ -844,6 +847,7 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
+          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
@@ -878,6 +882,7 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
+          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
@@ -912,6 +917,7 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
+          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
@@ -946,6 +952,7 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
+          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
@@ -980,6 +987,7 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
+          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
           onExport={() => downloadAsZip(html, css, javascript)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
@@ -1015,6 +1023,7 @@ function App() {
       <NavigationBar
         onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
         onRun={() => handleCommand('run')}
+        onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
         onImport={fileUpload.uploadFiles}
         onExport={() => downloadAsZip(html, css, javascript)}
         onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
