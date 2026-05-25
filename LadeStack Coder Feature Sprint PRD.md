@@ -1,5 +1,3 @@
-All checks confirmed. Generating full PRD now — NVIDIA NIM free models noted throughout. 🚀````markdown
-
 ```markdown
 # LadeStack Coder (code.ladestack.in) — Feature Sprint PRD
 
@@ -638,16 +636,4 @@ Explicitly out of scope. Do not build these, even if it seems easy:
 > Start with Feature 1: Read src/services/selectionOperationsService.ts and
 > api/ai.js first. Show me what you find. Then propose the fix before writing
 > any code. Ask me before making any assumptions.
-```
-
-```
-
----
-
-PRD complete. ✅
-
-**Tumhi aata he directly Claude Code madhye paste karu shakta.** Last point neet read kara — *"Start with Feature 1: Read the files first, show me what you find, then propose before writing any code."* — he instruction critical ahe. Claude Code la straight away code lihu deu naka — first analysis karayla sanga, mag approve kara, mag build.
-
-**Immediate next step (aajcha 48 tasyat):**
-`selectionOperationsService.ts` aani `api/ai.js` — dono files Claude Code madhye open kara aani above PRD paste kara. Stub fix hel 1–2 days madhe aani tumchya existing AI operations live hoyil — visible progress, zero new architecture.
 ```
