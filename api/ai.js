@@ -12,7 +12,7 @@ const axios = require('axios');
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const INVOKE_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
-const MODEL = process.env.NVIDIA_MODEL || 'qwen/qwen3.5-397b-a17b';
+const MODEL = process.env.NVIDIA_MODEL;
 const API_KEY = process.env.NVIDIA_API_KEY;
 
 // ─── Rate limiting (simple in-memory tracker) ────────────────────────────────
