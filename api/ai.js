@@ -87,6 +87,22 @@ const FEATURE_PROMPTS = {
     `[{"title":"...","description":"...","code":"...","type":"improvement|refactor|performance|security","impact":"high|medium|low"}]\n\n` +
     `\`\`\`${ctx}\n${code}\n\`\`\``,
 
+  generate: (userMessage, currentCode) => {
+    const editorCtx = currentCode
+      ? `\n\nCurrent editor state, if useful as context:\n` +
+        `HTML:\n\`\`\`html\n${currentCode.html || ''}\n\`\`\`\n` +
+        `CSS:\n\`\`\`css\n${currentCode.css || ''}\n\`\`\`\n` +
+        `JavaScript:\n\`\`\`javascript\n${currentCode.javascript || ''}\n\`\`\``
+      : '';
+
+    return (
+      `Build a complete browser-based UI from this prompt:\n${userMessage || ''}${editorCtx}\n\n` +
+      `Return ONLY valid JSON with exactly these string keys: "html", "css", "javascript". ` +
+      `Do not include markdown fences, explanations, comments outside the JSON, or extra keys. ` +
+      `Use plain HTML, CSS, and vanilla JavaScript only.`
+    );
+  },
+
   inlineEdit: (code, instruction, ctx) =>
     `Instruction:\n${instruction || ''}\n\n` +
     `Selected code:\n${code || ''}`,
@@ -119,6 +135,18 @@ function buildMessages(feature, { code, selectedCode, userMessage, instruction, 
     case 'optimize': userContent = FEATURE_PROMPTS.optimize(code || '', ctx); break;
     case 'enhance':  userContent = FEATURE_PROMPTS.enhance(code || '', ctx); break;
     case 'suggest':  userContent = FEATURE_PROMPTS.suggest(code || '', ctx); break;
+    case 'generate':
+      userContent = FEATURE_PROMPTS.generate(userMessage || '', currentCode);
+      return [
+        {
+          role: 'system',
+          content:
+            `You are a code generation assistant inside LadeStack Coder. ` +
+            `Generate complete, working browser code using only HTML, CSS, and vanilla JavaScript. ` +
+            `Return only strict JSON with the keys html, css, and javascript.`,
+        },
+        { role: 'user', content: userContent },
+      ];
     case 'inline-edit':
       userContent = FEATURE_PROMPTS.inlineEdit(code || '', instruction || '', ctx);
       return [
@@ -201,7 +229,7 @@ async function callNvidiaAI(messages, options = {}) {
 
 // ─── Valid features ───────────────────────────────────────────────────────────
 
-const VALID_FEATURES = new Set(['improve', 'explain', 'fix', 'optimize', 'enhance', 'suggest', 'inline-edit', 'chat']);
+const VALID_FEATURES = new Set(['improve', 'explain', 'fix', 'optimize', 'enhance', 'suggest', 'generate', 'inline-edit', 'chat']);
 const MAX_BODY_LEN = 60_000;
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
