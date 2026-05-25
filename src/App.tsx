@@ -580,6 +580,15 @@ function App() {
     setJavascript(template.javascript);
   }, [html, css, javascript]);
 
+  const handleBuildFromPrompt = useCallback(async (generatedCode: { html: string; css: string; javascript: string }) => {
+    codeHistory.saveState({ html, css, javascript }, 'Built from prompt');
+    setConsoleLogs([]);
+
+    await codeWriter.writeCode(generatedCode.html, setHtml);
+    await codeWriter.writeCode(generatedCode.css, setCss);
+    await codeWriter.writeCode(generatedCode.javascript, setJavascript);
+  }, [codeHistory, codeWriter, html, css, javascript]);
+
   const handleUpdateInjections = useCallback((css: string, js: string) => {
     setCustomInjectionCode({ css, js });
   }, []);
