@@ -133,7 +133,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
     const hasMeaningfulText = /[a-zA-Z0-9]/.test(normalizedPrompt);
 
     if (normalizedPrompt.length < MIN_PROMPT_LENGTH || !hasMeaningfulText) {
-      setError(true);
+      setErrorMessage('Please describe what you want to build in more detail.');
       return;
     }
 
