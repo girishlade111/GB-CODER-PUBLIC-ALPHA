@@ -122,7 +122,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
   };
 
   const handleTryAgain = () => {
-    setError(false);
+    setErrorMessage(null);
   };
 
   const handleGenerate = async () => {
