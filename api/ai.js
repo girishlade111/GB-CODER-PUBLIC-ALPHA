@@ -265,7 +265,7 @@ module.exports = async function handler(req, res) {
   }
 
   // Validate payload size
-  const totalLen = [code, selectedCode, userMessage, instruction, language, context].filter(Boolean).join('').length;
+  const totalLen = [code, selectedCode, userMessage, instruction, language, context, currentCode?.html, currentCode?.css, currentCode?.javascript].filter(Boolean).join('').length;
   if (totalLen > MAX_BODY_LEN) {
     return res.status(413).json({ error: 'Payload too large — please reduce the code size.' });
   }
