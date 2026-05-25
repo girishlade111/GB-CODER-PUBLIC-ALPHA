@@ -49,6 +49,7 @@ import { useProject } from './hooks/useProject';
 import { useSettings } from './hooks/useSettings';
 import { useFocusMode } from './hooks/useFocusMode';
 import { useProgressiveLoad } from './hooks/useProgressiveLoad';
+import { useCodeWriter } from './hooks/useCodeWriter';
 import SelectionToolbar from './components/SelectionToolbar';
 import SelectionSidebar from './components/SelectionSidebar';
 import { downloadAsZip } from './utils/downloadUtils';
