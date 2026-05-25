@@ -694,6 +694,60 @@ function App() {
     }
   };
 
+  // Render standalone live-preview share page (/preview?p=...) — must come
+  // first so it bypasses all editor chrome.
+  if (currentView === 'preview-share' && previewShareCode) {
+    return (
+      <PreviewSharePage
+        html={previewShareCode.html}
+        css={previewShareCode.css}
+        javascript={previewShareCode.javascript}
+      />
+    );
+  }
+
+  if (currentView === 'preview-share-error') {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#1e1e1e',
+          color: '#f3f4f6',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          padding: '24px',
+          textAlign: 'center',
+        }}
+      >
+        <div style={{ maxWidth: 480 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 12 }}>
+            Invalid preview link
+          </h1>
+          <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 24 }}>
+            The code could not be loaded.
+          </p>
+          <a
+            href="https://code.ladestack.in"
+            style={{
+              display: 'inline-block',
+              padding: '8px 16px',
+              background: '#3b82f6',
+              color: '#fff',
+              borderRadius: 8,
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
+            Open LadeStack Coder
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   // Render about page
   if (currentView === 'about') {
     return (
