@@ -578,14 +578,15 @@ function App() {
     setJavascript(template.javascript);
   }, [html, css, javascript]);
 
-  const handleBuildFromPrompt = useCallback(async (generatedHtml: string, generatedCss: string, generatedJavascript: string) => {
+  const handleBuildFromPrompt = useCallback((newHtml: string, newCss: string, newJavascript: string) => {
     codeHistory.saveState({ html, css, javascript }, 'Built from prompt');
+    autoSave.saveNow?.();
     setConsoleLogs([]);
-
-    await codeWriter.writeCode(generatedHtml, setHtml);
-    await codeWriter.writeCode(generatedCss, setCss);
-    await codeWriter.writeCode(generatedJavascript, setJavascript);
-  }, [codeHistory, codeWriter, html, css, javascript]);
+    setHtml(newHtml);
+    setCss(newCss);
+    setJavascript(newJavascript);
+    toast.success(' Built from prompt! Edit freely or generate again.');
+  }, [autoSave, codeHistory, html, css, javascript]);
 
   const handleUpdateInjections = useCallback((css: string, js: string) => {
     setCustomInjectionCode({ css, js });
