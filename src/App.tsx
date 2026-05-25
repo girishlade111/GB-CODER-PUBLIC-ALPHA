@@ -580,7 +580,6 @@ function App() {
 
   const handleBuildFromPrompt = useCallback((newHtml: string, newCss: string, newJavascript: string) => {
     codeHistory.saveState({ html, css, javascript }, 'Built from prompt');
-    autoSave.saveNow?.();
     setConsoleLogs([]);
     setHtml(newHtml);
     setCss(newCss);
