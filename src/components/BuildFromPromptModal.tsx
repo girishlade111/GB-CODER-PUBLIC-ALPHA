@@ -128,6 +128,24 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
   const handleGenerate = async () => {
     if (isGenerateDisabled) return;
 
+    // NEW: Prompt quality validation before making any API request.
+    const normalizedPrompt = promptText.trim().slice(0, MAX_PROMPT_LENGTH);
+    const hasMeaningfulText = /[a-zA-Z0-9]/.test(normalizedPrompt);
+
+    if (normalizedPrompt.length < MIN_PROMPT_LENGTH || !hasMeaningfulText) {
+      setError(true);
+      return;
+    }
+
+    // NEW: Duplicate prompt confirmation before replacing current generated code.
+    if (normalizedPrompt === lastGeneratedPrompt) {
+      const shouldRegenerate = window.confirm(
+        'You already generated code for this prompt. Generate again and replace current code?'
+      );
+
+      if (!shouldRegenerate) return;
+    }
+
     setIsLoading(true);
     setError(false);
     setLoadingMessageIndex(0);
@@ -143,7 +161,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
         },
         body: JSON.stringify({
           feature: 'generate',
-          prompt: promptText.trim(),
+          prompt: normalizedPrompt,
         }),
         signal: controller.signal,
       });
@@ -155,11 +173,16 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
       }
 
       const parsed = parseGeneratedCode(responseText);
-      const html = String(parsed.html ?? '');
-      const css = String(parsed.css ?? '');
-      const javascript = String(parsed.javascript ?? '');
+      // NEW: Empty-panel fallbacks keep generated output safe for all editors.
+      const parsedHtml = String(parsed.html ?? '');
+      const parsedCss = String(parsed.css ?? '');
+      const parsedJavascript = String(parsed.javascript ?? '');
+      const html = parsedHtml.trim() ? parsedHtml : '<div class="container"></div>';
+      const css = parsedCss.trim() ? parsedCss : '.container { padding: 20px; }';
+      const javascript = parsedJavascript.trim() ? parsedJavascript : '';
 
       onGenerate(html, css, javascript);
+      setLastGeneratedPrompt(normalizedPrompt);
       setCooldownUntil(Date.now() + COOLDOWN_MS);
       onClose();
     } catch {
