@@ -112,8 +112,8 @@ const FEATURE_PROMPTS = {
 
 // ─── Build messages ───────────────────────────────────────────────────────────
 
-function buildMessages(feature, { code, selectedCode, userMessage, instruction, context, currentCode }) {
-  const ctx = context || 'javascript';
+function buildMessages(feature, { code, selectedCode, userMessage, instruction, language, context, currentCode }) {
+  const ctx = context || language || 'javascript';
   let userContent;
   switch (feature) {
     case 'improve':  userContent = FEATURE_PROMPTS.improve(code || '', ctx); break;
@@ -219,7 +219,7 @@ module.exports = async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests — please wait a moment.' });
   }
 
-  const { feature, code, selectedCode, userMessage, instruction, context, currentCode, conversationHistory } = req.body || {};
+  const { feature, code, selectedCode, userMessage, instruction, language, context, currentCode, conversationHistory } = req.body || {};
 
   // Validate feature
   if (!feature || !VALID_FEATURES.has(feature)) {
@@ -229,13 +229,13 @@ module.exports = async function handler(req, res) {
   }
 
   // Validate payload size
-  const totalLen = [code, selectedCode, userMessage, instruction, context].filter(Boolean).join('').length;
+  const totalLen = [code, selectedCode, userMessage, instruction, language, context].filter(Boolean).join('').length;
   if (totalLen > MAX_BODY_LEN) {
     return res.status(413).json({ error: 'Payload too large — please reduce the code size.' });
   }
 
   try {
-    const messages = buildMessages(feature, { code, selectedCode, userMessage, instruction, context, currentCode });
+    const messages = buildMessages(feature, { code, selectedCode, userMessage, instruction, language, context, currentCode });
 
     // Inject conversation history for chat
     if (feature === 'chat' && Array.isArray(conversationHistory) && conversationHistory.length > 0) {
