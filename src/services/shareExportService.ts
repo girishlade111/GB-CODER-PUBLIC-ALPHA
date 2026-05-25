@@ -350,16 +350,13 @@ export const decodePreviewURL = (
   encodedString: string
 ): { html: string; css: string; javascript: string } => {
   try {
-    const decoded = shareExportService.loadFromUrl(encodedString);
-
-    if (!decoded) {
-      return { html: '', css: '', javascript: '' };
-    }
+    const decodedString = decodeURIComponent(escape(atob(encodedString)));
+    const decoded = JSON.parse(decodedString) as Partial<ShareableCode>;
 
     return {
-      html: decoded.html,
-      css: decoded.css,
-      javascript: decoded.javascript,
+      html: decoded.html || '',
+      css: decoded.css || '',
+      javascript: decoded.javascript || '',
     };
   } catch {
     return { html: '', css: '', javascript: '' };
