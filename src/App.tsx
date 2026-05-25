@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, Suspense, lazy } from 'react';
-import { Code2, MessageSquare, Mic, LayoutTemplate, BarChart3, CheckCircle, Zap, Sparkles } from 'lucide-react';
+import { Code2, MessageSquare, Mic, LayoutTemplate, BarChart3, CheckCircle, Zap } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
 import EditorPanel from './components/EditorPanel';
@@ -49,7 +49,6 @@ import { useProject } from './hooks/useProject';
 import { useSettings } from './hooks/useSettings';
 import { useFocusMode } from './hooks/useFocusMode';
 import { useProgressiveLoad } from './hooks/useProgressiveLoad';
-import { useCodeWriter } from './hooks/useCodeWriter';
 import SelectionToolbar from './components/SelectionToolbar';
 import SelectionSidebar from './components/SelectionSidebar';
 import { downloadAsZip } from './utils/downloadUtils';
@@ -96,7 +95,7 @@ function App() {
 
   // ===== NEW FEATURES STATE =====
   const [showAIChat, setShowAIChat] = useState(false);
-  const [showBuildPrompt, setShowBuildPrompt] = useState(false);
+  const [showBuildFromPrompt, setShowBuildFromPrompt] = useState(false);
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -128,7 +127,6 @@ function App() {
   const jsEditorRef = React.useRef<any>(null);
   const { selection, updateSelection, clearSelection, hasSelection } = useCodeSelection();
   const selectionOps = useSelectionOperations();
-  const codeWriter = useCodeWriter();
 
   // Code history for undo/redo functionality
   const codeHistory = useCodeHistory({ html, css, javascript });
