@@ -10,6 +10,7 @@ import {
   Moon,
   Settings,
   Trash2,
+  Wand2,
 } from 'lucide-react';
 import { EditorLanguage } from '../types';
 import { useTheme } from '../hooks/useTheme';
@@ -18,6 +19,7 @@ import { useSettings } from '../hooks/useSettings';
 interface NavigationBarProps {
   onAutoSaveToggle: () => void;
   onRun: () => void;
+  onOpenBuildFromPrompt: () => void;
   onImport: (files: FileList) => void;
   onExport: () => void;
   onExternalLibraryManagerToggle: () => void;
@@ -30,6 +32,7 @@ interface NavigationBarProps {
 const NavigationBar: React.FC<NavigationBarProps> = ({
   onAutoSaveToggle,
   onRun,
+  onOpenBuildFromPrompt,
   onImport,
   onExport,
   onExternalLibraryManagerToggle,
@@ -103,6 +106,30 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
             {/* Right side - Settings, Menu */}
             <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 min-w-0 flex-shrink-0">
+              <button
+                onClick={onRun}
+                className={`p-2 sm:px-3 sm:py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${
+                  isDark
+                    ? 'text-gray-300 hover:bg-dark-gray'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+                title="Run"
+                aria-label="Run"
+              >
+                <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden lg:inline text-sm font-medium">Run</span>
+              </button>
+
+              <button
+                onClick={onOpenBuildFromPrompt}
+                className="p-2 sm:px-3 sm:py-2 rounded-lg transition-all duration-200 flex items-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-purple-950/30 hover:from-violet-500 hover:to-purple-500 hover:shadow-purple-900/40 active:brightness-90"
+                title="Build with AI"
+                aria-label="Build with AI"
+              >
+                <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden lg:inline text-sm font-semibold">Build with AI</span>
+              </button>
+
               {/* Custom Actions */}
               {customActions}
 
