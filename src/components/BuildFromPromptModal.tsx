@@ -65,7 +65,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    setError(false);
+    setErrorMessage(null);
     setLoadingMessageIndex(0);
     requestAnimationFrame(() => textareaRef.current?.focus());
   }, [isOpen]);
