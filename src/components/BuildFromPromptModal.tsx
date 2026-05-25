@@ -147,7 +147,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
     }
 
     setIsLoading(true);
-    setError(false);
+    setErrorMessage(null);
     setLoadingMessageIndex(0);
 
     const controller = new AbortController();
