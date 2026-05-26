@@ -325,25 +325,58 @@ Generated on: ${new Date().toLocaleDateString()}
 
 export const shareExportService = ShareExportService.getInstance();
 
-export const generatePreviewShareURL = (
+export const generatePreviewShareURL = async (
   html: string,
   css: string,
   javascript: string
-): { url: string; encoded: string } => {
-  const shareUrl = shareExportService.generateShareableUrl({
-    html,
-    css,
-    javascript,
-    externalLibraries: [],
-    timestamp: Date.now(),
-    version: '1.0.0',
+): Promise<{ url: string; id: string }> => {
+  const response = await fetch('/api/share', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ html, css, javascript }),
   });
-  const encoded = new URL(shareUrl).searchParams.get('code') || '';
 
-  return {
-    url: `https://code.ladestack.in/preview?p=${encodeURIComponent(encoded)}`,
-    encoded,
-  };
+  if (response.ok) {
+    const data = await response.json();
+    return {
+      url: data.url,
+      id: data.id,
+    };
+  }
+
+  if (response.status === 429) {
+    throw new Error('TOO_MANY_SHARES');
+  }
+
+  if (response.status === 400) {
+    throw new Error('EMPTY_PROJECT');
+  }
+
+  throw new Error('SHARE_FAILED');
+};
+
+export const fetchPreviewByID = async (
+  shortId: string
+): Promise<{ html: string; css: string; javascript: string; createdAt?: number }> => {
+  const response = await fetch(`/api/preview?id=${encodeURIComponent(shortId)}`);
+
+  if (response.ok) {
+    const data = await response.json();
+    return {
+      html: data.html || '',
+      css: data.css || '',
+      javascript: data.javascript || '',
+      createdAt: data.createdAt,
+    };
+  }
+
+  if (response.status === 404) {
+    throw new Error('PREVIEW_NOT_FOUND');
+  }
+
+  throw new Error('PREVIEW_LOAD_FAILED');
 };
 
 export const decodePreviewURL = (
