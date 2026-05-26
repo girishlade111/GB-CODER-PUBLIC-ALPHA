@@ -59,7 +59,7 @@ import { migrateSnippets } from './utils/snippetUtils';
 import { externalLibraryService, ExternalLibrary } from './services/externalLibraryService';
 import { formattingService } from './services/formattingService';
 import { SelectionOperationType } from './services/selectionOperationsService';
-import { decodePreviewURL } from './services/shareExportService';
+import { fetchPreviewByID } from './services/shareExportService';
 import PreviewSharePage from './components/PreviewSharePage';
 
 
@@ -91,6 +91,9 @@ function App() {
   const [showSnippets, setShowSnippets] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<AppView>('editor');
   const [previewShareCode, setPreviewShareCode] = useState<{ html: string; css: string; javascript: string } | null>(null);
+  const [previewShortId, setPreviewShortId] = useState('');
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [showExternalLibraryManager, setShowExternalLibraryManager] = useState<boolean>(false);
   const [externalLibraries, setExternalLibraries] = useState<ExternalLibrary[]>([]);
   const [showExtensionsMarketplace, setShowExtensionsMarketplace] = useState<boolean>(false);
