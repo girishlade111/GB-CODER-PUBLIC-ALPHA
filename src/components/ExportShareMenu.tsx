@@ -122,8 +122,9 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
   }, [html, css, javascript, externalLibraries]);
 
   const handleSharePreviewUrl = useCallback(async () => {
+    setIsSharingPreview(true);
     try {
-      const { url } = generatePreviewShareURL(html, css, javascript);
+      const { url } = await generatePreviewShareURL(html, css, javascript);
       await navigator.clipboard.writeText(url);
       toast.success('🔗 Preview link copied! Share it anywhere.');
       setCopiedItem('preview');
