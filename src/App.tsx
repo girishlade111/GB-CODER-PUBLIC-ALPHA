@@ -713,38 +713,13 @@ function App() {
 
   if (currentView === 'preview-share-error') {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#1e1e1e',
-          color: '#f3f4f6',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          padding: '24px',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{ maxWidth: 480 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 12 }}>
-            Invalid preview link
-          </h1>
-          <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 24 }}>
-            The code could not be loaded.
-          </p>
+      <div className="flex min-h-screen items-center justify-center bg-[#1e1e1e] p-6 text-center text-gray-100">
+        <div className="max-w-md">
+          <h1 className="mb-3 text-[22px] font-semibold">Invalid preview link</h1>
+          <p className="mb-6 text-sm text-gray-400">The code could not be loaded.</p>
           <a
             href="https://code.ladestack.in"
-            style={{
-              display: 'inline-block',
-              padding: '8px 16px',
-              background: '#3b82f6',
-              color: '#fff',
-              borderRadius: 8,
-              textDecoration: 'none',
-              fontSize: 14,
-              fontWeight: 500,
-            }}
+            className="inline-block rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-blue-600"
           >
             Open LadeStack Coder
           </a>
