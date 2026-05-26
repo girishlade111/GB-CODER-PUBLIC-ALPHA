@@ -207,6 +207,11 @@ function App() {
 
     try {
       const decoded = decodePreviewURL(encoded);
+      if (!decoded.html && !decoded.css && !decoded.javascript) {
+        setCurrentView('preview-share-error');
+        return;
+      }
+
       setPreviewShareCode(decoded);
       setCurrentView('preview-share');
     } catch (err) {
