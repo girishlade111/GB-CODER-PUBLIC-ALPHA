@@ -194,32 +194,81 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // /preview route detection — runs once on app init.
-  // Standalone share viewer: code.ladestack.in/preview?p=ENCODED_STRING
+  // /preview/:id route and ?fork=:id detection - runs once on app init.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (window.location.pathname !== '/preview') return;
 
-    const params = new URLSearchParams(window.location.search);
-    const encoded = params.get('p');
+    const loadSharedPreview = async (shortId: string, mode: 'preview' | 'fork') => {
+      try {
+        const sharedCode = await fetchPreviewByID(shortId);
 
-    if (!encoded) {
-      setCurrentView('preview-share-error');
-      return;
-    }
+        if (mode === 'preview') {
+          setPreviewShareCode(sharedCode);
+          setPreviewError(null);
+          setPreviewLoading(false);
+          return;
+        }
 
-    try {
-      const decoded = decodePreviewURL(encoded);
-      if (!decoded.html && !decoded.css && !decoded.javascript) {
-        setCurrentView('preview-share-error');
+        codeHistory.saveState({ html, css, javascript }, 'Forked shared preview');
+        setHtml(sharedCode.html);
+        setCss(sharedCode.css);
+        setJavascript(sharedCode.javascript);
+        setConsoleLogs([]);
+        toast.success('Preview opened in editor.');
+      } catch (error: any) {
+        if (mode === 'preview') {
+          setPreviewError(
+            error.message === 'PREVIEW_NOT_FOUND'
+              ? "This preview has expired or doesn't exist."
+              : 'Failed to load preview. Try again.'
+          );
+          setPreviewLoading(false);
+          return;
+        }
+
+        toast.error(
+          error.message === 'PREVIEW_NOT_FOUND'
+            ? "This preview has expired or doesn't exist."
+            : 'Failed to load preview. Try again.'
+        );
+      }
+    };
+
+    if (window.location.pathname.startsWith('/preview/')) {
+      const shortId = window.location.pathname.split('/preview/')[1]?.split('/')[0] || '';
+      setCurrentView('preview-share');
+      setPreviewShortId(shortId);
+      setPreviewShareCode(null);
+
+      if (shortId.length !== 8) {
+        setPreviewError("This preview has expired or doesn't exist.");
+        setPreviewLoading(false);
         return;
       }
 
-      setPreviewShareCode(decoded);
+      setPreviewError(null);
+      setPreviewLoading(true);
+      loadSharedPreview(shortId, 'preview');
+      return;
+    }
+
+    if (window.location.pathname === '/preview' || window.location.pathname === '/preview/') {
       setCurrentView('preview-share');
-    } catch (err) {
-      console.error('[Preview] Failed to decode preview URL:', err);
-      setCurrentView('preview-share-error');
+      setPreviewShortId('');
+      setPreviewShareCode(null);
+      setPreviewError("This preview has expired or doesn't exist.");
+      setPreviewLoading(false);
+      return;
+    }
+
+    const forkId = new URLSearchParams(window.location.search).get('fork') || '';
+    if (forkId) {
+      if (forkId.length !== 8) {
+        toast.error("This preview has expired or doesn't exist.");
+        return;
+      }
+
+      loadSharedPreview(forkId, 'fork');
     }
   }, []);
 
