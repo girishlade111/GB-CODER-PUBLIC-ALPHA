@@ -126,14 +126,19 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
     try {
       const { url } = await generatePreviewShareURL(html, css, javascript);
       await navigator.clipboard.writeText(url);
-      toast.success('?? Preview link copied!');
+      toast.success('\uD83D\uDD17 Preview link copied!');
       setCopiedItem('preview');
       setTimeout(() => setCopiedItem(null), 2000);
     } catch (error: any) {
       console.error('Preview share URL error:', error);
-      toast.error(`Failed to copy preview link: ${error.message}`);
+      if (error.message === 'TOO_MANY_SHARES') {
+        toast.error(' Too many shares. Try again in an hour.');
+      } else if (error.message === 'EMPTY_PROJECT') {
+        toast.error(' Add some code before sharing.');
+      } else {
+        toast.error(' Share failed. Check connection and try again.');
+      }
     } finally {
-      setIsSharingPreview(false);
       setIsOpen(false);
     }
   }, [html, css, javascript]);
