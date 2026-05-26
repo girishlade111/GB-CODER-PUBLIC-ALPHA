@@ -751,14 +751,17 @@ function App() {
     }
   };
 
-  // Render standalone live-preview share page (/preview?p=...) — must come
+  // Render standalone live-preview share page (/preview/:id) - must come
   // first so it bypasses all editor chrome.
-  if (currentView === 'preview-share' && previewShareCode) {
+  if (currentView === 'preview-share') {
     return (
       <PreviewSharePage
-        html={previewShareCode.html}
-        css={previewShareCode.css}
-        javascript={previewShareCode.javascript}
+        html={previewShareCode?.html || ''}
+        css={previewShareCode?.css || ''}
+        javascript={previewShareCode?.javascript || ''}
+        shortId={previewShortId}
+        isLoading={previewLoading}
+        error={previewError}
       />
     );
   }
