@@ -220,7 +220,7 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
     {
       category: 'Share',
       items: [
-        { icon: copiedItem === 'preview' ? Check : Eye, label: 'Share Live Preview', onClick: handleSharePreviewUrl, copied: copiedItem === 'preview' },
+        { icon: copiedItem === 'preview' ? Check : Eye, label: isSharingPreview ? 'Saving...' : 'Share Live Preview', onClick: handleSharePreviewUrl, copied: copiedItem === 'preview', loading: isSharingPreview },
         { icon: copiedItem === 'url' ? Check : Share2, label: 'Generate Share URL', onClick: handleShareUrl, copied: copiedItem === 'url' },
         { icon: ExternalLink, label: 'Export to CodePen', onClick: handleExportCodePen },
         { icon: ExternalLink, label: 'Export to JSFiddle', onClick: handleExportJSFiddle },
@@ -277,7 +277,7 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
                     <button
                       key={itemIdx}
                       onClick={item.onClick}
-                      disabled={item.loading}
+                      disabled={item.loading || isSharingPreview}
                       className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                         isDark
                           ? 'hover:bg-gray-800 text-gray-300'
