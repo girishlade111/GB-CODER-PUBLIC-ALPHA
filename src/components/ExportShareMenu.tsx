@@ -139,6 +139,7 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
         toast.error(' Share failed. Check connection and try again.');
       }
     } finally {
+      setIsSharingPreview(false);
       setIsOpen(false);
     }
   }, [html, css, javascript]);
@@ -154,7 +155,6 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
       console.error('Export HTML error:', error);
       toast.error(`Failed to export: ${error.message}`);
     } finally {
-      setIsSharingPreview(false);
       setIsOpen(false);
     }
   }, [html, css, javascript]);
@@ -184,7 +184,6 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
       console.error('CodePen export error:', error);
       toast.error(`Failed to export: ${error.message}`);
     } finally {
-      setIsSharingPreview(false);
       setIsOpen(false);
     }
   }, [html, css, javascript]);
@@ -197,7 +196,6 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
       console.error('JSFiddle export error:', error);
       toast.error(`Failed to export: ${error.message}`);
     } finally {
-      setIsSharingPreview(false);
       setIsOpen(false);
     }
   }, [html, css, javascript]);
