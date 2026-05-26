@@ -126,13 +126,14 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
     try {
       const { url } = await generatePreviewShareURL(html, css, javascript);
       await navigator.clipboard.writeText(url);
-      toast.success('🔗 Preview link copied! Share it anywhere.');
+      toast.success('?? Preview link copied!');
       setCopiedItem('preview');
       setTimeout(() => setCopiedItem(null), 2000);
     } catch (error: any) {
       console.error('Preview share URL error:', error);
       toast.error(`Failed to copy preview link: ${error.message}`);
     } finally {
+      setIsSharingPreview(false);
       setIsOpen(false);
     }
   }, [html, css, javascript]);
@@ -148,6 +149,7 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
       console.error('Export HTML error:', error);
       toast.error(`Failed to export: ${error.message}`);
     } finally {
+      setIsSharingPreview(false);
       setIsOpen(false);
     }
   }, [html, css, javascript]);
@@ -177,6 +179,7 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
       console.error('CodePen export error:', error);
       toast.error(`Failed to export: ${error.message}`);
     } finally {
+      setIsSharingPreview(false);
       setIsOpen(false);
     }
   }, [html, css, javascript]);
@@ -189,6 +192,7 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
       console.error('JSFiddle export error:', error);
       toast.error(`Failed to export: ${error.message}`);
     } finally {
+      setIsSharingPreview(false);
       setIsOpen(false);
     }
   }, [html, css, javascript]);
@@ -297,3 +301,4 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
 };
 
 export default ExportShareMenu;
+
