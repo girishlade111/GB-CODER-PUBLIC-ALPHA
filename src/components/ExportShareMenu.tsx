@@ -23,6 +23,7 @@ const ExportShareMenu: React.FC<ExportShareMenuProps> = ({
   const { isDark } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isSharingPreview, setIsSharingPreview] = useState(false);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
   const handleScreenshot = useCallback(async (format: 'png' | 'jpeg' | 'svg') => {
