@@ -1,62 +1,34 @@
-/**
- * Vercel Serverless Function - GET /api/preview?id=SHORTID
- *
- * Loads shared preview code from Upstash Redis.
- */
-
-'use strict';
-
-const { Redis } = require('@upstash/redis');
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
-
-function getPreviewId(req) {
-  const { id } = req.query || {};
-  return typeof id === 'string' ? id.trim() : '';
-}
-
-module.exports = async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    return res.status(500).json({ error: 'Failed to load preview. Try again.' });
-  }
-
-  const id = getPreviewId(req);
-  if (!id) {
-    return res.status(404).json({ error: 'Preview not found or expired' });
-  }
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  
+  if (req.method === 'OPTIONS') { res.status(200).end(); return }
 
   try {
-    const stored = await redis.get(`preview:${id}`);
+    const { Redis } = require('@upstash/redis')
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
 
-    if (!stored) {
-      return res.status(404).json({ error: 'Preview not found or expired' });
+    const { id } = req.query
+    if (!id || id.length !== 8) {
+      return res.status(400).json({ error: 'Invalid preview ID' })
     }
 
-    const preview = typeof stored === 'string' ? JSON.parse(stored) : stored;
+    const data = await redis.get(`preview:${id}`)
+    if (!data) {
+      return res.status(404).json({ error: 'Preview not found or expired' })
+    }
 
+    const parsed = typeof data === 'string' ? JSON.parse(data) : data
     return res.status(200).json({
-      html: typeof preview.html === 'string' ? preview.html : '',
-      css: typeof preview.css === 'string' ? preview.css : '',
-      javascript: typeof preview.javascript === 'string' ? preview.javascript : '',
-      createdAt: preview.createdAt,
-    });
+      html: parsed.html || '',
+      css: parsed.css || '',
+      javascript: parsed.javascript || ''
+    })
+
   } catch (error) {
-    console.error('[preview] Failed to load preview:', error);
-    return res.status(500).json({ error: 'Failed to load preview. Try again.' });
+    console.error('[api/preview] Error:', error.message)
+    return res.status(500).json({ error: 'Failed to load preview. Try again.' })
   }
-};
+}

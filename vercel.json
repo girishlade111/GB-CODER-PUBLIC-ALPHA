@@ -8,10 +8,8 @@
     }
   },
   "rewrites": [
-    { "source": "/api/ai", "destination": "/api/ai" },
-    { "source": "/api/health", "destination": "/api/health" },
-    { "source": "/api/share", "destination": "/api/share" },
-    { "source": "/api/preview", "destination": "/api/preview" },
-    { "source": "/preview/(.*)", "destination": "/index.html" }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/preview/(.*)", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

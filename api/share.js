@@ -1,119 +1,80 @@
-/**
- * Vercel Serverless Function - POST /api/share
- *
- * Stores preview code in Upstash Redis and returns a short preview URL.
- */
-
-'use strict';
-
-const crypto = require('crypto');
-const { Redis } = require('@upstash/redis');
-
-const PREVIEW_TTL_SECONDS = 2_592_000; // 30 days
-const RATE_LIMIT_TTL_SECONDS = 3_600; // 1 hour
-const RATE_LIMIT_MAX = 10;
-const PREVIEW_URL_BASE = 'https://code.ladestack.in/preview';
-
-function getClientIp(req) {
-  const forwardedFor = req.headers['x-forwarded-for'];
-  if (typeof forwardedFor === 'string' && forwardedFor.length > 0) {
-    return forwardedFor.split(',')[0].trim();
-  }
-
-  return req.socket?.remoteAddress || 'unknown';
-}
-
-function createShortId() {
-  return crypto.randomBytes(6).toString('base64url').slice(0, 8);
-}
-
-function normalizeCode(value) {
-  return typeof value === 'string' ? value : '';
-}
-
-async function checkRateLimit(redis, ip) {
-  const key = `ratelimit:share:${ip}`;
-  const count = await redis.incr(key);
-
-  if (count === 1) {
-    await redis.expire(key, RATE_LIMIT_TTL_SECONDS);
-  }
-
-  return count <= RATE_LIMIT_MAX;
-}
-
-async function savePreviewWithUniqueId(redis, payload) {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const id = createShortId();
-    const key = `preview:${id}`;
-    const saved = await redis.set(key, JSON.stringify(payload), {
-      ex: PREVIEW_TTL_SECONDS,
-      nx: true,
-    });
-
-    if (saved === 'OK') {
-      return id;
-    }
-  }
-
-  throw new Error('Failed to generate unique preview id');
-}
-
-module.exports = async function handler(req, res) {
-  // CORS Headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+module.exports = async (req, res) => {
+  // CORS headers first
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  if (req.method === 'OPTIONS') { res.status(200).end(); return }
+  if (req.method !== 'POST') { 
+    return res.status(405).json({ error: 'Method not allowed' }) 
   }
 
   try {
-    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-      console.error('Share API error: UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN is missing');
-      return res.status(500).json({ error: 'Failed to save preview. Configuration missing.' });
+    // Safe body parsing — handles both pre-parsed and string body
+    let body
+    if (typeof req.body === 'string') {
+      body = JSON.parse(req.body)
+    } else if (typeof req.body === 'object' && req.body !== null) {
+      body = req.body  // already parsed (Express or Vercel with bodyParser)
+    } else {
+      // Raw stream — read manually
+      const chunks = []
+      for await (const chunk of req) {
+        chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk)
+      }
+      body = JSON.parse(Buffer.concat(chunks).toString())
     }
 
-    // Initialize Redis client INSIDE the handler
+    const { html = '', css = '', javascript = '' } = body
+
+    // Validate: at least one panel must have content
+    if (!html.trim() && !css.trim() && !javascript.trim()) {
+      return res.status(400).json({ error: 'Cannot share an empty project' })
+    }
+
+    // Redis client — initialized INSIDE handler
+    const { Redis } = require('@upstash/redis')
     const redis = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL,
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    });
+    })
 
-    const html = normalizeCode(req.body?.html);
-    const css = normalizeCode(req.body?.css);
-    const javascript = normalizeCode(req.body?.javascript);
+    // Generate short ID
+    const crypto = require('crypto')
+    const shortId = crypto.randomBytes(6).toString('base64url').slice(0, 8)
 
-    if (!html.trim() && !css.trim() && !javascript.trim()) {
-      return res.status(400).json({ error: 'Cannot share an empty project' });
+    // Rate limiting
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
+               req.headers['x-real-ip'] || 
+               'unknown'
+    const rateLimitKey = `ratelimit:share:${ip}`
+    const currentCount = await redis.get(rateLimitKey)
+    
+    if (currentCount && parseInt(currentCount) >= 10) {
+      return res.status(429).json({ 
+        error: 'Too many shares. Try again in an hour.' 
+      })
     }
 
-    const ip = getClientIp(req);
-    const allowed = await checkRateLimit(redis, ip);
+    // Store code in Redis with 30-day TTL
+    await redis.set(
+      `preview:${shortId}`,
+      JSON.stringify({ html, css, javascript, createdAt: Date.now() }),
+      { ex: 2592000 }
+    )
 
-    if (!allowed) {
-      return res.status(429).json({ error: 'Too many shares. Try again in an hour.' });
-    }
-
-    const payload = {
-      html,
-      css,
-      javascript,
-      createdAt: Date.now(),
-    };
-    const id = await savePreviewWithUniqueId(redis, payload);
+    // Increment rate limit counter
+    await redis.set(rateLimitKey, (parseInt(currentCount || '0') + 1).toString(), { ex: 3600 })
 
     return res.status(200).json({
-      id,
-      url: `${PREVIEW_URL_BASE}/${id}`,
-    });
+      id: shortId,
+      url: `https://code.ladestack.in/preview/${shortId}`
+    })
+
   } catch (error) {
-    console.error('Share API error:', error.message, error.stack);
-    return res.status(500).json({ error: 'Failed to save preview. Try again.' });
+    console.error('[api/share] Error:', error.message)
+    console.error('[api/share] Stack:', error.stack)
+    return res.status(500).json({ 
+      error: 'Failed to save preview. Try again.' 
+    })
   }
-};
+}
