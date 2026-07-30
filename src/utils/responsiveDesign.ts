@@ -406,7 +406,6 @@ export class ResponsiveDesignService {
    * Create responsive value
    */
   createResponsiveValue<T>(values: Partial<Record<Breakpoint, T>>, defaultValue: T): T {
-    const { breakpoint } = this.currentConfig;
     
     // Check from largest to smallest
     const breakpointOrder: Breakpoint[] = ['2xl', 'xl', 'lg', 'md', 'sm', 'xs'];

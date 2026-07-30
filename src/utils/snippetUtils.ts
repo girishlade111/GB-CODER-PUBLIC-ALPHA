@@ -1,4 +1,4 @@
-import { CodeSnippet, SnippetType, SnippetScope } from '../types';
+import { CodeSnippet, SnippetType } from '../types';
 
 export const exportSnippetAsJSON = (snippet: CodeSnippet): void => {
   const dataStr = JSON.stringify(snippet, null, 2);
@@ -38,7 +38,7 @@ export const importSnippetFromJSON = (file: File): Promise<CodeSnippet> => {
         };
 
         resolve(importedSnippet);
-      } catch (error) {
+      } catch {
         reject(new Error('Failed to parse snippet file'));
       }
     };
@@ -95,10 +95,11 @@ export const sortSnippets = (snippets: CodeSnippet[], sortBy: 'name' | 'date' | 
         return a.name.localeCompare(b.name);
       case 'date':
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      case 'updated':
+      case 'updated': {
         const aUpdated = a.updatedAt || a.createdAt;
         const bUpdated = b.updatedAt || b.createdAt;
         return new Date(bUpdated).getTime() - new Date(aUpdated).getTime();
+      }
       default:
         return 0;
     }

@@ -22,7 +22,6 @@ interface ProjectBarProps {
 const ProjectBar: React.FC<ProjectBarProps> = ({
     currentProject,
     projectList,
-    isSaving,
     onNewProject,
     onSwitchProject,
     onUpdateName,

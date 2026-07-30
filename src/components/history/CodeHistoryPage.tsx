@@ -29,7 +29,7 @@ const CodeHistoryPage: React.FC<CodeHistoryPageProps> = ({ onLoadCode, selection
 
   // Filter and sort code files
   const filteredAndSortedFiles = useMemo(() => {
-    let filtered = codeFiles.filter(file => {
+    const filtered = codeFiles.filter(file => {
       const matchesSearch = file.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         file.code_content.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesLanguage = languageFilter === 'all' || file.language === languageFilter;
@@ -55,7 +55,7 @@ const CodeHistoryPage: React.FC<CodeHistoryPageProps> = ({ onLoadCode, selection
 
   // Filter and sort AI history
   const filteredAndSortedHistory = useMemo(() => {
-    let filtered = selectionHistory.filter(item => {
+    const filtered = selectionHistory.filter(item => {
       const matchesSearch = item.operation.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.codePreview.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.result.explanation.toLowerCase().includes(searchQuery.toLowerCase());

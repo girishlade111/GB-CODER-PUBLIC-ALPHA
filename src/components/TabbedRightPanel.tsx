@@ -1,4 +1,4 @@
-import React, { useState, Suspense, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { useState, Suspense, forwardRef, useRef } from 'react';
 import { Eye, Terminal } from 'lucide-react';
 import PreviewPanel from './PreviewPanel';
 import { ConsoleLog, JSEditorMode } from '../types';

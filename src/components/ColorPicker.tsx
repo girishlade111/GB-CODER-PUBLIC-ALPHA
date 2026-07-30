@@ -296,15 +296,6 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
     }
   };
 
-  const handleHslChange = (component: "h" | "s" | "l", value: string) => {
-    let numValue = parseInt(value) || 0;
-    if (component === "h") numValue = Math.min(360, Math.max(0, numValue));
-    else numValue = Math.min(100, Math.max(0, numValue));
-
-    const newHsl = { ...hsl, [component]: numValue };
-    updateFromHsl(newHsl);
-  };
-
   const handleSatLightPicker = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!satLightRef.current) return;
     const rect = satLightRef.current.getBoundingClientRect();
@@ -377,12 +368,6 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
         : currentColor;
     onColorSelect(finalColor);
     onClose();
-  };
-
-  const getColorWithAlpha = (hex: string, a: number): string => {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return hex;
-    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${a / 100})`;
   };
 
   if (!isOpen) return null;

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, MessageSquare, Trash2, Copy, Check, Code2, Sparkles } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { aiChatAssistant, ChatMessage } from '../services/aiChatAssistant';
+import { ExternalLibrary } from '../services/externalLibraryService';
 import toast from 'react-hot-toast';
 
 interface AIChatAssistantProps {
@@ -10,7 +11,7 @@ interface AIChatAssistantProps {
   html: string;
   css: string;
   javascript: string;
-  externalLibraries: string[];
+  externalLibraries: ExternalLibrary[];
 }
 
 const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
@@ -61,7 +62,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
     try {
       const response = await aiChatAssistant.sendMessage(
         userMessage.content,
-        { html, css, javascript, externalLibraries },
+        { html, css, javascript, externalLibraries: externalLibraries.map(lib => lib.name) },
         includeCodeContext
       );
 
@@ -75,7 +76,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
       setMessages(prev => [...prev, assistantMessage]);
       aiChatAssistant.addMessage(userMessage);
       aiChatAssistant.addMessage(assistantMessage);
-    } catch (error) {
+    } catch {
       toast.error('Failed to get AI response');
     } finally {
       setIsLoading(false);
@@ -100,21 +101,6 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
     setMessages([]);
     aiChatAssistant.clearHistory();
     toast.success('Chat history cleared');
-  };
-
-  const extractCodeBlocks = (content: string) => {
-    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-    const blocks: { language: string; code: string }[] = [];
-    let match;
-
-    while ((match = codeBlockRegex.exec(content)) !== null) {
-      blocks.push({
-        language: match[1] || 'text',
-        code: match[2].trim(),
-      });
-    }
-
-    return blocks;
   };
 
   const renderMessageContent = (message: ChatMessage) => {

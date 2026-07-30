@@ -2,11 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global override: Remove all rounded corners for sharp 90-degree angles */
-* {
-    border-radius: 0 !important;
-}
-
 /* VS Code-style transition presets */
 :root {
     --transition-fast: 120ms ease-out;

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { X, Search, Code2, Layers, Zap, BookOpen, Star, ExternalLink, Grid, List } from 'lucide-react';
+import { X, Search, Code2, Layers, ExternalLink, Grid, List } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
-import { enhancedTemplateService, CodeTemplate, TemplateCategory, TEMPLATE_CATEGORIES } from '../services/enhancedTemplateService';
+import { enhancedTemplateService, TemplateCategory, TEMPLATE_CATEGORIES } from '../services/enhancedTemplateService';
 import toast from 'react-hot-toast';
 
 interface TemplateSelectorModalProps {
@@ -20,7 +20,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateMetadata, setTemplateMetadata] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);

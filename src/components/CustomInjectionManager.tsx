@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, Plus, Code2, Save, Trash2, ToggleLeft, ToggleRight, Zap, BookOpen } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
-import { customInjectionService, CustomInjection, PresetInjection } from '../services/customInjectionService';
+import { customInjectionService, CustomInjection } from '../services/customInjectionService';
 import toast from 'react-hot-toast';
 
 interface CustomInjectionManagerProps {
@@ -48,7 +48,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
       return;
     }
 
-    const added = customInjectionService.addInjection({
+    customInjectionService.addInjection({
       name: newInjection.name!,
       type: newInjection.type as 'css' | 'js',
       code: newInjection.code!,

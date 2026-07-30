@@ -1,5 +1,5 @@
 // Error Highlighting and Debugging Tools Service
-import { ConsoleLogEntry, DebugInfo } from '../types/console.types';
+import { DebugInfo } from '../types/console.types';
 
 export interface Breakpoint {
   id: string;

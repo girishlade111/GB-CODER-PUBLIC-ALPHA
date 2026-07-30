@@ -110,6 +110,11 @@ export default defineConfig({
           if (id.includes('@monaco-editor') || id.includes('monaco-editor')) {
             return 'monaco-editor';
           }
+
+          // TypeScript compiler - separate chunk (loaded lazily for TS/TSX mode only)
+          if (id.includes('node_modules') && id.includes('typescript')) {
+            return 'typescript-compiler';
+          }
           
           // React ecosystem - core chunk
           if (id.includes('node_modules')) {
@@ -143,7 +148,6 @@ export default defineConfig({
           if (id.includes('/components/NavigationBar') ||
               id.includes('/components/EditorPanel') ||
               id.includes('/components/TabbedRightPanel') ||
-              id.includes('/components/PreviewPanel') ||
               id.includes('/components/EnhancedConsole')) {
             return 'critical-ui';
           }

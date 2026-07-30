@@ -34,7 +34,6 @@ class CodeValidationService {
     const errors: ValidationError[] = [];
 
     // Check for unclosed tags
-    const tagPattern = /<([a-z][a-z0-9]*)\b[^>]*>(.*?)<\/\1>|<([a-z][a-z0-9]*)\b[^>]*\/?>|<!--[\s\S]*?-->|[^<]+/gi;
     const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
     const stack: { tag: string; line: number }[] = [];
 

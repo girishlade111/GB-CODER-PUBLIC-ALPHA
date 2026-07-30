@@ -1,8 +1,8 @@
 // Session Management Interface Component
 import React, { useState, useEffect } from 'react';
 import {
-  Save, FolderOpen, Download, Upload, Trash2, Share2, Edit3, Calendar,
-  Clock, Database, FileText, Plus, Search, Filter, X, Copy, AlertTriangle
+  Save, FolderOpen, Download, Upload, Trash2, Share2,
+  Clock, Database, Search, X, Copy, AlertTriangle
 } from 'lucide-react';
 import { sessionDataService } from '../services/sessionDataService';
 import { ConsoleSession } from '../types/console.types';
@@ -25,11 +25,9 @@ const SessionManager: React.FC<SessionManagerProps> = ({
   const [sessions, setSessions] = useState<ConsoleSession[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'manual' | 'auto'>('all');
-  const [selectedSession, setSelectedSession] = useState<ConsoleSession | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
-  const [showShareDialog, setShowShareDialog] = useState(false);
   const [sessionName, setSessionName] = useState('');
   const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'txt'>('json');
   const [importData, setImportData] = useState('');
@@ -67,7 +65,7 @@ const SessionManager: React.FC<SessionManagerProps> = ({
     setError(null);
 
     try {
-      const session = sessionDataService.createNewSession(sessionName.trim());
+      sessionDataService.createNewSession(sessionName.trim());
       sessionDataService.saveToLibrary();
       
       setShowSaveDialog(false);
