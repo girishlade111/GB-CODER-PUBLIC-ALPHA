@@ -9,6 +9,7 @@ import {
   CONSOLE_FEED_LIMIT,
   ConsoleMessage,
   ConsoleMessageOrigin,
+  PAGE_ORIGINS,
 } from '../types/consoleFeed';
 import type { ConsoleLevel, SerializedValue } from '../services/consoleBridge';
 
@@ -29,6 +30,11 @@ export interface ConsoleFeed {
   /** Convenience for plain-text producers such as the bundler. */
   appendText: (level: ConsoleLevel, text: string, origin?: ConsoleMessageOrigin) => void;
   clear: () => void;
+  /**
+   * Drops output produced by the preview document, keeping messages the app
+   * itself emitted (build diagnostics, voice attempts).
+   */
+  clearPageMessages: () => void;
 }
 
 /**
@@ -101,6 +107,17 @@ export const useConsoleFeed = (): ConsoleFeed => {
 
   const clear = useCallback(() => setMessages([]), []);
 
+  /*
+   * Used when a new preview document loads. Browser devtools clear page output on
+   * navigation, but messages the app generated are not page output -- wiping
+   * those made the voice attempt log useless, since editing code reloads the
+   * preview constantly. The explicit Clear button still clears everything.
+   */
+  const clearPageMessages = useCallback(
+    () => setMessages((current) => current.filter((message) => !PAGE_ORIGINS.includes(message.origin))),
+    [],
+  );
+
   const counts = useMemo<ConsoleCounts>(() => {
     const result: ConsoleCounts = { total: 0, log: 0, info: 0, warn: 0, error: 0, debug: 0 };
     for (const message of messages) {
@@ -111,5 +128,5 @@ export const useConsoleFeed = (): ConsoleFeed => {
     return result;
   }, [messages]);
 
-  return { messages, counts, append, appendText, clear };
+  return { messages, counts, append, appendText, clear, clearPageMessages };
 };
