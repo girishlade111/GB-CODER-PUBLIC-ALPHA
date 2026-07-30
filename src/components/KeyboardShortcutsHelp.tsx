@@ -53,6 +53,14 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ isOpen, o
             ],
         },
         {
+            category: 'Export & Import',
+            shortcuts: [
+                { keys: 'Ctrl/Cmd+Shift+E', description: 'Open Export & Share' },
+                { keys: 'Ctrl/Cmd+Shift+I', description: 'Open Import dialog' },
+                { keys: 'Ctrl/Cmd+Shift+S', description: 'Save screenshot as PNG' },
+            ]
+        },
+        {
             category: 'Preview',
             shortcuts: [
                 { keys: 'Ctrl+Enter', description: 'Run preview' },

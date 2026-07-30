@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, Suspense, lazy } from 'react';
-import { Code2, MessageSquare, Mic, LayoutTemplate, BarChart3, CheckCircle, Zap } from 'lucide-react';
+import { Code2, MessageSquare, Mic, LayoutTemplate, BarChart3, CheckCircle, Zap, Upload, Share2 } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
 import AppSidebar from './components/AppSidebar';
@@ -13,7 +13,8 @@ import Tooltip from './components/ui/Tooltip';
 
 // ===== NEW FEATURES IMPORTS =====
 import { Toaster, toast } from 'react-hot-toast';
-import ExportShareMenu from './components/ExportShareMenu';
+import ExportShareModal from './components/ExportShareModal';
+import ImportModal from './components/ImportModal';
 import { CodeTemplate } from './services/codeTemplatesService';
 
 // Lazy-loaded modal components (only shown when their show* state is true)
@@ -57,10 +58,19 @@ import { useFocusMode } from './hooks/useFocusMode';
 import { useProgressiveLoad } from './hooks/useProgressiveLoad';
 import { useCodeWriter } from './hooks/useCodeWriter';
 import { useProjectBundle } from './hooks/useProjectBundle';
+import { useAppShortcuts } from './hooks/useAppShortcuts';
 import { useFileWorkspace } from './hooks/useFileWorkspace';
 import SelectionToolbar from './components/SelectionToolbar';
 import SelectionSidebar from './components/SelectionSidebar';
-import { downloadAsZip } from './utils/downloadUtils';
+import {
+  createZipBlob,
+  downloadBlob,
+  formatBytes,
+  zipFilename,
+} from './services/projectArchiveService';
+import { ImportResult, applyImport } from './services/projectImportService';
+import { capturePreview, captureFilename, downloadCapture } from './services/captureService';
+import { clearShareHash, readShareLink } from './services/shareLinkService';
 import * as monacoHelper from './utils/monacoSelectionHelper';
 import { CodeSnippet, ConsoleLog, EditorLanguage, HistoryItem, JSEditorMode, SnippetType, SnippetScope } from './types';
 import {
@@ -194,8 +204,12 @@ function App() {
    * against the same three values it always used, while the underlying model can
    * now hold an arbitrary number of React/Vue files.
    */
-  const [fileProject, setFileProject] = useState<MultiFileProject>(() =>
-    createPlainProject(defaultHTML, defaultCSS, defaultJS),
+  const [fileProject, setFileProject] = useState<MultiFileProject>(
+    () =>
+      // A shared link must win: initialising here (rather than in an effect)
+      // means useProject seeds itself from the shared code, so its reverse-sync
+      // has nothing to overwrite.
+      readShareLink() ?? createPlainProject(defaultHTML, defaultCSS, defaultJS),
   );
 
   const { html, css, javascript } = useMemo(() => projectToTriple(fileProject), [fileProject]);
@@ -266,6 +280,9 @@ function App() {
   const [showExtensionsMarketplace, setShowExtensionsMarketplace] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState<boolean>(false);
+  const [showExportShare, setShowExportShare] = useState<boolean>(false);
+  const [exportModalTab, setExportModalTab] = useState<'screenshot' | 'export' | 'share'>('screenshot');
+  const [showImport, setShowImport] = useState<boolean>(false);
 
   // ===== NEW FEATURES STATE =====
   const [showAIChat, setShowAIChat] = useState(false);
@@ -557,7 +574,7 @@ function App() {
           handleFormatJavascript();
           break;
         case 'download':
-          downloadAsZip(html, css, javascript);
+          void handleExportZip();
           break;
         case 'help':
           setShowVoiceCommands(true);
@@ -620,6 +637,89 @@ function App() {
    * Switches project type, replacing the workspace with that type's starter
    * files. Plain keeps the user's current code so toggling back is lossless.
    */
+  /**
+   * Single ZIP path for every caller (menu, terminal, voice, page footers).
+   * Previously `downloadUtils.downloadAsZip` wrote an index.html with no
+   * <link>/<script>, so the archive rendered unstyled and inert; it also could
+   * not represent a multi-file project at all.
+   */
+  const handleExportZip = useCallback(async () => {
+    try {
+      const blob = await createZipBlob(fileProject, {
+        projectName: project.currentProject?.name ?? 'gb-coder-project',
+        externalLibraries,
+        resolvedVersions: Object.fromEntries(
+          projectBundle.resolvedPackages.map((pkg) => [pkg.name, pkg.resolvedVersion ?? pkg.version]),
+        ),
+      });
+      downloadBlob(blob, zipFilename(project.currentProject?.name));
+      toast.success(`Exported ZIP (${formatBytes(blob.size)}).`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Export failed.');
+    }
+  }, [fileProject, externalLibraries, project.currentProject?.name, projectBundle.resolvedPackages]);
+
+  /** Applies a parsed import, preserving undo history. */
+  const handleImportResult = useCallback(
+    (result: ImportResult) => {
+      codeHistory.saveState({ html, css, javascript }, 'Imported files');
+      // Merged outside the state updater: updaters must stay pure, and
+      // `fileProject` is already a dependency so it is never stale here.
+      const { project: merged, summary } = applyImport(fileProject, result);
+      setFileProject(merged);
+      toast.success(summary);
+    },
+    [codeHistory, html, css, javascript, fileProject],
+  );
+
+  /** Ctrl/Cmd+Shift+S — capture and save a PNG without opening the modal. */
+  const handleQuickScreenshot = useCallback(async () => {
+    try {
+      const capture = await capturePreview(previewRef.current, { format: 'png' });
+      downloadCapture(capture, captureFilename('png', project.currentProject?.name ?? 'gb-coder'));
+      toast.success('Screenshot saved.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Screenshot failed.');
+    }
+  }, [project.currentProject?.name]);
+
+  const handleOpenExport = useCallback((tab: 'screenshot' | 'export' | 'share' = 'screenshot') => {
+    setExportModalTab(tab);
+    setShowExportShare(true);
+  }, []);
+
+  useAppShortcuts({
+    onOpenExport: () => handleOpenExport('export'),
+    onOpenImport: () => setShowImport(true),
+    onQuickScreenshot: handleQuickScreenshot,
+  });
+
+  /*
+   * Self-contained share links (`#project=...`).
+   *
+   * The initial value is read in the state initializer above. This clears the
+   * hash afterwards (so a refresh cannot silently revert later edits) and also
+   * listens for `hashchange`, because pasting a share link into the current tab
+   * is a same-document navigation that never remounts the app.
+   */
+  useEffect(() => {
+    if (readShareLink()) {
+      clearShareHash();
+      toast.success('Opened a shared project.');
+    }
+
+    const onHashChange = () => {
+      const shared = readShareLink();
+      if (!shared) return;
+      setFileProject(shared);
+      clearShareHash();
+      toast.success('Opened a shared project.');
+    };
+
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
   /** Pins a package version so it survives before the import is written. */
   const handlePinDependency = useCallback((name: string, version: string) => {
     setFileProject((current) => ({
@@ -666,7 +766,7 @@ function App() {
         clearConsoleLogs();
         break;
       case 'download':
-        downloadAsZip(html, css, javascript);
+        void handleExportZip();
         break;
       case 'theme': {
         const newTheme = args[0] === 'light' ? 'light' : 'dark';
@@ -1036,7 +1136,7 @@ function App() {
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
-          onExport={() => downloadAsZip(html, css, javascript)}
+          onExport={handleExportZip}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
           onClear={handleClearAll}
@@ -1097,7 +1197,7 @@ function App() {
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
-          onExport={() => downloadAsZip(html, css, javascript)}
+          onExport={handleExportZip}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
           onClear={handleClearAll}
@@ -1159,7 +1259,7 @@ function App() {
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
-          onExport={() => downloadAsZip(html, css, javascript)}
+          onExport={handleExportZip}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
           onClear={handleClearAll}
@@ -1219,7 +1319,7 @@ function App() {
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
-          onExport={() => downloadAsZip(html, css, javascript)}
+          onExport={handleExportZip}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
           onClear={handleClearAll}
@@ -1254,7 +1354,7 @@ function App() {
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
-          onExport={() => downloadAsZip(html, css, javascript)}
+          onExport={handleExportZip}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
           onClear={handleClearAll}
@@ -1289,7 +1389,7 @@ function App() {
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
-          onExport={() => downloadAsZip(html, css, javascript)}
+          onExport={handleExportZip}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
           onClear={handleClearAll}
@@ -1324,7 +1424,7 @@ function App() {
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
-          onExport={() => downloadAsZip(html, css, javascript)}
+          onExport={handleExportZip}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
           onClear={handleClearAll}
@@ -1359,7 +1459,7 @@ function App() {
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onImport={fileUpload.uploadFiles}
-          onExport={() => downloadAsZip(html, css, javascript)}
+          onExport={handleExportZip}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           onSettingsToggle={handleSettingsToggle}
           onClear={handleClearAll}
@@ -1395,7 +1495,7 @@ function App() {
         onRun={() => handleCommand('run')}
         onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
         onImport={fileUpload.uploadFiles}
-        onExport={() => downloadAsZip(html, css, javascript)}
+        onExport={handleExportZip}
         onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
         onSettingsToggle={handleSettingsToggle}
         onClear={handleClearAll}
@@ -1471,13 +1571,27 @@ function App() {
             </Tooltip>
 
             {/* Export/Share Menu */}
-            <ExportShareMenu
-              previewRef={previewRef}
-              html={html}
-              css={css}
-              javascript={javascript}
-              externalLibraries={externalLibraries}
-            />
+            {/* Import */}
+            <Tooltip label="Import files" shortcut="⇧⌘I" className="hidden sm:inline-flex">
+              <button
+                onClick={() => setShowImport(true)}
+                className={toolbarIconButtonClass(isDark)}
+                title="Import files"
+              >
+                <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
+
+            {/* Export & Share — replaces the old dropdown */}
+            <Tooltip label="Export & Share" shortcut="⇧⌘E" className="hidden sm:inline-flex">
+              <button
+                onClick={() => handleOpenExport('screenshot')}
+                className={toolbarIconButtonClass(isDark)}
+                title="Export & Share"
+              >
+                <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
           </div>
         }
       />
@@ -1702,6 +1816,31 @@ function App() {
         </Suspense>
       )}
       
+      {/* Export & Share */}
+      {showExportShare && (
+        <ExportShareModal
+          isOpen={showExportShare}
+          onClose={() => setShowExportShare(false)}
+          project={fileProject}
+          previewRef={previewRef}
+          externalLibraries={externalLibraries}
+          resolvedVersions={Object.fromEntries(
+            projectBundle.resolvedPackages.map((pkg) => [pkg.name, pkg.resolvedVersion ?? pkg.version]),
+          )}
+          projectName={project.currentProject?.name ?? 'gb-coder-project'}
+          initialTab={exportModalTab}
+        />
+      )}
+
+      {/* Import */}
+      {showImport && (
+        <ImportModal
+          isOpen={showImport}
+          onClose={() => setShowImport(false)}
+          onImport={handleImportResult}
+        />
+      )}
+
       {/* AI Chat Assistant */}
       {showAIChat && (
         <Suspense fallback={null}>
