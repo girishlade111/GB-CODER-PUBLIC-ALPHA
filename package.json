@@ -8,6 +8,7 @@
     "dev:server": "cd server && node index.js",
     "dev:all": "concurrently --names \"SERVER,VITE\" --prefix-colors \"cyan,green\" \"cd server && node index.js\" \"vite\"",
     "build": "vite build",
+    "verify:bundle": "node scripts/measure-initial-bundle.mjs --assert-absent",
     "lint": "eslint .",
     "preview": "vite preview",
     "vercel-build": "vite build"

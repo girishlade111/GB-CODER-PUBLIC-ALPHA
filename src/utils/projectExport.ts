@@ -1,4 +1,3 @@
-import JSZip from 'jszip';
 import { Project } from '../types/project';
 
 
@@ -39,6 +38,8 @@ ${jsLibraries ? '\n' + jsLibraries + '\n' : ''}  <script src="script.js"></scrip
  */
 export async function exportProjectAsZip(project: Project): Promise<void> {
     try {
+        // Loaded on demand so JSZip stays out of any eager import chain.
+        const { default: JSZip } = await import('jszip');
         const zip = new JSZip();
 
         // Add index.html

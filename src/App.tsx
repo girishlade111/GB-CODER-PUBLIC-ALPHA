@@ -12,18 +12,23 @@ import { Code2, Share2 } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
 import AppSidebar from './components/AppSidebar';
-import FileExplorer from './components/FileExplorer';
-import DependenciesPanel from './components/DependenciesPanel';
-import MultiFileEditor from './components/MultiFileEditor';
 import EditorPanel from './components/EditorPanel';
 import TabbedRightPanel from './components/TabbedRightPanel';
 import Footer from './components/ui/Footer';
 import Tooltip from './components/ui/Tooltip';
+import LazyFallback from './components/ui/LazyFallback';
+import DropZoneOverlay from './components/DropZoneOverlay';
+import { useImportDrop } from './hooks/useImportDrop';
+/*
+ * Type-only imports from the lazy import chunk. `import type` is erased during
+ * compilation, so naming these types does not create a runtime dependency and
+ * the chunk stays out of the initial bundle.
+ */
+import type { ImportPlan as ImportPlanType } from './services/import/importEngine';
+import type { DetectedProjectKind as DetectedKind } from './services/import/projectDetection';
 
 // ===== NEW FEATURES IMPORTS =====
 import { Toaster, toast } from 'react-hot-toast';
-import ExportShareModal from './components/ExportShareModal';
-import ImportModal from './components/ImportModal';
 import { CodeTemplate } from './services/codeTemplatesService';
 
 // Lazy-loaded modal components (only shown when their show* state is true)
@@ -33,6 +38,20 @@ const TemplateSelectorModal = lazy(() => import('./components/TemplateSelectorMo
 const CodeStatsDashboard = lazy(() => import('./components/CodeStatsDashboard'));
 const CustomInjectionManager = lazy(() => import('./components/CustomInjectionManager'));
 const BuildFromPromptModal = lazy(() => import('./components/BuildFromPromptModal'));
+
+/*
+ * Everything past the core HTML/CSS/JS editor is a separate chunk, fetched the
+ * first time the user reaches for it. The sidebar entries that open these are
+ * plain icons and labels in the core bundle, so the shell is complete on first
+ * paint while none of this code is.
+ */
+const FileExplorer = lazy(() => import('./components/FileExplorer'));
+const DependenciesPanel = lazy(() => import('./components/DependenciesPanel'));
+const MultiFileEditor = lazy(() => import('./components/MultiFileEditor'));
+const ExportShareModal = lazy(() => import('./components/ExportShareModal'));
+const ImportModal = lazy(() => import('./components/ImportModal'));
+const PreviewSharePage = lazy(() => import('./components/PreviewSharePage'));
+const ImportReviewModal = lazy(() => import('./components/ImportReviewModal'));
 
 // Phase 2: High priority - lazy loaded after initial render
 // (EnhancedConsole is used inside TabbedRightPanel, not here directly)
@@ -112,7 +131,7 @@ import {
   VoiceModalTarget,
   voiceCommandService,
 } from './services/voiceCommandService';
-import PreviewSharePage from './components/PreviewSharePage';
+
 
 
 type AppView = 'editor' | 'history' | 'about' | 'documentation' | 'privacy' | 'terms' | 'cookies' | 'disclaimer' | 'contact' | 'preview-share' | 'preview-share-error';
@@ -734,6 +753,83 @@ function App() {
       toast.success(summary);
     },
     [codeHistory, html, css, javascript, fileProject],
+  );
+
+  /*
+   * ===== DRAG & DROP IMPORT =====
+   *
+   * The plan is built by the lazy import chunk and reviewed before anything is
+   * applied, so a wrong detection never silently replaces the user's work.
+   */
+  const [importPlan, setImportPlan] = useState<ImportPlanType | null>(null);
+
+  const handleImportPlan = useCallback(
+    (plan: ImportPlanType) => {
+      if (plan.result.files.length === 0 && plan.detection.kind !== 'fullstack') {
+        toast.error('Nothing importable was found in that drop.');
+        return;
+      }
+
+      /*
+       * A single HTML/CSS/JS file dropped into a plain project needs no
+       * ceremony: it routes straight to its panel. The review step exists to
+       * catch a *mode change* the user did not ask for, and there is none here.
+       */
+      const isSingleCoreFile =
+        plan.result.files.length === 1 &&
+        plan.detection.kind === 'simple' &&
+        fileProject.projectType === 'plain' &&
+        ['html', 'css', 'javascript'].includes(plan.result.files[0].language);
+
+      if (isSingleCoreFile) {
+        handleImportResult({ ...plan.result, projectType: 'plain', entry: undefined });
+        return;
+      }
+
+      setImportPlan(plan);
+    },
+    [fileProject.projectType, handleImportResult],
+  );
+
+  const {
+    isDragging: isImportDragging,
+    isPreparing: isImportPreparing,
+    dropHandlers,
+  } = useImportDrop({
+    onPlan: handleImportPlan,
+    onError: (message) => toast.error(message),
+    // A drop while the review modal is open would race with the pending plan.
+    disabled: importPlan !== null,
+  });
+
+  /** Applies a reviewed plan, honouring any override the user chose. */
+  const handleConfirmImport = useCallback(
+    (kind: DetectedKind) => {
+      if (!importPlan) return;
+
+      const projectType: ProjectType =
+        kind === 'react' ? 'react' : kind === 'vue' ? 'vue' : 'plain';
+
+      handleImportResult({
+        ...importPlan.result,
+        projectType,
+        // A forced plain import has no module entry to open.
+        entry: projectType === 'plain' ? undefined : importPlan.result.entry,
+      });
+
+      /*
+       * Open the entry file so the import lands somewhere useful rather than on
+       * an empty editor. Deferred a tick so the workspace sees the new files.
+       */
+      const entry = importPlan.result.entry;
+      if (projectType !== 'plain' && entry) {
+        setShowFileExplorer(true);
+        setTimeout(() => workspace.openFile(entry), 0);
+      }
+
+      setImportPlan(null);
+    },
+    [importPlan, handleImportResult, workspace],
   );
 
   /** Ctrl/Cmd+Shift+S — capture and save a PNG without opening the modal. */
@@ -1512,14 +1608,16 @@ function App() {
   // first so it bypasses all editor chrome.
   if (currentView === 'preview-share') {
     return (
-      <PreviewSharePage
-        html={previewShareCode?.html || ''}
-        css={previewShareCode?.css || ''}
-        javascript={previewShareCode?.javascript || ''}
-        shortId={previewShortId}
-        isLoading={previewLoading}
-        error={previewError}
-      />
+      <Suspense fallback={<LazyFallback label="shared preview" variant="overlay" />}>
+  <PreviewSharePage
+          html={previewShareCode?.html || ''}
+          css={previewShareCode?.css || ''}
+          javascript={previewShareCode?.javascript || ''}
+          shortId={previewShortId}
+          isLoading={previewLoading}
+          error={previewError}
+        />
+      </Suspense>
     );
   }
 
@@ -1877,8 +1975,30 @@ function App() {
 
   // Render main editor view
   return (
-    <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'
-      }`}>
+    <div
+      className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'
+      }`}
+      /*
+       * Window-wide drop target. Only the handlers live here; the code that can
+       * read a drop is fetched on the first one.
+       */
+      {...dropHandlers}
+      data-testid="app-root"
+    >
+      {/* Drag affordance — presentation only, always available. */}
+      <DropZoneOverlay isDragging={isImportDragging} isPreparing={isImportPreparing} />
+
+      {/* Import review: detection, override, and what was skipped. */}
+      {importPlan && (
+        <Suspense fallback={<LazyFallback label="import review" variant="overlay" />}>
+          <ImportReviewModal
+            plan={importPlan}
+            onCancel={() => setImportPlan(null)}
+            onConfirm={handleConfirmImport}
+          />
+        </Suspense>
+      )}
+
       {/* Navigation Bar */}
       <NavigationBar
         onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
@@ -1928,23 +2048,27 @@ function App() {
         />
 
         {showFileExplorer && !isMobile && (
-          <FileExplorer
-            projectType={fileProject.projectType}
-            workspace={workspace}
-            onClose={() => setShowFileExplorer(false)}
-          />
+          <Suspense fallback={<LazyFallback label="Files" variant="panel" />}>
+  <FileExplorer
+              projectType={fileProject.projectType}
+              workspace={workspace}
+              onClose={() => setShowFileExplorer(false)}
+            />
+          </Suspense>
         )}
 
         {showDependencies && !isMobile && (
-          <DependenciesPanel
-            project={fileProject}
-            resolvedPackages={projectBundle.resolvedPackages}
-            unresolvedPackages={projectBundle.unresolvedPackages}
-            isResolving={projectBundle.isResolvingPackages}
-            onPin={handlePinDependency}
-            onUnpin={handleUnpinDependency}
-            onClose={() => setShowDependencies(false)}
-          />
+          <Suspense fallback={<LazyFallback label="Dependencies" variant="panel" />}>
+  <DependenciesPanel
+              project={fileProject}
+              resolvedPackages={projectBundle.resolvedPackages}
+              unresolvedPackages={projectBundle.unresolvedPackages}
+              isResolving={projectBundle.isResolvingPackages}
+              onPin={handlePinDependency}
+              onUnpin={handleUnpinDependency}
+              onClose={() => setShowDependencies(false)}
+            />
+          </Suspense>
         )}
 
         <div className={`grid flex-1 min-w-0 gap-3 px-3 py-3 lg:px-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`}>
@@ -1957,16 +2081,18 @@ function App() {
             // column (whose three fixed-height editors give the grid row its
             // height), this column has no intrinsic height of its own.
             <div className="flex h-full w-full flex-col min-h-[calc(100vh-11rem)]">
-              <MultiFileEditor
-                projectType={fileProject.projectType}
-                workspace={workspace}
-                fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
-                fontSize={settings.editorFontSize}
-                buildStatus={projectBundle.status}
-                buildErrors={projectBundle.errors}
-                onSelectionChange={handleMultiFileSelectionChange}
-                onEditorReady={handleEditorReady}
-              />
+              <Suspense fallback={<LazyFallback label="multi-file editor" variant="panel" />}>
+  <MultiFileEditor
+                  projectType={fileProject.projectType}
+                  workspace={workspace}
+                  fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
+                  fontSize={settings.editorFontSize}
+                  buildStatus={projectBundle.status}
+                  buildErrors={projectBundle.errors}
+                  onSelectionChange={handleMultiFileSelectionChange}
+                  onEditorReady={handleEditorReady}
+                />
+              </Suspense>
             </div>
           ) : (
           <div className="flex flex-col space-y-3 w-full min-h-0">
@@ -2154,27 +2280,31 @@ function App() {
       
       {/* Export & Share */}
       {showExportShare && (
-        <ExportShareModal
-          isOpen={showExportShare}
-          onClose={() => setShowExportShare(false)}
-          project={fileProject}
-          previewRef={previewRef}
-          externalLibraries={externalLibraries}
-          resolvedVersions={Object.fromEntries(
-            projectBundle.resolvedPackages.map((pkg) => [pkg.name, pkg.resolvedVersion ?? pkg.version]),
-          )}
-          projectName={project.currentProject?.name ?? 'gb-coder-project'}
-          initialTab={exportModalTab}
-        />
+        <Suspense fallback={<LazyFallback label="Export & Share" variant="overlay" />}>
+  <ExportShareModal
+            isOpen={showExportShare}
+            onClose={() => setShowExportShare(false)}
+            project={fileProject}
+            previewRef={previewRef}
+            externalLibraries={externalLibraries}
+            resolvedVersions={Object.fromEntries(
+              projectBundle.resolvedPackages.map((pkg) => [pkg.name, pkg.resolvedVersion ?? pkg.version]),
+            )}
+            projectName={project.currentProject?.name ?? 'gb-coder-project'}
+            initialTab={exportModalTab}
+          />
+        </Suspense>
       )}
 
       {/* Import */}
       {showImport && (
-        <ImportModal
-          isOpen={showImport}
-          onClose={() => setShowImport(false)}
-          onImport={handleImportResult}
-        />
+        <Suspense fallback={<LazyFallback label="Import" variant="overlay" />}>
+  <ImportModal
+            isOpen={showImport}
+            onClose={() => setShowImport(false)}
+            onImport={handleImportResult}
+          />
+        </Suspense>
       )}
 
       {/* AI Chat Assistant */}
