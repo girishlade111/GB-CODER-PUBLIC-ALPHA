@@ -4,7 +4,6 @@ import { Code2, MessageSquare, Mic, LayoutTemplate, BarChart3, CheckCircle, Zap 
 import NavigationBar from './components/NavigationBar';
 import EditorPanel from './components/EditorPanel';
 import TabbedRightPanel from './components/TabbedRightPanel';
-import SaveStatusIndicator from './components/ui/SaveStatusIndicator';
 import Footer from './components/ui/Footer';
 
 // ===== NEW FEATURES IMPORTS =====
@@ -20,7 +19,7 @@ import BuildFromPromptModal from './components/BuildFromPromptModal';
 import { CodeTemplate } from './services/codeTemplatesService';
 
 // Phase 2: High priority - lazy loaded after initial render
-const EnhancedConsole = lazy(() => import('./components/EnhancedConsole'));
+// (EnhancedConsole is used inside TabbedRightPanel, not here directly)
 
 // Phase 3: Deferred - lazy loaded after high priority components
 const SnippetsSidebar = lazy(() => import('./components/SnippetsSidebar'));
@@ -364,7 +363,7 @@ function App() {
   // ===== VOICE COMMAND HANDLER =====
   useEffect(() => {
     const handleVoiceCommand = (event: CustomEvent) => {
-      const { action, param } = event.detail;
+      const { action } = event.detail;
       
       switch (action) {
         case 'run':
@@ -396,16 +395,8 @@ function App() {
     setShowExternalLibraryManager(!showExternalLibraryManager);
   };
 
-  const handleExtensionsToggle = () => {
-    setShowExtensionsMarketplace(!showExtensionsMarketplace);
-  };
-
   const handleSettingsToggle = () => {
     setShowSettings(!showSettings);
-  };
-
-  const handleKeyboardShortcutsToggle = () => {
-    setShowKeyboardShortcuts(!showKeyboardShortcuts);
   };
 
   const handleExternalLibrariesChange = (libraries: ExternalLibrary[]) => {
@@ -536,21 +527,6 @@ function App() {
     setSnippets(prev => prev.filter(s => s.id !== id));
   };
 
-  const resetCode = async () => {
-    codeHistory.saveState({ html, css, javascript }, 'Reset to default');
-
-    // Reset code to defaults
-    setHtml(defaultHTML);
-    setCss(defaultCSS);
-    setJavascript(defaultJS);
-    setConsoleLogs([]);
-
-    // Reset project name to default
-    if (project.currentProject) {
-      await project.updateProjectName('Untitled Project');
-    }
-  };
-
   const handleClearAll = async () => {
     // Save current state to history before clearing
     codeHistory.saveState({ html, css, javascript }, 'Clear all code');
@@ -570,24 +546,6 @@ function App() {
     // Reset project name if exists
     if (project.currentProject) {
       await project.updateProjectName('Untitled Project');
-    }
-  };
-
-  const handleUndo = () => {
-    const previousState = codeHistory.undo();
-    if (previousState) {
-      setHtml(previousState.html);
-      setCss(previousState.css);
-      setJavascript(previousState.javascript);
-    }
-  };
-
-  const handleRedo = () => {
-    const nextState = codeHistory.redo();
-    if (nextState) {
-      setHtml(nextState.html);
-      setCss(nextState.css);
-      setJavascript(nextState.javascript);
     }
   };
 
@@ -734,7 +692,6 @@ function App() {
       clearSelection();
       selectionOps.clearResult();
 
-    } else {
     }
   }, [selection, selectionOps, codeHistory, html, css, javascript, clearSelection]);
 
@@ -742,14 +699,6 @@ function App() {
     selectionOps.clearResult();
   }, [selectionOps]);
 
-
-  const handleManualSave = async () => {
-    const { error } = await autoSave.manualSave();
-    if (error) {
-      console.error('Save failed:', error);
-    } else {
-    }
-  };
 
   // Render standalone live-preview share page (/preview/:id) - must come
   // first so it bypasses all editor chrome.

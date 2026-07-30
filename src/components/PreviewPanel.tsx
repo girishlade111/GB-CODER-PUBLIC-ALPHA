@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play } from 'lucide-react';
-import * as ts from 'typescript';
 import { ConsoleLog, JSEditorMode } from '../types';
 import { externalLibraryService } from '../services/externalLibraryService';
 
@@ -16,6 +15,42 @@ interface PreviewPanelProps {
   previewDelay?: number;
 }
 
+/**
+ * Lazily transpile TypeScript/TSX code using a dynamic import of the
+ * TypeScript compiler. This keeps the 3.5 MB compiler out of the
+ * critical-ui bundle and only loads it when actually needed.
+ */
+async function transpileTypeScript(code: string): Promise<{ code: string; compilationError: string | null }> {
+  try {
+    const ts = await import('typescript');
+    const result = ts.transpileModule(code, {
+      compilerOptions: {
+        target: ts.ScriptTarget.ES2015,
+        jsx: ts.JsxEmit.React,
+      },
+      reportDiagnostics: true,
+    });
+
+    const errorDiagnostic = result.diagnostics?.find(
+      (diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error
+    );
+
+    if (errorDiagnostic) {
+      throw new Error(ts.flattenDiagnosticMessageText(errorDiagnostic.messageText, '\n'));
+    }
+
+    return {
+      code: result.outputText,
+      compilationError: null,
+    };
+  } catch (error) {
+    return {
+      code,
+      compilationError: error instanceof Error ? error.message : 'Unknown TypeScript compilation error',
+    };
+  }
+}
+
 const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   html,
   css,
@@ -29,6 +64,9 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('desktop');
   const [manualRunTrigger, setManualRunTrigger] = useState(0);
+  // Holds the transpiled JS when using TS/TSX mode
+  const [transpiledJs, setTranspiledJs] = useState<string>(javascript);
+  const [compilationError, setCompilationError] = useState<string | null>(null);
 
   // Expose the container div to parent components via ref
   useImperativeHandle(ref, () => {
@@ -36,73 +74,53 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     return container as HTMLDivElement;
   });
 
+  // Transpile TypeScript/TSX asynchronously when needed
+  const shouldTranspile = jsEditorMode === 'typescript' || jsEditorMode === 'tsx';
+
+  useEffect(() => {
+    if (!shouldTranspile) {
+      setTranspiledJs(javascript);
+      setCompilationError(null);
+      return;
+    }
+
+    let cancelled = false;
+    transpileTypeScript(javascript).then((result) => {
+      if (!cancelled) {
+        setTranspiledJs(result.code);
+        setCompilationError(result.compilationError);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [javascript, shouldTranspile]);
+
   // Sanitize code input to prevent XSS attacks
   const sanitizeCode = (code: string, language: string): string => {
     if (language === 'html') {
-      // Basic HTML sanitization - remove script tags and dangerous attributes
       return code
         .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/on\w+="[^"]*"/gi, '') // Remove event handlers
-        .replace(/javascript:/gi, '') // Remove javascript: protocols
-        .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, ''); // Remove iframes
+        .replace(/on\w+="[^"]*"/gi, '')
+        .replace(/javascript:/gi, '')
+        .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, '');
     } else if (language === 'css') {
-      // Basic CSS sanitization - remove dangerous CSS properties
       return code
-        .replace(/expression\s*\(/gi, '') // Remove CSS expressions
-        .replace(/behavior\s*:/gi, '') // Remove behavior property
-        .replace(/-moz-binding\s*:/gi, ''); // Remove Mozilla binding
+        .replace(/expression\s*\(/gi, '')
+        .replace(/behavior\s*:/gi, '')
+        .replace(/-moz-binding\s*:/gi, '');
     }
-    return code; // JavaScript will be handled in the sandbox
+    return code;
   };
 
   const escapeScriptContent = (code: string): string => {
     return code.replace(/<\/script/gi, '<\\/script');
   };
 
-  const prepareJavaScriptForPreview = () => {
-    const shouldTranspileTypeScript = jsEditorMode === 'typescript' || jsEditorMode === 'tsx';
-
-    if (!shouldTranspileTypeScript) {
-      return {
-        code: javascript,
-        compilationError: null as string | null,
-      };
-    }
-
-    try {
-      const result = ts.transpileModule(javascript, {
-        compilerOptions: {
-          target: ts.ScriptTarget.ES2015,
-          jsx: ts.JsxEmit.React,
-        },
-        reportDiagnostics: true,
-      });
-
-      const errorDiagnostic = result.diagnostics?.find(
-        (diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error
-      );
-
-      if (errorDiagnostic) {
-        throw new Error(ts.flattenDiagnosticMessageText(errorDiagnostic.messageText, '\n'));
-      }
-
-      return {
-        code: result.outputText,
-        compilationError: null as string | null,
-      };
-    } catch (error) {
-      return {
-        code: javascript,
-        compilationError: error instanceof Error ? error.message : 'Unknown TypeScript compilation error',
-      };
-    }
-  };
-
-  const generatePreviewContent = () => {
+  const generatePreviewContent = useCallback(() => {
     const sanitizedHtml = sanitizeCode(html, 'html');
     const sanitizedCss = sanitizeCode(css, 'css');
     const usesBabel = jsEditorMode === 'jsx' || jsEditorMode === 'tsx';
-    const { code: executableJavascript, compilationError } = prepareJavaScriptForPreview();
+    const executableJavascript = transpiledJs;
     const safeJavascript = escapeScriptContent(executableJavascript);
     const compiledJavaScriptString = JSON.stringify(executableJavascript);
     const compilationWarningScript = compilationError
@@ -256,35 +274,39 @@ ${safeJavascript}
     ${userCodeScript}
 </body>
 </html>`;
-  };
+  }, [html, css, transpiledJs, compilationError, jsEditorMode]);
 
-  const refreshPreview = () => {
+  const refreshPreview = useCallback(() => {
     if (iframeRef.current) {
       setIsLoading(true);
       const content = generatePreviewContent();
       iframeRef.current.srcdoc = content;
       setTimeout(() => setIsLoading(false), 300);
     }
-  };
+  }, [generatePreviewContent]);
+
+  // Use a ref for refreshPreview to avoid dependency issues in event-listener effects
+  const refreshPreviewRef = useRef(refreshPreview);
+  useEffect(() => {
+    refreshPreviewRef.current = refreshPreview;
+  }, [refreshPreview]);
 
   // Refresh preview with debounce - HTML/CSS always update, JS only if autoRunJS is true
+  const jsForPreview = autoRunJS ? javascript : '';
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      refreshPreview();
+      refreshPreviewRef.current();
     }, previewDelay);
     return () => clearTimeout(timeoutId);
-  }, [html, css, autoRunJS ? javascript : '', jsEditorMode, previewDelay, manualRunTrigger]);
+  }, [html, css, jsForPreview, jsEditorMode, previewDelay, manualRunTrigger, transpiledJs]);
 
   // Refresh preview when external libraries change
   useEffect(() => {
     const handleExternalLibrariesChange = () => {
-      refreshPreview();
+      refreshPreviewRef.current();
     };
 
-    // Listen for storage changes (when libraries are updated)
     window.addEventListener('storage', handleExternalLibrariesChange);
-
-    // Custom event for real-time updates
     window.addEventListener('external-libraries-updated', handleExternalLibrariesChange);
 
     return () => {
