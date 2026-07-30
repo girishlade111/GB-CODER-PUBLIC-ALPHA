@@ -268,7 +268,7 @@ ${html}
 
   <script>
 ${javascript}
-  <\/script>
+  </` + `script>
 </body>
 </html>`;
   }

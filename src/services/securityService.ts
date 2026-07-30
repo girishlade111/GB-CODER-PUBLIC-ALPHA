@@ -327,7 +327,7 @@ export class SecurityService {
       }
 
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -343,7 +343,7 @@ export class SecurityService {
     try {
       const parsed = new URL(url);
       return parsed.toString();
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -391,7 +391,7 @@ export class SecurityService {
     const sqlPatterns = [
       /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b)/gi,
       /(\bUNION\b.*\bSELECT\b)/gi,
-      /(;|\-\-|\/\*|\*\/)/g,
+      /(;|--|\/\*|\*\/)/g,
       /(\bOR\b.*=.*)/gi,
       /(\bAND\b.*=.*)/gi,
     ];

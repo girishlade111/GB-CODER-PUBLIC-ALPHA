@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Minus, Plus, History, Trash2, ChevronRight, Check, Code2, AlertCircle, Menu } from 'lucide-react';
 import { SelectionOperationResult } from '../services/selectionOperationsService';
 import { EditorLanguage, HistoryItem } from '../types';
@@ -62,7 +62,6 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
     isOpen,
     isLoading,
     result,
-    language,
     error,
     onClose,
     onApplyChanges,

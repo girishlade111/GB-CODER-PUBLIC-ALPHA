@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { CheckCircle, AlertTriangle, Info, X, Filter } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
-import { codeValidationService, ValidationError } from '../services/codeValidationService';
+import { codeValidationService } from '../services/codeValidationService';
 
 interface ValidationPanelProps {
   html: string;

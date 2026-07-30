@@ -95,7 +95,7 @@ class ErrorLoggingService {
     }
 
     // Log unhandled promise rejection
-    logPromiseRejection(reason: any, _promise: Promise<any>) {
+    logPromiseRejection(reason: any) {
         const error = reason instanceof Error ? reason : new Error(String(reason));
         this.logError(error, { type: 'unhandledRejection' }, 'high');
     }

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Camera, Download, Share2, Copy, FileCode, ExternalLink, Image, FileArchive, Check, Eye } from 'lucide-react';
+import { Camera, Share2, Copy, FileCode, ExternalLink, Image, FileArchive, Check, Eye } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { screenshotService } from '../services/screenshotService';
 import { generatePreviewShareURL, shareExportService } from '../services/shareExportService';

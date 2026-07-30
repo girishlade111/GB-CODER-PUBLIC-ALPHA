@@ -1,9 +1,9 @@
 import React from 'react';
 import {
   Code2, Zap, Globe, Shield, Users, Brain, Sparkles, Lightbulb,
-  Wrench, Instagram, Linkedin, Github, Codepen, Mail, Link,
+  Wrench, Instagram, Linkedin, Github, Codepen, Mail,
   CheckCircle, Rocket, Target, Award, Heart, ArrowRight, ExternalLink,
-  Layers, Palette, Smartphone, Clock
+  Layers, Clock
 } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 

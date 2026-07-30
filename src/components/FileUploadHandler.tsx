@@ -95,7 +95,7 @@ const FileUploadHandler: React.FC<FileUploadHandlerProps> = ({
           size: file.size
         });
 
-      } catch (error) {
+      } catch {
         errors.push(`${file.name}: Failed to read file`);
       }
     }
@@ -109,6 +109,7 @@ const FileUploadHandler: React.FC<FileUploadHandlerProps> = ({
     return processedFiles;
   }, [detectLanguageFromFile, validateFileSize, validateFileContent]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleFileUpload = useCallback(async (files: FileList) => {
     if (files.length === 0) return;
 

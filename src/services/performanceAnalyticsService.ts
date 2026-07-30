@@ -94,7 +94,7 @@ export class PerformanceAnalyticsService {
 
       // Normalize to 0-1 range (assuming 100ms is high CPU usage)
       return Math.min(avgDuration / 100, 1);
-    } catch (error) {
+    } catch {
       return 0;
     }
   }

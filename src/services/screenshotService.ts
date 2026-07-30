@@ -236,7 +236,7 @@ export class ScreenshotService {
   }
 
   // Alternative capture method using canvas
-  public async captureWithCanvas(element: HTMLElement, format: 'png' | 'jpeg' = 'png'): Promise<string> {
+  public async captureWithCanvas(element: HTMLElement): Promise<string> {
     try {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');

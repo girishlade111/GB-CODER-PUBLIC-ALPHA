@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mic, MicOff, HelpCircle, X, CheckCircle } from 'lucide-react';
+import { Mic, MicOff, X } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { voiceCommandService } from '../services/voiceCommandService';
 import toast from 'react-hot-toast';
@@ -15,7 +15,7 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
 }) => {
   const { isDark } = useTheme();
   const [isListening, setIsListening] = useState(false);
-  const [commands, setCommands] = useState(voiceCommandService.getCommands());
+  const [commands] = useState(voiceCommandService.getCommands());
   const [stats, setStats] = useState(voiceCommandService.getStats());
 
   useEffect(() => {

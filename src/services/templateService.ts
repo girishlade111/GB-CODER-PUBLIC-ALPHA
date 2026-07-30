@@ -1500,7 +1500,7 @@ toggleBtns.forEach(btn => {
 
 // Form validation
 function validateEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
 }
 
 function validatePassword(password) {

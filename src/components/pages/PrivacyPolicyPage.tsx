@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useTheme } from '../../hooks/useTheme';
-import { Shield, Lock, Database, Globe, Mail } from 'lucide-react';
+import { Shield, Lock, Database, Mail } from 'lucide-react';
 
 const PrivacyPolicyPage: React.FC = () => {
   const { isDark } = useTheme();

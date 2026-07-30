@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, FolderOpen, Download, Upload, Search, Filter, ChevronRight, Settings, Sparkles } from 'lucide-react';
+import { X, Plus, FolderOpen, Sparkles } from 'lucide-react';
 import { CodeSnippet, SnippetType, SnippetScope } from '../types';
 import SnippetManager from './SnippetManager';
 

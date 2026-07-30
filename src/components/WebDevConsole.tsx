@@ -5,7 +5,6 @@ import {
   Copy, Download, Maximize2, Minimize2, RefreshCw, Eye, EyeOff
 } from 'lucide-react';
 import { syntaxHighlighter } from '../services/syntaxHighlighter';
-import { debugToolsService } from '../services/debugToolsService';
 
 interface WebConsoleProps {
   html: string;
@@ -30,9 +29,6 @@ const WebDevConsole: React.FC<WebConsoleProps> = ({
   html,
   css,
   javascript,
-  onHtmlChange,
-  onCssChange,
-  onJsChange,
   className = '',
 }) => {
   const [messages, setMessages] = useState<ConsoleMessage[]>([]);

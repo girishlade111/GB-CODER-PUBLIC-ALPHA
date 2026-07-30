@@ -9,11 +9,11 @@ interface TerminalViewProps {
 
 const WS_URL = 'ws://localhost:3001/terminal';
 
-const TerminalView: React.FC<TerminalViewProps> = ({ id, active, onClosed }) => {
+const TerminalView: React.FC<TerminalViewProps> = ({ active, onClosed }) => {
     const terminalRef = useRef<HTMLDivElement>(null);
     const xtermRef = useRef<Terminal | null>(null);
     const wsRef = useRef<WebSocket | null>(null);
-    const [isConnected, setIsConnected] = useState(false);
+    const [, setIsConnected] = useState(false);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {

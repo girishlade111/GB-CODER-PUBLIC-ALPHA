@@ -12,7 +12,6 @@ import {
   Trash2,
   Wand2,
 } from 'lucide-react';
-import { EditorLanguage } from '../types';
 import { useTheme } from '../hooks/useTheme';
 import { useSettings } from '../hooks/useSettings';
 
@@ -35,7 +34,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   onOpenBuildFromPrompt,
   onImport,
   onExport,
-  onExternalLibraryManagerToggle,
   onSettingsToggle,
   onClear,
   autoSaveEnabled,
@@ -329,7 +327,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
         ref={fileInputRef}
         type="file"
         multiple
-        // @ts-ignore — webkitdirectory is non-standard but widely supported
+        // @ts-expect-error — webkitdirectory is non-standard but widely supported
         webkitdirectory=""
         mozdirectory=""
         accept=".html,.htm,.css,.js"

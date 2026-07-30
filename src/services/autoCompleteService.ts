@@ -91,7 +91,7 @@ export class AutoCompleteService {
     const currentWord = words[words.length - 1] || '';
 
     if (!currentWord) {
-      return this.getTopSuggestions(context);
+      return this.getTopSuggestions();
     }
 
     const suggestions: AutoCompleteItem[] = [];
@@ -254,7 +254,7 @@ export class AutoCompleteService {
   /**
    * Get top suggestions when no input
    */
-  private getTopSuggestions(context: AutoCompleteContext): AutoCompleteItem[] {
+  private getTopSuggestions(): AutoCompleteItem[] {
     const suggestions: AutoCompleteItem[] = [];
 
     // Add most common commands
