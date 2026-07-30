@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { useTheme } from './useTheme';
 
@@ -11,6 +11,12 @@ export interface AppSettings {
     theme: ThemeVariant;
     autoRunJS: boolean;
     previewDelay: number;
+    /** Speak short confirmations after a voice command runs. */
+    voiceFeedback: boolean;
+    /** Keep the microphone open for several commands instead of one. */
+    voiceContinuous: boolean;
+    /** BCP-47 tag passed to SpeechRecognition. */
+    voiceLanguage: string;
 }
 
 // Default settings matching current behavior
@@ -20,6 +26,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
     theme: 'dark',
     autoRunJS: true,
     previewDelay: 300,
+    // Off by default: audio that starts talking unprompted is intrusive.
+    voiceFeedback: false,
+    voiceContinuous: false,
+    voiceLanguage: 'en-US',
 };
 
 // Map theme variants to the base light/dark mode used by useTheme
@@ -28,10 +38,21 @@ const getBaseTheme = (variant: ThemeVariant): 'light' | 'dark' => {
 };
 
 export const useSettings = () => {
-    const [settings, setSettings] = useLocalStorage<AppSettings>(
+    const [storedSettings, setSettings] = useLocalStorage<AppSettings>(
         'gb-coder-settings',
         DEFAULT_SETTINGS
     );
+
+    /*
+     * Installs that predate a newly added setting have it missing from their
+     * persisted blob, which would otherwise surface as `undefined` and turn
+     * controlled inputs uncontrolled. Defaults backfill on every read.
+     */
+    const settings = useMemo<AppSettings>(
+        () => ({ ...DEFAULT_SETTINGS, ...storedSettings }),
+        [storedSettings]
+    );
+
     const { setTheme } = useTheme();
 
     // When the settings theme changes, sync it to the useTheme hook

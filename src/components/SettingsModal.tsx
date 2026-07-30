@@ -3,11 +3,15 @@ import { X, Settings as SettingsIcon } from 'lucide-react';
 import { useSettings, EditorFontFamily, ThemeVariant } from '../hooks/useSettings';
 import { useTheme } from '../hooks/useTheme';
 import { useFocusMode } from '../hooks/useFocusMode';
+import { VOICE_LANGUAGES } from '../services/voiceCommandService';
 
 interface SettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
+
+/** Spoken feedback is pointless to offer where SpeechSynthesis is missing. */
+const voiceSynthesisSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     const { settings, updateSettings, resetSettings, getFontFamilyCSS } = useSettings();
@@ -235,6 +239,102 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                             </div>
                             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
                                 Debounce delay before updating the preview after code changes
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Voice Commands Section */}
+                    <div>
+                        <h3
+                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
+                                }`}
+                        >
+                            Voice Commands
+                        </h3>
+
+                        {/* Spoken Feedback Toggle */}
+                        <div
+                            className={`flex items-center justify-between p-4 rounded-lg border ${isDark ? 'border-gray-700 bg-matte-black' : 'border-gray-300 bg-gray-50'
+                                } mb-4`}
+                        >
+                            <div className="flex-1">
+                                <div className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+                                    Voice Feedback
+                                </div>
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                                    Speak a short confirmation after each voice command, such as "Running code".
+                                    {!voiceSynthesisSupported && ' Your browser does not support speech synthesis.'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => updateSettings({ voiceFeedback: !settings.voiceFeedback })}
+                                disabled={!voiceSynthesisSupported}
+                                aria-label="Toggle voice feedback"
+                                aria-pressed={settings.voiceFeedback}
+                                className={`relative ml-4 w-12 h-6 rounded-full transition-colors ${settings.voiceFeedback ? 'bg-blue-600' : 'bg-gray-600'
+                                    } ${!voiceSynthesisSupported ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                <div
+                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${settings.voiceFeedback ? 'translate-x-6' : 'translate-x-0'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+
+                        {/* Continuous Listening Toggle */}
+                        <div
+                            className={`flex items-center justify-between p-4 rounded-lg border ${isDark ? 'border-gray-700 bg-matte-black' : 'border-gray-300 bg-gray-50'
+                                } mb-4`}
+                        >
+                            <div className="flex-1">
+                                <div className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+                                    Continuous Listening
+                                </div>
+                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                                    Keep the microphone open for several commands in a row. When off, listening stops
+                                    after each recognised command.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => updateSettings({ voiceContinuous: !settings.voiceContinuous })}
+                                aria-label="Toggle continuous listening"
+                                aria-pressed={settings.voiceContinuous}
+                                className={`relative ml-4 w-12 h-6 rounded-full transition-colors ${settings.voiceContinuous ? 'bg-blue-600' : 'bg-gray-600'
+                                    }`}
+                            >
+                                <div
+                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${settings.voiceContinuous ? 'translate-x-6' : 'translate-x-0'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+
+                        {/* Recognition Language */}
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="settings-voice-language"
+                                className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                            >
+                                Recognition Language
+                            </label>
+                            <select
+                                id="settings-voice-language"
+                                value={settings.voiceLanguage}
+                                onChange={(e) => updateSettings({ voiceLanguage: e.target.value })}
+                                className={`w-full px-3 py-2 rounded-lg border outline-none ${isDark
+                                    ? 'bg-matte-black border-gray-700 text-gray-200'
+                                    : 'bg-white border-gray-300 text-gray-900'
+                                    }`}
+                            >
+                                {VOICE_LANGUAGES.map((language) => (
+                                    <option key={language.code} value={language.code}>
+                                        {language.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                                Which language the microphone transcribes. Availability depends on your browser; English
+                                is the most reliable.
                             </p>
                         </div>
                     </div>

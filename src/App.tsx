@@ -1,4 +1,13 @@
-import React, { useState, useCallback, useEffect, useMemo, Suspense, lazy } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+  Suspense,
+  lazy,
+} from 'react';
 import { Code2, Share2 } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
@@ -61,9 +70,11 @@ import { useFileWorkspace } from './hooks/useFileWorkspace';
 import SelectionToolbar from './components/SelectionToolbar';
 import SelectionSidebar from './components/SelectionSidebar';
 import {
+  buildStandaloneHtml,
   createZipBlob,
   downloadBlob,
   formatBytes,
+  htmlFilename,
   zipFilename,
 } from './services/projectArchiveService';
 import { ImportResult, applyImport } from './services/projectImportService';
@@ -90,10 +101,55 @@ import { externalLibraryService, ExternalLibrary } from './services/externalLibr
 import { formattingService } from './services/formattingService';
 import { SelectionOperationType } from './services/selectionOperationsService';
 import { fetchPreviewByID } from './services/shareExportService';
+import {
+  UNRECOGNIZED_MESSAGE,
+  VoiceCommandDetail,
+  VoiceExportTarget,
+  VoiceModalTarget,
+  voiceCommandService,
+} from './services/voiceCommandService';
 import PreviewSharePage from './components/PreviewSharePage';
 
 
 type AppView = 'editor' | 'history' | 'about' | 'documentation' | 'privacy' | 'terms' | 'cookies' | 'disclaimer' | 'contact' | 'preview-share' | 'preview-share-error';
+
+/*
+ * ===== VOICE COMMAND GLUE =====
+ * Module-level so the external-store subscription identity is stable across
+ * renders, which `useSyncExternalStore` requires to avoid resubscribing.
+ */
+const subscribeToVoice = (onStoreChange: () => void) => voiceCommandService.subscribe(onStoreChange);
+const getVoiceSnapshot = () => voiceCommandService.getState();
+
+/** Turns a dictated phrase into a sentence-cased AI prompt. */
+const toPromptText = (spoken: string): string =>
+  spoken.charAt(0).toUpperCase() + spoken.slice(1);
+
+/** Voice action -> the selection operation it maps onto. */
+const VOICE_SELECTION_OPERATIONS: Record<string, SelectionOperationType> = {
+  explain: 'explain',
+  fix: 'debug',
+  optimize: 'optimize',
+  enhance_design: 'improveUI',
+};
+
+/** Human labels for the "select some code first" message. */
+const VOICE_SELECTION_LABELS: Record<string, string> = {
+  explain: 'explain code',
+  fix: 'find and fix issues',
+  optimize: 'optimize performance',
+  enhance_design: 'enhance the design',
+};
+
+/** First unused `new-file-N` path, so "new file" never needs a dialog. */
+const nextVoiceFilePath = (project: MultiFileProject): string => {
+  const existing = new Set(project.files.map((file) => file.path));
+  for (let index = 1; index <= 99; index += 1) {
+    const candidate = `src/new-file-${index}.js`;
+    if (!existing.has(candidate)) return candidate;
+  }
+  return `src/new-file-${Date.now()}.js`;
+};
 
 /**
  * Minimal starter template. Previously these were an empty `.container` div and
@@ -287,6 +343,8 @@ function App() {
   const [showBuildFromPrompt, setShowBuildFromPrompt] = useState(false);
   const [isBuildAnimating, setIsBuildAnimating] = useState(false);
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
+  /** Transcript routed into Build with AI, awaiting the user's confirmation. */
+  const [voiceBuildPrompt, setVoiceBuildPrompt] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showInjectionManager, setShowInjectionManager] = useState(false);
@@ -316,6 +374,9 @@ function App() {
   const jsEditorRef = React.useRef<any>(null);
   const { selection, updateSelection, clearSelection, hasSelection } = useCodeSelection();
   const selectionOps = useSelectionOperations();
+
+  /** Live microphone state, so the toolbar mic reflects it. */
+  const voiceState = useSyncExternalStore(subscribeToVoice, getVoiceSnapshot, getVoiceSnapshot);
   const codeWriter = useCodeWriter();
 
   // Code history for undo/redo functionality
@@ -518,36 +579,6 @@ function App() {
       }
     }
   }, [project.currentProject?.id]);
-
-  // ===== VOICE COMMAND HANDLER =====
-  useEffect(() => {
-    const handleVoiceCommand = (event: CustomEvent) => {
-      const { action } = event.detail;
-      
-      switch (action) {
-        case 'run':
-          handleCommand('run');
-          break;
-        case 'clear_console':
-          clearConsoleLogs();
-          break;
-        case 'format':
-          handleFormatHtml();
-          handleFormatCss();
-          handleFormatJavascript();
-          break;
-        case 'download':
-          void handleExportZip();
-          break;
-        case 'help':
-          setShowVoiceCommands(true);
-          break;
-      }
-    };
-
-    window.addEventListener('voice-command', handleVoiceCommand as EventListener);
-    return () => window.removeEventListener('voice-command', handleVoiceCommand as EventListener);
-  }, [html, css, javascript]);
 
   // External Library Manager handlers
   const handleExternalLibraryManagerToggle = () => {
@@ -1056,6 +1087,356 @@ function App() {
     selectionOps.clearResult();
   }, [selectionOps]);
 
+  /* ===================================================================== */
+  /* ===== VOICE COMMANDS ================================================ */
+  /* ===================================================================== */
+
+  /**
+   * Every voice action below has an equivalent button, menu item, or shortcut
+   * elsewhere in the app. Voice is an additional way in, never the only one.
+   */
+
+  /** Opens Build with AI on a spoken description, awaiting confirmation. */
+  const openVoiceBuild = useCallback((promptText: string) => {
+    setVoiceBuildPrompt(promptText);
+    setShowBuildFromPrompt(true);
+  }, []);
+
+  /** "Export as PNG / JPEG / SVG / HTML / ZIP", plus CodePen and JSFiddle. */
+  const runVoiceExport = useCallback(
+    async (target: VoiceExportTarget) => {
+      switch (target) {
+        case 'png':
+          await handleQuickScreenshot();
+          voiceCommandService.speak('Screenshot saved');
+          return;
+        case 'jpeg':
+        case 'svg':
+          try {
+            const capture = await capturePreview(previewRef.current, { format: target });
+            downloadCapture(
+              capture,
+              captureFilename(target, project.currentProject?.name ?? 'gb-coder'),
+            );
+            toast.success(`Saved ${target.toUpperCase()}.`);
+            voiceCommandService.speak('Export complete');
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Capture failed.');
+            voiceCommandService.speak('Export failed');
+          }
+          return;
+        case 'html':
+          /*
+           * A multi-file project cannot collapse into one .html file, so it
+           * falls back to the ZIP that preserves its structure.
+           */
+          if (fileProject.projectType !== 'plain') {
+            toast.success('Multi-file projects export as a ZIP — building it now.');
+            await handleExportZip();
+            return;
+          }
+          try {
+            const standalone = buildStandaloneHtml(fileProject, {
+              projectName: project.currentProject?.name ?? 'GB Coder Project',
+              externalLibraries,
+            });
+            downloadBlob(
+              standalone,
+              htmlFilename(project.currentProject?.name),
+              'text/html;charset=utf-8',
+            );
+            toast.success('Exported standalone HTML.');
+            voiceCommandService.speak('Export complete');
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Export failed.');
+            voiceCommandService.speak('Export failed');
+          }
+          return;
+        case 'zip':
+          await handleExportZip();
+          voiceCommandService.speak('Export complete');
+          return;
+        case 'codepen':
+        case 'jsfiddle':
+          // These need a user gesture on a real form/window, so hand off to the
+          // Share tab rather than trying to pop a blocked window.
+          handleOpenExport('share');
+          toast.success(`Open ${target === 'codepen' ? 'CodePen' : 'JSFiddle'} from the Share tab.`);
+          return;
+        default:
+          handleOpenExport('export');
+      }
+    },
+    [
+      handleQuickScreenshot,
+      handleExportZip,
+      handleOpenExport,
+      fileProject,
+      externalLibraries,
+      project.currentProject?.name,
+    ],
+  );
+
+  /** "Open templates / settings / statistics / …" */
+  const runVoiceOpen = useCallback(
+    (target: VoiceModalTarget) => {
+      switch (target) {
+        case 'templates':
+          setShowTemplates(true);
+          return 'Templates';
+        case 'settings':
+          setShowSettings(true);
+          return 'Settings';
+        case 'statistics':
+          setShowStats(true);
+          return 'Statistics';
+        case 'export':
+          handleOpenExport('export');
+          return 'Export';
+        case 'share':
+          handleOpenExport('share');
+          return 'Share';
+        case 'import':
+          setShowImport(true);
+          return 'Import';
+        case 'history':
+          setCurrentView('history');
+          return 'History';
+        case 'snippets':
+          setShowSnippets(true);
+          return 'Snippets';
+        case 'ai-chat':
+          setShowAIChat(true);
+          return 'AI Chat';
+        case 'shortcuts':
+          setShowKeyboardShortcuts(true);
+          return 'Keyboard shortcuts';
+        case 'dependencies':
+          setShowDependencies(true);
+          return 'Dependencies';
+        case 'libraries':
+          setShowExternalLibraryManager(true);
+          return 'External libraries';
+        case 'extensions':
+          setShowExtensionsMarketplace(true);
+          return 'Extensions';
+        case 'injection':
+          setShowInjectionManager(true);
+          return 'Custom injection';
+        case 'voice':
+          setShowVoiceCommands(true);
+          return 'Voice commands';
+        default:
+          return null;
+      }
+    },
+    [handleOpenExport],
+  );
+
+  /** "New file" / "Create a new file called utils.js" */
+  const runVoiceNewFile = useCallback(
+    (spokenPath?: string) => {
+      if (fileProject.projectType === 'plain') {
+        toast.error('Single-file projects have a fixed HTML, CSS and JS set. Start a React or Vue project to add files.');
+        voiceCommandService.speak('New files need a React or Vue project');
+        return;
+      }
+
+      const path = spokenPath?.trim() || nextVoiceFilePath(fileProject);
+      const result = workspace.createFile(path);
+
+      if (!result.ok) {
+        toast.error(result.error ?? `Could not create ${path}.`);
+        voiceCommandService.speak('Could not create the file');
+        return;
+      }
+
+      toast.success(`Created ${path}.`);
+      voiceCommandService.speak('File created');
+    },
+    [fileProject, workspace],
+  );
+
+  /** Copies the runnable single-file bundle to the clipboard. */
+  const runVoiceCopy = useCallback(async () => {
+    try {
+      const standalone = buildStandaloneHtml(fileProject, {
+        projectName: project.currentProject?.name ?? 'GB Coder Project',
+        externalLibraries,
+      });
+      await navigator.clipboard.writeText(standalone);
+      toast.success('Copied the full page to the clipboard.');
+      voiceCommandService.speak('Copied');
+    } catch {
+      toast.error('Clipboard access was blocked by the browser.');
+      voiceCommandService.speak('Copy failed');
+    }
+  }, [fileProject, externalLibraries, project.currentProject?.name]);
+
+  /**
+   * Central dispatcher for the `voice-command` event. Reads live values from the
+   * render scope, so it is re-created every render and reached through a ref
+   * (below) to keep a single, permanent event listener.
+   */
+  /*
+   * Deliberately not memoized: it is only ever reached through the ref below,
+   * so a stable identity would buy nothing while risking stale reads of
+   * `handleCommand` and the formatters, which are plain per-render functions.
+   */
+  const handleVoiceCommandDetail = async (detail: VoiceCommandDetail) => {
+    const { action, param } = detail;
+
+    // Selection-driven AI operations share one guard and one code path.
+    const selectionOperation = VOICE_SELECTION_OPERATIONS[action];
+    if (selectionOperation) {
+      if (!hasSelection || !selection.code) {
+        toast.error(`Select some code first, then say it again to ${VOICE_SELECTION_LABELS[action]}.`);
+        voiceCommandService.speak('Error: no code selected');
+        return;
+      }
+      await handleSelectionOperation(selectionOperation);
+      return;
+    }
+
+    switch (action) {
+      case 'run':
+        await handleCommand('run');
+        toast.success('Running code.');
+        voiceCommandService.speak('Running code');
+        return;
+
+      case 'build_open':
+        // No transcript to seed — open the modal as the button would.
+        setVoiceBuildPrompt('');
+        setShowBuildFromPrompt(true);
+        voiceCommandService.speak('Build with AI is open');
+        return;
+
+      case 'build':
+        if (!param) return;
+        openVoiceBuild(toPromptText(param));
+        voiceCommandService.speak('Review the prompt, then generate');
+        return;
+
+      case 'build_followup': {
+        if (!param) return;
+        /*
+         * Refinements extend the prompt in place when one is being composed;
+         * otherwise the phrase stands alone as a fresh prompt. Either way the
+         * user still confirms in the modal before anything is generated.
+         */
+        const addition = toPromptText(param);
+        setVoiceBuildPrompt((current) => {
+          const base = current.trim();
+          if (!base) return addition;
+          return `${base.replace(/[.!?]+$/, '')}. ${addition}`;
+        });
+        setShowBuildFromPrompt(true);
+        voiceCommandService.speak('Prompt updated');
+        return;
+      }
+
+      case 'export':
+        await runVoiceExport((param as VoiceExportTarget) ?? 'png');
+        return;
+
+      case 'save_project':
+        await handleExportZip();
+        voiceCommandService.speak('Project saved');
+        return;
+
+      case 'open_modal': {
+        const opened = runVoiceOpen(param as VoiceModalTarget);
+        if (!opened) {
+          toast.error(UNRECOGNIZED_MESSAGE);
+          return;
+        }
+        toast.success(`Opened ${opened}.`);
+        voiceCommandService.speak(`${opened} open`);
+        return;
+      }
+
+      case 'new_file':
+        runVoiceNewFile(param);
+        return;
+
+      case 'clear_console':
+        clearConsoleLogs();
+        toast.success('Console cleared.');
+        voiceCommandService.speak('Console cleared');
+        return;
+
+      case 'format':
+        await handleFormatHtml();
+        await handleFormatCss();
+        await handleFormatJavascript();
+        voiceCommandService.speak('Code formatted');
+        return;
+
+      case 'copy':
+        await runVoiceCopy();
+        return;
+
+      case 'toggle_theme': {
+        const nextTheme =
+          param === 'dark' || param === 'light' ? param : isDark ? 'light' : 'dark';
+        updateSettings({ theme: nextTheme });
+        toast.success(`Switched to ${nextTheme} theme.`);
+        voiceCommandService.speak(`${nextTheme} theme`);
+        return;
+      }
+
+      case 'help':
+        setShowVoiceCommands(true);
+        voiceCommandService.speak('Here are the commands');
+        return;
+
+      case 'unrecognized':
+        toast.error(UNRECOGNIZED_MESSAGE);
+        return;
+
+      default:
+        return;
+    }
+  };
+
+  /*
+   * A ref keeps exactly one listener attached for the app's lifetime while the
+   * handler itself always sees fresh state. Re-subscribing on every dependency
+   * change would risk dropping an event mid-command.
+   */
+  const voiceHandlerRef = useRef(handleVoiceCommandDetail);
+  useEffect(() => {
+    voiceHandlerRef.current = handleVoiceCommandDetail;
+  });
+
+  useEffect(() => {
+    const listener = (event: Event) => {
+      const detail = (event as CustomEvent<VoiceCommandDetail>).detail;
+      if (!detail) return;
+      void voiceHandlerRef.current(detail);
+    };
+
+    window.addEventListener('voice-command', listener);
+    return () => window.removeEventListener('voice-command', listener);
+  }, []);
+
+  // Settings own the voice preferences; the service is told about changes.
+  useEffect(() => {
+    voiceCommandService.setVoiceFeedback(settings.voiceFeedback);
+    voiceCommandService.setContinuous(settings.voiceContinuous);
+    voiceCommandService.setLanguage(settings.voiceLanguage);
+  }, [settings.voiceFeedback, settings.voiceContinuous, settings.voiceLanguage]);
+
+  /** Toolbar mic: opens the overlay and starts listening, or stops it. */
+  const handleToggleVoice = useCallback(() => {
+    if (voiceState.isListening) {
+      voiceCommandService.stopListening();
+      return;
+    }
+    setShowVoiceCommands(true);
+  }, [voiceState.isListening]);
+
 
   // Render standalone live-preview share page (/preview/:id) - must come
   // first so it bypasses all editor chrome.
@@ -1438,6 +1819,8 @@ function App() {
         onNewProject={handleNewProject}
         currentProjectType={fileProject.projectType}
         autoSaveEnabled={autoSaveEnabled}
+        onToggleVoice={handleToggleVoice}
+        isVoiceListening={voiceState.isListening}
         customActions={
           <div className="flex items-center gap-1 sm:gap-2">
             {/* Export & Share is the only feature icon left in the top bar;
@@ -1673,9 +2056,14 @@ function App() {
         <Suspense fallback={null}>
           <BuildFromPromptModal
             isOpen={showBuildFromPrompt}
-            onClose={() => setShowBuildFromPrompt(false)}
+            onClose={() => {
+              setShowBuildFromPrompt(false);
+              // Drop the dictated prompt so opening the modal manually starts clean.
+              setVoiceBuildPrompt('');
+            }}
             onGenerate={handleBuildFromPrompt}
             projectContext={{ html, css, javascript }}
+            initialPrompt={voiceBuildPrompt}
           />
         </Suspense>
       )}
@@ -1725,6 +2113,9 @@ function App() {
           <VoiceCommandPanel
             isOpen={showVoiceCommands}
             onClose={() => setShowVoiceCommands(false)}
+            onVoiceFeedbackChange={(enabled) => updateSettings({ voiceFeedback: enabled })}
+            onContinuousChange={(enabled) => updateSettings({ voiceContinuous: enabled })}
+            onLanguageChange={(language) => updateSettings({ voiceLanguage: language })}
           />
         </Suspense>
       )}
