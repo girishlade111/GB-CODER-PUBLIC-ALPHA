@@ -107,11 +107,14 @@ import { SelectionOperationType } from './services/selectionOperationsService';
 import { fetchPreviewByID } from './services/shareExportService';
 import {
   UNRECOGNIZED_MESSAGE,
+  VoiceAttemptDetail,
   VoiceCommandDetail,
   VoiceExportTarget,
   VoiceModalTarget,
+  VoicePanelTarget,
   voiceCommandService,
 } from './services/voiceCommandService';
+import { sandboxTerminal } from './services/sandboxTerminal';
 import PreviewSharePage from './components/PreviewSharePage';
 
 
@@ -332,6 +335,7 @@ function App() {
     append: appendConsoleMessage,
     appendText: appendConsoleText,
     clear: clearConsole,
+    clearPageMessages: clearPreviewMessages,
   } = consoleFeed;
   const { isDark } = useTheme();
   const [snippets, setSnippets] = useLocalStorage<CodeSnippet[]>('gb-coder-snippets', []);
@@ -363,6 +367,15 @@ function App() {
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
   /** Transcript routed into Build with AI, awaiting the user's confirmation. */
   const [voiceBuildPrompt, setVoiceBuildPrompt] = useState('');
+  /**
+   * Voice-driven request to focus a right-hand panel. The nonce makes repeat
+   * requests for the same tab distinguishable, so saying "open console" twice
+   * works even if the tab is already selected.
+   */
+  const [rightPanelRequest, setRightPanelRequest] = useState<{
+    tab: VoicePanelTarget;
+    nonce: number;
+  } | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showInjectionManager, setShowInjectionManager] = useState(false);
@@ -1456,6 +1469,104 @@ function App() {
         return;
       }
 
+      case 'open_panel': {
+        const target = (param as VoicePanelTarget) ?? 'console';
+        setRightPanelRequest({ tab: target, nonce: Date.now() });
+        toast.success(`Opened the ${target} panel.`);
+        voiceCommandService.speak(`${target} open`);
+        return;
+      }
+
+      case 'validate_now':
+        setRightPanelRequest({ tab: 'validator', nonce: Date.now() });
+        validation.revalidate();
+        toast.success('Re-running validation.');
+        voiceCommandService.speak('Checking your code');
+        return;
+
+      case 'open_file': {
+        if (!param) return;
+        /*
+         * Normalization lower-cases everything, so the spoken name is matched
+         * against real paths case-insensitively rather than guessing casing.
+         */
+        const wanted = param.toLowerCase();
+        const target = fileProject.files.find((file) => {
+          const path = file.path.toLowerCase();
+          return path === wanted || path.endsWith(`/${wanted}`);
+        });
+
+        if (!target) {
+          toast.error(`No file matching "${param}".`);
+          voiceCommandService.speak('File not found');
+          return;
+        }
+        if (fileProject.projectType === 'plain') {
+          toast.success(`${target.path} is already open below.`);
+          return;
+        }
+        workspace.openFile(target.path);
+        toast.success(`Opened ${target.path}.`);
+        voiceCommandService.speak('File open');
+        return;
+      }
+
+      case 'undo': {
+        const restored = codeHistory.undo();
+        if (!restored) {
+          toast.error('Nothing left to undo.');
+          voiceCommandService.speak('Nothing to undo');
+          return;
+        }
+        setHtml(restored.html);
+        setCss(restored.css);
+        setJavascript(restored.javascript);
+        toast.success('Undone.');
+        voiceCommandService.speak('Undone');
+        return;
+      }
+
+      case 'redo': {
+        const restored = codeHistory.redo();
+        if (!restored) {
+          toast.error('Nothing to redo.');
+          voiceCommandService.speak('Nothing to redo');
+          return;
+        }
+        setHtml(restored.html);
+        setCss(restored.css);
+        setJavascript(restored.javascript);
+        toast.success('Redone.');
+        voiceCommandService.speak('Redone');
+        return;
+      }
+
+      case 'share_link':
+        handleOpenExport('share');
+        toast.success('Create a share link from the Share tab.');
+        voiceCommandService.speak('Share options open');
+        return;
+
+      case 'set_language': {
+        // The service already swapped the recognition instance; persist it.
+        if (param) updateSettings({ voiceLanguage: param });
+        return;
+      }
+
+      case 'start_listening':
+        setShowVoiceCommands(true);
+        return;
+
+      case 'sandbox_connect':
+      case 'sandbox_stop':
+        /*
+         * Registered so the vocabulary is complete, but the sandbox layer does
+         * not exist yet. Saying so is better than appearing to work.
+         */
+        toast.error('Sandbox mode is not available yet.');
+        voiceCommandService.speak('Sandbox mode is not available yet');
+        return;
+
       case 'help':
         setShowVoiceCommands(true);
         voiceCommandService.speak('Here are the commands');
@@ -1491,12 +1602,68 @@ function App() {
     return () => window.removeEventListener('voice-command', listener);
   }, []);
 
-  // Settings own the voice preferences; the service is told about changes.
+  /*
+   * Every recognition attempt is mirrored into the Console tab at INFO level, so
+   * a misfire can be diagnosed from inside the app rather than from devtools.
+   */
+  useEffect(() => {
+    const listener = (event: Event) => {
+      const detail = (event as CustomEvent<VoiceAttemptDetail>).detail;
+      if (!detail) return;
+
+      const confidence = `${Math.round(detail.score * 100)}%`;
+      const resolved =
+        detail.action === null
+          ? 'no match'
+          : `${detail.action}${detail.param ? `(${detail.param})` : ''}`;
+
+      appendConsoleText(
+        'info',
+        `[voice] "${detail.transcript}" -> ${resolved} · ${confidence} · ${detail.outcome}` +
+          (detail.matchedPhrase ? ` · matched "${detail.matchedPhrase}"` : ''),
+        'voice',
+      );
+    };
+
+    window.addEventListener('voice-attempt', listener);
+    return () => window.removeEventListener('voice-attempt', listener);
+  }, [appendConsoleText]);
+
+  /**
+   * Settings own the voice preferences; the service is told about changes.
+   *
+   * Language is reconciled rather than pushed on the first pass. The service
+   * restores its own persisted language in its constructor, so blindly applying
+   * the settings value here would overwrite a restored choice with the default
+   * on every reload.
+   */
+  const voiceLanguageReconciled = useRef(false);
   useEffect(() => {
     voiceCommandService.setVoiceFeedback(settings.voiceFeedback);
     voiceCommandService.setContinuous(settings.voiceContinuous);
+
+    if (!voiceLanguageReconciled.current) {
+      voiceLanguageReconciled.current = true;
+      const restored = voiceCommandService.getState().language;
+      if (restored && restored !== settings.voiceLanguage) {
+        updateSettings({ voiceLanguage: restored });
+        return;
+      }
+    }
+
     voiceCommandService.setLanguage(settings.voiceLanguage);
-  }, [settings.voiceFeedback, settings.voiceContinuous, settings.voiceLanguage]);
+  }, [settings.voiceFeedback, settings.voiceContinuous, settings.voiceLanguage, updateSettings]);
+
+  /*
+   * Gated voice actions. The sandbox layer does not exist yet, so those commands
+   * stay out of the advertised list until a connector registers.
+   */
+  useEffect(() => {
+    voiceCommandService.setCapabilities({ sandbox: sandboxTerminal.isAvailable() });
+    return sandboxTerminal.subscribe((available) => {
+      voiceCommandService.setCapabilities({ sandbox: available });
+    });
+  }, []);
 
   /** Toolbar mic: opens the overlay and starts listening, or stops it. */
   const handleToggleVoice = useCallback(() => {
@@ -1504,8 +1671,18 @@ function App() {
       voiceCommandService.stopListening();
       return;
     }
+
+    /*
+     * Opening the overlay auto-starts listening, but if it is *already* open and
+     * merely paused (single-command mode stops after each command), setting the
+     * same state changes nothing and the mic would stay off. Start it explicitly.
+     */
+    if (showVoiceCommands) {
+      voiceCommandService.startListening();
+      return;
+    }
     setShowVoiceCommands(true);
-  }, [voiceState.isListening]);
+  }, [voiceState.isListening, showVoiceCommands]);
 
 
   // Render standalone live-preview share page (/preview/:id) - must come
@@ -2031,7 +2208,7 @@ function App() {
               javascript={javascript + (customInjectionCode.js ? '\n\n// Custom Injections\n' + customInjectionCode.js : '')}
               jsEditorMode={jsEditorMode}
               onConsoleMessage={appendConsoleMessage}
-              onPreviewReset={clearConsole}
+              onPreviewReset={clearPreviewMessages}
               autoRunJS={settings.autoRunJS}
               previewDelay={isBuildAnimating ? 60000 : settings.previewDelay}
               // Console props
@@ -2043,6 +2220,7 @@ function App() {
               isValidating={validation.isValidating}
               isValidationReady={isValidationReady}
               onRevalidate={validation.revalidate}
+              panelRequest={rightPanelRequest}
               resolvedPackages={projectBundle.resolvedPackages}
               unresolvedPackages={projectBundle.unresolvedPackages}
               // Multi-file project rendering

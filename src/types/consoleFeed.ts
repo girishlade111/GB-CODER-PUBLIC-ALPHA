@@ -15,8 +15,19 @@ import type {
 
 export type { ConsoleLevel, SerializedValue, SourceLocation, StackFrame };
 
-/** `build` covers bundler diagnostics, which do not come from the iframe. */
-export type ConsoleMessageOrigin = ConsoleOrigin | 'build';
+/**
+ * `build` covers bundler diagnostics and `voice` covers speech-recognition
+ * attempts. Neither comes from the preview iframe, which matters for clearing:
+ * see `clearPageMessages`.
+ */
+export type ConsoleMessageOrigin = ConsoleOrigin | 'build' | 'voice';
+
+/** Origins produced by the preview document itself. */
+export const PAGE_ORIGINS: readonly ConsoleMessageOrigin[] = Object.freeze([
+  'console',
+  'window-error',
+  'unhandled-rejection',
+]);
 
 /** A stack frame paired with the user-file location it resolved to, if any. */
 export interface ResolvedStackFrame {
