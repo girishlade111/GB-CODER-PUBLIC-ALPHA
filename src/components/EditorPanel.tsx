@@ -19,6 +19,8 @@ interface EditorPanelProps {
   fontSize?: number;
   jsEditorMode?: JSEditorMode;
   onJsEditorModeChange?: (mode: JSEditorMode) => void;
+  /** Fired once Monaco has mounted, for navigation and validation wiring. */
+  onEditorReady?: (editor: unknown, monaco: unknown) => void;
 }
 
 const ACCEPTED_EXTENSIONS: Record<EditorLanguage, string[]> = {
@@ -54,6 +56,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
   fontSize,
   jsEditorMode = 'javascript',
   onJsEditorModeChange,
+  onEditorReady,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -233,6 +236,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
               fontFamily={fontFamily}
               fontSize={fontSize}
               jsEditorMode={jsEditorMode}
+              onMount={onEditorReady}
             />
           </div>
 

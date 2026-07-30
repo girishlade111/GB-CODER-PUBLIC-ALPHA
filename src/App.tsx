@@ -67,6 +67,10 @@ import { useCodeWriter } from './hooks/useCodeWriter';
 import { useProjectBundle } from './hooks/useProjectBundle';
 import { useAppShortcuts } from './hooks/useAppShortcuts';
 import { useFileWorkspace } from './hooks/useFileWorkspace';
+import { useConsoleFeed } from './hooks/useConsoleFeed';
+import { useValidation } from './hooks/useValidation';
+import { validationService } from './services/validationService';
+import { editorNavigator } from './services/editorNavigator';
 import SelectionToolbar from './components/SelectionToolbar';
 import SelectionSidebar from './components/SelectionSidebar';
 import {
@@ -314,7 +318,21 @@ function App() {
     );
   }, []);
   const [jsEditorMode, setJsEditorMode] = useLocalStorage<JSEditorMode>('gb-coder-js-editor-mode', 'javascript');
-  const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
+  /*
+   * Console feed. Owns the cap, repeat collapsing, collision-free ids and the
+   * per-level counts that drive the badges.
+   */
+  const consoleFeed = useConsoleFeed();
+  /*
+   * Destructured because the hook's object identity changes on every new
+   * message, while these three callbacks are stable. Depending on the object
+   * would invalidate every consumer each time a log arrived.
+   */
+  const {
+    append: appendConsoleMessage,
+    appendText: appendConsoleText,
+    clear: clearConsole,
+  } = consoleFeed;
   const { isDark } = useTheme();
   const [snippets, setSnippets] = useLocalStorage<CodeSnippet[]>('gb-coder-snippets', []);
   const [selectionHistory, setSelectionHistory] = useState<HistoryItem[]>([]);
@@ -403,6 +421,54 @@ function App() {
     autoSave.lastSaveTime ? new Date(autoSave.lastSaveTime).getTime() : null,
   );
 
+  /*
+   * Validation. Debounced inside the hook, and driven from App rather than from
+   * the console panel so the problem count stays live even while the user is
+   * looking at the Live Preview tab.
+   *
+   * `isValidationReady` flips once an editor has mounted and handed its Monaco
+   * instance to the service, which is what owns the language workers.
+   */
+  const [isValidationReady, setIsValidationReady] = useState(validationService.isReady());
+  const validation = useValidation(fileProject, isValidationReady);
+
+  /**
+   * Called by every editor on mount. Registers the instance for click-to-jump
+   * navigation and hands Monaco to the validation service.
+   */
+  const handleEditorReady = useCallback(
+    (key: string, editor: unknown, monaco: unknown) => {
+      editorNavigator.register(key, editor as never);
+      if (monaco) {
+        validationService.setMonaco(monaco as never);
+        setIsValidationReady(true);
+      }
+    },
+    [],
+  );
+
+  /*
+   * Multi-file navigation needs the target file open before its line can be
+   * revealed. Plain mode needs nothing: all three editors are always mounted.
+   */
+  useEffect(() => {
+    editorNavigator.setActivationHandler((file) => {
+      if (fileProject.projectType === 'plain') return;
+      if (fileProject.files.some((projectFile) => projectFile.path === file)) {
+        workspace.openFile(file);
+      }
+    });
+    return () => editorNavigator.setActivationHandler(null);
+  }, [fileProject, workspace]);
+
+  /*
+   * Switching project type unmounts one editor surface and mounts the other.
+   * Dropping the registry avoids holding disposed Monaco instances.
+   */
+  useEffect(() => {
+    editorNavigator.reset();
+  }, [fileProject.projectType]);
+
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -432,7 +498,7 @@ function App() {
         setHtml(sharedCode.html);
         setCss(sharedCode.css);
         setJavascript(sharedCode.javascript);
-        setConsoleLogs([]);
+        clearConsole();
         toast.success('Preview opened in editor.');
       } catch (error: any) {
         if (mode === 'preview') {
@@ -595,13 +661,17 @@ function App() {
     window.dispatchEvent(new CustomEvent('external-libraries-updated'));
   };
 
+  /**
+   * Bundler diagnostics arrive as flat text. Adapted onto the structured feed so
+   * build output and runtime output share one list, one cap and one clear.
+   */
   const handleConsoleLog = useCallback((log: ConsoleLog) => {
-    setConsoleLogs(prev => [...prev, log]);
-  }, []);
+    appendConsoleText(log.type, log.message, 'build');
+  }, [appendConsoleText]);
 
   const clearConsoleLogs = useCallback(() => {
-    setConsoleLogs([]);
-  }, []);
+    clearConsole();
+  }, [clearConsole]);
 
   /**
    * Client-side build for React/Vue projects. A no-op for plain projects, so
@@ -745,7 +815,7 @@ function App() {
 
       return createProjectOfType(projectType);
     });
-    setConsoleLogs([]);
+    clearConsole();
     toast.success(`Started a new ${PROJECT_TYPE_LABEL[projectType]} project.`);
   }, []);
 
@@ -754,7 +824,7 @@ function App() {
 
     switch (cmd) {
       case 'run':
-        setConsoleLogs([]);
+        clearConsole();
         break;
       case 'clear':
         clearConsoleLogs();
@@ -826,7 +896,7 @@ function App() {
     setHtml(snippet.html);
     setCss(snippet.css);
     setJavascript(snippet.javascript);
-    setConsoleLogs([]);
+    clearConsole();
   };
 
 
@@ -857,7 +927,7 @@ function App() {
         break;
     }
 
-    setConsoleLogs([]);
+    clearConsole();
   };
   const deleteSnippet = (id: string) => {
     setSnippets(prev => prev.filter(s => s.id !== id));
@@ -871,7 +941,7 @@ function App() {
     setHtml('');
     setCss('');
     setJavascript('');
-    setConsoleLogs([]);
+    clearConsole();
 
     // Clear auto-save data
     localStorage.removeItem('gb-coder-autosave');
@@ -961,7 +1031,7 @@ function App() {
 
   const handleBuildFromPrompt = useCallback(async (newHtml: string, newCss: string, newJavascript: string) => {
     codeHistory.saveState({ html, css, javascript }, 'Built from prompt');
-    setConsoleLogs([]);
+    clearConsole();
     setIsBuildAnimating(true);
     setHtml('');
     setCss('');
@@ -1895,6 +1965,7 @@ function App() {
                 buildStatus={projectBundle.status}
                 buildErrors={projectBundle.errors}
                 onSelectionChange={handleMultiFileSelectionChange}
+                onEditorReady={handleEditorReady}
               />
             </div>
           ) : (
@@ -1909,6 +1980,7 @@ function App() {
               isFormatLoading={formatLoadingStates.html}
               editorRef={htmlEditorRef}
               onSelectionChange={(editor) => handleSelectionChange(editor, 'html')}
+              onEditorReady={(editor, monaco) => handleEditorReady('html', editor, monaco)}
               fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
               fontSize={settings.editorFontSize}
             />
@@ -1923,6 +1995,7 @@ function App() {
               isFormatLoading={formatLoadingStates.css}
               editorRef={cssEditorRef}
               onSelectionChange={(editor) => handleSelectionChange(editor, 'css')}
+              onEditorReady={(editor, monaco) => handleEditorReady('css', editor, monaco)}
               fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
               fontSize={settings.editorFontSize}
             />
@@ -1937,6 +2010,7 @@ function App() {
               isFormatLoading={formatLoadingStates.javascript}
               editorRef={jsEditorRef}
               onSelectionChange={(editor) => handleSelectionChange(editor, 'javascript')}
+              onEditorReady={(editor, monaco) => handleEditorReady('javascript', editor, monaco)}
               fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
               fontSize={settings.editorFontSize}
               jsEditorMode={jsEditorMode}
@@ -1949,18 +2023,28 @@ function App() {
           <div className="flex flex-col w-full h-full min-h-0">
             <TabbedRightPanel
               ref={previewRef}
-              errorCount={consoleLogs.filter(log => log.type === 'error').length}
+              errorCount={consoleFeed.counts.error}
+              problemCount={validation.summary.errors}
               // Preview props
               html={html}
               css={css + (customInjectionCode.css ? '\n\n/* Custom Injections */\n' + customInjectionCode.css : '')}
               javascript={javascript + (customInjectionCode.js ? '\n\n// Custom Injections\n' + customInjectionCode.js : '')}
               jsEditorMode={jsEditorMode}
-              onConsoleLog={handleConsoleLog}
+              onConsoleMessage={appendConsoleMessage}
+              onPreviewReset={clearConsole}
               autoRunJS={settings.autoRunJS}
               previewDelay={isBuildAnimating ? 60000 : settings.previewDelay}
               // Console props
-              consoleLogs={consoleLogs}
+              consoleMessages={consoleFeed.messages}
+              consoleCounts={consoleFeed.counts}
               onClearConsole={clearConsoleLogs}
+              project={fileProject}
+              validation={validation.summary}
+              isValidating={validation.isValidating}
+              isValidationReady={isValidationReady}
+              onRevalidate={validation.revalidate}
+              resolvedPackages={projectBundle.resolvedPackages}
+              unresolvedPackages={projectBundle.unresolvedPackages}
               // Multi-file project rendering
               projectType={fileProject.projectType}
               bundledCode={projectBundle.bundle.code}
