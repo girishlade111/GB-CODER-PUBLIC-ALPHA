@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { useSettings } from '../hooks/useSettings';
+import Tooltip from './ui/Tooltip';
 
 interface NavigationBarProps {
   onAutoSaveToggle: () => void;
@@ -80,12 +81,12 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
     <>
       {/* Main Navigation Bar — no drag events */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-40 backdrop-blur-sm border-b shadow-vscode-widget transition-all duration-200 ${isDark
-          ? 'bg-matte-black/98 border-gray-700'
-          : 'bg-white/98 border-gray-200'
+        className={`fixed top-0 left-0 right-0 z-40 backdrop-blur-md border-b transition-all duration-200 ${isDark
+          ? 'bg-surface-base/95 border-stroke-subtle'
+          : 'bg-white/95 border-gray-200'
           }`}
       >
-        <div className="w-full mx-auto px-3 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="w-full mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Left side - Logo */}
             <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 min-w-0 flex-1">
@@ -104,75 +105,83 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
             {/* Right side - Settings, Menu */}
             <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 min-w-0 flex-shrink-0">
-              <button
-                onClick={onRun}
-                className={`p-2 sm:px-3 sm:py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${
-                  isDark
-                    ? 'text-gray-300 hover:bg-dark-gray'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-                title="Run"
-                aria-label="Run"
-              >
-                <Play className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden lg:inline text-sm font-medium">Run</span>
-              </button>
+              <Tooltip label="Run">
+                <button
+                  onClick={onRun}
+                  className={`p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 ${
+                    isDark
+                      ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+                      : 'text-gray-700 hover:bg-black/5'
+                  }`}
+                  title="Run"
+                  aria-label="Run"
+                >
+                  <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="hidden lg:inline text-sm font-medium">Run</span>
+                </button>
+              </Tooltip>
 
-              <button
-                onClick={onOpenBuildFromPrompt}
-                className="p-2 sm:px-3 sm:py-2 rounded-lg transition-all duration-200 flex items-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-purple-950/30 hover:from-violet-500 hover:to-purple-500 hover:shadow-purple-900/40 active:brightness-90"
-                title="Build with AI"
-                aria-label="Build with AI"
-              >
-                <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden lg:inline text-sm font-semibold">Build with AI</span>
-              </button>
+              <Tooltip label="Build with AI">
+                <button
+                  onClick={onOpenBuildFromPrompt}
+                  className="p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 bg-accent text-accent-fg hover:bg-accent-hover active:brightness-95"
+                  title="Build with AI"
+                  aria-label="Build with AI"
+                >
+                  <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="hidden lg:inline text-sm font-semibold">Build with AI</span>
+                </button>
+              </Tooltip>
 
               {/* Custom Actions */}
               {customActions}
 
               {/* Settings Button */}
-              <button
-                onClick={onSettingsToggle}
-                className={`p-2 sm:p-2.5 rounded-lg transition-all duration-200 hover:brightness-125 active:brightness-90 ${isDark
-                  ? 'text-bright-white hover:bg-dark-gray'
-                  : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                title="Settings"
-                aria-label="Settings"
-              >
-                <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
+              <Tooltip label="Settings">
+                <button
+                  onClick={onSettingsToggle}
+                  className={`p-2 rounded-md transition-colors ${isDark
+                    ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+                    : 'text-gray-600 hover:bg-black/5'
+                    }`}
+                  title="Settings"
+                  aria-label="Settings"
+                >
+                  <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </Tooltip>
 
               {/* Hamburger Menu */}
               <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className={`p-2 sm:p-2.5 rounded-lg transition-all duration-200 hover:brightness-125 active:brightness-90 ${isDropdownOpen
-                    ? (isDark ? 'bg-dark-gray text-white' : 'bg-gray-100 text-black')
-                    : (isDark
-                      ? 'text-bright-white hover:bg-dark-gray'
-                      : 'text-gray-600 hover:bg-gray-100')
-                    }`}
-                  title="Menu"
-                  aria-label="Toggle navigation menu"
-                  aria-expanded={isDropdownOpen}
-                  aria-haspopup="true"
-                >
-                  <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
+                <Tooltip label="Menu">
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className={`p-2 rounded-md transition-colors ${isDropdownOpen
+                      ? (isDark ? 'bg-white/10 text-content-primary' : 'bg-gray-100 text-black')
+                      : (isDark
+                        ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+                        : 'text-gray-600 hover:bg-black/5')
+                      }`}
+                    title="Menu"
+                    aria-label="Toggle navigation menu"
+                    aria-expanded={isDropdownOpen}
+                    aria-haspopup="true"
+                  >
+                    <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                </Tooltip>
 
                 {/* Dropdown Content */}
                 {isDropdownOpen && (
-                  <div className={`absolute right-0 mt-2 w-72 sm:w-80 rounded-xl shadow-vscode-widget border z-50 animate-slide-down overflow-hidden ${isDark
-                    ? 'bg-dark-gray border-gray-700'
+                  <div className={`absolute right-0 mt-2 w-72 sm:w-80 rounded-lg shadow-elevated border z-50 animate-slide-down overflow-hidden ${isDark
+                    ? 'bg-surface-raised border-stroke-subtle'
                     : 'bg-white border-gray-200'
                     }`}>
                     {/* Menu Content */}
                     <div className="py-2 max-h-[calc(100vh-100px)] overflow-y-auto">
                       {/* Code Operations */}
                       <div className="px-4 py-3">
-                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-gray-600 pl-2 ${isDark ? 'text-gray-400' : 'text-gray-500'
+                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-accent/60 pl-2 ${isDark ? 'text-content-muted' : 'text-gray-500'
                           }`}>
                           Code Operations
                         </h4>
@@ -182,8 +191,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               onRun();
                               setIsDropdownOpen(false);
                             }}
-                            className={`px-3 py-2.5 text-sm flex items-center gap-2 transition-colors rounded-lg ${isDark
-                              ? 'text-gray-300 hover:bg-[#2a2d2e]'
+                            className={`px-3 py-2 text-sm flex items-center gap-2 transition-colors rounded-md ${isDark
+                              ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
                               : 'text-gray-700 hover:bg-gray-50'
                               }`}
                           >
@@ -196,10 +205,10 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               onAutoSaveToggle();
                               setIsDropdownOpen(false);
                             }}
-                            className={`px-3 py-2.5 text-sm flex items-center gap-2 transition-colors rounded-lg ${autoSaveEnabled
+                            className={`px-3 py-2 text-sm flex items-center gap-2 transition-colors rounded-md ${autoSaveEnabled
                               ? (isDark ? 'bg-white text-black' : 'bg-black text-white')
                               : isDark
-                                ? 'text-gray-300 hover:bg-gray-700'
+                                ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
                                 : 'text-gray-700 hover:bg-gray-50'
                               }`}
                           >
@@ -221,7 +230,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               onClear();
                               setIsDropdownOpen(false);
                             }}
-                            className={`w-full mt-2 px-3 py-2.5 text-sm flex items-center gap-2 transition-colors rounded-lg ${isDark
+                            className={`w-full mt-2 px-3 py-2 text-sm flex items-center gap-2 transition-colors rounded-md ${isDark
                               ? 'text-red-400 hover:bg-red-900/20'
                               : 'text-red-600 hover:bg-red-50'
                               }`}
@@ -232,11 +241,11 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                         )}
                       </div>
 
-                      <div className={`border-t my-1 ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />
+                      <div className={`border-t my-1 ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`} />
 
                       {/* File Management */}
                       <div className="px-4 py-3">
-                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-gray-600 pl-2 ${isDark ? 'text-gray-400' : 'text-gray-500'
+                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-accent/60 pl-2 ${isDark ? 'text-content-muted' : 'text-gray-500'
                           }`}>
                           Files
                         </h4>
@@ -246,8 +255,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               fileInputRef.current?.click();
                               setIsDropdownOpen(false);
                             }}
-                            className={`w-full px-3 py-2.5 text-left text-sm flex items-center gap-3 transition-colors rounded-lg ${isDark
-                              ? 'text-gray-300 hover:bg-[#2a2d2e]'
+                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3 transition-colors rounded-md ${isDark
+                              ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
                               : 'text-gray-700 hover:bg-gray-50'
                               }`}
                           >
@@ -260,8 +269,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               onExport();
                               setIsDropdownOpen(false);
                             }}
-                            className={`w-full px-3 py-2.5 text-left text-sm flex items-center gap-3 transition-colors rounded-lg ${isDark
-                              ? 'text-gray-300 hover:bg-[#2a2d2e]'
+                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3 transition-colors rounded-md ${isDark
+                              ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
                               : 'text-gray-700 hover:bg-gray-50'
                               }`}
                           >
@@ -271,11 +280,11 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                         </div>
                       </div>
 
-                      <div className={`border-t my-1 ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />
+                      <div className={`border-t my-1 ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`} />
 
                       {/* Settings & Tools */}
                       <div className="px-4 py-3">
-                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-gray-600 pl-2 ${isDark ? 'text-gray-400' : 'text-gray-500'
+                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-accent/60 pl-2 ${isDark ? 'text-content-muted' : 'text-gray-500'
                           }`}>
                           Settings & Tools
                         </h4>
@@ -285,8 +294,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               updateSettings({ theme: isDark ? 'light' : 'dark' });
                               setIsDropdownOpen(false);
                             }}
-                            className={`w-full px-3 py-2.5 text-left text-sm flex items-center gap-3 transition-colors rounded-lg ${isDark
-                              ? 'text-gray-300 hover:bg-[#2a2d2e]'
+                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3 transition-colors rounded-md ${isDark
+                              ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
                               : 'text-gray-700 hover:bg-gray-50'
                               }`}
                           >
@@ -299,8 +308,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               window.dispatchEvent(new CustomEvent('navigate-to-about'));
                               setIsDropdownOpen(false);
                             }}
-                            className={`w-full px-3 py-2.5 text-left text-sm flex items-center gap-3 transition-colors rounded-lg ${isDark
-                              ? 'text-gray-300 hover:bg-[#2a2d2e]'
+                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3 transition-colors rounded-md ${isDark
+                              ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
                               : 'text-gray-700 hover:bg-gray-50'
                               }`}
                           >

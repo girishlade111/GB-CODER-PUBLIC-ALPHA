@@ -98,17 +98,17 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm`}>
       <div
-        className={`w-full max-w-7xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden ${
-          isDark ? 'bg-matte-black border border-gray-700' : 'bg-white border border-gray-200'
+        className={`w-full max-w-7xl h-[90vh] rounded-lg shadow-elevated flex flex-col overflow-hidden ${
+          isDark ? 'bg-surface-raised border border-stroke-subtle' : 'bg-white border border-gray-200'
         }`}
       >
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${
-          isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
+          isDark ? 'border-stroke-subtle bg-surface-raised' : 'border-gray-200 bg-gray-50'
         }`}>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl">
-              <Layers className="w-6 h-6 text-white" />
+            <div className="p-2 bg-accent-subtle text-accent-hover rounded-md">
+              <Layers className="w-5 h-5" />
             </div>
             <div>
               <h2 className={`text-lg font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
@@ -126,9 +126,9 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                 onClick={() => setViewMode('grid')}
                 className={`p-2 transition-colors ${
                   viewMode === 'grid'
-                    ? 'bg-purple-500 text-white'
+                    ? 'bg-accent text-accent-fg'
                     : isDark
-                    ? 'bg-gray-800 text-gray-400'
+                    ? 'bg-surface-overlay text-content-secondary'
                     : 'bg-white text-gray-600'
                 }`}
               >
@@ -138,9 +138,9 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                 onClick={() => setViewMode('list')}
                 className={`p-2 transition-colors ${
                   viewMode === 'list'
-                    ? 'bg-purple-500 text-white'
+                    ? 'bg-accent text-accent-fg'
                     : isDark
-                    ? 'bg-gray-800 text-gray-400'
+                    ? 'bg-surface-overlay text-content-secondary'
                     : 'bg-white text-gray-600'
                 }`}
               >
@@ -150,7 +150,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
             <button
               onClick={onClose}
               className={`p-2 rounded-lg transition-colors ${
-                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+                isDark ? 'hover:bg-white/5 text-content-secondary hover:text-content-primary' : 'hover:bg-gray-200 text-gray-600'
               }`}
             >
               <X className="w-5 h-5" />
@@ -162,7 +162,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
         <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
-            <div className="flex-1">
+            <div className="w-full shrink-0 lg:w-72">
               <div className="relative">
                 <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
                   isDark ? 'text-gray-500' : 'text-gray-400'
@@ -172,9 +172,9 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                   placeholder="Search templates by name, description, or tags..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                  className={`w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent ${
                     isDark
-                      ? 'bg-gray-800 text-gray-100 placeholder-gray-500'
+                      ? 'bg-surface-overlay text-content-primary placeholder-content-muted'
                       : 'bg-gray-100 text-gray-900 placeholder-gray-400'
                   }`}
                 />
@@ -182,14 +182,14 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
             </div>
 
             {/* Category Filter */}
-            <div className="flex gap-2 flex-wrap max-h-32 overflow-y-auto">
+            <div className="flex min-w-0 flex-1 flex-wrap gap-2 max-h-32 overflow-y-auto">
               <button
                 onClick={() => setSelectedCategory('all')}
-                className={`px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                className={`px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
                   selectedCategory === 'all'
-                    ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'
+                    ? 'bg-accent text-accent-fg'
                     : isDark
-                    ? 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    ? 'bg-surface-overlay text-content-secondary hover:bg-white/5 hover:text-content-primary'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -201,9 +201,9 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                   onClick={() => setSelectedCategory(category.id)}
                   className={`px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
                     selectedCategory === category.id
-                      ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'
+                      ? 'bg-accent text-accent-fg'
                       : isDark
-                      ? 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                      ? 'bg-surface-overlay text-content-secondary hover:bg-white/5 hover:text-content-primary'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -217,9 +217,9 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
             <select
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className={`px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+              className={`px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent ${
                 isDark
-                  ? 'bg-gray-800 text-gray-100'
+                  ? 'bg-surface-overlay text-content-primary'
                   : 'bg-gray-100 text-gray-900'
               }`}
             >
@@ -232,10 +232,10 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
         </div>
 
         {/* Templates Grid/List */}
-        <div className={`flex-1 overflow-y-auto p-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className={`flex-1 overflow-y-auto p-6 ${isDark ? 'bg-surface-raised' : 'bg-gray-50'}`}>
           {filteredTemplates.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
-              <div className={`p-6 rounded-full mb-4 ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}>
+              <div className={`p-6 rounded-full mb-4 ${isDark ? 'bg-surface-overlay' : 'bg-gray-200'}`}>
                 <Search className={`w-12 h-12 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
               </div>
               <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -246,7 +246,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
               </p>
             </div>
           ) : (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
               {filteredTemplates.map((template) => {
                 const categoryInfo = getCategoryInfo(template.category);
                 const isLoadingThis = selectedTemplateId === template.id;
@@ -254,23 +254,23 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                 return (
                   <div
                     key={template.id}
-                    className={`rounded-xl overflow-hidden border transition-all hover:shadow-xl hover:scale-105 ${
+                    className={`flex flex-col rounded-lg overflow-hidden border transition-colors hover:border-accent/50 ${
                       viewMode === 'grid'
                         ? isDark
-                          ? 'bg-gray-800 border-gray-700'
+                          ? 'bg-surface-overlay border-stroke-subtle'
                           : 'bg-white border-gray-200'
                         : isDark
-                        ? 'bg-gray-800 border-gray-700 p-4'
+                        ? 'bg-surface-overlay border-stroke-subtle p-4'
                         : 'bg-white border-gray-200 p-4'
                     }`}
                   >
                     {/* Card Header */}
-                    <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-                      <div className="flex items-start justify-between mb-2">
+                    <div className={`flex-1 p-3 border-b ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`}>
+                      <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2 flex-1">
                           <span className="text-2xl">{categoryInfo.icon}</span>
                           <div className="flex-1">
-                            <h3 className={`font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+                            <h3 className={`text-sm font-semibold ${isDark ? 'text-content-primary' : 'text-gray-900'}`}>
                               {template.name}
                             </h3>
                             <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -278,7 +278,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                             </p>
                           </div>
                         </div>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getDifficultyColor(template.difficulty)}`}>
+                        <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded-sm font-medium ${getDifficultyColor(template.difficulty)}`}>
                           {template.difficulty}
                         </span>
                       </div>
@@ -289,12 +289,14 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
 
                     {/* Tags */}
                     {viewMode === 'grid' && (
-                      <div className="px-4 py-2 flex flex-wrap gap-2">
+                      <div className="px-3 py-2 flex flex-wrap gap-1">
                         {template.tags.slice(0, 4).map((tag, idx) => (
                           <span
                             key={idx}
-                            className={`text-xs px-2 py-1 rounded-md ${
-                              isDark ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600'
+                            className={`text-[11px] leading-4 px-1.5 py-0.5 rounded-sm font-medium ${
+                              isDark
+                                ? 'bg-white/[0.07] text-content-secondary'
+                                : 'bg-gray-100 text-gray-700'
                             }`}
                           >
                             #{tag}
@@ -305,12 +307,12 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
 
                     {/* Features */}
                     {viewMode === 'list' && template.features && (
-                      <div className="px-4 py-2 flex flex-wrap gap-2">
+                      <div className="px-3 py-2 flex flex-wrap gap-1">
                         {template.features.map((feature, idx) => (
                           <span
                             key={idx}
-                            className={`text-xs px-2 py-1 rounded-md ${
-                              isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-700'
+                            className={`text-[11px] leading-4 px-1.5 py-0.5 rounded-sm font-medium ${
+                              isDark ? 'bg-accent-subtle text-accent-hover' : 'bg-purple-100 text-purple-700'
                             }`}
                           >
                             {feature}
@@ -320,15 +322,15 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                     )}
 
                     {/* Actions */}
-                    <div className={`p-4 flex gap-2 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+                    <div className={`mt-auto p-3 flex gap-2 ${isDark ? 'bg-surface-raised' : 'bg-gray-50'}`}>
                       <button
                         onClick={() => handleLoadTemplate(template.id)}
                         disabled={isLoadingThis}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-all ${
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${
                           isLoadingThis
-                            ? 'bg-gray-600 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-purple-500 to-blue-500 hover:shadow-lg'
-                        } text-white`}
+                            ? 'bg-surface-hover text-content-muted cursor-not-allowed'
+                            : 'bg-accent text-accent-fg hover:bg-accent-hover'
+                        }`}
                       >
                         {isLoadingThis ? (
                           <>
@@ -363,7 +365,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
 
         {/* Footer Stats */}
         <div className={`px-4 py-3 border-t ${
-          isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
+          isDark ? 'border-stroke-subtle bg-surface-raised' : 'border-gray-200 bg-gray-50'
         }`}>
           <div className="flex items-center justify-between text-sm">
             <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>

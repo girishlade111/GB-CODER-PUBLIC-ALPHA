@@ -678,7 +678,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
       </div>
 
       {/* Mode Tabs */}
-      <div className="bg-dark-gray border-b border-gray-700 flex items-center">
+      <div className="bg-surface-raised border-b border-stroke-subtle flex items-center px-2">
         {([
           { key: 'console', label: 'Console', icon: Terminal },
           { key: 'validator', label: 'Validator', icon: CheckCircle },
@@ -688,9 +688,9 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
           <button
             key={key}
             onClick={() => setActiveMode(key)}
-            className={`px-4 py-2 text-sm border-r border-gray-700 flex items-center gap-2 ${activeMode === key
-              ? 'bg-matte-black text-white border-b-2 border-b-vscode-statusbar'
-              : 'text-gray-400 hover:text-gray-200 hover:bg-gray-750'
+            className={`px-3 py-2 -mb-[1px] text-sm font-medium border-b-2 flex items-center gap-2 transition-colors ${activeMode === key
+              ? 'text-content-primary border-accent'
+              : 'text-content-muted border-transparent hover:text-content-primary'
               }`}
           >
             <Icon className="w-4 h-4" />

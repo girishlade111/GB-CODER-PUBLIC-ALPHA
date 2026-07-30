@@ -296,7 +296,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onClick={handleOverlayClick}
     >
-      <div className="w-full max-w-[560px] rounded-xl border border-gray-700 bg-matte-black p-5 shadow-2xl">
+      <div className="w-full max-w-[560px] rounded-lg border border-stroke-subtle bg-surface-raised p-6 shadow-elevated">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="rounded-lg bg-violet-600/20 p-2 text-violet-300">

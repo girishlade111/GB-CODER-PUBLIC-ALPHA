@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play } from 'lucide-react';
+import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye } from 'lucide-react';
 import { ConsoleLog, JSEditorMode } from '../types';
 import { externalLibraryService } from '../services/externalLibraryService';
 
@@ -63,6 +63,9 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('desktop');
+  // Drives the "nothing to preview yet" placeholder. Purely presentational —
+  // the iframe still renders as normal underneath.
+  const isProjectEmpty = !html.trim() && !css.trim() && !javascript.trim();
   const [manualRunTrigger, setManualRunTrigger] = useState(0);
   // Holds the transpiled JS when using TS/TSX mode
   const [transpiledJs, setTranspiledJs] = useState<string>(javascript);
@@ -453,10 +456,28 @@ ${safeJavascript}
           </div>
         </div>
       </div>
-      <div className={`relative ${viewMode === 'fullscreen' ? 'h-full' : 'h-full'} flex items-start justify-center overflow-auto bg-gray-800`}>
+      <div className={`relative ${viewMode === 'fullscreen' ? 'h-full' : 'h-full'} flex items-start justify-center overflow-auto bg-surface-canvas`}>
         {isLoading && (
-          <div className="absolute inset-0 bg-dark-gray bg-opacity-75 flex items-center justify-center z-10">
-            <RefreshCw className="w-6 h-6 text-blue-400 animate-spin" />
+          <div className="absolute inset-0 bg-surface-canvas/75 flex items-center justify-center z-10">
+            <RefreshCw className="w-6 h-6 text-accent animate-spin" />
+          </div>
+        )}
+
+        {/*
+          Placeholder for a genuinely blank project. Sits above the iframe but
+          stays click-through so it never interferes with the preview.
+        */}
+        {isProjectEmpty && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-6 text-center">
+            <div className="rounded-lg border border-stroke-subtle bg-surface-raised p-3">
+              <Eye className="h-6 w-6 text-content-muted" />
+            </div>
+            <p className="text-sm font-medium text-content-secondary">
+              Start typing or use Build with AI to generate code
+            </p>
+            <p className="text-xs text-content-muted">
+              Your live preview will appear here as you type
+            </p>
           </div>
         )}
         <div
@@ -469,7 +490,7 @@ ${safeJavascript}
         >
           <iframe
             ref={iframeRef}
-            className="w-full h-full bg-white shadow-lg"
+            className={`w-full h-full ${isProjectEmpty ? 'bg-transparent' : 'bg-white shadow-lg'}`}
             title="Code Preview"
             // Security trust model: The sandbox restricts the iframe to only scripts
             // and same-origin access. allow-same-origin is required for console message
@@ -490,7 +511,7 @@ ${safeJavascript}
     <>
       {/* Normal Preview Panel */}
       {viewMode !== 'fullscreen' && (
-        <div className="w-full h-full bg-dark-gray rounded-lg overflow-hidden border border-gray-700 flex flex-col">
+        <div className="w-full h-full bg-surface-base rounded-lg overflow-hidden border border-stroke-subtle flex flex-col">
           {renderPreviewContent()}
         </div>
       )}
