@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye } from 'lucide-react';
 import { ConsoleLog, JSEditorMode } from '../types';
+import { MOUNT_ELEMENT_ID, ProjectType } from '../types/files';
+import { RUNTIME_SCRIPTS } from '../services/bundlerService';
 import { externalLibraryService } from '../services/externalLibraryService';
 
 type ViewMode = 'desktop' | 'tablet' | 'mobile' | 'fullscreen';
@@ -13,6 +15,15 @@ interface PreviewPanelProps {
   onConsoleLog: (log: ConsoleLog) => void;
   autoRunJS?: boolean;
   previewDelay?: number;
+  /**
+   * Multi-file project mode. `plain` (the default) keeps the original
+   * html/css/javascript pipeline completely untouched.
+   */
+  projectType?: ProjectType;
+  /** Pre-bundled IIFE for react/vue projects. Ignored in plain mode. */
+  bundledCode?: string;
+  /** CSS collected from the module graph for react/vue projects. */
+  bundledCss?: string;
 }
 
 /**
@@ -59,13 +70,20 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   onConsoleLog,
   autoRunJS = true,
   previewDelay = 300,
+  projectType = 'plain',
+  bundledCode = '',
+  bundledCss = '',
 }, ref) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('desktop');
+  /** React/Vue projects render a bundled module graph instead of raw files. */
+  const isFrameworkProject = projectType !== 'plain';
   // Drives the "nothing to preview yet" placeholder. Purely presentational —
   // the iframe still renders as normal underneath.
-  const isProjectEmpty = !html.trim() && !css.trim() && !javascript.trim();
+  const isProjectEmpty = isFrameworkProject
+    ? !bundledCode.trim()
+    : !html.trim() && !css.trim() && !javascript.trim();
   const [manualRunTrigger, setManualRunTrigger] = useState(0);
   // Holds the transpiled JS when using TS/TSX mode
   const [transpiledJs, setTranspiledJs] = useState<string>(javascript);
@@ -83,6 +101,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   const shouldTranspile = jsEditorMode === 'typescript' || jsEditorMode === 'tsx';
 
   useEffect(() => {
+    if (isFrameworkProject) return;
     if (!shouldTranspile) {
       setTranspiledJs(javascript);
       setCompilationError(null);
@@ -98,7 +117,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     });
 
     return () => { cancelled = true; };
-  }, [javascript, shouldTranspile]);
+  }, [javascript, shouldTranspile, isFrameworkProject]);
 
   // Sanitize code input to prevent XSS attacks (CSS only - HTML runs in sandboxed iframe)
   const sanitizeCode = (code: string, language: string): string => {
@@ -116,9 +135,21 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   };
 
   const generatePreviewContent = useCallback(() => {
-    const sanitizedCss = sanitizeCode(css, 'css');
-    const usesBabel = jsEditorMode === 'jsx' || jsEditorMode === 'tsx';
-    const executableJavascript = transpiledJs;
+    /*
+     * Framework projects substitute the bundler's output for the three raw
+     * files: the markup becomes a mount point, the styles are the CSS collected
+     * out of the module graph, and the script is the already-compiled IIFE
+     * (so neither Babel nor the TypeScript transpiler is involved).
+     * Plain mode falls through to the original values unchanged.
+     */
+    const effectiveHtml = isFrameworkProject
+      ? `<div id="${MOUNT_ELEMENT_ID[projectType as Exclude<ProjectType, 'plain'>]}"></div>`
+      : html;
+    const effectiveCss = isFrameworkProject ? bundledCss : css;
+
+    const sanitizedCss = sanitizeCode(effectiveCss, 'css');
+    const usesBabel = !isFrameworkProject && (jsEditorMode === 'jsx' || jsEditorMode === 'tsx');
+    const executableJavascript = isFrameworkProject ? bundledCode : transpiledJs;
     const safeJavascript = escapeScriptContent(executableJavascript);
     const compiledJavaScriptString = JSON.stringify(executableJavascript);
     const compilationWarningScript = compilationError
@@ -146,6 +177,32 @@ ${safeJavascript}
     const externalLibraries = externalLibraryService.getLibraries();
     const externalLibsHTML = externalLibraryService.generateInjectionHTML();
 
+    /*
+     * Framework runtime tags (React/ReactDOM or Vue) from CDN.
+     *
+     * De-duplicated against libraries the user added manually, because loading
+     * two copies of React makes them fight over `window.React` and produces
+     * baffling "invalid hook call" errors. `react-dom` is matched before
+     * `react` since its URL contains both.
+     */
+    const addedLibraryUrls = externalLibraries.map((library) => library.url.toLowerCase());
+    const runtimeScriptsHTML = isFrameworkProject
+      ? RUNTIME_SCRIPTS[projectType as Exclude<ProjectType, 'plain'>]
+          .filter((url) => {
+            const lower = url.toLowerCase();
+            const pkg = lower.includes('react-dom')
+              ? 'react-dom'
+              : lower.includes('react')
+                ? 'react'
+                : 'vue';
+            return !addedLibraryUrls.some(
+              (added) => added.includes(`/${pkg}@`) || added.includes(`/${pkg}/`),
+            );
+          })
+          .map((url) => `    <script crossorigin src="${url}"></script>`)
+          .join('\n')
+      : '';
+
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -156,6 +213,7 @@ ${safeJavascript}
     <title>Preview</title>
     ${externalLibsHTML}
     ${jsxRuntimeScripts}
+${runtimeScriptsHTML}
     <style>
         body { 
             margin: 0; 
@@ -168,7 +226,7 @@ ${safeJavascript}
     </style>
 </head>
 <body>
-    ${html}
+    ${effectiveHtml}
     <script>
         // External Libraries Loading Indicator
         if (${externalLibraries.length} > 0) {
@@ -275,7 +333,7 @@ ${safeJavascript}
     ${userCodeScript}
 </body>
 </html>`;
-  }, [html, css, transpiledJs, compilationError, jsEditorMode]);
+  }, [html, css, transpiledJs, compilationError, jsEditorMode, isFrameworkProject, projectType, bundledCode, bundledCss]);
 
   const refreshPreview = useCallback(() => {
     if (iframeRef.current) {
@@ -304,7 +362,7 @@ ${safeJavascript}
       refreshPreviewRef.current();
     }, delay);
     return () => clearTimeout(timeoutId);
-  }, [html, css, jsForPreview, jsEditorMode, previewDelay, manualRunTrigger, transpiledJs]);
+  }, [html, css, jsForPreview, jsEditorMode, previewDelay, manualRunTrigger, transpiledJs, bundledCode, bundledCss, projectType]);
 
   // Refresh preview when external libraries change
   useEffect(() => {

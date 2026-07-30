@@ -28,6 +28,18 @@ export interface ProjectContext {
   html: string;
   css: string;
   javascript: string;
+  /**
+   * Full contents of every file in a multi-file React/Vue project.
+   *
+   * When present the server renders these instead of the three fixed files, so
+   * the AI sees the whole project and can reason about cross-file imports. The
+   * three keys above stay populated for plain projects and for backward
+   * compatibility with the existing request contract.
+   */
+  files?: Array<{ path: string; language: string; content: string }>;
+  /** Which file the operation targets, for multi-file projects. */
+  activePath?: string;
+  projectType?: 'plain' | 'react' | 'vue';
 }
 
 /** Request body posted to `POST /api/ai`. */

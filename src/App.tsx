@@ -1,8 +1,10 @@
-import React, { useState, useCallback, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, Suspense, lazy } from 'react';
 import { Code2, MessageSquare, Mic, LayoutTemplate, BarChart3, CheckCircle, Zap } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
 import AppSidebar from './components/AppSidebar';
+import FileExplorer from './components/FileExplorer';
+import MultiFileEditor from './components/MultiFileEditor';
 import EditorPanel from './components/EditorPanel';
 import TabbedRightPanel from './components/TabbedRightPanel';
 import Footer from './components/ui/Footer';
@@ -53,11 +55,27 @@ import { useSettings } from './hooks/useSettings';
 import { useFocusMode } from './hooks/useFocusMode';
 import { useProgressiveLoad } from './hooks/useProgressiveLoad';
 import { useCodeWriter } from './hooks/useCodeWriter';
+import { useProjectBundle } from './hooks/useProjectBundle';
+import { useFileWorkspace } from './hooks/useFileWorkspace';
 import SelectionToolbar from './components/SelectionToolbar';
 import SelectionSidebar from './components/SelectionSidebar';
 import { downloadAsZip } from './utils/downloadUtils';
 import * as monacoHelper from './utils/monacoSelectionHelper';
 import { CodeSnippet, ConsoleLog, EditorLanguage, HistoryItem, JSEditorMode, SnippetType, SnippetScope } from './types';
+import {
+  MultiFileProject,
+  PLAIN_CSS_PATH,
+  PLAIN_HTML_PATH,
+  PLAIN_JS_PATH,
+  PROJECT_TYPE_LABEL,
+  ProjectType,
+  createPlainProject,
+  createProjectOfType,
+  getFileContent,
+  languageForPath,
+  projectToTriple,
+  setFileContent,
+} from './types/files';
 import { migrateSnippets } from './utils/snippetUtils';
 import { externalLibraryService, ExternalLibrary } from './services/externalLibraryService';
 import { formattingService } from './services/formattingService';
@@ -166,9 +184,66 @@ function App() {
   // Progressive loading phases
   const { isPhase3Ready } = useProgressiveLoad();
 
-  const [html, setHtml] = useState(defaultHTML);
-  const [css, setCss] = useState(defaultCSS);
-  const [javascript, setJavascript] = useState(defaultJS);
+  /**
+   * The multi-file project is the single source of truth for all code.
+   *
+   * `html` / `css` / `javascript` below are *derived* from it rather than being
+   * independent state. That keeps every existing consumer (export, share,
+   * templates, snippets, autosave, history, stats, validation, AI) working
+   * against the same three values it always used, while the underlying model can
+   * now hold an arbitrary number of React/Vue files.
+   */
+  const [fileProject, setFileProject] = useState<MultiFileProject>(() =>
+    createPlainProject(defaultHTML, defaultCSS, defaultJS),
+  );
+
+  const { html, css, javascript } = useMemo(() => projectToTriple(fileProject), [fileProject]);
+
+  /**
+   * Last known plain project, preserved so switching plain -> React -> plain is
+   * lossless. A framework project has no index.html/script.js to derive from.
+   */
+  const lastPlainProjectRef = React.useRef<MultiFileProject | null>(null);
+  useEffect(() => {
+    if (fileProject.projectType === 'plain') lastPlainProjectRef.current = fileProject;
+  }, [fileProject]);
+
+  /*
+   * These setters intentionally mirror React's `useState` setter contract:
+   * they accept either a value or an updater function, because existing call
+   * sites use both (e.g. snippet insertion does `setHtml(prev => prev + ...)`).
+   * Extra arguments are ignored, which matters because `codeWriter.writeCode`
+   * invokes the setter as `onUpdate(text, progress)`.
+   */
+  const setHtml = useCallback((value: React.SetStateAction<string>) => {
+    setFileProject((current) =>
+      setFileContent(
+        current,
+        PLAIN_HTML_PATH,
+        typeof value === 'function' ? value(getFileContent(current, PLAIN_HTML_PATH)) : value,
+      ),
+    );
+  }, []);
+
+  const setCss = useCallback((value: React.SetStateAction<string>) => {
+    setFileProject((current) =>
+      setFileContent(
+        current,
+        PLAIN_CSS_PATH,
+        typeof value === 'function' ? value(getFileContent(current, PLAIN_CSS_PATH)) : value,
+      ),
+    );
+  }, []);
+
+  const setJavascript = useCallback((value: React.SetStateAction<string>) => {
+    setFileProject((current) =>
+      setFileContent(
+        current,
+        PLAIN_JS_PATH,
+        typeof value === 'function' ? value(getFileContent(current, PLAIN_JS_PATH)) : value,
+      ),
+    );
+  }, []);
   const [jsEditorMode, setJsEditorMode] = useLocalStorage<JSEditorMode>('gb-coder-js-editor-mode', 'javascript');
   const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
   const { isDark } = useTheme();
@@ -178,6 +253,7 @@ function App() {
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 1024);
   const [autoSaveEnabled, setAutoSaveEnabled] = useLocalStorage<boolean>('gb-coder-autosave-enabled', true);
   const [showSnippets, setShowSnippets] = useState<boolean>(false);
+  const [showFileExplorer, setShowFileExplorer] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<AppView>('editor');
   const [previewShareCode, setPreviewShareCode] = useState<{ html: string; css: string; javascript: string } | null>(null);
   const [previewShortId, setPreviewShortId] = useState('');
@@ -238,6 +314,17 @@ function App() {
     enabled: autoSaveEnabled,
     projectId: project.currentProject?.id, // Make auto-save project-aware
   });
+
+  /**
+   * Editor-facing view of the project: open tabs, focused file, per-file dirty
+   * state and file CRUD. Dirty markers clear whenever autosave actually writes,
+   * so the tab dots reflect real save state rather than a guess.
+   */
+  const workspace = useFileWorkspace(
+    fileProject,
+    setFileProject,
+    autoSave.lastSaveTime ? new Date(autoSave.lastSaveTime).getTime() : null,
+  );
 
 
   // File upload functionality
@@ -503,6 +590,53 @@ function App() {
     setConsoleLogs([]);
   }, []);
 
+  /**
+   * Client-side build for React/Vue projects. A no-op for plain projects, so
+   * the default experience pays nothing for this.
+   */
+  const projectBundle = useProjectBundle({
+    project: fileProject,
+    onConsoleLog: handleConsoleLog,
+  });
+
+  /**
+   * Selection handler for the multi-file editor, so the AI selection toolbar
+   * works there too. Framework file languages are mapped onto the editor's
+   * three-language union that the AI layer expects.
+   */
+  const handleMultiFileSelectionChange = useCallback(
+    (editor: unknown, path: string) => {
+      const language = languageForPath(path);
+      const editorLanguage: EditorLanguage =
+        language === 'css' ? 'css' : language === 'html' ? 'html' : 'javascript';
+      updateSelection(editor, editorLanguage);
+    },
+    [updateSelection],
+  );
+
+  /**
+   * Switches project type, replacing the workspace with that type's starter
+   * files. Plain keeps the user's current code so toggling back is lossless.
+   */
+  const handleNewProject = useCallback((projectType: ProjectType) => {
+    setFileProject((current) => {
+      if (current.projectType === projectType) return current;
+
+      /*
+       * Returning to plain mode restores the exact files the user last had
+       * there. Deriving them from the framework project instead would hand back
+       * an empty index.html, silently destroying their work.
+       */
+      if (projectType === 'plain') {
+        return lastPlainProjectRef.current ?? createPlainProject(defaultHTML, defaultCSS, defaultJS);
+      }
+
+      return createProjectOfType(projectType);
+    });
+    setConsoleLogs([]);
+    toast.success(`Started a new ${PROJECT_TYPE_LABEL[projectType]} project.`);
+  }, []);
+
   const handleCommand = async (command: string) => {
     const [cmd, ...args] = command.toLowerCase().split(' ');
 
@@ -746,10 +880,28 @@ function App() {
     // Always send the FULL contents of all three files so the AI can see
     // cross-file dependencies. `selection.fullFileCode` comes straight from the
     // Monaco model, so it is the freshest copy of the targeted file.
+    /*
+     * For a plain project the three fixed files are the whole context. For a
+     * React/Vue project the AI gets every file plus which one is focused, so it
+     * can reason about imports between them rather than a single snippet.
+     */
+    const isFrameworkProject = fileProject.projectType !== 'plain';
+
     const projectContext = {
       html: selection.language === 'html' ? selection.fullFileCode : html,
       css: selection.language === 'css' ? selection.fullFileCode : css,
       javascript: selection.language === 'javascript' ? selection.fullFileCode : javascript,
+      ...(isFrameworkProject
+        ? {
+            projectType: fileProject.projectType,
+            activePath: workspace.activePath ?? undefined,
+            files: fileProject.files.map((file) => ({
+              path: file.path,
+              language: file.language,
+              content: file.content,
+            })),
+          }
+        : {}),
     };
 
     try {
@@ -770,7 +922,7 @@ function App() {
     } catch (error) {
       console.error('[App] Operation failed:', error);
     }
-  }, [hasSelection, selection, selectionOps, html, css, javascript]);
+  }, [hasSelection, selection, selectionOps, html, css, javascript, fileProject, workspace.activePath]);
 
   const handleApplySelectionChanges = useCallback((newCode: string) => {
     const activeResult = selectionOps.result;
@@ -1229,6 +1381,8 @@ function App() {
         onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
         onSettingsToggle={handleSettingsToggle}
         onClear={handleClearAll}
+        onNewProject={handleNewProject}
+        currentProjectType={fileProject.projectType}
         autoSaveEnabled={autoSaveEnabled}
         customActions={
           <div className="flex items-center gap-1 sm:gap-2">
@@ -1315,13 +1469,42 @@ function App() {
       {/* Main Content — left rail + workspace */}
       <div className="flex flex-1 min-h-0">
         <AppSidebar
+          onToggleFiles={() => setShowFileExplorer((open) => !open)}
+          isFilesOpen={showFileExplorer}
           onOpenTemplates={() => setShowTemplates(true)}
           onOpenAITools={() => setShowAIChat(true)}
           onOpenSettings={handleSettingsToggle}
         />
 
+        {showFileExplorer && !isMobile && (
+          <FileExplorer
+            projectType={fileProject.projectType}
+            workspace={workspace}
+            onClose={() => setShowFileExplorer(false)}
+          />
+        )}
+
         <div className={`grid flex-1 min-w-0 gap-3 px-3 py-3 lg:px-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`}>
-          {/* Left Panel - Editors */}
+          {/*
+            Left column: the three fixed panels for plain projects, or the
+            tabbed multi-file editor for React/Vue. Plain mode is unchanged.
+          */}
+          {fileProject.projectType !== 'plain' ? (
+            // min-h keeps the pane from collapsing: unlike the plain-mode
+            // column (whose three fixed-height editors give the grid row its
+            // height), this column has no intrinsic height of its own.
+            <div className="flex h-full w-full flex-col min-h-[calc(100vh-11rem)]">
+              <MultiFileEditor
+                projectType={fileProject.projectType}
+                workspace={workspace}
+                fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
+                fontSize={settings.editorFontSize}
+                buildStatus={projectBundle.status}
+                buildErrors={projectBundle.errors}
+                onSelectionChange={handleMultiFileSelectionChange}
+              />
+            </div>
+          ) : (
           <div className="flex flex-col space-y-3 w-full min-h-0">
             <EditorPanel
               title="HTML"
@@ -1367,6 +1550,7 @@ function App() {
               onJsEditorModeChange={setJsEditorMode}
             />
           </div>
+          )}
 
           {/* Right Panel - Tabbed Interface for Preview, Console, and AI Suggestions */}
           <div className="flex flex-col w-full h-full min-h-0">
@@ -1384,6 +1568,10 @@ function App() {
               // Console props
               consoleLogs={consoleLogs}
               onClearConsole={clearConsoleLogs}
+              // Multi-file project rendering
+              projectType={fileProject.projectType}
+              bundledCode={projectBundle.bundle.code}
+              bundledCss={projectBundle.bundle.css}
             />
 
             {/* Snippets Sidebar - Phase 3 */}
