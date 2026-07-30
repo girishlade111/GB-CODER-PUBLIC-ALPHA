@@ -655,10 +655,17 @@ function App() {
   const handleSelectionOperation = useCallback(async (operation: SelectionOperationType) => {
     if (!hasSelection || !selection.code || !selection.language) return;
 
-    const context = selection.fullFileCode;
+    // Always send the FULL contents of all three files so the AI can see
+    // cross-file dependencies. `selection.fullFileCode` comes straight from the
+    // Monaco model, so it is the freshest copy of the targeted file.
+    const projectContext = {
+      html: selection.language === 'html' ? selection.fullFileCode : html,
+      css: selection.language === 'css' ? selection.fullFileCode : css,
+      javascript: selection.language === 'javascript' ? selection.fullFileCode : javascript,
+    };
 
     try {
-      const result = await selectionOps.executeOperation(operation, selection.code, selection.language, context);
+      const result = await selectionOps.executeOperation(operation, selection.code, selection.language, projectContext);
 
       // Save to history if successful
       if (result) {
@@ -675,26 +682,53 @@ function App() {
     } catch (error) {
       console.error('[App] Operation failed:', error);
     }
-  }, [hasSelection, selection, selectionOps]);
+  }, [hasSelection, selection, selectionOps, html, css, javascript]);
 
   const handleApplySelectionChanges = useCallback((newCode: string) => {
-    if (!selection.editorInstance || !selection.range) {
-      console.error('No editor instance or range available');
+    const activeResult = selectionOps.result;
+
+    if (!activeResult || typeof newCode !== 'string' || !newCode.trim()) {
+      toast.error('Nothing to apply — the AI returned no code.');
       return;
     }
 
-    // Apply the changes using Monaco helper
-    const success = monacoHelper.replaceSelectedCode(selection.editorInstance, newCode, selection.range);
+    // The AI reports which file its code belongs to. Only a same-file result
+    // paired with a live selection may be applied as a range replacement;
+    // anything else is a complete file replacement.
+    const targetFile: EditorLanguage = activeResult.targetFile || selection.language || 'html';
+    const canReplaceSelection =
+      activeResult.appliesToSelection !== false &&
+      targetFile === selection.language &&
+      !!selection.editorInstance &&
+      !!selection.range;
 
-    if (success) {
-      // Save to history
-      codeHistory.saveState({ html, css, javascript }, `Applied ${selectionOps.result?.operation}`);
+    codeHistory.saveState({ html, css, javascript }, `Applied ${activeResult.operation}`);
 
-      // Clear selection and result
-      clearSelection();
-      selectionOps.clearResult();
+    if (canReplaceSelection) {
+      const success = monacoHelper.replaceSelectedCode(selection.editorInstance, newCode, selection.range);
 
+      if (!success) {
+        toast.error('Could not apply the change to the editor.');
+        return;
+      }
+    } else {
+      // Whole-file replacement — including the cross-file case where the real
+      // fix lives in a file the user did not have selected.
+      const setterByFile: Record<EditorLanguage, (value: string) => void> = {
+        html: setHtml,
+        css: setCss,
+        javascript: setJavascript,
+      };
+
+      setterByFile[targetFile](newCode);
+
+      if (targetFile !== selection.language) {
+        toast.success(`Applied to the ${targetFile.toUpperCase()} file — that is where the fix belonged.`);
+      }
     }
+
+    clearSelection();
+    selectionOps.clearResult();
   }, [selection, selectionOps, codeHistory, html, css, javascript, clearSelection]);
 
   const handleCloseSelectionResult = useCallback(() => {
@@ -1347,6 +1381,7 @@ function App() {
             isOpen={showBuildFromPrompt}
             onClose={() => setShowBuildFromPrompt(false)}
             onGenerate={handleBuildFromPrompt}
+            projectContext={{ html, css, javascript }}
           />
         </Suspense>
       )}

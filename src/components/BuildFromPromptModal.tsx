@@ -1,10 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, Wand2, X } from 'lucide-react';
+import toast from 'react-hot-toast';
+import {
+  AiParseError,
+  AiRequestError,
+  AiResponseEnvelope,
+  GeneratedProjectPayload,
+  ProjectContext,
+  parseAiJson,
+  validateGeneratedProject,
+} from '../types/ai';
 
 interface BuildFromPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGenerate: (html: string, css: string, javascript: string) => void;
+  /** FULL current editor contents, sent as reference context with the request. */
+  projectContext?: ProjectContext;
 }
 
 const QUICK_START_PROMPTS = [
@@ -27,27 +39,21 @@ const LOADING_MESSAGES = [
 const MAX_PROMPT_LENGTH = 500;
 const MIN_PROMPT_LENGTH = 10;
 const COOLDOWN_MS = 8000;
-const TIMEOUT_MS = 45000;
+// Covers the initial attempt plus one stricter retry.
+const TIMEOUT_MS = 95000;
 
-const parseGeneratedCode = (responseText: string) => {
-  try {
-    return JSON.parse(responseText);
-  } catch {
-    const firstBrace = responseText.indexOf('{');
-    const lastBrace = responseText.lastIndexOf('}');
-
-    if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-      throw new Error('No JSON object found in response.');
-    }
-
-    return JSON.parse(responseText.slice(firstBrace, lastBrace + 1));
-  }
-};
+/**
+ * Parses and validates generated code. Throws AiParseError when the payload
+ * cannot be trusted, so broken output is never applied to the editor.
+ */
+const parseGeneratedCode = (responseText: string): GeneratedProjectPayload =>
+  validateGeneratedProject(parseAiJson(responseText), responseText);
 
 const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
   isOpen,
   onClose,
   onGenerate,
+  projectContext,
 }) => {
   const [promptText, setPromptText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -184,7 +190,13 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
     abortControllerRef.current = controller;
     const timeoutId = window.setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    try {
+    /**
+     * One generation attempt. `strictJson` makes the server append the
+     * "Return ONLY valid JSON, nothing else" instruction to the system prompt.
+     * The payload is fully validated here, so a caller only ever receives
+     * output that is safe to write into the editor.
+     */
+    const requestGeneration = async (strictJson: boolean): Promise<GeneratedProjectPayload> => {
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: {
@@ -193,35 +205,81 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
         body: JSON.stringify({
           feature: 'generate',
           prompt: normalizedPrompt,
+          // Full current editor contents travel with every AI request.
+          projectContext: {
+            html: projectContext?.html ?? '',
+            css: projectContext?.css ?? '',
+            javascript: projectContext?.javascript ?? '',
+          },
+          strictJson,
         }),
         signal: controller.signal,
       });
 
-      const responseText = await response.text();
-
-      if (!response.ok) {
-        throw new Error('Generation request failed.');
+      let data: AiResponseEnvelope | null = null;
+      try {
+        data = (await response.json()) as AiResponseEnvelope;
+      } catch {
+        data = null;
       }
 
-      const parsed = parseGeneratedCode(responseText);
-      // NEW: Empty-panel fallbacks keep generated output safe for all editors.
-      const parsedHtml = String(parsed.html ?? '');
-      const parsedCss = String(parsed.css ?? '');
-      const parsedJavascript = String(parsed.javascript ?? '');
-      const html = parsedHtml.trim() ? parsedHtml : '<div class="container"></div>';
-      const css = parsedCss.trim() ? parsedCss : '.container { padding: 20px; }';
-      const javascript = parsedJavascript.trim() ? parsedJavascript : '';
+      if (!response.ok) {
+        throw new AiRequestError(
+          data?.error || 'Generation request failed.',
+          response.status,
+          response.status !== 413 && response.status !== 400,
+        );
+      }
+
+      if (typeof data?.result !== 'string' || !data.result.trim()) {
+        throw new AiRequestError('AI returned an empty response.', response.status, true);
+      }
+
+      // JSON.parse + contract validation BEFORE anything reaches the editor.
+      return parseGeneratedCode(data.result);
+    };
+
+    try {
+      let parsed: GeneratedProjectPayload;
+
+      try {
+        parsed = await requestGeneration(false);
+      } catch (firstError) {
+        if (controller.signal.aborted) throw firstError;
+
+        const isRetryable =
+          firstError instanceof AiParseError ||
+          (firstError instanceof AiRequestError && firstError.retryable);
+
+        if (!isRetryable) throw firstError;
+
+        // Retry exactly once, with the stricter JSON-only instruction.
+        parsed = await requestGeneration(true);
+      }
 
       if (controller.signal.aborted) return;
+
+      // All three keys are always present; blank panels get a minimal seed.
+      const html = parsed.html.trim() ? parsed.html : '<div class="container"></div>';
+      const css = parsed.css.trim() ? parsed.css : '.container { padding: 20px; }';
+      const javascript = parsed.js;
 
       onGenerate(html, css, javascript);
       setLastGeneratedPrompt(normalizedPrompt);
       setCooldownUntil(Date.now() + COOLDOWN_MS);
       onClose();
-    } catch {
-      if (!controller.signal.aborted) {
-        setErrorMessage('Generation failed — try rephrasing your prompt.');
-      }
+    } catch (error) {
+      if (controller.signal.aborted) return;
+
+      const message =
+        error instanceof AiParseError
+          ? 'The AI returned malformed output, so nothing was applied. Please try again.'
+          : error instanceof AiRequestError
+            ? error.message
+            : 'Generation failed — try rephrasing your prompt.';
+
+      setErrorMessage(message);
+      toast.error(message, { duration: 5000 });
     } finally {
       window.clearTimeout(timeoutId);
       if (abortControllerRef.current === controller) {
