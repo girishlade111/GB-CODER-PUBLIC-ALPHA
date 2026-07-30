@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, Suspense, lazy } from 'react';
-import { Code2, MessageSquare, Mic, LayoutTemplate, BarChart3, CheckCircle, Zap, Upload, Share2 } from 'lucide-react';
+import { Code2, Share2 } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
 import AppSidebar from './components/AppSidebar';
@@ -22,7 +22,6 @@ const AIChatAssistant = lazy(() => import('./components/AIChatAssistant'));
 const VoiceCommandPanel = lazy(() => import('./components/VoiceCommandPanel'));
 const TemplateSelectorModal = lazy(() => import('./components/TemplateSelectorModal'));
 const CodeStatsDashboard = lazy(() => import('./components/CodeStatsDashboard'));
-const ValidationPanel = lazy(() => import('./components/ValidationPanel'));
 const CustomInjectionManager = lazy(() => import('./components/CustomInjectionManager'));
 const BuildFromPromptModal = lazy(() => import('./components/BuildFromPromptModal'));
 
@@ -48,7 +47,6 @@ const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsH
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useCodeHistory } from './hooks/useCodeHistory';
 import { useAutoSave } from './hooks/useAutoSave';
-import { useFileUpload } from './hooks/useFileUpload';
 import { useTheme } from './hooks/useTheme';
 import { useCodeSelection } from './hooks/useCodeSelection';
 import { useSelectionOperations } from './hooks/useSelectionOperations';
@@ -291,7 +289,6 @@ function App() {
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStats, setShowStats] = useState(false);
-  const [showValidation, setShowValidation] = useState(false);
   const [showInjectionManager, setShowInjectionManager] = useState(false);
   const [customInjectionCode, setCustomInjectionCode] = useState({ css: '', js: '' });
   const previewRef = React.useRef<HTMLElement>(null);
@@ -345,40 +342,6 @@ function App() {
     autoSave.lastSaveTime ? new Date(autoSave.lastSaveTime).getTime() : null,
   );
 
-
-  // File upload functionality
-  const fileUpload = useFileUpload({
-    onHtmlUpload: (content, filename) => {
-      codeHistory.saveState({ html, css, javascript }, `Loaded ${filename}`);
-      setHtml(content);
-    },
-    onCssUpload: (content, filename) => {
-      codeHistory.saveState({ html, css, javascript }, `Loaded ${filename}`);
-      setCss(content);
-    },
-    onJsUpload: (content, filename) => {
-      codeHistory.saveState({ html, css, javascript }, `Loaded ${filename}`);
-      setJavascript(content);
-    },
-    onMultipleUpload: (files) => {
-      codeHistory.saveState({ html, css, javascript }, `Loaded ${files.length} files`);
-
-      files.forEach(file => {
-        switch (file.language) {
-          case 'html':
-            setHtml(file.content);
-            break;
-          case 'css':
-            setCss(file.content);
-            break;
-          case 'javascript':
-            setJavascript(file.content);
-            break;
-        }
-      });
-
-    }
-  });
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -1135,11 +1098,8 @@ function App() {
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-          onImport={fileUpload.uploadFiles}
-          onExport={handleExportZip}
-          onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
-          onSettingsToggle={handleSettingsToggle}
-          onClear={handleClearAll}
+              onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
+            onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -1196,11 +1156,8 @@ function App() {
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-          onImport={fileUpload.uploadFiles}
-          onExport={handleExportZip}
-          onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
-          onSettingsToggle={handleSettingsToggle}
-          onClear={handleClearAll}
+              onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
+            onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -1258,11 +1215,8 @@ function App() {
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-          onImport={fileUpload.uploadFiles}
-          onExport={handleExportZip}
-          onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
-          onSettingsToggle={handleSettingsToggle}
-          onClear={handleClearAll}
+              onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
+            onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -1318,11 +1272,8 @@ function App() {
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-          onImport={fileUpload.uploadFiles}
-          onExport={handleExportZip}
-          onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
-          onSettingsToggle={handleSettingsToggle}
-          onClear={handleClearAll}
+              onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
+            onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -1353,11 +1304,8 @@ function App() {
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-          onImport={fileUpload.uploadFiles}
-          onExport={handleExportZip}
-          onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
-          onSettingsToggle={handleSettingsToggle}
-          onClear={handleClearAll}
+              onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
+            onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -1388,11 +1336,8 @@ function App() {
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-          onImport={fileUpload.uploadFiles}
-          onExport={handleExportZip}
-          onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
-          onSettingsToggle={handleSettingsToggle}
-          onClear={handleClearAll}
+              onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
+            onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -1423,11 +1368,8 @@ function App() {
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-          onImport={fileUpload.uploadFiles}
-          onExport={handleExportZip}
-          onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
-          onSettingsToggle={handleSettingsToggle}
-          onClear={handleClearAll}
+              onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
+            onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -1458,11 +1400,8 @@ function App() {
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-          onImport={fileUpload.uploadFiles}
-          onExport={handleExportZip}
-          onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
-          onSettingsToggle={handleSettingsToggle}
-          onClear={handleClearAll}
+              onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
+            onClear={handleClearAll}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -1494,95 +1433,15 @@ function App() {
         onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
         onRun={() => handleCommand('run')}
         onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-        onImport={fileUpload.uploadFiles}
-        onExport={handleExportZip}
         onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
-        onSettingsToggle={handleSettingsToggle}
         onClear={handleClearAll}
         onNewProject={handleNewProject}
         currentProjectType={fileProject.projectType}
         autoSaveEnabled={autoSaveEnabled}
         customActions={
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* AI Chat */}
-            <Tooltip label="AI Chat Assistant" className="hidden sm:inline-flex">
-              <button
-                onClick={() => setShowAIChat(true)}
-                className={toolbarIconButtonClass(isDark)}
-                title="AI Chat Assistant"
-              >
-                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </Tooltip>
-
-            {/* Voice Commands */}
-            <Tooltip label="Voice Commands" className="hidden sm:inline-flex">
-              <button
-                onClick={() => setShowVoiceCommands(true)}
-                className={toolbarIconButtonClass(isDark)}
-                title="Voice Commands"
-              >
-                <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </Tooltip>
-
-            {/* Templates */}
-            <Tooltip label="Code Templates" className="hidden sm:inline-flex">
-              <button
-                onClick={() => setShowTemplates(true)}
-                className={toolbarIconButtonClass(isDark)}
-                title="Code Templates"
-              >
-                <LayoutTemplate className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </Tooltip>
-
-            {/* Statistics */}
-            <Tooltip label="Code Statistics" className="hidden sm:inline-flex">
-              <button
-                onClick={() => setShowStats(true)}
-                className={toolbarIconButtonClass(isDark)}
-                title="Code Statistics"
-              >
-                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </Tooltip>
-
-            {/* Validation */}
-            <Tooltip label="Code Validation" className="hidden sm:inline-flex">
-              <button
-                onClick={() => setShowValidation(true)}
-                className={toolbarIconButtonClass(isDark)}
-                title="Code Validation"
-              >
-                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </Tooltip>
-
-            {/* Custom Injection */}
-            <Tooltip label="Custom Code Injection" className="hidden sm:inline-flex">
-              <button
-                onClick={() => setShowInjectionManager(true)}
-                className={toolbarIconButtonClass(isDark)}
-                title="Custom Code Injection"
-              >
-                <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </Tooltip>
-
-            {/* Export/Share Menu */}
-            {/* Import */}
-            <Tooltip label="Import files" shortcut="⇧⌘I" className="hidden sm:inline-flex">
-              <button
-                onClick={() => setShowImport(true)}
-                className={toolbarIconButtonClass(isDark)}
-                title="Import files"
-              >
-                <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </Tooltip>
-
-            {/* Export & Share — replaces the old dropdown */}
+            {/* Export & Share is the only feature icon left in the top bar;
+                every other entry point now lives in the left sidebar. */}
             <Tooltip label="Export & Share" shortcut="⇧⌘E" className="hidden sm:inline-flex">
               <button
                 onClick={() => handleOpenExport('screenshot')}
@@ -1606,8 +1465,13 @@ function App() {
           onToggleDependencies={() => setShowDependencies((open) => !open)}
           isDependenciesOpen={showDependencies}
           onOpenTemplates={() => setShowTemplates(true)}
-          onOpenAITools={() => setShowAIChat(true)}
+          onOpenImport={() => setShowImport(true)}
+          onOpenAIChat={() => setShowAIChat(true)}
+          onOpenVoiceCommands={() => setShowVoiceCommands(true)}
+          onOpenStatistics={() => setShowStats(true)}
+          onOpenInjection={() => setShowInjectionManager(true)}
           onOpenSettings={handleSettingsToggle}
+          canDockPanels={!isMobile}
         />
 
         {showFileExplorer && !isMobile && (
@@ -1890,18 +1754,6 @@ function App() {
       )}
 
       {/* Validation Panel */}
-      {showValidation && (
-        <Suspense fallback={null}>
-          <ValidationPanel
-            html={html}
-            css={css}
-            javascript={javascript}
-            isOpen={showValidation}
-            onClose={() => setShowValidation(false)}
-          />
-        </Suspense>
-      )}
-
       {/* Custom Injection Manager */}
       {showInjectionManager && (
         <Suspense fallback={null}>
