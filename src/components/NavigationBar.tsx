@@ -1,14 +1,11 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Menu,
   Save,
   Play,
-  Upload,
-  Download,
   FileText,
   Sun,
   Moon,
-  Settings,
   Trash2,
   Wand2,
   FilePlus,
@@ -22,10 +19,7 @@ interface NavigationBarProps {
   onAutoSaveToggle: () => void;
   onRun: () => void;
   onOpenBuildFromPrompt: () => void;
-  onImport: (files: FileList) => void;
-  onExport: () => void;
   onExternalLibraryManagerToggle: () => void;
-  onSettingsToggle: () => void;
   onClear?: () => void;
   /** Starts a new project of the given type. Plain is the default mode. */
   onNewProject?: (projectType: ProjectType) => void;
@@ -38,9 +32,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   onAutoSaveToggle,
   onRun,
   onOpenBuildFromPrompt,
-  onImport,
-  onExport,
-  onSettingsToggle,
   onClear,
   onNewProject,
   currentProjectType = 'plain',
@@ -51,16 +42,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   const { updateSettings } = useSettings();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      onImport(e.target.files);
-      // Reset so same folder can be re-imported
-      e.target.value = '';
-    }
-  }, [onImport]);
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -110,7 +92,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               </div>
             </div>
 
-            {/* Right side - Settings, Menu */}
+            {/* Right side - Run, Build with AI, Export, project menu */}
             <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 min-w-0 flex-shrink-0">
               <Tooltip label="Run">
                 <button
@@ -143,24 +125,9 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               {/* Custom Actions */}
               {customActions}
 
-              {/* Settings Button */}
-              <Tooltip label="Settings">
-                <button
-                  onClick={onSettingsToggle}
-                  className={`p-2 rounded-md transition-colors ${isDark
-                    ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                    : 'text-gray-600 hover:bg-black/5'
-                    }`}
-                  title="Settings"
-                  aria-label="Settings"
-                >
-                  <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              </Tooltip>
-
-              {/* Hamburger Menu */}
+              {/* Project menu — project-level actions that have no sidebar equivalent */}
               <div className="relative" ref={dropdownRef}>
-                <Tooltip label="Menu">
+                <Tooltip label="Project menu">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className={`p-2 rounded-md transition-colors ${isDropdownOpen
@@ -169,8 +136,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                         ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
                         : 'text-gray-600 hover:bg-black/5')
                       }`}
-                    title="Menu"
-                    aria-label="Toggle navigation menu"
+                    title="Project menu"
+                    aria-label="Toggle project menu"
                     aria-expanded={isDropdownOpen}
                     aria-haspopup="true"
                   >
@@ -235,23 +202,9 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                       <div className="px-4 py-3">
                         <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-accent/60 pl-2 ${isDark ? 'text-content-muted' : 'text-gray-500'
                           }`}>
-                          Code Operations
+                          Project
                         </h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            onClick={() => {
-                              onRun();
-                              setIsDropdownOpen(false);
-                            }}
-                            className={`px-3 py-2 text-sm flex items-center gap-2 transition-colors rounded-md ${isDark
-                              ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                              : 'text-gray-700 hover:bg-gray-50'
-                              }`}
-                          >
-                            <Play className="w-4 h-4" />
-                            Run
-                          </button>
-
+                        <div className="grid grid-cols-1 gap-2">
                           <button
                             onClick={() => {
                               onAutoSaveToggle();
@@ -295,50 +248,13 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
                       <div className={`border-t my-1 ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`} />
 
-                      {/* File Management */}
-                      <div className="px-4 py-3">
-                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-accent/60 pl-2 ${isDark ? 'text-content-muted' : 'text-gray-500'
-                          }`}>
-                          Files
-                        </h4>
-                        <div className="space-y-1">
-                          <button
-                            onClick={() => {
-                              fileInputRef.current?.click();
-                              setIsDropdownOpen(false);
-                            }}
-                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3 transition-colors rounded-md ${isDark
-                              ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                              : 'text-gray-700 hover:bg-gray-50'
-                              }`}
-                          >
-                            <Upload className="w-4 h-4" />
-                            Import Files
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              onExport();
-                              setIsDropdownOpen(false);
-                            }}
-                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3 transition-colors rounded-md ${isDark
-                              ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                              : 'text-gray-700 hover:bg-gray-50'
-                              }`}
-                          >
-                            <Download className="w-4 h-4" />
-                            Export ZIP
-                          </button>
-                        </div>
-                      </div>
-
                       <div className={`border-t my-1 ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`} />
 
-                      {/* Settings & Tools */}
+                      {/* Appearance & Info */}
                       <div className="px-4 py-3">
                         <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-accent/60 pl-2 ${isDark ? 'text-content-muted' : 'text-gray-500'
                           }`}>
-                          Settings & Tools
+                          Appearance & Info
                         </h4>
                         <div className="space-y-1">
                           <button
@@ -378,23 +294,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
           </div>
         </div>
       </nav>
-
-      {/*
-        Hidden file input — supports both single files and full folder import.
-        webkitdirectory allows selecting a folder; multiple allows multi-file select.
-        accept filter matches html/css/js only.
-      */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        // @ts-expect-error — webkitdirectory is non-standard but widely supported
-        webkitdirectory=""
-        mozdirectory=""
-        accept=".html,.htm,.css,.js"
-        onChange={handleFileInputChange}
-        className="hidden"
-      />
 
       {/* Spacer for fixed navbar */}
       <div className="h-14 sm:h-16" />
