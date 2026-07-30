@@ -11,7 +11,9 @@ import {
   Settings,
   Trash2,
   Wand2,
+  FilePlus,
 } from 'lucide-react';
+import { PROJECT_TYPE_LABEL, ProjectType } from '../types/files';
 import { useTheme } from '../hooks/useTheme';
 import { useSettings } from '../hooks/useSettings';
 import Tooltip from './ui/Tooltip';
@@ -25,6 +27,9 @@ interface NavigationBarProps {
   onExternalLibraryManagerToggle: () => void;
   onSettingsToggle: () => void;
   onClear?: () => void;
+  /** Starts a new project of the given type. Plain is the default mode. */
+  onNewProject?: (projectType: ProjectType) => void;
+  currentProjectType?: ProjectType;
   autoSaveEnabled: boolean;
   customActions?: React.ReactNode;
 }
@@ -37,6 +42,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   onExport,
   onSettingsToggle,
   onClear,
+  onNewProject,
+  currentProjectType = 'plain',
   autoSaveEnabled,
   customActions,
 }) => {
@@ -179,6 +186,51 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                     }`}>
                     {/* Menu Content */}
                     <div className="py-2 max-h-[calc(100vh-100px)] overflow-y-auto">
+                      {/* New Project — project type selection */}
+                      {onNewProject && (
+                        <>
+                          <div className="px-4 py-3">
+                            <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-accent/60 pl-2 ${isDark ? 'text-content-muted' : 'text-gray-500'
+                              }`}>
+                              New Project
+                            </h4>
+                            <div className="space-y-1">
+                              {(['plain', 'react', 'vue'] as ProjectType[]).map((type) => {
+                                const isCurrent = type === currentProjectType;
+                                return (
+                                  <button
+                                    key={type}
+                                    onClick={() => {
+                                      if (!isCurrent) onNewProject(type);
+                                      setIsDropdownOpen(false);
+                                    }}
+                                    className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3 transition-colors rounded-md ${isCurrent
+                                      ? (isDark ? 'bg-white/[0.07] text-content-primary' : 'bg-gray-100 text-gray-900')
+                                      : (isDark
+                                        ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+                                        : 'text-gray-700 hover:bg-gray-50')
+                                      }`}
+                                  >
+                                    <FilePlus className="w-4 h-4" />
+                                    {PROJECT_TYPE_LABEL[type]}
+                                    {isCurrent && (
+                                      <span className="ml-auto rounded-sm bg-accent-subtle px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-hover">
+                                        Current
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <p className={`mt-2 text-[11px] ${isDark ? 'text-content-muted' : 'text-gray-500'}`}>
+                              React and Vue projects are compiled in your browser. Switching replaces the editor contents.
+                            </p>
+                          </div>
+
+                          <div className={`border-t my-1 ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`} />
+                        </>
+                      )}
+
                       {/* Code Operations */}
                       <div className="px-4 py-3">
                         <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-accent/60 pl-2 ${isDark ? 'text-content-muted' : 'text-gray-500'

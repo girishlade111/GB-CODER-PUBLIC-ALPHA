@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   FolderTree,
+  Package,
   LayoutTemplate,
   Sparkles,
   Settings as SettingsIcon,
@@ -11,6 +12,10 @@ import Tooltip from './ui/Tooltip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface AppSidebarProps {
+  onToggleFiles: () => void;
+  isFilesOpen: boolean;
+  onToggleDependencies: () => void;
+  isDependenciesOpen: boolean;
   onOpenTemplates: () => void;
   onOpenAITools: () => void;
   onOpenSettings: () => void;
@@ -21,18 +26,21 @@ interface SidebarItem {
   label: string;
   icon: React.ReactNode;
   onClick?: () => void;
-  /** Reserved for a later phase — rendered but not yet interactive. */
-  comingSoon?: boolean;
+  /** Renders as the selected entry, e.g. while its panel is open. */
+  isActive?: boolean;
 }
 
 /**
  * Left rail navigation. Icon-only by default and expandable to show labels.
  *
- * The Files entry is a placeholder for the file tree landing in a later phase;
- * it is rendered so the layout is already sized for it. The remaining entries
- * open existing panels — no new behaviour is introduced here.
+ * Files toggles the project file explorer; the remaining entries open existing
+ * panels.
  */
 const AppSidebar: React.FC<AppSidebarProps> = ({
+  onToggleFiles,
+  isFilesOpen,
+  onToggleDependencies,
+  isDependenciesOpen,
   onOpenTemplates,
   onOpenAITools,
   onOpenSettings,
@@ -44,7 +52,15 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       id: 'files',
       label: 'Files',
       icon: <FolderTree className="h-5 w-5" />,
-      comingSoon: true,
+      onClick: onToggleFiles,
+      isActive: isFilesOpen,
+    },
+    {
+      id: 'dependencies',
+      label: 'Dependencies',
+      icon: <Package className="h-5 w-5" />,
+      onClick: onToggleDependencies,
+      isActive: isDependenciesOpen,
     },
     {
       id: 'templates',
@@ -67,33 +83,21 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   ];
 
   const renderItem = (item: SidebarItem) => {
-    const isInteractive = !item.comingSoon && !!item.onClick;
-
     const button = (
       <button
         type="button"
         onClick={item.onClick}
-        disabled={!isInteractive}
-        aria-disabled={!isInteractive}
+        aria-pressed={item.isActive}
         className={`flex w-full items-center rounded-md text-sm font-medium transition-colors ${
           isExpanded ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2'
         } ${
-          isInteractive
-            ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-            : 'cursor-default text-content-muted'
+          item.isActive
+            ? 'bg-white/[0.07] text-content-primary'
+            : 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
         }`}
       >
         <span className="flex shrink-0 items-center justify-center">{item.icon}</span>
-        {isExpanded && (
-          <>
-            <span className="truncate">{item.label}</span>
-            {item.comingSoon && (
-              <span className="ml-auto rounded-sm border border-stroke-subtle bg-surface-overlay px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-content-muted">
-                Soon
-              </span>
-            )}
-          </>
-        )}
+        {isExpanded && <span className="truncate">{item.label}</span>}
       </button>
     );
 
@@ -101,7 +105,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
     if (!isExpanded) {
       return (
         <li key={item.id}>
-          <Tooltip label={item.comingSoon ? `${item.label} — coming soon` : item.label} side="right">
+          <Tooltip label={item.label} side="right">
             {button}
           </Tooltip>
         </li>

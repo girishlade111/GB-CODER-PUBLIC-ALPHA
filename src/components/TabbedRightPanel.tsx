@@ -2,6 +2,7 @@ import React, { useState, Suspense, forwardRef, useRef } from 'react';
 import { Eye, Terminal } from 'lucide-react';
 import PreviewPanel from './PreviewPanel';
 import { ConsoleLog, JSEditorMode } from '../types';
+import { ProjectType } from '../types/files';
 
 // Lazy load heavy components
 const EnhancedConsole = React.lazy(() => import('./EnhancedConsole'));
@@ -24,6 +25,13 @@ interface TabbedRightPanelProps {
     // Console props
     consoleLogs: ConsoleLog[];
     onClearConsole: () => void;
+
+    // Multi-file project props (plain mode leaves these at their defaults)
+    projectType?: ProjectType;
+    bundledCode?: string;
+    bundledCss?: string;
+    importMap?: Record<string, string>;
+    isResolvingPackages?: boolean;
 }
 
 const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
@@ -39,6 +47,12 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
     // Console props
     consoleLogs,
     onClearConsole,
+    // Multi-file project props
+    projectType = 'plain',
+    bundledCode = '',
+    bundledCss = '',
+    importMap = {},
+    isResolvingPackages = false,
 }, ref) => {
     const [activeTab, setActiveTab] = useState<TabType>('preview');
     const internalRef = useRef<HTMLElement>(null);
@@ -74,6 +88,11 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                         onConsoleLog={onConsoleLog}
                         autoRunJS={autoRunJS}
                         previewDelay={previewDelay}
+                        projectType={projectType}
+                        bundledCode={bundledCode}
+                        bundledCss={bundledCss}
+                        importMap={importMap}
+                        isResolvingPackages={isResolvingPackages}
                     />
                 );
             case 'console':

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye } from 'lucide-react';
+import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package } from 'lucide-react';
 import { ConsoleLog, JSEditorMode } from '../types';
+import { MOUNT_ELEMENT_ID, ProjectType } from '../types/files';
 import { externalLibraryService } from '../services/externalLibraryService';
 
 type ViewMode = 'desktop' | 'tablet' | 'mobile' | 'fullscreen';
@@ -13,6 +14,19 @@ interface PreviewPanelProps {
   onConsoleLog: (log: ConsoleLog) => void;
   autoRunJS?: boolean;
   previewDelay?: number;
+  /**
+   * Multi-file project mode. `plain` (the default) keeps the original
+   * html/css/javascript pipeline completely untouched.
+   */
+  projectType?: ProjectType;
+  /** Pre-bundled IIFE for react/vue projects. Ignored in plain mode. */
+  bundledCode?: string;
+  /** CSS collected from the module graph for react/vue projects. */
+  bundledCss?: string;
+  /** Bare specifier -> CDN URL, rendered as an import map. */
+  importMap?: Record<string, string>;
+  /** True while CDN packages are being resolved for the first time. */
+  isResolvingPackages?: boolean;
 }
 
 /**
@@ -59,13 +73,22 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   onConsoleLog,
   autoRunJS = true,
   previewDelay = 300,
+  projectType = 'plain',
+  bundledCode = '',
+  bundledCss = '',
+  importMap = {},
+  isResolvingPackages = false,
 }, ref) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('desktop');
+  /** React/Vue projects render a bundled module graph instead of raw files. */
+  const isFrameworkProject = projectType !== 'plain';
   // Drives the "nothing to preview yet" placeholder. Purely presentational —
   // the iframe still renders as normal underneath.
-  const isProjectEmpty = !html.trim() && !css.trim() && !javascript.trim();
+  const isProjectEmpty = isFrameworkProject
+    ? !bundledCode.trim()
+    : !html.trim() && !css.trim() && !javascript.trim();
   const [manualRunTrigger, setManualRunTrigger] = useState(0);
   // Holds the transpiled JS when using TS/TSX mode
   const [transpiledJs, setTranspiledJs] = useState<string>(javascript);
@@ -83,6 +106,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   const shouldTranspile = jsEditorMode === 'typescript' || jsEditorMode === 'tsx';
 
   useEffect(() => {
+    if (isFrameworkProject) return;
     if (!shouldTranspile) {
       setTranspiledJs(javascript);
       setCompilationError(null);
@@ -98,7 +122,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     });
 
     return () => { cancelled = true; };
-  }, [javascript, shouldTranspile]);
+  }, [javascript, shouldTranspile, isFrameworkProject]);
 
   // Sanitize code input to prevent XSS attacks (CSS only - HTML runs in sandboxed iframe)
   const sanitizeCode = (code: string, language: string): string => {
@@ -116,9 +140,21 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   };
 
   const generatePreviewContent = useCallback(() => {
-    const sanitizedCss = sanitizeCode(css, 'css');
-    const usesBabel = jsEditorMode === 'jsx' || jsEditorMode === 'tsx';
-    const executableJavascript = transpiledJs;
+    /*
+     * Framework projects substitute the bundler's output for the three raw
+     * files: the markup becomes a mount point, the styles are the CSS collected
+     * out of the module graph, and the script is the already-compiled IIFE
+     * (so neither Babel nor the TypeScript transpiler is involved).
+     * Plain mode falls through to the original values unchanged.
+     */
+    const effectiveHtml = isFrameworkProject
+      ? `<div id="${MOUNT_ELEMENT_ID[projectType as Exclude<ProjectType, 'plain'>]}"></div>`
+      : html;
+    const effectiveCss = isFrameworkProject ? bundledCss : css;
+
+    const sanitizedCss = sanitizeCode(effectiveCss, 'css');
+    const usesBabel = !isFrameworkProject && (jsEditorMode === 'jsx' || jsEditorMode === 'tsx');
+    const executableJavascript = isFrameworkProject ? bundledCode : transpiledJs;
     const safeJavascript = escapeScriptContent(executableJavascript);
     const compiledJavaScriptString = JSON.stringify(executableJavascript);
     const compilationWarningScript = compilationError
@@ -146,6 +182,31 @@ ${safeJavascript}
     const externalLibraries = externalLibraryService.getLibraries();
     const externalLibsHTML = externalLibraryService.generateInjectionHTML();
 
+    /*
+     * Import map: resolves every bare specifier in the bundle (the framework
+     * runtime, the JSX runtime and any npm package) to a CDN URL.
+     *
+     * One map for everything is what guarantees a single shared React/Vue
+     * instance — CDN packages are fetched with esm.sh's `?external=react`, so
+     * their own `react` import lands on this same entry rather than a second copy.
+     */
+    const importMapHTML =
+      isFrameworkProject && Object.keys(importMap).length > 0
+        ? `    <script type="importmap">${JSON.stringify({ imports: importMap })}</script>`
+        : '';
+
+    /*
+     * The bundle is an ES module, so it must run as `type="module"`. Module
+     * scripts are deferred, which conveniently means the mount node in <body>
+     * already exists and the classic console-bridge script has already installed
+     * its console overrides before any user code runs.
+     */
+    const moduleScript = isFrameworkProject
+      ? `<script type="module">
+${safeJavascript}
+</script>`
+      : '';
+
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -156,6 +217,7 @@ ${safeJavascript}
     <title>Preview</title>
     ${externalLibsHTML}
     ${jsxRuntimeScripts}
+${importMapHTML}
     <style>
         body { 
             margin: 0; 
@@ -168,7 +230,7 @@ ${safeJavascript}
     </style>
 </head>
 <body>
-    ${html}
+    ${effectiveHtml}
     <script>
         // External Libraries Loading Indicator
         if (${externalLibraries.length} > 0) {
@@ -248,8 +310,10 @@ ${safeJavascript}
                     }
                 };
                 
-                ${usesBabel
-                  ? '// JSX/TSX user code is executed by Babel from the text/babel script tag below.'
+                ${usesBabel || isFrameworkProject
+                  ? `// User code runs from a separate script tag below${isFrameworkProject
+                      ? ' (an ES module, so it cannot be eval\'d).'
+                      : ' (Babel).'}`
                   : `
                 // Execute sanitized JavaScript
                 const sanitizedJs = ${compiledJavaScriptString};
@@ -273,9 +337,10 @@ ${safeJavascript}
         }
     </script>
     ${userCodeScript}
+    ${moduleScript}
 </body>
 </html>`;
-  }, [html, css, transpiledJs, compilationError, jsEditorMode]);
+  }, [html, css, transpiledJs, compilationError, jsEditorMode, isFrameworkProject, projectType, bundledCode, bundledCss, importMap]);
 
   const refreshPreview = useCallback(() => {
     if (iframeRef.current) {
@@ -304,7 +369,7 @@ ${safeJavascript}
       refreshPreviewRef.current();
     }, delay);
     return () => clearTimeout(timeoutId);
-  }, [html, css, jsForPreview, jsEditorMode, previewDelay, manualRunTrigger, transpiledJs]);
+  }, [html, css, jsForPreview, jsEditorMode, previewDelay, manualRunTrigger, transpiledJs, bundledCode, bundledCss, projectType, importMap]);
 
   // Refresh preview when external libraries change
   useEffect(() => {
@@ -457,7 +522,17 @@ ${safeJavascript}
         </div>
       </div>
       <div className={`relative ${viewMode === 'fullscreen' ? 'h-full' : 'h-full'} flex items-start justify-center overflow-auto bg-surface-canvas`}>
-        {isLoading && (
+        {isResolvingPackages && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-surface-canvas/90 px-6 text-center">
+            <Package className="h-6 w-6 animate-pulse text-accent" />
+            <p className="text-sm font-medium text-content-secondary">Fetching packages from CDN…</p>
+            <p className="text-xs text-content-muted">
+              First time only — resolved packages are cached for this session.
+            </p>
+          </div>
+        )}
+
+        {isLoading && !isResolvingPackages && (
           <div className="absolute inset-0 bg-surface-canvas/75 flex items-center justify-center z-10">
             <RefreshCw className="w-6 h-6 text-accent animate-spin" />
           </div>
