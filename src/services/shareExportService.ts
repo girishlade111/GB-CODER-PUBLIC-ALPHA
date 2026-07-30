@@ -1,5 +1,4 @@
 // Code Sharing & Export Service
-import JSZip from 'jszip';
 
 export interface ShareableCode {
   html: string;
@@ -95,6 +94,11 @@ export class ShareExportService {
     javascript: string,
     projectName: string = 'gb-coder-project'
   ): Promise<Blob> {
+    /*
+     * Loaded on demand. A module-scope import put JSZip (95 kB) into the entry
+     * chunk, because App statically imports this service for `fetchPreviewByID`.
+     */
+    const { default: JSZip } = await import('jszip');
     const zip = new JSZip();
     
     // Create project folder

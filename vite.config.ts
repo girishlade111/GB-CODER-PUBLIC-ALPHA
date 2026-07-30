@@ -120,9 +120,13 @@ export default defineConfig({
           // heavy and only needed once a framework project is opened, so they
           // must stay out of the entry chunk. Checked before the generic
           // node_modules buckets below so they are not swept into react-core.
-          if (id.includes('esbuild-wasm')) {
-            return 'esbuild-wasm';
-          }
+          /*
+           * esbuild-wasm is left unbucketed for the same reason as JSZip: it is
+           * CommonJS, so naming its chunk captured the shared interop helper and
+           * created a static edge from the React chunk into it. Its only entry
+           * point is a dynamic import in the project bundler, which is enough
+           * for Rollup to split it correctly on its own.
+           */
           if (id.includes('@vue/compiler-sfc') || id.includes('@vue/compiler-')) {
             return 'vue-compiler';
           }
@@ -141,9 +145,18 @@ export default defineConfig({
             if (id.includes('axios')) {
               return 'http-client';
             }
-            if (id.includes('jszip')) {
-              return 'compression';
-            }
+            /*
+             * JSZip is deliberately NOT bucketed by hand.
+             *
+             * Naming a chunk for a CommonJS dependency parks Rollup's generated
+             * interop helper inside that chunk. React is also CommonJS and needs
+             * the same helper, which created a *static* edge from `react-core`
+             * into the JSZip chunk and pulled 95 kB of zip code into first paint
+             * even though every `import('jszip')` in the app is dynamic.
+             *
+             * Left unbucketed, Rollup derives the chunk from the dynamic import
+             * boundary and keeps the shared helper somewhere neutral.
+             */
             if (id.includes('diff') || id.includes('react-diff-viewer')) {
               return 'diff-tools';
             }
@@ -155,28 +168,26 @@ export default defineConfig({
             }
           }
 
-          // Critical UI components - load immediately
-          if (id.includes('/components/NavigationBar') ||
-              id.includes('/components/EditorPanel') ||
-              id.includes('/components/TabbedRightPanel') ||
-              id.includes('/components/EnhancedConsole')) {
-            return 'critical-ui';
-          }
-
-          // Deferred components - lazy loaded
-          if (id.includes('/components/GeminiCodeAssistant') ||
-              id.includes('/components/SnippetsSidebar') ||
-              id.includes('/components/SettingsModal') ||
-              id.includes('/components/HistoryPanel') ||
-              id.includes('/components/ExtensionsMarketplace') ||
-              id.includes('/components/ExternalLibraryManager') ||
-              id.includes('/components/AIEnhancementPopup') ||
-              id.includes('/components/CodeExplanationPopup') ||
-              id.includes('/components/KeyboardShortcutsHelp') ||
-              id.includes('/components/ProjectBar') ||
-              id.includes('/components/pages/')) {
-            return 'deferred-components';
-          }
+          /*
+           * Application code is deliberately NOT grouped by hand.
+           *
+           * Two manual buckets used to exist here, `critical-ui` and
+           * `deferred-components`, and they actively defeated code splitting.
+           * `manualChunks` decides which *chunk* a module lands in, not whether
+           * that chunk is eager: putting a lazily-imported module in a chunk
+           * that also contains a statically-imported one makes the whole chunk
+           * statically reachable, so Vite emits a `modulepreload` for it.
+           *
+           * Concretely, `EnhancedConsole` is loaded via React.lazy but was
+           * grouped into `critical-ui` alongside `NavigationBar`, which dragged
+           * it — and through it xterm (275 kB) — into first paint. The chunk
+           * named `deferred-components` was preloaded for the same reason.
+           *
+           * Returning undefined lets Rollup split along the real dynamic
+           * `import()` boundaries, which is the only thing that actually
+           * determines what loads when.
+           */
+          return undefined;
         },
       },
     },
