@@ -9,6 +9,8 @@ import {
   Trash2,
   Wand2,
   FilePlus,
+  Mic,
+  MicOff,
 } from 'lucide-react';
 import { PROJECT_TYPE_LABEL, ProjectType } from '../types/files';
 import { useTheme } from '../hooks/useTheme';
@@ -26,6 +28,9 @@ interface NavigationBarProps {
   currentProjectType?: ProjectType;
   autoSaveEnabled: boolean;
   customActions?: React.ReactNode;
+  /** Push-to-talk: starts listening, or stops it when already live. */
+  onToggleVoice?: () => void;
+  isVoiceListening?: boolean;
 }
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
@@ -37,6 +42,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   currentProjectType = 'plain',
   autoSaveEnabled,
   customActions,
+  onToggleVoice,
+  isVoiceListening = false,
 }) => {
   const { isDark } = useTheme();
   const { updateSettings } = useSettings();
@@ -109,6 +116,37 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   <span className="hidden lg:inline text-sm font-medium">Run</span>
                 </button>
               </Tooltip>
+
+              {/*
+                * Voice: icon-only so it slots into the existing toolbar rhythm
+                * without competing with Run / Build with AI for width. Every
+                * action it reaches is still available manually.
+                */}
+              {onToggleVoice && (
+                <Tooltip label={isVoiceListening ? 'Stop listening' : 'Voice commands'}>
+                  <button
+                    onClick={onToggleVoice}
+                    className={`relative p-2 rounded-md transition-colors ${isVoiceListening
+                      ? 'bg-red-500/15 text-red-400'
+                      : (isDark
+                        ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+                        : 'text-gray-700 hover:bg-black/5')
+                      }`}
+                    title={isVoiceListening ? 'Stop listening' : 'Voice commands'}
+                    aria-label={isVoiceListening ? 'Stop listening' : 'Start voice commands'}
+                    aria-pressed={isVoiceListening}
+                  >
+                    {isVoiceListening ? (
+                      <>
+                        <span className="absolute inset-1 rounded-full bg-red-500/30 animate-voice-ring" />
+                        <Mic className="relative w-4 h-4 sm:w-5 sm:h-5" />
+                      </>
+                    ) : (
+                      <MicOff className="w-4 h-4 sm:w-5 sm:h-5" />
+                    )}
+                  </button>
+                </Tooltip>
+              )}
 
               <Tooltip label="Build with AI">
                 <button

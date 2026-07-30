@@ -17,6 +17,11 @@ interface BuildFromPromptModalProps {
   onGenerate: (html: string, css: string, javascript: string) => void;
   /** FULL current editor contents, sent as reference context with the request. */
   projectContext?: ProjectContext;
+  /**
+   * Seed text for the prompt box, used by the voice flow. Nothing is generated
+   * automatically: the transcript is shown so the user can confirm or edit it.
+   */
+  initialPrompt?: string;
 }
 
 const QUICK_START_PROMPTS = [
@@ -54,8 +59,9 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
   onClose,
   onGenerate,
   projectContext,
+  initialPrompt = '',
 }) => {
-  const [promptText, setPromptText] = useState('');
+  const [promptText, setPromptText] = useState(initialPrompt);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
@@ -76,6 +82,24 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
     setLoadingMessageIndex(0);
     requestAnimationFrame(() => textareaRef.current?.focus());
   }, [isOpen]);
+
+  /*
+   * Voice dictation updates `initialPrompt` while the modal is already open
+   * (follow-ups such as "add a navbar" append to it), so the textarea has to
+   * track it. An empty seed is ignored so opening the modal manually never
+   * wipes text the user typed.
+   */
+  useEffect(() => {
+    if (!initialPrompt) return;
+    setPromptText(initialPrompt);
+    requestAnimationFrame(() => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+      textarea.focus();
+      // Caret at the end, ready to keep editing the dictated prompt.
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    });
+  }, [initialPrompt]);
 
   // NEW: Show prompt-quality feedback even when the disabled button cannot be clicked.
   useEffect(() => {

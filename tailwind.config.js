@@ -145,12 +145,23 @@ export default {
           '0%': { opacity: '0', transform: 'scale(0.98)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
+        // Voice command overlay: waveform bars and the pulsing mic halo.
+        'voice-wave': {
+          '0%, 100%': { transform: 'scaleY(0.25)' },
+          '50%': { transform: 'scaleY(1)' },
+        },
+        'voice-ring': {
+          '0%': { opacity: '0.5', transform: 'scale(1)' },
+          '100%': { opacity: '0', transform: 'scale(1.9)' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 0.2s ease-out',
         'slide-down': 'slide-down 0.2s ease-out',
         'slide-up': 'slide-up 0.2s ease-out',
         'scale-in': 'scale-in 0.2s ease-out',
+        'voice-wave': 'voice-wave 900ms ease-in-out infinite',
+        'voice-ring': 'voice-ring 1.6s ease-out infinite',
       },
     },
   },
