@@ -2,9 +2,11 @@ import React, { useState, useCallback, useEffect, Suspense, lazy } from 'react';
 import { Code2, MessageSquare, Mic, LayoutTemplate, BarChart3, CheckCircle, Zap } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
+import AppSidebar from './components/AppSidebar';
 import EditorPanel from './components/EditorPanel';
 import TabbedRightPanel from './components/TabbedRightPanel';
 import Footer from './components/ui/Footer';
+import Tooltip from './components/ui/Tooltip';
 
 // ===== NEW FEATURES IMPORTS =====
 import { Toaster, toast } from 'react-hot-toast';
@@ -66,13 +68,99 @@ import PreviewSharePage from './components/PreviewSharePage';
 
 type AppView = 'editor' | 'history' | 'about' | 'documentation' | 'privacy' | 'terms' | 'cookies' | 'disclaimer' | 'contact' | 'preview-share' | 'preview-share-error';
 
+/**
+ * Minimal starter template. Previously these were an empty `.container` div and
+ * an empty rule, which rendered as a blank gray Live Preview on first load and
+ * gave no sense that the editor was working. This renders something immediately
+ * while staying small enough to read and delete in one pass.
+ */
 const defaultHTML = `<div class="container">
+  <div class="card">
+    <h1 class="card-title">Hello World</h1>
+    <p class="card-text">Edit the HTML, CSS or JS to see this update live.</p>
+    <button class="card-button" type="button">Get started</button>
+  </div>
 </div>`;
 
-const defaultCSS = `.container {
+const defaultCSS = `:root {
+  --accent: #7c3aed;
+  --surface: #18181b;
+  --stroke: #27272a;
+  --text: #fafafa;
+  --text-muted: #a1a1aa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #0a0a0a;
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+.card {
+  max-width: 360px;
+  padding: 32px;
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+.card-title {
+  margin: 0 0 8px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.card-text {
+  margin: 0 0 24px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.card-button {
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 120ms ease-out;
+}
+
+.card-button:hover {
+  filter: brightness(1.12);
 }`;
 
-const defaultJS = ``;
+const defaultJS = `const button = document.querySelector('.card-button');
+
+button?.addEventListener('click', () => {
+  console.log('Button clicked');
+});`;
+
+/**
+ * Shared styling for the icon-only buttons in the top toolbar: 6px radius and a
+ * subtle white wash on hover so every icon target reads as interactive.
+ */
+const toolbarIconButtonClass = (isDark: boolean) =>
+  `rounded-md p-2 transition-colors ${
+    isDark
+      ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+      : 'text-gray-600 hover:bg-black/5 hover:text-gray-900'
+  }`;
 
 function App() {
   // Progressive loading phases
@@ -1145,70 +1233,70 @@ function App() {
         customActions={
           <div className="flex items-center gap-1 sm:gap-2">
             {/* AI Chat */}
-            <button
-              onClick={() => setShowAIChat(true)}
-              className={`p-2 rounded-lg transition-colors hidden sm:block ${
-                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-              }`}
-              title="AI Chat Assistant"
-            >
-              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            <Tooltip label="AI Chat Assistant" className="hidden sm:inline-flex">
+              <button
+                onClick={() => setShowAIChat(true)}
+                className={toolbarIconButtonClass(isDark)}
+                title="AI Chat Assistant"
+              >
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
 
             {/* Voice Commands */}
-            <button
-              onClick={() => setShowVoiceCommands(true)}
-              className={`p-2 rounded-lg transition-colors hidden sm:block ${
-                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-              }`}
-              title="Voice Commands"
-            >
-              <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            <Tooltip label="Voice Commands" className="hidden sm:inline-flex">
+              <button
+                onClick={() => setShowVoiceCommands(true)}
+                className={toolbarIconButtonClass(isDark)}
+                title="Voice Commands"
+              >
+                <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
 
             {/* Templates */}
-            <button
-              onClick={() => setShowTemplates(true)}
-              className={`p-2 rounded-lg transition-colors hidden sm:block ${
-                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-              }`}
-              title="Code Templates"
-            >
-              <LayoutTemplate className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            <Tooltip label="Code Templates" className="hidden sm:inline-flex">
+              <button
+                onClick={() => setShowTemplates(true)}
+                className={toolbarIconButtonClass(isDark)}
+                title="Code Templates"
+              >
+                <LayoutTemplate className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
 
             {/* Statistics */}
-            <button
-              onClick={() => setShowStats(true)}
-              className={`p-2 rounded-lg transition-colors hidden sm:block ${
-                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-              }`}
-              title="Code Statistics"
-            >
-              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            <Tooltip label="Code Statistics" className="hidden sm:inline-flex">
+              <button
+                onClick={() => setShowStats(true)}
+                className={toolbarIconButtonClass(isDark)}
+                title="Code Statistics"
+              >
+                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
 
             {/* Validation */}
-            <button
-              onClick={() => setShowValidation(true)}
-              className={`p-2 rounded-lg transition-colors hidden sm:block ${
-                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-              }`}
-              title="Code Validation"
-            >
-              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            <Tooltip label="Code Validation" className="hidden sm:inline-flex">
+              <button
+                onClick={() => setShowValidation(true)}
+                className={toolbarIconButtonClass(isDark)}
+                title="Code Validation"
+              >
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
 
             {/* Custom Injection */}
-            <button
-              onClick={() => setShowInjectionManager(true)}
-              className={`p-2 rounded-lg transition-colors hidden sm:block ${
-                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-              }`}
-              title="Custom Code Injection"
-            >
-              <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            <Tooltip label="Custom Code Injection" className="hidden sm:inline-flex">
+              <button
+                onClick={() => setShowInjectionManager(true)}
+                className={toolbarIconButtonClass(isDark)}
+                title="Custom Code Injection"
+              >
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
 
             {/* Export/Share Menu */}
             <ExportShareMenu
@@ -1224,11 +1312,17 @@ function App() {
 
 
 
-      {/* Main Content */}
-      <div className="flex-1 px-2 sm:px-3 lg:px-4 py-3">
-        <div className={`grid gap-2 lg:gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`}>
+      {/* Main Content — left rail + workspace */}
+      <div className="flex flex-1 min-h-0">
+        <AppSidebar
+          onOpenTemplates={() => setShowTemplates(true)}
+          onOpenAITools={() => setShowAIChat(true)}
+          onOpenSettings={handleSettingsToggle}
+        />
+
+        <div className={`grid flex-1 min-w-0 gap-3 px-3 py-3 lg:px-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`}>
           {/* Left Panel - Editors */}
-          <div className="flex flex-col space-y-2 w-full min-h-0">
+          <div className="flex flex-col space-y-3 w-full min-h-0">
             <EditorPanel
               title="HTML"
               language="html"

@@ -129,25 +129,25 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
   return (
     <div
-      className={`bg-dark-gray border rounded-lg overflow-hidden w-full shadow-sm transition-colors ${
+      className={`bg-surface-base border rounded-lg overflow-hidden w-full transition-colors ${
         isDragOver
-          ? 'border-blue-500 ring-2 ring-blue-500/30'
-          : 'border-gray-700'
+          ? 'border-accent ring-2 ring-accent/30'
+          : 'border-stroke-subtle'
       }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       <div
-        className="bg-matte-black px-4 py-2.5 border-b border-gray-700 flex items-center justify-between cursor-pointer hover:bg-[#232324] transition-colors"
+        className="bg-surface-raised px-4 py-2 border-b border-stroke-subtle flex items-center justify-between cursor-pointer hover:bg-white/[0.03] transition-colors"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         {/* Left side: Icon, Title, File Label, Language Badge */}
         <div className="flex items-center gap-2">
           {icon}
-          <h3 className="text-sm font-medium text-bright-white">{title}</h3>
-          <span className="text-xs text-gray-500 font-mono">{fileName}</span>
-          <span className="text-[10px] tracking-wider font-semibold bg-gray-700 text-gray-400 px-2 py-0.5 rounded uppercase">
+          <h3 className="text-sm font-medium text-content-primary">{title}</h3>
+          <span className="text-xs text-content-muted font-mono">{fileName}</span>
+          <span className="text-[10px] tracking-wider font-semibold bg-white/[0.07] text-content-secondary px-1.5 py-0.5 rounded-sm uppercase">
             {languageBadge}
           </span>
           {isJavaScriptPanel && onJsEditorModeChange && (
@@ -155,7 +155,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
               value={jsEditorMode}
               onChange={(e) => onJsEditorModeChange(e.target.value as JSEditorMode)}
               onClick={(e) => e.stopPropagation()}
-              className="h-6 bg-gray-800 border border-gray-600 text-gray-200 text-[11px] font-semibold rounded px-2 py-0.5 hover:border-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="h-6 bg-surface-overlay border border-stroke-strong text-content-primary text-[11px] font-semibold rounded-md px-2 py-0.5 hover:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
               title="JavaScript editor language mode"
             >
               {JS_MODE_OPTIONS.map((option) => (
@@ -174,7 +174,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
             <button
               onClick={handleFormat}
               disabled={!canFormat}
-              className="p-1.5 hover:bg-purple-900/30 disabled:opacity-40 disabled:cursor-not-allowed text-purple-400 hover:text-purple-300 rounded transition-all duration-200"
+              className="p-1.5 rounded-md hover:bg-accent-subtle disabled:opacity-40 disabled:cursor-not-allowed text-accent-hover hover:text-accent-hover transition-colors"
               title={`Format ${language.toUpperCase()} code (Prettier)`}
             >
               <Wand2 className={`w-4 h-4 ${isFormatLoading ? 'animate-spin' : ''}`} />
@@ -185,7 +185,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           <button
             onClick={handleCopy}
             disabled={!hasContent}
-            className="p-1.5 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed text-gray-400 hover:text-bright-white rounded transition-all duration-200"
+            className="p-1.5 rounded-md hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed text-content-secondary hover:text-content-primary transition-colors"
             title="Copy code to clipboard"
           >
             <Copy className="w-4 h-4" />
@@ -194,7 +194,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           {/* Lock/Unlock Button */}
           <button
             onClick={toggleLock}
-            className={`p-1.5 hover:bg-gray-700 rounded transition-all duration-200 ${isLocked ? 'text-amber-400 hover:text-amber-300 bg-amber-900/20' : 'text-gray-400 hover:text-bright-white'
+            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${isLocked ? 'text-amber-300 bg-amber-500/10' : 'text-content-secondary hover:text-content-primary'
               }`}
             title={isLocked ? 'Unlock editor (make editable)' : 'Lock editor (read-only)'}
           >
@@ -214,14 +214,14 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
         <div className="relative">
           {/* Drag overlay */}
           {isDragOver && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-blue-900/40 border-2 border-dashed border-blue-400 rounded pointer-events-none">
-              <p className="text-blue-300 font-medium text-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-accent-subtle border-2 border-dashed border-accent rounded-lg pointer-events-none">
+              <p className="text-accent-hover font-medium text-sm">
                 Drop {ACCEPTED_EXTENSIONS[language].join(', ')} file here
               </p>
             </div>
           )}
 
-          <div className="p-2 sm:p-3">
+          <div className="p-3">
             <CodeEditor
               language={language}
               value={value}

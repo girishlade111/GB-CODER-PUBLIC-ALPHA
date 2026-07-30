@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { BarChart3, Code2, FileText, Clock, Zap, Layers } from 'lucide-react';
+import { BarChart3, Code2, FileText, Clock, Zap, Layers, X } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 
 interface CodeStatsDashboardProps {
@@ -83,17 +83,17 @@ const CodeStatsDashboard: React.FC<CodeStatsDashboardProps> = ({
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm`}>
       <div
-        className={`w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden ${
-          isDark ? 'bg-matte-black border border-gray-700' : 'bg-white border border-gray-200'
+        className={`w-full max-w-4xl rounded-lg shadow-elevated overflow-hidden ${
+          isDark ? 'bg-surface-raised border border-stroke-subtle' : 'bg-white border border-gray-200'
         }`}
       >
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${
-          isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
+          isDark ? 'border-stroke-subtle bg-surface-raised' : 'border-gray-200 bg-gray-50'
         }`}>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl">
-              <BarChart3 className="w-6 h-6 text-white" />
+            <div className="p-2 bg-accent-subtle text-accent-hover rounded-md">
+              <BarChart3 className="w-5 h-5" />
             </div>
             <div>
               <h2 className={`text-lg font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
@@ -106,50 +106,52 @@ const CodeStatsDashboard: React.FC<CodeStatsDashboardProps> = ({
           </div>
           <button
             onClick={onClose}
-            className={`p-2 rounded-lg transition-colors ${
-              isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+            className={`p-2 rounded-md transition-colors ${
+              isDark ? 'hover:bg-white/5 text-content-secondary hover:text-content-primary' : 'hover:bg-gray-200 text-gray-600'
             }`}
+            title="Close"
+            aria-label="Close code statistics"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className={`p-6 overflow-y-auto max-h-[70vh] ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className={`p-6 overflow-y-auto max-h-[70vh] ${isDark ? 'bg-surface-raised' : 'bg-gray-50'}`}>
           {/* Overview Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 items-stretch">
             <StatCard
               icon={Code2}
               label="Total Lines"
               value={stats.lines.total.toString()}
-              color="from-purple-500 to-blue-500"
+              color="bg-violet-500/10 text-violet-300"
               isDark={isDark}
             />
             <StatCard
               icon={FileText}
               label="Total Characters"
               value={stats.chars.total.toLocaleString()}
-              color="from-green-500 to-emerald-500"
+              color="bg-emerald-500/10 text-emerald-300"
               isDark={isDark}
             />
             <StatCard
               icon={Layers}
               label="HTML Tags"
               value={stats.patterns.htmlTags.toString()}
-              color="from-orange-500 to-red-500"
+              color="bg-orange-500/10 text-orange-300"
               isDark={isDark}
             />
             <StatCard
               icon={Zap}
               label="JS Functions"
               value={stats.patterns.jsFunctions.toString()}
-              color="from-yellow-500 to-amber-500"
+              color="bg-amber-500/10 text-amber-300"
               isDark={isDark}
             />
           </div>
 
           {/* Language Breakdown */}
-          <div className={`mb-6 p-4 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
+          <div className={`mb-6 p-4 rounded-lg ${isDark ? 'bg-surface-overlay border border-stroke-subtle' : 'bg-white border border-gray-200'}`}>
             <h3 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${
               isDark ? 'text-gray-400' : 'text-gray-500'
             }`}>
@@ -201,7 +203,7 @@ const CodeStatsDashboard: React.FC<CodeStatsDashboardProps> = ({
 
           {/* Code Patterns */}
           <div className="grid md:grid-cols-2 gap-4 mb-6">
-            <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
+            <div className={`p-4 rounded-lg ${isDark ? 'bg-surface-overlay border border-stroke-subtle' : 'bg-white border border-gray-200'}`}>
               <h3 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${
                 isDark ? 'text-gray-400' : 'text-gray-500'
               }`}>
@@ -215,7 +217,7 @@ const CodeStatsDashboard: React.FC<CodeStatsDashboardProps> = ({
               </div>
             </div>
 
-            <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
+            <div className={`p-4 rounded-lg ${isDark ? 'bg-surface-overlay border border-stroke-subtle' : 'bg-white border border-gray-200'}`}>
               <h3 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${
                 isDark ? 'text-gray-400' : 'text-gray-500'
               }`}>
@@ -239,10 +241,10 @@ const CodeStatsDashboard: React.FC<CodeStatsDashboardProps> = ({
           </div>
 
           {/* Tips */}
-          <div className={`p-4 rounded-xl ${
+          <div className={`p-4 rounded-lg ${
             isDark 
-              ? 'bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700' 
-              : 'bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200'
+              ? 'bg-accent-subtle border border-accent/40' 
+              : 'bg-purple-50 border border-purple-200'
           }`}>
             <p className={`text-sm ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
               💡 <strong>Tip:</strong> Keep your code organized. Aim for functions under 50 lines and CSS rules under 200 lines for better maintainability.
@@ -262,12 +264,21 @@ const StatCard: React.FC<{
   color: string;
   isDark: boolean;
 }> = ({ icon: Icon, label, value, color, isDark }) => (
-  <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
-    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center mb-2`}>
-      <Icon className="w-6 h-6 text-white" />
+  // h-full + flex column keeps all four boxes the same height regardless of how
+  // long the value string is; the grid already equalises their width.
+  <div
+    className={`flex h-full flex-col gap-2 p-4 rounded-lg ${
+      isDark ? 'bg-surface-overlay border border-stroke-subtle' : 'bg-white border border-gray-200'
+    }`}
+  >
+    {/* Desaturated tint + coloured glyph instead of a saturated gradient fill */}
+    <div className={`w-8 h-8 rounded-md flex items-center justify-center ${color}`}>
+      <Icon className="w-4 h-4" />
     </div>
     <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{label}</p>
-    <p className={`text-xl font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>{value}</p>
+    <p className={`mt-auto text-xl font-semibold tabular-nums ${isDark ? 'text-content-primary' : 'text-gray-900'}`}>
+      {value}
+    </p>
   </div>
 );
 
