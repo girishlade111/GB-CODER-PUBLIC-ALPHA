@@ -56,7 +56,9 @@ export const useSelectionOperations = () => {
         trimmedSelection.length > 0 ||
         [projectContext?.html, projectContext?.css, projectContext?.javascript].some(
           (file) => typeof file === 'string' && file.trim().length > 0,
-        );
+        ) ||
+        // Multi-file projects carry their code in `files` instead.
+        (projectContext?.files ?? []).some((file) => file.content.trim().length > 0);
 
       if (!hasAnyCode) {
         const message = 'Nothing to analyze — write or select some code first.';
@@ -73,6 +75,7 @@ export const useSelectionOperations = () => {
         selectedCode: selectedCode ?? '',
         targetLanguage,
         projectContext: {
+          ...projectContext,
           html: projectContext?.html ?? '',
           css: projectContext?.css ?? '',
           javascript: projectContext?.javascript ?? '',

@@ -224,6 +224,32 @@ function buildProjectContextBlock(projectContext, targetLanguage) {
   const ctx = projectContext || {};
   const target = labelFor(targetLanguage);
 
+  /*
+   * Multi-file React/Vue project: render every file so the model can resolve
+   * imports between them. `activePath` marks the one being operated on.
+   */
+  if (Array.isArray(ctx.files) && ctx.files.length > 0) {
+    const activePath = ctx.activePath || null;
+    const rendered = ctx.files.map((file) => {
+      const marker = file.path === activePath ? ' (TARGET FILE)' : '';
+      const body = typeof file.content === 'string' && file.content.length
+        ? file.content
+        : '(this file is currently empty)';
+      return `----- BEGIN FILE: ${file.path}${marker} (${file.language || 'unknown'}) -----\n${body}\n----- END FILE: ${file.path} -----`;
+    });
+
+    return [
+      `=== FULL PROJECT CONTEXT — ${ctx.projectType || 'multi-file'} project, ${ctx.files.length} file(s) ===`,
+      'Below are the complete, current contents of every file in the project.',
+      'They are bundled together and run as one app, so imports between them must',
+      'stay consistent. Read all of them before answering.',
+      '',
+      rendered.join('\n\n'),
+      '',
+      '=== END FULL PROJECT CONTEXT ===',
+    ].join('\n');
+  }
+
   const renderFile = (label, content) => {
     const marker = label === target ? ' (TARGET FILE)' : '';
     const body = typeof content === 'string' && content.length ? content : '(this file is currently empty)';
@@ -666,19 +692,16 @@ module.exports = async function handler(req, res) {
   }
 
   const files = projectContext || currentCode || {};
-  const totalLen = [
-    code,
-    selectedCode,
-    userMessage,
-    prompt,
-    instruction,
-    files.html,
-    files.css,
-    files.javascript,
-    context,
-  ]
-    .filter((v) => typeof v === 'string')
-    .join('').length;
+  const multiFileLen = Array.isArray(files.files)
+    ? files.files.reduce(
+        (sum, file) => sum + (typeof file?.content === 'string' ? file.content.length : 0),
+        0,
+      )
+    : 0;
+  const totalLen =
+    [code, selectedCode, userMessage, prompt, instruction, files.html, files.css, files.javascript, context]
+      .filter((v) => typeof v === 'string')
+      .join('').length + multiFileLen;
 
   if (totalLen > MAX_BODY_LEN) {
     return res.status(413).json({ error: 'Payload too large — please reduce the code size.' });
