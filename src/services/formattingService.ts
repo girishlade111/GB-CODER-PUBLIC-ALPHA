@@ -5,25 +5,28 @@ import { FormatResult, DiffResult, FormatSettings, DEFAULT_FORMAT_SETTINGS } fro
 class FormattingService {
     private settings: FormatSettings = DEFAULT_FORMAT_SETTINGS;
     private prettierModule: any = null;
+    private loadingPromise: Promise<any> | null = null;
 
     private async loadPrettier() {
-        if (!this.prettierModule) {
-            const [prettier, pluginHTML, pluginCSS, pluginJS, pluginESTree] = await Promise.all([
+        if (!this.loadingPromise) {
+            this.loadingPromise = Promise.all([
                 import('prettier/standalone'),
                 import('prettier/plugins/html'),
                 import('prettier/plugins/postcss'),
                 import('prettier/plugins/babel'),
                 import('prettier/plugins/estree'),
-            ]);
-            this.prettierModule = {
-                prettier: prettier.default || prettier,
-                pluginHTML: pluginHTML.default || pluginHTML,
-                pluginCSS: pluginCSS.default || pluginCSS,
-                pluginJS: pluginJS.default || pluginJS,
-                pluginESTree: pluginESTree.default || pluginESTree,
-            };
+            ]).then(([prettier, pluginHTML, pluginCSS, pluginJS, pluginESTree]) => {
+                this.prettierModule = {
+                    prettier: prettier.default || prettier,
+                    pluginHTML: pluginHTML.default || pluginHTML,
+                    pluginCSS: pluginCSS.default || pluginCSS,
+                    pluginJS: pluginJS.default || pluginJS,
+                    pluginESTree: pluginESTree.default || pluginESTree,
+                };
+                return this.prettierModule;
+            });
         }
-        return this.prettierModule;
+        return this.loadingPromise;
     }
 
     updateSettings(newSettings: Partial<FormatSettings>): void {

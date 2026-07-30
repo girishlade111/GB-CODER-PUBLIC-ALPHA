@@ -136,7 +136,10 @@ ${safeJavascript}
 </script>`
       : '';
 
-    // Get external libraries
+    // Get external libraries - NOTE: externalLibraryService.getLibraries() is not a
+    // reactive dependency of this useCallback. Library changes are propagated via the
+    // 'external-libraries-updated' event listener effect which calls refreshPreviewRef.
+    // Do not remove that event listener without adding externalLibraries to deps.
     const externalLibraries = externalLibraryService.getLibraries();
     const externalLibsHTML = externalLibraryService.generateInjectionHTML();
 
@@ -289,10 +292,14 @@ ${safeJavascript}
 
   // Refresh preview with debounce - HTML/CSS always update, JS only if autoRunJS is true
   const jsForPreview = autoRunJS ? javascript : '';
+  const isInitialMount = useRef(true);
   useEffect(() => {
+    // On initial mount, fire immediately to avoid blank iframe flash
+    const delay = isInitialMount.current ? 0 : previewDelay;
+    isInitialMount.current = false;
     const timeoutId = setTimeout(() => {
       refreshPreviewRef.current();
-    }, previewDelay);
+    }, delay);
     return () => clearTimeout(timeoutId);
   }, [html, css, jsForPreview, jsEditorMode, previewDelay, manualRunTrigger, transpiledJs]);
 
@@ -464,6 +471,13 @@ ${safeJavascript}
             ref={iframeRef}
             className="w-full h-full bg-white shadow-lg"
             title="Code Preview"
+            // Security trust model: The sandbox restricts the iframe to only scripts
+            // and same-origin access. allow-same-origin is required for console message
+            // passing between the iframe and parent via postMessage. User-authored code
+            // runs in this sandbox and can access same-origin storage. No sensitive auth
+            // tokens or secrets should be stored in localStorage/sessionStorage on this
+            // origin. HTML sanitization was intentionally removed because this is a code
+            // playground where users expect their script tags to execute.
             sandbox="allow-scripts allow-same-origin"
             srcDoc={previewContent}
           />
