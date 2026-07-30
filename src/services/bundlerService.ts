@@ -20,6 +20,13 @@ import {
   languageForPath,
   normalizePath,
 } from '../types/files';
+import {
+  PackageResolutionError,
+  ResolvedPackage,
+  detectDependencies,
+  requiredRuntimeSpecifiers,
+  resolvePackages,
+} from './packageResolver';
 
 export interface BundleError {
   message: string;
@@ -34,6 +41,12 @@ export interface BundleResult {
   css: string;
   errors: BundleError[];
   warnings: BundleError[];
+  /** Specifier -> CDN URL, rendered as an import map in the preview iframe. */
+  importMap: Record<string, string>;
+  /** Successfully resolved packages, for the Dependencies panel. */
+  resolved: ResolvedPackage[];
+  /** Packages that could not be resolved from any CDN. */
+  unresolved: PackageResolutionError[];
 }
 
 /** Formats a bundle error the way it will appear in the Console panel. */
@@ -211,39 +224,15 @@ const compileVueFile = async (path: string, source: string): Promise<CompiledSfc
 
 // ─── Bare-import shims ────────────────────────────────────────────────────────
 
-/**
- * Maps a bare module specifier onto the global the preview iframe exposes.
+/*
+ * Bare specifiers are deliberately left BARE and marked external.
  *
- * These shims are intentionally CommonJS (`module.exports = ...`). esbuild then
- * resolves named imports as runtime property lookups on the namespace object,
- * which means arbitrary names work — important because Vue's compiled output
- * imports dozens of internal helpers (`openBlock`, `createElementVNode`, ...)
- * that would be impractical to enumerate as static ESM exports.
+ * The bundle is emitted as an ES module and the preview iframe carries an import
+ * map pointing each specifier at a CDN URL. Keeping them bare is what allows the
+ * user's code and any CDN package (loaded with esm.sh `?external=react`) to
+ * resolve to the *same* runtime module — bundling copies instead would break
+ * hooks and provide/inject across the boundary.
  */
-const GLOBAL_FOR_MODULE: Record<string, string> = {
-  react: 'React',
-  'react-dom': 'ReactDOM',
-  'react-dom/client': 'ReactDOM',
-  'react/jsx-runtime': 'React',
-  'react/jsx-dev-runtime': 'React',
-  vue: 'Vue',
-};
-
-const shimSource = (specifier: string): string | null => {
-  const globalName = GLOBAL_FOR_MODULE[specifier];
-  if (!globalName) return null;
-
-  return `
-var _g = globalThis.${globalName};
-if (!_g) {
-  throw new Error(
-    'The "${specifier}" runtime is not available in the preview. ' +
-    'It is normally loaded automatically — try refreshing the preview.'
-  );
-}
-module.exports = _g;
-`;
-};
 
 // ─── Virtual file system plugin ───────────────────────────────────────────────
 
@@ -299,6 +288,8 @@ export interface PluginContext {
   contents: Map<string, string>;
   collectedCss: string[];
   sfcCache: Map<string, CompiledSfc>;
+  /** Bare specifiers encountered, to be resolved to CDN URLs. */
+  bareSpecifiers: Set<string>;
 }
 
 export const createVirtualFsPlugin = (ctx: PluginContext): Plugin => ({
@@ -318,19 +309,19 @@ export const createVirtualFsPlugin = (ctx: PluginContext): Plugin => ({
         return { path: normalizePath(raw), namespace: 'vfs' };
       }
 
-      // Bare specifier -> runtime global shim.
+      // Already a URL (e.g. hand-written CDN import): leave it alone.
+      if (/^https?:\/\//.test(raw)) {
+        return { path: raw, external: true };
+      }
+
+      /*
+       * Bare specifier: record it and leave it external so the iframe's import
+       * map resolves it at runtime. Node builtins are recorded too, so the
+       * resolver can produce the "use Sandbox mode" error for them.
+       */
       if (!raw.startsWith('.') && !raw.startsWith('/')) {
-        if (shimSource(raw)) return { path: raw, namespace: 'shim' };
-        return {
-          errors: [
-            {
-              text:
-                `Cannot import "${raw}" — npm packages are not supported yet. ` +
-                `Only relative imports and react/react-dom/vue are available.`,
-              location: args.importer ? { file: args.importer } : null,
-            },
-          ],
-        };
+        ctx.bareSpecifiers.add(raw);
+        return { path: raw, external: true };
       }
 
       const resolved = resolveRelative(args.importer, raw, filePaths);
@@ -347,11 +338,6 @@ export const createVirtualFsPlugin = (ctx: PluginContext): Plugin => ({
 
       return { path: resolved, namespace: 'vfs' };
     });
-
-    build.onLoad({ filter: /.*/, namespace: 'shim' }, (args) => ({
-      contents: shimSource(args.path) ?? '',
-      loader: 'js',
-    }));
 
     build.onLoad({ filter: /.*/, namespace: 'vfs' }, async (args) => {
       // ── Vue sub-modules ──
@@ -471,7 +457,15 @@ const toBundleError = (
  * the caller can route them to the Console panel.
  */
 export const buildProject = async (project: MultiFileProject): Promise<BundleResult> => {
-  const empty: BundleResult = { code: '', css: '', errors: [], warnings: [] };
+  const empty: BundleResult = {
+    code: '',
+    css: '',
+    errors: [],
+    warnings: [],
+    importMap: {},
+    resolved: [],
+    unresolved: [],
+  };
 
   if (project.projectType === 'plain') return empty;
 
@@ -506,7 +500,15 @@ export const buildProjectWith = async (
   esbuild: Pick<EsbuildModule, 'build'>,
   project: MultiFileProject,
 ): Promise<BundleResult> => {
-  const empty: BundleResult = { code: '', css: '', errors: [], warnings: [] };
+  const empty: BundleResult = {
+    code: '',
+    css: '',
+    errors: [],
+    warnings: [],
+    importMap: {},
+    resolved: [],
+    unresolved: [],
+  };
 
   const entry = resolveEntry(project);
   if (!entry) {
@@ -527,6 +529,7 @@ export const buildProjectWith = async (
     contents: new Map(project.files.map((f) => [f.path, f.content])),
     collectedCss: [],
     sfcCache: new Map(),
+    bareSpecifiers: new Set(),
   };
 
   try {
@@ -534,15 +537,23 @@ export const buildProjectWith = async (
       entryPoints: [entry],
       bundle: true,
       write: false,
-      format: 'iife',
-      target: 'es2019',
+      /*
+       * ESM output, not IIFE: bare imports must survive into the output so the
+       * iframe's import map can resolve them to CDN URLs at runtime.
+       */
+      format: 'esm',
+      target: 'es2020',
       platform: 'browser',
       sourcemap: false,
-      // Classic JSX transform: React.createElement resolves against the UMD
-      // global in the iframe, so user code need not import React itself.
-      jsx: 'transform',
-      jsxFactory: 'React.createElement',
-      jsxFragment: 'React.Fragment',
+      /*
+       * Automatic JSX runtime. The classic transform needed a `React` global,
+       * which no longer exists now that React is an ES module from the CDN.
+       * esbuild emits `import { jsx } from "react/jsx-runtime"`, which the
+       * import map resolves to the same React instance as everything else.
+       */
+      ...(project.projectType === 'react'
+        ? { jsx: 'automatic' as const, jsxImportSource: 'react' }
+        : { jsx: 'transform' as const }),
       define: {
         'process.env.NODE_ENV': '"development"',
         global: 'globalThis',
@@ -551,11 +562,63 @@ export const buildProjectWith = async (
       plugins: [createVirtualFsPlugin(ctx)],
     });
 
+    /*
+     * Resolve every bare specifier the build left external, plus the framework
+     * runtimes (react/jsx-runtime is injected by esbuild rather than written by
+     * the user, so it would otherwise be missing from the map).
+     *
+     * Resolution is cached per session, so repeated builds only pay the network
+     * cost for genuinely new or re-versioned packages.
+     */
+    /*
+     * The set is a union of three sources rather than just what esbuild saw:
+     *   - specifiers esbuild actually encountered (the authoritative graph)
+     *   - specifiers scanned from every file, including ones not yet reachable
+     *     from the entry, so the Dependencies panel does not sit on "Pending"
+     *     for a package in a file the user has not wired up yet
+     *   - manual pins, so a version can be resolved before the import exists
+     *   - the framework runtimes, since react/jsx-runtime is injected by the
+     *     compiler and never appears in user code
+     */
+    const specifiers = [
+      ...new Set([
+        ...ctx.bareSpecifiers,
+        ...detectDependencies(project).flatMap((dependency) => dependency.specifiers),
+        ...Object.keys(project.dependencies ?? {}),
+        ...requiredRuntimeSpecifiers(project.projectType),
+      ]),
+    ];
+
+    const resolutions = await resolvePackages(specifiers, {
+      projectType: project.projectType,
+      pins: project.dependencies ?? {},
+    });
+
+    const importMap: Record<string, string> = {};
+    const resolved: ResolvedPackage[] = [];
+    const unresolved: PackageResolutionError[] = [];
+
+    for (const resolution of resolutions) {
+      if (resolution.ok) {
+        importMap[resolution.resolved.specifier] = resolution.resolved.url;
+        resolved.push(resolution.resolved);
+      } else {
+        unresolved.push(resolution.error);
+      }
+    }
+
+    // A failed package is a build error: the module would throw at runtime with
+    // a far less useful message than the resolver's.
+    const resolutionErrors: BundleError[] = unresolved.map((error) => ({ message: error.message }));
+
     return {
       code: result.outputFiles?.[0]?.text ?? '',
       css: ctx.collectedCss.join('\n\n'),
-      errors: (result.errors ?? []).map(toBundleError),
+      errors: [...(result.errors ?? []).map(toBundleError), ...resolutionErrors],
       warnings: (result.warnings ?? []).map(toBundleError),
+      importMap,
+      resolved,
+      unresolved,
     };
   } catch (error) {
     const buildFailure = error as { errors?: Array<{ text: string; location?: never }> };
@@ -575,14 +638,11 @@ export const buildProjectWith = async (
   }
 };
 
-/** CDN runtimes injected into the preview iframe for each framework. */
-export const RUNTIME_SCRIPTS: Record<Exclude<ProjectType, 'plain'>, string[]> = {
-  react: [
-    'https://unpkg.com/react@18/umd/react.production.min.js',
-    'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-  ],
-  vue: ['https://unpkg.com/vue@3/dist/vue.global.prod.js'],
-};
+/**
+ * Framework runtimes are no longer injected as UMD <script> tags — they are
+ * resolved through the import map like any other package, which guarantees a
+ * single shared instance between user code and CDN packages.
+ */
 
 export const isBundledProjectType = (projectType: ProjectType): boolean => projectType !== 'plain';
 

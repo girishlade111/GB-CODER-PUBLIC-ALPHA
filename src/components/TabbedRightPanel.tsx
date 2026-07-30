@@ -30,6 +30,8 @@ interface TabbedRightPanelProps {
     projectType?: ProjectType;
     bundledCode?: string;
     bundledCss?: string;
+    importMap?: Record<string, string>;
+    isResolvingPackages?: boolean;
 }
 
 const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
@@ -49,6 +51,8 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
     projectType = 'plain',
     bundledCode = '',
     bundledCss = '',
+    importMap = {},
+    isResolvingPackages = false,
 }, ref) => {
     const [activeTab, setActiveTab] = useState<TabType>('preview');
     const internalRef = useRef<HTMLElement>(null);
@@ -87,6 +91,8 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                         projectType={projectType}
                         bundledCode={bundledCode}
                         bundledCss={bundledCss}
+                        importMap={importMap}
+                        isResolvingPackages={isResolvingPackages}
                     />
                 );
             case 'console':

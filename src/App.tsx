@@ -4,6 +4,7 @@ import { Code2, MessageSquare, Mic, LayoutTemplate, BarChart3, CheckCircle, Zap 
 import NavigationBar from './components/NavigationBar';
 import AppSidebar from './components/AppSidebar';
 import FileExplorer from './components/FileExplorer';
+import DependenciesPanel from './components/DependenciesPanel';
 import MultiFileEditor from './components/MultiFileEditor';
 import EditorPanel from './components/EditorPanel';
 import TabbedRightPanel from './components/TabbedRightPanel';
@@ -254,6 +255,7 @@ function App() {
   const [autoSaveEnabled, setAutoSaveEnabled] = useLocalStorage<boolean>('gb-coder-autosave-enabled', true);
   const [showSnippets, setShowSnippets] = useState<boolean>(false);
   const [showFileExplorer, setShowFileExplorer] = useState<boolean>(false);
+  const [showDependencies, setShowDependencies] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<AppView>('editor');
   const [previewShareCode, setPreviewShareCode] = useState<{ html: string; css: string; javascript: string } | null>(null);
   const [previewShortId, setPreviewShortId] = useState('');
@@ -618,6 +620,22 @@ function App() {
    * Switches project type, replacing the workspace with that type's starter
    * files. Plain keeps the user's current code so toggling back is lossless.
    */
+  /** Pins a package version so it survives before the import is written. */
+  const handlePinDependency = useCallback((name: string, version: string) => {
+    setFileProject((current) => ({
+      ...current,
+      dependencies: { ...(current.dependencies ?? {}), [name]: version },
+    }));
+  }, []);
+
+  const handleUnpinDependency = useCallback((name: string) => {
+    setFileProject((current) => {
+      const { [name]: removed, ...rest } = current.dependencies ?? {};
+      void removed;
+      return { ...current, dependencies: rest };
+    });
+  }, []);
+
   const handleNewProject = useCallback((projectType: ProjectType) => {
     setFileProject((current) => {
       if (current.projectType === projectType) return current;
@@ -1471,6 +1489,8 @@ function App() {
         <AppSidebar
           onToggleFiles={() => setShowFileExplorer((open) => !open)}
           isFilesOpen={showFileExplorer}
+          onToggleDependencies={() => setShowDependencies((open) => !open)}
+          isDependenciesOpen={showDependencies}
           onOpenTemplates={() => setShowTemplates(true)}
           onOpenAITools={() => setShowAIChat(true)}
           onOpenSettings={handleSettingsToggle}
@@ -1481,6 +1501,18 @@ function App() {
             projectType={fileProject.projectType}
             workspace={workspace}
             onClose={() => setShowFileExplorer(false)}
+          />
+        )}
+
+        {showDependencies && !isMobile && (
+          <DependenciesPanel
+            project={fileProject}
+            resolvedPackages={projectBundle.resolvedPackages}
+            unresolvedPackages={projectBundle.unresolvedPackages}
+            isResolving={projectBundle.isResolvingPackages}
+            onPin={handlePinDependency}
+            onUnpin={handleUnpinDependency}
+            onClose={() => setShowDependencies(false)}
           />
         )}
 
@@ -1572,6 +1604,8 @@ function App() {
               projectType={fileProject.projectType}
               bundledCode={projectBundle.bundle.code}
               bundledCss={projectBundle.bundle.css}
+              importMap={projectBundle.bundle.importMap}
+              isResolvingPackages={projectBundle.isResolvingPackages}
             />
 
             {/* Snippets Sidebar - Phase 3 */}
