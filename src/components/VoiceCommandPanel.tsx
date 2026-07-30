@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import {
   ChevronDown,
   ChevronUp,
@@ -53,7 +53,17 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
   const [typedCommand, setTypedCommand] = useState('');
   const [showAllCommands, setShowAllCommands] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const commands = useMemo(() => voiceCommandService.getCommands(), []);
+  /*
+   * Derived from the intent registry rather than a hardcoded list, so the
+   * reference and its count stay accurate as actions are added, and gated
+   * actions (sandbox) stay hidden until available.
+   *
+   * Computed per render rather than memoized: the set depends on capabilities
+   * that can change at any time, and there is no honest dependency to key a
+   * memo on. It is a couple of dozen frozen objects, so the cost is noise.
+   */
+  const commandGroups = voiceCommandService.getCommandGroups();
+  const commandCount = commandGroups.reduce((total, group) => total + group.intents.length, 0);
 
   // Escape to dismiss, consistent with the other sidebar-triggered panels.
   useEffect(() => {
@@ -129,15 +139,16 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
   const handleLanguageSelect = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const next = event.target.value;
+      /*
+       * The service destroys and rebuilds the recognition instance and resumes
+       * listening itself. The panel used to stop and immediately restart here,
+       * which raced: the old instance's queued `onend` fired after the new
+       * session had started and reset it back to "not listening".
+       */
       voiceCommandService.setLanguage(next);
       onLanguageChange?.(next);
-      // The language only takes effect on a new session.
-      if (voice.isListening) {
-        voiceCommandService.stopListening();
-        voiceCommandService.startListening();
-      }
     },
-    [onLanguageChange, voice.isListening],
+    [onLanguageChange],
   );
 
   if (!isOpen) return null;
@@ -150,6 +161,10 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
         return 'Processing...';
       case 'done':
         return 'Done';
+      case 'switching':
+        return 'Switching language...';
+      case 'confirming':
+        return 'Confirm?';
       case 'error':
         return voice.error?.code === 'unsupported' ? 'Unavailable' : 'Needs attention';
       default:
@@ -165,6 +180,10 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
         return isDark ? 'bg-sky-500/15 text-sky-300' : 'bg-sky-50 text-sky-700';
       case 'done':
         return isDark ? 'bg-violet-500/15 text-violet-300' : 'bg-violet-50 text-violet-700';
+      case 'switching':
+        return isDark ? 'bg-sky-500/15 text-sky-300' : 'bg-sky-50 text-sky-700';
+      case 'confirming':
+        return isDark ? 'bg-amber-500/15 text-amber-200' : 'bg-amber-50 text-amber-800';
       case 'error':
         return isDark ? 'bg-amber-500/15 text-amber-300' : 'bg-amber-50 text-amber-700';
       default:
@@ -370,6 +389,53 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
           </div>
         )}
 
+        {/*
+          Borderline fuzzy match: confirm before acting. Answerable by voice
+          ("yes" / "no", handled in the service) or by clicking here.
+        */}
+        {voice.pendingSuggestion && (
+          <div
+            className={`mx-4 sm:mx-5 mt-3 rounded-xl border px-3 py-2.5 ${
+              isDark
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-100'
+                : 'bg-amber-50 border-amber-200 text-amber-900'
+            }`}
+            role="alert"
+            data-testid="voice-did-you-mean"
+          >
+            <p className="text-sm">
+              Did you mean{' '}
+              <span className="font-semibold">{voice.pendingSuggestion.description}</span>?
+              <span className={`ml-1 text-xs ${isDark ? 'text-amber-200/60' : 'text-amber-700/70'}`}>
+                ({Math.round(voice.pendingSuggestion.score * 100)}% match)
+              </span>
+            </p>
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => voiceCommandService.confirmSuggestion()}
+                data-testid="voice-confirm-suggestion"
+                className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
+              >
+                Yes, do it
+              </button>
+              <button
+                type="button"
+                onClick={() => voiceCommandService.dismissSuggestion()}
+                data-testid="voice-dismiss-suggestion"
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+                  isDark ? 'bg-white/10 text-gray-200 hover:bg-white/20' : 'bg-white text-gray-700 border border-gray-200'
+                }`}
+              >
+                No
+              </button>
+              <span className={`text-[11px] ${isDark ? 'text-amber-200/60' : 'text-amber-700/70'}`}>
+                or just say &ldquo;yes&rdquo; / &ldquo;no&rdquo;
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Suggestions */}
         <div className="px-4 sm:px-5 mt-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -443,7 +509,7 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
             }`}
           >
             {showAllCommands ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
-            {showAllCommands ? 'Hide' : 'Show'} all {commands.length} commands
+            {showAllCommands ? 'Hide' : 'Show'} all {commandCount} commands
             {voice.commandsExecuted > 0 && (
               <span className={isDark ? 'text-gray-600' : 'text-gray-400'}>
                 &middot; {voice.commandsExecuted} run this session
@@ -452,32 +518,50 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
           </button>
 
           {showAllCommands && (
-            <div className="mt-3 max-h-56 overflow-y-auto grid gap-2 sm:grid-cols-2">
-              {commands.map((command) => (
-                <div
-                  key={command.id}
-                  className={`rounded-xl border px-3 py-2 ${
-                    isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-gray-50'
-                  }`}
-                >
-                  <p className={`text-xs font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                    {command.description}
+            <div className="mt-3 max-h-64 overflow-y-auto space-y-3" data-testid="voice-command-list">
+              {commandGroups.map((group) => (
+                <div key={group.category}>
+                  <p
+                    className={`text-[10px] font-semibold uppercase tracking-wider mb-1.5 ${
+                      isDark ? 'text-gray-500' : 'text-gray-400'
+                    }`}
+                  >
+                    {group.category}
                   </p>
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {command.examples.map((example) => (
-                      <button
-                        key={example}
-                        type="button"
-                        onClick={() => runCommand(example)}
-                        title={`Run: ${example}`}
-                        className={`text-[11px] px-1.5 py-0.5 rounded transition-colors ${
-                          isDark
-                            ? 'bg-white/5 text-gray-400 hover:bg-white/15 hover:text-white'
-                            : 'bg-white text-gray-500 border border-gray-200 hover:text-gray-900'
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {group.intents.map((intent) => (
+                      <div
+                        key={intent.id}
+                        data-testid="voice-command-entry"
+                        className={`rounded-xl border px-3 py-2 ${
+                          isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-gray-50'
                         }`}
                       >
-                        &ldquo;{example}&rdquo;
-                      </button>
+                        <p
+                          className={`text-xs font-semibold ${
+                            isDark ? 'text-gray-200' : 'text-gray-800'
+                          }`}
+                        >
+                          {intent.description}
+                        </p>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {intent.examples.map((example) => (
+                            <button
+                              key={example}
+                              type="button"
+                              onClick={() => runCommand(example)}
+                              title={`Run: ${example}`}
+                              className={`text-[11px] px-1.5 py-0.5 rounded transition-colors ${
+                                isDark
+                                  ? 'bg-white/5 text-gray-400 hover:bg-white/15 hover:text-white'
+                                  : 'bg-white text-gray-500 border border-gray-200 hover:text-gray-900'
+                              }`}
+                            >
+                              &ldquo;{example}&rdquo;
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

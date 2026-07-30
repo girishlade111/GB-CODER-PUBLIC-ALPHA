@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   CheckCircle,
   Copy,
@@ -45,6 +45,10 @@ interface EnhancedConsoleProps {
   resolvedPackages: ShellPackage[];
   unresolvedPackages: ShellPackageError[];
   isResolvingPackages: boolean;
+  /** Voice-driven sub-tab focus request; the nonce allows repeats. */
+  subTabRequest?: { tab: ConsoleMode; nonce: number } | null;
+  /** Called once the request has been applied, so it is not replayed. */
+  onSubTabRequestHandled?: () => void;
   className?: string;
 }
 
@@ -68,6 +72,8 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
   resolvedPackages,
   unresolvedPackages,
   isResolvingPackages,
+  subTabRequest,
+  onSubTabRequestHandled,
   className = '',
 }) => {
   const [activeMode, setActiveMode] = useState<ConsoleMode>('console');
@@ -79,6 +85,14 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
   const [previewCount, setPreviewCount] = useState(0);
   /** Set the first time the Terminal tab is opened; never unset. */
   const [hasOpenedTerminal, setHasOpenedTerminal] = useState(false);
+
+  /* A voice command can focus a sub-tab directly. */
+  useEffect(() => {
+    if (!subTabRequest) return;
+    setActiveMode(subTabRequest.tab);
+    if (subTabRequest.tab === 'terminal') setHasOpenedTerminal(true);
+    onSubTabRequestHandled?.();
+  }, [subTabRequest, onSubTabRequestHandled]);
 
   /** Count shown next to "GB Console" for the active sub-tab. */
   const itemCount = useMemo(() => {

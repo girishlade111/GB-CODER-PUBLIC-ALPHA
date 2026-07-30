@@ -1,4 +1,4 @@
-import React, { useState, Suspense, forwardRef, useRef } from 'react';
+import React, { useEffect, useState, Suspense, forwardRef, useRef } from 'react';
 import { Eye, Terminal } from 'lucide-react';
 import PreviewPanel from './PreviewPanel';
 import { JSEditorMode } from '../types';
@@ -46,6 +46,9 @@ interface TabbedRightPanelProps {
     resolvedPackages: ShellPackage[];
     unresolvedPackages: ShellPackageError[];
 
+    /** Voice-driven focus request: outer tab plus console sub-tab. */
+    panelRequest?: { tab: 'console' | 'validator' | 'terminal' | 'preview'; nonce: number } | null;
+
     // Multi-file project props (plain mode leaves these at their defaults)
     projectType?: ProjectType;
     bundledCode?: string;
@@ -79,6 +82,7 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
     // Terminal props
     resolvedPackages,
     unresolvedPackages,
+    panelRequest,
     // Multi-file project props
     projectType = 'plain',
     bundledCode = '',
@@ -87,6 +91,27 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
     isResolvingPackages = false,
 }, ref) => {
     const [activeTab, setActiveTab] = useState<TabType>('preview');
+
+    /*
+     * A voice command can ask for a specific panel. `preview` maps to the outer
+     * Live Preview tab; the other three live inside the console panel, so the
+     * outer tab switches and the request is forwarded to the sub-tab strip.
+     */
+    /*
+     * One-shot: consumed once applied. Holding it indefinitely re-applied the
+     * last request whenever the console panel remounted (which happens on every
+     * outer tab switch), silently dragging the user back to a sub-tab they had
+     * since navigated away from.
+     */
+    const [subTabRequest, setSubTabRequest] = useState<
+        { tab: 'console' | 'validator' | 'terminal' | 'preview'; nonce: number } | null
+    >(null);
+
+    useEffect(() => {
+        if (!panelRequest) return;
+        setActiveTab(panelRequest.tab === 'preview' ? 'preview' : 'console');
+        if (panelRequest.tab !== 'preview') setSubTabRequest(panelRequest);
+    }, [panelRequest]);
     const internalRef = useRef<HTMLElement>(null);
     
     // Use the passed ref or internal ref
@@ -161,6 +186,8 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                                 resolvedPackages={resolvedPackages}
                                 unresolvedPackages={unresolvedPackages}
                                 isResolvingPackages={isResolvingPackages}
+                                subTabRequest={subTabRequest}
+                                onSubTabRequestHandled={() => setSubTabRequest(null)}
                                 className="flex-1"
                             />
                         </div>

@@ -10,25 +10,49 @@
  */
 import {
   UNRECOGNIZED_MESSAGE,
-  VOICE_COMMANDS,
   VoiceActionId,
-  VoiceCommandDefinition,
+  VoiceCapabilities,
   VoiceDispatchAction,
-  getVisibleCommands,
+  getIntent,
+  getIntentsByCategory,
+  getListedIntents,
+  normalizeTranscript,
   parseVoiceCommand,
 } from './voiceCommandParser';
 
 export type {
   VoiceActionId,
-  VoiceCommandDefinition,
   VoiceDispatchAction,
   VoiceExportTarget,
   VoiceModalTarget,
+  VoicePanelTarget,
+  VoiceCapabilities,
+  VoiceIntent,
+  VoiceCategory,
 } from './voiceCommandParser';
-export { UNRECOGNIZED_MESSAGE, VOICE_SUGGESTIONS } from './voiceCommandParser';
+export {
+  UNRECOGNIZED_MESSAGE,
+  VOICE_SUGGESTIONS,
+  EXECUTE_THRESHOLD,
+  SUGGEST_THRESHOLD,
+  getIntentsByCategory,
+} from './voiceCommandParser';
 
-/** Lifecycle shown in the overlay. */
-export type VoiceStatus = 'idle' | 'listening' | 'processing' | 'done' | 'error';
+/**
+ * Lifecycle shown in the overlay.
+ *
+ * `switching` covers the language swap, which requires destroying and rebuilding
+ * the recognition instance and so is not instant. `confirming` is the
+ * "did you mean …?" state for a borderline fuzzy match.
+ */
+export type VoiceStatus =
+  | 'idle'
+  | 'listening'
+  | 'processing'
+  | 'done'
+  | 'error'
+  | 'switching'
+  | 'confirming';
 
 export type VoiceErrorCode =
   | 'unsupported'
@@ -52,6 +76,32 @@ export interface VoiceCommandDetail {
   transcript: string;
 }
 
+/**
+ * Every recognition attempt, dispatched on `voice-attempt` so the app can mirror
+ * it into the Console tab. Makes misfires diagnosable without devtools.
+ */
+export interface VoiceAttemptDetail {
+  transcript: string;
+  normalized: string;
+  /** Null when nothing scored above the rejection floor. */
+  action: VoiceActionId | null;
+  param?: string;
+  score: number;
+  /** The synonym or trigger that produced the score. */
+  matchedPhrase: string | null;
+  outcome: 'executed' | 'confirming' | 'rejected';
+}
+
+/** A borderline match awaiting a yes/no. */
+export interface VoiceSuggestion {
+  action: VoiceActionId;
+  param?: string;
+  /** Human description of the action, used in the prompt and the TTS. */
+  description: string;
+  transcript: string;
+  score: number;
+}
+
 export interface VoiceState {
   status: VoiceStatus;
   isListening: boolean;
@@ -68,6 +118,12 @@ export interface VoiceState {
   language: string;
   voiceFeedback: boolean;
   commandsExecuted: number;
+  /** True while the recognition instance is being rebuilt for a new language. */
+  isSwitchingLanguage: boolean;
+  /** Set when a match scored in the confirmation band. */
+  pendingSuggestion: VoiceSuggestion | null;
+  /** Confidence of the most recent attempt, for the overlay. */
+  lastScore: number | null;
 }
 
 export interface VoiceCommandStats {
@@ -197,17 +253,50 @@ const describeError = (code: string): VoiceError => {
 
 /** How long the "Done" state lingers before returning to idle. */
 const DONE_LINGER_MS = 1400;
-/** Guards the continuous-mode auto-restart loop against error storms. */
+/** Guards the auto-restart loop against error storms. */
 const MAX_CONSECUTIVE_RESTARTS = 30;
+/** Breathing room between destroying an instance and starting its replacement. */
+const LANGUAGE_SWAP_MS = 250;
+/** Where the chosen recognition language is remembered across reloads. */
+const LANGUAGE_STORAGE_KEY = 'gb-coder-voice-language';
+const DEFAULT_LANGUAGE = 'en-US';
+
+/** Phrases that accept or reject a "did you mean …?" prompt. */
+const AFFIRMATIVES = new Set([
+  'yes', 'yeah', 'yep', 'yup', 'sure', 'ok', 'okay', 'correct', 'right',
+  'confirm', 'do it', 'go ahead', 'that one', 'affirmative',
+]);
+const NEGATIVES = new Set([
+  'no', 'nope', 'nah', 'cancel', 'never mind', 'nevermind', 'stop', 'wrong',
+  'forget it', 'negative',
+]);
+
+/** Reads the persisted language, falling back to English. */
+const loadStoredLanguage = (): string => {
+  if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
+  try {
+    return window.localStorage.getItem(LANGUAGE_STORAGE_KEY) || DEFAULT_LANGUAGE;
+  } catch {
+    // Private browsing can throw on access.
+    return DEFAULT_LANGUAGE;
+  }
+};
 
 class VoiceCommandService {
   private recognition: SpeechRecognitionLike | null = null;
   private readonly listeners = new Set<(state: VoiceState) => void>();
   private onCommandExecuted?: (command: string) => void;
   private doneTimer: ReturnType<typeof setTimeout> | null = null;
-  /** True between `startListening()` and an explicit stop; drives auto-restart. */
+  /** True between `startListening()` and a stop; drives auto-restart. */
   private wantsToListen = false;
+  /**
+   * Set when the user (or a completed single-shot command) stopped the mic, as
+   * opposed to the engine ending the session on its own. Auto-restart checks
+   * this so turning the mic off stays off.
+   */
+  private intentionalStop = false;
   private restartCount = 0;
+  private capabilities: VoiceCapabilities = {};
   private stats: VoiceCommandStats = {
     commandsExecuted: 0,
     lastCommand: null,
@@ -225,9 +314,12 @@ class VoiceCommandService {
     supported: false,
     synthesisSupported: false,
     continuous: false,
-    language: 'en-US',
+    language: DEFAULT_LANGUAGE,
     voiceFeedback: false,
     commandsExecuted: 0,
+    isSwitchingLanguage: false,
+    pendingSuggestion: null,
+    lastScore: null,
   };
 
   constructor() {
@@ -236,6 +328,8 @@ class VoiceCommandService {
       ...this.state,
       supported,
       synthesisSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
+      // Restored so the first instance is built with the user's language.
+      language: loadStoredLanguage(),
     };
   }
 
@@ -356,10 +450,20 @@ class VoiceCommandService {
 
     recognition.onend = () => {
       /*
-       * Chrome ends the session after a pause even with `continuous = true`, so
-       * continuous mode is really "restart until the user says stop".
+       * The Web Speech API ends a session on silence, on transient errors, and
+       * sometimes for no stated reason — in every browser, and regardless of the
+       * `continuous` flag. Restarting is therefore the default whenever the user
+       * has not asked us to stop.
+       *
+       * This previously only restarted in continuous mode, so a single-command
+       * session that timed out before the user spoke simply went dead with the
+       * overlay still showing "Listening...".
        */
-      if (this.wantsToListen && this.state.continuous && this.restartCount < MAX_CONSECUTIVE_RESTARTS) {
+      if (
+        !this.intentionalStop &&
+        this.wantsToListen &&
+        this.restartCount < MAX_CONSECUTIVE_RESTARTS
+      ) {
         this.restartCount += 1;
         try {
           recognition.start();
@@ -373,15 +477,44 @@ class VoiceCommandService {
       this.setState({
         isListening: false,
         interimTranscript: '',
-        // Preserve a terminal error or the brief "done" confirmation.
+        // Preserve a terminal error, the "done" confirmation, or a pending prompt.
         status:
-          this.state.status === 'error' || this.state.status === 'done'
+          this.state.status === 'error' ||
+          this.state.status === 'done' ||
+          this.state.status === 'confirming'
             ? this.state.status
             : 'idle',
       });
     };
 
     return recognition;
+  }
+
+  /**
+   * Destroys the current recognition instance.
+   *
+   * Handlers are detached *before* `abort()`, which is the crux of the language
+   * switching bug: aborting fires `onend` (and sometimes `onerror`) on a later
+   * tick, and that stale callback would run against the replacement session —
+   * flipping `isListening` back to false and clearing `wantsToListen` on an
+   * instance that had just started successfully.
+   */
+  private teardownRecognition(): void {
+    const recognition = this.recognition;
+    this.recognition = null;
+    if (!recognition) return;
+
+    recognition.onstart = null;
+    recognition.onresult = null;
+    recognition.onerror = null;
+    recognition.onend = null;
+    recognition.onspeechstart = null;
+
+    try {
+      recognition.abort();
+    } catch {
+      // Already dead; nothing to release.
+    }
   }
 
   /** Starts listening. Returns false when speech recognition is unavailable. */
@@ -402,11 +535,13 @@ class VoiceCommandService {
     if (this.state.isListening) return true;
 
     this.clearDoneTimer();
-    this.recognition?.abort();
+    // Always a fresh instance: some Chrome builds leave an aborted one unusable.
+    this.teardownRecognition();
     this.recognition = this.createRecognition();
     if (!this.recognition) return false;
 
     this.wantsToListen = true;
+    this.intentionalStop = false;
     this.restartCount = 0;
 
     try {
@@ -436,6 +571,7 @@ class VoiceCommandService {
 
   public stopListening() {
     this.wantsToListen = false;
+    this.intentionalStop = true;
     if (!this.recognition) {
       this.setState({ status: 'idle', isListening: false, interimTranscript: '' });
       return;
@@ -453,12 +589,9 @@ class VoiceCommandService {
   /** Hard stop: drops any in-flight audio and clears the session transcript. */
   public cancel() {
     this.wantsToListen = false;
+    this.intentionalStop = true;
     this.clearDoneTimer();
-    try {
-      this.recognition?.abort();
-    } catch {
-      // Nothing to abort.
-    }
+    this.teardownRecognition();
     this.stopSpeaking();
     this.setState({
       status: 'idle',
@@ -466,6 +599,8 @@ class VoiceCommandService {
       transcript: '',
       interimTranscript: '',
       error: null,
+      pendingSuggestion: null,
+      isSwitchingLanguage: false,
     });
   }
 
@@ -490,28 +625,127 @@ class VoiceCommandService {
 
     this.clearDoneTimer();
 
-    const match = parseVoiceCommand(transcript);
+    // A pending "did you mean …?" takes priority: the next thing said is an
+    // answer to that question, not a new command.
+    if (this.state.pendingSuggestion) {
+      const answer = normalizeTranscript(transcript);
+      if (AFFIRMATIVES.has(answer)) return this.confirmSuggestion();
+      if (NEGATIVES.has(answer)) {
+        this.dismissSuggestion();
+        return null;
+      }
+      // Anything else replaces the question and is matched normally.
+      this.setState({ pendingSuggestion: null });
+    }
 
-    if (!match) {
+    const match = parseVoiceCommand(transcript, this.capabilities);
+
+    /* Below the rejection floor: say so rather than guessing. */
+    if (!match || match.confidence === 'low') {
       this.setState({
         status: 'error',
         transcript,
         interimTranscript: '',
         lastCommand: transcript,
         lastAction: null,
+        lastScore: match?.score ?? 0,
         error: { code: 'unknown', message: UNRECOGNIZED_MESSAGE },
+      });
+      this.dispatchAttempt({
+        transcript,
+        normalized: match?.normalized ?? normalizeTranscript(transcript),
+        action: null,
+        score: match?.score ?? 0,
+        matchedPhrase: match?.matchedPhrase ?? null,
+        outcome: 'rejected',
       });
       this.dispatch({ action: 'unrecognized', transcript });
       return null;
     }
 
-    // "Stop listening" is handled here rather than by the app.
-    if (match.id === 'stop_listening') {
-      this.setState({ transcript, lastCommand: transcript, lastAction: match.id });
+    /* Borderline: ask before acting. */
+    if (match.confidence === 'medium') {
+      const suggestion: VoiceSuggestion = {
+        action: match.id,
+        param: match.param,
+        description: match.description,
+        transcript,
+        score: match.score,
+      };
+
+      this.setState({
+        status: 'confirming',
+        transcript,
+        interimTranscript: '',
+        lastCommand: transcript,
+        lastScore: match.score,
+        error: null,
+        pendingSuggestion: suggestion,
+      });
+
+      this.dispatchAttempt({
+        transcript,
+        normalized: match.normalized,
+        action: match.id,
+        param: match.param,
+        score: match.score,
+        matchedPhrase: match.matchedPhrase,
+        outcome: 'confirming',
+      });
+
+      this.speak(`Did you mean ${match.description}?`);
+      return null;
+    }
+
+    return this.execute(match.id, match.param, transcript, {
+      normalized: match.normalized,
+      score: match.score,
+      matchedPhrase: match.matchedPhrase,
+    });
+  }
+
+  /**
+   * Runs a resolved action. Shared by direct matches and confirmed suggestions
+   * so both take identical paths, including spoken feedback and logging.
+   */
+  private execute(
+    action: VoiceActionId,
+    param: string | undefined,
+    transcript: string,
+    diagnostics: { normalized: string; score: number; matchedPhrase: string | null },
+  ): VoiceActionId {
+    this.dispatchAttempt({
+      transcript,
+      normalized: diagnostics.normalized,
+      action,
+      param,
+      score: diagnostics.score,
+      matchedPhrase: diagnostics.matchedPhrase,
+      outcome: 'executed',
+    });
+
+    // Meta actions the service owns rather than the app.
+    if (action === 'stop_listening') {
+      this.setState({
+        transcript,
+        lastCommand: transcript,
+        lastAction: action,
+        lastScore: diagnostics.score,
+        pendingSuggestion: null,
+      });
       this.stopListening();
       this.setState({ status: 'done' });
       this.scheduleIdle();
-      return match.id;
+      return action;
+    }
+
+    if (action === 'set_language' && param) {
+      this.setState({ transcript, lastCommand: transcript, lastAction: action, status: 'done' });
+      this.speak('Switching language');
+      // Still dispatched below so the app can persist it into settings.
+      this.setLanguage(param);
+      this.dispatch({ action, param, transcript });
+      return action;
     }
 
     this.stats = {
@@ -525,12 +759,14 @@ class VoiceCommandService {
       transcript,
       interimTranscript: '',
       lastCommand: transcript,
-      lastAction: match.id,
+      lastAction: action,
+      lastScore: diagnostics.score,
       error: null,
+      pendingSuggestion: null,
       commandsExecuted: this.stats.commandsExecuted,
     });
 
-    this.dispatch({ action: match.id, param: match.param, transcript });
+    this.dispatch({ action, param, transcript });
     this.onCommandExecuted?.(transcript);
 
     /*
@@ -542,7 +778,29 @@ class VoiceCommandService {
     }
 
     this.scheduleIdle();
-    return match.id;
+    return action;
+  }
+
+  /** Accepts the pending "did you mean …?" suggestion. */
+  public confirmSuggestion(): VoiceActionId | null {
+    const suggestion = this.state.pendingSuggestion;
+    if (!suggestion) return null;
+
+    this.setState({ pendingSuggestion: null, status: 'processing' });
+    return this.execute(suggestion.action, suggestion.param, suggestion.transcript, {
+      normalized: normalizeTranscript(suggestion.transcript),
+      score: suggestion.score,
+      matchedPhrase: 'confirmed suggestion',
+    });
+  }
+
+  /** Rejects the pending suggestion without running anything. */
+  public dismissSuggestion(): void {
+    if (!this.state.pendingSuggestion) return;
+    this.setState({
+      pendingSuggestion: null,
+      status: this.state.isListening ? 'listening' : 'idle',
+    });
   }
 
   /** Typed fallback from the panel — never touches the microphone. */
@@ -564,6 +822,18 @@ class VoiceCommandService {
     window.dispatchEvent(new CustomEvent<VoiceCommandDetail>('voice-command', { detail }));
   }
 
+  /**
+   * Publishes a recognition attempt for the Console tab.
+   *
+   * Separate from `voice-command` on purpose: every attempt is logged, including
+   * the ones that were rejected or only offered as a suggestion, which are
+   * precisely the cases worth debugging.
+   */
+  private dispatchAttempt(detail: VoiceAttemptDetail) {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent<VoiceAttemptDetail>('voice-attempt', { detail }));
+  }
+
   // ------------------------------------------------------------ preferences
 
   public setContinuous(continuous: boolean) {
@@ -572,10 +842,56 @@ class VoiceCommandService {
     if (this.recognition) this.recognition.continuous = continuous;
   }
 
+  /**
+   * Switches the recognition language.
+   *
+   * The previous implementation assigned `recognition.lang` on the live
+   * instance. Browser engines read `lang` when `start()` is called and ignore
+   * later writes, so every language except whichever was set at first init was
+   * silently ineffective. The instance is therefore destroyed and rebuilt, and
+   * listening resumes only after the swap completes.
+   */
   public setLanguage(language: string) {
-    if (this.state.language === language) return;
-    this.setState({ language });
-    if (this.recognition) this.recognition.lang = language;
+    if (!language || this.state.language === language) return;
+
+    try {
+      window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    } catch {
+      // Persistence is a convenience; never block the switch on it.
+    }
+
+    // Resume afterwards if the mic was live, or was about to be.
+    const shouldResume = this.state.isListening || this.wantsToListen;
+
+    this.teardownRecognition();
+    this.setState({
+      language,
+      isSwitchingLanguage: shouldResume,
+      status: shouldResume ? 'switching' : this.state.status,
+      isListening: false,
+      interimTranscript: '',
+    });
+
+    if (!shouldResume) {
+      this.setState({ isSwitchingLanguage: false });
+      return;
+    }
+
+    /*
+     * A short gap before restarting: starting a new instance in the same tick as
+     * destroying the old one makes some engines reject `start()` outright.
+     */
+    setTimeout(() => {
+      this.setState({ isSwitchingLanguage: false });
+      // Only resume if nothing intervened (a stop, or another switch).
+      if (this.state.language !== language) return;
+      this.startListening();
+    }, LANGUAGE_SWAP_MS);
+  }
+
+  /** Declares which gated capabilities exist, e.g. an attached sandbox. */
+  public setCapabilities(capabilities: VoiceCapabilities) {
+    this.capabilities = { ...capabilities };
   }
 
   public setVoiceFeedback(enabled: boolean) {
@@ -630,12 +946,29 @@ class VoiceCommandService {
     this.onCommandExecuted = callback;
   }
 
-  public getCommands(): VoiceCommandDefinition[] {
-    return getVisibleCommands();
+  /**
+   * Commands to advertise, straight from the registry.
+   *
+   * Registry-derived so the panel's list and count cannot drift from what is
+   * actually matchable, and so gated actions stay hidden until available.
+   */
+  public getCommands() {
+    return getListedIntents(this.capabilities);
   }
 
-  public getAllCommands(): readonly VoiceCommandDefinition[] {
-    return VOICE_COMMANDS;
+  /** The same list grouped by category, for the reference panel. */
+  public getCommandGroups() {
+    return getIntentsByCategory(this.capabilities);
+  }
+
+  /** Total advertised commands — the number shown on the disclosure button. */
+  public getCommandCount(): number {
+    return getListedIntents(this.capabilities).length;
+  }
+
+  /** Human description for an action id, used for TTS confirmations. */
+  public describeAction(action: VoiceActionId): string {
+    return getIntent(action)?.description ?? action;
   }
 
   public getStats(): VoiceCommandStats {
