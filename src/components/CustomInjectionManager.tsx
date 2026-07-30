@@ -110,18 +110,18 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm`} onClick={handleClose}>
       <div
-        className={`w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden ${
-          isDark ? 'bg-matte-black border border-gray-700' : 'bg-white border border-gray-200'
+        className={`w-full max-w-5xl h-[85vh] rounded-lg shadow-elevated flex flex-col overflow-hidden ${
+          isDark ? 'bg-surface-raised border border-stroke-subtle' : 'bg-white border border-gray-200'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${
-          isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
+          isDark ? 'border-stroke-subtle bg-surface-raised' : 'border-gray-200 bg-gray-50'
         }`}>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl">
-              <Zap className="w-6 h-6 text-white" />
+            <div className="p-2 bg-accent-subtle text-accent-hover rounded-md">
+              <Zap className="w-5 h-5" />
             </div>
             <div>
               <h2 className={`text-lg font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
@@ -135,7 +135,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleApplyInjections}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-fg rounded-md text-sm font-medium hover:bg-accent-hover transition-colors"
             >
               <Save className="w-4 h-4" />
               Apply
@@ -143,7 +143,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
             <button
               onClick={handleClose}
               className={`p-2 rounded-lg transition-colors ${
-                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+                isDark ? 'hover:bg-white/5 text-content-secondary hover:text-content-primary' : 'hover:bg-gray-200 text-gray-600'
               }`}
               title="Close"
             >
@@ -181,14 +181,14 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
         </div>
 
         {/* Content */}
-        <div className={`flex-1 overflow-y-auto p-6 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`} onClick={(e) => e.stopPropagation()}>
+        <div className={`flex-1 overflow-y-auto p-6 ${isDark ? 'bg-surface-raised' : 'bg-gray-50'}`} onClick={(e) => e.stopPropagation()}>
           {activeTab === 'custom' ? (
             <div className="space-y-4">
               {/* Add New Button */}
               {!isAddingNew && (
                 <button
                   onClick={() => setIsAddingNew(true)}
-                  className="w-full p-4 border-2 border-dashed rounded-xl border-gray-600 text-gray-400 hover:border-purple-500 hover:text-purple-500 transition-colors flex items-center justify-center gap-2"
+                  className="w-full p-4 border-2 border-dashed rounded-lg border-gray-600 text-gray-400 hover:border-purple-500 hover:text-purple-500 transition-colors flex items-center justify-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
                   Add Custom Injection
@@ -197,7 +197,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
 
               {/* Add New Form */}
               {isAddingNew && (
-                <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white border'}`}>
+                <div className={`p-4 rounded-lg ${isDark ? 'bg-surface-overlay border border-stroke-subtle' : 'bg-white border'}`}>
                   <div className="grid gap-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -267,7 +267,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                       </button>
                       <button
                         onClick={handleAddInjection}
-                        className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg"
+                        className="px-4 py-2 bg-accent text-accent-fg rounded-md text-sm font-medium hover:bg-accent-hover transition-colors"
                       >
                         Save Injection
                       </button>
@@ -280,7 +280,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
               {customInjections.map((injection) => (
                 <div
                   key={injection.id}
-                  className={`p-4 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white border'}`}
+                  className={`p-4 rounded-lg ${isDark ? 'bg-surface-overlay border border-stroke-subtle' : 'bg-white border'}`}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-3">
@@ -314,7 +314,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                     </div>
                   </div>
                   <pre className={`p-3 rounded-lg overflow-x-auto text-sm ${
-                    isDark ? 'bg-gray-900 text-gray-300' : 'bg-gray-100 text-gray-700'
+                    isDark ? 'bg-surface-canvas text-content-secondary' : 'bg-gray-100 text-gray-700'
                   }`}>
                     <code>{injection.code.substring(0, 200)}{injection.code.length > 200 ? '...' : ''}</code>
                   </pre>
@@ -339,7 +339,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                  isDark ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-900'
+                  isDark ? 'bg-surface-overlay text-content-primary' : 'bg-gray-100 text-gray-900'
                 }`}
               />
 
@@ -359,11 +359,11 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                       {categoryPresets.map((preset) => (
                         <div
                           key={preset.id}
-                          className={`p-4 rounded-xl ${
+                          className={`p-4 rounded-lg ${
                             selectedPresets.includes(preset.id)
                               ? 'border-2 border-purple-500'
                               : isDark
-                              ? 'bg-gray-800 border border-gray-700'
+                              ? 'bg-surface-overlay border border-stroke-subtle'
                               : 'bg-white border border-gray-200'
                           }`}
                         >
@@ -383,7 +383,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                               onClick={() => handleTogglePreset(preset.id)}
                               className={`ml-4 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                                 selectedPresets.includes(preset.id)
-                                  ? 'bg-purple-500 text-white'
+                                  ? 'bg-accent text-accent-fg'
                                   : isDark
                                   ? 'bg-gray-700 text-gray-300'
                                   : 'bg-gray-200 text-gray-700'
@@ -413,7 +413,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
 
         {/* Footer Stats */}
         <div className={`px-4 py-3 border-t ${
-          isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
+          isDark ? 'border-stroke-subtle bg-surface-raised' : 'border-gray-200 bg-gray-50'
         }`}>
           <div className="flex items-center justify-between text-sm">
             <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>

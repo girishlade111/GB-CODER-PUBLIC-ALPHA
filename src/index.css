@@ -2,199 +2,286 @@
 @tailwind components;
 @tailwind utilities;
 
-/* VS Code-style transition presets */
+/* ─── Design tokens ──────────────────────────────────────────────────────────
+   Modern dev-tool dark theme. Surfaces step up in lightness as elements lift
+   off the canvas; a single accent carries all interactive emphasis.
+   Keep in sync with theme.extend in tailwind.config.js.
+--------------------------------------------------------------------------- */
 :root {
+    /* Motion */
     --transition-fast: 120ms ease-out;
     --transition-normal: 200ms ease-out;
     --transition-slow: 300ms ease-out;
+
+    /* Surfaces (darkest → lightest) */
+    --surface-canvas: #0a0a0a;
+    --surface-base: #111111;
+    --surface-raised: #18181b;
+    --surface-overlay: #1f1f23;
+    --surface-hover: #27272a;
+
+    /* Hover/active wash applied over any surface */
+    --hover-overlay: rgba(255, 255, 255, 0.05);
+    --active-overlay: rgba(255, 255, 255, 0.08);
+
+    /* Strokes — subtle dividers rather than harsh borders */
+    --stroke-subtle: #27272a;
+    --stroke-strong: #3f3f46;
+
+    /* Text */
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+
+    /* Accent (single accent colour for the whole product) */
+    --accent: #7c3aed;
+    --accent-hover: #8b5cf6;
+    --accent-muted: #6d28d9;
+    --accent-subtle: rgba(124, 58, 237, 0.12);
+
+    /* Radius scale */
+    --radius-sm: 4px;
+    /* tags, badges */
+    --radius-md: 6px;
+    /* buttons, inputs */
+    --radius-lg: 8px;
+    /* cards, modals, panels */
+
+    /* Elevation */
+    --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.4);
+
+    /* Type */
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', Monaco, Consolas, monospace;
+
+    /* ── Legacy VS Code variable names, repointed at the new palette ── */
+    --vscode-bg-editor: var(--surface-canvas);
+    --vscode-bg-sidebar: var(--surface-raised);
+    --vscode-bg-activitybar: var(--surface-base);
+    --vscode-bg-panel: var(--surface-base);
+    --vscode-bg-statusbar: var(--accent);
+    --vscode-border: var(--stroke-subtle);
+    --vscode-border-subtle: var(--stroke-subtle);
+    --vscode-border-light: var(--stroke-subtle);
+    --vscode-text-primary: var(--text-primary);
+    --vscode-text-secondary: var(--text-secondary);
+    --vscode-text-link: var(--accent-hover);
+    --vscode-selection: #3f3f46;
+    --vscode-line-highlight: var(--surface-raised);
+    --vscode-cursor: #fafafa;
+    --vscode-error: #f87171;
+    --vscode-warning: #fbbf24;
+    --vscode-info: #60a5fa;
+    --vscode-success: #4ade80;
 }
 
-/* Unified focus ring — VS Code blue */
+/* ─── Base ─────────────────────────────────────────────────────────────────── */
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    background-color: var(--surface-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings use the tighter 1.2 leading from the type scale */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+}
+
+code,
+kbd,
+pre,
+samp,
+.font-mono {
+    font-family: var(--font-mono);
+}
+
+/* Unified focus ring — accent coloured */
 *:focus-visible {
     outline: none !important;
-    box-shadow: 0 0 0 2px #007fd4 !important;
+    box-shadow: 0 0 0 2px var(--accent) !important;
 }
 
 /* Global button press feedback */
 button {
     transition: background-color var(--transition-fast),
-                color var(--transition-fast),
-                transform 60ms ease-out,
-                box-shadow var(--transition-fast);
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform 60ms ease-out,
+        box-shadow var(--transition-fast);
 }
+
 button:active:not(:disabled) {
     transform: scale(0.97);
 }
 
-/* VS Code-style scrollbar */
+/* ─── Scrollbars ───────────────────────────────────────────────────────────── */
+
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
 }
+
 ::-webkit-scrollbar-track {
     background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-    background: rgba(121, 121, 121, 0.4);
+    background: #3f3f46;
+    border-radius: 5px;
+    border: 2px solid transparent;
+    background-clip: content-box;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(121, 121, 121, 0.6);
+    background: #52525b;
+    background-clip: content-box;
 }
+
 ::-webkit-scrollbar-corner {
     background: transparent;
 }
 
-/* VS Code Dark Theme CSS Variables */
-:root {
-    /* Background Colors */
-    --vscode-bg-editor: #1e1e1e;
-    --vscode-bg-sidebar: #252526;
-    --vscode-bg-activitybar: #333333;
-    --vscode-bg-panel: #1e1e1e;
-    --vscode-bg-statusbar: #007acc;
-
-    /* Border Colors */
-    --vscode-border: #2d2d30;
-    --vscode-border-subtle: #1e1e1e;
-    --vscode-border-light: rgba(255, 255, 255, 0.1);
-    /* Slightly white border */
-
-    /* Text Colors */
-    --vscode-text-primary: #d4d4d4;
-    --vscode-text-secondary: #969696;
-    --vscode-text-link: #3794ff;
-
-    /* Selection & Highlights */
-    --vscode-selection: #264f78;
-    --vscode-line-highlight: #2a2d2e;
-    --vscode-cursor: #aeafad;
-
-    /* Semantic Colors */
-    --vscode-error: #f48771;
-    --vscode-warning: #cca700;
-    --vscode-info: #3794ff;
-    --vscode-success: #89d185;
+* {
+    scrollbar-color: #3f3f46 transparent;
 }
 
-/* Apply VS Code theme to body */
-body {
-    background-color: var(--vscode-bg-editor);
-    color: var(--vscode-text-primary);
-}
+/* ─── Palette remap ────────────────────────────────────────────────────────────
+   The app's markup is written against Tailwind's gray scale. Repointing those
+   utilities here restyles every panel, card and label at once, which keeps this
+   redesign a token change rather than a thousand-line class rename.
 
-/* Remap Tailwind gray utilities to VS Code theme colors */
+   `!important` is required because these compete with Tailwind's own utilities
+   of equal specificity.
+--------------------------------------------------------------------------- */
 @layer utilities {
 
-    /* Background colors - darkest to lightest */
+    /* ── Surfaces ── */
     .bg-gray-950 {
-        background-color: #1e1e1e !important;
-        /* vscode-editor */
+        background-color: var(--surface-canvas) !important;
     }
 
     .bg-gray-900 {
-        background-color: #1e1e1e !important;
-        /* vscode-editor/panel */
+        background-color: var(--surface-base) !important;
     }
 
     .bg-gray-800 {
-        background-color: #252526 !important;
-        /* vscode-sidebar */
+        background-color: var(--surface-raised) !important;
     }
 
     .bg-gray-700 {
-        background-color: #333333 !important;
-        /* vscode-activitybar */
+        background-color: var(--surface-overlay) !important;
     }
 
-    /* Hover state backgrounds */
-    .hover\:bg-gray-800:hover {
-        background-color: #2d2d30 !important;
-        /* vscode-border (slightly lighter) */
+    .bg-gray-600 {
+        background-color: var(--surface-hover) !important;
     }
 
-    .hover\:bg-gray-700:hover {
-        background-color: #2d2d30 !important;
-        /* vscode-border */
-    }
-
-    /* Semi-transparent backgrounds */
+    /* Semi-transparent surfaces */
     .bg-gray-800\/50 {
-        background-color: rgba(37, 37, 38, 0.5) !important;
+        background-color: rgba(24, 24, 27, 0.5) !important;
+    }
+
+    .bg-gray-900\/50 {
+        background-color: rgba(17, 17, 17, 0.5) !important;
     }
 
     .bg-gray-900\/20 {
-        background-color: rgba(30, 30, 30, 0.2) !important;
+        background-color: rgba(17, 17, 17, 0.2) !important;
     }
 
-    /* Border colors - Updated to slightly white */
+    /* ── Hover surfaces — a subtle white wash reads better on near-black
+          than a hard-coded lighter gray ── */
+    .hover\:bg-gray-800:hover,
+    .hover\:bg-gray-700:hover {
+        background-color: var(--hover-overlay) !important;
+    }
+
+    .hover\:bg-gray-600:hover {
+        background-color: var(--active-overlay) !important;
+    }
+
+    /* ── Strokes ── */
     .border-gray-800,
     .border-gray-700 {
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        /* Slightly white */
+        border-color: var(--stroke-subtle) !important;
     }
 
-    .border-gray-600 {
-        border-color: rgba(255, 255, 255, 0.12) !important;
-        /* Slightly brighter white */
-    }
-
+    .border-gray-600,
     .border-gray-500 {
-        border-color: rgba(255, 255, 255, 0.15) !important;
+        border-color: var(--stroke-strong) !important;
     }
 
-    /* Text colors - dark theme */
+    .divide-gray-700> :not([hidden])~ :not([hidden]) {
+        border-color: var(--stroke-subtle) !important;
+    }
+
+    /* ── Text ── */
+    .text-gray-600 {
+        color: var(--text-muted) !important;
+    }
+
     .text-gray-500 {
-        color: #858585 !important;
+        color: var(--text-muted) !important;
     }
 
     .text-gray-400 {
-        color: #969696 !important;
-        /* vscode-text-dim */
+        color: var(--text-secondary) !important;
     }
 
     .text-gray-300 {
-        color: #d4d4d4 !important;
-        /* vscode-text */
+        color: #d4d4d8 !important;
     }
 
-    .text-gray-200 {
-        color: #e8e8e8 !important;
-        /* Brighter text */
-    }
-
-    /* Hover text colors */
-    .hover\:text-gray-200:hover {
-        color: #e8e8e8 !important;
+    .text-gray-200,
+    .text-gray-100 {
+        color: var(--text-primary) !important;
     }
 
     .hover\:text-gray-300:hover {
-        color: #d4d4d4 !important;
+        color: #d4d4d8 !important;
     }
 
-    /* Ring colors (focus states) */
+    .hover\:text-gray-200:hover,
+    .hover\:text-gray-100:hover {
+        color: var(--text-primary) !important;
+    }
+
+    /* ── Focus rings ── */
     .focus\:ring-gray-700:focus {
-        --tw-ring-color: rgba(255, 255, 255, 0.1) !important;
+        --tw-ring-color: var(--stroke-strong) !important;
     }
 
-    /* Divide colors (for dividers) */
-    .divide-gray-700> :not([hidden])~ :not([hidden]) {
-        border-color: rgba(255, 255, 255, 0.1) !important;
+    /* ── Utility: standard interactive hover highlight for icon buttons ── */
+    .hover-highlight {
+        transition: background-color var(--transition-fast), color var(--transition-fast);
+    }
+
+    .hover-highlight:hover {
+        background-color: var(--hover-overlay);
     }
 }
 
-/* Global border styling for sections, buttons, and cards */
-section,
-button,
-[role="button"],
-.card,
-[class*="card"],
-[class*="panel"],
-[class*="modal"],
-[class*="sidebar"] {
-    border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Ensure visible borders on common containers */
-div[class*="border"] {
-    border-color: rgba(255, 255, 255, 0.1) !important;
-}
+/*
+  NOTE: two blanket `border-color: ... !important` rules previously lived here
+  (one matching `section, button, [class*="card"], [class*="panel"], …`, one
+  matching `div[class*="border"]`). They forced a single border colour onto
+  almost every element, which made per-component borders impossible to style.
+  They are intentionally removed — `borderColor.DEFAULT` in tailwind.config.js
+  now supplies the subtle stroke for bare `border` classes, and the remaps
+  above cover the explicit `border-gray-*` utilities.
+*/

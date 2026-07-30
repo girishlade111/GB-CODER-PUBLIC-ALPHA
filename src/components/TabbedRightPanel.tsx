@@ -79,9 +79,9 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
             case 'console':
                 return (
                     <Suspense fallback={
-                        <div className="bg-matte-black border border-gray-700 rounded-lg p-4 text-center">
-                            <div className="w-6 h-6 border-3 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                            <p className="text-gray-400 text-sm">Loading Console...</p>
+                        <div className="bg-surface-base border border-stroke-subtle rounded-lg p-4 text-center">
+                            <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                            <p className="text-content-secondary text-sm">Loading Console...</p>
                         </div>
                     }>
                         <div className="h-full min-h-0 flex flex-col">
@@ -102,19 +102,19 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
     };
 
     return (
-        <div className="flex flex-col h-full bg-matte-black border border-gray-700 rounded-lg overflow-hidden shadow-sm">
+        <div className="flex flex-col h-full bg-surface-base border border-stroke-subtle rounded-lg overflow-hidden">
             {/* Tab Navigation */}
-            <div className="flex items-center bg-dark-gray border-b border-gray-700 px-1">
+            <div className="flex items-center bg-surface-raised border-b border-stroke-subtle px-2">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`
-              flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all duration-200
+              flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors
               border-b-2 -mb-[1px]
               ${activeTab === tab.id
-                                ? 'text-white border-vscode-statusbar bg-matte-black'
-                                : 'text-gray-500 border-transparent hover:text-gray-200 hover:bg-[#2a2d2e]'
+                                ? 'text-content-primary border-accent'
+                                : 'text-content-muted border-transparent hover:text-content-primary'
                             }
             `}
                         aria-selected={activeTab === tab.id}
