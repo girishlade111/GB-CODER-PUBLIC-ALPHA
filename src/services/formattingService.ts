@@ -1,14 +1,30 @@
-import * as prettier from 'prettier/standalone';
-import * as prettierPluginHTML from 'prettier/plugins/html';
-import * as prettierPluginCSS from 'prettier/plugins/postcss';
-import * as prettierPluginJS from 'prettier/plugins/babel';
-import * as prettierPluginESTree from 'prettier/plugins/estree';
 import { diffLines, Change } from 'diff';
 import { EditorLanguage } from '../types';
 import { FormatResult, DiffResult, FormatSettings, DEFAULT_FORMAT_SETTINGS } from '../types/formatting';
 
 class FormattingService {
     private settings: FormatSettings = DEFAULT_FORMAT_SETTINGS;
+    private prettierModule: any = null;
+
+    private async loadPrettier() {
+        if (!this.prettierModule) {
+            const [prettier, pluginHTML, pluginCSS, pluginJS, pluginESTree] = await Promise.all([
+                import('prettier/standalone'),
+                import('prettier/plugins/html'),
+                import('prettier/plugins/postcss'),
+                import('prettier/plugins/babel'),
+                import('prettier/plugins/estree'),
+            ]);
+            this.prettierModule = {
+                prettier: prettier.default || prettier,
+                pluginHTML: pluginHTML.default || pluginHTML,
+                pluginCSS: pluginCSS.default || pluginCSS,
+                pluginJS: pluginJS.default || pluginJS,
+                pluginESTree: pluginESTree.default || pluginESTree,
+            };
+        }
+        return this.prettierModule;
+    }
 
     updateSettings(newSettings: Partial<FormatSettings>): void {
         this.settings = { ...this.settings, ...newSettings };
@@ -31,7 +47,8 @@ class FormattingService {
                 };
             }
 
-            const { parser, plugins } = this.getParserConfig(language);
+            const { prettier, pluginHTML, pluginCSS, pluginJS, pluginESTree } = await this.loadPrettier();
+            const { parser, plugins } = this.getParserConfig(language, { pluginHTML, pluginCSS, pluginJS, pluginESTree });
             const formattedCode = await prettier.format(code, {
                 parser,
                 plugins,
@@ -71,14 +88,14 @@ class FormattingService {
         }
     }
 
-    private getParserConfig(language: EditorLanguage): { parser: string; plugins: any[] } {
+    private getParserConfig(language: EditorLanguage, plugins: { pluginHTML: any; pluginCSS: any; pluginJS: any; pluginESTree: any }): { parser: string; plugins: any[] } {
         switch (language) {
             case 'html':
-                return { parser: 'html', plugins: [prettierPluginHTML] };
+                return { parser: 'html', plugins: [plugins.pluginHTML] };
             case 'css':
-                return { parser: 'css', plugins: [prettierPluginCSS] };
+                return { parser: 'css', plugins: [plugins.pluginCSS] };
             case 'javascript':
-                return { parser: 'babel', plugins: [prettierPluginJS, prettierPluginESTree] };
+                return { parser: 'babel', plugins: [plugins.pluginJS, plugins.pluginESTree] };
             default:
                 throw new Error(`Unsupported language: ${language}`);
         }

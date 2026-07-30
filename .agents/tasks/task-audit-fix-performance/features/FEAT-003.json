@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Performance optimizations: improve code splitting, add React.memo where missing, fix re-render issues, and optimize the preview panel rendering",
+  "status": "in_progress",
+  "steps": [
+    "In src/App.tsx, the components AIChatAssistant, VoiceCommandPanel, TemplateSelectorModal, CodeStatsDashboard, ValidationPanel, CustomInjectionManager, and BuildFromPromptModal are eagerly imported but only shown conditionally (when their show* state is true). Convert them to lazy imports with React.lazy() and wrap in Suspense. This reduces the initial bundle size by deferring these modal components.",
+    "In src/components/PreviewPanel.tsx, the function `generatePreviewContent()` is called BOTH in the useEffect debounce AND directly in the JSX `srcDoc={generatePreviewContent()}`. This means every render regenerates the preview content string even when nothing changed. Fix: use useMemo or useState to store the generated content and only update it in the useEffect, remove the direct call in JSX srcDoc.",
+    "In src/App.tsx, `handleConsoleLog` is wrapped in useCallback but `clearConsoleLogs` is not. Since clearConsoleLogs is passed as a prop to TabbedRightPanel (which is memoized), this causes unnecessary re-renders. Wrap clearConsoleLogs in useCallback.",
+    "In src/components/PreviewPanel.tsx, the `sanitizeCode` function removes script tags from HTML before injecting into the iframe. However, users writing a code editor want their script tags to work. The sanitization is too aggressive for a code playground - it strips legitimate HTML that users type. Remove the HTML sanitization (keep the CSS sanitization for expression() attacks). The iframe already has sandbox='allow-scripts allow-same-origin' which is the correct security boundary.",
+    "In vite.config.ts, move the 'formatter' chunk (prettier - 891KB) to be lazily loaded. Currently it imports all prettier plugins statically in formattingService.ts. Convert formattingService.ts to use dynamic imports for prettier so the formatter chunk only loads when the user clicks Format. Create a wrapper that dynamically imports prettier plugins on first format call.",
+    "In src/index.css, the rule `* { border-radius: 0 !important; }` applies a universal selector with !important on every single element. This is extremely expensive for CSS performance as it forces the browser to recalculate styles for every element. It also breaks rounded UI elements. Remove this rule - if specific elements need sharp corners, apply the style to those specific elements."
+  ],
+  "acceptance_criteria": [
+    "Modal components (AIChatAssistant, VoiceCommandPanel, etc.) are lazy-loaded and not in the initial bundle",
+    "PreviewPanel does not call generatePreviewContent() directly in JSX - uses stored value from useEffect",
+    "The formatter chunk (prettier) is only loaded when the user triggers a format action",
+    "The aggressive HTML sanitization that removes script tags from user code is removed (iframe sandbox provides security)",
+    "The universal border-radius: 0 !important CSS rule is removed",
+    "Build succeeds and total initial load JS (excluding lazy chunks) is reduced"
+  ],
+  "verification": [
+    "Run 'bunx vite build' and verify: (a) critical-ui chunk is smaller, (b) new deferred chunks appear for modal components, (c) formatter chunk is separate",
+    "Check that the index chunk (main app code) does not include AIChatAssistant/VoiceCommandPanel/etc code"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

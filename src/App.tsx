@@ -8,15 +8,17 @@ import Footer from './components/ui/Footer';
 
 // ===== NEW FEATURES IMPORTS =====
 import { Toaster, toast } from 'react-hot-toast';
-import AIChatAssistant from './components/AIChatAssistant';
 import ExportShareMenu from './components/ExportShareMenu';
-import VoiceCommandPanel from './components/VoiceCommandPanel';
-import TemplateSelectorModal from './components/TemplateSelectorModal';
-import CodeStatsDashboard from './components/CodeStatsDashboard';
-import ValidationPanel from './components/ValidationPanel';
-import CustomInjectionManager from './components/CustomInjectionManager';
-import BuildFromPromptModal from './components/BuildFromPromptModal';
 import { CodeTemplate } from './services/codeTemplatesService';
+
+// Lazy-loaded modal components (only shown when their show* state is true)
+const AIChatAssistant = lazy(() => import('./components/AIChatAssistant'));
+const VoiceCommandPanel = lazy(() => import('./components/VoiceCommandPanel'));
+const TemplateSelectorModal = lazy(() => import('./components/TemplateSelectorModal'));
+const CodeStatsDashboard = lazy(() => import('./components/CodeStatsDashboard'));
+const ValidationPanel = lazy(() => import('./components/ValidationPanel'));
+const CustomInjectionManager = lazy(() => import('./components/CustomInjectionManager'));
+const BuildFromPromptModal = lazy(() => import('./components/BuildFromPromptModal'));
 
 // Phase 2: High priority - lazy loaded after initial render
 // (EnhancedConsole is used inside TabbedRightPanel, not here directly)
@@ -409,9 +411,9 @@ function App() {
     setConsoleLogs(prev => [...prev, log]);
   }, []);
 
-  const clearConsoleLogs = () => {
+  const clearConsoleLogs = useCallback(() => {
     setConsoleLogs([]);
-  };
+  }, []);
 
   const handleCommand = async (command: string) => {
     const [cmd, ...args] = command.toLowerCase().split(' ');
@@ -1339,59 +1341,87 @@ function App() {
       {/* ===== NEW FEATURES MODALS ===== */}
 
       {/* Build from Prompt */}
-      <BuildFromPromptModal
-        isOpen={showBuildFromPrompt}
-        onClose={() => setShowBuildFromPrompt(false)}
-        onGenerate={handleBuildFromPrompt}
-      />
+      {showBuildFromPrompt && (
+        <Suspense fallback={null}>
+          <BuildFromPromptModal
+            isOpen={showBuildFromPrompt}
+            onClose={() => setShowBuildFromPrompt(false)}
+            onGenerate={handleBuildFromPrompt}
+          />
+        </Suspense>
+      )}
       
       {/* AI Chat Assistant */}
-      <AIChatAssistant
-        isOpen={showAIChat}
-        onClose={() => setShowAIChat(false)}
-        html={html}
-        css={css}
-        javascript={javascript}
-        externalLibraries={externalLibraries}
-      />
+      {showAIChat && (
+        <Suspense fallback={null}>
+          <AIChatAssistant
+            isOpen={showAIChat}
+            onClose={() => setShowAIChat(false)}
+            html={html}
+            css={css}
+            javascript={javascript}
+            externalLibraries={externalLibraries}
+          />
+        </Suspense>
+      )}
 
       {/* Voice Command Panel */}
-      <VoiceCommandPanel
-        isOpen={showVoiceCommands}
-        onClose={() => setShowVoiceCommands(false)}
-      />
+      {showVoiceCommands && (
+        <Suspense fallback={null}>
+          <VoiceCommandPanel
+            isOpen={showVoiceCommands}
+            onClose={() => setShowVoiceCommands(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Template Selector */}
-      <TemplateSelectorModal
-        isOpen={showTemplates}
-        onClose={() => setShowTemplates(false)}
-        onLoadTemplate={handleLoadTemplate}
-      />
+      {showTemplates && (
+        <Suspense fallback={null}>
+          <TemplateSelectorModal
+            isOpen={showTemplates}
+            onClose={() => setShowTemplates(false)}
+            onLoadTemplate={handleLoadTemplate}
+          />
+        </Suspense>
+      )}
 
       {/* Code Statistics Dashboard */}
-      <CodeStatsDashboard
-        html={html}
-        css={css}
-        javascript={javascript}
-        isOpen={showStats}
-        onClose={() => setShowStats(false)}
-      />
+      {showStats && (
+        <Suspense fallback={null}>
+          <CodeStatsDashboard
+            html={html}
+            css={css}
+            javascript={javascript}
+            isOpen={showStats}
+            onClose={() => setShowStats(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Validation Panel */}
-      <ValidationPanel
-        html={html}
-        css={css}
-        javascript={javascript}
-        isOpen={showValidation}
-        onClose={() => setShowValidation(false)}
-      />
+      {showValidation && (
+        <Suspense fallback={null}>
+          <ValidationPanel
+            html={html}
+            css={css}
+            javascript={javascript}
+            isOpen={showValidation}
+            onClose={() => setShowValidation(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Custom Injection Manager */}
-      <CustomInjectionManager
-        isOpen={showInjectionManager}
-        onClose={() => setShowInjectionManager(false)}
-        onUpdateInjections={handleUpdateInjections}
-      />
+      {showInjectionManager && (
+        <Suspense fallback={null}>
+          <CustomInjectionManager
+            isOpen={showInjectionManager}
+            onClose={() => setShowInjectionManager(false)}
+            onUpdateInjections={handleUpdateInjections}
+          />
+        </Suspense>
+      )}
 
       {/* Toast Notifications */}
       <Toaster

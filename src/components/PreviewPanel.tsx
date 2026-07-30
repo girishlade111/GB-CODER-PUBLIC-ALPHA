@@ -67,6 +67,8 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   // Holds the transpiled JS when using TS/TSX mode
   const [transpiledJs, setTranspiledJs] = useState<string>(javascript);
   const [compilationError, setCompilationError] = useState<string | null>(null);
+  // Holds the generated preview content to avoid recalculating on every render
+  const [previewContent, setPreviewContent] = useState<string>('');
 
   // Expose the container div to parent components via ref
   useImperativeHandle(ref, () => {
@@ -95,15 +97,9 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     return () => { cancelled = true; };
   }, [javascript, shouldTranspile]);
 
-  // Sanitize code input to prevent XSS attacks
+  // Sanitize code input to prevent XSS attacks (CSS only - HTML runs in sandboxed iframe)
   const sanitizeCode = (code: string, language: string): string => {
-    if (language === 'html') {
-      return code
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/on\w+="[^"]*"/gi, '')
-        .replace(/javascript:/gi, '')
-        .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, '');
-    } else if (language === 'css') {
+    if (language === 'css') {
       return code
         .replace(/expression\s*\(/gi, '')
         .replace(/behavior\s*:/gi, '')
@@ -117,7 +113,6 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   };
 
   const generatePreviewContent = useCallback(() => {
-    const sanitizedHtml = sanitizeCode(html, 'html');
     const sanitizedCss = sanitizeCode(css, 'css');
     const usesBabel = jsEditorMode === 'jsx' || jsEditorMode === 'tsx';
     const executableJavascript = transpiledJs;
@@ -167,7 +162,7 @@ ${safeJavascript}
     </style>
 </head>
 <body>
-    ${sanitizedHtml}
+    ${html}
     <script>
         // External Libraries Loading Indicator
         if (${externalLibraries.length} > 0) {
@@ -280,6 +275,7 @@ ${safeJavascript}
     if (iframeRef.current) {
       setIsLoading(true);
       const content = generatePreviewContent();
+      setPreviewContent(content);
       iframeRef.current.srcdoc = content;
       setTimeout(() => setIsLoading(false), 300);
     }
@@ -469,7 +465,7 @@ ${safeJavascript}
             className="w-full h-full bg-white shadow-lg"
             title="Code Preview"
             sandbox="allow-scripts allow-same-origin"
-            srcDoc={generatePreviewContent()}
+            srcDoc={previewContent}
           />
         </div>
       </div>
