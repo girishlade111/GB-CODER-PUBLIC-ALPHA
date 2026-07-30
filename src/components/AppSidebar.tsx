@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   FolderTree,
+  Package,
   LayoutTemplate,
   Sparkles,
   Settings as SettingsIcon,
@@ -13,6 +14,8 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 interface AppSidebarProps {
   onToggleFiles: () => void;
   isFilesOpen: boolean;
+  onToggleDependencies: () => void;
+  isDependenciesOpen: boolean;
   onOpenTemplates: () => void;
   onOpenAITools: () => void;
   onOpenSettings: () => void;
@@ -36,6 +39,8 @@ interface SidebarItem {
 const AppSidebar: React.FC<AppSidebarProps> = ({
   onToggleFiles,
   isFilesOpen,
+  onToggleDependencies,
+  isDependenciesOpen,
   onOpenTemplates,
   onOpenAITools,
   onOpenSettings,
@@ -49,6 +54,13 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       icon: <FolderTree className="h-5 w-5" />,
       onClick: onToggleFiles,
       isActive: isFilesOpen,
+    },
+    {
+      id: 'dependencies',
+      label: 'Dependencies',
+      icon: <Package className="h-5 w-5" />,
+      onClick: onToggleDependencies,
+      isActive: isDependenciesOpen,
     },
     {
       id: 'templates',

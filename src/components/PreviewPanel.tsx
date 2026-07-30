@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye } from 'lucide-react';
+import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package } from 'lucide-react';
 import { ConsoleLog, JSEditorMode } from '../types';
 import { MOUNT_ELEMENT_ID, ProjectType } from '../types/files';
-import { RUNTIME_SCRIPTS } from '../services/bundlerService';
 import { externalLibraryService } from '../services/externalLibraryService';
 
 type ViewMode = 'desktop' | 'tablet' | 'mobile' | 'fullscreen';
@@ -24,6 +23,10 @@ interface PreviewPanelProps {
   bundledCode?: string;
   /** CSS collected from the module graph for react/vue projects. */
   bundledCss?: string;
+  /** Bare specifier -> CDN URL, rendered as an import map. */
+  importMap?: Record<string, string>;
+  /** True while CDN packages are being resolved for the first time. */
+  isResolvingPackages?: boolean;
 }
 
 /**
@@ -73,6 +76,8 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   projectType = 'plain',
   bundledCode = '',
   bundledCss = '',
+  importMap = {},
+  isResolvingPackages = false,
 }, ref) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -178,29 +183,28 @@ ${safeJavascript}
     const externalLibsHTML = externalLibraryService.generateInjectionHTML();
 
     /*
-     * Framework runtime tags (React/ReactDOM or Vue) from CDN.
+     * Import map: resolves every bare specifier in the bundle (the framework
+     * runtime, the JSX runtime and any npm package) to a CDN URL.
      *
-     * De-duplicated against libraries the user added manually, because loading
-     * two copies of React makes them fight over `window.React` and produces
-     * baffling "invalid hook call" errors. `react-dom` is matched before
-     * `react` since its URL contains both.
+     * One map for everything is what guarantees a single shared React/Vue
+     * instance — CDN packages are fetched with esm.sh's `?external=react`, so
+     * their own `react` import lands on this same entry rather than a second copy.
      */
-    const addedLibraryUrls = externalLibraries.map((library) => library.url.toLowerCase());
-    const runtimeScriptsHTML = isFrameworkProject
-      ? RUNTIME_SCRIPTS[projectType as Exclude<ProjectType, 'plain'>]
-          .filter((url) => {
-            const lower = url.toLowerCase();
-            const pkg = lower.includes('react-dom')
-              ? 'react-dom'
-              : lower.includes('react')
-                ? 'react'
-                : 'vue';
-            return !addedLibraryUrls.some(
-              (added) => added.includes(`/${pkg}@`) || added.includes(`/${pkg}/`),
-            );
-          })
-          .map((url) => `    <script crossorigin src="${url}"></script>`)
-          .join('\n')
+    const importMapHTML =
+      isFrameworkProject && Object.keys(importMap).length > 0
+        ? `    <script type="importmap">${JSON.stringify({ imports: importMap })}</script>`
+        : '';
+
+    /*
+     * The bundle is an ES module, so it must run as `type="module"`. Module
+     * scripts are deferred, which conveniently means the mount node in <body>
+     * already exists and the classic console-bridge script has already installed
+     * its console overrides before any user code runs.
+     */
+    const moduleScript = isFrameworkProject
+      ? `<script type="module">
+${safeJavascript}
+</script>`
       : '';
 
     return `
@@ -213,7 +217,7 @@ ${safeJavascript}
     <title>Preview</title>
     ${externalLibsHTML}
     ${jsxRuntimeScripts}
-${runtimeScriptsHTML}
+${importMapHTML}
     <style>
         body { 
             margin: 0; 
@@ -306,8 +310,10 @@ ${runtimeScriptsHTML}
                     }
                 };
                 
-                ${usesBabel
-                  ? '// JSX/TSX user code is executed by Babel from the text/babel script tag below.'
+                ${usesBabel || isFrameworkProject
+                  ? `// User code runs from a separate script tag below${isFrameworkProject
+                      ? ' (an ES module, so it cannot be eval\'d).'
+                      : ' (Babel).'}`
                   : `
                 // Execute sanitized JavaScript
                 const sanitizedJs = ${compiledJavaScriptString};
@@ -331,9 +337,10 @@ ${runtimeScriptsHTML}
         }
     </script>
     ${userCodeScript}
+    ${moduleScript}
 </body>
 </html>`;
-  }, [html, css, transpiledJs, compilationError, jsEditorMode, isFrameworkProject, projectType, bundledCode, bundledCss]);
+  }, [html, css, transpiledJs, compilationError, jsEditorMode, isFrameworkProject, projectType, bundledCode, bundledCss, importMap]);
 
   const refreshPreview = useCallback(() => {
     if (iframeRef.current) {
@@ -362,7 +369,7 @@ ${runtimeScriptsHTML}
       refreshPreviewRef.current();
     }, delay);
     return () => clearTimeout(timeoutId);
-  }, [html, css, jsForPreview, jsEditorMode, previewDelay, manualRunTrigger, transpiledJs, bundledCode, bundledCss, projectType]);
+  }, [html, css, jsForPreview, jsEditorMode, previewDelay, manualRunTrigger, transpiledJs, bundledCode, bundledCss, projectType, importMap]);
 
   // Refresh preview when external libraries change
   useEffect(() => {
@@ -515,7 +522,17 @@ ${runtimeScriptsHTML}
         </div>
       </div>
       <div className={`relative ${viewMode === 'fullscreen' ? 'h-full' : 'h-full'} flex items-start justify-center overflow-auto bg-surface-canvas`}>
-        {isLoading && (
+        {isResolvingPackages && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-surface-canvas/90 px-6 text-center">
+            <Package className="h-6 w-6 animate-pulse text-accent" />
+            <p className="text-sm font-medium text-content-secondary">Fetching packages from CDN…</p>
+            <p className="text-xs text-content-muted">
+              First time only — resolved packages are cached for this session.
+            </p>
+          </div>
+        )}
+
+        {isLoading && !isResolvingPackages && (
           <div className="absolute inset-0 bg-surface-canvas/75 flex items-center justify-center z-10">
             <RefreshCw className="w-6 h-6 text-accent animate-spin" />
           </div>

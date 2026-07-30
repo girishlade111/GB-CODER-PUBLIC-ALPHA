@@ -6,15 +6,22 @@ import {
   isBundledProjectType,
   preloadBundler,
 } from '../services/bundlerService';
+import {
+  PackageResolutionError,
+  ResolvedPackage,
+  hasUncachedPackages,
+} from '../services/packageResolver';
 import { MultiFileProject, isScriptFile } from '../types/files';
 import { ConsoleLog } from '../types';
 
 export interface ProjectBundle {
   code: string;
   css: string;
+  /** Bare specifier -> CDN URL for the preview's import map. */
+  importMap: Record<string, string>;
 }
 
-const EMPTY_BUNDLE: ProjectBundle = { code: '', css: '' };
+const EMPTY_BUNDLE: ProjectBundle = { code: '', css: '', importMap: {} };
 
 /**
  * Signature of everything that can affect a build. Used so an unrelated
@@ -29,6 +36,8 @@ const buildSignature = (project: MultiFileProject): string => {
     files: [...project.files]
       .sort((a, b) => a.path.localeCompare(b.path))
       .map((f) => [f.path, f.content]),
+    // A changed version pin must trigger a rebuild and re-resolution.
+    dependencies: project.dependencies ?? {},
   });
 };
 
@@ -57,6 +66,9 @@ export const useProjectBundle = ({
   const [bundle, setBundle] = useState<ProjectBundle>(EMPTY_BUNDLE);
   const [errors, setErrors] = useState<BundleError[]>([]);
   const [isBuilding, setIsBuilding] = useState(false);
+  const [isResolvingPackages, setIsResolvingPackages] = useState(false);
+  const [resolvedPackages, setResolvedPackages] = useState<ResolvedPackage[]>([]);
+  const [unresolvedPackages, setUnresolvedPackages] = useState<PackageResolutionError[]>([]);
 
   const isFrameworkProject = isBundledProjectType(project.projectType);
   const signature = useMemo(() => buildSignature(project), [project]);
@@ -95,6 +107,8 @@ export const useProjectBundle = ({
 
     let cancelled = false;
     setIsBuilding(true);
+    // Only show the CDN overlay for a genuinely cold resolution.
+    setIsResolvingPackages(hasUncachedPackages(project));
 
     const timer = window.setTimeout(async () => {
       const result = await buildProject(project);
@@ -102,6 +116,19 @@ export const useProjectBundle = ({
 
       setErrors(result.errors);
       setIsBuilding(false);
+      setIsResolvingPackages(false);
+
+      /*
+       * A build that fails before the resolution step reports no packages at
+       * all. Keeping the previous lists means a transient syntax error while
+       * typing does not flip every row in the Dependencies panel back to
+       * "Pending" and lose the versions already resolved.
+       */
+      const reachedResolution = result.resolved.length > 0 || result.unresolved.length > 0;
+      if (reachedResolution) {
+        setResolvedPackages(result.resolved);
+        setUnresolvedPackages(result.unresolved);
+      }
 
       if (result.errors.length > 0) {
         // Only announce a given failure once, otherwise every keystroke while
@@ -124,7 +151,7 @@ export const useProjectBundle = ({
         emit('info', 'Build succeeded.');
       }
 
-      setBundle({ code: result.code, css: result.css });
+      setBundle({ code: result.code, css: result.css, importMap: result.importMap });
     }, debounceMs);
 
     return () => {
@@ -144,7 +171,15 @@ export const useProjectBundle = ({
         ? 'error'
         : 'ready';
 
-  return { bundle, errors, isBuilding, status };
+  return {
+    bundle,
+    errors,
+    isBuilding,
+    isResolvingPackages,
+    resolvedPackages,
+    unresolvedPackages,
+    status,
+  };
 };
 
 /** Files whose contents feed the module graph — useful for UI affordances. */

@@ -38,6 +38,14 @@ export interface MultiFileProject {
   files: ProjectFile[];
   /** Module entry point. Unused by plain projects. */
   entry?: string;
+  /**
+   * Manual version pins by package name, e.g. `{ axios: '1.6.0' }`.
+   *
+   * Lets a version be fixed before the import is even written, and overrides the
+   * default `latest` when a specifier carries no explicit version. A version
+   * written inline in code still wins over a pin.
+   */
+  dependencies?: Record<string, string>;
 }
 
 /** Fixed paths that back the three original editors in plain mode. */
