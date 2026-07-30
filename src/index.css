@@ -285,3 +285,19 @@ button:active:not(:disabled) {
   now supplies the subtle stroke for bare `border` classes, and the remaps
   above cover the explicit `border-gray-*` utilities.
 */
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Jump-to-line highlight
+
+   Applied by `editorNavigator` as a whole-line Monaco decoration when a console
+   stack frame or a Validator problem row is clicked, then removed on a timer.
+   It has to live in plain CSS (not Tailwind) because Monaco applies the class
+   to elements it owns, which Tailwind never sees at build time.
+   ───────────────────────────────────────────────────────────────────────────── */
+.gb-jump-highlight {
+    background-color: rgba(124, 58, 237, 0.28);
+    /* A left rule makes the target line obvious without shifting the layout. */
+    box-shadow: inset 3px 0 0 0 #7c3aed;
+    transition: background-color 200ms ease-out;
+}

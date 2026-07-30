@@ -1,8 +1,12 @@
 import React, { useState, Suspense, forwardRef, useRef } from 'react';
 import { Eye, Terminal } from 'lucide-react';
 import PreviewPanel from './PreviewPanel';
-import { ConsoleLog, JSEditorMode } from '../types';
-import { ProjectType } from '../types/files';
+import { JSEditorMode } from '../types';
+import { MultiFileProject, ProjectType } from '../types/files';
+import { ValidationSummary } from '../services/validationService';
+import { ShellPackage, ShellPackageError } from '../services/localShell';
+import type { ConsoleMessage } from '../types/consoleFeed';
+import type { ConsoleCounts } from '../hooks/useConsoleFeed';
 
 // Lazy load heavy components
 const EnhancedConsole = React.lazy(() => import('./EnhancedConsole'));
@@ -10,21 +14,37 @@ const EnhancedConsole = React.lazy(() => import('./EnhancedConsole'));
 type TabType = 'preview' | 'console';
 
 interface TabbedRightPanelProps {
-    // Error count for badge
+    /** Console errors, shown on the Console tab badge. */
     errorCount: number;
+    /** Validation errors, added to the same badge so problems are visible
+     *  without opening the panel. */
+    problemCount: number;
 
     // Preview Panel props
     html: string;
     css: string;
     javascript: string;
     jsEditorMode?: JSEditorMode;
-    onConsoleLog: (log: ConsoleLog) => void;
+    onConsoleMessage: (message: Omit<ConsoleMessage, 'id' | 'count'>) => void;
+    onPreviewReset?: () => void;
     autoRunJS?: boolean;
     previewDelay?: number;
 
     // Console props
-    consoleLogs: ConsoleLog[];
+    consoleMessages: ConsoleMessage[];
+    consoleCounts: ConsoleCounts;
     onClearConsole: () => void;
+
+    // Validator props
+    project: MultiFileProject;
+    validation: ValidationSummary;
+    isValidating: boolean;
+    isValidationReady: boolean;
+    onRevalidate: () => void;
+
+    // Terminal props
+    resolvedPackages: ShellPackage[];
+    unresolvedPackages: ShellPackageError[];
 
     // Multi-file project props (plain mode leaves these at their defaults)
     projectType?: ProjectType;
@@ -36,17 +56,29 @@ interface TabbedRightPanelProps {
 
 const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
     errorCount,
+    problemCount,
     // Preview props
     html,
     css,
     javascript,
     jsEditorMode = 'javascript',
-    onConsoleLog,
+    onConsoleMessage,
+    onPreviewReset,
     autoRunJS = true,
     previewDelay = 300,
     // Console props
-    consoleLogs,
+    consoleMessages,
+    consoleCounts,
     onClearConsole,
+    // Validator props
+    project,
+    validation,
+    isValidating,
+    isValidationReady,
+    onRevalidate,
+    // Terminal props
+    resolvedPackages,
+    unresolvedPackages,
     // Multi-file project props
     projectType = 'plain',
     bundledCode = '',
@@ -70,22 +102,32 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
             id: 'console',
             label: 'Console',
             icon: <Terminal className="w-4 h-4" />,
-            badge: errorCount > 0 ? errorCount : undefined,
+            /* Real-time: console errors plus outstanding validation errors. */
+            badge: errorCount + problemCount > 0 ? errorCount + problemCount : undefined,
             badgeColor: 'bg-red-500',
         },
     ];
 
-    const renderTabContent = () => {
-        switch (activeTab) {
-            case 'preview':
-                return (
-                    <PreviewPanel
+    /*
+     * The preview stays mounted regardless of which tab is showing.
+     *
+     * Previously these two tabs were mutually exclusive, which meant selecting
+     * Console destroyed the preview iframe -- so the console could never
+     * receive output while the user was actually looking at it, and returning to
+     * Preview re-ran the document and wiped the feed. The console panel is
+     * opaque and simply covers the preview when active, so the iframe keeps
+     * running and keeps its real dimensions (screenshot capture depends on
+     * those).
+     */
+    const renderPreview = () => (
+        <PreviewPanel
                         ref={previewRef}
                         html={html}
                         css={css}
                         javascript={javascript}
                         jsEditorMode={jsEditorMode}
-                        onConsoleLog={onConsoleLog}
+                        onConsoleMessage={onConsoleMessage}
+                        onPreviewReset={onPreviewReset}
                         autoRunJS={autoRunJS}
                         previewDelay={previewDelay}
                         projectType={projectType}
@@ -93,10 +135,10 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                         bundledCss={bundledCss}
                         importMap={importMap}
                         isResolvingPackages={isResolvingPackages}
-                    />
-                );
-            case 'console':
-                return (
+        />
+    );
+
+    const renderConsole = () => (
                     <Suspense fallback={
                         <div className="bg-surface-base border border-stroke-subtle rounded-lg p-4 text-center">
                             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-2" />
@@ -105,20 +147,25 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                     }>
                         <div className="h-full min-h-0 flex flex-col">
                             <EnhancedConsole
-                                logs={consoleLogs}
+                                messages={consoleMessages}
+                                counts={consoleCounts}
                                 onClear={onClearConsole}
                                 html={html}
                                 css={css}
                                 javascript={javascript}
+                                project={project}
+                                validation={validation}
+                                isValidating={isValidating}
+                                isValidationReady={isValidationReady}
+                                onRevalidate={onRevalidate}
+                                resolvedPackages={resolvedPackages}
+                                unresolvedPackages={unresolvedPackages}
+                                isResolvingPackages={isResolvingPackages}
                                 className="flex-1"
                             />
                         </div>
                     </Suspense>
-                );
-            default:
-                return null;
-        }
-    };
+    );
 
     return (
         <div className="flex flex-col h-full bg-surface-base border border-stroke-subtle rounded-lg overflow-hidden">
@@ -127,6 +174,7 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
+                        data-testid={`right-tab-${tab.id}`}
                         onClick={() => setActiveTab(tab.id)}
                         className={`
               flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors
@@ -156,9 +204,14 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                 ))}
             </div>
 
-            {/* Tab Content */}
-            <div className="flex-1 min-h-0 overflow-hidden">
-                {renderTabContent()}
+            {/* Tab content: both panes are mounted; the console overlays the preview. */}
+            <div className="relative flex-1 min-h-0 overflow-hidden">
+                <div className="absolute inset-0" aria-hidden={activeTab !== 'preview'}>
+                    {renderPreview()}
+                </div>
+                {activeTab === 'console' && (
+                    <div className="absolute inset-0 z-10 bg-surface-base">{renderConsole()}</div>
+                )}
             </div>
         </div>
     );

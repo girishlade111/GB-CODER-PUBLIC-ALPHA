@@ -16,6 +16,8 @@ interface MultiFileEditorProps {
   buildErrors: BundleError[];
   /** Wired to the AI selection toolbar, same as the plain-mode panels. */
   onSelectionChange?: (editor: unknown, path: string) => void;
+  /** Registers the mounted editor for click-to-jump navigation. */
+  onEditorReady?: (key: string, editor: unknown, monaco: unknown) => void;
 }
 
 const STATUS_LABEL: Record<MultiFileEditorProps['buildStatus'], string> = {
@@ -41,12 +43,20 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
   buildStatus,
   buildErrors,
   onSelectionChange,
+  onEditorReady,
 }) => {
   const { activeFile } = workspace;
 
   const handleWillMount = (monaco: Monaco) => defineGbCoderTheme(monaco);
 
-  const handleMount = (editor: unknown) => {
+  const handleMount = (editor: unknown, monaco: unknown) => {
+    /*
+     * The instance is now retained (via onEditorReady) instead of being
+     * dropped. Without it, nothing could reveal a line in multi-file mode, so
+     * Problems rows and stack frames had nowhere to navigate to.
+     */
+    if (activeFile) onEditorReady?.(activeFile.path, editor, monaco);
+
     if (!onSelectionChange || !activeFile) return;
     const instance = editor as { onDidChangeCursorSelection: (cb: () => void) => void };
     instance.onDidChangeCursorSelection(() => onSelectionChange(editor, activeFile.path));

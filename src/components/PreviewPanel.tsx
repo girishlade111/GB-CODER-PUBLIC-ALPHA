@@ -1,8 +1,15 @@
-import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package } from 'lucide-react';
-import { ConsoleLog, JSEditorMode } from '../types';
+import { JSEditorMode } from '../types';
 import { MOUNT_ELEMENT_ID, ProjectType } from '../types/files';
 import { externalLibraryService } from '../services/externalLibraryService';
+import {
+  StackMappingContext,
+  buildConsoleBridgeScript,
+  mapStackFrame,
+  parseBridgeMessage,
+} from '../services/consoleBridge';
+import type { ConsoleMessage, ResolvedStackFrame } from '../types/consoleFeed';
 
 type ViewMode = 'desktop' | 'tablet' | 'mobile' | 'fullscreen';
 
@@ -11,7 +18,13 @@ interface PreviewPanelProps {
   css: string;
   javascript: string;
   jsEditorMode?: JSEditorMode;
-  onConsoleLog: (log: ConsoleLog) => void;
+  /** Receives every captured console call, with stack frames already resolved. */
+  onConsoleMessage: (message: Omit<ConsoleMessage, 'id' | 'count'>) => void;
+  /**
+   * Fired when a fresh preview document reports itself live. Browser devtools
+   * clear on navigation, and the console feed follows the same rule.
+   */
+  onPreviewReset?: () => void;
   autoRunJS?: boolean;
   previewDelay?: number;
   /**
@@ -70,7 +83,8 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   css,
   javascript,
   jsEditorMode = 'javascript',
-  onConsoleLog,
+  onConsoleMessage,
+  onPreviewReset,
   autoRunJS = true,
   previewDelay = 300,
   projectType = 'plain',
@@ -80,6 +94,9 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   isResolvingPackages = false,
 }, ref) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  /** Monotonic run counter, and the id of the document currently mounted. */
+  const runCounterRef = useRef(0);
+  const currentRunIdRef = useRef<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('desktop');
   /** React/Vue projects render a bundled module graph instead of raw files. */
@@ -139,7 +156,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
     return code.replace(/<\/script/gi, '<\\/script');
   };
 
-  const generatePreviewContent = useCallback(() => {
+  const generatePreviewContent = useCallback((runId: string) => {
     /*
      * Framework projects substitute the bundler's output for the three raw
      * files: the markup becomes a mount point, the styles are the CSS collected
@@ -231,57 +248,13 @@ ${importMapHTML}
 </head>
 <body>
     ${effectiveHtml}
+    <script>${buildConsoleBridgeScript(runId)}</script>
     <script>
         // External Libraries Loading Indicator
         if (${externalLibraries.length} > 0) {
             console.log('Loading ${externalLibraries.length} external libraries...');
         }
-        
-        // Strict console intercept with input validation
-        const sendToParent = (type, message) => {
-            // Validate input before sending
-            if (typeof message === 'string' && message.length < 10000) {
-                window.parent.postMessage({
-                    type: 'console',
-                    level: type,
-                    message: message.substring(0, 5000), // Limit message length
-                    timestamp: new Date().toISOString()
-                }, '*');
-            }
-        };
-        
-        // Secure console methods with limits
-        const secureConsole = {
-            log: (...args) => sendToParent('log', args.map(arg => 
-                typeof arg === 'string' && arg.length > 1000 ? arg.substring(0, 1000) + '...' : 
-                typeof arg === 'object' ? '[Object]' : String(arg)
-            ).join(' ')),
-            error: (...args) => sendToParent('error', args.map(arg => 
-                typeof arg === 'string' && arg.length > 1000 ? arg.substring(0, 1000) + '...' : 
-                typeof arg === 'object' ? '[Object]' : String(arg)
-            ).join(' ')),
-            warn: (...args) => sendToParent('warn', args.map(arg => 
-                typeof arg === 'string' && arg.length > 1000 ? arg.substring(0, 1000) + '...' : 
-                typeof arg === 'object' ? '[Object]' : String(arg)
-            ).join(' ')),
-            info: (...args) => sendToParent('info', args.map(arg => 
-                typeof arg === 'string' && arg.length > 1000 ? arg.substring(0, 1000) + '...' : 
-                typeof arg === 'object' ? '[Object]' : String(arg)
-            ).join(' '))
-        };
-        
-        // Override console with secure version
-        console.log = secureConsole.log;
-        console.error = secureConsole.error;
-        console.warn = secureConsole.warn;
-        console.info = secureConsole.info;
         ${compilationWarningScript}
-        
-        // Catch runtime errors with sanitized output
-        window.addEventListener('error', (e) => {
-            const message = e.message ? e.message.substring(0, 500) : 'Unknown error';
-            sendToParent('error', \`\${message} at \${e.filename || 'unknown'}:\${e.lineno || 'unknown'}\`);
-        });
         
         // Wait for external libraries to load before executing user code
         const waitForLibraries = () => {
@@ -325,7 +298,9 @@ ${importMapHTML}
                 }
                 
             } catch (error) {
-                sendToParent('error', error.message ? error.message.substring(0, 200) : 'Execution error');
+                // Re-thrown through console.error so the bridge captures the
+                // real Error object, and with it a mappable stack trace.
+                console.error(error);
             }
         };
         
@@ -345,7 +320,15 @@ ${importMapHTML}
   const refreshPreview = useCallback(() => {
     if (iframeRef.current) {
       setIsLoading(true);
-      const content = generatePreviewContent();
+      /*
+       * Each document gets its own run id. Messages tagged with a superseded id
+       * are discarded, so a slow log from the previous preview cannot appear
+       * beneath the output of the one that replaced it.
+       */
+      runCounterRef.current += 1;
+      const runId = `run-${runCounterRef.current}`;
+      currentRunIdRef.current = runId;
+      const content = generatePreviewContent(runId);
       setPreviewContent(content);
       iframeRef.current.srcdoc = content;
       setTimeout(() => setIsLoading(false), 300);
@@ -386,22 +369,82 @@ ${importMapHTML}
     };
   }, []);
 
+  /*
+   * Stack frames arrive as engine text (`at foo (about:srcdoc:12:5)`) and are
+   * resolved here, where the shape of the generated document is known.
+   *
+   * Plain projects run the user's JS through `eval`, so engines report it
+   * against `<anonymous>` with script-relative line numbers -- those map
+   * directly onto the JS editor. Babel and bundled module output cannot be
+   * mapped without source maps, so their frames stay unlinked rather than
+   * pointing at a line that has nothing to do with the error.
+   */
+  const stackContext = useMemo<StackMappingContext>(
+    () => ({
+      userScriptStartLine: null,
+      userScriptIsEvaluated: !isFrameworkProject && jsEditorMode !== 'jsx' && jsEditorMode !== 'tsx',
+      scriptFile: 'javascript',
+    }),
+    [isFrameworkProject, jsEditorMode],
+  );
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'console') {
-        const log: ConsoleLog = {
-          id: Date.now().toString(),
-          type: event.data.level,
-          message: event.data.message,
-          timestamp: event.data.timestamp,
-        };
-        onConsoleLog(log);
+      // Scoped to this iframe: a bare `window` listener also caught messages
+      // from unrelated frames and from other panels' preview documents.
+      const message = parseBridgeMessage(event, iframeRef.current?.contentWindow ?? null);
+      if (!message) return;
+
+      if (message.kind === 'lifecycle') {
+        if (message.runId !== currentRunIdRef.current) return;
+        onPreviewReset?.();
+        return;
       }
+
+      /*
+       * `console.error(err)` carries no call-site stack of its own -- the useful
+       * frames belong to the Error that was passed in. Hoist them so the row
+       * gets clickable frames instead of burying them inside the argument.
+       */
+      const errorArgument = message.args.find(
+        (arg): arg is Extract<typeof arg, { kind: 'error' }> =>
+          arg.kind === 'error' && arg.stack.length > 0,
+      );
+
+      /*
+       * An explicit Error's own trace beats the call site of the `console.error`
+       * that reported it: the former points at where the failure happened, the
+       * latter only at the bridge's interceptor.
+       */
+      const rawFrames = errorArgument ? errorArgument.stack : message.stack;
+
+      const stack: ResolvedStackFrame[] = rawFrames.map((frame) => ({
+        frame,
+        location: mapStackFrame(frame, stackContext),
+      }));
+
+      /*
+       * Keep the trace only when at least one frame resolves to a user file, or
+       * when the message is an uncaught failure where the trace is the point.
+       * Otherwise a plain `console.error('oops')` would trail several lines of
+       * unclickable internal frames.
+       */
+      const hasMappedFrame = stack.some((entry) => entry.location !== null);
+      const keepStack = hasMappedFrame || message.origin !== 'console';
+
+      onConsoleMessage({
+        level: message.level,
+        origin: message.origin,
+        args: message.args,
+        stack: keepStack ? stack : [],
+        timestamp: message.timestamp,
+        groupDepth: message.groupDepth,
+      });
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [onConsoleLog]);
+  }, [onConsoleMessage, onPreviewReset, stackContext]);
 
   // Handle ESC key to exit fullscreen
   useEffect(() => {
@@ -416,7 +459,8 @@ ${importMapHTML}
   }, [viewMode]);
 
   const openInNewTab = () => {
-    const content = generatePreviewContent();
+    // A detached tab has no parent to post to; the bridge no-ops there.
+    const content = generatePreviewContent('external');
     const blob = new Blob([content], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
