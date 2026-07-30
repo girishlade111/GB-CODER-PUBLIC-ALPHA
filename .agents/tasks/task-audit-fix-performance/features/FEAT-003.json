@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Performance optimizations: improve code splitting, add React.memo where missing, fix re-render issues, and optimize the preview panel rendering",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In src/App.tsx, the components AIChatAssistant, VoiceCommandPanel, TemplateSelectorModal, CodeStatsDashboard, ValidationPanel, CustomInjectionManager, and BuildFromPromptModal are eagerly imported but only shown conditionally (when their show* state is true). Convert them to lazy imports with React.lazy() and wrap in Suspense. This reduces the initial bundle size by deferring these modal components.",
     "In src/components/PreviewPanel.tsx, the function `generatePreviewContent()` is called BOTH in the useEffect debounce AND directly in the JSX `srcDoc={generatePreviewContent()}`. This means every render regenerates the preview content string even when nothing changed. Fix: use useMemo or useState to store the generated content and only update it in the useEffect, remove the direct call in JSX srcDoc.",
@@ -24,5 +24,5 @@
     "Check that the index chunk (main app code) does not include AIChatAssistant/VoiceCommandPanel/etc code"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Build succeeds. Modal components now in separate lazy chunks: BuildFromPromptModal (6KB), CodeStatsDashboard (7.7KB), VoiceCommandPanel (8.1KB), ValidationPanel (12KB), CustomInjectionManager (18KB), AIChatAssistant (29.8KB), TemplateSelectorModal (128KB). Formatter chunk (891KB) is separate and only loads on format action. critical-ui chunk remains at 63KB. index chunk is 94KB. All lint errors are pre-existing @typescript-eslint/no-explicit-any issues. React hooks warnings are pre-existing from FEAT-001."
 }
