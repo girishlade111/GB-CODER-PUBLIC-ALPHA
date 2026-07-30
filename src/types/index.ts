@@ -86,6 +86,16 @@ export interface SelectionOperationResult {
   hasCodeChanges: boolean;
   explanation: string;
   suggestedCode?: string;
+  /**
+   * Which file the suggested code belongs to, as reported by the AI.
+   * Used to decide where to apply the change.
+   */
+  targetFile?: EditorLanguage;
+  /**
+   * True when `suggestedCode` replaces only the user's selection range.
+   * False when it is the complete new contents of `targetFile`.
+   */
+  appliesToSelection?: boolean;
   issues?: Array<{
     type: string;
     description: string;
