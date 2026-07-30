@@ -115,6 +115,17 @@ export default defineConfig({
           if (id.includes('node_modules') && id.includes('typescript')) {
             return 'typescript-compiler';
           }
+
+          // Client-side bundler for multi-file React/Vue projects. Both are
+          // heavy and only needed once a framework project is opened, so they
+          // must stay out of the entry chunk. Checked before the generic
+          // node_modules buckets below so they are not swept into react-core.
+          if (id.includes('esbuild-wasm')) {
+            return 'esbuild-wasm';
+          }
+          if (id.includes('@vue/compiler-sfc') || id.includes('@vue/compiler-')) {
+            return 'vue-compiler';
+          }
           
           // React ecosystem - core chunk
           if (id.includes('node_modules')) {
