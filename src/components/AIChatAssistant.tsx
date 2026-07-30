@@ -23,6 +23,16 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
   externalLibraries,
 }) => {
   const { isDark } = useTheme();
+  // Escape to dismiss, consistent with the other sidebar-triggered panels.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -220,6 +230,8 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
             </button>
             <button
               onClick={onClose}
+              title="Close"
+              aria-label="Close AI chat"
               className={`p-2 rounded-lg transition-colors ${
                 isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
               }`}

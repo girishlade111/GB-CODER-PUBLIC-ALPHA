@@ -16,6 +16,17 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   onLoadTemplate,
 }) => {
   const { isDark } = useTheme();
+
+  // Escape to dismiss, matching the other modals.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
@@ -149,6 +160,8 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
             </div>
             <button
               onClick={onClose}
+              title="Close"
+              aria-label="Close template library"
               className={`p-2 rounded-lg transition-colors ${
                 isDark ? 'hover:bg-white/5 text-content-secondary hover:text-content-primary' : 'hover:bg-gray-200 text-gray-600'
               }`}
