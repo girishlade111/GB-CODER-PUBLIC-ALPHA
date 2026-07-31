@@ -13,6 +13,7 @@ import {
   PLAIN_CSS_PATH,
   PLAIN_HTML_PATH,
   PLAIN_JS_PATH,
+  PLAIN_PATHS,
   ProjectFile,
   ProjectType,
   createPlainProject,
@@ -23,8 +24,12 @@ import {
 
 /** Per-file cap. Generous enough for real projects, small enough to stay responsive. */
 export const MAX_FILE_BYTES = 2 * 1024 * 1024;
-/** Cap on a whole archive, to avoid unzipping something pathological. */
-export const MAX_ARCHIVE_BYTES = 20 * 1024 * 1024;
+/**
+ * Cap on a whole archive, matching the drop-path engine (50 MB). Kept as a hard
+ * reject here rather than a warn-then-import, because this path (the Import
+ * modal) applies the result immediately with no review step to soften it.
+ */
+export const MAX_ARCHIVE_BYTES = 50 * 1024 * 1024;
 export const MAX_ARCHIVE_ENTRIES = 300;
 
 const IMPORTABLE_EXTENSIONS = new Set([
@@ -373,11 +378,50 @@ const PLAIN_TARGET_BY_LANGUAGE: Partial<Record<FileLanguage, string>> = {
 };
 
 /**
+ * Plain mode's three fixed files are the only ones that back the editor panels.
+ * Anything else in an import (package.json, config.json, README, …) is a config
+ * or metadata file: it still belongs in the project, where the Files sidebar can
+ * show it, but it must never be mapped onto a panel.
+ */
+const PLAIN_FIXED_PATH_SET = new Set<string>(PLAIN_PATHS);
+
+/**
+ * Keeps a plain project's extra files across an import.
+ *
+ * The imported project starts from the three fixed panels. Existing non-panel
+ * files from the current project survive (imported content wins on a path
+ * collision), and newly arriving ones are added, so a lone `config.json` drop
+ * lands in the Files sidebar instead of being silently discarded.
+ */
+const mergeExtraFiles = (
+  project: MultiFileProject,
+  base: MultiFileProject,
+  incoming: ProjectFile[],
+): MultiFileProject => {
+  if (incoming.length === 0) return project;
+
+  const byPath = new Map<string, ProjectFile>();
+  for (const file of base.files) {
+    if (!PLAIN_FIXED_PATH_SET.has(file.path)) {
+      byPath.set(file.path.toLowerCase(), file);
+    }
+  }
+
+  for (const file of incoming) {
+    byPath.set(file.path.toLowerCase(), file);
+  }
+
+  return { ...project, files: [...project.files, ...byPath.values()] };
+};
+
+/**
  * Merges an import into a project.
  *
  * Plain imports map onto the three fixed panels so the familiar single-file
- * experience is preserved. Framework imports replace the file tree wholesale,
- * because a half-merged module graph would not build.
+ * experience is preserved; any non-panel files (e.g. a dropped .json config)
+ * are kept alongside them and shown in the Files sidebar. Framework imports
+ * replace the file tree wholesale, because a half-merged module graph would not
+ * build.
  */
 export const applyImport = (
   current: MultiFileProject,
@@ -389,31 +433,47 @@ export const applyImport = (
 
   if (result.projectType === 'plain') {
     const triple = { html: '', css: '', javascript: '' };
+    const extraFiles: ProjectFile[] = [];
     let matched = 0;
 
     for (const file of result.files) {
       const target = PLAIN_TARGET_BY_LANGUAGE[file.language];
-      if (!target) continue;
+      if (!target) {
+        extraFiles.push(file);
+        continue;
+      }
       matched++;
       if (target === PLAIN_HTML_PATH) triple.html = file.content;
       if (target === PLAIN_CSS_PATH) triple.css = file.content;
       if (target === PLAIN_JS_PATH) triple.javascript = file.content;
     }
 
-    if (matched === 0) {
-      return { project: current, summary: 'No HTML, CSS or JS files were found.' };
-    }
-
     // Keep panels the import did not supply, so importing only a stylesheet
     // does not blank the user's markup.
     const base = current.projectType === 'plain' ? current : createPlainProject('', '', '');
-    return {
-      project: createPlainProject(
+    const merged = mergeExtraFiles(
+      createPlainProject(
         triple.html || getExistingPlain(base, PLAIN_HTML_PATH),
         triple.css || getExistingPlain(base, PLAIN_CSS_PATH),
         triple.javascript || getExistingPlain(base, PLAIN_JS_PATH),
       ),
-      summary: `Imported ${matched} file${matched === 1 ? '' : 's'} into the editor.`,
+      base,
+      extraFiles,
+    );
+
+    const parts: string[] = [];
+    if (matched > 0) {
+      parts.push(`Imported ${matched} file${matched === 1 ? '' : 's'} into the editor`);
+    }
+    if (extraFiles.length > 0) {
+      parts.push(
+        `${extraFiles.length} file${extraFiles.length === 1 ? '' : 's'} added to Files`,
+      );
+    }
+
+    return {
+      project: merged,
+      summary: parts.join(' · ') || 'No HTML, CSS or JS files were found.',
     };
   }
 

@@ -21,6 +21,13 @@ interface EditorPanelProps {
   onJsEditorModeChange?: (mode: JSEditorMode) => void;
   /** Fired once Monaco has mounted, for navigation and validation wiring. */
   onEditorReady?: (editor: unknown, monaco: unknown) => void;
+  /**
+   * Receives a validated single file dropped on the panel. When provided, the
+   * panel's own FileReader path is bypassed and the drop is handed to the lazy
+   * import engine, which is what keeps all drop-handling logic out of the
+   * initial bundle.
+   */
+  onFileDrop?: (file: File) => void;
 }
 
 const ACCEPTED_EXTENSIONS: Record<EditorLanguage, string[]> = {
@@ -57,6 +64,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
   jsEditorMode = 'javascript',
   onJsEditorModeChange,
   onEditorReady,
+  onFileDrop,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -105,30 +113,45 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      setDropError(null);
 
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length === 0) return;
+      const files = Array.from(e.dataTransfer.files);
+      const file = files[0];
 
-    const file = files[0];
-    if (!isValidFile(file.name)) {
-      setDropError(DROP_ERROR_MESSAGES[language]);
-      setTimeout(() => setDropError(null), 4000);
-      return;
-    }
+      // A single matching file is owned by the panel: validated here (a cheap
+      // extension check) but read by the lazy import engine via `onFileDrop`.
+      // Folders and multi-file drops fall through to the global drop zone.
+      if (files.length === 1 && file) {
+        if (!isValidFile(file.name)) {
+          e.stopPropagation();
+          setDropError(DROP_ERROR_MESSAGES[language]);
+          setTimeout(() => setDropError(null), 4000);
+          return;
+        }
 
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const content = ev.target?.result as string;
-      if (content !== undefined) {
-        onChange(content);
+        if (onFileDrop) {
+          e.stopPropagation();
+          onFileDrop(file);
+          return;
+        }
+
+        // Fallback for contexts without the import pipeline.
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const content = ev.target?.result as string;
+          if (content !== undefined) {
+            onChange(content);
+          }
+        };
+        reader.readAsText(file);
       }
-    };
-    reader.readAsText(file);
-  }, [isValidFile, language, onChange]);
+    },
+    [isValidFile, language, onChange, onFileDrop],
+  );
 
   return (
     <div

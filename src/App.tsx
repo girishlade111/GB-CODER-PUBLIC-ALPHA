@@ -813,12 +813,25 @@ function App() {
     isDragging: isImportDragging,
     isPreparing: isImportPreparing,
     dropHandlers,
+    importFiles,
   } = useImportDrop({
     onPlan: handleImportPlan,
     onError: (message) => toast.error(message),
     // A drop while the review modal is open would race with the pending plan.
     disabled: importPlan !== null,
   });
+
+  /**
+   * Panel-targeted single-file drop. The panel validates the extension; the
+   * actual file read happens in the lazy import chunk, so a code-panel drop is
+   * no different from a global one as far as the initial bundle is concerned.
+   */
+  const handlePanelFileDrop = useCallback(
+    (file: File) => {
+      void importFiles([file]);
+    },
+    [importFiles],
+  );
 
   /** Applies a reviewed plan, honouring any override the user chose. */
   const handleConfirmImport = useCallback(
@@ -838,10 +851,17 @@ function App() {
       /*
        * Open the entry file so the import lands somewhere useful rather than on
        * an empty editor. Deferred a tick so the workspace sees the new files.
+       * Plain imports that carried extra files (e.g. a dropped config.json) get
+       * the Files sidebar opened too, so those files are actually visible.
        */
       const entry = importPlan.result.entry;
-      if (projectType !== 'plain' && entry) {
+      const hasExtraFiles = importPlan.result.files.some(
+        (file) => !['html', 'css', 'javascript'].includes(file.language),
+      );
+      if (projectType !== 'plain' || hasExtraFiles) {
         setShowFileExplorer(true);
+      }
+      if (projectType !== 'plain' && entry) {
         setTimeout(() => workspace.openFile(entry), 0);
       }
 
@@ -2289,6 +2309,7 @@ function App() {
               editorRef={htmlEditorRef}
               onSelectionChange={(editor) => handleSelectionChange(editor, 'html')}
               onEditorReady={(editor, monaco) => handleEditorReady('html', editor, monaco)}
+              onFileDrop={handlePanelFileDrop}
               fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
               fontSize={settings.editorFontSize}
             />
@@ -2304,6 +2325,7 @@ function App() {
               editorRef={cssEditorRef}
               onSelectionChange={(editor) => handleSelectionChange(editor, 'css')}
               onEditorReady={(editor, monaco) => handleEditorReady('css', editor, monaco)}
+              onFileDrop={handlePanelFileDrop}
               fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
               fontSize={settings.editorFontSize}
             />
@@ -2319,6 +2341,7 @@ function App() {
               editorRef={jsEditorRef}
               onSelectionChange={(editor) => handleSelectionChange(editor, 'javascript')}
               onEditorReady={(editor, monaco) => handleEditorReady('javascript', editor, monaco)}
+              onFileDrop={handlePanelFileDrop}
               fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
               fontSize={settings.editorFontSize}
               jsEditorMode={jsEditorMode}
