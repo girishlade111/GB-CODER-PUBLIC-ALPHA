@@ -140,7 +140,17 @@ const validateEntry = (path: string, size: number): string | null => {
   return null;
 };
 
-/** Reads a FileList (or array) of loose files into project files. */
+/**
+ * Reads a FileList (or array) of loose files into project files.
+ *
+ * @deprecated Do not wire new import surfaces to this. It does **not** run
+ * `detectProject`, so anything imported through it can never be recognised as a
+ * React, Vue or full-stack project — which is exactly why click-to-upload used to
+ * be unable to enter VS Code mode. Every entry point (drop, file picker, folder
+ * picker, URL) must go through `useImportDrop().importFiles`, which funnels into
+ * `buildImportPlan` in `services/import/importEngine`. Retained only because
+ * `importFromUrl` below shares its helpers; it has no callers.
+ */
 export const importFromFiles = async (files: File[]): Promise<ImportResult> => {
   const accepted: ProjectFile[] = [];
   const warnings: ImportWarning[] = [];
@@ -165,7 +175,13 @@ export const importFromFiles = async (files: File[]): Promise<ImportResult> => {
 
 // ─── ZIP import ───────────────────────────────────────────────────────────────
 
-/** Extracts a .zip into project files. */
+/**
+ * Extracts a .zip into project files.
+ *
+ * @deprecated Same caveat as `importFromFiles` above: no detection runs, so a
+ * zipped React or full-stack project would import as a plain file bag. Use
+ * `buildImportPlan`, which reads the archive *and* detects. No callers remain.
+ */
 export const importFromZip = async (archive: File | Blob): Promise<ImportResult> => {
   if (archive.size > MAX_ARCHIVE_BYTES) {
     throw new Error(
