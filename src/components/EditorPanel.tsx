@@ -142,14 +142,14 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
       onDrop={handleDrop}
     >
       <div
-        className="bg-surface-raised px-4 py-2 border-b border-stroke-subtle flex items-center justify-between cursor-pointer hover:bg-white/[0.03] transition-colors"
+        className="bg-surface-raised px-4 py-2 border-b border-stroke-subtle flex items-center justify-between cursor-pointer hover:bg-white/[0.03] transition-colors compact:min-h-[44px] compact:flex-wrap compact:gap-x-2 compact:gap-y-1"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         {/* Left side: Icon, Title, File Label, Language Badge */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 compact:min-w-0">
           {icon}
           <h3 className="text-sm font-medium text-content-primary">{title}</h3>
-          <span className="text-xs text-content-muted font-mono">{fileName}</span>
+          <span className="text-xs text-content-muted font-mono mobile:hidden">{fileName}</span>
           <span className="text-[10px] tracking-wider font-semibold bg-white/[0.07] text-content-secondary px-1.5 py-0.5 rounded-sm uppercase">
             {languageBadge}
           </span>
@@ -171,13 +171,13 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
         </div>
 
         {/* Right side: Action Buttons + Collapse Icon */}
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2 compact:shrink-0" onClick={(e) => e.stopPropagation()}>
           {/* Format Button */}
           {onFormat && (
             <button
               onClick={handleFormat}
               disabled={!canFormat}
-              className="p-1.5 rounded-md hover:bg-accent-subtle disabled:opacity-40 disabled:cursor-not-allowed text-accent-hover hover:text-accent-hover transition-colors"
+              className="p-1.5 rounded-md compact:flex compact:min-h-[44px] compact:min-w-[44px] compact:items-center compact:justify-center hover:bg-accent-subtle disabled:opacity-40 disabled:cursor-not-allowed text-accent-hover hover:text-accent-hover transition-colors"
               title={`Format ${language.toUpperCase()} code (Prettier)`}
             >
               <Wand2 className={`w-4 h-4 ${isFormatLoading ? 'animate-spin' : ''}`} />
@@ -188,7 +188,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           <button
             onClick={handleCopy}
             disabled={!hasContent}
-            className="p-1.5 rounded-md hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed text-content-secondary hover:text-content-primary transition-colors"
+            className="p-1.5 rounded-md compact:flex compact:min-h-[44px] compact:min-w-[44px] compact:items-center compact:justify-center hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed text-content-secondary hover:text-content-primary transition-colors"
             title="Copy code to clipboard"
           >
             <Copy className="w-4 h-4" />
@@ -197,7 +197,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           {/* Lock/Unlock Button */}
           <button
             onClick={toggleLock}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${isLocked ? 'text-amber-300 bg-amber-500/10' : 'text-content-secondary hover:text-content-primary'
+            className={`p-1.5 rounded-md compact:flex compact:min-h-[44px] compact:min-w-[44px] compact:items-center compact:justify-center hover:bg-white/5 transition-colors ${isLocked ? 'text-amber-300 bg-amber-500/10' : 'text-content-secondary hover:text-content-primary'
               }`}
             title={isLocked ? 'Unlock editor (make editable)' : 'Lock editor (read-only)'}
           >
@@ -206,7 +206,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
           {/* Collapse Icon */}
           <ChevronDown
-            className={`w-4 h-4 text-gray-400 transition-transform ml-1 ${isCollapsed ? 'rotate-180' : ''
+            className={`w-4 h-4 text-gray-400 transition-transform ml-1 compact:mr-1 compact:h-8 compact:w-8 compact:p-2 ${isCollapsed ? 'rotate-180' : ''
               }`}
             onClick={() => setIsCollapsed(!isCollapsed)}
           />

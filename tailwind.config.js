@@ -3,6 +3,25 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      // ─── Responsive breakpoints ───────────────────────────────────────────
+      // Added alongside (not replacing) Tailwind's defaults, so every existing
+      // `sm:`/`md:`/`lg:`/`xl:` class in the codebase keeps its current
+      // meaning and the desktop rendering is unaffected.
+      //
+      //   mobile  ≤ 640px
+      //   tablet  641px – 1024px
+      //   compact ≤ 1024px   (mobile + tablet — the single-column range)
+      //   desktop ≥ 1025px   (today's layout, must stay pixel-identical)
+      //
+      // `compact` and `desktop` are exact complements, so a rule written for
+      // one can never bleed into the other.
+      screens: {
+        mobile: { max: '640px' },
+        tablet: { min: '641px', max: '1024px' },
+        compact: { max: '1024px' },
+        desktop: { min: '1025px' },
+      },
+
       // ─── Color palette ────────────────────────────────────────────────────
       // Modern dev-tool dark theme: near-black canvas, layered surfaces that
       // step up as elements lift off the page, one accent, muted secondary

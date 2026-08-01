@@ -1,9 +1,12 @@
 import React, { useState, useRef } from 'react';
 import {
   Menu,
+  MoreVertical,
+  PanelLeft,
   Save,
   Play,
   FileText,
+  Share2,
   Sun,
   Moon,
   Trash2,
@@ -31,6 +34,17 @@ interface NavigationBarProps {
   /** Push-to-talk: starts listening, or stops it when already live. */
   onToggleVoice?: () => void;
   isVoiceListening?: boolean;
+  /**
+   * Opens the navigation drawer. Only rendered at ≤1024px, where the left rail
+   * is off-canvas; hidden with CSS on desktop so it costs no toolbar width.
+   */
+  onToggleNavDrawer?: () => void;
+  isNavDrawerOpen?: boolean;
+  /**
+   * Export & Share. The same handler that drives the desktop toolbar button, so
+   * the overflow menu is a second trigger rather than a second implementation.
+   */
+  onOpenExport?: () => void;
 }
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
@@ -44,18 +58,26 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   customActions,
   onToggleVoice,
   isVoiceListening = false,
+  onToggleNavDrawer,
+  isNavDrawerOpen = false,
+  onOpenExport,
 }) => {
   const { isDark } = useTheme();
   const { updateSettings } = useSettings();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isOverflowOpen, setIsOverflowOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const overflowRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (overflowRef.current && !overflowRef.current.contains(event.target as Node)) {
+        setIsOverflowOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -65,13 +87,13 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   // Handle escape key for menu close
   React.useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isDropdownOpen) {
-        setIsDropdownOpen(false);
-      }
+      if (event.key !== 'Escape') return;
+      if (isDropdownOpen) setIsDropdownOpen(false);
+      if (isOverflowOpen) setIsOverflowOpen(false);
     };
     document.addEventListener('keydown', handleEscapeKey);
     return () => document.removeEventListener('keydown', handleEscapeKey);
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, isOverflowOpen]);
 
   return (
     <>
@@ -86,6 +108,25 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Left side - Logo */}
             <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 min-w-0 flex-1">
+              {/*
+                Drawer trigger. `hidden` above 1024px — a display:none flex child
+                creates no box and no gap, so the desktop toolbar is unchanged.
+              */}
+              {onToggleNavDrawer && (
+                <button
+                  onClick={onToggleNavDrawer}
+                  className={`hidden h-11 w-11 shrink-0 items-center justify-center rounded-md transition-colors compact:flex ${
+                    isDark
+                      ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+                      : 'text-gray-700 hover:bg-black/5'
+                  }`}
+                  aria-label={isNavDrawerOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                  aria-expanded={isNavDrawerOpen}
+                >
+                  <PanelLeft className="w-5 h-5" />
+                </button>
+              )}
+
               <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-4">
                 <img
                   src="/tghjkl.jpeg"
@@ -104,7 +145,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               <Tooltip label="Run">
                 <button
                   onClick={onRun}
-                  className={`p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 ${
+                  className={`p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 compact:justify-center compact:min-h-[44px] compact:min-w-[44px] ${
                     isDark
                       ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
                       : 'text-gray-700 hover:bg-black/5'
@@ -123,7 +164,12 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 * action it reaches is still available manually.
                 */}
               {onToggleVoice && (
-                <Tooltip label={isVoiceListening ? 'Stop listening' : 'Voice commands'}>
+                <Tooltip
+                  label={isVoiceListening ? 'Stop listening' : 'Voice commands'}
+                  /* Secondary action: moves into the overflow menu at ≤1024px so
+                     Run and Build with AI keep the width they need. */
+                  className="hidden desktop:inline-flex"
+                >
                   <button
                     onClick={onToggleVoice}
                     className={`relative p-2 rounded-md transition-colors ${isVoiceListening
@@ -151,7 +197,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               <Tooltip label="Build with AI">
                 <button
                   onClick={onOpenBuildFromPrompt}
-                  className="p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 bg-accent text-accent-fg hover:bg-accent-hover active:brightness-95"
+                  className="p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 bg-accent text-accent-fg hover:bg-accent-hover active:brightness-95 compact:justify-center compact:min-h-[44px] compact:min-w-[44px]"
                   title="Build with AI"
                   aria-label="Build with AI"
                 >
@@ -163,12 +209,90 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               {/* Custom Actions */}
               {customActions}
 
+              {/*
+                Overflow menu for secondary actions at ≤1024px. It re-triggers
+                the same `onToggleVoice` / `onOpenExport` handlers the desktop
+                toolbar uses — no duplicated feature logic, just a second
+                trigger surface that fits a narrow bar.
+              */}
+              {(onToggleVoice || onOpenExport) && (
+                <div className="relative hidden compact:block" ref={overflowRef}>
+                  <button
+                    onClick={() => setIsOverflowOpen((open) => !open)}
+                    className={`flex h-11 w-11 items-center justify-center rounded-md transition-colors ${
+                      isOverflowOpen
+                        ? isDark
+                          ? 'bg-white/10 text-content-primary'
+                          : 'bg-gray-100 text-black'
+                        : isDark
+                          ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+                          : 'text-gray-600 hover:bg-black/5'
+                    }`}
+                    aria-label="More actions"
+                    aria-expanded={isOverflowOpen}
+                    aria-haspopup="true"
+                    data-testid="nav-overflow-toggle"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+
+                  {isOverflowOpen && (
+                    <div
+                      className={`absolute right-0 mt-2 w-56 overflow-hidden rounded-lg border shadow-elevated z-50 animate-slide-down ${
+                        isDark ? 'bg-surface-raised border-stroke-subtle' : 'bg-white border-gray-200'
+                      }`}
+                      data-testid="nav-overflow-menu"
+                    >
+                      <div className="py-1">
+                        {onToggleVoice && (
+                          <button
+                            onClick={() => {
+                              onToggleVoice();
+                              setIsOverflowOpen(false);
+                            }}
+                            className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left text-sm transition-colors ${
+                              isDark
+                                ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+                                : 'text-gray-700 hover:bg-gray-50'
+                            }`}
+                          >
+                            {isVoiceListening ? (
+                              <Mic className="w-4 h-4 text-red-400" />
+                            ) : (
+                              <MicOff className="w-4 h-4" />
+                            )}
+                            {isVoiceListening ? 'Stop listening' : 'Voice commands'}
+                          </button>
+                        )}
+
+                        {onOpenExport && (
+                          <button
+                            onClick={() => {
+                              onOpenExport();
+                              setIsOverflowOpen(false);
+                            }}
+                            className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left text-sm transition-colors ${
+                              isDark
+                                ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+                                : 'text-gray-700 hover:bg-gray-50'
+                            }`}
+                          >
+                            <Share2 className="w-4 h-4" />
+                            Export &amp; Share
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Project menu — project-level actions that have no sidebar equivalent */}
               <div className="relative" ref={dropdownRef}>
                 <Tooltip label="Project menu">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className={`p-2 rounded-md transition-colors ${isDropdownOpen
+                    className={`p-2 rounded-md transition-colors compact:flex compact:h-11 compact:w-11 compact:items-center compact:justify-center ${isDropdownOpen
                       ? (isDark ? 'bg-white/10 text-content-primary' : 'bg-gray-100 text-black')
                       : (isDark
                         ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
