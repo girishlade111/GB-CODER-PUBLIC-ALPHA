@@ -8,6 +8,7 @@ import {
   Package,
   PanelLeftClose,
   PanelLeftOpen,
+  PanelsTopLeft,
   Settings as SettingsIcon,
   Upload,
   X,
@@ -23,6 +24,14 @@ interface AppSidebarProps {
   isDependenciesOpen: boolean;
   onOpenTemplates: () => void;
   onOpenImport: () => void;
+  /**
+   * Switches the current project into VS Code mode by hand.
+   *
+   * That mode is entered automatically for a detected full-stack import, but it
+   * is also the only place the Sandbox and Terminal panels live — so without a
+   * manual way in, a plain, React or Vue project could never reach them.
+   */
+  onOpenVSCodeMode: () => void;
   onOpenAIChat: () => void;
   onOpenVoiceCommands: () => void;
   onOpenStatistics: () => void;
@@ -76,6 +85,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   isDependenciesOpen,
   onOpenTemplates,
   onOpenImport,
+  onOpenVSCodeMode,
   onOpenAIChat,
   onOpenVoiceCommands,
   onOpenStatistics,
@@ -123,6 +133,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
           label: 'Import',
           icon: <Upload className="h-5 w-5" />,
           onClick: onOpenImport,
+        },
+        {
+          id: 'vscode-mode',
+          label: 'VS Code Mode & Sandbox',
+          icon: <PanelsTopLeft className="h-5 w-5" />,
+          onClick: onOpenVSCodeMode,
         },
       ],
     },

@@ -37,6 +37,12 @@ interface VSCodeModeProps {
   onExit: () => void;
   fontFamily: string;
   fontSize: number;
+  /**
+   * How the mode was entered. Only affects wording: claiming a project was
+   * "detected as full-stack" when the user switched by hand would be untrue, and
+   * this mode is now reachable both ways.
+   */
+  entryReason?: 'detected' | 'manual';
 }
 
 const subscribeSandbox = (onChange: () => void) => sandboxSession.subscribe(onChange);
@@ -83,6 +89,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   onExit,
   fontFamily,
   fontSize,
+  entryReason = 'detected',
 }) => {
   const sandbox = useSyncExternalStore(subscribeSandbox, getSandboxSnapshot, getSandboxSnapshot);
 
@@ -169,7 +176,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         >
           <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400" />
           <p className="flex-1 text-xs text-amber-100">
-            Full-stack project detected — connect a Sandbox to run this project.
+            {entryReason === 'manual'
+              ? 'VS Code mode — connect a Sandbox to run this project.'
+              : 'Full-stack project detected — connect a Sandbox to run this project.'}
           </p>
           <button
             onClick={() => setRightTab('sandbox')}

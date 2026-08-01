@@ -446,6 +446,17 @@ function App() {
    * React / Vue editors, which are untouched by this feature.
    */
   const [fullStackProject, setFullStackProject] = useState<MultiFileProject | null>(null);
+  /**
+   * What to restore when leaving VS Code mode, set only for a *manual* entry.
+   *
+   * An auto-detected full-stack import has nothing meaningful to go back to and
+   * leaves as a plain project. A manual entry does: a React or Vue project must
+   * come back as itself, not be silently flattened to plain on exit.
+   */
+  const [vsCodeReturn, setVsCodeReturn] = useState<{
+    projectType: MultiFileProject['projectType'];
+    entry?: string;
+  } | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showInjectionManager, setShowInjectionManager] = useState(false);
@@ -941,17 +952,42 @@ function App() {
    */
   const handleExitFullStack = useCallback(() => {
     const project = fullStackProject;
+    const restore = vsCodeReturn;
     setFullStackProject(null);
+    setVsCodeReturn(null);
     if (!project) return;
 
     handleImportResult({
       files: project.files,
-      projectType: 'plain',
-      entry: undefined,
+      // Manual entries remember where they came from; auto-detected ones do not.
+      projectType: restore?.projectType ?? 'plain',
+      entry: restore?.entry,
       warnings: [],
     });
     toast.success('Left VS Code mode. Your files were kept.');
-  }, [fullStackProject, handleImportResult]);
+  }, [fullStackProject, vsCodeReturn, handleImportResult]);
+
+  /**
+   * Manual switch into VS Code mode.
+   *
+   * The automatic route only fires for a detected full-stack import, but the
+   * Sandbox and Terminal panels live exclusively in this mode — so a plain, React
+   * or Vue project had no way to reach them. Reuses `fullStackProject` as "the
+   * project currently open in VS Code mode" so the existing file-change and exit
+   * wiring applies unchanged.
+   */
+  const handleEnterVSCodeMode = useCallback(() => {
+    if (fullStackProject) return;
+
+    if (fileProject.files.length === 0) {
+      toast.error('Add or import some files before switching to VS Code mode.');
+      return;
+    }
+
+    setVsCodeReturn({ projectType: fileProject.projectType, entry: fileProject.entry });
+    setFullStackProject(fileProject);
+    toast.success('VS Code mode — connect a sandbox in the right-hand panel.');
+  }, [fullStackProject, fileProject]);
 
   /** Ctrl/Cmd+Shift+S — capture and save a PNG without opening the modal. */
   const handleQuickScreenshot = useCallback(async () => {
@@ -2271,7 +2307,9 @@ function App() {
       >
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
-          onRun={() => toast('Full-stack projects run in a Sandbox, not locally.')}
+          onRun={() =>
+            toast('In VS Code mode, projects run in a Sandbox rather than locally.')
+          }
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
           onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
           autoSaveEnabled={autoSaveEnabled}
@@ -2283,6 +2321,7 @@ function App() {
           <Suspense fallback={<LazyFallback label="VS Code mode" variant="panel" />}>
             <VSCodeMode
               project={fullStackProject}
+              entryReason={vsCodeReturn ? 'manual' : 'detected'}
               onChangeFile={handleFullStackFileChange}
               onExit={handleExitFullStack}
               fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
@@ -2383,6 +2422,7 @@ function App() {
           isDependenciesOpen={showDependencies}
           onOpenTemplates={() => setShowTemplates(true)}
           onOpenImport={() => setShowImport(true)}
+          onOpenVSCodeMode={handleEnterVSCodeMode}
           onOpenAIChat={() => setShowAIChat(true)}
           onOpenVoiceCommands={() => setShowVoiceCommands(true)}
           onOpenStatistics={() => setShowStats(true)}
