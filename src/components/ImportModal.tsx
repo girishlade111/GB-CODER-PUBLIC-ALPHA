@@ -208,8 +208,14 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onFiles, isD
             aria-label="Choose a folder to import"
             type="file"
             multiple
+            /*
+             * Both spellings, as bare (empty-string) attributes. `webkitdirectory`
+             * is what Chromium and current Firefox honour; `directory` is the
+             * older Gecko spelling and is harmless where it is not recognised.
+             */
             // @ts-expect-error — non-standard but widely supported
             webkitdirectory=""
+            directory=""
             className="hidden"
             onChange={(event) => {
               void handleFiles(Array.from(event.target.files ?? []));

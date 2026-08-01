@@ -824,7 +824,11 @@ function App() {
   const handleImportPlan = useCallback(
     (plan: ImportPlanType) => {
       if (plan.result.files.length === 0 && plan.detection.kind !== 'fullstack') {
-        toast.error('Nothing importable was found in that drop.');
+        /*
+         * Reached by the pickers as well as by a drop, so the wording stays
+         * neutral about how the files arrived.
+         */
+        toast.error('No supported files were found. Expected .html, .css, .js, .jsx, .ts, .tsx, .vue or .json.');
         return;
       }
 

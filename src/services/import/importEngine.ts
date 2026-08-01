@@ -387,8 +387,24 @@ export const buildImportPlan = async (input: DropInput): Promise<ImportPlan> => 
     file,
   }));
 
-  const all = [...fromEntries, ...fromFiles];
-  if (all.length === 0) throw new Error('Nothing importable was dropped.');
+  /*
+   * Deduplicated by path. `collectTransfer` is careful to put a given file in
+   * exactly one of the two lists, but a duplicate here is silent and expensive —
+   * it inflates the file count shown to the user and, when a lone archive is
+   * duplicated, defeats the single-archive check below. Belt and braces.
+   */
+  const all: DroppedFile[] = [];
+  const seen = new Set<string>();
+  for (const item of [...fromEntries, ...fromFiles]) {
+    const key = `${item.path}\u0000${item.file.size}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    all.push(item);
+  }
+
+  if (all.length === 0) {
+    throw new Error('Nothing importable was found in that folder, file or archive.');
+  }
 
   // A lone archive is the common case and takes the zip path.
   if (all.length === 1 && isZipFile(all[0].file)) return planFromZip(all[0].file);

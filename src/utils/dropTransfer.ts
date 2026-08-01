@@ -71,19 +71,37 @@ export const collectTransfer = (transfer: DataTransfer | null | undefined): Coll
     for (const item of Array.from(transfer.items)) {
       if (item.kind !== 'file') continue;
       const entry = item.webkitGetAsEntry?.() as { isDirectory?: boolean } | null | undefined;
-      if (entry) {
-        if (entry.isDirectory) hasDirectory = true;
+
+      /*
+       * A directory can only be read through its entry, so that is the one case
+       * that must go down the traversal path.
+       */
+      if (entry?.isDirectory) {
+        hasDirectory = true;
         entries.push(entry);
-        // A file entry is also captured as a File so callers that only care
-        // about plain files (an editor panel, say) do not have to walk entries.
-        if (!entry.isDirectory) {
-          const file = item.getAsFile();
-          if (file) files.push(file);
-        }
-      } else {
-        const file = item.getAsFile();
-        if (file) files.push(file);
+        continue;
       }
+
+      /*
+       * Everything else is a plain file, and `getAsFile()` gives it to us
+       * directly — no async entry walk needed.
+       *
+       * Crucially it is added to `files` *only*. It used to be pushed to both
+       * lists, and because the plan builder concatenates them, every dropped
+       * file was counted twice: three files reported as six, and a lone .zip
+       * became two items, which skipped the single-archive branch entirely and
+       * broke zip drops outright. A synthetic DataTransfer returns null from
+       * `webkitGetAsEntry`, so this only ever misbehaved on a real drag — which
+       * is exactly why it survived earlier testing.
+       */
+      const file = item.getAsFile();
+      if (file) {
+        files.push(file);
+        continue;
+      }
+
+      // `getAsFile()` can still fail; keep the entry so the file is not lost.
+      if (entry) entries.push(entry);
     }
     return { entries, files, hasDirectory };
   }
