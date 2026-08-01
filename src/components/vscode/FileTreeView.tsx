@@ -1,5 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, File, FileCode, FileJson, Folder, FolderOpen } from 'lucide-react';
+import {
+  Atom,
+  Braces,
+  ChevronDown,
+  ChevronRight,
+  File,
+  FileCode,
+  FileText,
+  FileType,
+  Folder,
+  FolderOpen,
+  Globe,
+  Palette,
+  Triangle,
+} from 'lucide-react';
 import { ProjectFile } from '../../types/files';
 
 /**
@@ -23,6 +37,9 @@ interface TreeNode {
   isDirectory: boolean;
   children: TreeNode[];
 }
+
+/** Pixels of indent per nesting level. Shared by rows and their guide lines. */
+const INDENT_PX = 12;
 
 /** Groups flat paths into a nested structure. */
 const buildTree = (files: ProjectFile[]): TreeNode[] => {
@@ -58,12 +75,52 @@ const buildTree = (files: ProjectFile[]): TreeNode[] => {
   return sort(root.children);
 };
 
+/**
+ * File icon per extension.
+ *
+ * Every supported type gets a distinguishable glyph *and* colour rather than one
+ * generic "code file" icon, because scanning a tree by shape is much faster than
+ * reading every filename. Shapes are chosen to hint at the technology without
+ * reproducing any project's logo: a globe for markup, a palette for stylesheets,
+ * braces for data, an atom for component files, a triangle for Vue.
+ */
+const ICON_CLASS = 'h-3.5 w-3.5 flex-shrink-0';
+
 const iconFor = (name: string) => {
-  if (/\.json$/i.test(name)) return <FileJson className="h-3.5 w-3.5 text-amber-400" />;
-  if (/\.(jsx?|tsx?|mjs|cjs|vue|py|rb|go|rs|java|php)$/i.test(name)) {
-    return <FileCode className="h-3.5 w-3.5 text-sky-400" />;
+  const ext = (name.split('.').pop() ?? '').toLowerCase();
+
+  switch (ext) {
+    case 'html':
+    case 'htm':
+      return <Globe className={`${ICON_CLASS} text-orange-400`} />;
+    case 'css':
+      return <Palette className={`${ICON_CLASS} text-sky-400`} />;
+    case 'scss':
+    case 'sass':
+    case 'less':
+      return <Palette className={`${ICON_CLASS} text-pink-400`} />;
+    case 'js':
+    case 'mjs':
+    case 'cjs':
+      return <FileCode className={`${ICON_CLASS} text-yellow-400`} />;
+    case 'jsx':
+      return <Atom className={`${ICON_CLASS} text-cyan-400`} />;
+    case 'ts':
+      return <FileType className={`${ICON_CLASS} text-blue-400`} />;
+    case 'tsx':
+      return <Atom className={`${ICON_CLASS} text-blue-400`} />;
+    case 'vue':
+      return <Triangle className={`${ICON_CLASS} text-emerald-400`} />;
+    case 'json':
+    case 'jsonc':
+      return <Braces className={`${ICON_CLASS} text-amber-400`} />;
+    case 'md':
+    case 'mdx':
+    case 'txt':
+      return <FileText className={`${ICON_CLASS} text-vsc-textMuted`} />;
+    default:
+      return <File className={`${ICON_CLASS} text-vsc-textMuted`} />;
   }
-  return <File className="h-3.5 w-3.5 text-content-muted" />;
 };
 
 interface RowProps {
@@ -96,24 +153,40 @@ const TreeRow: React.FC<RowProps> = ({
         data-testid={node.isDirectory ? 'tree-folder' : 'tree-file'}
         data-path={node.path}
         title={node.path}
-        className={`flex w-full items-center gap-1 py-[3px] pr-2 text-left text-xs transition-colors ${
+        className={`relative flex w-full items-center gap-1 py-[3px] pr-2 text-left text-xs transition-colors ${
           isActive
-            ? 'bg-accent/20 text-content-primary'
-            : 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+            ? 'bg-white/10 text-white'
+            : 'text-vsc-text hover:bg-white/[0.06] hover:text-white'
         }`}
-        style={{ paddingLeft: `${depth * 12 + 6}px` }}
+        style={{ paddingLeft: `${depth * INDENT_PX + 6}px` }}
       >
+        {/*
+         * Indentation guides.
+         *
+         * One hairline per ancestor level, drawn absolutely so they cannot affect
+         * layout or the row's hit area. Without them, deep trees are very hard to
+         * read — which level a row belongs to becomes guesswork.
+         */}
+        {Array.from({ length: depth }, (_, level) => (
+          <span
+            key={level}
+            aria-hidden
+            className="pointer-events-none absolute top-0 bottom-0 w-px bg-vsc-indent/60"
+            style={{ left: `${level * INDENT_PX + 11}px` }}
+          />
+        ))}
+
         {node.isDirectory ? (
           <>
             {isOpen ? (
-              <ChevronDown className="h-3 w-3 flex-shrink-0 text-content-muted" />
+              <ChevronDown className="h-3 w-3 flex-shrink-0 text-vsc-textMuted" />
             ) : (
-              <ChevronRight className="h-3 w-3 flex-shrink-0 text-content-muted" />
+              <ChevronRight className="h-3 w-3 flex-shrink-0 text-vsc-textMuted" />
             )}
             {isOpen ? (
-              <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-accent/80" />
+              <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-sky-300/80" />
             ) : (
-              <Folder className="h-3.5 w-3.5 flex-shrink-0 text-accent/70" />
+              <Folder className="h-3.5 w-3.5 flex-shrink-0 text-sky-300/70" />
             )}
           </>
         ) : (
@@ -125,7 +198,7 @@ const TreeRow: React.FC<RowProps> = ({
         <span className="truncate">{node.name}</span>
         {!node.isDirectory && dirty.has(node.path) && (
           <span
-            className="ml-auto h-1.5 w-1.5 flex-shrink-0 rounded-full bg-content-secondary"
+            className="ml-auto h-1.5 w-1.5 flex-shrink-0 rounded-full bg-vsc-text"
             title="Unsaved changes"
           />
         )}

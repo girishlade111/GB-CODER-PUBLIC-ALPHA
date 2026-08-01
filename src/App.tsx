@@ -13,7 +13,7 @@ import React, {
  * open) otherwise fails with an unactionable "Failed to fetch dynamically
  * imported module". See src/utils/loadChunk.ts.
  */
-import { lazyWithRecovery } from './utils/loadChunk';
+import { lazyWithRecovery, loadChunk } from './utils/loadChunk';
 import { Code2, Eye, Share2 } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
@@ -966,6 +966,58 @@ function App() {
     });
     toast.success('Left VS Code mode. Your files were kept.');
   }, [fullStackProject, vsCodeReturn, handleImportResult]);
+
+  /**
+   * Adds files into the project already open in VS Code mode.
+   *
+   * Runs the *same* `buildImportPlan` pipeline as every other import path, so
+   * extension filtering, `node_modules` pruning, zip expansion and folder
+   * traversal all behave identically — then merges the result instead of
+   * replacing the project, because the Explorer's Load/drop affordances mean "add
+   * to what I am looking at", not "start again". Files at an existing path are
+   * overwritten, which is what re-importing an edited file should do.
+   */
+  const handleAddToFullStackProject = useCallback(
+    async (input: {
+      files?: File[];
+      entries?: unknown[];
+      handles?: Promise<unknown>[];
+      unreadableDirectories?: string[];
+    }) => {
+      try {
+        const engine = await loadChunk(
+          () => import('./services/import/importEngine'),
+          'The import engine',
+        );
+        const plan = await engine.buildImportPlan(input);
+        const incoming = plan.result.files;
+
+        if (incoming.length === 0) {
+          toast.error('No supported files were found in that drop.');
+          return;
+        }
+
+        setFullStackProject((current) => {
+          if (!current) return current;
+          const byPath = new Map(current.files.map((file) => [file.path, file]));
+          for (const file of incoming) byPath.set(file.path, file);
+          return { ...current, files: Array.from(byPath.values()) };
+        });
+
+        const existingPaths = new Set(fullStackProject?.files.map((file) => file.path) ?? []);
+        const added = incoming.filter((file) => !existingPaths.has(file.path)).length;
+        const replaced = incoming.length - added;
+        toast.success(
+          replaced > 0
+            ? `Added ${added} file${added === 1 ? '' : 's'}, updated ${replaced}.`
+            : `Added ${added} file${added === 1 ? '' : 's'}.`,
+        );
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Those files could not be added.');
+      }
+    },
+    [fullStackProject],
+  );
 
   /**
    * Manual switch into VS Code mode.
@@ -2302,33 +2354,77 @@ function App() {
    */
   if (fullStackProject) {
     return (
-      <div
-        className={`flex h-screen flex-col overflow-hidden transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'}`}
-      >
-        <NavigationBar
-          onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
-          onRun={() =>
-            toast('In VS Code mode, projects run in a Sandbox rather than locally.')
-          }
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-          onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
-          autoSaveEnabled={autoSaveEnabled}
-          onToggleVoice={handleToggleVoice}
-          isVoiceListening={voiceState.isListening}
-        />
-
-        <div className="min-h-0 flex-1 pt-14 sm:pt-16">
+      /*
+       * No NavigationBar here, deliberately. VS Code mode is a full-screen shell
+       * with its own top bar, so the app's normal chrome would be a second,
+       * redundant header eating vertical space. `overflow-hidden` on a `h-screen`
+       * box is what stops the page itself from scrolling, which is the
+       * precondition for the mode's four independent scroll regions.
+       */
+      <div className="flex h-screen flex-col overflow-hidden bg-vsc-editor">
+        <div className="min-h-0 flex-1">
           <Suspense fallback={<LazyFallback label="VS Code mode" variant="panel" />}>
             <VSCodeMode
               project={fullStackProject}
               entryReason={vsCodeReturn ? 'manual' : 'detected'}
               onChangeFile={handleFullStackFileChange}
               onExit={handleExitFullStack}
+              onAddImport={handleAddToFullStackProject}
+              onOpenDependencies={() => setShowDependencies(true)}
+              onOpenAIChat={() => setShowAIChat(true)}
+              onOpenVoiceCommands={() => setShowVoiceCommands(true)}
               fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
               fontSize={settings.editorFontSize}
             />
           </Suspense>
         </div>
+
+        {/*
+          The same panels the standard layout uses, rendered here too because this
+          branch returns before them. Reached from the mode's icon-only top bar.
+          Overlays rather than embedded tabs: these are built as full-screen
+          dialogs owned by App, and re-housing them would mean rebuilding them.
+        */}
+        {showDependencies && (
+          <Suspense fallback={null}>
+            <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col overflow-hidden border-l border-vsc-border bg-vsc-sidebar shadow-elevated">
+              <DependenciesPanel
+                project={fullStackProject}
+                resolvedPackages={projectBundle.resolvedPackages}
+                unresolvedPackages={projectBundle.unresolvedPackages}
+                isResolving={projectBundle.isResolvingPackages}
+                onPin={handlePinDependency}
+                onUnpin={handleUnpinDependency}
+                onClose={() => setShowDependencies(false)}
+              />
+            </div>
+          </Suspense>
+        )}
+
+        {showAIChat && (
+          <Suspense fallback={null}>
+            <AIChatAssistant
+              isOpen={showAIChat}
+              onClose={() => setShowAIChat(false)}
+              html={html}
+              css={css}
+              javascript={javascript}
+              externalLibraries={externalLibraries}
+            />
+          </Suspense>
+        )}
+
+        {showVoiceCommands && (
+          <Suspense fallback={null}>
+            <VoiceCommandPanel
+              isOpen={showVoiceCommands}
+              onClose={() => setShowVoiceCommands(false)}
+              onVoiceFeedbackChange={(enabled) => updateSettings({ voiceFeedback: enabled })}
+              onContinuousChange={(enabled) => updateSettings({ voiceContinuous: enabled })}
+              onLanguageChange={(language) => updateSettings({ voiceLanguage: language })}
+            />
+          </Suspense>
+        )}
 
         <Toaster position="bottom-right" />
       </div>

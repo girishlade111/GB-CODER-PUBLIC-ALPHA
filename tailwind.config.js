@@ -52,6 +52,29 @@ export default {
           fg: '#ffffff',
         },
 
+        /*
+         * Panel hierarchy for VS Code mode only.
+         *
+         * The rest of the app is intentionally flat-dark; this scale exists
+         * because an editor shell reads as broken without depth — the explorer
+         * has to sit *behind* the editor surface, and the active tab has to sit
+         * in front of the tab bar. Our own approximations of a familiar dark
+         * editor palette, not copied assets.
+         *
+         * Scoped under `vsc-` so no other mode can pick these up by accident.
+         */
+        vsc: {
+          editor: '#1e1e1e', // editor canvas — the frontmost surface
+          sidebar: '#252526', // explorer + right panel, one step back
+          tabbar: '#2d2d2d', // inactive tab strip, behind the active tab
+          panel: '#181818', // terminal + status bar, furthest back
+          border: '#2b2b2b',
+          borderStrong: '#3c3c3c',
+          text: '#cccccc',
+          textMuted: '#8b8b8b',
+          indent: '#404040', // file-tree indentation guides
+        },
+
         // VS Code Dark Theme Colors (retained for compatibility)
         'vscode-editor': '#0a0a0a',
         'vscode-sidebar': '#18181b',
