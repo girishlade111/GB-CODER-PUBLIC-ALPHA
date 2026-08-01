@@ -503,7 +503,7 @@ function App() {
    * instance to the service, which is what owns the language workers.
    */
   const [isValidationReady, setIsValidationReady] = useState(validationService.isReady());
-  const validation = useValidation(fileProject, isValidationReady);
+  const validation = useValidation(fileProject, isValidationReady, workspace.activePath);
 
   /**
    * Called by every editor on mount. Registers the instance for click-to-jump
@@ -839,6 +839,9 @@ function App() {
         fileProject.projectType === 'plain' &&
         ['html', 'css', 'javascript'].includes(plan.result.files[0].language);
 
+      // Whichever surface started the import, it is finished with now.
+      setShowImport(false);
+
       if (isSingleCoreFile) {
         handleImportResult({ ...plan.result, projectType: 'plain', entry: undefined });
         return;
@@ -852,7 +855,7 @@ function App() {
   const {
     isDragging: isImportDragging,
     isPreparing: isImportPreparing,
-    dropHandlers,
+    importFiles,
   } = useImportDrop({
     onPlan: handleImportPlan,
     onError: (message) => toast.error(message),
@@ -2289,7 +2292,6 @@ function App() {
        * Window-wide drop target. Only the handlers live here; the code that can
        * read a drop is fetched on the first one.
        */
-      {...dropHandlers}
       data-testid="app-root"
     >
       {/* Drag affordance — presentation only, always available. */}
@@ -2702,7 +2704,8 @@ function App() {
   <ImportModal
             isOpen={showImport}
             onClose={() => setShowImport(false)}
-            onImport={handleImportResult}
+            onFiles={importFiles}
+            isDragging={isImportDragging}
           />
         </Suspense>
       )}

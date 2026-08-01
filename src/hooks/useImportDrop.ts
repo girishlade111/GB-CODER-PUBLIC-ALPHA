@@ -7,44 +7,46 @@
  * traversal, project detection — is fetched with a dynamic `import()` at the
  * moment of the first drop.
  *
- * The synchronous collection step cannot be deferred. `DataTransferItem` objects
- * are invalidated as soon as the drop event handler returns, so
- * `webkitGetAsEntry()` has to be called before any `await`. The resulting
- * `FileSystemEntry` objects *do* survive, so they are handed to the lazy chunk
- * for traversal.
+ * ## Why the listeners are on `window`
+ *
+ * These used to be React props spread onto the editor view's root element. That
+ * had two failure modes, both of which shipped:
+ *
+ *  1. Any child that called `stopPropagation()` on `drop` silently swallowed the
+ *     import. The editor panels do exactly that, and they cover most of the
+ *     screen, so the most natural place to drop a project was the one place that
+ *     could not accept one.
+ *  2. Views that render their own tree — VS Code mode, every routed legal page —
+ *     never had the props at all, so dragging a project in did nothing.
+ *
+ * Listening on `window` fixes both: there is one drop target, it is the whole
+ * window, and it exists in every view. Panels that want to claim a single file
+ * for themselves still can, by calling `stopPropagation()` — but only when they
+ * genuinely handle the drop (see `EditorPanel`).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ImportPlan } from '../services/import/importEngine';
+import { carriesFiles, collectTransfer } from '../utils/dropTransfer';
 
 export interface ImportDropState {
   /** True while a drag carrying files is over the window. */
   isDragging: boolean;
   /** True while the import chunk is being fetched or a plan is being built. */
   isPreparing: boolean;
-  /** Handlers to spread onto a drop target. */
-  dropHandlers: {
-    onDragEnter: (event: React.DragEvent) => void;
-    onDragOver: (event: React.DragEvent) => void;
-    onDragLeave: () => void;
-    onDrop: (event: React.DragEvent) => void;
-  };
-  /** Opens the OS picker; used by the sidebar Import button. */
+  /**
+   * The single import entry point. Used by the drop handler, the Import
+   * dialog's file and folder pickers, and its URL field, so that detection runs
+   * identically no matter how the files arrived.
+   */
   importFiles: (files: File[]) => Promise<void>;
 }
 
 interface UseImportDropOptions {
   onPlan: (plan: ImportPlan) => void;
   onError: (message: string) => void;
-  /** Disables the drop target, e.g. while a modal owns the screen. */
+  /** Disables the drop target, e.g. while the review modal owns the screen. */
   disabled?: boolean;
 }
-
-/** True when a drag actually carries files rather than selected text. */
-const carriesFiles = (event: React.DragEvent): boolean => {
-  const types = event.dataTransfer?.types;
-  if (!types) return false;
-  return Array.from(types).includes('Files');
-};
 
 export const useImportDrop = ({
   onPlan,
@@ -58,20 +60,6 @@ export const useImportDrop = ({
    * flickers. Counting enters and leaves is what makes the overlay stable.
    */
   const dragDepth = useRef(0);
-
-  // A drag that ends outside the window never fires drop; reset defensively.
-  useEffect(() => {
-    const reset = () => {
-      dragDepth.current = 0;
-      setIsDragging(false);
-    };
-    window.addEventListener('dragend', reset);
-    window.addEventListener('drop', reset);
-    return () => {
-      window.removeEventListener('dragend', reset);
-      window.removeEventListener('drop', reset);
-    };
-  }, []);
 
   /** Loads the engine and builds a plan. The only dynamic import here. */
   const process = useCallback(
@@ -90,79 +78,90 @@ export const useImportDrop = ({
     [onPlan, onError],
   );
 
-  const onDragEnter = useCallback(
-    (event: React.DragEvent) => {
-      if (disabled || !carriesFiles(event)) return;
+  /*
+   * The listeners are attached once and read the latest `disabled`/`process`
+   * through refs. Re-subscribing on every render would drop a drag that was
+   * already in progress.
+   */
+  const disabledRef = useRef(disabled);
+  disabledRef.current = disabled;
+  const processRef = useRef(process);
+  processRef.current = process;
+
+  useEffect(() => {
+    const stopDragging = () => {
+      dragDepth.current = 0;
+      setIsDragging(false);
+    };
+
+    const onDragEnter = (event: DragEvent) => {
+      if (disabledRef.current || !carriesFiles(event.dataTransfer)) return;
       event.preventDefault();
       dragDepth.current += 1;
       setIsDragging(true);
-    },
-    [disabled],
-  );
+    };
 
-  const onDragOver = useCallback(
-    (event: React.DragEvent) => {
-      if (disabled || !carriesFiles(event)) return;
-      // Without preventDefault the browser navigates to the dropped file.
+    const onDragOver = (event: DragEvent) => {
+      if (disabledRef.current || !carriesFiles(event.dataTransfer)) return;
+      /*
+       * preventDefault has to run on EVERY dragover, not just the first one.
+       * The browser re-evaluates whether the element under the cursor is a valid
+       * drop target on each event, so skipping even one reverts to the default
+       * action and no `drop` is ever fired.
+       */
       event.preventDefault();
-      event.dataTransfer.dropEffect = 'copy';
-    },
-    [disabled],
-  );
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+      /*
+       * Recovers the overlay if `dragenter` was missed — it can be swallowed by
+       * a child, or fire before this listener attached on a fast drag.
+       */
+      if (dragDepth.current === 0) {
+        dragDepth.current = 1;
+        setIsDragging(true);
+      }
+    };
 
-  const onDragLeave = useCallback(
-    () => {
-      if (disabled) return;
+    const onDragLeave = (event: DragEvent) => {
+      if (disabledRef.current) return;
+      // Leaving the window entirely reports a null relatedTarget.
+      if (!event.relatedTarget) {
+        stopDragging();
+        return;
+      }
       dragDepth.current = Math.max(0, dragDepth.current - 1);
       if (dragDepth.current === 0) setIsDragging(false);
-    },
-    [disabled],
-  );
+    };
 
-  const onDrop = useCallback(
-    (event: React.DragEvent) => {
-      if (disabled) return;
+    const onDrop = (event: DragEvent) => {
+      stopDragging();
+      if (disabledRef.current) return;
+      if (!carriesFiles(event.dataTransfer)) return;
+
+      // Stops the browser navigating away to the dropped file.
       event.preventDefault();
-      dragDepth.current = 0;
-      setIsDragging(false);
 
-      const transfer = event.dataTransfer;
-      if (!transfer) return;
-
-      /*
-       * Collected synchronously, before the handler yields. `items` is preferred
-       * because it exposes directory entries; `files` alone cannot represent a
-       * dropped folder.
-       */
-      const entries: unknown[] = [];
-      const files: File[] = [];
-
-      if (transfer.items && transfer.items.length > 0) {
-        for (const item of Array.from(transfer.items)) {
-          if (item.kind !== 'file') continue;
-          const asEntry = item.webkitGetAsEntry?.();
-          if (asEntry) entries.push(asEntry);
-          else {
-            const file = item.getAsFile();
-            if (file) files.push(file);
-          }
-        }
-      } else if (transfer.files) {
-        files.push(...Array.from(transfer.files));
-      }
-
+      const { entries, files } = collectTransfer(event.dataTransfer);
       if (entries.length === 0 && files.length === 0) return;
-      void process({ entries, files });
-    },
-    [disabled, process],
-  );
+      void processRef.current({ entries, files });
+    };
+
+    window.addEventListener('dragenter', onDragEnter);
+    window.addEventListener('dragover', onDragOver);
+    window.addEventListener('dragleave', onDragLeave);
+    window.addEventListener('drop', onDrop);
+    // A drag that ends outside the window never fires drop; reset defensively.
+    window.addEventListener('dragend', stopDragging);
+
+    return () => {
+      window.removeEventListener('dragenter', onDragEnter);
+      window.removeEventListener('dragover', onDragOver);
+      window.removeEventListener('dragleave', onDragLeave);
+      window.removeEventListener('drop', onDrop);
+      window.removeEventListener('dragend', stopDragging);
+    };
+  }, []);
 
   const importFiles = useCallback((files: File[]) => process({ files }), [process]);
 
-  return {
-    isDragging,
-    isPreparing,
-    dropHandlers: { onDragEnter, onDragOver, onDragLeave, onDrop },
-    importFiles,
-  };
+  return { isDragging, isPreparing, importFiles };
 };
