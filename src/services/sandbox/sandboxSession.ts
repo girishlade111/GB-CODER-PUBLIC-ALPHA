@@ -60,6 +60,15 @@ export interface SandboxState {
   runningCommand: string | null;
   previews: SandboxPreview[];
   activePort: number | null;
+  /**
+   * True only once the backend has confirmed a dev-server process is actually
+   * alive inside the sandbox (the `running` probe on /logs). Deliberately not
+   * inferred from "a start command was issued": a command that crashes on boot
+   * would otherwise leave the UI offering a live preview that cannot load.
+   */
+  devServerRunning: boolean;
+  /** Ports the backend observed listening, as opposed to ones we guessed. */
+  detectedPorts: number[];
   logs: SandboxLogLine[];
   error: string | null;
   packageManager: string | null;
@@ -70,6 +79,8 @@ export interface SandboxState {
 }
 
 const MAX_LOG_LINES = 500;
+/** Consecutive failed log polls tolerated before giving up. */
+const MAX_POLL_FAILURES = 4;
 
 const INITIAL: SandboxState = {
   status: 'idle',
@@ -79,6 +90,8 @@ const INITIAL: SandboxState = {
   runningCommand: null,
   previews: [],
   activePort: null,
+  devServerRunning: false,
+  detectedPorts: [],
   logs: [],
   error: null,
   packageManager: null,
@@ -115,6 +128,7 @@ class SandboxSession {
   private readonly listeners = new Set<(state: SandboxState) => void>();
   /** Byte offset into the dev-server log file, for incremental polling. */
   private logOffset = 0;
+  private pollFailures = 0;
   private logTimer: ReturnType<typeof setInterval> | null = null;
   private logPath: string | null = null;
   /** Files last uploaded, so Restart can rebuild without asking again. */
@@ -235,6 +249,8 @@ class SandboxSession {
     try {
       const result = await this.post<{
         previews: SandboxPreview[];
+        /** Ports the backend observed listening, as opposed to ones we guessed. */
+        detectedPorts?: number[];
         logPath: string;
         logs: SandboxLogLine[];
       }>('start', {
@@ -248,12 +264,20 @@ class SandboxSession {
       this.logPath = result.logPath ?? null;
       this.logOffset = 0;
 
+      const previews = result.previews ?? [];
       this.setState({
         status: 'running',
         runningCommand: command,
-        previews: result.previews ?? [],
+        previews,
         // Default to the first preview; the UI offers a selector when several.
-        activePort: result.previews?.[0]?.port ?? null,
+        activePort: previews[0]?.port ?? null,
+        detectedPorts: result.detectedPorts ?? [],
+        /*
+         * A port that is already listening is the strongest signal available at
+         * this point. If nothing bound yet the log poll will flip this as soon as
+         * the process appears, so a slow-booting server still enables the toggle.
+         */
+        devServerRunning: previews.length > 0,
         isBusy: false,
       });
 
@@ -279,6 +303,7 @@ class SandboxSession {
    */
   private startLogPolling(): void {
     this.stopLogPolling();
+    this.pollFailures = 0;
     this.logTimer = setInterval(() => {
       void this.pollLogs();
     }, 2500);
@@ -294,7 +319,13 @@ class SandboxSession {
   public async pollLogs(): Promise<void> {
     if (!this.state.sandboxId || !this.logPath) return;
     try {
-      const result = await this.post<{ chunk: string; offset: number; truncated: boolean }>('logs', {
+      const result = await this.post<{
+        chunk: string;
+        offset: number;
+        truncated: boolean;
+        /** Liveness probe from the backend; drives the Dev Server toggle. */
+        running?: boolean;
+      }>('logs', {
         sandboxId: this.state.sandboxId,
         logPath: this.logPath,
         offset: this.logOffset,
@@ -302,6 +333,17 @@ class SandboxSession {
 
       if (result.truncated) this.log('system', 'Log file was rotated; continuing from the start.');
       this.logOffset = result.offset ?? this.logOffset;
+      this.pollFailures = 0;
+
+      /*
+       * Reconcile liveness. Without this the UI keeps offering a dev-server
+       * preview after the process has died, which is the confusing case: the
+       * iframe just fails to load with no explanation.
+       */
+      if (typeof result.running === 'boolean' && result.running !== this.state.devServerRunning) {
+        if (!result.running) this.log('system', 'Dev server process is no longer running.');
+        this.setState({ devServerRunning: result.running });
+      }
 
       if (result.chunk) {
         const lines = result.chunk
@@ -312,11 +354,17 @@ class SandboxSession {
       }
     } catch {
       /*
-       * A failed poll is not worth surfacing: the next tick usually succeeds, and
-       * an error toast every 2.5s would be worse than silence. A genuinely dead
-       * sandbox shows up when the user next acts on it.
+       * One failed poll is not worth surfacing — the next tick usually succeeds,
+       * and an error line every 2.5s would be worse than silence. But giving up
+       * after a single failure (the previous behaviour) meant one transient blip
+       * silently froze the log pane for the rest of the session, so allow a few.
        */
-      this.stopLogPolling();
+      this.pollFailures += 1;
+      if (this.pollFailures >= MAX_POLL_FAILURES) {
+        this.log('system', 'Stopped polling logs after repeated failures. Restart the sandbox to resume.');
+        this.setState({ devServerRunning: false });
+        this.stopLogPolling();
+      }
     }
   }
 

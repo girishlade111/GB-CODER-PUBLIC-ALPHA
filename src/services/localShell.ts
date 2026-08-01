@@ -114,8 +114,9 @@ const COMMANDS: CommandDefinition[] = [
           cyan('ls -la') +
           gray(' requires'),
         gray('Sandbox mode, which executes them inside a live sandbox container.'),
-        gray('When a sandbox is attached, this terminal switches to a real PTY session'),
-        gray('and the header above turns green.'),
+        gray('Each command is sent as a single request and returns its output when it'),
+        gray('finishes, so interactive prompts and foreground servers are not supported;'),
+        gray('start long-running processes from the Sandbox panel instead.'),
         '',
         dim('Tip: use the up and down arrows to recall previous commands.'),
         '',

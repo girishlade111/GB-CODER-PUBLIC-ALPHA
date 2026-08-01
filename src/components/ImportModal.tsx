@@ -1,14 +1,23 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, FileArchive, FolderOpen, Link2, Loader2, Upload, X } from 'lucide-react';
-import {
-  ImportResult, ImportWarning, importFromFiles, importFromUrl, importFromZip, isZipFile,
-} from '../services/projectImportService';
+import { ImportWarning, importFromUrl } from '../services/projectImportService';
 
 interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Receives the parsed import; the caller merges it into project state. */
-  onImport: (result: ImportResult) => void;
+  /**
+   * The shared import entry point (`useImportDrop().importFiles`). Routing the
+   * pickers and the URL field through the same function the drop handler uses is
+   * what makes project detection — and therefore full-stack VS Code mode —
+   * behave identically no matter how the files arrived.
+   *
+   * This replaced a second, older pipeline (`projectImportService.importFromFiles`)
+   * that never called `detectProject`, which is why click-upload could import a
+   * full-stack project and silently load it into the plain editors.
+   */
+  onFiles: (files: File[]) => Promise<void>;
+  /** Drag state from the window-level handler, for the dashed box highlight. */
+  isDragging?: boolean;
 }
 
 /**
@@ -18,16 +27,13 @@ interface ImportModalProps {
  * The previous flow was a single hidden input with `webkitdirectory` always set,
  * which in Chrome forced folder-only selection and accepted just .html/.css/.js.
  */
-const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) => {
-  const [isDragging, setIsDragging] = useState(false);
+const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onFiles, isDragging = false }) => {
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<ImportWarning[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
-  // Nested dragenter/dragleave events fire constantly; count depth instead.
-  const dragDepth = useRef(0);
 
   useEffect(() => {
     if (!isOpen) {
@@ -35,8 +41,6 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
       setWarnings([]);
       setUrl('');
       setBusy(false);
-      setIsDragging(false);
-      dragDepth.current = 0;
     }
   }, [isOpen]);
 
@@ -49,41 +53,25 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
 
-  const finish = useCallback(
-    (result: ImportResult) => {
-      setWarnings(result.warnings);
-      if (result.files.length === 0) {
-        setError('No importable files were found.');
-        return;
-      }
-      onImport(result);
-      // Warnings stay visible so partial imports are not silently lossy.
-      if (result.warnings.length === 0) onClose();
-    },
-    [onImport, onClose],
-  );
-
+  /**
+   * Hands files to the shared importer. The review dialog it opens is rendered by
+   * App, so this dialog just needs to stop showing a spinner afterwards.
+   */
   const handleFiles = useCallback(
     async (files: File[]) => {
       if (files.length === 0) return;
       setBusy(true);
       setError(null);
       setWarnings([]);
-
       try {
-        // A lone .zip is an archive import; anything else is a loose-file import.
-        const result =
-          files.length === 1 && isZipFile(files[0])
-            ? await importFromZip(files[0])
-            : await importFromFiles(files);
-        finish(result);
+        await onFiles(files);
       } catch (importError) {
         setError(importError instanceof Error ? importError.message : 'Import failed.');
       } finally {
         setBusy(false);
       }
     },
-    [finish],
+    [onFiles],
   );
 
   const handleUrlImport = async () => {
@@ -92,7 +80,21 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
     setError(null);
     setWarnings([]);
     try {
-      finish(await importFromUrl(url));
+      /*
+       * The importer engine reads File objects, not URLs, so the fetch still
+       * goes through projectImportService — but its output is converted back into
+       * Files and pushed through the shared path so a pasted URL gets the same
+       * detection and review step as a drop.
+       */
+      const fetched = await importFromUrl(url);
+      setWarnings(fetched.warnings);
+      if (fetched.files.length === 0) {
+        setError('No importable files were found at that URL.');
+        return;
+      }
+      await onFiles(
+        fetched.files.map((file) => new File([file.content], file.path, { type: 'text/plain' })),
+      );
     } catch (importError) {
       setError(importError instanceof Error ? importError.message : 'Could not fetch that URL.');
     } finally {
@@ -135,27 +137,15 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
 
         <div className="space-y-4 overflow-y-auto p-4">
           {/* Drop zone */}
+          {/*
+            No drop handlers of its own. The window-level handler already covers
+            every pixel, and it is the only one that can read a dropped *folder*
+            (`webkitGetAsEntry`) — this box used to read `dataTransfer.files`,
+            which is always empty for a folder, so dropping one here did nothing.
+            `isDragging` comes from that same handler purely to highlight the box.
+          */}
           <div
-            onDragEnter={(event) => {
-              event.preventDefault();
-              dragDepth.current += 1;
-              setIsDragging(true);
-            }}
-            onDragOver={(event) => event.preventDefault()}
-            onDragLeave={(event) => {
-              event.preventDefault();
-              dragDepth.current -= 1;
-              if (dragDepth.current <= 0) {
-                dragDepth.current = 0;
-                setIsDragging(false);
-              }
-            }}
-            onDrop={(event) => {
-              event.preventDefault();
-              dragDepth.current = 0;
-              setIsDragging(false);
-              void handleFiles(Array.from(event.dataTransfer.files));
-            }}
+            data-testid="import-dropzone"
             className={`flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-6 py-8 text-center transition-colors ${
               isDragging
                 ? 'border-accent bg-accent-subtle'

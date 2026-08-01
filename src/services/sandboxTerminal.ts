@@ -2,8 +2,16 @@
  * Sandbox terminal seam.
  *
  * The Terminal tab runs in Local Mode until something registers a connector
- * here. Wiring the actual sandbox (a real PTY proxied over a WebSocket) is a
- * separate piece of work, so this module defines the contract and nothing else.
+ * here. `sandboxSession` registers one on connect and clears it on close, so this
+ * module defines the contract and nothing else.
+ *
+ * The registered connector is a request/response command runner over
+ * `/api/sandbox/exec`, not a PTY: each command is one HTTP round trip that
+ * returns when the process exits. A true PTY needs a long-lived bidirectional
+ * connection, which the serverless deployment target cannot hold open, so
+ * interactive programs are out of scope. The `PTY` wording in the members below
+ * describes the *shape* of the seam, which a future WebSocket-backed connector
+ * could satisfy unchanged — it is not a claim about the current implementation.
  *
  * There is deliberately no default connector and no hard-coded URL. The old
  * terminal dialled `ws://localhost:3001` on mount and retried every three

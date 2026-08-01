@@ -1,6 +1,16 @@
 import React, { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import Editor from '@monaco-editor/react';
-import { ChevronDown, ChevronUp, Info, LogOut, Plug, RefreshCw, TerminalSquare, X } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Info,
+  LogOut,
+  Plug,
+  RefreshCw,
+  Server,
+  TerminalSquare,
+  X,
+} from 'lucide-react';
 import FileTreeView from './FileTreeView';
 import TerminalTab from '../Console/TerminalTab';
 import SandboxPanel from '../sandbox/SandboxPanel';
@@ -143,6 +153,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   );
 
   const activePreview = sandbox.previews.find((preview) => preview.port === sandbox.activePort);
+  /*
+   * Both halves matter: a confirmed-live process with no exposed port has nothing
+   * to show, and an exposed port whose process has since died would load an error.
+   */
+  const devServerReady = sandbox.devServerRunning && sandbox.previews.length > 0;
 
   return (
     <div className="flex h-full min-h-0 flex-col" data-testid="vscode-mode">
@@ -190,6 +205,78 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               onOpen={openFile}
             />
           </div>
+
+          {/*
+           * Dev Server shortcut.
+           *
+           * Lives here rather than in AppSidebar because AppSidebar is not
+           * rendered in this mode at all (App returns VSCodeMode early for a
+           * full-stack project), and the brief asks for this control to appear
+           * only in VS Code / full-stack mode.
+           *
+           * Stays disabled until the backend has *confirmed* a live process and
+           * at least one reachable port, so it never routes the user to an iframe
+           * that cannot load.
+           */}
+          <div className="border-t border-stroke-subtle">
+            <button
+              onClick={() => setRightTab('preview')}
+              disabled={!devServerReady}
+              data-testid="dev-server-toggle"
+              aria-disabled={!devServerReady}
+              title={
+                devServerReady
+                  ? `Show the live preview served from port ${sandbox.activePort}.`
+                  : 'Connect a sandbox and start your dev server first.'
+              }
+              className={`flex w-full items-center gap-1.5 px-2.5 py-2 text-left text-[11px] ${
+                devServerReady
+                  ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
+                  : 'cursor-not-allowed text-content-muted opacity-50'
+              }`}
+            >
+              <Server className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex-1 truncate">Dev Server</span>
+              {devServerReady && (
+                <span
+                  aria-hidden
+                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"
+                  title="Running"
+                />
+              )}
+            </button>
+
+            {/* Only worth showing when there is an actual choice to make. */}
+            {devServerReady && sandbox.previews.length > 1 && (
+              <div className="px-2.5 pb-2" data-testid="dev-server-ports">
+                <span className="mb-1 block text-[10px] uppercase tracking-wider text-content-muted">
+                  Ports
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {sandbox.previews.map((preview) => (
+                    <button
+                      key={preview.port}
+                      onClick={() => {
+                        sandboxSession.selectPort(preview.port);
+                        setRightTab('preview');
+                      }}
+                      data-testid={`dev-server-port-${preview.port}`}
+                      aria-pressed={preview.port === sandbox.activePort}
+                      title={preview.url}
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                        preview.port === sandbox.activePort
+                          ? 'bg-accent/20 text-content-primary'
+                          : 'text-content-muted hover:bg-white/5 hover:text-content-primary'
+                      }`}
+                    >
+                      {preview.port}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={onExit}
             data-testid="exit-vscode-mode"

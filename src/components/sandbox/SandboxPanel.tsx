@@ -3,9 +3,12 @@ import {
   AlertTriangle,
   Box,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   Eye,
   EyeOff,
+  HelpCircle,
   Loader2,
   Play,
   Plug,
@@ -93,6 +96,11 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState(() => readStoredKey());
   const [showKey, setShowKey] = useState(false);
+  /*
+   * Expanded for anyone who has never stored a key, collapsed for returning
+   * users. Read once on mount so toggling it does not fight the initialiser.
+   */
+  const [showGuide, setShowGuide] = useState(() => !readStoredKey());
   const [customCommand, setCustomCommand] = useState('');
 
   const hasKey = apiKey.trim().length > 0;
@@ -149,6 +157,65 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        {/*
+         * First-run guide.
+         *
+         * Rendered regardless of connection state, not just while disconnected:
+         * step 4 (run the dev server, then open Dev Server) only becomes relevant
+         * *after* connecting, so hiding the whole block on connect would remove
+         * the guidance exactly when it starts to matter. Expansion is keyed off
+         * whether a key was ever stored, so a returning user gets it out of the
+         * way while a first-time user cannot miss it.
+         */}
+        <div
+          className="mb-3 rounded-xl border border-stroke-subtle bg-surface-raised"
+          data-testid="sandbox-onboarding"
+        >
+          <button
+            type="button"
+            onClick={() => setShowGuide((value) => !value)}
+            aria-expanded={showGuide}
+            aria-controls="sandbox-onboarding-steps"
+            data-testid="sandbox-onboarding-toggle"
+            className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-xs font-medium text-content-secondary hover:text-content-primary"
+          >
+            <HelpCircle className="h-3.5 w-3.5 shrink-0 text-accent" />
+            <span className="flex-1">How to connect a sandbox</span>
+            {showGuide ? (
+              <ChevronUp className="h-3.5 w-3.5 shrink-0" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+            )}
+          </button>
+
+          {showGuide && (
+            <ol
+              id="sandbox-onboarding-steps"
+              data-testid="sandbox-onboarding-steps"
+              className="list-decimal space-y-1.5 border-t border-stroke-subtle px-3 py-2.5 pl-7 text-[11px] leading-snug text-content-muted"
+            >
+              <li>
+                Go to{' '}
+                <a
+                  href="https://e2b.dev"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-0.5 text-accent hover:underline"
+                >
+                  e2b.dev <ExternalLink className="h-3 w-3" />
+                </a>{' '}
+                and create a free account
+              </li>
+              <li>Copy your API key from the E2B dashboard</li>
+              <li>Paste it below and click Connect</li>
+              <li>
+                Once connected, run your dev server command in the Terminal, then click
+                &ldquo;Dev Server&rdquo; in the sidebar to see your live preview
+              </li>
+            </ol>
+          )}
+        </div>
+
         {/* Provider cards */}
         {!isConnected && (
           <>

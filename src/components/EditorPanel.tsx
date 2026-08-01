@@ -4,6 +4,7 @@ import CodeEditor from './CodeEditor';
 import CopyToast from './ui/CopyToast';
 import { EditorLanguage, JSEditorMode } from '../types';
 import { useEditorActions } from '../hooks/useEditorActions';
+import { collectTransfer, looksLikeProjectImport } from '../utils/dropTransfer';
 
 interface EditorPanelProps {
   title: string;
@@ -28,6 +29,17 @@ const ACCEPTED_EXTENSIONS: Record<EditorLanguage, string[]> = {
   css: ['.css'],
   javascript: ['.js', '.ts', '.jsx', '.tsx'],
 };
+
+/**
+ * Every extension any panel can open. A single file with one of these is a
+ * panel-level drop; anything else is a project import.
+ */
+const EDITABLE_EXTENSIONS = new Set(
+  Object.values(ACCEPTED_EXTENSIONS).flat(),
+);
+
+const isEditableTextFile = (filename: string): boolean =>
+  EDITABLE_EXTENSIONS.has('.' + (filename.split('.').pop()?.toLowerCase() ?? ''));
 
 const DROP_ERROR_MESSAGES: Record<EditorLanguage, string> = {
   html: 'Only HTML files (.html) can be dropped here.',
@@ -90,35 +102,66 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
     return ACCEPTED_EXTENSIONS[language].includes(ext);
   }, [language]);
 
+  /*
+   * A panel only owns a drop that is unambiguously "one editable file for this
+   * editor". Folders, archives and multi-file drops are project imports and must
+   * be left alone so the event reaches the window-level import handler.
+   *
+   * This is the fix for drag-and-drop appearing to do nothing: the panels cover
+   * most of the workspace, and they used to `stopPropagation()` on every drop,
+   * so dropping a project onto the code area — the obvious place to aim — was
+   * swallowed and reported as "Only HTML files can be dropped here".
+   */
+  const claimsDrop = useCallback(
+    (transfer: DataTransfer | null): File | null => {
+      const collected = collectTransfer(transfer);
+      if (looksLikeProjectImport(collected)) return null;
+      const file = collected.files.length === 1 ? collected.files[0] : null;
+      if (!file) return null;
+      // Unknown extensions (.zip, .json, Dockerfile…) belong to the importer.
+      return isEditableTextFile(file.name) ? file : null;
+    },
+    [],
+  );
+
   const handleDragOver = useCallback((e: React.DragEvent) => {
+    // preventDefault marks this element as a valid drop target. stopPropagation
+    // is deliberately NOT called: the window handler needs to see the drag so
+    // the full-window import affordance still appears over the code panes.
     e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(true);
+    const items = e.dataTransfer?.items;
+    const single = items ? Array.from(items).filter((i) => i.kind === 'file').length === 1 : false;
+    setIsDragOver(single);
     setDropError(null);
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setIsDragOver(false);
     }
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
     setIsDragOver(false);
 
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length === 0) return;
+    const file = claimsDrop(e.dataTransfer);
+    if (!file) {
+      // Not ours. Leave the event untouched so the importer picks it up.
+      return;
+    }
 
-    const file = files[0];
     if (!isValidFile(file.name)) {
+      // An editable file aimed at the wrong panel is a genuine mistake worth
+      // reporting, so this one is claimed in order to explain itself.
+      e.preventDefault();
+      e.stopPropagation();
       setDropError(DROP_ERROR_MESSAGES[language]);
       setTimeout(() => setDropError(null), 4000);
       return;
     }
+
+    e.preventDefault();
+    e.stopPropagation();
 
     const reader = new FileReader();
     reader.onload = (ev) => {
@@ -128,7 +171,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
       }
     };
     reader.readAsText(file);
-  }, [isValidFile, language, onChange]);
+  }, [claimsDrop, isValidFile, language, onChange]);
 
   return (
     <div

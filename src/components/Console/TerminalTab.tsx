@@ -61,6 +61,8 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
   const sessionRef = useRef<SandboxTerminalSession | null>(null);
   const [sandboxAvailable, setSandboxAvailable] = useState(sandboxTerminal.isAvailable());
+  /** Flipped once xterm has mounted, so the sandbox attach effect can re-run. */
+  const [termReady, setTermReady] = useState(false);
   const [sandboxStatus, setSandboxStatus] = useState<SandboxTerminalStatus>('idle');
 
   /*
@@ -167,6 +169,11 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
     term.open(host);
     termRef.current = term;
+    /*
+     * State, not just the ref: the sandbox attach effect below needs to re-run
+     * once the terminal exists, and assigning to a ref does not re-render.
+     */
+    setTermReady(true);
 
     term.write(
       [
@@ -290,6 +297,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       disposable.dispose();
       term.dispose();
       termRef.current = null;
+      setTermReady(false);
     };
   }, [redrawLine, submitLocal, writePrompt]);
 
@@ -330,10 +338,17 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   // Track sandbox availability so the header reflects reality.
   useEffect(() => sandboxTerminal.subscribe(setSandboxAvailable), []);
 
-  /** Attaches to the sandbox PTY when one becomes available. */
+  /**
+   * Attaches to the sandbox command runner once both halves exist.
+   *
+   * Depends on `termReady` as well as `sandboxAvailable`, because either can
+   * become true second. Previously this only re-ran on `sandboxAvailable`, so
+   * opening the Terminal *after* a sandbox was already connected left it stuck in
+   * Local mode: the effect ran once with no terminal yet and never ran again.
+   */
   useEffect(() => {
     const term = termRef.current;
-    if (!sandboxAvailable || !term) return;
+    if (!sandboxAvailable || !termReady || !term) return;
 
     const session = sandboxTerminal.connect({ cols: term.cols, rows: term.rows });
     if (!session) return;
@@ -360,7 +375,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       sessionRef.current = null;
       setSandboxStatus('idle');
     };
-  }, [sandboxAvailable]);
+  }, [sandboxAvailable, termReady]);
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-[#0a0a0a]">
@@ -389,7 +404,13 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           </span>
         </div>
         <span className="text-[10px] uppercase tracking-wide text-content-muted">
-          {isSandboxMode ? 'Real shell' : 'Simulated shell'}
+          {/*
+            Not "Real shell": commands run one-per-HTTP-request against the
+            sandbox, so there is no persistent TTY. Interactive programs and
+            long-lived foreground processes will not behave as they would in a
+            terminal, and the label should not imply otherwise.
+          */}
+          {isSandboxMode ? 'Sandbox · command runner' : 'Simulated shell'}
         </span>
       </div>
 

@@ -25,7 +25,18 @@ export interface ValidationState {
   revalidate: () => void;
 }
 
-export const useValidation = (project: MultiFileProject, enabled = true): ValidationState => {
+export const useValidation = (
+  project: MultiFileProject,
+  enabled = true,
+  /*
+   * Path of the file currently open in the editor. Not used to *select* what gets
+   * validated — the whole project is always synced — but changing files has to
+   * re-trigger a run. Monaco only creates a model once a file has been opened, so
+   * diagnostics for a file the user had never visited did not exist until the
+   * switch, and results already on screen were stale relative to the new file.
+   */
+  activePath?: string | null,
+): ValidationState => {
   const [summary, setSummary] = useState<ValidationSummary>(EMPTY_SUMMARY);
   const [isValidating, setIsValidating] = useState(false);
   const [manualTrigger, setManualTrigger] = useState(0);
@@ -46,7 +57,8 @@ export const useValidation = (project: MultiFileProject, enabled = true): Valida
   /*
    * `project` is in the dependency list because a new object identity is exactly
    * what "the code changed" means here; the debounce is what keeps that from
-   * becoming per-keystroke work.
+   * becoming per-keystroke work. `activePath` is there so switching files
+   * re-validates too — see the parameter comment.
    */
   useEffect(() => {
     if (!enabled) return;
@@ -67,7 +79,7 @@ export const useValidation = (project: MultiFileProject, enabled = true): Valida
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [project, enabled, manualTrigger]);
+  }, [project, enabled, manualTrigger, activePath]);
 
   const revalidate = useCallback(() => setManualTrigger((value) => value + 1), []);
 
