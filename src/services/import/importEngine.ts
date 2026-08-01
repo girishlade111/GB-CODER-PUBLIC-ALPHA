@@ -113,6 +113,10 @@ export interface DroppedFile {
 export interface DropInput {
   files?: File[];
   entries?: unknown[];
+  /** Pending `FileSystemHandle`s, used when `webkitGetAsEntry()` returned null. */
+  handles?: Promise<unknown>[];
+  /** Folders that could not be read at all, so the error can explain why. */
+  unreadableDirectories?: string[];
 }
 
 export interface SkippedGroup {
@@ -382,6 +386,19 @@ export const buildImportPlan = async (input: DropInput): Promise<ImportPlan> => 
    * the caller may hand them over unresolved.
    */
   const fromEntries = await flattenEntries(input.entries ?? []);
+
+  /*
+   * Resolved here rather than in the drop handler for the same reason as
+   * entries: the handles must be *requested* synchronously during the drop, but
+   * can only be awaited afterwards. A rejection is tolerated per handle so one
+   * unreadable folder cannot fail an otherwise valid import.
+   */
+  const settled = await Promise.allSettled(input.handles ?? []);
+  const resolvedHandles = settled
+    .filter((r): r is PromiseFulfilledResult<unknown> => r.status === 'fulfilled')
+    .map((r) => r.value);
+  const fromHandles = await flattenHandles(resolvedHandles);
+
   const fromFiles: DroppedFile[] = (input.files ?? []).map((file) => ({
     path: (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name,
     file,
@@ -395,7 +412,7 @@ export const buildImportPlan = async (input: DropInput): Promise<ImportPlan> => 
    */
   const all: DroppedFile[] = [];
   const seen = new Set<string>();
-  for (const item of [...fromEntries, ...fromFiles]) {
+  for (const item of [...fromEntries, ...fromHandles, ...fromFiles]) {
     const key = `${item.path}\u0000${item.file.size}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -403,6 +420,18 @@ export const buildImportPlan = async (input: DropInput): Promise<ImportPlan> => 
   }
 
   if (all.length === 0) {
+    /*
+     * Distinguish "the folder could not be read" from "the folder had nothing we
+     * support". The first used to be reported as the second, which sent people
+     * looking for a problem with their project rather than with the browser.
+     */
+    const unreadable = input.unreadableDirectories ?? [];
+    if (unreadable.length > 0) {
+      throw new Error(
+        `Could not read the dropped folder${unreadable.length > 1 ? 's' : ''} (${unreadable.join(', ')}). ` +
+          'Your browser did not expose the contents — use "Choose folder" in the Import dialog instead.',
+      );
+    }
     throw new Error('Nothing importable was found in that folder, file or archive.');
   }
 
@@ -438,6 +467,66 @@ const entryToFile = (entry: FileSystemFileEntry): Promise<File | null> =>
       () => resolve(null),
     );
   });
+
+/* ── File System Access handles ──────────────────────────────────────────────
+ *
+ * Fallback for when `webkitGetAsEntry()` returns null on a dropped folder, which
+ * is what made folder drops fail: the folder still turns up in
+ * `dataTransfer.files` as an unreadable zero-byte entry, so the import found
+ * nothing and reported that nothing was importable. `getAsFileSystemHandle()`
+ * reports the kind reliably, so this is a real fallback rather than a guess.
+ */
+
+interface DirHandle {
+  kind: 'directory';
+  name: string;
+  values: () => AsyncIterableIterator<DirHandle | FileHandle>;
+}
+interface FileHandle {
+  kind: 'file';
+  name: string;
+  getFile: () => Promise<File>;
+}
+
+/** Recursively flattens resolved FileSystemHandles, mirroring `flattenEntries`. */
+export const flattenHandles = async (
+  handles: unknown[],
+  depth = 0,
+  prefix = '',
+): Promise<DroppedFile[]> => {
+  if (depth > MAX_TRAVERSAL_DEPTH) return [];
+
+  const collected: DroppedFile[] = [];
+
+  for (const raw of handles) {
+    const handle = raw as DirHandle | FileHandle | null;
+    if (!handle) continue;
+
+    const path = prefix ? `${prefix}/${handle.name}` : handle.name;
+    if (shouldSkipPath(path)) continue;
+
+    if (handle.kind === 'file') {
+      try {
+        collected.push({ path, file: await handle.getFile() });
+      } catch {
+        // One unreadable file must not fail the whole import.
+      }
+      continue;
+    }
+
+    if (handle.kind === 'directory') {
+      const children: (DirHandle | FileHandle)[] = [];
+      try {
+        for await (const child of handle.values()) children.push(child);
+      } catch {
+        continue;
+      }
+      collected.push(...(await flattenHandles(children, depth + 1, path)));
+    }
+  }
+
+  return collected;
+};
 
 /**
  * Flattens dropped directory entries into files with their relative paths.

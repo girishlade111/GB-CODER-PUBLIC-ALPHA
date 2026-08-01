@@ -63,7 +63,12 @@ export const useImportDrop = ({
 
   /** Loads the engine and builds a plan. The only dynamic import here. */
   const process = useCallback(
-    async (input: { files?: File[]; entries?: unknown[] }) => {
+    async (input: {
+      files?: File[];
+      entries?: unknown[];
+      handles?: Promise<unknown>[];
+      unreadableDirectories?: string[];
+    }) => {
       setIsPreparing(true);
       try {
         const engine = await import('../services/import/importEngine');
@@ -140,9 +145,22 @@ export const useImportDrop = ({
       // Stops the browser navigating away to the dropped file.
       event.preventDefault();
 
-      const { entries, files } = collectTransfer(event.dataTransfer);
-      if (entries.length === 0 && files.length === 0) return;
-      void processRef.current({ entries, files });
+      const { entries, files, handles, unreadableDirectories } = collectTransfer(
+        event.dataTransfer,
+      );
+      /*
+       * `unreadableDirectories` counts as something to report: a folder we could
+       * not open must produce an explanation, not a silent no-op.
+       */
+      if (
+        entries.length === 0 &&
+        files.length === 0 &&
+        handles.length === 0 &&
+        unreadableDirectories.length === 0
+      ) {
+        return;
+      }
+      void processRef.current({ entries, files, handles, unreadableDirectories });
     };
 
     window.addEventListener('dragenter', onDragEnter);
