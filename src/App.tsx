@@ -53,6 +53,16 @@ const ImportModal = lazy(() => import('./components/ImportModal'));
 const PreviewSharePage = lazy(() => import('./components/PreviewSharePage'));
 const ImportReviewModal = lazy(() => import('./components/ImportReviewModal'));
 
+/*
+ * The full-stack feature (VS Code mode, sandbox panel, sandbox client, E2B
+ * vocabulary) behind ONE dynamic import. It is a separate chunk from both the
+ * core editor and the import/detection chunk, and is only ever rendered after a
+ * detected full-stack project is confirmed — so it is only ever fetched then.
+ */
+const VSCodeMode = lazy(() =>
+  import('./features/fullstack/fullstackFeature').then((module) => ({ default: module.VSCodeMode })),
+);
+
 // Phase 2: High priority - lazy loaded after initial render
 // (EnhancedConsole is used inside TabbedRightPanel, not here directly)
 
@@ -400,6 +410,12 @@ function App() {
     tab: VoicePanelTarget;
     nonce: number;
   } | null>(null);
+  /**
+   * Set when a full-stack project is confirmed. Drives VS Code mode, and is kept
+   * separate from `fileProject` so leaving the mode cannot disturb the plain /
+   * React / Vue editors, which are untouched by this feature.
+   */
+  const [fullStackProject, setFullStackProject] = useState<MultiFileProject | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showInjectionManager, setShowInjectionManager] = useState(false);
@@ -825,6 +841,22 @@ function App() {
     (kind: DetectedKind) => {
       if (!importPlan) return;
 
+      /*
+       * Full-stack: enter VS Code mode instead of loading the project into the
+       * standard editors, which have nowhere to run a server. This is the only
+       * path that pulls the full-stack chunk.
+       */
+      if (kind === 'fullstack') {
+        setFullStackProject({
+          projectType: 'plain',
+          files: importPlan.result.files,
+          entry: importPlan.result.entry,
+        });
+        setImportPlan(null);
+        toast.success('Full-stack project detected — connect a Sandbox to run it.');
+        return;
+      }
+
       const projectType: ProjectType =
         kind === 'react' ? 'react' : kind === 'vue' ? 'vue' : 'plain';
 
@@ -849,6 +881,36 @@ function App() {
     },
     [importPlan, handleImportResult, workspace],
   );
+
+  /** Applies an edit made in VS Code mode. */
+  const handleFullStackFileChange = useCallback((path: string, content: string) => {
+    setFullStackProject((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        files: current.files.map((file) => (file.path === path ? { ...file, content } : file)),
+      };
+    });
+  }, []);
+
+  /**
+   * Leaves VS Code mode without losing work: the edited files are handed to the
+   * normal import path, so they land in the standard editor rather than being
+   * discarded if detection was wrong.
+   */
+  const handleExitFullStack = useCallback(() => {
+    const project = fullStackProject;
+    setFullStackProject(null);
+    if (!project) return;
+
+    handleImportResult({
+      files: project.files,
+      projectType: 'plain',
+      entry: undefined,
+      warnings: [],
+    });
+    toast.success('Left VS Code mode. Your files were kept.');
+  }, [fullStackProject, handleImportResult]);
 
   /** Ctrl/Cmd+Shift+S — capture and save a PNG without opening the modal. */
   const handleQuickScreenshot = useCallback(async () => {
@@ -2156,6 +2218,43 @@ function App() {
   }
 
   // Render main editor view
+  /*
+   * Full-stack projects get the VS Code style mode. Returned before the standard
+   * editor view so the multi-panel layout is bypassed entirely — the other
+   * project modes are completely unaffected by this branch.
+   */
+  if (fullStackProject) {
+    return (
+      <div
+        className={`flex h-screen flex-col overflow-hidden transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'}`}
+      >
+        <NavigationBar
+          onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
+          onRun={() => toast('Full-stack projects run in a Sandbox, not locally.')}
+          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
+          onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
+          autoSaveEnabled={autoSaveEnabled}
+          onToggleVoice={handleToggleVoice}
+          isVoiceListening={voiceState.isListening}
+        />
+
+        <div className="min-h-0 flex-1 pt-14 sm:pt-16">
+          <Suspense fallback={<LazyFallback label="VS Code mode" variant="panel" />}>
+            <VSCodeMode
+              project={fullStackProject}
+              onChangeFile={handleFullStackFileChange}
+              onExit={handleExitFullStack}
+              fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
+              fontSize={settings.editorFontSize}
+            />
+          </Suspense>
+        </div>
+
+        <Toaster position="bottom-right" />
+      </div>
+    );
+  }
+
   return (
     <div
       className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'

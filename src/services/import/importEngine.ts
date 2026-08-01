@@ -78,9 +78,20 @@ const JUNK_FILE_PATTERN = /(^|\/)(\.DS_Store|Thumbs\.db|npm-debug\.log|yarn-erro
 
 /** Extensions we can actually open in an editor panel. */
 const EDITABLE_EXTENSIONS = new Set([
+  // Front-end
   'html', 'htm', 'css', 'scss', 'sass', 'less',
   'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'vue', 'svelte',
-  'json', 'md', 'txt', 'svg', 'yml', 'yaml', 'toml', 'env',
+  /*
+   * Back-end sources. Omitting these meant a full-stack import silently dropped
+   * every server file: detection could still see `app.py` in the manifest and
+   * classify the project correctly, but the file itself was never imported, so
+   * the editor opened a "Python project" containing no Python.
+   */
+  'py', 'rb', 'go', 'rs', 'java', 'kt', 'php', 'cs', 'sh', 'bash', 'sql',
+  'prisma', 'graphql', 'gql', 'proto',
+  // Config and docs
+  'json', 'jsonc', 'md', 'mdx', 'txt', 'svg', 'yml', 'yaml', 'toml', 'ini',
+  'env', 'cfg', 'conf', 'lock', 'gitignore', 'dockerignore', 'editorconfig',
 ]);
 
 /** Files without an extension that still matter for detection. */
