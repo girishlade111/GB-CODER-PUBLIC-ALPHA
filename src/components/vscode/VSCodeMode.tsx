@@ -1,11 +1,17 @@
-import React, { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
-import Editor from '@monaco-editor/react';
+import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import Editor, { OnMount } from '@monaco-editor/react';
 import {
-  ChevronDown,
-  ChevronUp,
+  Box,
+  FilePlus,
+  FolderPlus,
   Info,
   LogOut,
+  MessageSquare,
+  Mic,
+  MonitorPlay,
+  Package,
   Plug,
+  Plus,
   RefreshCw,
   Server,
   TerminalSquare,
@@ -14,21 +20,33 @@ import {
 import FileTreeView from './FileTreeView';
 import TerminalTab from '../Console/TerminalTab';
 import SandboxPanel from '../sandbox/SandboxPanel';
+import Tooltip from '../ui/Tooltip';
 import { GB_CODER_MONACO_THEME, defineGbCoderTheme } from '../../utils/monacoTheme';
 import { MultiFileProject } from '../../types/files';
 import { sandboxSession } from '../../services/sandbox/sandboxSession';
+import { carriesFiles, collectTransfer } from '../../utils/dropTransfer';
 
 /**
- * VS Code style editor mode for full-stack projects.
+ * VS Code style editor shell.
  *
- * Used *only* for a confirmed full-stack import. Plain, React and Vue projects
- * keep their existing multi-panel editors untouched — this is an additional mode,
- * not a replacement.
+ * Entered automatically for a detected full-stack import, or by hand from the
+ * sidebar. Plain, React and Vue projects keep their existing multi-panel editors
+ * untouched — this is an additional mode, not a replacement.
  *
- * The layout is the familiar three columns: explorer, one editable file with a
- * tab strip, and a right-hand panel. The right panel cannot show a local iframe:
- * a project with a server half has nothing meaningful to execute client-side, so
- * it asks for a sandbox instead of rendering something misleading.
+ * ## Layout contract
+ *
+ * The shell owns the whole viewport and **nothing here scrolls the page**. It is a
+ * fixed-height column: top bar, body, optional terminal, status bar. The body is
+ * three fixed-height columns, and each of the four content areas — explorer,
+ * editor, right panel, terminal — is its own scroll container.
+ *
+ * That isolation is the point, and it is load-bearing rather than cosmetic: with a
+ * single page-level scroller, opening a long file dragged the explorer and
+ * terminal out of view, and a long file tree pushed the editor down. Every region
+ * below therefore pairs `min-h-0` with `overflow-hidden`/`overflow-y-auto`, and
+ * every fixed strip is `shrink-0`. `min-h-0` is the non-obvious half: a flex child
+ * defaults to `min-height:auto`, so without it a tall child refuses to shrink and
+ * overflows its parent instead of scrolling inside it.
  */
 
 interface VSCodeModeProps {
@@ -40,9 +58,28 @@ interface VSCodeModeProps {
   /**
    * How the mode was entered. Only affects wording: claiming a project was
    * "detected as full-stack" when the user switched by hand would be untrue, and
-   * this mode is now reachable both ways.
+   * this mode is reachable both ways.
    */
   entryReason?: 'detected' | 'manual';
+  /**
+   * Adds files into the *current* project rather than replacing it.
+   *
+   * Takes the raw transfer shape rather than `File[]` so a dropped folder works:
+   * directories only exist as entries/handles, never as files. Runs through the
+   * same `buildImportPlan` pipeline every other import path uses.
+   */
+  onAddImport?: (input: {
+    files?: File[];
+    entries?: unknown[];
+    handles?: Promise<unknown>[];
+    unreadableDirectories?: string[];
+  }) => Promise<void>;
+  /** Opens the app's existing Dependencies panel. */
+  onOpenDependencies?: () => void;
+  /** Opens the app's existing AI Chat overlay. */
+  onOpenAIChat?: () => void;
+  /** Opens the app's existing Voice Commands overlay. */
+  onOpenVoiceCommands?: () => void;
 }
 
 const subscribeSandbox = (onChange: () => void) => sandboxSession.subscribe(onChange);
@@ -50,6 +87,12 @@ const getSandboxSnapshot = () => sandboxSession.getState();
 
 /** Most recently opened files, newest last, as VS Code orders its tabs. */
 const MAX_TABS = 12;
+
+/** Terminal panel height bounds, in px. */
+const TERMINAL_MIN_H = 96;
+const TERMINAL_DEFAULT_H = 240;
+/** Never let the terminal squeeze the editor to nothing. */
+const TERMINAL_MAX_FRACTION = 0.75;
 
 /**
  * Extension to Monaco language.
@@ -83,6 +126,19 @@ const monacoLanguageForPath = (path: string): string => {
   return MONACO_LANGUAGE_BY_EXTENSION[base.slice(dot + 1).toLowerCase()] ?? 'plaintext';
 };
 
+/** Human label for the status bar, e.g. `typescript` -> `TypeScript`. */
+const LANGUAGE_LABEL: Record<string, string> = {
+  html: 'HTML', css: 'CSS', scss: 'SCSS', less: 'Less',
+  javascript: 'JavaScript', typescript: 'TypeScript', json: 'JSON',
+  python: 'Python', ruby: 'Ruby', go: 'Go', rust: 'Rust', java: 'Java',
+  kotlin: 'Kotlin', php: 'PHP', csharp: 'C#', shell: 'Shell', sql: 'SQL',
+  graphql: 'GraphQL', markdown: 'Markdown', yaml: 'YAML', ini: 'INI',
+  xml: 'XML', dockerfile: 'Dockerfile', makefile: 'Makefile',
+  plaintext: 'Plain Text',
+};
+
+type RightTab = 'preview' | 'sandbox';
+
 const VSCodeMode: React.FC<VSCodeModeProps> = ({
   project,
   onChangeFile,
@@ -90,13 +146,17 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   fontFamily,
   fontSize,
   entryReason = 'detected',
+  onAddImport,
+  onOpenDependencies,
+  onOpenAIChat,
+  onOpenVoiceCommands,
 }) => {
   const sandbox = useSyncExternalStore(subscribeSandbox, getSandboxSnapshot, getSandboxSnapshot);
 
   const [openPaths, setOpenPaths] = useState<string[]>([]);
   const [activePath, setActivePath] = useState<string | null>(null);
   const [dirtyPaths, setDirtyPaths] = useState<Set<string>>(new Set());
-  const [rightTab, setRightTab] = useState<'preview' | 'sandbox'>('sandbox');
+  const [rightTab, setRightTab] = useState<RightTab>('sandbox');
   const [showBanner, setShowBanner] = useState(true);
   /*
    * VS Code mode replaces the standard console panel, so the Terminal has to be
@@ -104,6 +164,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
    * would have no entry point in the only mode that can use it.
    */
   const [showTerminal, setShowTerminal] = useState(false);
+  const [terminalHeight, setTerminalHeight] = useState(TERMINAL_DEFAULT_H);
+  /** Cursor position, mirrored into the status bar. */
+  const [cursor, setCursor] = useState({ line: 1, column: 1 });
+  const [isExplorerDropTarget, setIsExplorerDropTarget] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
   /* Open a sensible first file so the editor is not empty on entry. */
   useEffect(() => {
@@ -159,6 +226,91 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     [activePath, onChangeFile],
   );
 
+  /** Mirrors the caret into the status bar, the way VS Code reports Ln/Col. */
+  const handleEditorMount = useCallback<OnMount>((editor) => {
+    setCursor({
+      line: editor.getPosition()?.lineNumber ?? 1,
+      column: editor.getPosition()?.column ?? 1,
+    });
+    editor.onDidChangeCursorPosition((event) => {
+      setCursor({ line: event.position.lineNumber, column: event.position.column });
+    });
+  }, []);
+
+  /* ── Terminal resize ──────────────────────────────────────────────────────
+   *
+   * Pointer events with capture rather than window listeners: capture keeps the
+   * drag tracking even when the cursor leaves the 4px handle, which is otherwise
+   * very easy to do and makes the resize feel broken.
+   */
+  const dragRef = useRef<{ startY: number; startHeight: number } | null>(null);
+
+  const handleResizeDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      dragRef.current = { startY: event.clientY, startHeight: terminalHeight };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [terminalHeight],
+  );
+
+  const handleResizeMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    // Dragging up grows the panel, so the delta is inverted.
+    const next = drag.startHeight + (drag.startY - event.clientY);
+    const max = Math.max(TERMINAL_MIN_H, window.innerHeight * TERMINAL_MAX_FRACTION);
+    setTerminalHeight(Math.min(max, Math.max(TERMINAL_MIN_H, next)));
+  }, []);
+
+  const handleResizeUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, []);
+
+  /* ── Explorer imports ─────────────────────────────────────────────────── */
+
+  const submitFiles = useCallback(
+    async (files: File[]) => {
+      if (!onAddImport || files.length === 0) return;
+      await onAddImport({ files });
+    },
+    [onAddImport],
+  );
+
+  /**
+   * Claims a drop over the explorer so it adds to this project.
+   *
+   * Without `stopPropagation` the window-level importer would also see it and
+   * start a whole-project import with its review dialog, which is the opposite of
+   * "add these files to the tree I am looking at".
+   */
+  const handleExplorerDrop = useCallback(
+    (event: React.DragEvent) => {
+      if (!onAddImport || !carriesFiles(event.dataTransfer)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setIsExplorerDropTarget(false);
+      // Must read synchronously: DataTransferItem is neutered after this returns.
+      const collected = collectTransfer(event.dataTransfer);
+      void onAddImport(collected);
+    },
+    [onAddImport],
+  );
+
+  const handleExplorerDragOver = useCallback(
+    (event: React.DragEvent) => {
+      if (!onAddImport || !carriesFiles(event.dataTransfer)) return;
+      // Every dragover must be prevented, or no drop event is fired at all.
+      event.preventDefault();
+      event.stopPropagation();
+      event.dataTransfer.dropEffect = 'copy';
+      setIsExplorerDropTarget(true);
+    },
+    [onAddImport],
+  );
+
   const activePreview = sandbox.previews.find((preview) => preview.port === sandbox.activePort);
   /*
    * Both halves matter: a confirmed-live process with no exposed port has nothing
@@ -166,12 +318,95 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
    */
   const devServerReady = sandbox.devServerRunning && sandbox.previews.length > 0;
 
+  const activeLanguage = activeFile ? monacoLanguageForPath(activeFile.path) : null;
+
+  /** Top-bar entries. Icon-only by design, so each one carries a tooltip. */
+  const topBarActions = [
+    {
+      id: 'preview',
+      label: 'Live Preview',
+      icon: <MonitorPlay className="h-4 w-4" />,
+      onClick: () => setRightTab('preview'),
+      isActive: rightTab === 'preview',
+    },
+    {
+      id: 'sandbox',
+      label: 'Sandbox',
+      icon: <Box className="h-4 w-4" />,
+      onClick: () => setRightTab('sandbox'),
+      isActive: rightTab === 'sandbox',
+    },
+    {
+      id: 'dependencies',
+      label: 'Dependencies',
+      icon: <Package className="h-4 w-4" />,
+      onClick: onOpenDependencies,
+      isActive: false,
+    },
+    {
+      id: 'ai-chat',
+      label: 'AI Chat',
+      icon: <MessageSquare className="h-4 w-4" />,
+      onClick: onOpenAIChat,
+      isActive: false,
+    },
+    {
+      id: 'voice',
+      label: 'Voice Commands',
+      icon: <Mic className="h-4 w-4" />,
+      onClick: onOpenVoiceCommands,
+      isActive: false,
+    },
+  ];
+
   return (
-    <div className="flex h-full min-h-0 flex-col" data-testid="vscode-mode">
+    // h-full inside App's h-screen wrapper; overflow-hidden forbids page scroll.
+    <div
+      className="flex h-full min-h-0 flex-col overflow-hidden bg-vsc-editor text-vsc-text"
+      data-testid="vscode-mode"
+    >
+      {/* ── Top bar: icon-only, replaces the app's normal chrome ── */}
+      <header
+        className="flex h-9 shrink-0 items-center gap-1 border-b border-vsc-border bg-vsc-panel px-2"
+        data-testid="vscode-topbar"
+      >
+        <span className="mr-1 select-none text-[11px] font-semibold tracking-wide text-vsc-textMuted">
+          GB Coder
+        </span>
+
+        <div className="flex items-center gap-0.5">
+          {topBarActions.map((action) => (
+            <Tooltip key={action.id} label={action.label} side="bottom">
+              <button
+                type="button"
+                onClick={action.onClick}
+                disabled={!action.onClick}
+                aria-label={action.label}
+                aria-pressed={action.isActive}
+                data-testid={`vscode-nav-${action.id}`}
+                className={`rounded p-1.5 transition-colors ${
+                  action.isActive
+                    ? 'bg-white/10 text-white'
+                    : action.onClick
+                      ? 'text-vsc-textMuted hover:bg-white/[0.08] hover:text-white'
+                      : 'cursor-not-allowed text-vsc-textMuted/40'
+                }`}
+              >
+                {action.icon}
+              </button>
+            </Tooltip>
+          ))}
+        </div>
+
+        <span className="ml-auto truncate text-[11px] text-vsc-textMuted" title={activePath ?? ''}>
+          {activePath ?? 'No file open'}
+        </span>
+      </header>
+
       {/* Entry banner */}
       {showBanner && (
         <div
-          className="flex items-start gap-2.5 border-b border-amber-500/30 bg-amber-500/10 px-3 py-2"
+          className="flex shrink-0 items-start gap-2.5 border-b border-amber-500/30 bg-amber-500/10 px-3 py-2"
           data-testid="vscode-banner"
         >
           <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400" />
@@ -196,38 +431,80 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      {/* ── Body: three independently scrolling columns ── */}
       <div className="flex min-h-0 flex-1">
         {/* Explorer */}
-        <aside className="flex w-56 min-w-[12rem] flex-col overflow-hidden border-r border-stroke-subtle bg-surface-base">
-          <div className="flex items-center justify-between border-b border-stroke-subtle px-2.5 py-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-content-muted">
+        <aside
+          className={`flex w-60 shrink-0 flex-col overflow-hidden border-r bg-vsc-sidebar ${
+            isExplorerDropTarget ? 'border-accent' : 'border-vsc-border'
+          }`}
+          data-testid="vscode-explorer"
+        >
+          <div className="flex shrink-0 items-center gap-1 border-b border-vsc-border px-2 py-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-vsc-textMuted">
               Explorer
             </span>
-            <span className="text-[10px] text-content-muted">{project.files.length}</span>
+            <span className="rounded bg-white/10 px-1 text-[9px] text-vsc-textMuted">
+              {project.files.length}
+            </span>
+
+            <div className="ml-auto flex items-center gap-0.5">
+              <Tooltip label="Load File" side="bottom">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  aria-label="Load File"
+                  data-testid="explorer-load-file"
+                  className="rounded p-1 text-vsc-textMuted hover:bg-white/10 hover:text-white"
+                >
+                  <FilePlus className="h-3.5 w-3.5" />
+                </button>
+              </Tooltip>
+              <Tooltip label="Load Folder" side="bottom">
+                <button
+                  type="button"
+                  onClick={() => folderInputRef.current?.click()}
+                  aria-label="Load Folder"
+                  data-testid="explorer-load-folder"
+                  className="rounded p-1 text-vsc-textMuted hover:bg-white/10 hover:text-white"
+                >
+                  <FolderPlus className="h-3.5 w-3.5" />
+                </button>
+              </Tooltip>
+            </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto">
+
+          {/*
+            Own scroll container. A long tree scrolls here and nowhere else — it
+            cannot push the editor down or move the terminal.
+          */}
+          <div
+            className="min-h-0 flex-1 overflow-y-auto"
+            data-testid="vscode-explorer-scroll"
+            onDragOver={handleExplorerDragOver}
+            onDragLeave={() => setIsExplorerDropTarget(false)}
+            onDrop={handleExplorerDrop}
+          >
             <FileTreeView
               files={project.files}
               activePath={activePath}
               dirtyPaths={dirtyPaths}
               onOpen={openFile}
             />
+            {isExplorerDropTarget && (
+              <p className="px-3 py-2 text-[11px] text-accent">Drop to add to this project…</p>
+            )}
           </div>
 
           {/*
            * Dev Server shortcut.
            *
            * Lives here rather than in AppSidebar because AppSidebar is not
-           * rendered in this mode at all (App returns VSCodeMode early for a
-           * full-stack project), and the brief asks for this control to appear
-           * only in VS Code / full-stack mode.
-           *
-           * Stays disabled until the backend has *confirmed* a live process and
-           * at least one reachable port, so it never routes the user to an iframe
-           * that cannot load.
+           * rendered in this mode at all. Stays disabled until the backend has
+           * *confirmed* a live process and at least one reachable port, so it
+           * never routes the user to an iframe that cannot load.
            */}
-          <div className="border-t border-stroke-subtle">
+          <div className="shrink-0 border-t border-vsc-border">
             <button
               onClick={() => setRightTab('preview')}
               disabled={!devServerReady}
@@ -240,8 +517,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               }
               className={`flex w-full items-center gap-1.5 px-2.5 py-2 text-left text-[11px] ${
                 devServerReady
-                  ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                  : 'cursor-not-allowed text-content-muted opacity-50'
+                  ? 'text-vsc-text hover:bg-white/[0.06] hover:text-white'
+                  : 'cursor-not-allowed text-vsc-textMuted opacity-50'
               }`}
             >
               <Server className="h-3.5 w-3.5 shrink-0" />
@@ -258,7 +535,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             {/* Only worth showing when there is an actual choice to make. */}
             {devServerReady && sandbox.previews.length > 1 && (
               <div className="px-2.5 pb-2" data-testid="dev-server-ports">
-                <span className="mb-1 block text-[10px] uppercase tracking-wider text-content-muted">
+                <span className="mb-1 block text-[10px] uppercase tracking-wider text-vsc-textMuted">
                   Ports
                 </span>
                 <div className="flex flex-wrap gap-1">
@@ -274,8 +551,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       title={preview.url}
                       className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
                         preview.port === sandbox.activePort
-                          ? 'bg-accent/20 text-content-primary'
-                          : 'text-content-muted hover:bg-white/5 hover:text-content-primary'
+                          ? 'bg-accent/25 text-white'
+                          : 'text-vsc-textMuted hover:bg-white/10 hover:text-white'
                       }`}
                     >
                       {preview.port}
@@ -290,7 +567,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             onClick={onExit}
             data-testid="exit-vscode-mode"
             title="Return to the standard editor. File contents are kept."
-            className="flex items-center gap-1.5 border-t border-stroke-subtle px-2.5 py-2 text-[11px] text-content-secondary hover:bg-white/5 hover:text-content-primary"
+            className="flex shrink-0 items-center gap-1.5 border-t border-vsc-border px-2.5 py-2 text-[11px] text-vsc-text hover:bg-white/[0.06] hover:text-white"
           >
             <LogOut className="h-3.5 w-3.5" />
             Exit VS Code mode
@@ -298,9 +575,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         </aside>
 
         {/* Editor column: one file at a time, with tabs */}
-        <main className="flex min-w-0 flex-1 flex-col">
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-vsc-editor">
           <div
-            className="flex items-stretch overflow-x-auto border-b border-stroke-subtle bg-surface-raised"
+            className="flex shrink-0 items-stretch overflow-x-auto border-b border-vsc-border bg-vsc-tabbar"
             role="tablist"
             data-testid="vscode-tabs"
           >
@@ -315,17 +592,23 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   data-testid="vscode-tab"
                   data-path={path}
                   onClick={() => setActivePath(path)}
-                  className={`group flex cursor-pointer items-center gap-1.5 border-r border-stroke-subtle px-3 py-1.5 text-xs ${
+                  /*
+                   * Active tabs carry a coloured top border and the editor's own
+                   * background, so the tab reads as physically continuous with the
+                   * surface below it. Inactive tabs keep a transparent top border
+                   * so switching does not shift anything by a pixel.
+                   */
+                  className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-t-2 border-r-vsc-border px-3 py-1.5 text-xs ${
                     isActive
-                      ? 'bg-surface-base text-content-primary'
-                      : 'text-content-muted hover:text-content-secondary'
+                      ? 'border-t-accent bg-vsc-editor text-white'
+                      : 'border-t-transparent text-vsc-textMuted hover:bg-white/[0.04] hover:text-vsc-text'
                   }`}
                   title={path}
                 >
                   <span className="max-w-[12rem] truncate">{name}</span>
                   {dirtyPaths.has(path) && (
                     <span
-                      className="h-1.5 w-1.5 rounded-full bg-content-secondary"
+                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-vsc-text"
                       data-testid="tab-dirty-dot"
                       title="Unsaved changes"
                     />
@@ -343,7 +626,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             })}
           </div>
 
-          <div className="min-h-0 flex-1">
+          {/* Monaco scrolls internally; this box only bounds it. */}
+          <div className="min-h-0 flex-1 overflow-hidden" data-testid="vscode-editor-scroll">
             {activeFile ? (
               <Editor
                 /* Keyed by path: one Monaco model per file, so undo history and
@@ -353,6 +637,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 value={activeFile.content}
                 onChange={handleChange}
                 beforeMount={defineGbCoderTheme}
+                onMount={handleEditorMount}
                 theme={GB_CODER_MONACO_THEME}
                 options={{
                   fontFamily,
@@ -364,7 +649,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 }}
               />
             ) : (
-              <div className="grid h-full place-items-center text-xs text-content-muted">
+              <div className="grid h-full place-items-center text-xs text-vsc-textMuted">
                 Select a file from the explorer.
               </div>
             )}
@@ -372,8 +657,14 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         </main>
 
         {/* Right panel */}
-        <aside className="flex w-[26rem] min-w-[20rem] flex-col overflow-hidden border-l border-stroke-subtle bg-surface-base">
-          <div className="flex border-b border-stroke-subtle bg-surface-raised" role="tablist">
+        <aside
+          className="flex w-[26rem] min-w-[18rem] shrink-0 flex-col overflow-hidden border-l border-vsc-border bg-vsc-sidebar"
+          data-testid="vscode-right-panel"
+        >
+          <div
+            className="flex shrink-0 border-b border-vsc-border bg-vsc-tabbar"
+            role="tablist"
+          >
             {(['preview', 'sandbox'] as const).map((tab) => (
               <button
                 key={tab}
@@ -381,30 +672,39 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 aria-selected={rightTab === tab}
                 onClick={() => setRightTab(tab)}
                 data-testid={`vscode-right-tab-${tab}`}
-                className={`px-3 py-2 text-xs font-medium capitalize ${
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium ${
                   rightTab === tab
-                    ? 'border-b-2 border-accent text-content-primary'
-                    : 'text-content-muted hover:text-content-primary'
+                    ? 'border-b-2 border-accent text-white'
+                    : 'border-b-2 border-transparent text-vsc-textMuted hover:text-white'
                 }`}
               >
+                {tab === 'preview' ? (
+                  <MonitorPlay className="h-3.5 w-3.5" />
+                ) : (
+                  <Box className="h-3.5 w-3.5" />
+                )}
                 {tab === 'preview' ? 'Live Preview' : 'Sandbox'}
               </button>
             ))}
           </div>
 
-          <div className="min-h-0 flex-1 overflow-hidden">
+          {/* Own scroll container. */}
+          <div
+            className="min-h-0 flex-1 overflow-y-auto"
+            data-testid="vscode-right-panel-scroll"
+          >
             {rightTab === 'sandbox' ? (
               <SandboxPanel files={project.files} />
             ) : activePreview ? (
-              <div className="flex h-full flex-col">
-                <div className="flex items-center justify-between border-b border-stroke-subtle px-2.5 py-1.5">
-                  <span className="flex items-center gap-1.5 text-[11px] text-content-secondary">
+              <div className="flex h-full min-h-0 flex-col">
+                <div className="flex shrink-0 items-center justify-between border-b border-vsc-border px-2.5 py-1.5">
+                  <span className="flex items-center gap-1.5 text-[11px] text-vsc-text">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                     {activePreview.label}
                   </span>
                   <button
                     onClick={() => void sandboxSession.pollLogs()}
-                    className="text-content-muted hover:text-content-primary"
+                    className="text-vsc-textMuted hover:text-white"
                     aria-label="Refresh"
                   >
                     <RefreshCw className="h-3 w-3" />
@@ -414,7 +714,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 <iframe
                   src={activePreview.url}
                   title="Sandbox preview"
-                  className="flex-1 border-0 bg-white"
+                  className="min-h-0 flex-1 border-0 bg-white"
                   sandbox="allow-scripts allow-same-origin allow-forms"
                 />
               </div>
@@ -424,11 +724,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 data-testid="connect-sandbox-prompt"
               >
                 <div>
-                  <Plug className="mx-auto mb-3 h-7 w-7 text-content-muted" />
-                  <p className="text-sm font-semibold text-content-primary">
-                    Connect Sandbox to Preview
-                  </p>
-                  <p className="mt-1.5 text-xs leading-relaxed text-content-muted">
+                  <Plug className="mx-auto mb-3 h-7 w-7 text-vsc-textMuted" />
+                  <p className="text-sm font-semibold text-white">Connect Sandbox to Preview</p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-vsc-textMuted">
                     This project has a server side, so it cannot run in the browser. Start a sandbox
                     to build and serve it, then the preview appears here.
                   </p>
@@ -445,44 +743,142 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         </aside>
       </div>
 
-      {/* Bottom terminal panel, as in VS Code. */}
-      <div
-        className={`flex flex-col border-t border-stroke-subtle bg-surface-base ${
-          showTerminal ? 'h-64' : ''
-        }`}
+      {/* ── Terminal panel: resizable, own scroll ── */}
+      {showTerminal && (
+        <>
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="Resize terminal panel"
+            data-testid="terminal-resize-handle"
+            onPointerDown={handleResizeDown}
+            onPointerMove={handleResizeMove}
+            onPointerUp={handleResizeUp}
+            onPointerCancel={handleResizeUp}
+            className="h-1 shrink-0 cursor-row-resize bg-vsc-border transition-colors hover:bg-accent"
+          />
+          <div
+            className="flex shrink-0 flex-col overflow-hidden bg-vsc-panel"
+            style={{ height: `${terminalHeight}px` }}
+            data-testid="vscode-terminal-panel"
+          >
+            {/* Terminal chrome: tab-style header, as VS Code presents its panel. */}
+            <div className="flex shrink-0 items-center gap-1 border-b border-vsc-border px-2">
+              <div
+                className="flex items-center gap-1.5 border-b-2 border-accent px-1.5 py-1.5 text-[11px] text-white"
+                role="tab"
+                aria-selected
+              >
+                <TerminalSquare className="h-3.5 w-3.5" />
+                Terminal
+              </div>
+
+              {/*
+                Disabled deliberately. The sandbox transport is a single session,
+                so offering a working "+" would create a tab that cannot run
+                anything. Shown rather than hidden so the limit is legible.
+              */}
+              <Tooltip label="One sandbox session at a time" side="bottom">
+                <button
+                  type="button"
+                  disabled
+                  aria-label="New terminal"
+                  data-testid="terminal-new"
+                  className="ml-1 cursor-not-allowed rounded p-1 text-vsc-textMuted/40"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </Tooltip>
+
+              <button
+                onClick={() => setShowTerminal(false)}
+                aria-label="Close panel"
+                className="ml-auto rounded p-1 text-vsc-textMuted hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-hidden" data-testid="vscode-terminal-scroll">
+              {/* The same Terminal component as the standard console panel: it
+                  switches itself to Sandbox Mode once a connector is registered,
+                  and shows Local Mode until then. */}
+              <TerminalTab
+                project={project}
+                resolvedPackages={[]}
+                unresolvedPackages={[]}
+                isResolvingPackages={false}
+                isActive={showTerminal}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Status bar ── */}
+      <footer
+        className="flex h-6 shrink-0 items-center gap-3 border-t border-vsc-border bg-vsc-panel px-2 text-[11px] text-vsc-textMuted"
+        data-testid="vscode-status-bar"
       >
         <button
           onClick={() => setShowTerminal((value) => !value)}
           data-testid="vscode-terminal-toggle"
-          className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-medium text-content-secondary hover:bg-white/5"
+          aria-pressed={showTerminal}
+          className="flex items-center gap-1 rounded px-1 hover:bg-white/10 hover:text-white"
         >
-          <TerminalSquare className="h-3.5 w-3.5" />
+          <TerminalSquare className="h-3 w-3" />
           Terminal
-          {sandbox.sandboxId && (
-            <span className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] text-emerald-300">
-              <span className="h-1 w-1 rounded-full bg-emerald-400" />
-              sandbox
-            </span>
-          )}
-          <span className="ml-auto">
-            {showTerminal ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-          </span>
         </button>
-        {showTerminal && (
-          <div className="min-h-0 flex-1">
-            {/* The same Terminal component as the standard console panel: it
-                switches itself to Sandbox Mode once a connector is registered. */}
-            <TerminalTab
-              project={project}
-              resolvedPackages={[]}
-              unresolvedPackages={[]}
-              isResolvingPackages={false}
-              isActive={showTerminal}
-            />
-          </div>
+
+        {activeLanguage && (
+          <span data-testid="status-language">
+            {LANGUAGE_LABEL[activeLanguage] ?? activeLanguage}
+          </span>
         )}
-      </div>
-      </div>
+
+        {activeFile && (
+          <span data-testid="status-cursor">
+            Ln {cursor.line}, Col {cursor.column}
+          </span>
+        )}
+
+        <span className="ml-auto flex items-center gap-1.5" data-testid="status-sandbox">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              sandbox.sandboxId ? 'bg-emerald-400' : 'bg-vsc-textMuted'
+            }`}
+          />
+          {sandbox.sandboxId ? 'Connected: Sandbox' : 'Local Mode'}
+        </span>
+      </footer>
+
+      {/* Hidden inputs backing the Explorer's Load File / Load Folder buttons. */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept=".html,.htm,.css,.js,.mjs,.cjs,.jsx,.ts,.tsx,.vue,.json,.md,.txt,.zip"
+        className="hidden"
+        data-testid="explorer-file-input"
+        onChange={(event) => {
+          void submitFiles(Array.from(event.target.files ?? []));
+          event.target.value = '';
+        }}
+      />
+      <input
+        ref={folderInputRef}
+        type="file"
+        multiple
+        // @ts-expect-error — non-standard but widely supported
+        webkitdirectory=""
+        directory=""
+        className="hidden"
+        data-testid="explorer-folder-input"
+        onChange={(event) => {
+          void submitFiles(Array.from(event.target.files ?? []));
+          event.target.value = '';
+        }}
+      />
     </div>
   );
 };
