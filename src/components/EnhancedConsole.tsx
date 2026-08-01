@@ -262,7 +262,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
       </div>
 
       {/* Sub-tab strip, with live counts */}
-      <div className="bg-surface-raised border-b border-stroke-subtle flex items-center px-2 flex-shrink-0">
+      <div className="bg-surface-raised border-b border-stroke-subtle flex items-center px-2 flex-shrink-0 compact:overflow-x-auto">
         {tabs.map(({ key, label, icon, badge, tone }) => (
           <button
             key={key}
@@ -273,7 +273,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
             role="tab"
             aria-selected={activeMode === key}
             data-testid={`console-subtab-${key}`}
-            className={`px-3 py-2 -mb-[1px] text-sm font-medium border-b-2 flex items-center gap-2 transition-colors ${
+            className={`px-3 py-2 -mb-[1px] text-sm font-medium border-b-2 flex items-center gap-2 transition-colors compact:min-h-[44px] compact:shrink-0 compact:whitespace-nowrap ${
               activeMode === key
                 ? 'text-content-primary border-accent'
                 : 'text-content-muted border-transparent hover:text-content-primary'

@@ -8,7 +8,7 @@ import React, {
   Suspense,
   lazy,
 } from 'react';
-import { Code2, Share2 } from 'lucide-react';
+import { Code2, Eye, Share2 } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
 import AppSidebar from './components/AppSidebar';
@@ -153,6 +153,13 @@ import { sandboxTerminal } from './services/sandboxTerminal';
 
 
 type AppView = 'editor' | 'history' | 'about' | 'documentation' | 'privacy' | 'terms' | 'cookies' | 'disclaimer' | 'contact' | 'preview-share' | 'preview-share-error';
+
+/*
+ * Start of the desktop range. Mirrors the `desktop` / `compact` screens in
+ * tailwind.config.js — mobile ≤640, tablet 641–1024, desktop ≥1025 — so the
+ * handful of places that must branch in JS use the same boundary the CSS does.
+ */
+const DESKTOP_MIN_WIDTH = 1025;
 
 /*
  * ===== VOICE COMMAND GLUE =====
@@ -375,7 +382,20 @@ function App() {
   const [snippets, setSnippets] = useLocalStorage<CodeSnippet[]>('gb-coder-snippets', []);
   const [selectionHistory, setSelectionHistory] = useState<HistoryItem[]>([]);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 1024);
+  /*
+   * `isMobile` means "below the desktop breakpoint" — i.e. the ≤1024px compact
+   * range that Tailwind's `compact:` variant covers. Keeping the JS threshold
+   * and the CSS breakpoint on the same boundary (1025px) is what stops the
+   * layout from disagreeing with itself at 1024px exactly.
+   */
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < DESKTOP_MIN_WIDTH);
+  /** Off-canvas nav drawer, compact viewports only. */
+  const [isNavDrawerOpen, setIsNavDrawerOpen] = useState<boolean>(false);
+  /**
+   * Which of the two stacked columns is on screen at ≤1024px. Desktop shows
+   * both side by side and ignores this entirely.
+   */
+  const [mobilePane, setMobilePane] = useState<'code' | 'preview'>('code');
   const [autoSaveEnabled, setAutoSaveEnabled] = useLocalStorage<boolean>('gb-coder-autosave-enabled', true);
   const [showSnippets, setShowSnippets] = useState<boolean>(false);
   const [showFileExplorer, setShowFileExplorer] = useState<boolean>(false);
@@ -525,7 +545,11 @@ function App() {
 
   React.useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
+      const compact = window.innerWidth < DESKTOP_MIN_WIDTH;
+      setIsMobile(compact);
+      // Crossing into desktop dismisses the drawer, which has no desktop
+      // representation.
+      if (!compact) setIsNavDrawerOpen(false);
     };
 
     window.addEventListener('resize', handleResize);
@@ -2257,7 +2281,9 @@ function App() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'
+      /* `compact:pb-14` reserves the strip the fixed Code/Preview bar occupies
+         so it never covers the footer or the bottom of the active pane. */
+      className={`min-h-screen flex flex-col transition-colors compact:pb-14 ${isDark ? 'bg-matte-black' : 'bg-bright-white'
       }`}
       /*
        * Window-wide drop target. Only the handlers live here; the code that can
@@ -2292,11 +2318,16 @@ function App() {
         autoSaveEnabled={autoSaveEnabled}
         onToggleVoice={handleToggleVoice}
         isVoiceListening={voiceState.isListening}
+        onToggleNavDrawer={() => setIsNavDrawerOpen((open) => !open)}
+        isNavDrawerOpen={isNavDrawerOpen}
+        onOpenExport={() => handleOpenExport('screenshot')}
         customActions={
           <div className="flex items-center gap-1 sm:gap-2">
             {/* Export & Share is the only feature icon left in the top bar;
-                every other entry point now lives in the left sidebar. */}
-            <Tooltip label="Export & Share" shortcut="⇧⌘E" className="hidden sm:inline-flex">
+                every other entry point now lives in the left sidebar. Below
+                1025px it moves into the toolbar's overflow menu, which calls
+                the same handler. */}
+            <Tooltip label="Export & Share" shortcut="⇧⌘E" className="hidden desktop:inline-flex">
               <button
                 onClick={() => handleOpenExport('screenshot')}
                 className={toolbarIconButtonClass(isDark)}
@@ -2313,6 +2344,22 @@ function App() {
 
       {/* Main Content — left rail + workspace */}
       <div className="flex flex-1 min-h-0">
+        {/*
+          Drawer backdrop. Only ever rendered while the drawer is open, and the
+          drawer can only open below 1025px, so desktop never sees this node.
+        */}
+        {isNavDrawerOpen && (
+          <div
+            /* z-[35] sits above the Code/Preview bar (z-30) so the whole
+               viewport really is behind the drawer, but below the top bar
+               (z-40) so the hamburger stays reachable to close it. */
+            className="fixed inset-0 z-[35] bg-black/60 desktop:hidden"
+            onClick={() => setIsNavDrawerOpen(false)}
+            aria-hidden="true"
+            data-testid="nav-drawer-backdrop"
+          />
+        )}
+
         <AppSidebar
           onToggleFiles={() => setShowFileExplorer((open) => !open)}
           isFilesOpen={showFileExplorer}
@@ -2326,6 +2373,8 @@ function App() {
           onOpenInjection={() => setShowInjectionManager(true)}
           onOpenSettings={handleSettingsToggle}
           canDockPanels={!isMobile}
+          isDrawerOpen={isNavDrawerOpen}
+          onCloseDrawer={() => setIsNavDrawerOpen(false)}
         />
 
         {showFileExplorer && !isMobile && (
@@ -2352,7 +2401,7 @@ function App() {
           </Suspense>
         )}
 
-        <div className={`grid flex-1 min-w-0 gap-3 px-3 py-3 lg:px-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`}>
+        <div className={`grid flex-1 min-w-0 gap-3 px-3 py-3 lg:px-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`} data-testid="workspace-grid">
           {/*
             Left column: the three fixed panels for plain projects, or the
             tabbed multi-file editor for React/Vue. Plain mode is unchanged.
@@ -2361,7 +2410,12 @@ function App() {
             // min-h keeps the pane from collapsing: unlike the plain-mode
             // column (whose three fixed-height editors give the grid row its
             // height), this column has no intrinsic height of its own.
-            <div className="flex h-full w-full flex-col min-h-[calc(100vh-11rem)]">
+            <div
+              className={`flex h-full w-full flex-col min-h-[calc(100vh-11rem)] ${
+                mobilePane === 'preview' ? 'compact:hidden' : ''
+              }`}
+              data-testid="code-column"
+            >
               <Suspense fallback={<LazyFallback label="multi-file editor" variant="panel" />}>
   <MultiFileEditor
                   projectType={fileProject.projectType}
@@ -2376,7 +2430,12 @@ function App() {
               </Suspense>
             </div>
           ) : (
-          <div className="flex flex-col space-y-3 w-full min-h-0">
+          <div
+            className={`flex flex-col space-y-3 w-full min-h-0 ${
+              mobilePane === 'preview' ? 'compact:hidden' : ''
+            }`}
+            data-testid="code-column"
+          >
             <EditorPanel
               title="HTML"
               language="html"
@@ -2427,7 +2486,22 @@ function App() {
           )}
 
           {/* Right Panel - Tabbed Interface for Preview, Console, and AI Suggestions */}
-          <div className="flex flex-col w-full h-full min-h-0">
+          {/*
+            `compact:min-h-[70dvh]` is the fix for the invisible preview. Every
+            node inside TabbedRightPanel is `flex-1`/`absolute`, so this column
+            has no intrinsic height of its own. In the two-column desktop grid
+            the row is sized by the editor column next to it, so `h-full`
+            resolves to something real. Stacked into a single column the row has
+            nothing to take its height from and collapsed to 0px — the iframe
+            was mounted and running, just zero-height. A definite minimum height
+            on the compact range gives the row something to resolve against.
+          */}
+          <div
+            className={`flex flex-col w-full h-full min-h-0 compact:min-h-[70dvh] ${
+              mobilePane === 'code' ? 'compact:hidden' : ''
+            }`}
+            data-testid="preview-column"
+          >
             <TabbedRightPanel
               ref={previewRef}
               errorCount={consoleFeed.counts.error}
@@ -2489,6 +2563,50 @@ function App() {
             )}
           </div>
         </div>
+      </div>
+
+      {/*
+        Code ⇄ Preview switch for the compact range — the CodePen/JSFiddle
+        pattern. Both columns stay mounted; this only flips which one is
+        displayed, so Monaco keeps its models and the preview iframe keeps
+        running and never reloads on a switch. `hidden` above 1024px.
+      */}
+      <div
+        data-testid="mobile-pane-toggle"
+        role="tablist"
+        aria-label="Workspace view"
+        className="fixed bottom-0 left-0 right-0 z-30 hidden border-t border-stroke-subtle bg-surface-raised compact:grid compact:grid-cols-2"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobilePane === 'code'}
+          data-testid="mobile-pane-code"
+          onClick={() => setMobilePane('code')}
+          className={`flex min-h-[56px] items-center justify-center gap-2 border-t-2 text-sm font-medium transition-colors ${
+            mobilePane === 'code'
+              ? 'border-accent bg-accent-subtle text-content-primary'
+              : 'border-transparent text-content-secondary'
+          }`}
+        >
+          <Code2 className="h-4 w-4" />
+          Code
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobilePane === 'preview'}
+          data-testid="mobile-pane-preview"
+          onClick={() => setMobilePane('preview')}
+          className={`flex min-h-[56px] items-center justify-center gap-2 border-t-2 text-sm font-medium transition-colors ${
+            mobilePane === 'preview'
+              ? 'border-accent bg-accent-subtle text-content-primary'
+              : 'border-transparent text-content-secondary'
+          }`}
+        >
+          <Eye className="h-4 w-4" />
+          Preview
+        </button>
       </div>
 
       {/* Footer */}

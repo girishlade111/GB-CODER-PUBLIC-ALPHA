@@ -10,6 +10,7 @@ import {
   PanelLeftOpen,
   Settings as SettingsIcon,
   Upload,
+  X,
   Zap,
 } from 'lucide-react';
 import Tooltip from './ui/Tooltip';
@@ -32,6 +33,13 @@ interface AppSidebarProps {
    * dependencies) have no room. Modal-based entries stay available at all sizes.
    */
   canDockPanels?: boolean;
+  /**
+   * Drawer state, only meaningful at ≤1024px where the rail becomes an
+   * off-canvas drawer. Ignored by the desktop styling entirely.
+   */
+  isDrawerOpen?: boolean;
+  /** Dismisses the drawer — backdrop tap, close button, or item selection. */
+  onCloseDrawer?: () => void;
 }
 
 interface SidebarItem {
@@ -74,6 +82,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   onOpenInjection,
   onOpenSettings,
   canDockPanels = true,
+  isDrawerOpen = false,
+  onCloseDrawer,
 }) => {
   const [isExpanded, setIsExpanded] = useLocalStorage<boolean>('gb-coder-sidebar-expanded', false);
 
@@ -158,16 +168,31 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
     const button = (
       <button
         type="button"
-        onClick={item.disabled ? undefined : item.onClick}
+        onClick={
+          item.disabled
+            ? undefined
+            : () => {
+                item.onClick?.();
+                // Closes the mobile drawer after a selection. On desktop the
+                // drawer is already closed, so this is a no-op.
+                onCloseDrawer?.();
+              }
+        }
         disabled={item.disabled}
         aria-pressed={item.isActive}
         /*
           Accent left border marks the active item, per the design tokens. The
           border is always present but transparent when inactive, so the label
           never shifts horizontally on selection.
+
+          The `compact:` overrides make the collapsed rail lay itself out like
+          the expanded one inside the drawer — full-width rows with labels and a
+          44px minimum touch target — without a second component.
         */
-        className={`flex w-full items-center rounded-md border-l-2 text-sm font-medium transition-colors ${
-          isExpanded ? 'gap-3 pl-2.5 pr-3 py-2' : 'justify-center px-2 py-2'
+        className={`flex w-full items-center rounded-md border-l-2 text-sm font-medium transition-colors compact:min-h-[44px] ${
+          isExpanded
+            ? 'gap-3 pl-2.5 pr-3 py-2'
+            : 'justify-center px-2 py-2 compact:justify-start compact:gap-3 compact:pl-2.5 compact:pr-3'
         } ${
           item.disabled
             ? 'cursor-not-allowed border-transparent text-content-muted opacity-50'
@@ -177,7 +202,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         }`}
       >
         <span className="flex shrink-0 items-center justify-center">{item.icon}</span>
-        {isExpanded && <span className="truncate">{item.label}</span>}
+        {/*
+          Always rendered, then hidden with CSS when the desktop rail is
+          collapsed. `display: none` is visually identical to not rendering it,
+          and it lets the same markup show labels inside the mobile drawer.
+        */}
+        <span className={`truncate ${isExpanded ? '' : 'hidden compact:inline'}`}>{item.label}</span>
       </button>
     );
 
@@ -211,21 +241,44 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         Rendered at every breakpoint: it is now the only route to these
         features, so hiding it on small screens would make them unreachable.
       */
-      className={`sticky top-14 flex shrink-0 flex-col self-start overflow-y-auto border-r border-stroke-subtle bg-surface-base transition-[width] duration-200 ease-out sm:top-16 ${
+      className={`sticky top-14 flex h-[calc(100vh-4rem)] shrink-0 flex-col self-start overflow-y-auto border-r border-stroke-subtle bg-surface-base transition-[width] duration-200 ease-out sm:top-16 ${
         isExpanded ? 'w-52' : 'w-[52px]'
+      } compact:fixed compact:bottom-0 compact:left-0 compact:z-40 compact:h-auto compact:w-[min(18rem,82vw)] compact:shadow-elevated-lg compact:transition-transform ${
+        isDrawerOpen ? 'compact:translate-x-0' : 'compact:-translate-x-full'
       }`}
-      style={{ height: 'calc(100vh - 4rem)' }}
     >
+      {/*
+        Drawer-only header. `display: none` above 1024px, so the desktop rail is
+        byte-for-byte what it was.
+      */}
+      <div className="hidden items-center justify-between border-b border-stroke-subtle px-3 py-2 compact:flex">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-content-muted">
+          Menu
+        </span>
+        <button
+          type="button"
+          onClick={onCloseDrawer}
+          aria-label="Close navigation menu"
+          className="flex h-11 w-11 items-center justify-center rounded-md text-content-secondary transition-colors hover:bg-white/5 hover:text-content-primary"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
       <nav className="flex-1 p-2">
         {sections.map((section, index) => (
           <div key={section.id} className={index > 0 ? 'mt-3' : undefined}>
-            {isExpanded ? (
-              <h2 className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wide text-content-muted">
-                {section.label}
-              </h2>
-            ) : (
-              // Collapsed: a rule stands in for the group heading.
-              index > 0 && <div className="mx-2 mb-2 border-t border-stroke-subtle" />
+            <h2
+              className={`mb-1 px-3 text-[10px] font-semibold uppercase tracking-wide text-content-muted ${
+                isExpanded ? '' : 'hidden compact:block'
+              }`}
+            >
+              {section.label}
+            </h2>
+            {/* Collapsed desktop rail: a rule stands in for the group heading.
+                The drawer shows the real heading instead. */}
+            {!isExpanded && index > 0 && (
+              <div className="mx-2 mb-2 border-t border-stroke-subtle compact:hidden" />
             )}
             <ul className="flex flex-col gap-1">{section.items.map(renderItem)}</ul>
           </div>
@@ -246,18 +299,20 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
           <button
             type="button"
             onClick={() => setIsExpanded(false)}
-            className="mt-1 flex w-full items-center gap-3 rounded-md border-l-2 border-transparent pl-2.5 pr-3 py-2 text-sm font-medium text-content-secondary transition-colors hover:bg-white/5 hover:text-content-primary"
+            /* Rail width is fixed inside the drawer, so the rail collapse
+               control is hidden there — the drawer closes instead. */
+            className="mt-1 flex w-full items-center gap-3 rounded-md border-l-2 border-transparent pl-2.5 pr-3 py-2 text-sm font-medium text-content-secondary transition-colors hover:bg-white/5 hover:text-content-primary compact:hidden"
             aria-label="Collapse sidebar"
           >
             <PanelLeftClose className="h-5 w-5 shrink-0" />
             <span className="truncate">Collapse</span>
           </button>
         ) : (
-          <Tooltip label="Expand sidebar" side="right">
+          <Tooltip label="Expand sidebar" side="right" className="inline-flex compact:hidden">
             <button
               type="button"
               onClick={() => setIsExpanded(true)}
-              className="mt-1 flex w-full items-center justify-center rounded-md px-2 py-2 text-content-secondary transition-colors hover:bg-white/5 hover:text-content-primary"
+              className="mt-1 flex w-full items-center justify-center rounded-md px-2 py-2 text-content-secondary transition-colors hover:bg-white/5 hover:text-content-primary compact:hidden"
             >
               <PanelLeftOpen className="h-5 w-5" />
             </button>

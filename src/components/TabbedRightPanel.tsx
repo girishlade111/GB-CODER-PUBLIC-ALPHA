@@ -197,7 +197,7 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
     return (
         <div className="flex flex-col h-full bg-surface-base border border-stroke-subtle rounded-lg overflow-hidden">
             {/* Tab Navigation */}
-            <div className="flex items-center bg-surface-raised border-b border-stroke-subtle px-2">
+            <div className="flex items-center bg-surface-raised border-b border-stroke-subtle px-2 compact:shrink-0 compact:overflow-x-auto">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
@@ -206,6 +206,7 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                         className={`
               flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors
               border-b-2 -mb-[1px]
+              compact:min-h-[44px] compact:shrink-0 compact:whitespace-nowrap
               ${activeTab === tab.id
                                 ? 'text-content-primary border-accent'
                                 : 'text-content-muted border-transparent hover:text-content-primary'
@@ -215,7 +216,9 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                         role="tab"
                     >
                         {tab.icon}
-                        <span className="hidden sm:inline">{tab.label}</span>
+                        {/* Only two outer tabs, so the labels fit even at 375px.
+                            The strip scrolls rather than clipping if they don't. */}
+                        <span>{tab.label}</span>
                         {tab.badge !== undefined && tab.badge > 0 && (
                             <span
                                 className={`
