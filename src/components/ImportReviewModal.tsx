@@ -172,12 +172,13 @@ const ImportReviewModal: React.FC<ImportReviewModalProps> = ({ plan, onCancel, o
                 <div className="text-xs text-amber-100">
                   <p className="text-sm font-semibold">Full-stack project detected</p>
                   <p className="mt-1 opacity-90">
-                    Advanced mode is coming. This project has a server side that cannot run in the
-                    browser preview, so it will not be opened yet.
+                    This opens in VS Code mode: a full file tree with one file editable at a time.
+                    The server side cannot run in the browser, so the preview asks you to connect a
+                    Sandbox.
                   </p>
                   <p className="mt-2 opacity-90">
                     If this is really a front-end project — for example React with a small local
-                    mock server — change the type above and import it anyway.
+                    mock server — change the type above and import it as that instead.
                   </p>
                 </div>
               </div>
@@ -249,20 +250,15 @@ const ImportReviewModal: React.FC<ImportReviewModalProps> = ({ plan, onCancel, o
           </button>
           <button
             onClick={() => onConfirm(kind)}
-            disabled={isFullStack || files.length === 0}
+            disabled={files.length === 0}
             data-testid="confirm-import"
             className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-              isFullStack || files.length === 0
+              files.length === 0
                 ? 'cursor-not-allowed bg-white/5 text-content-muted'
                 : 'bg-accent text-accent-fg hover:bg-accent-hover'
             }`}
-            title={
-              isFullStack
-                ? 'Change the project type above to import this as a front-end project'
-                : undefined
-            }
           >
-            {isFullStack ? 'Cannot open yet' : `Import as ${KIND_LABEL[kind]}`}
+            {isFullStack ? 'Open in VS Code mode' : `Import as ${KIND_LABEL[kind]}`}
           </button>
         </div>
       </div>

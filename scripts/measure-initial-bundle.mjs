@@ -118,6 +118,10 @@ if (process.argv.includes('--assert-absent')) {
     ['prettier formatter', 'prettier/standalone'],
     ['esbuild-wasm', 'esbuild-wasm'],
     ['TypeScript compiler', 'createSourceFile'],
+    // Full-stack feature: VS Code mode, sandbox client, E2B proxy calls.
+    ['E2B sandbox client', 'gbcoder_e2b_key'],
+    ['sandbox proxy calls', '/api/sandbox/'],
+    ['VS Code editor mode', 'Connect Sandbox to Preview'],
   ];
 
   const criticalSource = [...entries, ...preloads]
