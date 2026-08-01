@@ -7,9 +7,10 @@ import { ValidationSummary } from '../services/validationService';
 import { ShellPackage, ShellPackageError } from '../services/localShell';
 import type { ConsoleMessage } from '../types/consoleFeed';
 import type { ConsoleCounts } from '../hooks/useConsoleFeed';
+import { lazyWithRecovery } from '../utils/loadChunk';
 
 // Lazy load heavy components
-const EnhancedConsole = React.lazy(() => import('./EnhancedConsole'));
+const EnhancedConsole = lazyWithRecovery(() => import('./EnhancedConsole'), 'The console');
 
 type TabType = 'preview' | 'console';
 

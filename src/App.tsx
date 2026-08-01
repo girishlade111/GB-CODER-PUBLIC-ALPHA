@@ -6,8 +6,14 @@ import React, {
   useRef,
   useSyncExternalStore,
   Suspense,
-  lazy,
 } from 'react';
+/*
+ * `lazyWithRecovery` rather than React's `lazy`: a hashed chunk that no longer
+ * exists on the server (because a new version was deployed while this tab stayed
+ * open) otherwise fails with an unactionable "Failed to fetch dynamically
+ * imported module". See src/utils/loadChunk.ts.
+ */
+import { lazyWithRecovery } from './utils/loadChunk';
 import { Code2, Eye, Share2 } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
@@ -32,12 +38,12 @@ import { Toaster, toast } from 'react-hot-toast';
 import { CodeTemplate } from './services/codeTemplatesService';
 
 // Lazy-loaded modal components (only shown when their show* state is true)
-const AIChatAssistant = lazy(() => import('./components/AIChatAssistant'));
-const VoiceCommandPanel = lazy(() => import('./components/VoiceCommandPanel'));
-const TemplateSelectorModal = lazy(() => import('./components/TemplateSelectorModal'));
-const CodeStatsDashboard = lazy(() => import('./components/CodeStatsDashboard'));
-const CustomInjectionManager = lazy(() => import('./components/CustomInjectionManager'));
-const BuildFromPromptModal = lazy(() => import('./components/BuildFromPromptModal'));
+const AIChatAssistant = lazyWithRecovery(() => import('./components/AIChatAssistant'));
+const VoiceCommandPanel = lazyWithRecovery(() => import('./components/VoiceCommandPanel'));
+const TemplateSelectorModal = lazyWithRecovery(() => import('./components/TemplateSelectorModal'));
+const CodeStatsDashboard = lazyWithRecovery(() => import('./components/CodeStatsDashboard'));
+const CustomInjectionManager = lazyWithRecovery(() => import('./components/CustomInjectionManager'));
+const BuildFromPromptModal = lazyWithRecovery(() => import('./components/BuildFromPromptModal'));
 
 /*
  * Everything past the core HTML/CSS/JS editor is a separate chunk, fetched the
@@ -45,13 +51,13 @@ const BuildFromPromptModal = lazy(() => import('./components/BuildFromPromptModa
  * plain icons and labels in the core bundle, so the shell is complete on first
  * paint while none of this code is.
  */
-const FileExplorer = lazy(() => import('./components/FileExplorer'));
-const DependenciesPanel = lazy(() => import('./components/DependenciesPanel'));
-const MultiFileEditor = lazy(() => import('./components/MultiFileEditor'));
-const ExportShareModal = lazy(() => import('./components/ExportShareModal'));
-const ImportModal = lazy(() => import('./components/ImportModal'));
-const PreviewSharePage = lazy(() => import('./components/PreviewSharePage'));
-const ImportReviewModal = lazy(() => import('./components/ImportReviewModal'));
+const FileExplorer = lazyWithRecovery(() => import('./components/FileExplorer'));
+const DependenciesPanel = lazyWithRecovery(() => import('./components/DependenciesPanel'));
+const MultiFileEditor = lazyWithRecovery(() => import('./components/MultiFileEditor'));
+const ExportShareModal = lazyWithRecovery(() => import('./components/ExportShareModal'));
+const ImportModal = lazyWithRecovery(() => import('./components/ImportModal'));
+const PreviewSharePage = lazyWithRecovery(() => import('./components/PreviewSharePage'));
+const ImportReviewModal = lazyWithRecovery(() => import('./components/ImportReviewModal'));
 
 /*
  * The full-stack feature (VS Code mode, sandbox panel, sandbox client, E2B
@@ -59,28 +65,32 @@ const ImportReviewModal = lazy(() => import('./components/ImportReviewModal'));
  * core editor and the import/detection chunk, and is only ever rendered after a
  * detected full-stack project is confirmed — so it is only ever fetched then.
  */
-const VSCodeMode = lazy(() =>
-  import('./features/fullstack/fullstackFeature').then((module) => ({ default: module.VSCodeMode })),
+const VSCodeMode = lazyWithRecovery(
+  () =>
+    import('./features/fullstack/fullstackFeature').then((module) => ({
+      default: module.VSCodeMode,
+    })),
+  'Full-stack editor mode',
 );
 
 // Phase 2: High priority - lazy loaded after initial render
 // (EnhancedConsole is used inside TabbedRightPanel, not here directly)
 
 // Phase 3: Deferred - lazy loaded after high priority components
-const SnippetsSidebar = lazy(() => import('./components/SnippetsSidebar'));
-const ExternalLibraryManager = lazy(() => import('./components/ExternalLibraryManager'));
-const CodeHistoryPage = lazy(() => import('./components/history/CodeHistoryPage'));
-const AboutPage = lazy(() => import('./components/pages/AboutPage'));
-const DocumentationPage = lazy(() => import('./components/pages/DocumentationPage'));
-const PrivacyPolicyPage = lazy(() => import('./components/pages/PrivacyPolicyPage'));
-const TermsOfServicePage = lazy(() => import('./components/pages/TermsOfServicePage'));
-const CookiePolicyPage = lazy(() => import('./components/pages/CookiePolicyPage'));
-const DisclaimerPage = lazy(() => import('./components/pages/DisclaimerPage'));
-const ContactPage = lazy(() => import('./components/pages/ContactPage'));
-const ExtensionsMarketplace = lazy(() => import('./components/ExtensionsMarketplace'));
-const SettingsModal = lazy(() => import('./components/SettingsModal'));
-const HistoryPanel = lazy(() => import('./components/HistoryPanel'));
-const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp'));
+const SnippetsSidebar = lazyWithRecovery(() => import('./components/SnippetsSidebar'));
+const ExternalLibraryManager = lazyWithRecovery(() => import('./components/ExternalLibraryManager'));
+const CodeHistoryPage = lazyWithRecovery(() => import('./components/history/CodeHistoryPage'));
+const AboutPage = lazyWithRecovery(() => import('./components/pages/AboutPage'));
+const DocumentationPage = lazyWithRecovery(() => import('./components/pages/DocumentationPage'));
+const PrivacyPolicyPage = lazyWithRecovery(() => import('./components/pages/PrivacyPolicyPage'));
+const TermsOfServicePage = lazyWithRecovery(() => import('./components/pages/TermsOfServicePage'));
+const CookiePolicyPage = lazyWithRecovery(() => import('./components/pages/CookiePolicyPage'));
+const DisclaimerPage = lazyWithRecovery(() => import('./components/pages/DisclaimerPage'));
+const ContactPage = lazyWithRecovery(() => import('./components/pages/ContactPage'));
+const ExtensionsMarketplace = lazyWithRecovery(() => import('./components/ExtensionsMarketplace'));
+const SettingsModal = lazyWithRecovery(() => import('./components/SettingsModal'));
+const HistoryPanel = lazyWithRecovery(() => import('./components/HistoryPanel'));
+const KeyboardShortcutsHelp = lazyWithRecovery(() => import('./components/KeyboardShortcutsHelp'));
 
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useCodeHistory } from './hooks/useCodeHistory';

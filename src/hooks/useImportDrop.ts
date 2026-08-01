@@ -27,6 +27,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ImportPlan } from '../services/import/importEngine';
 import { carriesFiles, collectTransfer } from '../utils/dropTransfer';
+import { loadChunk } from '../utils/loadChunk';
 
 export interface ImportDropState {
   /** True while a drag carrying files is over the window. */
@@ -71,7 +72,17 @@ export const useImportDrop = ({
     }) => {
       setIsPreparing(true);
       try {
-        const engine = await import('../services/import/importEngine');
+        /*
+         * Routed through `loadChunk` because this is the single chunk every
+         * import path depends on. When a deploy invalidated it, the raw dynamic
+         * import failed with "Failed to fetch dynamically imported module" and
+         * took drag-and-drop, Choose files, Choose folder and URL import down
+         * together, with an error that pointed at nothing the user could act on.
+         */
+        const engine = await loadChunk(
+          () => import('../services/import/importEngine'),
+          'The import engine',
+        );
         const plan = await engine.buildImportPlan(input);
         onPlan(plan);
       } catch (error) {
