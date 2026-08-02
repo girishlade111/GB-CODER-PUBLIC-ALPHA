@@ -5,16 +5,19 @@ export interface CodeTemplate {
   id: string;
   name: string;
   description: string;
-  category: TemplateCategory;
+  category: TemplateCategory | 'plain' | 'react' | 'vue' | 'nextjs';
   subcategory?: string;
   tags: string[];
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   features?: string[];
+  projectType: 'plain' | 'react' | 'vue' | 'nextjs';
+  previewImage?: string;
+  author?: string;
 }
 
 export type TemplateCategory = 
   | 'business' | 'ai-agents' | 'startup' | 'saas' | 'ecommerce' 
-  | 'portfolio' | 'landing' | 'dashboard' | 'utility';
+  | 'portfolio' | 'landing' | 'dashboard' | 'utility' | 'plain' | 'react' | 'vue' | 'nextjs';
 
 export interface TemplateCategoryInfo {
   id: TemplateCategory;
@@ -34,6 +37,10 @@ export const TEMPLATE_CATEGORIES: TemplateCategoryInfo[] = [
   { id: 'landing', name: 'Landing Pages', icon: '📄', description: 'Marketing landing pages', color: 'teal' },
   { id: 'dashboard', name: 'Dashboard', icon: '📊', description: 'Admin & analytics dashboards', color: 'blue' },
   { id: 'utility', name: 'Utility', icon: '🔧', description: 'Tools & utilities', color: 'gray' },
+  { id: 'plain', name: 'Plain HTML/CSS', icon: '🌐', description: 'Vanilla web templates', color: 'orange' },
+  { id: 'react', name: 'React', icon: '⚛️', description: 'React applications', color: 'cyan' },
+  { id: 'vue', name: 'Vue', icon: '💚', description: 'Vue applications', color: 'emerald' },
+  { id: 'nextjs', name: 'Next.js', icon: '▲', description: 'Next.js applications', color: 'gray' },
 ];
 
 // Import actual templates
@@ -45,8 +52,24 @@ import ecommerceStore from './templates/ecommerce/store';
 import portfolioDeveloper from './templates/portfolio/developer';
 import utilityCalculator from './templates/utility/calculator';
 
+// New Templates
+import plainBlog from './templates/plain/blog';
+import plainAnimation from './templates/plain/animation';
+import plainAuth from './templates/plain/auth';
+import reactTodo from './templates/react/todo';
+import reactWeather from './templates/react/weather';
+import reactDashboard from './templates/react/dashboard';
+import vueTasks from './templates/vue/tasks';
+import nextjsBlog from './templates/nextjs/blog';
+
+// Exported payload type
+export type TemplatePayload = 
+  | { html: string; css: string; javascript: string }
+  | { files: { path: string; content: string }[] };
+
+
 // Template registry with actual code
-const templateRegistry: Record<string, { html: string; css: string; javascript: string }> = {
+const templateRegistry: Record<string, TemplatePayload | (() => Promise<TemplatePayload>)> = {
   'business-corporate': businessCorporate,
   'ai-chatbot': aiChatbot,
   'startup-landing': startupLanding,
@@ -54,10 +77,18 @@ const templateRegistry: Record<string, { html: string; css: string; javascript: 
   'ecommerce-store': ecommerceStore,
   'portfolio-developer': portfolioDeveloper,
   'utility-calculator': utilityCalculator,
+  'plain-blog': plainBlog,
+  'plain-animation': plainAnimation,
+  'plain-auth': plainAuth,
+  'react-todo': reactTodo,
+  'react-weather': reactWeather,
+  'react-dashboard': reactDashboard,
+  'vue-tasks': vueTasks,
+  'nextjs-blog': nextjsBlog,
 };
 
 // Template metadata
-const templateMetadata: Record<string, CodeTemplate> = {
+let templateMetadata: Record<string, CodeTemplate> = {
   'business-corporate': {
     id: 'business-corporate',
     name: 'Corporate Business',
@@ -67,6 +98,8 @@ const templateMetadata: Record<string, CodeTemplate> = {
     tags: ['business', 'corporate', 'professional', 'responsive'],
     difficulty: 'intermediate',
     features: ['Hero Section', 'Services', 'Team', 'Contact Form', 'About Us'],
+    projectType: 'plain',
+    author: 'GB Coder',
   },
   'ai-chatbot': {
     id: 'ai-chatbot',
@@ -77,6 +110,8 @@ const templateMetadata: Record<string, CodeTemplate> = {
     tags: ['ai', 'chatbot', 'conversation', 'automation'],
     difficulty: 'advanced',
     features: ['Chat Interface', 'AI Responses', 'History', 'Settings'],
+    projectType: 'plain',
+    author: 'GB Coder',
   },
   'startup-landing': {
     id: 'startup-landing',
@@ -87,6 +122,8 @@ const templateMetadata: Record<string, CodeTemplate> = {
     tags: ['startup', 'landing', 'saas', 'modern'],
     difficulty: 'intermediate',
     features: ['Hero', 'Features', 'Pricing', 'Testimonials', 'CTA'],
+    projectType: 'plain',
+    author: 'GB Coder',
   },
   'saas-dashboard': {
     id: 'saas-dashboard',
@@ -97,6 +134,8 @@ const templateMetadata: Record<string, CodeTemplate> = {
     tags: ['saas', 'dashboard', 'admin', 'analytics'],
     difficulty: 'advanced',
     features: ['Sidebar', 'Stats', 'Charts', 'Activity Feed'],
+    projectType: 'plain',
+    author: 'GB Coder',
   },
   'ecommerce-store': {
     id: 'ecommerce-store',
@@ -107,6 +146,8 @@ const templateMetadata: Record<string, CodeTemplate> = {
     tags: ['ecommerce', 'store', 'shop', 'cart'],
     difficulty: 'advanced',
     features: ['Product Grid', 'Shopping Cart', 'Categories', 'Search'],
+    projectType: 'plain',
+    author: 'GB Coder',
   },
   'portfolio-developer': {
     id: 'portfolio-developer',
@@ -117,6 +158,8 @@ const templateMetadata: Record<string, CodeTemplate> = {
     tags: ['portfolio', 'developer', 'projects', 'resume'],
     difficulty: 'intermediate',
     features: ['About', 'Skills', 'Projects', 'Contact'],
+    projectType: 'plain',
+    author: 'GB Coder',
   },
   'utility-calculator': {
     id: 'utility-calculator',
@@ -127,19 +170,193 @@ const templateMetadata: Record<string, CodeTemplate> = {
     tags: ['calculator', 'math', 'utility', 'tool'],
     difficulty: 'beginner',
     features: ['Basic Operations', 'History', 'Keyboard Support'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'plain-blog': {
+    id: 'plain-blog',
+    name: 'Vanilla Blog Layout',
+    description: 'Classic plain HTML/CSS blog layout template.',
+    category: 'plain',
+    subcategory: 'Blog',
+    tags: ['blog', 'layout', 'content'],
+    difficulty: 'beginner',
+    features: ['Header', 'Article layout', 'Responsive CSS'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'plain-animation': {
+    id: 'plain-animation',
+    name: 'Animation Showcase',
+    description: 'A pure CSS animation template.',
+    category: 'plain',
+    subcategory: 'Animation',
+    tags: ['animation', 'css', 'hover'],
+    difficulty: 'beginner',
+    features: ['CSS transitions', 'Hover effects'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'plain-auth': {
+    id: 'plain-auth',
+    name: 'Login/Signup',
+    description: 'Vanilla authentication form template.',
+    category: 'plain',
+    subcategory: 'Auth',
+    tags: ['auth', 'form', 'login'],
+    difficulty: 'beginner',
+    features: ['Form layout', 'Basic validation'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'react-todo': {
+    id: 'react-todo',
+    name: 'React Todo App',
+    description: 'A classic Todo application in React.',
+    category: 'react',
+    subcategory: 'Utility',
+    tags: ['react', 'todo', 'state'],
+    difficulty: 'beginner',
+    features: ['useState', 'List rendering', 'Controlled inputs'],
+    projectType: 'react',
+    author: 'GB Coder',
+  },
+  'react-weather': {
+    id: 'react-weather',
+    name: 'Weather Widget',
+    description: 'React weather widget mockup.',
+    category: 'react',
+    subcategory: 'Dashboard',
+    tags: ['react', 'weather', 'widget'],
+    difficulty: 'beginner',
+    features: ['Component architecture', 'Styling'],
+    projectType: 'react',
+    author: 'GB Coder',
+  },
+  'react-dashboard': {
+    id: 'react-dashboard',
+    name: 'React Admin Dashboard',
+    description: 'React admin dashboard layout.',
+    category: 'react',
+    subcategory: 'Dashboard',
+    tags: ['react', 'dashboard', 'layout'],
+    difficulty: 'intermediate',
+    features: ['Sidebar', 'Flexbox layout', 'Multiple components'],
+    projectType: 'react',
+    author: 'GB Coder',
+  },
+  'vue-tasks': {
+    id: 'vue-tasks',
+    name: 'Vue Task Manager',
+    description: 'A simple Task manager in Vue 3.',
+    category: 'vue',
+    subcategory: 'Utility',
+    tags: ['vue', 'task', 'manager'],
+    difficulty: 'beginner',
+    features: ['Composition API', 'v-for', 'v-model'],
+    projectType: 'vue',
+    author: 'GB Coder',
+  },
+  'nextjs-blog': {
+    id: 'nextjs-blog',
+    name: 'Next.js Blog Starter',
+    description: 'A simulated Next.js Blog starter running on React client-side.',
+    category: 'nextjs',
+    subcategory: 'Blog',
+    tags: ['nextjs', 'react', 'blog'],
+    difficulty: 'intermediate',
+    features: ['Next.js simulation', 'App router style structure'],
+    projectType: 'react', // Uses React builder internally
+    author: 'GB Coder',
   },
 };
 
 class EnhancedTemplateService {
   private static instance: EnhancedTemplateService;
 
-  private constructor() {}
+  private constructor() {
+    this.loadCustomTemplates();
+  }
 
   public static getInstance(): EnhancedTemplateService {
     if (!EnhancedTemplateService.instance) {
       EnhancedTemplateService.instance = new EnhancedTemplateService();
     }
     return EnhancedTemplateService.instance;
+  }
+
+  private loadCustomTemplates() {
+    try {
+      const stored = localStorage.getItem('gbcoder_custom_templates');
+      if (stored) {
+        const customTemplates = JSON.parse(stored) as CodeTemplate[];
+        customTemplates.forEach(t => {
+          templateMetadata[t.id] = t;
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to load custom templates', err);
+    }
+  }
+
+  public saveCustomTemplate(template: CodeTemplate, payload: TemplatePayload) {
+    templateMetadata[template.id] = template;
+    templateRegistry[template.id] = payload;
+    
+    // Persist metadata and payload to localStorage
+    try {
+      const stored = localStorage.getItem('gbcoder_custom_templates') || '[]';
+      const customTemplates = JSON.parse(stored) as any[];
+      // We store both metadata and payload in localStorage for custom templates
+      const existingIdx = customTemplates.findIndex(t => t.id === template.id);
+      const dataToStore = { ...template, payload };
+      
+      if (existingIdx >= 0) {
+        customTemplates[existingIdx] = dataToStore;
+      } else {
+        customTemplates.push(dataToStore);
+      }
+      localStorage.setItem('gbcoder_custom_templates', JSON.stringify(customTemplates));
+    } catch (err) {
+      console.error('Failed to save custom template', err);
+    }
+  }
+
+  public getCustomTemplates(): CodeTemplate[] {
+    try {
+      const stored = localStorage.getItem('gbcoder_custom_templates');
+      if (stored) {
+        const customTemplates = JSON.parse(stored) as any[];
+        // Return just metadata
+        return customTemplates.map(t => {
+          const { payload, ...meta } = t;
+          return meta as CodeTemplate;
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to parse custom templates', err);
+    }
+    return [];
+  }
+
+  public deleteCustomTemplate(id: string) {
+    delete templateMetadata[id];
+    delete templateRegistry[id];
+    try {
+      const stored = localStorage.getItem('gbcoder_custom_templates');
+      if (stored) {
+        const customTemplates = JSON.parse(stored) as any[];
+        const filtered = customTemplates.filter(t => t.id !== id);
+        localStorage.setItem('gbcoder_custom_templates', JSON.stringify(filtered));
+      }
+    } catch (err) {
+      console.error('Failed to delete custom template', err);
+    }
+  }
+
+  public registerTemplate(meta: CodeTemplate, payload: TemplatePayload | (() => Promise<TemplatePayload>)) {
+    templateMetadata[meta.id] = meta;
+    templateRegistry[meta.id] = payload;
   }
 
   /**
@@ -172,13 +389,30 @@ class EnhancedTemplateService {
   /**
    * Get template code by ID (lazy loaded)
    */
-  public async getTemplateById(id: string): Promise<{ html: string; css: string; javascript: string } | null> {
+  public async getTemplateById(id: string): Promise<TemplatePayload | null> {
     try {
+      // For custom templates stored in localStorage
+      if (!templateRegistry[id]) {
+        const stored = localStorage.getItem('gbcoder_custom_templates');
+        if (stored) {
+          const customTemplates = JSON.parse(stored) as any[];
+          const found = customTemplates.find(t => t.id === id);
+          if (found && found.payload) {
+            return found.payload;
+          }
+        }
+      }
+
       const templateCode = templateRegistry[id];
       if (!templateCode) {
         console.error(`Template not found: ${id}`);
         return null;
       }
+      
+      if (typeof templateCode === 'function') {
+        return await templateCode();
+      }
+      
       return templateCode;
     } catch (error) {
       console.error(`Failed to load template ${id}:`, error);

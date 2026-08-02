@@ -1987,12 +1987,24 @@ function App() {
   };
 
   // ===== NEW FEATURES HANDLERS =====
-  const handleLoadTemplate = useCallback((template: CodeTemplate) => {
-    codeHistory.saveState({ html, css, javascript }, `Loaded template: ${template.name}`);
-    setHtml(template.html);
-    setCss(template.css);
-    setJavascript(template.javascript);
-  }, [html, css, javascript]);
+  const handleLoadTemplate = useCallback((payload: any, meta: any) => {
+    // If it's a multi-file template
+    if (payload.files) {
+      const newProject: MultiFileProject = {
+        projectType: meta.projectType || 'plain',
+        files: payload.files,
+        id: crypto.randomUUID(),
+        name: meta.name
+      };
+      setFileProject(newProject);
+    } else {
+      // Legacy or single-file payload
+      codeHistory.saveState({ html, css, javascript }, `Loaded template: ${meta?.name || 'Unknown'}`);
+      setHtml(payload.html || '');
+      setCss(payload.css || '');
+      setJavascript(payload.javascript || '');
+    }
+  }, [html, css, javascript, setFileProject, setHtml, setCss, setJavascript, codeHistory]);
 
   const handleBuildFromPrompt = useCallback(async (newHtml: string, newCss: string, newJavascript: string) => {
     codeHistory.saveState({ html, css, javascript }, 'Built from prompt');

@@ -1,13 +1,14 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { X, Search, Code2, Layers, ExternalLink, Grid, List } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { X, Search, Code2, Layers, Grid, List, Plus, Download, Upload, Eye, FileCode, Check } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
-import { enhancedTemplateService, TemplateCategory, TEMPLATE_CATEGORIES } from '../services/enhancedTemplateService';
+import { enhancedTemplateService, TemplateCategoryInfo, CodeTemplate } from '../services/enhancedTemplateService';
 import toast from 'react-hot-toast';
 
 interface TemplateSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoadTemplate: (template: { html: string; css: string; javascript: string }) => void;
+  onLoadTemplate: (payload: any, meta: any) => void;
+  currentProject?: any; // To allow saving current project
 }
 
 const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
@@ -17,7 +18,6 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
 }) => {
   const { isDark } = useTheme();
 
-  // Escape to dismiss, matching the other modals.
   useEffect(() => {
     if (!isOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -28,368 +28,404 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   }, [isOpen, onClose]);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [, setIsLoading] = useState(false);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [templateMetadata, setTemplateMetadata] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-  // Load template metadata on mount (lazy - no code loaded)
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState<'name' | 'difficulty'>('name');
+  
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  
+  const [previewTemplate, setPreviewTemplate] = useState<CodeTemplate | null>(null);
+  const [previewPayload, setPreviewPayload] = useState<any | null>(null);
+  const [confirmTemplate, setConfirmTemplate] = useState<CodeTemplate | null>(null);
+
+  const [templateMetadata, setTemplateMetadata] = useState<CodeTemplate[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [customTemplates, setCustomTemplates] = useState<CodeTemplate[]>([]);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadData = useCallback(() => {
+    const meta = enhancedTemplateService.getAllTemplatesMetadata();
+    const custom = enhancedTemplateService.getCustomTemplates();
+    setTemplateMetadata([...meta, ...custom]);
+    setCategories(enhancedTemplateService.getCategoriesWithCounts());
+    setCustomTemplates(custom);
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
-      const metadata = enhancedTemplateService.getAllTemplatesMetadata();
-      setTemplateMetadata(metadata);
-      const cats = enhancedTemplateService.getCategoriesWithCounts();
-      setCategories(cats);
+      loadData();
     }
-  }, [isOpen]);
+  }, [isOpen, loadData]);
+
+  // Derived filter options
+  const allTags = useMemo(() => {
+    const tags = new Set<string>();
+    templateMetadata.forEach(t => t.tags?.forEach(tag => tags.add(tag)));
+    return Array.from(tags).sort();
+  }, [templateMetadata]);
 
   const filteredTemplates = useMemo(() => {
     let filtered = templateMetadata;
 
-    if (searchQuery) {
-      filtered = enhancedTemplateService.searchTemplates(searchQuery);
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase();
+      filtered = filtered.filter(t => 
+        t.name.toLowerCase().includes(q) || 
+        t.description.toLowerCase().includes(q) || 
+        t.tags?.some(tag => tag.toLowerCase().includes(q))
+      );
     }
 
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(t => t.category === selectedCategory);
+      if (selectedCategory === 'my-templates') {
+        filtered = filtered.filter(t => customTemplates.some(ct => ct.id === t.id));
+      } else {
+        filtered = filtered.filter(t => t.category === selectedCategory || t.projectType === selectedCategory);
+      }
     }
 
-    if (selectedDifficulty !== 'all') {
-      filtered = filtered.filter(t => t.difficulty === selectedDifficulty);
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(t => selectedTags.some(tag => t.tags?.includes(tag)));
     }
+
+    // Sort
+    filtered.sort((a, b) => {
+      if (sortOption === 'name') {
+        return a.name.localeCompare(b.name);
+      } else {
+        const diffMap: Record<string, number> = { beginner: 1, intermediate: 2, advanced: 3 };
+        return (diffMap[a.difficulty] || 0) - (diffMap[b.difficulty] || 0);
+      }
+    });
 
     return filtered;
-  }, [searchQuery, selectedCategory, selectedDifficulty, templateMetadata]);
+  }, [debouncedSearch, selectedCategory, selectedTags, sortOption, templateMetadata, customTemplates]);
 
-  const handleLoadTemplate = useCallback(async (templateId: string) => {
-    setIsLoading(true);
-    setSelectedTemplateId(templateId);
-    
+  const handlePreview = async (template: CodeTemplate) => {
+    setPreviewTemplate(template);
+    if (previewPayload && previewTemplate?.id === template.id) return; // already fetched
+    setPreviewPayload(null);
     try {
-      const templateCode = await enhancedTemplateService.getTemplateById(templateId);
-      
-      if (templateCode) {
-        onLoadTemplate(templateCode);
-        toast.success(`Template loaded successfully!`);
-        onClose();
-      } else {
-        toast.error('Failed to load template');
-      }
-    } catch (error: any) {
-      console.error('Error loading template:', error);
-      toast.error(`Failed to load template: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-      setSelectedTemplateId(null);
-    }
-  }, [onLoadTemplate, onClose]);
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner': return 'text-green-500 bg-green-500/10';
-      case 'intermediate': return 'text-yellow-500 bg-yellow-500/10';
-      case 'advanced': return 'text-red-500 bg-red-500/10';
-      default: return 'text-gray-500 bg-gray-500/10';
+      const payload = await enhancedTemplateService.getTemplateById(template.id);
+      setPreviewPayload(payload);
+    } catch (e) {
+      console.error(e);
     }
   };
 
-  const getCategoryInfo = (categoryId: string) => {
-    return TEMPLATE_CATEGORIES.find(c => c.id === categoryId) || {
-      name: categoryId,
-      icon: '📁',
-      color: 'gray'
+  const handleLoadClick = async (e: React.MouseEvent, template: CodeTemplate) => {
+    e.stopPropagation();
+    // Set as preview so the confirm dialog knows what to load
+    setPreviewTemplate(template);
+    setPreviewPayload(null);
+    
+    // Show a loading toast or just let the confirm dialog show loading
+    const toastId = toast.loading('Fetching template data...');
+    try {
+      const payload = await enhancedTemplateService.getTemplateById(template.id);
+      setPreviewPayload(payload);
+      setConfirmTemplate(template);
+      toast.dismiss(toastId);
+    } catch (err) {
+      toast.error('Failed to load template');
+      toast.dismiss(toastId);
+    }
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        if (json.id && json.name && json.payload) {
+          const { payload, ...meta } = json;
+          enhancedTemplateService.saveCustomTemplate(meta, payload);
+          toast.success('Template imported!');
+          loadData();
+        } else {
+          toast.error('Invalid template format');
+        }
+      } catch (err) {
+        toast.error('Failed to parse file');
+      }
     };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const exportTemplate = async (template: CodeTemplate) => {
+    const payload = await enhancedTemplateService.getTemplateById(template.id);
+    const data = { ...template, payload };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${template.id}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   if (!isOpen) return null;
 
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm`}>
-      <div
-        className={`w-full max-w-7xl h-[90vh] rounded-lg shadow-elevated flex flex-col overflow-hidden ${
-          isDark ? 'bg-surface-raised border border-stroke-subtle' : 'bg-white border border-gray-200'
-        }`}
-      >
+      <div className={`w-full max-w-7xl h-[90vh] rounded-lg shadow-elevated flex flex-col overflow-hidden ${isDark ? 'bg-surface-raised border border-stroke-subtle' : 'bg-white border border-gray-200'}`}>
+        
         {/* Header */}
-        <div className={`flex items-center justify-between p-4 border-b ${
-          isDark ? 'border-stroke-subtle bg-surface-raised' : 'border-gray-200 bg-gray-50'
-        }`}>
+        <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-stroke-subtle bg-surface-raised' : 'border-gray-200 bg-gray-50'}`}>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-accent-subtle text-accent-hover rounded-md">
               <Layers className="w-5 h-5" />
             </div>
             <div>
-              <h2 className={`text-lg font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
-                Code Templates Library
-              </h2>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                {filteredTemplates.length} templates available
-              </p>
+              <h2 className={`text-lg font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>Code Templates Library</h2>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{filteredTemplates.length} templates available</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {/* View Mode Toggle */}
-            <div className={`flex rounded-lg overflow-hidden border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-accent text-accent-fg'
-                    : isDark
-                    ? 'bg-surface-overlay text-content-secondary'
-                    : 'bg-white text-gray-600'
-                }`}
-              >
-                <Grid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-accent text-accent-fg'
-                    : isDark
-                    ? 'bg-surface-overlay text-content-secondary'
-                    : 'bg-white text-gray-600'
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
-            <button
-              onClick={onClose}
-              title="Close"
-              aria-label="Close template library"
-              className={`p-2 rounded-lg transition-colors ${
-                isDark ? 'hover:bg-white/5 text-content-secondary hover:text-content-primary' : 'hover:bg-gray-200 text-gray-600'
-              }`}
-            >
+          <div className="flex items-center gap-3">
+            <input type="file" ref={fileInputRef} onChange={handleImport} accept=".json" className="hidden" />
+            <button onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 text-sm rounded border flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">
+              <Upload className="w-4 h-4" /> Import Template
+            </button>
+            <button onClick={onClose} className="p-2 rounded hover:bg-black/10 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300">
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
-            <div className="w-full shrink-0 lg:w-72">
-              <div className="relative">
-                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
-                  isDark ? 'text-gray-500' : 'text-gray-400'
-                }`} />
-                <input
-                  type="text"
-                  placeholder="Search templates by name, description, or tags..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent ${
-                    isDark
-                      ? 'bg-surface-overlay text-content-primary placeholder-content-muted'
-                      : 'bg-gray-100 text-gray-900 placeholder-gray-400'
-                  }`}
-                />
-              </div>
-            </div>
-
-            {/* Category Filter */}
-            <div className="flex min-w-0 flex-1 flex-wrap gap-2 max-h-32 overflow-y-auto">
-              <button
-                onClick={() => setSelectedCategory('all')}
-                className={`px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
-                  selectedCategory === 'all'
-                    ? 'bg-accent text-accent-fg'
-                    : isDark
-                    ? 'bg-surface-overlay text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                All ({templateMetadata.length})
-              </button>
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
-                    selectedCategory === category.id
-                      ? 'bg-accent text-accent-fg'
-                      : isDark
-                      ? 'bg-surface-overlay text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+        {/* Body Split */}
+        <div className="flex flex-1 overflow-hidden">
+          
+          {/* Left Pane: Filters & List */}
+          <div className={`flex flex-col flex-1 border-r ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`}>
+            
+            {/* Toolbar */}
+            <div className={`p-4 border-b ${isDark ? 'border-stroke-subtle' : 'border-gray-200'} space-y-3`}>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search templates..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={`w-full pl-9 pr-3 py-2 rounded-md text-sm outline-none ${isDark ? 'bg-surface-overlay text-white border border-gray-700' : 'bg-white border border-gray-300'}`}
+                  />
+                </div>
+                <select 
+                  value={sortOption} 
+                  onChange={(e) => setSortOption(e.target.value as any)}
+                  className={`px-3 py-2 rounded-md text-sm outline-none ${isDark ? 'bg-surface-overlay text-white border border-gray-700' : 'bg-white border border-gray-300'}`}
                 >
-                  <span>{category.icon}</span>
-                  {category.name} ({category.count})
-                </button>
-              ))}
-            </div>
-
-            {/* Difficulty Filter */}
-            <select
-              value={selectedDifficulty}
-              onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className={`px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent ${
-                isDark
-                  ? 'bg-surface-overlay text-content-primary'
-                  : 'bg-gray-100 text-gray-900'
-              }`}
-            >
-              <option value="all">All Levels</option>
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Templates Grid/List */}
-        <div className={`flex-1 overflow-y-auto p-6 ${isDark ? 'bg-surface-raised' : 'bg-gray-50'}`}>
-          {filteredTemplates.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center">
-              <div className={`p-6 rounded-full mb-4 ${isDark ? 'bg-surface-overlay' : 'bg-gray-200'}`}>
-                <Search className={`w-12 h-12 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+                  <option value="name">Name (A-Z)</option>
+                  <option value="difficulty">Difficulty</option>
+                </select>
               </div>
-              <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                No templates found
-              </h3>
-              <p className={isDark ? 'text-gray-500' : 'text-gray-500'}>
-                Try adjusting your search or filters
-              </p>
-            </div>
-          ) : (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
-              {filteredTemplates.map((template) => {
-                const categoryInfo = getCategoryInfo(template.category);
-                const isLoadingThis = selectedTemplateId === template.id;
 
-                return (
-                  <div
-                    key={template.id}
-                    className={`flex flex-col rounded-lg overflow-hidden border transition-colors hover:border-accent/50 ${
-                      viewMode === 'grid'
-                        ? isDark
-                          ? 'bg-surface-overlay border-stroke-subtle'
-                          : 'bg-white border-gray-200'
-                        : isDark
-                        ? 'bg-surface-overlay border-stroke-subtle p-4'
-                        : 'bg-white border-gray-200 p-4'
-                    }`}
+              {/* Categories */}
+              <div className="flex gap-2 flex-wrap pb-1">
+                <button onClick={() => setSelectedCategory('all')} className={`px-3 py-1.5 text-sm rounded-full whitespace-nowrap ${selectedCategory === 'all' ? 'bg-accent text-white font-medium' : 'bg-black/5 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-black/10 dark:hover:bg-white/10'}`}>All</button>
+                <button onClick={() => setSelectedCategory('my-templates')} className={`px-3 py-1.5 text-sm rounded-full whitespace-nowrap ${selectedCategory === 'my-templates' ? 'bg-accent text-white font-medium' : 'bg-black/5 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-black/10 dark:hover:bg-white/10'}`}>My Templates</button>
+                {categories.map(c => (
+                  <button 
+                    key={c.id} 
+                    onClick={() => setSelectedCategory(c.id)}
+                    className={`px-3 py-1.5 text-sm rounded-full whitespace-nowrap flex items-center gap-1 ${selectedCategory === c.id ? 'bg-accent text-white font-medium' : 'bg-black/5 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-black/10 dark:hover:bg-white/10'}`}
                   >
-                    {/* Card Header */}
-                    <div className={`flex-1 p-3 border-b ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`}>
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2 flex-1">
-                          <span className="text-2xl">{categoryInfo.icon}</span>
-                          <div className="flex-1">
-                            <h3 className={`text-sm font-semibold ${isDark ? 'text-content-primary' : 'text-gray-900'}`}>
-                              {template.name}
-                            </h3>
-                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {categoryInfo.name} • {template.subcategory}
-                            </p>
-                          </div>
-                        </div>
-                        <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded-sm font-medium ${getDifficultyColor(template.difficulty)}`}>
-                          {template.difficulty}
-                        </span>
-                      </div>
-                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {template.description}
-                      </p>
-                    </div>
+                    <span>{c.icon}</span> {c.name}
+                  </button>
+                ))}
+              </div>
 
-                    {/* Tags */}
-                    {viewMode === 'grid' && (
-                      <div className="px-3 py-2 flex flex-wrap gap-1">
-                        {template.tags.slice(0, 4).map((tag, idx) => (
-                          <span
-                            key={idx}
-                            className={`text-[11px] leading-4 px-1.5 py-0.5 rounded-sm font-medium ${
-                              isDark
-                                ? 'bg-white/[0.07] text-content-secondary'
-                                : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
 
-                    {/* Features */}
-                    {viewMode === 'list' && template.features && (
-                      <div className="px-3 py-2 flex flex-wrap gap-1">
-                        {template.features.map((feature, idx) => (
-                          <span
-                            key={idx}
-                            className={`text-[11px] leading-4 px-1.5 py-0.5 rounded-sm font-medium ${
-                              isDark ? 'bg-accent-subtle text-accent-hover' : 'bg-purple-100 text-purple-700'
-                            }`}
-                          >
-                            {feature}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className={`mt-auto p-3 flex gap-2 ${isDark ? 'bg-surface-raised' : 'bg-gray-50'}`}>
-                      <button
-                        onClick={() => handleLoadTemplate(template.id)}
-                        disabled={isLoadingThis}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isLoadingThis
-                            ? 'bg-surface-hover text-content-muted cursor-not-allowed'
-                            : 'bg-accent text-accent-fg hover:bg-accent-hover'
-                        }`}
-                      >
-                        {isLoadingThis ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Loading...
-                          </>
-                        ) : (
-                          <>
-                            <Code2 className="w-4 h-4" />
-                            Load Template
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => {
-                          toast.success('Template preview coming soon');
-                        }}
-                        className={`px-3 py-2 rounded-lg transition-colors ${
-                          isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'
-                        }`}
-                        title="Preview"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
-          )}
-        </div>
 
-        {/* Footer Stats */}
-        <div className={`px-4 py-3 border-t ${
-          isDark ? 'border-stroke-subtle bg-surface-raised' : 'border-gray-200 bg-gray-50'
-        }`}>
-          <div className="flex items-center justify-between text-sm">
-            <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-              Showing {filteredTemplates.length} of {templateMetadata.length} templates
-            </span>
-            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>
-              Templates load on-demand for better performance
-            </span>
+            {/* List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {filteredTemplates.length === 0 ? (
+                 <div className="flex items-center justify-center h-full text-gray-400">No templates found.</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {filteredTemplates.map(template => (
+                    <div 
+                      key={template.id}
+                      onClick={() => handlePreview(template)}
+                      className={`group flex flex-col p-4 rounded-lg border cursor-pointer transition-all ${previewTemplate?.id === template.id ? 'border-accent ring-1 ring-accent' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500'} ${isDark ? 'bg-surface-overlay' : 'bg-white'}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 shrink-0 bg-black/5 dark:bg-white/5 rounded-md flex items-center justify-center text-xl">
+                          {template.projectType === 'react' ? '⚛️' : template.projectType === 'vue' ? '💚' : template.projectType === 'nextjs' ? '▲' : '🌐'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start">
+                            <h3 className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.name}</h3>
+                            <span className={`text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${
+                               template.difficulty === 'beginner' ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' :
+                               template.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400' :
+                               'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'
+                            }`}>{template.difficulty}</span>
+                          </div>
+                          <p className="text-xs text-gray-500 line-clamp-2 mt-1">{template.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                        <div className="flex gap-2 flex-wrap">
+                        </div>
+                        <button
+                          onClick={(e) => handleLoadClick(e, template)}
+                          className="px-3 py-1 text-xs font-medium bg-accent text-white rounded hover:bg-accent-hover transition-colors shadow-sm whitespace-nowrap"
+                        >
+                          Select
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Right Pane: Preview */}
+          <div className={`hidden lg:flex flex-col w-[400px] xl:w-[450px] shrink-0 border-l ${isDark ? 'bg-surface-raised border-stroke-subtle' : 'bg-gray-50 border-gray-200'}`}>
+            {previewTemplate ? (
+              <div className="flex flex-col h-full">
+                <div className={`p-5 border-b flex justify-between items-center ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`}>
+                  <div className="min-w-0 pr-4">
+                     <h3 className={`font-bold text-lg truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{previewTemplate.name}</h3>
+                     <p className="text-sm text-gray-500 truncate">{previewTemplate.subcategory || previewTemplate.category}</p>
+                  </div>
+                  <button onClick={() => exportTemplate(previewTemplate)} title="Download Template" className="p-2 shrink-0 hover:bg-black/10 dark:hover:bg-white/10 rounded-full text-gray-600 dark:text-gray-400">
+                    <Download className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="flex-1 p-5 overflow-y-auto">
+                   <div className="aspect-video bg-white rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm flex flex-col overflow-hidden mb-6 relative group">
+                      {previewPayload?.files ? (
+                        <div className="flex-1 p-4 overflow-y-auto text-xs font-mono text-gray-300 bg-[#1e1e1e]">
+                           <div className="text-gray-500 mb-4">// Project structure</div>
+                           {previewPayload.files.map((f: any) => (
+                             <div key={f.path} className="flex items-center gap-2 py-1.5">
+                                <FileCode className="w-4 h-4 text-blue-400" />
+                                {f.path}
+                             </div>
+                           ))}
+                        </div>
+                      ) : previewPayload?.html ? (
+                        <iframe 
+                           srcDoc={`<!DOCTYPE html><html><head><style>${previewPayload.css}</style></head><body>${previewPayload.html}<script>${previewPayload.javascript}</script></body></html>`}
+                           className="w-full h-full border-0 bg-white"
+                           title="Preview"
+                        />
+                      ) : (
+                        <div className="flex-1 flex items-center justify-center text-gray-400">Loading Preview...</div>
+                      )}
+                      
+                      {/* Interactive overlay just to block clicks on iframe */}
+                      <div className="absolute inset-0 z-10" />
+                   </div>
+
+                   <div className="space-y-6">
+                      <div>
+                         <h4 className={`font-semibold text-sm mb-3 uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Features</h4>
+                         <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-2">
+                           {previewTemplate.features?.map((f, i) => (
+                              <li key={i} className="flex items-center gap-2">
+                                 <Check className="w-4 h-4 text-green-500 shrink-0" />
+                                 {f}
+                              </li>
+                           ))}
+                         </ul>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-black/5 dark:bg-white/5">
+                         <div>
+                            <span className="block text-xs text-gray-500 mb-1">Author</span>
+                            <span className="text-sm font-medium dark:text-gray-200">{previewTemplate.author || 'GB Coder'}</span>
+                         </div>
+                         <div>
+                            <span className="block text-xs text-gray-500 mb-1">Files</span>
+                            <span className="text-sm font-medium dark:text-gray-200">
+                               {previewPayload?.files ? previewPayload.files.length : 3}
+                            </span>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+
+                <div className={`p-5 border-t ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`}>
+                  <button 
+                    onClick={() => setConfirmTemplate(previewTemplate)}
+                    className="w-full py-3 bg-accent hover:bg-accent-hover text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
+                  >
+                    <Code2 className="w-5 h-5" /> Load into Editor
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-400 p-8 text-center">
+                <div className="w-16 h-16 bg-black/5 dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
+                  <Eye className="w-8 h-8 opacity-50" />
+                </div>
+                <p>Select a template to view details and preview.</p>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {confirmTemplate && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+           <div className={`w-full max-w-md p-6 rounded-xl shadow-2xl ${isDark ? 'bg-surface-raised border border-stroke-subtle' : 'bg-white'}`}>
+              <h3 className={`text-xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Load Template</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm leading-relaxed">
+                Loading <strong className="text-accent">{confirmTemplate.name}</strong> will overwrite your current code and files. 
+                Are you sure you want to proceed?
+              </p>
+              
+              {!previewPayload ? (
+                <div className="flex justify-center mb-4">
+                  <div className="animate-spin w-6 h-6 border-2 border-accent border-t-transparent rounded-full"></div>
+                </div>
+              ) : null}
+
+              <div className="flex justify-end gap-3">
+                 <button 
+                   onClick={() => setConfirmTemplate(null)} 
+                   className="px-5 py-2.5 text-sm font-medium rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 transition-colors"
+                 >
+                   Cancel
+                 </button>
+                 <button 
+                   onClick={() => {
+                     if (previewPayload) {
+                       onLoadTemplate(previewPayload, confirmTemplate);
+                       setConfirmTemplate(null);
+                       onClose();
+                     }
+                   }}
+                   disabled={!previewPayload}
+                   className="px-5 py-2.5 text-sm font-medium rounded-lg bg-accent text-white hover:bg-accent-hover transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                 >
+                   Yes, Load It
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
