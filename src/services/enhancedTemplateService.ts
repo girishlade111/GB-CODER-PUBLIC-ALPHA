@@ -62,6 +62,13 @@ import reactDashboard from './templates/react/dashboard';
 import vueTasks from './templates/vue/tasks';
 import nextjsBlog from './templates/nextjs/blog';
 
+// Phase 2 Templates
+import businessAgency from './templates/business/agency';
+import businessConsulting from './templates/business/consulting';
+import businessLocal from './templates/business/local';
+import startupWaitlist from './templates/startup/waitlist';
+import saasPricing from './templates/saas/pricing';
+
 // Exported payload type
 export type TemplatePayload = 
   | { html: string; css: string; javascript: string }
@@ -85,10 +92,75 @@ const templateRegistry: Record<string, TemplatePayload | (() => Promise<Template
   'react-dashboard': reactDashboard,
   'vue-tasks': vueTasks,
   'nextjs-blog': nextjsBlog,
+  'business-agency': businessAgency,
+  'business-consulting': businessConsulting,
+  'business-local': businessLocal,
+  'startup-waitlist': startupWaitlist,
+  'saas-pricing': saasPricing,
 };
 
 // Template metadata
 let templateMetadata: Record<string, CodeTemplate> = {
+  'business-agency': {
+    id: 'business-agency',
+    name: 'Digital Agency',
+    description: 'Modern digital agency landing page with portfolio showcase.',
+    category: 'business',
+    subcategory: 'Agency',
+    tags: ['agency', 'business', 'modern', 'digital'],
+    difficulty: 'intermediate',
+    features: ['Hero Image', 'Services', 'Animations'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'business-consulting': {
+    id: 'business-consulting',
+    name: 'Financial Consulting',
+    description: 'Professional financial consulting firm template.',
+    category: 'business',
+    subcategory: 'Consulting',
+    tags: ['finance', 'business', 'consulting', 'corporate'],
+    difficulty: 'beginner',
+    features: ['Sidebar Layout', 'Services Cards', 'Hero Banner'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'business-local': {
+    id: 'business-local',
+    name: 'Local Cafe & Bakery',
+    description: 'Aesthetic local cafe and bakery template.',
+    category: 'business',
+    subcategory: 'Local',
+    tags: ['cafe', 'restaurant', 'local', 'food'],
+    difficulty: 'beginner',
+    features: ['Image Grid', 'Menu Link', 'Order Button'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'startup-waitlist': {
+    id: 'startup-waitlist',
+    name: 'Product Waitlist',
+    description: 'Modern glassmorphic waitlist page for upcoming startups.',
+    category: 'startup',
+    subcategory: 'Waitlist',
+    tags: ['startup', 'waitlist', 'glassmorphism', 'modern'],
+    difficulty: 'intermediate',
+    features: ['Glass Container', 'Input Form', 'Animated Blobs'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'saas-pricing': {
+    id: 'saas-pricing',
+    name: 'SaaS Pricing',
+    description: 'Clean SaaS pricing table with prominent Pro plan.',
+    category: 'saas',
+    subcategory: 'Pricing',
+    tags: ['saas', 'pricing', 'table', 'subscription'],
+    difficulty: 'beginner',
+    features: ['Pricing Grid', 'Hover Effects', 'Call to Action'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
   'business-corporate': {
     id: 'business-corporate',
     name: 'Corporate Business',
