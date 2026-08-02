@@ -25,6 +25,11 @@ import { GB_CODER_MONACO_THEME, defineGbCoderTheme } from '../../utils/monacoThe
 import { MultiFileProject } from '../../types/files';
 import { sandboxSession } from '../../services/sandbox/sandboxSession';
 import { carriesFiles, collectTransfer } from '../../utils/dropTransfer';
+import {
+  readViewState,
+  reconcileViewState,
+  writeViewState,
+} from '../../services/vscodeWorkspaceStore';
 
 /**
  * VS Code style editor shell.
@@ -153,8 +158,18 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 }) => {
   const sandbox = useSyncExternalStore(subscribeSandbox, getSandboxSnapshot, getSandboxSnapshot);
 
-  const [openPaths, setOpenPaths] = useState<string[]>([]);
-  const [activePath, setActivePath] = useState<string | null>(null);
+  /*
+   * Tabs come back from the previous visit, reconciled against the files that
+   * actually loaded: a project can change between visits, and a tab pointing at a
+   * file that is no longer there renders an empty editor that reads as broken.
+   *
+   * Computed in an initialiser so the restored file is the one Monaco mounts with.
+   * Deferring it would let the auto-open effect below choose a different file
+   * first, and the user would watch their file switch out from under them.
+   */
+  const [restoredView] = useState(() => reconcileViewState(readViewState(), project.files));
+  const [openPaths, setOpenPaths] = useState<string[]>(restoredView.openPaths);
+  const [activePath, setActivePath] = useState<string | null>(restoredView.activePath);
   const [dirtyPaths, setDirtyPaths] = useState<Set<string>>(new Set());
   const [rightTab, setRightTab] = useState<RightTab>('sandbox');
   const [showBanner, setShowBanner] = useState(true);
@@ -182,6 +197,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     setOpenPaths([preferred.path]);
     setActivePath(preferred.path);
   }, [project.files, activePath]);
+
+  /* Remember the tab layout, so returning to the route reopens what was open. */
+  useEffect(() => {
+    writeViewState({ openPaths, activePath });
+  }, [openPaths, activePath]);
 
   const openFile = useCallback((path: string) => {
     setOpenPaths((current) => {
@@ -320,6 +340,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
   const activeLanguage = activeFile ? monacoLanguageForPath(activeFile.path) : null;
 
+  /*
+   * The mode is reachable by URL, so it can legitimately be open with nothing in
+   * it. That is a state to show rather than a case to redirect out of: sending the
+   * user somewhere else would contradict the address they navigated to.
+   */
+  const hasFiles = project.files.length > 0;
+
   /** Top-bar entries. Icon-only by design, so each one carries a tooltip. */
   const topBarActions = [
     {
@@ -403,8 +430,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         </span>
       </header>
 
-      {/* Entry banner */}
-      {showBanner && (
+      {/* Entry banner. Suppressed with no files: there is no project to describe
+          as detected, and the empty state below says what to do instead. */}
+      {showBanner && hasFiles && (
         <div
           className="flex shrink-0 items-start gap-2.5 border-b border-amber-500/30 bg-amber-500/10 px-3 py-2"
           data-testid="vscode-banner"
@@ -648,9 +676,41 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   tabSize: 2,
                 }}
               />
-            ) : (
+            ) : hasFiles ? (
               <div className="grid h-full place-items-center text-xs text-vsc-textMuted">
                 Select a file from the explorer.
+              </div>
+            ) : (
+              <div
+                className="grid h-full place-items-center px-6 text-center"
+                data-testid="vscode-empty-state"
+              >
+                <div>
+                  <FolderPlus className="mx-auto mb-3 h-7 w-7 text-vsc-textMuted" />
+                  <p className="text-sm font-semibold text-white">No project loaded</p>
+                  <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-vsc-textMuted">
+                    Import a folder to get started. What you load stays in this workspace, so a
+                    refresh brings it back.
+                  </p>
+                  <div className="mt-3 flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => folderInputRef.current?.click()}
+                      data-testid="empty-load-folder"
+                      className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg hover:bg-accent-hover"
+                    >
+                      Load Folder
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      data-testid="empty-load-file"
+                      className="rounded-lg border border-vsc-borderStrong px-3 py-1.5 text-xs font-semibold text-vsc-text hover:bg-white/[0.06] hover:text-white"
+                    >
+                      Load File
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>

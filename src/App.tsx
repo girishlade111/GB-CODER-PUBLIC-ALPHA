@@ -26,6 +26,21 @@ import LazyFallback from './components/ui/LazyFallback';
 import DropZoneOverlay from './components/DropZoneOverlay';
 import { useImportDrop } from './hooks/useImportDrop';
 /*
+ * VS Code mode's route and its persistence layer.
+ *
+ * Both are imported eagerly, and deliberately: the very first render has to know
+ * whether the URL addresses VS Code mode, and starting that decision in an effect
+ * would show the standard editor for a frame first. Neither module names anything
+ * from the full-stack feature, so this does not pull that chunk into the initial
+ * payload — `npm run verify:bundle` enforces that.
+ */
+import { EDITOR_ROUTE, VSCODE_ROUTE, isVSCodeModePath, navigateTo } from './utils/appRoutes';
+import {
+  clearWorkspace,
+  loadWorkspace,
+  saveWorkspace,
+} from './services/vscodeWorkspaceStore';
+/*
  * Type-only imports from the lazy import chunk. `import type` is erased during
  * compilation, so naming these types does not create a runtime dependency and
  * the chunk stays out of the initial bundle.
@@ -303,6 +318,18 @@ const toolbarIconButtonClass = (isDark: boolean) =>
       : 'text-gray-600 hover:bg-black/5 hover:text-gray-900'
   }`;
 
+/**
+ * The workspace VS Code mode shows when nothing has been loaded into it yet —
+ * someone opening `/ide` directly, before importing anything.
+ *
+ * Module-level so its identity is stable: a fresh object each render would look
+ * like a new project to every effect and memo inside the mode.
+ */
+const EMPTY_VSCODE_PROJECT: MultiFileProject = { projectType: 'plain', files: [] };
+
+/** How long to let edits settle before writing the workspace to storage. */
+const WORKSPACE_SAVE_DEBOUNCE_MS = 600;
+
 function App() {
   // Progressive loading phases
   const { isPhase3Ready } = useProgressiveLoad();
@@ -457,6 +484,29 @@ function App() {
     projectType: MultiFileProject['projectType'];
     entry?: string;
   } | null>(null);
+  /**
+   * Whether the URL addresses VS Code mode.
+   *
+   * Seeded from `window.location` in the initialiser rather than in an effect,
+   * for the same reason `fileProject` reads the share link there: an effect runs
+   * after the first paint, so the standard editor would render for a frame and
+   * then be replaced — the exact flash this route exists to remove.
+   *
+   * The URL is the source of truth for *which mode is on screen*. It is the only
+   * part of the app's state the browser preserves across a refresh by itself.
+   */
+  const [isVSCodeRoute, setIsVSCodeRoute] = useState<boolean>(() => isVSCodeModePath());
+  /**
+   * True while the stored workspace is being read back.
+   *
+   * Distinct from "there is no project": the difference decides whether the mode
+   * shows a loading state or tells the user nothing is loaded, and getting it
+   * wrong means flashing "No project loaded" over a workspace that is about to
+   * appear.
+   */
+  const [isRestoringWorkspace, setIsRestoringWorkspace] = useState<boolean>(() =>
+    isVSCodeModePath(),
+  );
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showInjectionManager, setShowInjectionManager] = useState(false);
@@ -905,6 +955,10 @@ function App() {
           entry: importPlan.result.entry,
         });
         setImportPlan(null);
+        // Entering the mode is a navigation, not just a state change, so the URL
+        // has to move with it or a refresh would land back in the editor.
+        setIsVSCodeRoute(true);
+        navigateTo(VSCODE_ROUTE);
         toast.success('Full-stack project detected — connect a Sandbox to run it.');
         return;
       }
@@ -950,22 +1004,49 @@ function App() {
    * normal import path, so they land in the standard editor rather than being
    * discarded if detection was wrong.
    */
-  const handleExitFullStack = useCallback(() => {
-    const project = fullStackProject;
-    const restore = vsCodeReturn;
-    setFullStackProject(null);
-    setVsCodeReturn(null);
-    if (!project) return;
+  const leaveVSCodeMode = useCallback(
+    /**
+     * `updateUrl` is false when the browser has *already* moved — a Back press
+     * out of the mode. Pushing another entry there would fight the user's own
+     * navigation and leave a history entry they have to press through twice.
+     */
+    ({ updateUrl }: { updateUrl: boolean }) => {
+      const project = fullStackProject;
+      const restore = vsCodeReturn;
+      setFullStackProject(null);
+      setVsCodeReturn(null);
+      setIsVSCodeRoute(false);
+      setIsRestoringWorkspace(false);
+      /*
+       * The stored copy is precisely what a refresh would reopen, so leaving has
+       * to drop it. Queued behind any in-flight save by the store itself.
+       */
+      void clearWorkspace();
+      if (updateUrl) navigateTo(EDITOR_ROUTE);
 
-    handleImportResult({
-      files: project.files,
-      // Manual entries remember where they came from; auto-detected ones do not.
-      projectType: restore?.projectType ?? 'plain',
-      entry: restore?.entry,
-      warnings: [],
-    });
-    toast.success('Left VS Code mode. Your files were kept.');
-  }, [fullStackProject, vsCodeReturn, handleImportResult]);
+      /*
+       * Nothing was ever loaded — someone opened `/ide` directly and left again.
+       * There are no files to hand back, and importing an empty set would clear
+       * the editor the user is about to return to.
+       */
+      if (!project || project.files.length === 0) return;
+
+      handleImportResult({
+        files: project.files,
+        // Manual entries remember where they came from; auto-detected ones do not.
+        projectType: restore?.projectType ?? 'plain',
+        entry: restore?.entry,
+        warnings: [],
+      });
+      toast.success('Left VS Code mode. Your files were kept.');
+    },
+    [fullStackProject, vsCodeReturn, handleImportResult],
+  );
+
+  const handleExitFullStack = useCallback(
+    () => leaveVSCodeMode({ updateUrl: true }),
+    [leaveVSCodeMode],
+  );
 
   /**
    * Adds files into the project already open in VS Code mode.
@@ -998,10 +1079,19 @@ function App() {
         }
 
         setFullStackProject((current) => {
-          if (!current) return current;
-          const byPath = new Map(current.files.map((file) => [file.path, file]));
+          const byPath = new Map((current?.files ?? []).map((file) => [file.path, file]));
           for (const file of incoming) byPath.set(file.path, file);
-          return { ...current, files: Array.from(byPath.values()) };
+          /*
+           * `current` is null when the mode is open with nothing loaded — someone
+           * arrived at the route directly and used the empty state's Load
+           * buttons. That is a first import rather than a merge, so the project
+           * is created here instead of the update being dropped.
+           */
+          return {
+            projectType: current?.projectType ?? 'plain',
+            entry: current?.entry ?? plan.result.entry,
+            files: Array.from(byPath.values()),
+          };
         });
 
         const existingPaths = new Set(fullStackProject?.files.map((file) => file.path) ?? []);
@@ -1038,8 +1128,94 @@ function App() {
 
     setVsCodeReturn({ projectType: fileProject.projectType, entry: fileProject.entry });
     setFullStackProject(fileProject);
+    // A navigation, not just a state change — see the detected-import path above.
+    setIsVSCodeRoute(true);
+    navigateTo(VSCODE_ROUTE);
     toast.success('VS Code mode — connect a sandbox in the right-hand panel.');
   }, [fullStackProject, fileProject]);
+
+  /*
+   * Rebuilds the workspace after a refresh, or on a direct visit to the route.
+   *
+   * Files only. The sandbox is deliberately *not* restored: an E2B session does
+   * not survive the page unloading and the client has no reattach API, so
+   * reporting "Connected" would be a lie about a session that no longer exists.
+   * The status bar reads the in-memory sandbox store, which starts empty, so it
+   * says Local Mode on its own — which is the truth. The user's API key stays in
+   * localStorage, so reconnecting is one click and needs no re-entry.
+   */
+  useEffect(() => {
+    if (!isRestoringWorkspace) return;
+
+    let cancelled = false;
+    const finish = () => {
+      if (!cancelled) setIsRestoringWorkspace(false);
+    };
+
+    void loadWorkspace().then((stored) => {
+      if (cancelled) return;
+
+      if (stored && stored.files.length > 0) {
+        setFullStackProject({
+          projectType: stored.projectType,
+          files: stored.files,
+          entry: stored.entry,
+        });
+        // Restores "leaving returns this to React/Vue" across the refresh.
+        if (stored.returnTo) setVsCodeReturn(stored.returnTo);
+      }
+
+      finish();
+    }, finish);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isRestoringWorkspace]);
+
+  /*
+   * Records the workspace as it changes, debounced so typing does not write on
+   * every keystroke.
+   *
+   * The `isRestoringWorkspace` guard is load-bearing: without it the empty
+   * starting state would be written over the stored workspace before the read
+   * that is about to replace it has even resolved.
+   */
+  useEffect(() => {
+    if (!isVSCodeRoute || isRestoringWorkspace) return;
+    if (!fullStackProject || fullStackProject.files.length === 0) return;
+
+    const timer = window.setTimeout(() => {
+      void saveWorkspace(fullStackProject, vsCodeReturn);
+    }, WORKSPACE_SAVE_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [isVSCodeRoute, isRestoringWorkspace, fullStackProject, vsCodeReturn]);
+
+  /*
+   * Back and Forward across the mode boundary.
+   *
+   * The app had no `popstate` listener at all, so without this the URL would
+   * change on a Back press while the view stayed where it was.
+   */
+  useEffect(() => {
+    const handlePopState = () => {
+      if (isVSCodeModePath()) {
+        setIsVSCodeRoute(true);
+        /*
+         * Forward into the mode after having left it. Leaving cleared the
+         * in-memory project, so it has to be read back rather than assumed.
+         */
+        if (!fullStackProject) setIsRestoringWorkspace(true);
+        return;
+      }
+
+      if (isVSCodeRoute) leaveVSCodeMode({ updateUrl: false });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isVSCodeRoute, fullStackProject, leaveVSCodeMode]);
 
   /** Ctrl/Cmd+Shift+S — capture and save a PNG without opening the modal. */
   const handleQuickScreenshot = useCallback(async () => {
@@ -2352,7 +2528,13 @@ function App() {
    * editor view so the multi-panel layout is bypassed entirely — the other
    * project modes are completely unaffected by this branch.
    */
-  if (fullStackProject) {
+  /*
+   * Chosen by the *route*, not by whether a project happens to be in memory —
+   * that is what lets a refresh land back here. `fullStackProject` is still
+   * honoured alongside it so any existing way into the mode keeps working even if
+   * it did not move the URL.
+   */
+  if (isVSCodeRoute || fullStackProject) {
     return (
       /*
        * No NavigationBar here, deliberately. VS Code mode is a full-screen shell
@@ -2363,20 +2545,31 @@ function App() {
        */
       <div className="flex h-screen flex-col overflow-hidden bg-vsc-editor">
         <div className="min-h-0 flex-1">
-          <Suspense fallback={<LazyFallback label="VS Code mode" variant="panel" />}>
-            <VSCodeMode
-              project={fullStackProject}
-              entryReason={vsCodeReturn ? 'manual' : 'detected'}
-              onChangeFile={handleFullStackFileChange}
-              onExit={handleExitFullStack}
-              onAddImport={handleAddToFullStackProject}
-              onOpenDependencies={() => setShowDependencies(true)}
-              onOpenAIChat={() => setShowAIChat(true)}
-              onOpenVoiceCommands={() => setShowVoiceCommands(true)}
-              fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
-              fontSize={settings.editorFontSize}
-            />
-          </Suspense>
+          {isRestoringWorkspace ? (
+            /*
+             * The stored workspace is still being read. A loading state rather
+             * than the mode's empty state, because "No project loaded" would be
+             * wrong for a workspace that is one tick from appearing — and a
+             * message that contradicts itself a moment later is worse than a
+             * spinner.
+             */
+            <LazyFallback label="Restoring your workspace" variant="panel" />
+          ) : (
+            <Suspense fallback={<LazyFallback label="VS Code mode" variant="panel" />}>
+              <VSCodeMode
+                project={fullStackProject ?? EMPTY_VSCODE_PROJECT}
+                entryReason={vsCodeReturn ? 'manual' : 'detected'}
+                onChangeFile={handleFullStackFileChange}
+                onExit={handleExitFullStack}
+                onAddImport={handleAddToFullStackProject}
+                onOpenDependencies={() => setShowDependencies(true)}
+                onOpenAIChat={() => setShowAIChat(true)}
+                onOpenVoiceCommands={() => setShowVoiceCommands(true)}
+                fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
+                fontSize={settings.editorFontSize}
+              />
+            </Suspense>
+          )}
         </div>
 
         {/*
@@ -2389,7 +2582,7 @@ function App() {
           <Suspense fallback={null}>
             <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col overflow-hidden border-l border-vsc-border bg-vsc-sidebar shadow-elevated">
               <DependenciesPanel
-                project={fullStackProject}
+                project={fullStackProject ?? EMPTY_VSCODE_PROJECT}
                 resolvedPackages={projectBundle.resolvedPackages}
                 unresolvedPackages={projectBundle.unresolvedPackages}
                 isResolving={projectBundle.isResolvingPackages}
