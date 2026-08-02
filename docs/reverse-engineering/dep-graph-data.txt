@@ -1,0 +1,839 @@
+# Dependency Graph Data
+
+Total files analyzed: 202
+Internal edges: 359
+External edges: 224
+Circular SCCs (size>1): 0
+Unresolved imports: 11
+Orphan files (no dependents): 55
+
+## TOP FAN-IN (hubs)
+
+29	hooks/useTheme.ts
+28	types/files.ts
+23	types/index.ts
+11	services/externalLibraryService.ts
+11	types/console.types.ts
+7	hooks/useLocalStorage.ts
+7	hooks/useSettings.ts
+7	services/validationService.ts
+5	services/selectionOperationsService.ts
+5	types/consoleFeed.ts
+5	types/project.ts
+5	./App.jsx
+5	sandbox/_shared.js
+4	components/ui/Tooltip.tsx
+4	services/snapshotService.ts
+4	services/consoleBridge.ts
+4	services/packageResolver.ts
+3	utils/loadChunk.ts
+3	services/projects/projectDatabase.ts
+3	services/import/importEngine.ts
+
+## TOP FAN-OUT
+
+88	App.tsx
+20	services/enhancedTemplateService.ts
+10	components/LegalPageLayout.tsx
+9	components/EnhancedConsole.tsx
+9	components/TabbedRightPanel.tsx
+9	components/vscode/VSCodeMode.tsx
+6	components/ExportShareModal.tsx
+6	components/MultiFileEditor.tsx
+5	components/EditorPanel.tsx
+5	components/PreviewPanel.tsx
+5	components/SettingsModal.tsx
+4	components/ImportReviewModal.tsx
+4	components/NavigationBar.tsx
+4	hooks/useAutoFormat.ts
+4	hooks/useProjectBundle.ts
+4	services/projectArchiveService.ts
+4	types/files.ts
+3	components/AIChatAssistant.tsx
+3	components/Console/ConsoleTab.tsx
+3	components/Console/TerminalTab.tsx
+
+## CIRCULAR SCCs
+
+
+## UNRESOLVED
+
+main.tsx:4	./index.css
+services/templates/nextjs/blog.ts:22	./App.jsx
+services/templates/react/dashboard.ts:27	./App.jsx
+services/templates/react/dashboard.ts:28	./style.css
+services/templates/react/todo.ts:23	./App.jsx
+services/templates/react/weather.ts:19	./App.jsx
+services/templates/vue/tasks.ts:24	./App.vue
+types/files.ts:291	./App.jsx
+types/files.ts:292	./index.css
+types/files.ts:379	./App.vue
+types/files.ts:380	./style.css
+
+## ORPHANS
+
+components/AutoSaveIndicator.tsx
+components/CodeWriteConfirmationModal.tsx
+components/ColorPicker.tsx
+components/FormatButton.tsx
+components/FormatDiffModal.tsx
+components/LegalPageLayout.tsx
+components/ProjectBar.tsx
+components/SearchReplaceModal.tsx
+components/SelectionResultPanel.tsx
+components/SessionManager.tsx
+components/ui/EditorLoader.tsx
+components/ui/FormatToast.tsx
+components/ui/LadeStackLoader.tsx
+components/ui/LoadingFallback.tsx
+components/ui/LoadingSkeleton.tsx
+components/ui/SaveStatusIndicator.tsx
+components/ui/ThemeToggle.tsx
+components/vscode/VSCodeMode.tsx
+hooks/useAutoFormat.ts
+hooks/useThemeSync.ts
+main.tsx
+services/analytics.ts
+services/autoCompleteService.ts
+services/codeMinifierService.ts
+services/codeTemplatesService.ts
+services/codeValidationService.ts
+services/commandHistoryService.ts
+services/debugToolsService.ts
+services/errorLogging.ts
+services/externalToolsService.ts
+services/outputStreamingService.ts
+services/performanceAnalyticsService.ts
+services/screenshotService.ts
+services/searchFilterService.ts
+services/securityService.ts
+services/syntaxHighlighter.ts
+services/templateService.ts
+types/vendor-modules.d.ts
+types/xterm.d.ts
+utils/analytics.ts
+utils/downloadUtils.ts
+utils/responsiveDesign.ts
+utils/seo.ts
+vite-env.d.ts
+index.js
+ai.js
+health.js
+preview.js
+sandbox/close.js
+sandbox/create.js
+sandbox/exec.js
+sandbox/logs.js
+sandbox/start.js
+share.js
+test-redis.js
+
+## EXTERNAL IMPORTS BY FILE
+
+App.tsx	react, lucide-react, react-hot-toast
+AppWrapper.tsx	react, @vercel/analytics/react
+ai.js	axios
+components/AIChatAssistant.tsx	react, lucide-react, react-hot-toast
+components/AiDiffModal.tsx	react, react-diff-viewer-continued, lucide-react, react-hot-toast
+components/AppSidebar.tsx	react, lucide-react
+components/AutoSaveIndicator.tsx	react, lucide-react
+components/BuildFromPromptModal.tsx	react, lucide-react, react-hot-toast
+components/CodeEditor.tsx	react, @monaco-editor/react
+components/CodeStatsDashboard.tsx	react, lucide-react
+components/CodeWriteConfirmationModal.tsx	react, lucide-react
+components/ColorPicker.tsx	react, lucide-react
+components/CommandPalette.tsx	react, lucide-react
+components/Console/ConsoleTab.tsx	react, lucide-react
+components/Console/ConsoleValueTree.tsx	react, lucide-react
+components/Console/PreviewRunTab.tsx	react, lucide-react
+components/Console/TerminalTab.tsx	react, xterm, xterm/css/xterm.css
+components/Console/ValidatorTab.tsx	react, lucide-react
+components/CustomInjectionManager.tsx	react, lucide-react, react-hot-toast
+components/DependenciesPanel.tsx	react, lucide-react
+components/DropZoneOverlay.tsx	react, lucide-react
+components/EditorPanel.tsx	react, lucide-react
+components/EditorTabs.tsx	react, lucide-react
+components/EnhancedConsole.tsx	react, lucide-react
+components/ErrorBoundary.tsx	react, lucide-react
+components/ExportShareModal.tsx	react, lucide-react, react-hot-toast
+components/ExtensionsMarketplace.tsx	react, lucide-react
+components/ExternalLibraryManager.tsx	react, lucide-react
+components/FileExplorer.tsx	react, lucide-react
+components/FormatButton.tsx	react, lucide-react
+components/FormatDiffModal.tsx	react, lucide-react, react-diff-viewer-continued
+components/HistoryPanel.tsx	react, lucide-react
+components/ImportModal.tsx	react, lucide-react
+components/ImportReviewModal.tsx	react, lucide-react
+components/KeyboardShortcutsHelp.tsx	react, lucide-react
+components/LegalPageLayout.tsx	react
+components/MultiFileEditor.tsx	react, @monaco-editor/react, lucide-react
+components/NavigationBar.tsx	react, lucide-react
+components/PreviewPanel.tsx	react, lucide-react, typescript
+components/PreviewSharePage.tsx	react, lucide-react
+components/ProjectBar.tsx	react, lucide-react
+components/SearchReplaceModal.tsx	react, lucide-react
+components/SelectionResultPanel.tsx	react, lucide-react
+components/SelectionSidebar.tsx	react, lucide-react
+components/SelectionToolbar.tsx	react, lucide-react
+components/SessionManager.tsx	react, lucide-react
+components/SessionRecoveryModal.tsx	react, lucide-react
+components/SettingsModal.tsx	react, lucide-react
+components/SnapshotManagerModal.tsx	react, lucide-react
+components/SnippetManager.tsx	react, lucide-react
+components/SnippetsSidebar.tsx	react, lucide-react
+components/StatusBar.tsx	react, lucide-react
+components/TabbedRightPanel.tsx	react, lucide-react
+components/TemplateSelectorModal.tsx	react, lucide-react, react-hot-toast
+components/VoiceCommandPanel.tsx	react, lucide-react
+components/WelcomeTourModal.tsx	react, lucide-react
+components/history/CodeHistoryPage.tsx	react, lucide-react
+components/pages/AboutPage.tsx	react, lucide-react
+components/pages/ContactPage.tsx	react, lucide-react
+components/pages/CookiePolicyPage.tsx	react, lucide-react
+components/pages/DisclaimerPage.tsx	react, lucide-react
+components/pages/DocumentationPage.tsx	react, lucide-react
+components/pages/PrivacyPolicyPage.tsx	react, lucide-react
+components/pages/TermsOfServicePage.tsx	react, lucide-react
+components/projects/NewProjectModal.tsx	react, lucide-react
+components/projects/ProjectDashboard.tsx	react, lucide-react
+components/sandbox/SandboxPanel.tsx	react, lucide-react
+components/ui/CopyToast.tsx	react, lucide-react
+components/ui/EditorLoader.tsx	react
+components/ui/Footer.tsx	react, lucide-react
+components/ui/FormatToast.tsx	react, lucide-react
+components/ui/LadeStackLoader.tsx	react
+components/ui/LazyFallback.tsx	react, lucide-react
+components/ui/LoadingFallback.tsx	lucide-react
+components/ui/SaveStatusIndicator.tsx	react, lucide-react
+components/ui/ThemeToggle.tsx	react, lucide-react
+components/ui/Tooltip.tsx	react
+components/vscode/FileTreeView.tsx	react, lucide-react
+components/vscode/VSCodeMode.tsx	react, @monaco-editor/react, lucide-react
+hooks/useAppShortcuts.ts	react
+hooks/useAutoFormat.ts	react
+hooks/useAutoSave.ts	react
+hooks/useCodeHistory.ts	react
+hooks/useCodeSelection.ts	react
+hooks/useCodeWriter.ts	react
+hooks/useConsoleFeed.ts	react
+hooks/useEditorActions.ts	react
+hooks/useFileWorkspace.ts	react
+hooks/useFocusMode.ts	react
+hooks/useImportDrop.ts	react
+hooks/useLocalStorage.ts	react
+hooks/useProgressiveLoad.ts	react
+hooks/useProject.ts	react
+hooks/useProjectBundle.ts	react
+hooks/useSelectionOperations.ts	react, react-hot-toast
+hooks/useSettings.ts	react
+hooks/useSnapshots.ts	react
+hooks/useTheme.ts	react
+hooks/useThemeSync.ts	react
+hooks/useValidation.ts	react
+index.js	dotenv, express, http, ws, node-pty, cors, os
+main.tsx	react, react-dom/client
+preview.js	@upstash/redis
+sandbox/_shared.js	e2b
+services/aiChatAssistant.ts	@google/generative-ai
+services/bundlerService.ts	esbuild-wasm, esbuild-wasm/esbuild.wasm?url, @vue/compiler-sfc, @vue/compiler-sfc/dist/compiler-sfc.esm-browser.js
+services/captureService.ts	html-to-image
+services/formattingService.ts	diff, prettier/standalone, prettier/plugins/html, prettier/plugins/postcss, prettier/plugins/babel, prettier/plugins/estree
+services/import/importEngine.ts	jszip
+services/packageResolver.ts	pkg
+services/projectArchiveService.ts	jszip
+services/projectImportService.ts	jszip
+services/screenshotService.ts	html-to-image
+services/shareExportService.ts	jszip
+services/templates/vue/tasks.ts	vue
+share.js	@upstash/redis, crypto
+test-redis.js	@upstash/redis
+types/files.ts	vue
+utils/loadChunk.ts	react
+utils/monacoTheme.ts	@monaco-editor/react
+utils/projectExport.ts	jszip
+
+## INTERNAL IMPORTS (all edges)
+
+ai.js	X	axios
+App.tsx	X	react
+App.tsx	I	utils/loadChunk.ts
+App.tsx	X	lucide-react
+App.tsx	I	components/NavigationBar.tsx
+App.tsx	I	components/AppSidebar.tsx
+App.tsx	I	components/EditorPanel.tsx
+App.tsx	I	components/TabbedRightPanel.tsx
+App.tsx	I	components/ui/Footer.tsx
+App.tsx	I	components/ui/Tooltip.tsx
+App.tsx	I	components/ui/LazyFallback.tsx
+App.tsx	I	components/DropZoneOverlay.tsx
+App.tsx	I	hooks/useImportDrop.ts
+App.tsx	I	utils/appRoutes.ts
+App.tsx	I	services/vscodeWorkspaceStore.ts
+App.tsx	I	services/projects/projectDatabase.ts
+App.tsx	I	components/projects/ProjectDashboard.tsx
+App.tsx	I	services/import/importEngine.ts
+App.tsx	I	services/import/projectDetection.ts
+App.tsx	X	react-hot-toast
+App.tsx	I	components/AiDiffModal.tsx
+App.tsx	I	components/AIChatAssistant.tsx
+App.tsx	I	components/VoiceCommandPanel.tsx
+App.tsx	I	components/TemplateSelectorModal.tsx
+App.tsx	I	components/CodeStatsDashboard.tsx
+App.tsx	I	components/CustomInjectionManager.tsx
+App.tsx	I	components/BuildFromPromptModal.tsx
+App.tsx	I	components/WelcomeTourModal.tsx
+App.tsx	I	components/FileExplorer.tsx
+App.tsx	I	components/DependenciesPanel.tsx
+App.tsx	I	components/MultiFileEditor.tsx
+App.tsx	I	components/ExportShareModal.tsx
+App.tsx	I	components/ImportModal.tsx
+App.tsx	I	components/PreviewSharePage.tsx
+App.tsx	I	components/ImportReviewModal.tsx
+App.tsx	I	components/projects/NewProjectModal.tsx
+App.tsx	I	features/fullstack/fullstackFeature.ts
+App.tsx	I	components/SnippetsSidebar.tsx
+App.tsx	I	components/ExternalLibraryManager.tsx
+App.tsx	I	components/history/CodeHistoryPage.tsx
+App.tsx	I	components/pages/AboutPage.tsx
+App.tsx	I	components/pages/DocumentationPage.tsx
+App.tsx	I	components/pages/PrivacyPolicyPage.tsx
+App.tsx	I	components/pages/TermsOfServicePage.tsx
+App.tsx	I	components/pages/CookiePolicyPage.tsx
+App.tsx	I	components/pages/DisclaimerPage.tsx
+App.tsx	I	components/pages/ContactPage.tsx
+App.tsx	I	components/ExtensionsMarketplace.tsx
+App.tsx	I	components/SettingsModal.tsx
+App.tsx	I	components/HistoryPanel.tsx
+App.tsx	I	components/KeyboardShortcutsHelp.tsx
+App.tsx	I	components/CommandPalette.tsx
+App.tsx	I	hooks/useLocalStorage.ts
+App.tsx	I	hooks/useCodeHistory.ts
+App.tsx	I	hooks/useAutoSave.ts
+App.tsx	I	hooks/useSnapshots.ts
+App.tsx	I	components/SessionRecoveryModal.tsx
+App.tsx	I	components/SnapshotManagerModal.tsx
+App.tsx	I	components/StatusBar.tsx
+App.tsx	I	services/snapshotService.ts
+App.tsx	I	hooks/useTheme.ts
+App.tsx	I	hooks/useCodeSelection.ts
+App.tsx	I	hooks/useSelectionOperations.ts
+App.tsx	I	hooks/useProject.ts
+App.tsx	I	hooks/useSettings.ts
+App.tsx	I	hooks/useFocusMode.ts
+App.tsx	I	hooks/useProgressiveLoad.ts
+App.tsx	I	hooks/useCodeWriter.ts
+App.tsx	I	hooks/useProjectBundle.ts
+App.tsx	I	hooks/useAppShortcuts.ts
+App.tsx	I	hooks/useFileWorkspace.ts
+App.tsx	I	hooks/useConsoleFeed.ts
+App.tsx	I	hooks/useValidation.ts
+App.tsx	I	services/validationService.ts
+App.tsx	I	services/editorNavigator.ts
+App.tsx	I	components/SelectionToolbar.tsx
+App.tsx	I	components/SelectionSidebar.tsx
+App.tsx	I	services/projectArchiveService.ts
+App.tsx	I	services/projectImportService.ts
+App.tsx	I	services/captureService.ts
+App.tsx	I	services/shareLinkService.ts
+App.tsx	I	utils/monacoSelectionHelper.ts
+App.tsx	I	types/index.ts
+App.tsx	I	types/files.ts
+App.tsx	I	utils/snippetUtils.ts
+App.tsx	I	services/externalLibraryService.ts
+App.tsx	I	services/formattingService.ts
+App.tsx	I	services/selectionOperationsService.ts
+App.tsx	I	services/shareExportService.ts
+App.tsx	I	services/voiceCommandService.ts
+App.tsx	I	services/sandboxTerminal.ts
+App.tsx	I	services/customInjectionService.ts
+AppWrapper.tsx	X	react
+AppWrapper.tsx	X	@vercel/analytics/react
+AppWrapper.tsx	I	App.tsx
+components/AIChatAssistant.tsx	X	react
+components/AIChatAssistant.tsx	X	lucide-react
+components/AIChatAssistant.tsx	I	hooks/useTheme.ts
+components/AIChatAssistant.tsx	I	services/aiChatAssistant.ts
+components/AIChatAssistant.tsx	I	services/externalLibraryService.ts
+components/AIChatAssistant.tsx	X	react-hot-toast
+components/AiDiffModal.tsx	X	react
+components/AiDiffModal.tsx	X	react-diff-viewer-continued
+components/AiDiffModal.tsx	X	lucide-react
+components/AiDiffModal.tsx	I	hooks/useTheme.ts
+components/AiDiffModal.tsx	X	react-hot-toast
+components/AppSidebar.tsx	X	react
+components/AppSidebar.tsx	X	lucide-react
+components/AppSidebar.tsx	I	components/ui/Tooltip.tsx
+components/AppSidebar.tsx	I	hooks/useLocalStorage.ts
+components/AutoSaveIndicator.tsx	X	react
+components/AutoSaveIndicator.tsx	X	lucide-react
+components/BuildFromPromptModal.tsx	X	react
+components/BuildFromPromptModal.tsx	X	lucide-react
+components/BuildFromPromptModal.tsx	X	react-hot-toast
+components/BuildFromPromptModal.tsx	I	types/ai.ts
+components/CodeEditor.tsx	X	react
+components/CodeEditor.tsx	X	@monaco-editor/react
+components/CodeEditor.tsx	I	utils/monacoTheme.ts
+components/CodeEditor.tsx	I	types/index.ts
+components/CodeStatsDashboard.tsx	X	react
+components/CodeStatsDashboard.tsx	X	lucide-react
+components/CodeStatsDashboard.tsx	I	hooks/useTheme.ts
+components/CodeStatsDashboard.tsx	I	types/files.ts
+components/CodeWriteConfirmationModal.tsx	X	react
+components/CodeWriteConfirmationModal.tsx	X	lucide-react
+components/ColorPicker.tsx	X	react
+components/ColorPicker.tsx	X	lucide-react
+components/ColorPicker.tsx	I	hooks/useTheme.ts
+components/CommandPalette.tsx	X	react
+components/CommandPalette.tsx	X	lucide-react
+components/CommandPalette.tsx	I	hooks/useTheme.ts
+components/Console/ConsoleTab.tsx	X	react
+components/Console/ConsoleTab.tsx	X	lucide-react
+components/Console/ConsoleTab.tsx	I	components/Console/ConsoleValueTree.tsx
+components/Console/ConsoleTab.tsx	I	services/editorNavigator.ts
+components/Console/ConsoleTab.tsx	I	types/consoleFeed.ts
+components/Console/ConsoleValueTree.tsx	X	react
+components/Console/ConsoleValueTree.tsx	X	lucide-react
+components/Console/ConsoleValueTree.tsx	I	services/consoleBridge.ts
+components/Console/PreviewRunTab.tsx	X	react
+components/Console/PreviewRunTab.tsx	X	lucide-react
+components/Console/TerminalTab.tsx	X	react
+components/Console/TerminalTab.tsx	X	xterm
+components/Console/TerminalTab.tsx	X	xterm/css/xterm.css
+components/Console/TerminalTab.tsx	I	types/files.ts
+components/Console/TerminalTab.tsx	I	services/localShell.ts
+components/Console/TerminalTab.tsx	I	services/sandboxTerminal.ts
+components/Console/ValidatorTab.tsx	X	react
+components/Console/ValidatorTab.tsx	X	lucide-react
+components/Console/ValidatorTab.tsx	I	services/editorNavigator.ts
+components/Console/ValidatorTab.tsx	I	services/validationService.ts
+components/CustomInjectionManager.tsx	X	react
+components/CustomInjectionManager.tsx	X	lucide-react
+components/CustomInjectionManager.tsx	I	hooks/useTheme.ts
+components/CustomInjectionManager.tsx	I	services/customInjectionService.ts
+components/CustomInjectionManager.tsx	X	react-hot-toast
+components/DependenciesPanel.tsx	X	react
+components/DependenciesPanel.tsx	X	lucide-react
+components/DependenciesPanel.tsx	I	services/packageResolver.ts
+components/DependenciesPanel.tsx	I	types/files.ts
+components/DropZoneOverlay.tsx	X	react
+components/DropZoneOverlay.tsx	X	lucide-react
+components/EditorPanel.tsx	X	react
+components/EditorPanel.tsx	X	lucide-react
+components/EditorPanel.tsx	I	components/CodeEditor.tsx
+components/EditorPanel.tsx	I	components/ui/CopyToast.tsx
+components/EditorPanel.tsx	I	types/index.ts
+components/EditorPanel.tsx	I	hooks/useEditorActions.ts
+components/EditorPanel.tsx	I	utils/dropTransfer.ts
+components/EditorTabs.tsx	X	react
+components/EditorTabs.tsx	X	lucide-react
+components/EditorTabs.tsx	I	services/validationService.ts
+components/EnhancedConsole.tsx	X	react
+components/EnhancedConsole.tsx	X	lucide-react
+components/EnhancedConsole.tsx	I	components/Console/ConsoleTab.tsx
+components/EnhancedConsole.tsx	I	components/Console/ValidatorTab.tsx
+components/EnhancedConsole.tsx	I	components/Console/TerminalTab.tsx
+components/EnhancedConsole.tsx	I	components/Console/PreviewRunTab.tsx
+components/EnhancedConsole.tsx	I	types/files.ts
+components/EnhancedConsole.tsx	I	services/validationService.ts
+components/EnhancedConsole.tsx	I	services/localShell.ts
+components/EnhancedConsole.tsx	I	types/consoleFeed.ts
+components/EnhancedConsole.tsx	I	hooks/useConsoleFeed.ts
+components/ErrorBoundary.tsx	X	react
+components/ErrorBoundary.tsx	X	lucide-react
+components/ExportShareModal.tsx	X	react
+components/ExportShareModal.tsx	X	lucide-react
+components/ExportShareModal.tsx	X	react-hot-toast
+components/ExportShareModal.tsx	I	services/captureService.ts
+components/ExportShareModal.tsx	I	services/projectArchiveService.ts
+components/ExportShareModal.tsx	I	services/shareLinkService.ts
+components/ExportShareModal.tsx	I	services/shareExportService.ts
+components/ExportShareModal.tsx	I	types/files.ts
+components/ExportShareModal.tsx	I	services/externalLibraryService.ts
+components/ExtensionsMarketplace.tsx	X	react
+components/ExtensionsMarketplace.tsx	X	lucide-react
+components/ExtensionsMarketplace.tsx	I	hooks/useTheme.ts
+components/ExternalLibraryManager.tsx	X	react
+components/ExternalLibraryManager.tsx	X	lucide-react
+components/ExternalLibraryManager.tsx	I	services/externalLibraryService.ts
+components/FileExplorer.tsx	X	react
+components/FileExplorer.tsx	X	lucide-react
+components/FileExplorer.tsx	I	types/files.ts
+components/FileExplorer.tsx	I	hooks/useFileWorkspace.ts
+components/FormatButton.tsx	X	react
+components/FormatButton.tsx	X	lucide-react
+components/FormatButton.tsx	I	types/index.ts
+components/FormatDiffModal.tsx	X	react
+components/FormatDiffModal.tsx	X	lucide-react
+components/FormatDiffModal.tsx	X	react-diff-viewer-continued
+components/FormatDiffModal.tsx	I	types/formatting.ts
+components/FormatDiffModal.tsx	I	types/index.ts
+components/history/CodeHistoryPage.tsx	X	react
+components/history/CodeHistoryPage.tsx	X	lucide-react
+components/history/CodeHistoryPage.tsx	I	hooks/useLocalStorage.ts
+components/history/CodeHistoryPage.tsx	I	types/index.ts
+components/HistoryPanel.tsx	X	react
+components/HistoryPanel.tsx	X	lucide-react
+components/HistoryPanel.tsx	I	hooks/useCodeHistory.ts
+components/ImportModal.tsx	X	react
+components/ImportModal.tsx	X	lucide-react
+components/ImportModal.tsx	I	services/projectImportService.ts
+components/ImportReviewModal.tsx	X	react
+components/ImportReviewModal.tsx	X	lucide-react
+components/ImportReviewModal.tsx	I	hooks/useTheme.ts
+components/ImportReviewModal.tsx	I	services/projectArchiveService.ts
+components/ImportReviewModal.tsx	I	services/import/importEngine.ts
+components/ImportReviewModal.tsx	I	services/import/projectDetection.ts
+components/KeyboardShortcutsHelp.tsx	X	react
+components/KeyboardShortcutsHelp.tsx	X	lucide-react
+components/KeyboardShortcutsHelp.tsx	I	hooks/useTheme.ts
+components/LegalPageLayout.tsx	X	react
+components/LegalPageLayout.tsx	I	components/NavigationBar.tsx
+components/LegalPageLayout.tsx	I	components/ui/Footer.tsx
+components/LegalPageLayout.tsx	I	components/ExternalLibraryManager.tsx
+components/LegalPageLayout.tsx	I	components/pages/PrivacyPolicyPage.tsx
+components/LegalPageLayout.tsx	I	components/pages/TermsOfServicePage.tsx
+components/LegalPageLayout.tsx	I	components/pages/ContactPage.tsx
+components/LegalPageLayout.tsx	I	components/pages/CookiePolicyPage.tsx
+components/LegalPageLayout.tsx	I	components/pages/DisclaimerPage.tsx
+components/LegalPageLayout.tsx	I	services/externalLibraryService.ts
+components/LegalPageLayout.tsx	I	hooks/useTheme.ts
+components/MultiFileEditor.tsx	X	react
+components/MultiFileEditor.tsx	X	@monaco-editor/react
+components/MultiFileEditor.tsx	X	lucide-react
+components/MultiFileEditor.tsx	I	components/EditorTabs.tsx
+components/MultiFileEditor.tsx	I	hooks/useFileWorkspace.ts
+components/MultiFileEditor.tsx	I	types/files.ts
+components/MultiFileEditor.tsx	I	utils/monacoTheme.ts
+components/MultiFileEditor.tsx	I	services/bundlerService.ts
+components/MultiFileEditor.tsx	I	services/validationService.ts
+components/NavigationBar.tsx	X	react
+components/NavigationBar.tsx	X	lucide-react
+components/NavigationBar.tsx	I	types/files.ts
+components/NavigationBar.tsx	I	hooks/useTheme.ts
+components/NavigationBar.tsx	I	hooks/useSettings.ts
+components/NavigationBar.tsx	I	components/ui/Tooltip.tsx
+components/pages/AboutPage.tsx	X	react
+components/pages/AboutPage.tsx	X	lucide-react
+components/pages/AboutPage.tsx	I	hooks/useTheme.ts
+components/pages/ContactPage.tsx	X	react
+components/pages/ContactPage.tsx	I	hooks/useTheme.ts
+components/pages/ContactPage.tsx	X	lucide-react
+components/pages/CookiePolicyPage.tsx	X	react
+components/pages/CookiePolicyPage.tsx	I	hooks/useTheme.ts
+components/pages/CookiePolicyPage.tsx	X	lucide-react
+components/pages/DisclaimerPage.tsx	X	react
+components/pages/DisclaimerPage.tsx	I	hooks/useTheme.ts
+components/pages/DisclaimerPage.tsx	X	lucide-react
+components/pages/DocumentationPage.tsx	X	react
+components/pages/DocumentationPage.tsx	X	lucide-react
+components/pages/DocumentationPage.tsx	I	hooks/useTheme.ts
+components/pages/PrivacyPolicyPage.tsx	X	react
+components/pages/PrivacyPolicyPage.tsx	I	hooks/useTheme.ts
+components/pages/PrivacyPolicyPage.tsx	X	lucide-react
+components/pages/TermsOfServicePage.tsx	X	react
+components/pages/TermsOfServicePage.tsx	I	hooks/useTheme.ts
+components/pages/TermsOfServicePage.tsx	X	lucide-react
+components/PreviewPanel.tsx	X	react
+components/PreviewPanel.tsx	X	lucide-react
+components/PreviewPanel.tsx	I	types/index.ts
+components/PreviewPanel.tsx	I	types/files.ts
+components/PreviewPanel.tsx	I	services/externalLibraryService.ts
+components/PreviewPanel.tsx	I	services/consoleBridge.ts
+components/PreviewPanel.tsx	I	types/consoleFeed.ts
+components/PreviewPanel.tsx	X	typescript
+components/PreviewSharePage.tsx	X	react
+components/PreviewSharePage.tsx	X	lucide-react
+components/ProjectBar.tsx	X	react
+components/ProjectBar.tsx	X	lucide-react
+components/ProjectBar.tsx	I	hooks/useTheme.ts
+components/ProjectBar.tsx	I	types/project.ts
+components/ProjectBar.tsx	I	utils/projectExport.ts
+components/projects/NewProjectModal.tsx	X	react
+components/projects/NewProjectModal.tsx	X	lucide-react
+components/projects/NewProjectModal.tsx	I	hooks/useTheme.ts
+components/projects/NewProjectModal.tsx	I	services/projects/projectDatabase.ts
+components/projects/ProjectDashboard.tsx	X	react
+components/projects/ProjectDashboard.tsx	X	lucide-react
+components/projects/ProjectDashboard.tsx	I	hooks/useTheme.ts
+components/projects/ProjectDashboard.tsx	I	services/projects/projectDatabase.ts
+components/sandbox/SandboxPanel.tsx	X	react
+components/sandbox/SandboxPanel.tsx	X	lucide-react
+components/sandbox/SandboxPanel.tsx	I	services/sandbox/sandboxSession.ts
+components/SearchReplaceModal.tsx	X	react
+components/SearchReplaceModal.tsx	X	lucide-react
+components/SearchReplaceModal.tsx	I	hooks/useTheme.ts
+components/SelectionResultPanel.tsx	X	react
+components/SelectionResultPanel.tsx	X	lucide-react
+components/SelectionResultPanel.tsx	I	services/selectionOperationsService.ts
+components/SelectionResultPanel.tsx	I	types/index.ts
+components/SelectionSidebar.tsx	X	react
+components/SelectionSidebar.tsx	X	lucide-react
+components/SelectionSidebar.tsx	I	services/selectionOperationsService.ts
+components/SelectionSidebar.tsx	I	types/index.ts
+components/SelectionToolbar.tsx	X	react
+components/SelectionToolbar.tsx	X	lucide-react
+components/SelectionToolbar.tsx	I	services/selectionOperationsService.ts
+components/SelectionToolbar.tsx	I	types/index.ts
+components/SessionManager.tsx	X	react
+components/SessionManager.tsx	X	lucide-react
+components/SessionManager.tsx	I	services/sessionDataService.ts
+components/SessionManager.tsx	I	types/console.types.ts
+components/SessionRecoveryModal.tsx	X	react
+components/SessionRecoveryModal.tsx	X	lucide-react
+components/SessionRecoveryModal.tsx	I	hooks/useSettings.ts
+components/SettingsModal.tsx	X	react
+components/SettingsModal.tsx	X	lucide-react
+components/SettingsModal.tsx	I	hooks/useSettings.ts
+components/SettingsModal.tsx	I	hooks/useTheme.ts
+components/SettingsModal.tsx	I	hooks/useFocusMode.ts
+components/SettingsModal.tsx	I	services/voiceCommandService.ts
+components/SettingsModal.tsx	I	hooks/useSnapshots.ts
+components/SnapshotManagerModal.tsx	X	react
+components/SnapshotManagerModal.tsx	X	lucide-react
+components/SnapshotManagerModal.tsx	I	hooks/useSettings.ts
+components/SnapshotManagerModal.tsx	I	hooks/useSnapshots.ts
+components/SnapshotManagerModal.tsx	I	services/snapshotService.ts
+components/SnippetManager.tsx	X	react
+components/SnippetManager.tsx	X	lucide-react
+components/SnippetManager.tsx	I	types/index.ts
+components/SnippetManager.tsx	I	utils/snippetUtils.ts
+components/SnippetsSidebar.tsx	X	react
+components/SnippetsSidebar.tsx	X	lucide-react
+components/SnippetsSidebar.tsx	I	types/index.ts
+components/SnippetsSidebar.tsx	I	components/SnippetManager.tsx
+components/StatusBar.tsx	X	react
+components/StatusBar.tsx	X	lucide-react
+components/StatusBar.tsx	I	hooks/useSettings.ts
+components/TabbedRightPanel.tsx	X	react
+components/TabbedRightPanel.tsx	X	lucide-react
+components/TabbedRightPanel.tsx	I	components/PreviewPanel.tsx
+components/TabbedRightPanel.tsx	I	types/index.ts
+components/TabbedRightPanel.tsx	I	types/files.ts
+components/TabbedRightPanel.tsx	I	services/validationService.ts
+components/TabbedRightPanel.tsx	I	services/localShell.ts
+components/TabbedRightPanel.tsx	I	types/consoleFeed.ts
+components/TabbedRightPanel.tsx	I	hooks/useConsoleFeed.ts
+components/TabbedRightPanel.tsx	I	utils/loadChunk.ts
+components/TabbedRightPanel.tsx	I	components/EnhancedConsole.tsx
+components/TemplateSelectorModal.tsx	X	react
+components/TemplateSelectorModal.tsx	X	lucide-react
+components/TemplateSelectorModal.tsx	I	hooks/useTheme.ts
+components/TemplateSelectorModal.tsx	I	services/enhancedTemplateService.ts
+components/TemplateSelectorModal.tsx	X	react-hot-toast
+components/ui/CopyToast.tsx	X	react
+components/ui/CopyToast.tsx	X	lucide-react
+components/ui/EditorLoader.tsx	X	react
+components/ui/Footer.tsx	X	react
+components/ui/Footer.tsx	I	hooks/useTheme.ts
+components/ui/Footer.tsx	X	lucide-react
+components/ui/FormatToast.tsx	X	react
+components/ui/FormatToast.tsx	X	lucide-react
+components/ui/LadeStackLoader.tsx	X	react
+components/ui/LazyFallback.tsx	X	react
+components/ui/LazyFallback.tsx	X	lucide-react
+components/ui/LoadingFallback.tsx	X	lucide-react
+components/ui/SaveStatusIndicator.tsx	X	react
+components/ui/SaveStatusIndicator.tsx	X	lucide-react
+components/ui/ThemeToggle.tsx	X	react
+components/ui/ThemeToggle.tsx	X	lucide-react
+components/ui/ThemeToggle.tsx	I	hooks/useTheme.ts
+components/ui/Tooltip.tsx	X	react
+components/VoiceCommandPanel.tsx	X	react
+components/VoiceCommandPanel.tsx	X	lucide-react
+components/VoiceCommandPanel.tsx	I	hooks/useTheme.ts
+components/VoiceCommandPanel.tsx	I	services/voiceCommandService.ts
+components/vscode/FileTreeView.tsx	X	react
+components/vscode/FileTreeView.tsx	X	lucide-react
+components/vscode/FileTreeView.tsx	I	types/files.ts
+components/vscode/VSCodeMode.tsx	X	react
+components/vscode/VSCodeMode.tsx	X	@monaco-editor/react
+components/vscode/VSCodeMode.tsx	X	lucide-react
+components/vscode/VSCodeMode.tsx	I	components/vscode/FileTreeView.tsx
+components/vscode/VSCodeMode.tsx	I	components/Console/TerminalTab.tsx
+components/vscode/VSCodeMode.tsx	I	components/sandbox/SandboxPanel.tsx
+components/vscode/VSCodeMode.tsx	I	components/ui/Tooltip.tsx
+components/vscode/VSCodeMode.tsx	I	utils/monacoTheme.ts
+components/vscode/VSCodeMode.tsx	I	types/files.ts
+components/vscode/VSCodeMode.tsx	I	services/sandbox/sandboxSession.ts
+components/vscode/VSCodeMode.tsx	I	utils/dropTransfer.ts
+components/vscode/VSCodeMode.tsx	I	services/vscodeWorkspaceStore.ts
+components/WelcomeTourModal.tsx	X	react
+components/WelcomeTourModal.tsx	X	lucide-react
+hooks/useAppShortcuts.ts	X	react
+hooks/useAutoFormat.ts	X	react
+hooks/useAutoFormat.ts	I	types/index.ts
+hooks/useAutoFormat.ts	I	types/formatting.ts
+hooks/useAutoFormat.ts	I	services/formattingService.ts
+hooks/useAutoFormat.ts	I	hooks/useLocalStorage.ts
+hooks/useAutoSave.ts	X	react
+hooks/useAutoSave.ts	I	services/snapshotService.ts
+hooks/useCodeHistory.ts	X	react
+hooks/useCodeSelection.ts	X	react
+hooks/useCodeSelection.ts	I	types/index.ts
+hooks/useCodeSelection.ts	I	utils/monacoSelectionHelper.ts
+hooks/useCodeWriter.ts	X	react
+hooks/useConsoleFeed.ts	X	react
+hooks/useConsoleFeed.ts	I	types/consoleFeed.ts
+hooks/useConsoleFeed.ts	I	services/consoleBridge.ts
+hooks/useEditorActions.ts	X	react
+hooks/useEditorActions.ts	I	types/index.ts
+hooks/useFileWorkspace.ts	X	react
+hooks/useFileWorkspace.ts	I	types/files.ts
+hooks/useFocusMode.ts	X	react
+hooks/useFocusMode.ts	I	hooks/useLocalStorage.ts
+hooks/useImportDrop.ts	X	react
+hooks/useImportDrop.ts	I	services/import/importEngine.ts
+hooks/useImportDrop.ts	I	utils/dropTransfer.ts
+hooks/useImportDrop.ts	I	utils/loadChunk.ts
+hooks/useLocalStorage.ts	X	react
+hooks/useProgressiveLoad.ts	X	react
+hooks/useProject.ts	X	react
+hooks/useProject.ts	I	types/project.ts
+hooks/useProject.ts	I	services/projectStore.ts
+hooks/useProject.ts	I	services/externalLibraryService.ts
+hooks/useProjectBundle.ts	X	react
+hooks/useProjectBundle.ts	I	services/bundlerService.ts
+hooks/useProjectBundle.ts	I	services/packageResolver.ts
+hooks/useProjectBundle.ts	I	types/files.ts
+hooks/useProjectBundle.ts	I	types/index.ts
+hooks/useSelectionOperations.ts	X	react
+hooks/useSelectionOperations.ts	X	react-hot-toast
+hooks/useSelectionOperations.ts	I	services/selectionOperationsService.ts
+hooks/useSelectionOperations.ts	I	types/ai.ts
+hooks/useSelectionOperations.ts	I	types/index.ts
+hooks/useSettings.ts	X	react
+hooks/useSettings.ts	I	hooks/useLocalStorage.ts
+hooks/useSettings.ts	I	hooks/useTheme.ts
+hooks/useSnapshots.ts	X	react
+hooks/useSnapshots.ts	I	services/snapshotService.ts
+hooks/useTheme.ts	X	react
+hooks/useTheme.ts	I	hooks/useLocalStorage.ts
+hooks/useThemeSync.ts	X	react
+hooks/useValidation.ts	X	react
+hooks/useValidation.ts	I	types/files.ts
+hooks/useValidation.ts	I	services/validationService.ts
+index.js	X	dotenv
+index.js	X	express
+index.js	X	http
+index.js	X	ws
+index.js	X	node-pty
+index.js	X	cors
+index.js	X	os
+main.tsx	X	react
+main.tsx	X	react-dom/client
+main.tsx	I	AppWrapper.tsx
+main.tsx	I	components/ErrorBoundary.tsx
+main.tsx	I	./index.css
+preview.js	X	@upstash/redis
+sandbox/_shared.js	X	e2b
+sandbox/close.js	I	sandbox/_shared.js
+sandbox/create.js	I	sandbox/_shared.js
+sandbox/create.js	I	sandbox/_detect.js
+sandbox/exec.js	I	sandbox/_shared.js
+sandbox/logs.js	I	sandbox/_shared.js
+sandbox/start.js	I	sandbox/_shared.js
+sandbox/start.js	I	sandbox/_detect.js
+services/aiChatAssistant.ts	X	@google/generative-ai
+services/autoCompleteService.ts	I	types/console.types.ts
+services/bundlerService.ts	X	esbuild-wasm
+services/bundlerService.ts	I	types/files.ts
+services/bundlerService.ts	I	services/packageResolver.ts
+services/bundlerService.ts	X	esbuild-wasm/esbuild.wasm?url
+services/bundlerService.ts	X	@vue/compiler-sfc
+services/bundlerService.ts	X	@vue/compiler-sfc/dist/compiler-sfc.esm-browser.js
+services/captureService.ts	X	html-to-image
+services/commandHistoryService.ts	I	types/console.types.ts
+services/debugToolsService.ts	I	types/console.types.ts
+services/enhancedTemplateService.ts	I	services/templates/business/corporate.ts
+services/enhancedTemplateService.ts	I	services/templates/ai-agents/chatbot.ts
+services/enhancedTemplateService.ts	I	services/templates/startup/landing.ts
+services/enhancedTemplateService.ts	I	services/templates/saas/dashboard.ts
+services/enhancedTemplateService.ts	I	services/templates/ecommerce/store.ts
+services/enhancedTemplateService.ts	I	services/templates/portfolio/developer.ts
+services/enhancedTemplateService.ts	I	services/templates/utility/calculator.ts
+services/enhancedTemplateService.ts	I	services/templates/plain/blog.ts
+services/enhancedTemplateService.ts	I	services/templates/plain/animation.ts
+services/enhancedTemplateService.ts	I	services/templates/plain/auth.ts
+services/enhancedTemplateService.ts	I	services/templates/react/todo.ts
+services/enhancedTemplateService.ts	I	services/templates/react/weather.ts
+services/enhancedTemplateService.ts	I	services/templates/react/dashboard.ts
+services/enhancedTemplateService.ts	I	services/templates/vue/tasks.ts
+services/enhancedTemplateService.ts	I	services/templates/nextjs/blog.ts
+services/enhancedTemplateService.ts	I	services/templates/business/agency.ts
+services/enhancedTemplateService.ts	I	services/templates/business/consulting.ts
+services/enhancedTemplateService.ts	I	services/templates/business/local.ts
+services/enhancedTemplateService.ts	I	services/templates/startup/waitlist.ts
+services/enhancedTemplateService.ts	I	services/templates/saas/pricing.ts
+services/externalToolsService.ts	I	types/console.types.ts
+services/formattingService.ts	X	diff
+services/formattingService.ts	I	types/index.ts
+services/formattingService.ts	I	types/formatting.ts
+services/formattingService.ts	X	prettier/standalone
+services/formattingService.ts	X	prettier/plugins/html
+services/formattingService.ts	X	prettier/plugins/postcss
+services/formattingService.ts	X	prettier/plugins/babel
+services/formattingService.ts	X	prettier/plugins/estree
+services/import/importEngine.ts	I	services/import/projectDetection.ts
+services/import/importEngine.ts	I	services/projectImportService.ts
+services/import/importEngine.ts	I	types/files.ts
+services/import/importEngine.ts	X	jszip
+services/import/projectDetection.ts	I	types/files.ts
+services/localShell.ts	I	types/files.ts
+services/outputStreamingService.ts	I	types/console.types.ts
+services/packageResolver.ts	I	types/files.ts
+services/packageResolver.ts	X	pkg
+services/performanceAnalyticsService.ts	I	types/console.types.ts
+services/projectArchiveService.ts	I	types/files.ts
+services/projectArchiveService.ts	I	services/packageResolver.ts
+services/projectArchiveService.ts	I	services/externalLibraryService.ts
+services/projectArchiveService.ts	I	services/customInjectionService.ts
+services/projectArchiveService.ts	X	jszip
+services/projectImportService.ts	I	types/files.ts
+services/projectImportService.ts	X	jszip
+services/projects/projectDatabase.ts	I	types/files.ts
+services/projectStore.ts	I	types/project.ts
+services/projectStore.ts	I	services/externalLibraryService.ts
+services/sandbox/sandboxSession.ts	I	services/sandboxTerminal.ts
+services/screenshotService.ts	X	html-to-image
+services/searchFilterService.ts	I	types/console.types.ts
+services/securityService.ts	I	types/console.types.ts
+services/selectionOperationsService.ts	I	types/index.ts
+services/selectionOperationsService.ts	I	types/ai.ts
+services/sessionDataService.ts	I	types/console.types.ts
+services/shareExportService.ts	X	jszip
+services/shareLinkService.ts	I	types/files.ts
+services/snapshotService.ts	I	types/files.ts
+services/snapshotService.ts	I	services/externalLibraryService.ts
+services/snapshotService.ts	I	types/project.ts
+services/syntaxHighlighter.ts	I	types/console.types.ts
+services/templates/nextjs/blog.ts	I	./App.jsx
+services/templates/react/dashboard.ts	I	./App.jsx
+services/templates/react/dashboard.ts	I	./style.css
+services/templates/react/todo.ts	I	./App.jsx
+services/templates/react/weather.ts	I	./App.jsx
+services/templates/vue/tasks.ts	X	vue
+services/templates/vue/tasks.ts	I	./App.vue
+services/validationService.ts	I	types/files.ts
+services/voiceCommandParser.ts	I	services/voiceMatcher.ts
+services/voiceCommandParser.ts	I	services/voiceIntentRegistry.ts
+services/voiceCommandService.ts	I	services/voiceCommandParser.ts
+services/voiceMatcher.ts	I	services/voiceIntentRegistry.ts
+services/vscodeWorkspaceStore.ts	I	types/files.ts
+share.js	X	@upstash/redis
+share.js	X	crypto
+test-redis.js	X	@upstash/redis
+types/ai.ts	I	types/index.ts
+types/consoleFeed.ts	I	services/consoleBridge.ts
+types/files.ts	I	./App.jsx
+types/files.ts	I	./index.css
+types/files.ts	I	./App.vue
+types/files.ts	I	./style.css
+types/files.ts	X	vue
+types/formatting.ts	I	types/index.ts
+types/project.ts	I	services/externalLibraryService.ts
+types/project.ts	I	hooks/useSettings.ts
+utils/loadChunk.ts	X	react
+utils/monacoTheme.ts	X	@monaco-editor/react
+utils/projectExport.ts	I	types/project.ts
+utils/projectExport.ts	X	jszip
+utils/snippetUtils.ts	I	types/index.ts
