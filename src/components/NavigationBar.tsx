@@ -45,6 +45,14 @@ interface NavigationBarProps {
    * the overflow menu is a second trigger rather than a second implementation.
    */
   onOpenExport?: () => void;
+  /**
+   * Returns to the project dashboard.
+   *
+   * When omitted the logo stays the plain, non-interactive mark it has always
+   * been — the legal and documentation pages render this bar without a project to
+   * leave, so a "back to your projects" affordance there would be meaningless.
+   */
+  onNavigateHome?: () => void;
 }
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
@@ -53,6 +61,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   onOpenBuildFromPrompt,
   onClear,
   onNewProject,
+  onNavigateHome,
   currentProjectType = 'plain',
   autoSaveEnabled,
   customActions,
@@ -127,7 +136,33 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 </button>
               )}
 
-              <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-4">
+              {/*
+                The logo doubles as the way back to the dashboard, which is where
+                a wordmark conventionally leads. Rendered as a button only when a
+                handler is supplied, so it is never an interactive-looking element
+                that does nothing.
+              */}
+              <div
+                className={`flex items-center gap-1.5 sm:gap-2 lg:gap-4 ${
+                  onNavigateHome ? 'cursor-pointer rounded-lg transition-opacity hover:opacity-80' : ''
+                }`}
+                onClick={onNavigateHome}
+                onKeyDown={
+                  onNavigateHome
+                    ? (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          onNavigateHome();
+                        }
+                      }
+                    : undefined
+                }
+                role={onNavigateHome ? 'button' : undefined}
+                tabIndex={onNavigateHome ? 0 : undefined}
+                aria-label={onNavigateHome ? 'All projects' : undefined}
+                title={onNavigateHome ? 'All projects' : undefined}
+                data-testid={onNavigateHome ? 'nav-home' : undefined}
+              >
                 <img
                   src="/tghjkl.jpeg"
                   alt="GB Coder Logo"

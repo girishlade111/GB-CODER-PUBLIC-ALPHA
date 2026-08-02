@@ -2,6 +2,7 @@ import React from 'react';
 import {
   BarChart3,
   FolderTree,
+  LayoutGrid,
   LayoutTemplate,
   MessageSquare,
   Mic,
@@ -18,6 +19,13 @@ import Tooltip from './ui/Tooltip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface AppSidebarProps {
+  /**
+   * Leaves the current project and returns to the dashboard.
+   *
+   * Pending edits are flushed by the caller before navigating, so this is not a
+   * "discard" action.
+   */
+  onOpenProjects: () => void;
   onToggleFiles: () => void;
   isFilesOpen: boolean;
   onToggleDependencies: () => void;
@@ -79,6 +87,7 @@ interface SidebarSection {
  * AI would misrepresent what they do.
  */
 const AppSidebar: React.FC<AppSidebarProps> = ({
+  onOpenProjects,
   onToggleFiles,
   isFilesOpen,
   onToggleDependencies,
@@ -104,6 +113,17 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       id: 'project',
       label: 'Project',
       items: [
+        {
+          /*
+           * First in the rail: it is the way *out* of the current project, and
+           * burying the exit under the tools that belong to it reads as a
+           * dead end.
+           */
+          id: 'projects',
+          label: 'All Projects',
+          icon: <LayoutGrid className="h-5 w-5" />,
+          onClick: onOpenProjects,
+        },
         {
           id: 'files',
           label: 'Files',
