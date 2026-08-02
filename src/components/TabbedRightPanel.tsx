@@ -56,6 +56,10 @@ interface TabbedRightPanelProps {
     bundledCss?: string;
     importMap?: Record<string, string>;
     isResolvingPackages?: boolean;
+    
+    // Custom Injections
+    customInjections?: any[];
+    onOpenInjectionManager?: () => void;
 }
 
 const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
@@ -90,6 +94,8 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
     bundledCss = '',
     importMap = {},
     isResolvingPackages = false,
+    customInjections = [],
+    onOpenInjectionManager,
 }, ref) => {
     const [activeTab, setActiveTab] = useState<TabType>('preview');
 
@@ -161,6 +167,7 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                         bundledCss={bundledCss}
                         importMap={importMap}
                         isResolvingPackages={isResolvingPackages}
+                        customInjections={customInjections}
         />
     );
 
@@ -233,6 +240,15 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                         )}
                     </button>
                 ))}
+                {customInjections.filter((i: any) => i.enabled).length > 0 && (
+                    <button
+                        onClick={onOpenInjectionManager}
+                        className="ml-auto mr-2 px-2 py-1 flex items-center gap-1 text-[10px] uppercase font-bold text-accent bg-accent/10 border border-accent/20 rounded-md hover:bg-accent/20 transition-colors"
+                        title="Manage Custom Injections"
+                    >
+                        <span>⚡ {customInjections.filter((i: any) => i.enabled).length} Injections</span>
+                    </button>
+                )}
             </div>
 
             {/* Tab content: both panes are mounted; the console overlays the preview. */}

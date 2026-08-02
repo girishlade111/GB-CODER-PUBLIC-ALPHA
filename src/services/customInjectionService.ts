@@ -1,345 +1,315 @@
-// Custom CSS/JS Injection Service for Preview Customization
+// Custom CSS/JS/HTML Injection Service for Preview Customization
+
+export type InjectionType = 'css' | 'js' | 'html';
+export type InjectionTarget = 'head' | 'before-body' | 'after-body' | 'inline';
+
 export interface CustomInjection {
   id: string;
   name: string;
-  type: 'css' | 'js';
+  type: InjectionType;
+  target: InjectionTarget;
   code: string;
   enabled: boolean;
+  applyToExport: boolean;
+  order: number;
   description?: string;
+  isPreset?: boolean;
 }
 
 export interface PresetInjection {
   id: string;
   name: string;
   description: string;
-  type: 'css' | 'js';
+  version: string;
+  iconUrl?: string; // Optional icon url or icon name
+  type: InjectionType;
+  target: InjectionTarget;
   code: string;
-  category: 'animation' | 'debug' | 'utility' | 'accessibility';
+  category: 'CSS Frameworks' | 'UI Libraries' | 'JS Utilities' | 'Visualization' | 'Animation' | 'Meta/SEO' | 'Analytics' | 'Debug' | 'Accessibility';
 }
 
 class CustomInjectionService {
   private static instance: CustomInjectionService;
-  private readonly STORAGE_KEY = 'gb-coder-custom-injections';
-
+  
   private presetInjections: PresetInjection[] = [
-    // CSS Presets
+    // CSS Frameworks
     {
-      id: 'css-reset',
-      name: 'CSS Reset',
-      description: 'Basic CSS reset for consistent styling',
-      type: 'css',
-      category: 'utility',
-      code: `* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  line-height: 1.5;
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-}`,
+      id: 'tailwind-css',
+      name: 'Tailwind CSS',
+      description: 'Utility-first CSS framework (via CDN)',
+      version: '3.4.1',
+      type: 'html',
+      target: 'head',
+      category: 'CSS Frameworks',
+      code: '<script src="https://cdn.tailwindcss.com"></script>'
     },
     {
-      id: 'smooth-scroll',
-      name: 'Smooth Scrolling',
-      description: 'Enable smooth scrolling for the page',
-      type: 'css',
-      category: 'utility',
-      code: `html {
-  scroll-behavior: smooth;
-}`,
+      id: 'bootstrap-5',
+      name: 'Bootstrap 5',
+      description: 'The most popular HTML, CSS, and JS library in the world.',
+      version: '5.3.2',
+      type: 'html',
+      target: 'head',
+      category: 'CSS Frameworks',
+      code: '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">\n<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>'
     },
     {
-      id: 'selection-color',
-      name: 'Custom Text Selection',
-      description: 'Style the text selection highlight',
-      type: 'css',
-      category: 'utility',
-      code: `::selection {
-  background: #667eea;
-  color: white;
-}
+      id: 'bulma',
+      name: 'Bulma',
+      description: 'Free, open source, and modern CSS framework based on Flexbox.',
+      version: '0.9.4',
+      type: 'html',
+      target: 'head',
+      category: 'CSS Frameworks',
+      code: '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">'
+    },
+    {
+      id: 'materialize',
+      name: 'Materialize',
+      description: 'A modern responsive front-end framework based on Material Design.',
+      version: '1.0.0',
+      type: 'html',
+      target: 'head',
+      category: 'CSS Frameworks',
+      code: '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">\n<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>'
+    },
+    
+    // UI Libraries
+    {
+      id: 'font-awesome',
+      name: 'Font Awesome 6',
+      description: 'The web\'s most popular icon set and toolkit.',
+      version: '6.4.2',
+      type: 'html',
+      target: 'head',
+      category: 'UI Libraries',
+      code: '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">'
+    },
+    {
+      id: 'lucide-icons',
+      name: 'Lucide Icons',
+      description: 'Beautiful & consistent icons (via unpkg).',
+      version: '0.292.0',
+      type: 'html',
+      target: 'head',
+      category: 'UI Libraries',
+      code: '<script src="https://unpkg.com/lucide@latest"></script>\n<script>lucide.createIcons();</script>'
+    },
+    {
+      id: 'google-fonts-inter',
+      name: 'Google Fonts: Inter',
+      description: 'Inter font family.',
+      version: 'latest',
+      type: 'html',
+      target: 'head',
+      category: 'UI Libraries',
+      code: '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">'
+    },
+    {
+      id: 'material-icons',
+      name: 'Material Icons',
+      description: 'Google Material Design Icons.',
+      version: 'latest',
+      type: 'html',
+      target: 'head',
+      category: 'UI Libraries',
+      code: '<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">'
+    },
 
-::-moz-selection {
-  background: #667eea;
-  color: white;
-}`,
+    // JS Utilities
+    {
+      id: 'jquery',
+      name: 'jQuery',
+      description: 'Fast, small, and feature-rich JavaScript library.',
+      version: '3.7.1',
+      type: 'html',
+      target: 'head',
+      category: 'JS Utilities',
+      code: '<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>'
     },
     {
-      id: 'focus-outline',
-      name: 'Enhanced Focus Outline',
-      description: 'Better focus indicators for accessibility',
-      type: 'css',
-      category: 'accessibility',
-      code: `:focus {
-  outline: 3px solid #667eea;
-  outline-offset: 2px;
-}
+      id: 'lodash',
+      name: 'Lodash',
+      description: 'A modern JavaScript utility library delivering modularity, performance & extras.',
+      version: '4.17.21',
+      type: 'html',
+      target: 'head',
+      category: 'JS Utilities',
+      code: '<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>'
+    },
+    {
+      id: 'dayjs',
+      name: 'Day.js',
+      description: 'Fast 2kB alternative to Moment.js.',
+      version: '1.11.10',
+      type: 'html',
+      target: 'head',
+      category: 'JS Utilities',
+      code: '<script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>'
+    },
+    {
+      id: 'axios',
+      name: 'Axios',
+      description: 'Promise based HTTP client for the browser and node.js.',
+      version: '1.6.2',
+      type: 'html',
+      target: 'head',
+      category: 'JS Utilities',
+      code: '<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>'
+    },
 
-:focus:not(:focus-visible) {
-  outline: none;
-}
+    // Visualization
+    {
+      id: 'threejs',
+      name: 'Three.js',
+      description: 'JavaScript 3D library.',
+      version: '0.158.0',
+      type: 'html',
+      target: 'head',
+      category: 'Visualization',
+      code: '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>'
+    },
+    {
+      id: 'chartjs',
+      name: 'Chart.js',
+      description: 'Simple yet flexible JavaScript charting for designers & developers.',
+      version: '4.4.0',
+      type: 'html',
+      target: 'head',
+      category: 'Visualization',
+      code: '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>'
+    },
+    {
+      id: 'd3js',
+      name: 'D3.js',
+      description: 'Data-Driven Documents.',
+      version: '7.8.5',
+      type: 'html',
+      target: 'head',
+      category: 'Visualization',
+      code: '<script src="https://d3js.org/d3.v7.min.js"></script>'
+    },
+    {
+      id: 'p5js',
+      name: 'p5.js',
+      description: 'p5.js is a JS client-side library for creating graphic and interactive experiences.',
+      version: '1.9.0',
+      type: 'html',
+      target: 'head',
+      category: 'Visualization',
+      code: '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>'
+    },
 
-:focus-visible {
-  outline: 3px solid #667eea;
-  outline-offset: 2px;
-}`,
+    // Animation
+    {
+      id: 'gsap',
+      name: 'GSAP',
+      description: 'Professional-grade JavaScript animation for the modern web.',
+      version: '3.12.2',
+      type: 'html',
+      target: 'head',
+      category: 'Animation',
+      code: '<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>'
     },
     {
-      id: 'reduce-motion',
-      name: 'Respect Reduced Motion',
-      description: 'Disable animations for users who prefer reduced motion',
-      type: 'css',
-      category: 'accessibility',
-      code: `@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}`,
+      id: 'animejs',
+      name: 'Anime.js',
+      description: 'Lightweight JavaScript animation library.',
+      version: '3.2.1',
+      type: 'html',
+      target: 'head',
+      category: 'Animation',
+      code: '<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>'
     },
     {
-      id: 'debug-layout',
-      name: 'Debug Layout Borders',
-      description: 'Show borders on all elements for debugging',
-      type: 'css',
-      category: 'debug',
-      code: `* {
-  outline: 1px solid rgba(255, 0, 0, 0.3) !important;
-}`,
-    },
-    {
-      id: 'bounce-animation',
-      name: 'Bounce Animation',
-      description: 'Add a bounce keyframe animation',
-      type: 'css',
-      category: 'animation',
-      code: `@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-.bounce {
-  animation: bounce 1s ease-in-out infinite;
-}`,
+      id: 'lottie-web',
+      name: 'Lottie Web',
+      description: 'Render After Effects animations natively on Web.',
+      version: '5.12.2',
+      type: 'html',
+      target: 'head',
+      category: 'Animation',
+      code: '<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>'
     },
     {
       id: 'fade-in',
       name: 'Fade In Animation',
       description: 'Smooth fade-in animation',
+      version: '1.0',
       type: 'css',
-      category: 'animation',
+      target: 'inline',
+      category: 'Animation',
       code: `@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
 .fade-in {
   animation: fadeIn 0.5s ease-out forwards;
-}`,
+}`
     },
-    // JavaScript Presets
+
+    // Meta/SEO
     {
-      id: 'console-timer',
-      name: 'Console Timer',
-      description: 'Add performance timing to console',
-      type: 'js',
-      category: 'debug',
-      code: `// Add performance timing
-console.time('pageLoad');
-window.addEventListener('load', () => {
-  console.timeEnd('pageLoad');
-  console.log('Page fully loaded!');
-});`,
+      id: 'open-graph',
+      name: 'Open Graph Boilerplate',
+      description: 'Basic Open Graph meta tags for social sharing.',
+      version: '1.0',
+      type: 'html',
+      target: 'head',
+      category: 'Meta/SEO',
+      code: '<meta property="og:title" content="My Project">\n<meta property="og:description" content="A description of my project">\n<meta property="og:image" content="https://example.com/image.jpg">\n<meta property="og:url" content="https://example.com">'
     },
     {
-      id: 'error-handler',
-      name: 'Global Error Handler',
-      description: 'Catch and log global errors',
-      type: 'js',
-      category: 'debug',
-      code: `window.addEventListener('error', (event) => {
-  console.error('Global error caught:', {
-    message: event.message,
-    source: event.filename,
-    line: event.lineno,
-    column: event.colno,
-    error: event.error
-  });
-});
-
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
-});`,
+      id: 'twitter-card',
+      name: 'Twitter Card Boilerplate',
+      description: 'Basic Twitter Card meta tags.',
+      version: '1.0',
+      type: 'html',
+      target: 'head',
+      category: 'Meta/SEO',
+      code: '<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:title" content="My Project">\n<meta name="twitter:description" content="A description of my project">\n<meta name="twitter:image" content="https://example.com/image.jpg">'
     },
     {
-      id: 'click-ripple',
-      name: 'Click Ripple Effect',
-      description: 'Add ripple effect on click',
-      type: 'js',
-      category: 'animation',
-      code: `document.addEventListener('click', (e) => {
-  const ripple = document.createElement('span');
-  ripple.className = 'click-ripple';
-  ripple.style.cssText = \`
-    position: fixed;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: rgba(102, 126, 234, 0.6);
-    transform: scale(0);
-    animation: rippleEffect 0.6s ease-out;
-    pointer-events: none;
-    left: \${e.clientX - 10}px;
-    top: \${e.clientY - 10}px;
-    z-index: 9999;
-  \`;
-  
-  document.body.appendChild(ripple);
-  
-  setTimeout(() => ripple.remove(), 600);
-});
+      id: 'favicon-template',
+      name: 'Favicon Template',
+      description: 'Standard favicon link tags.',
+      version: '1.0',
+      type: 'html',
+      target: 'head',
+      category: 'Meta/SEO',
+      code: '<link rel="icon" href="/favicon.ico" type="image/x-icon">\n<link rel="apple-touch-icon" href="/apple-touch-icon.png">'
+    },
 
-// Add the keyframe animation
-if (!document.getElementById('ripple-styles')) {
-  const style = document.createElement('style');
-  style.id = 'ripple-styles';
-  style.textContent = \`
-    @keyframes rippleEffect {
-      to {
-        transform: scale(4);
-        opacity: 0;
-      }
-    }
-  \`;
-  document.head.appendChild(style);
-}`,
+    // Analytics
+    {
+      id: 'ga4',
+      name: 'Google Analytics 4',
+      description: 'Google Analytics 4 tracking snippet (replace G-XXXXX).',
+      version: 'latest',
+      type: 'html',
+      target: 'head',
+      category: 'Analytics',
+      code: '<!-- Google tag (gtag.js) -->\n<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>\n<script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag("js", new Date());\n  gtag("config", "G-XXXXXXXXXX");\n</script>'
     },
     {
-      id: 'keyboard-shortcuts',
-      name: 'Keyboard Shortcuts',
-      description: 'Add useful keyboard shortcuts',
-      type: 'js',
-      category: 'utility',
-      code: `document.addEventListener('keydown', (e) => {
-  // Ctrl/Cmd + S to prevent default save
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-    e.preventDefault();
-    console.log('Save shortcut pressed!');
-  }
-  
-  // Escape to clear selection
-  if (e.key === 'Escape') {
-    window.getSelection()?.removeAllRanges();
-    console.log('Selection cleared');
-  }
-  
-  // F12 to toggle dev tools (won't work in most browsers, but here for completeness)
-  if (e.key === 'F12') {
-    console.log('Dev tools requested');
-  }
-});`,
+      id: 'plausible',
+      name: 'Plausible Analytics',
+      description: 'Privacy-friendly analytics snippet.',
+      version: 'latest',
+      type: 'html',
+      target: 'head',
+      category: 'Analytics',
+      code: '<script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js"></script>'
     },
     {
-      id: 'lazy-images',
-      name: 'Lazy Load Images',
-      description: 'Automatically lazy load all images',
-      type: 'js',
-      category: 'utility',
-      code: `// Enable native lazy loading for all images
-document.querySelectorAll('img:not([loading])').forEach(img => {
-  img.setAttribute('loading', 'lazy');
-});
-
-// Add intersection observer for fade-in effect
-const imageObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      const img = entry.target;
-      img.classList.add('loaded');
-      imageObserver.unobserve(img);
-    }
-  });
-});
-
-document.querySelectorAll('img').forEach(img => {
-  imageObserver.observe(img);
-});
-
-// Add fade-in styles
-const style = document.createElement('style');
-style.textContent = \`
-  img {
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  img.loaded {
-    opacity: 1;
-  }
-\`;
-document.head.appendChild(style);`,
-    },
-    {
-      id: 'skip-links',
-      name: 'Skip Links',
-      description: 'Add accessibility skip links',
-      type: 'js',
-      category: 'accessibility',
-      code: `// Add skip to main content link
-const skipLink = document.createElement('a');
-skipLink.href = '#main';
-skipLink.className = 'skip-link';
-skipLink.textContent = 'Skip to main content';
-skipLink.style.cssText = \`
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  background: #667eea;
-  color: white;
-  padding: 1rem;
-  z-index: 10000;
-  text-decoration: none;
-  font-weight: bold;
-\`;
-
-skipLink.addEventListener('focus', () => {
-  skipLink.style.left = '0';
-});
-
-skipLink.addEventListener('blur', () => {
-  skipLink.style.left = '-9999px';
-});
-
-document.body.insertBefore(skipLink, document.body.firstChild);
-
-// Add main landmark if not exists
-if (!document.getElementById('main')) {
-  const main = document.querySelector('main') || document.querySelector('body > *');
-  if (main) {
-    main.id = 'main';
-    main.setAttribute('tabindex', '-1');
-  }
-}`,
+      id: 'umami',
+      name: 'Umami Analytics',
+      description: 'Simple, fast, privacy-focused alternative to GA.',
+      version: 'latest',
+      type: 'html',
+      target: 'head',
+      category: 'Analytics',
+      code: '<script async src="https://analytics.umami.is/script.js" data-website-id="YOUR-WEBSITE-ID"></script>'
     },
   ];
 
@@ -352,13 +322,27 @@ if (!document.getElementById('main')) {
     return CustomInjectionService.instance;
   }
 
+  private getStorageKey(projectId?: string): string {
+    return projectId ? `gb-coder-custom-injections-${projectId}` : 'gb-coder-custom-injections-global';
+  }
+
   /**
-   * Get all custom injections from storage
+   * Get all custom injections from storage for a specific project
    */
-  public getCustomInjections(): CustomInjection[] {
+  public getCustomInjections(projectId?: string): CustomInjection[] {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      const stored = localStorage.getItem(this.getStorageKey(projectId));
+      let injections: CustomInjection[] = stored ? JSON.parse(stored) : [];
+      // Ensure all loaded injections have required fields
+      injections = injections.map((i, index) => ({
+        ...i,
+        target: i.target || (i.type === 'html' ? 'head' : 'inline'),
+        applyToExport: i.applyToExport ?? false,
+        order: typeof i.order === 'number' ? i.order : index
+      }));
+      // Sort by order
+      injections.sort((a, b) => a.order - b.order);
+      return injections;
     } catch (error) {
       console.error('Failed to load custom injections:', error);
       return [];
@@ -366,11 +350,13 @@ if (!document.getElementById('main')) {
   }
 
   /**
-   * Save custom injections to storage
+   * Save custom injections to storage for a specific project
    */
-  public saveCustomInjections(injections: CustomInjection[]): void {
+  public saveCustomInjections(injections: CustomInjection[], projectId?: string): void {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(injections));
+      // Ensure order matches array index if not set properly
+      const ordered = injections.map((i, index) => ({ ...i, order: index }));
+      localStorage.setItem(this.getStorageKey(projectId), JSON.stringify(ordered));
     } catch (error) {
       console.error('Failed to save custom injections:', error);
     }
@@ -379,56 +365,90 @@ if (!document.getElementById('main')) {
   /**
    * Add a new custom injection
    */
-  public addInjection(injection: Omit<CustomInjection, 'id'>): CustomInjection {
-    const injections = this.getCustomInjections();
+  public addInjection(injection: Omit<CustomInjection, 'id' | 'order'>, projectId?: string): CustomInjection {
+    const injections = this.getCustomInjections(projectId);
     const newInjection: CustomInjection = {
       ...injection,
-      id: Date.now().toString(),
+      id: Date.now().toString() + Math.random().toString(36).substring(7),
+      order: injections.length,
     };
     injections.push(newInjection);
-    this.saveCustomInjections(injections);
+    this.saveCustomInjections(injections, projectId);
     return newInjection;
+  }
+  
+  /**
+   * Add a preset injection to active list
+   */
+  public addPreset(presetId: string, projectId?: string): CustomInjection | null {
+    const preset = this.presetInjections.find(p => p.id === presetId);
+    if (!preset) return null;
+    
+    return this.addInjection({
+      name: preset.name,
+      type: preset.type,
+      target: preset.target,
+      code: preset.code,
+      enabled: true,
+      applyToExport: false,
+      description: preset.description,
+      isPreset: true,
+    }, projectId);
   }
 
   /**
    * Update an existing injection
    */
-  public updateInjection(id: string, updates: Partial<CustomInjection>): boolean {
-    const injections = this.getCustomInjections();
+  public updateInjection(id: string, updates: Partial<CustomInjection>, projectId?: string): boolean {
+    const injections = this.getCustomInjections(projectId);
     const index = injections.findIndex(i => i.id === id);
     
     if (index === -1) return false;
     
     injections[index] = { ...injections[index], ...updates };
-    this.saveCustomInjections(injections);
+    this.saveCustomInjections(injections, projectId);
     return true;
   }
 
   /**
    * Delete an injection
    */
-  public deleteInjection(id: string): boolean {
-    const injections = this.getCustomInjections();
+  public deleteInjection(id: string, projectId?: string): boolean {
+    const injections = this.getCustomInjections(projectId);
     const filtered = injections.filter(i => i.id !== id);
     
     if (filtered.length === injections.length) return false;
     
-    this.saveCustomInjections(filtered);
+    this.saveCustomInjections(filtered, projectId);
     return true;
   }
 
   /**
    * Toggle injection enabled state
    */
-  public toggleInjection(id: string): boolean {
-    const injections = this.getCustomInjections();
+  public toggleInjection(id: string, projectId?: string): boolean {
+    const injections = this.getCustomInjections(projectId);
     const injection = injections.find(i => i.id === id);
     
     if (!injection) return false;
     
     injection.enabled = !injection.enabled;
-    this.saveCustomInjections(injections);
+    this.saveCustomInjections(injections, projectId);
     return true;
+  }
+  
+  /**
+   * Reorder injections
+   */
+  public reorderInjections(startIndex: number, endIndex: number, projectId?: string): void {
+    const injections = this.getCustomInjections(projectId);
+    const [removed] = injections.splice(startIndex, 1);
+    injections.splice(endIndex, 0, removed);
+    this.saveCustomInjections(injections, projectId);
+  }
+  
+  public resetToDefaults(projectId?: string): void {
+    this.saveCustomInjections([], projectId);
   }
 
   /**
@@ -439,46 +459,42 @@ if (!document.getElementById('main')) {
   }
 
   /**
-   * Get presets by category
-   */
-  public getPresetsByCategory(category: PresetInjection['category']): PresetInjection[] {
-    return this.presetInjections.filter(p => p.category === category);
-  }
-
-  /**
    * Search presets
    */
   public searchPresets(query: string): PresetInjection[] {
+    if (!query) return this.presetInjections;
     const lowercaseQuery = query.toLowerCase();
     return this.presetInjections.filter(p =>
       p.name.toLowerCase().includes(lowercaseQuery) ||
-      p.description.toLowerCase().includes(lowercaseQuery)
+      p.description.toLowerCase().includes(lowercaseQuery) ||
+      p.category.toLowerCase().includes(lowercaseQuery)
     );
   }
-
+  
   /**
-   * Generate combined CSS/JS for preview injection
+   * Sanitize injection code based on type
    */
-  public generateInjectionCode(
-    customInjections: CustomInjection[],
-    selectedPresets: string[]
-  ): { css: string; js: string } {
-    const allInjections = [
-      ...customInjections.filter(i => i.enabled),
-      ...this.presetInjections.filter(p => selectedPresets.includes(p.id)),
-    ];
-
-    const css = allInjections
-      .filter(i => i.type === 'css')
-      .map(i => `/* ${i.name} */\n${i.code}`)
-      .join('\n\n');
-
-    const js = allInjections
-      .filter(i => i.type === 'js')
-      .map(i => `// ${i.name}\n${i.code}`)
-      .join('\n\n');
-
-    return { css, js };
+  public sanitizeCode(code: string, type: InjectionType): string {
+    if (type === 'css') {
+      // Very basic stripping of script tags from CSS
+        return code.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                 .replace(/javascript:/gi, '');
+    }
+    return code;
+  }
+  
+  /**
+   * Check if JS code is potentially unsafe (e.g. document.write)
+   */
+  public checkUnsafeJS(code: string): string[] {
+    const warnings: string[] = [];
+    if (code.includes('document.write')) {
+      warnings.push('Warning: document.write can overwrite the entire preview document.');
+    }
+    if (code.includes('while(true)') || code.includes('while (true)')) {
+      warnings.push('Warning: Infinite loops may crash the preview.');
+    }
+    return warnings;
   }
 }
 

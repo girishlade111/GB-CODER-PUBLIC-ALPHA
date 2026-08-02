@@ -65,6 +65,8 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
   // ZIP progress
   const [zipPercent, setZipPercent] = useState<number | null>(null);
 
+  const [includeInjections, setIncludeInjections] = useState(true);
+
   const isFrameworkProject = project.projectType !== 'plain';
   const triple = useMemo(() => projectToTriple(project), [project]);
   const isEmpty =
@@ -74,8 +76,8 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
     !triple.javascript.trim();
 
   const archiveOptions = useMemo(
-    () => ({ projectName, externalLibraries, resolvedVersions }),
-    [projectName, externalLibraries, resolvedVersions],
+    () => ({ projectName, externalLibraries, resolvedVersions, includeInjections, projectId: project.id }),
+    [projectName, externalLibraries, resolvedVersions, includeInjections, project.id],
   );
 
   const sizes = useMemo(
@@ -428,6 +430,20 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
           unzipping.
         </p>
       )}
+
+      <div className="mt-4 flex items-center gap-2 rounded-md border border-stroke-subtle bg-surface-overlay px-3 py-2.5">
+        <input
+          type="checkbox"
+          id="include-injections-export"
+          checked={includeInjections}
+          onChange={(e) => setIncludeInjections(e.target.checked)}
+          className="h-4 w-4 rounded border-stroke-subtle bg-surface-base text-accent focus:ring-accent"
+        />
+        <label htmlFor="include-injections-export" className="flex flex-col cursor-pointer">
+          <span className="text-sm font-medium text-content-primary">Include custom injections</span>
+          <span className="text-xs text-content-muted">Embeds your active injections (like analytics or fonts) into the exported files</span>
+        </label>
+      </div>
     </div>
   );
 

@@ -56,6 +56,8 @@ interface PreviewPanelProps {
   importMap?: Record<string, string>;
   /** True while CDN packages are being resolved for the first time. */
   isResolvingPackages?: boolean;
+  /** Custom Code Injections */
+  customInjections?: any[];
 }
 
 /**
@@ -108,6 +110,7 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   bundledCss = '',
   importMap = {},
   isResolvingPackages = false,
+  customInjections = [],
 }, ref) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   /** Monotonic run counter, and the id of the document currently mounted. */
@@ -194,9 +197,18 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
       : html;
     const effectiveCss = isFrameworkProject ? bundledCss : css;
 
-    const sanitizedCss = sanitizeCode(effectiveCss, 'css');
+    const activeInjections = (customInjections || []).filter((i: any) => i.enabled);
+    
+    // Process inline injections
+    const inlineCssInjections = activeInjections.filter((i: any) => i.type === 'css' && i.target === 'inline');
+    const inlineJsInjections = activeInjections.filter((i: any) => i.type === 'js' && i.target === 'inline');
+    
+    const inlineCss = inlineCssInjections.map((i: any) => i.code).join('\n\n');
+    const inlineJs = inlineJsInjections.map((i: any) => i.code).join('\n\n');
+
+    const sanitizedCss = sanitizeCode(effectiveCss + (inlineCss ? '\n/* Custom Injections */\n' + inlineCss : ''), 'css');
     const usesBabel = !isFrameworkProject && (jsEditorMode === 'jsx' || jsEditorMode === 'tsx');
-    const executableJavascript = isFrameworkProject ? bundledCode : transpiledJs;
+    const executableJavascript = (isFrameworkProject ? bundledCode : transpiledJs) + (inlineJs ? '\n// Custom Injections\n' + inlineJs : '');
     const safeJavascript = escapeScriptContent(executableJavascript);
     const compiledJavaScriptString = JSON.stringify(executableJavascript);
     const compilationWarningScript = compilationError
@@ -249,6 +261,19 @@ ${safeJavascript}
 </script>`
       : '';
 
+    // Process tag injections
+    const renderInjections = (injections: any[]) => {
+      return injections.map((inj: any) => {
+        if (inj.type === 'css') return `<style>\n${inj.code}\n</style>`;
+        if (inj.type === 'js') return `<script>\n${inj.code}\n</script>`;
+        return inj.code;
+      }).join('\n');
+    };
+
+    const headInjections = renderInjections(activeInjections.filter((i: any) => i.target === 'head'));
+    const beforeBodyInjections = renderInjections(activeInjections.filter((i: any) => i.target === 'before-body'));
+    const afterBodyInjections = renderInjections(activeInjections.filter((i: any) => i.target === 'after-body'));
+
     const mockUAScript = isMobileUA
       ? `<script>
           Object.defineProperty(navigator, 'userAgent', {
@@ -270,6 +295,7 @@ ${safeJavascript}
     ${externalLibsHTML}
     ${jsxRuntimeScripts}
 ${importMapHTML}
+    ${headInjections}
     <style>
         body { 
             margin: 0; 
@@ -282,6 +308,7 @@ ${importMapHTML}
     </style>
 </head>
 <body>
+    ${beforeBodyInjections}
     ${effectiveHtml}
     <script>${buildConsoleBridgeScript(runId)}</script>
     <script>
@@ -348,9 +375,10 @@ ${importMapHTML}
     </script>
     ${userCodeScript}
     ${moduleScript}
+    ${afterBodyInjections}
 </body>
 </html>`;
-  }, [html, css, transpiledJs, compilationError, jsEditorMode, isFrameworkProject, projectType, bundledCode, bundledCss, importMap, isMobileUA]);
+  }, [html, css, transpiledJs, compilationError, jsEditorMode, isFrameworkProject, projectType, bundledCode, bundledCss, importMap, isMobileUA, customInjections]);
 
   const refreshPreview = useCallback(() => {
     if (iframeRef.current) {

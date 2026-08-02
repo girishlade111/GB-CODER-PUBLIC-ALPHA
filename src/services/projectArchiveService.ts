@@ -18,9 +18,11 @@ import {
   ProjectType,
   getFileContent,
   projectToTriple,
+  MOUNT_ELEMENT_ID,
 } from '../types/files';
 import { detectDependencies } from './packageResolver';
 import { ExternalLibrary } from './externalLibraryService';
+import { customInjectionService } from './customInjectionService';
 
 /** A file destined for the archive. */
 export interface ArchiveFile {
@@ -33,6 +35,8 @@ export interface ArchiveOptions {
   externalLibraries?: ExternalLibrary[];
   /** Resolved versions from the bundler, used to write a real package.json. */
   resolvedVersions?: Record<string, string>;
+  includeInjections?: boolean;
+  projectId?: string;
 }
 
 export interface ZipProgress {
@@ -91,6 +95,10 @@ export const buildStandaloneHtml = (
   const { html, css, javascript } = projectToTriple(project);
   const title = options.projectName ?? 'GB Coder Project';
   const tags = libraryTags(options.externalLibraries);
+  const injections = getInjections(options);
+  
+  const finalCss = css + (injections.inlineCss ? '\n/* Custom Injections */\n' + injections.inlineCss : '');
+  const finalJs = javascript + (injections.inlineJs ? '\n// Custom Injections\n' + injections.inlineJs : '');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -99,16 +107,19 @@ export const buildStandaloneHtml = (
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
 ${tags.head}
+${injections.head ? `    ${injections.head}` : ''}
     <style>
-${css}
+${finalCss}
     </style>
 </head>
 <body>
+${injections.beforeBody ? `    ${injections.beforeBody}` : ''}
 ${html}
 ${tags.body}
     <script>
-${escapeClosingScript(javascript)}
+${escapeClosingScript(finalJs)}
     </script>
+${injections.afterBody ? `    ${injections.afterBody}` : ''}
 </body>
 </html>
 `;
@@ -124,6 +135,7 @@ const buildLinkedHtml = (project: MultiFileProject, options: ArchiveOptions): st
   const { html } = projectToTriple(project);
   const title = options.projectName ?? 'GB Coder Project';
   const tags = libraryTags(options.externalLibraries);
+  const injections = getInjections(options);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -132,12 +144,15 @@ const buildLinkedHtml = (project: MultiFileProject, options: ArchiveOptions): st
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
 ${tags.head}
+${injections.head ? `    ${injections.head}` : ''}
     <link rel="stylesheet" href="./${PLAIN_CSS_PATH}">
 </head>
 <body>
+${injections.beforeBody ? `    ${injections.beforeBody}` : ''}
 ${html}
 ${tags.body}
     <script src="./${PLAIN_JS_PATH}"></script>
+${injections.afterBody ? `    ${injections.afterBody}` : ''}
 </body>
 </html>
 `;
@@ -223,24 +238,34 @@ export default defineConfig({
 const buildViteIndexHtml = (
   project: MultiFileProject,
   entry: string,
-  options: ArchiveOptions,
+  options: ArchiveOptions = {},
 ): string => {
-  const mountId = project.projectType === 'react' ? 'root' : 'app';
+  const { html } = projectToTriple(project);
   const title = options.projectName ?? 'GB Coder Project';
   const tags = libraryTags(options.externalLibraries);
+  const injections = getInjections(options);
+  const mountId =
+    project.projectType === 'react' || project.projectType === 'vue'
+      ? MOUNT_ELEMENT_ID[project.projectType]
+      : 'app';
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
 ${tags.head}
+${injections.head ? `    ${injections.head}` : ''}
 </head>
 <body>
+${injections.beforeBody ? `    ${injections.beforeBody}` : ''}
+${html}
     <div id="${mountId}"></div>
 ${tags.body}
     <script type="module" src="/src/${entry}"></script>
+${injections.afterBody ? `    ${injections.afterBody}` : ''}
 </body>
 </html>
 `;
@@ -374,6 +399,8 @@ export const estimateExportSize = (
 };
 
 // ─── ZIP generation ───────────────────────────────────────────────────────────
+
+// ─── Escape scripts ───────────────────────────────────────────────────────────
 
 /**
  * Creates the .zip archive.

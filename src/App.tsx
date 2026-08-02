@@ -203,6 +203,7 @@ import {
   voiceCommandService,
 } from './services/voiceCommandService';
 import { sandboxTerminal } from './services/sandboxTerminal';
+import { customInjectionService } from './services/customInjectionService';
 /*
  * PreviewSharePage is intentionally NOT imported here. It is declared with
  * React.lazy below: the standalone share page is only reached via a /preview/:id
@@ -594,7 +595,7 @@ function App() {
   const [showStats, setShowStats] = useState(false);
   const [aiSuggestionsUsed, setAiSuggestionsUsed] = useState(0);
   const [showInjectionManager, setShowInjectionManager] = useState(false);
-  const [customInjectionCode, setCustomInjectionCode] = useState({ css: '', js: '' });
+  const [customInjections, setCustomInjections] = useState<any[]>([]);
   const previewRef = React.useRef<HTMLElement>(null);
 
   // Settings
@@ -2089,9 +2090,17 @@ function App() {
     });
   }, [html, css, javascript, codeHistory, clearConsole]);
 
-  const handleUpdateInjections = useCallback((css: string, js: string) => {
-    setCustomInjectionCode({ css, js });
-  }, []);
+  const loadInjections = useCallback(() => {
+    setCustomInjections(customInjectionService.getCustomInjections(project.currentProject?.id));
+  }, [project.currentProject?.id]);
+
+  useEffect(() => {
+    loadInjections();
+  }, [loadInjections]);
+
+  const handleUpdateInjections = useCallback(() => {
+    loadInjections();
+  }, [loadInjections]);
 
   // Selection Operation Handlers
   const handleSelectionChange = useCallback((editor: any, language: EditorLanguage) => {
@@ -3519,8 +3528,10 @@ function App() {
               problemCount={validation.summary.errors}
               // Preview props
               html={html}
-              css={css + (customInjectionCode.css ? '\n\n/* Custom Injections */\n' + customInjectionCode.css : '')}
-              javascript={javascript + (customInjectionCode.js ? '\n\n// Custom Injections\n' + customInjectionCode.js : '')}
+              css={css}
+              javascript={javascript}
+              customInjections={customInjections}
+              onOpenInjectionManager={() => setShowInjectionManager(true)}
               jsEditorMode={jsEditorMode}
               onConsoleMessage={appendConsoleMessage}
               onPreviewReset={clearPreviewMessages}
@@ -3795,7 +3806,8 @@ function App() {
           <CustomInjectionManager
             isOpen={showInjectionManager}
             onClose={() => setShowInjectionManager(false)}
-            onUpdateInjections={handleUpdateInjections}
+            onInjectionsChanged={handleUpdateInjections}
+            projectId={project.currentProject?.id}
           />
         </Suspense>
       )}
