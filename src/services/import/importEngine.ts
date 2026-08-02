@@ -126,6 +126,17 @@ export interface SkippedGroup {
   entries: number;
 }
 
+/**
+ * What an import came from.
+ *
+ * `sourceName` cannot answer this on its own: a folder and a lone file both
+ * produce a bare name, and they are not interchangeable to the caller. Bringing
+ * in a whole folder means bringing in a *project*, whereas a single file is an
+ * addition to whatever is already open — so the two cannot be told apart by
+ * guessing at the name.
+ */
+export type ImportSourceKind = 'zip' | 'folder' | 'files' | 'file';
+
 export interface ImportPlan {
   detection: DetectionResult;
   /** Files ready to load into the editor. */
@@ -139,6 +150,7 @@ export interface ImportPlan {
   /** Original archive or file-set size. */
   sourceBytes: number;
   sourceName: string;
+  source: ImportSourceKind;
 }
 
 export class ImportTooLargeError extends Error {
@@ -279,6 +291,7 @@ const planFromZip = async (archive: File): Promise<ImportPlan> => {
     totalBytes,
     sourceBytes: archive.size,
     sourceName: archive.name,
+    source: 'zip',
   };
 };
 
@@ -294,6 +307,7 @@ const planFromZip = async (archive: File): Promise<ImportPlan> => {
 const planFromFiles = async (
   input: DroppedFile[],
   sourceName: string,
+  source: ImportSourceKind,
 ): Promise<ImportPlan> => {
   const sourceBytes = input.reduce((total, item) => total + item.file.size, 0);
   if (sourceBytes > MAX_ARCHIVE_BYTES) throw new ImportTooLargeError(sourceBytes);
@@ -356,6 +370,7 @@ const planFromFiles = async (
     totalBytes,
     sourceBytes,
     sourceName,
+    source,
   };
 };
 
@@ -438,11 +453,20 @@ export const buildImportPlan = async (input: DropInput): Promise<ImportPlan> => 
   // A lone archive is the common case and takes the zip path.
   if (all.length === 1 && isZipFile(all[0].file)) return planFromZip(all[0].file);
 
+  /*
+   * A path containing a separator means the browser gave us structure, which only
+   * happens for a folder — a multi-file selection reports bare filenames.
+   */
   const rootFolder = all[0].path.includes('/') ? all[0].path.split('/')[0] : null;
   const sourceName =
     rootFolder ?? (all.length === 1 ? all[0].file.name : `${all.length} files`);
+  const source: ImportSourceKind = rootFolder
+    ? 'folder'
+    : all.length === 1
+      ? 'file'
+      : 'files';
 
-  return planFromFiles(all, sourceName);
+  return planFromFiles(all, sourceName, source);
 };
 
 /* ────────────────────────────────────────────────────────────────────────── */

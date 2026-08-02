@@ -5,6 +5,7 @@ import {
   FilePlus,
   FolderPlus,
   Info,
+  LayoutGrid,
   LogOut,
   MessageSquare,
   Mic,
@@ -85,6 +86,13 @@ interface VSCodeModeProps {
   onOpenAIChat?: () => void;
   /** Opens the app's existing Voice Commands overlay. */
   onOpenVoiceCommands?: () => void;
+  /**
+   * Returns to the project dashboard.
+   *
+   * Needed here specifically because this mode replaces the app's normal chrome,
+   * so the NavigationBar logo — the way back everywhere else — is not on screen.
+   */
+  onOpenProjects?: () => void;
 }
 
 const subscribeSandbox = (onChange: () => void) => sandboxSession.subscribe(onChange);
@@ -155,6 +163,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   onOpenDependencies,
   onOpenAIChat,
   onOpenVoiceCommands,
+  onOpenProjects,
 }) => {
   const sandbox = useSyncExternalStore(subscribeSandbox, getSandboxSnapshot, getSandboxSnapshot);
 
@@ -397,9 +406,26 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         className="flex h-9 shrink-0 items-center gap-1 border-b border-vsc-border bg-vsc-panel px-2"
         data-testid="vscode-topbar"
       >
-        <span className="mr-1 select-none text-[11px] font-semibold tracking-wide text-vsc-textMuted">
-          GB Coder
-        </span>
+        {/* Same role the app's logo plays elsewhere: the way back to the
+            dashboard. A plain label when there is nowhere to go back to. */}
+        {onOpenProjects ? (
+          <Tooltip label="All Projects" side="bottom">
+            <button
+              type="button"
+              onClick={onOpenProjects}
+              data-testid="vscode-all-projects"
+              aria-label="All Projects"
+              className="mr-1 flex items-center gap-1.5 rounded px-1 py-0.5 text-[11px] font-semibold tracking-wide text-vsc-textMuted transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              GB Coder
+            </button>
+          </Tooltip>
+        ) : (
+          <span className="mr-1 select-none text-[11px] font-semibold tracking-wide text-vsc-textMuted">
+            GB Coder
+          </span>
+        )}
 
         <div className="flex items-center gap-0.5">
           {topBarActions.map((action) => (

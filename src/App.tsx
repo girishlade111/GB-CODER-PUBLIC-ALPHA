@@ -41,6 +41,35 @@ import {
   saveWorkspace,
 } from './services/vscodeWorkspaceStore';
 /*
+ * The project layer. Eager for the same reason as the route helpers: the first
+ * render has to know whether a project is active, because that decides between
+ * the dashboard and an editor. None of it names anything from the full-stack
+ * feature, so the initial payload is unaffected.
+ */
+import {
+  EditorStyle,
+  FileSnapshot,
+  ProjectRecord,
+  createProject as createProjectRecord,
+  deleteProject as deleteProjectRecord,
+  getProject,
+  listProjects,
+  readActiveProjectId,
+  readProjectFiles,
+  saveProjectFiles,
+  snapshotOf,
+  suggestProjectName,
+  touchProject,
+  updateProject,
+  writeActiveProjectId,
+} from './services/projects/projectDatabase';
+/*
+ * Not lazy, deliberately. The dashboard is the first screen on a cold start, so
+ * deferring it would trade a smaller bundle for a spinner on the one view
+ * everybody sees first.
+ */
+import ProjectDashboard from './components/projects/ProjectDashboard';
+/*
  * Type-only imports from the lazy import chunk. `import type` is erased during
  * compilation, so naming these types does not create a runtime dependency and
  * the chunk stays out of the initial bundle.
@@ -73,6 +102,7 @@ const ExportShareModal = lazyWithRecovery(() => import('./components/ExportShare
 const ImportModal = lazyWithRecovery(() => import('./components/ImportModal'));
 const PreviewSharePage = lazyWithRecovery(() => import('./components/PreviewSharePage'));
 const ImportReviewModal = lazyWithRecovery(() => import('./components/ImportReviewModal'));
+const NewProjectModal = lazyWithRecovery(() => import('./components/projects/NewProjectModal'));
 
 /*
  * The full-stack feature (VS Code mode, sandbox panel, sandbox client, E2B
@@ -146,6 +176,7 @@ import {
   PLAIN_HTML_PATH,
   PLAIN_JS_PATH,
   PROJECT_TYPE_LABEL,
+  ProjectFile,
   ProjectType,
   createPlainProject,
   createProjectOfType,
@@ -330,6 +361,15 @@ const EMPTY_VSCODE_PROJECT: MultiFileProject = { projectType: 'plain', files: []
 /** How long to let edits settle before writing the workspace to storage. */
 const WORKSPACE_SAVE_DEBOUNCE_MS = 600;
 
+/**
+ * How long to let edits settle before writing them to the active project.
+ *
+ * Longer than the workspace debounce because this write is larger, and a project
+ * save is never the thing standing between the user and their next action —
+ * navigating away flushes immediately rather than waiting for this.
+ */
+const PROJECT_SAVE_DEBOUNCE_MS = 1200;
+
 function App() {
   // Progressive loading phases
   const { isPhase3Ready } = useProgressiveLoad();
@@ -506,6 +546,38 @@ function App() {
    */
   const [isRestoringWorkspace, setIsRestoringWorkspace] = useState<boolean>(() =>
     isVSCodeModePath(),
+  );
+
+  /* ===== PROJECT LAYER =====
+   *
+   * A project is the unit of work: the editors are only ever shown with one open.
+   * `activeProjectId` being null is what puts the dashboard on screen, so it is
+   * read from localStorage in the initialiser — synchronously, because deciding
+   * this in an effect would render an editor for a frame before replacing it with
+   * the dashboard.
+   *
+   * Only the *pointer* lives in localStorage. Records and files are in IndexedDB,
+   * which has no practical size ceiling; see services/projects/projectDatabase.
+   */
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(() =>
+    readActiveProjectId(),
+  );
+  const [activeProject, setActiveProject] = useState<ProjectRecord | null>(null);
+  /** True while the pointed-at project's files are being read back. */
+  const [isOpeningProject, setIsOpeningProject] = useState<boolean>(
+    () => readActiveProjectId() !== null,
+  );
+  const [projects, setProjects] = useState<ProjectRecord[]>([]);
+  const [isProjectListLoading, setIsProjectListLoading] = useState<boolean>(true);
+  const [showNewProject, setShowNewProject] = useState<boolean>(false);
+  /**
+   * What was last written for the active project, so a save can send only the
+   * files that actually changed rather than rewriting the whole tree.
+   */
+  const savedFilesRef = React.useRef<FileSnapshot | null>(null);
+  /** The most recent unsaved state, held so navigation can flush it on demand. */
+  const pendingProjectSaveRef = React.useRef<{ projectId: string; files: ProjectFile[] } | null>(
+    null,
   );
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -783,6 +855,14 @@ function App() {
 
   // Load project code when project changes
   useEffect(() => {
+    /*
+     * Suppressed while a project from the project layer is open. This syncs from
+     * the older localStorage record, which only ever holds an html/css/js triple —
+     * letting it run would overwrite a multi-file project with a flattened copy of
+     * something else.
+     */
+    if (activeProjectId) return;
+
     if (project.currentProject && !project.isLoading) {
       const proj = project.currentProject;
       if (proj.html !== html || proj.css !== css || proj.javascript !== javascript) {
@@ -884,6 +964,72 @@ function App() {
     [codeHistory, html, css, javascript, fileProject],
   );
 
+  /**
+   * Writes any pending edits now instead of waiting for the debounce.
+   *
+   * Every path that leaves a project awaits this. The debounce exists to avoid
+   * writing on each keystroke, not to make navigation lossy, and "I clicked away
+   * and my last paragraph vanished" is the one failure this layer must not have.
+   *
+   * Declared up here, ahead of the import handlers, because they need it too.
+   */
+  const flushProjectSave = useCallback(async () => {
+    const pendingSave = pendingProjectSaveRef.current;
+    if (!pendingSave) return;
+
+    pendingProjectSaveRef.current = null;
+    savedFilesRef.current = await saveProjectFiles(
+      pendingSave.projectId,
+      pendingSave.files,
+      savedFilesRef.current,
+    );
+  }, []);
+
+  /**
+   * Puts a project's files in front of the user.
+   *
+   * `fileProject` is set even for a VS Code style project. Leaving that mode hands
+   * its files back through the standard import path, which *merges* — so if the
+   * two started out different, exiting would fold starter content into the
+   * project. Seeding both makes that merge a no-op.
+   */
+  const applyProjectToEditor = useCallback(
+    (record: ProjectRecord, files: ProjectFile[], options: { navigate: boolean }) => {
+      const project: MultiFileProject = {
+        projectType: record.projectType,
+        files,
+        entry: record.entry,
+      };
+
+      savedFilesRef.current = snapshotOf(files);
+      pendingProjectSaveRef.current = null;
+
+      /*
+       * On a cold start the URL already says which editor was on screen and the
+       * browser preserved that across the refresh, so it wins. When the user is
+       * actively opening a project, the record's stored style is what to honour.
+       */
+      const openInVSCode = options.navigate ? record.editorStyle === 'vscode' : isVSCodeModePath();
+
+      setFileProject(project);
+
+      if (openInVSCode) {
+        setFullStackProject(project);
+        setVsCodeReturn({ projectType: record.projectType, entry: record.entry });
+        setIsVSCodeRoute(true);
+        // The project is the source of truth now, so nothing needs restoring.
+        setIsRestoringWorkspace(false);
+        if (options.navigate) navigateTo(VSCODE_ROUTE);
+      } else {
+        setFullStackProject(null);
+        setVsCodeReturn(null);
+        setIsVSCodeRoute(false);
+        if (options.navigate) navigateTo(EDITOR_ROUTE);
+      }
+    },
+    [],
+  );
+
   /*
    * ===== DRAG & DROP IMPORT =====
    *
@@ -891,6 +1037,84 @@ function App() {
    * applied, so a wrong detection never silently replaces the user's work.
    */
   const [importPlan, setImportPlan] = useState<ImportPlanType | null>(null);
+
+  /**
+   * Whether an import should become a project of its own.
+   *
+   * A folder or an archive is a whole project, so bringing one in starts one —
+   * that is what "open my project" means. Loose files are an addition to whatever
+   * is already open.
+   */
+  const importShouldCreateProject = useCallback(
+    (plan: ImportPlanType): boolean => {
+      if (plan.source === 'folder' || plan.source === 'zip') return true;
+
+      /*
+       * ...except with nothing open, which is a drop straight onto the dashboard.
+       * There is no project to add to, and the alternative is quietly discarding
+       * what was just dropped.
+       */
+      return activeProjectId === null;
+    },
+    [activeProjectId],
+  );
+
+  /**
+   * Names a project after whatever was imported.
+   *
+   * An archive's own extension is not part of its name; everything else already
+   * arrives as a bare folder or file name.
+   */
+  const projectNameFromImport = (plan: ImportPlanType): string => {
+    const raw = plan.source === 'zip' ? plan.sourceName.replace(/\.zip$/i, '') : plan.sourceName;
+    const trimmed = raw.trim();
+    return trimmed.length > 0 ? trimmed : 'Imported Project';
+  };
+
+  /**
+   * Turns a confirmed import into a new project and opens it.
+   *
+   * The editor style comes from the detection the user just confirmed rather than
+   * from a separate question: a project with a server side needs the mode that can
+   * run one, and asking again about something already decided is noise.
+   */
+  const createProjectFromImport = useCallback(
+    async (plan: ImportPlanType, kind: DetectedKind) => {
+      await flushProjectSave();
+
+      const projectType: ProjectType =
+        kind === 'react' ? 'react' : kind === 'vue' ? 'vue' : 'plain';
+      const editorStyle: EditorStyle = kind === 'fullstack' ? 'vscode' : 'plain';
+      /*
+       * Mirrors what the existing import path does with the entry point: a forced
+       * plain import has no module entry to open, while a framework or full-stack
+       * project does.
+       */
+      const entry = kind === 'fullstack' || projectType !== 'plain' ? plan.result.entry : undefined;
+
+      const record = await createProjectRecord({
+        name: projectNameFromImport(plan),
+        editorStyle,
+        projectType,
+        entry,
+        files: plan.result.files,
+      });
+
+      if (!record) {
+        toast.error('Could not save that import as a project. This browser may be blocking storage.');
+        return;
+      }
+
+      setProjects((current) => [record, ...current]);
+      writeActiveProjectId(record.id);
+      setActiveProjectId(record.id);
+      setActiveProject(record);
+      applyProjectToEditor(record, plan.result.files, { navigate: true });
+      setIsOpeningProject(false);
+      toast.success(`Imported "${record.name}" as a new project.`);
+    },
+    [applyProjectToEditor, flushProjectSave],
+  );
 
   const handleImportPlan = useCallback(
     (plan: ImportPlanType) => {
@@ -909,6 +1133,13 @@ function App() {
        * catch a *mode change* the user did not ask for, and there is none here.
        */
       const isSingleCoreFile =
+        /*
+         * An import that becomes its own project never takes this shortcut, even
+         * when it happens to hold one file: a folder containing only `index.html`
+         * is still a folder the user asked to open, and it goes to review so the
+         * project it creates is the one they confirmed.
+         */
+        !importShouldCreateProject(plan) &&
         plan.result.files.length === 1 &&
         plan.detection.kind === 'simple' &&
         fileProject.projectType === 'plain' &&
@@ -924,7 +1155,7 @@ function App() {
 
       setImportPlan(plan);
     },
-    [fileProject.projectType, handleImportResult],
+    [fileProject.projectType, handleImportResult, importShouldCreateProject],
   );
 
   const {
@@ -942,6 +1173,19 @@ function App() {
   const handleConfirmImport = useCallback(
     (kind: DetectedKind) => {
       if (!importPlan) return;
+
+      /*
+       * A folder or archive becomes its own project, named after itself, and is
+       * opened in whichever editor its detected kind calls for. Handled before the
+       * branches below because those load files into the *current* session, which
+       * is not what importing a project means.
+       */
+      if (importShouldCreateProject(importPlan)) {
+        const plan = importPlan;
+        setImportPlan(null);
+        void createProjectFromImport(plan, kind);
+        return;
+      }
 
       /*
        * Full-stack: enter VS Code mode instead of loading the project into the
@@ -985,7 +1229,13 @@ function App() {
 
       setImportPlan(null);
     },
-    [importPlan, handleImportResult, workspace],
+    [
+      importPlan,
+      handleImportResult,
+      workspace,
+      importShouldCreateProject,
+      createProjectFromImport,
+    ],
   );
 
   /** Applies an edit made in VS Code mode. */
@@ -1020,8 +1270,11 @@ function App() {
       /*
        * The stored copy is precisely what a refresh would reopen, so leaving has
        * to drop it. Queued behind any in-flight save by the store itself.
+       *
+       * Skipped when a project is open: that copy was never written in the first
+       * place, and the project's own files must survive leaving the mode.
        */
-      void clearWorkspace();
+      if (!activeProjectId) void clearWorkspace();
       if (updateUrl) navigateTo(EDITOR_ROUTE);
 
       /*
@@ -1040,7 +1293,7 @@ function App() {
       });
       toast.success('Left VS Code mode. Your files were kept.');
     },
-    [fullStackProject, vsCodeReturn, handleImportResult],
+    [fullStackProject, vsCodeReturn, handleImportResult, activeProjectId],
   );
 
   const handleExitFullStack = useCallback(
@@ -1147,6 +1400,16 @@ function App() {
   useEffect(() => {
     if (!isRestoringWorkspace) return;
 
+    /*
+     * A project owns its own files, so the standalone workspace copy must not be
+     * read back over them. That copy still matters for `/ide` reached without a
+     * project, which is why it is skipped here rather than removed.
+     */
+    if (activeProjectId) {
+      setIsRestoringWorkspace(false);
+      return;
+    }
+
     let cancelled = false;
     const finish = () => {
       if (!cancelled) setIsRestoringWorkspace(false);
@@ -1171,7 +1434,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [isRestoringWorkspace]);
+  }, [isRestoringWorkspace, activeProjectId]);
 
   /*
    * Records the workspace as it changes, debounced so typing does not write on
@@ -1184,13 +1447,16 @@ function App() {
   useEffect(() => {
     if (!isVSCodeRoute || isRestoringWorkspace) return;
     if (!fullStackProject || fullStackProject.files.length === 0) return;
+    // With a project open, the project autosave is the one writer. Two writers for
+    // the same files would each restore a different version on the next visit.
+    if (activeProjectId) return;
 
     const timer = window.setTimeout(() => {
       void saveWorkspace(fullStackProject, vsCodeReturn);
     }, WORKSPACE_SAVE_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [isVSCodeRoute, isRestoringWorkspace, fullStackProject, vsCodeReturn]);
+  }, [isVSCodeRoute, isRestoringWorkspace, fullStackProject, vsCodeReturn, activeProjectId]);
 
   /*
    * Back and Forward across the mode boundary.
@@ -1216,6 +1482,224 @@ function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [isVSCodeRoute, fullStackProject, leaveVSCodeMode]);
+
+  /** Opens a project from the dashboard. */
+  const handleOpenProject = useCallback(
+    async (record: ProjectRecord) => {
+      // The project being left may have unsaved edits.
+      await flushProjectSave();
+
+      const [files, touched] = await Promise.all([
+        readProjectFiles(record.id),
+        touchProject(record.id),
+      ]);
+      const opened = touched ?? record;
+
+      /*
+       * A project with no files means its records were lost while its metadata
+       * survived. Reopening into a blank editor would look like data corruption
+       * with no explanation, so say so and start it from the standard scaffold.
+       */
+      const restored =
+        files.length > 0 ? files : createPlainProject(defaultHTML, defaultCSS, defaultJS).files;
+      if (files.length === 0) {
+        toast.error(`"${opened.name}" had no files stored. Starting it fresh.`);
+      }
+
+      writeActiveProjectId(opened.id);
+      setActiveProjectId(opened.id);
+      setActiveProject(opened);
+      setProjects((current) => [opened, ...current.filter((item) => item.id !== opened.id)]);
+      applyProjectToEditor(opened, restored, { navigate: true });
+      setIsOpeningProject(false);
+    },
+    [applyProjectToEditor, flushProjectSave],
+  );
+
+  /** Creates a project from the New Project modal and opens it. */
+  const handleCreateProject = useCallback(
+    async ({ name, editorStyle }: { name: string; editorStyle: EditorStyle }) => {
+      await flushProjectSave();
+
+      // A brand-new project starts from the same scaffold the editor used to open
+      // with by default — that content is a starting point, not a landing page.
+      const starter = createPlainProject(defaultHTML, defaultCSS, defaultJS);
+      const record = await createProjectRecord({
+        name,
+        editorStyle,
+        projectType: 'plain',
+        files: starter.files,
+      });
+
+      if (!record) {
+        toast.error('Could not create the project. This browser may be blocking local storage.');
+        return;
+      }
+
+      setShowNewProject(false);
+      setProjects((current) => [record, ...current]);
+      writeActiveProjectId(record.id);
+      setActiveProjectId(record.id);
+      setActiveProject(record);
+      applyProjectToEditor(record, starter.files, { navigate: true });
+      setIsOpeningProject(false);
+      toast.success(`Created "${record.name}".`);
+    },
+    [applyProjectToEditor, flushProjectSave],
+  );
+
+  const handleDeleteProject = useCallback(
+    async (record: ProjectRecord) => {
+      // Drop any queued write first, or a save for the project being deleted
+      // could be flushed afterwards and recreate its files.
+      if (pendingProjectSaveRef.current?.projectId === record.id) {
+        pendingProjectSaveRef.current = null;
+      }
+
+      await deleteProjectRecord(record.id);
+      setProjects((current) => current.filter((item) => item.id !== record.id));
+
+      if (activeProjectId === record.id) {
+        savedFilesRef.current = null;
+        writeActiveProjectId(null);
+        setActiveProjectId(null);
+        setActiveProject(null);
+      }
+
+      toast.success(`Deleted "${record.name}".`);
+    },
+    [activeProjectId],
+  );
+
+  /** Leaves the active project and returns to the dashboard. */
+  const handleReturnToDashboard = useCallback(async () => {
+    await flushProjectSave();
+
+    savedFilesRef.current = null;
+    writeActiveProjectId(null);
+    setActiveProjectId(null);
+    setActiveProject(null);
+    setFullStackProject(null);
+    setVsCodeReturn(null);
+    setIsVSCodeRoute(false);
+    setIsRestoringWorkspace(false);
+    navigateTo(EDITOR_ROUTE);
+
+    // Re-read so the list reflects the lastOpenedAt just written.
+    setProjects(await listProjects());
+  }, [flushProjectSave]);
+
+  /* The dashboard's list, loaded once. */
+  useEffect(() => {
+    void listProjects().then((list) => {
+      setProjects(list);
+      setIsProjectListLoading(false);
+    });
+  }, []);
+
+  /*
+   * Reopens whatever was active when the tab was last closed.
+   *
+   * Runs once: `isOpeningProject` starts true only when the pointer exists, so an
+   * empty pointer goes straight to the dashboard with no async work at all.
+   */
+  useEffect(() => {
+    if (!isOpeningProject) return;
+
+    let cancelled = false;
+
+    void (async () => {
+      const id = readActiveProjectId();
+      const record = id ? await getProject(id) : null;
+      if (cancelled) return;
+
+      if (!record) {
+        /*
+         * The pointer names a project that is gone — deleted in another tab, or
+         * the database was cleared while this key survived. The dashboard is the
+         * honest destination; an editor would have nothing to edit.
+         */
+        writeActiveProjectId(null);
+        setActiveProjectId(null);
+        setIsOpeningProject(false);
+        return;
+      }
+
+      const [files, touched] = await Promise.all([
+        readProjectFiles(record.id),
+        touchProject(record.id),
+      ]);
+      if (cancelled) return;
+
+      const opened = touched ?? record;
+      setActiveProject(opened);
+      setProjects((current) => [opened, ...current.filter((item) => item.id !== opened.id)]);
+      if (files.length > 0) applyProjectToEditor(opened, files, { navigate: false });
+      setIsOpeningProject(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /*
+   * Autosave. Records the pending state on every change and writes it once edits
+   * settle.
+   *
+   * The files come from `fullStackProject` when VS Code mode owns them and from
+   * `fileProject` otherwise, so both editors persist through one path rather than
+   * each needing its own.
+   */
+  const projectFilesToPersist = fullStackProject?.files ?? fileProject.files;
+
+  useEffect(() => {
+    if (!activeProjectId || isOpeningProject) return;
+
+    pendingProjectSaveRef.current = { projectId: activeProjectId, files: projectFilesToPersist };
+    const timer = window.setTimeout(() => {
+      void flushProjectSave();
+    }, PROJECT_SAVE_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [activeProjectId, isOpeningProject, projectFilesToPersist, flushProjectSave]);
+
+  /*
+   * Flush when the tab stops being visible.
+   *
+   * `visibilitychange` rather than `beforeunload`: it fires on tab switches and on
+   * mobile backgrounding, where `beforeunload` is unreliable, and it is the last
+   * moment an async write is still allowed to start.
+   */
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') void flushProjectSave();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [flushProjectSave]);
+
+  /*
+   * Keeps the stored editor style honest.
+   *
+   * "Opens in its stored editor style" is only true if switching modes inside a
+   * project updates the record. Done here rather than in the enter/exit handlers
+   * so that feature's logic is left alone.
+   */
+  useEffect(() => {
+    if (!activeProjectId || isOpeningProject || !activeProject) return;
+
+    const style: EditorStyle = isVSCodeRoute ? 'vscode' : 'plain';
+    if (activeProject.editorStyle === style) return;
+
+    void updateProject(activeProjectId, { editorStyle: style }).then((updated) => {
+      if (!updated) return;
+      setActiveProject(updated);
+      setProjects((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+    });
+  }, [activeProjectId, isOpeningProject, isVSCodeRoute, activeProject]);
 
   /** Ctrl/Cmd+Shift+S — capture and save a PNG without opening the modal. */
   const handleQuickScreenshot = useCallback(async () => {
@@ -2565,6 +3049,7 @@ function App() {
                 onOpenDependencies={() => setShowDependencies(true)}
                 onOpenAIChat={() => setShowAIChat(true)}
                 onOpenVoiceCommands={() => setShowVoiceCommands(true)}
+                onOpenProjects={() => void handleReturnToDashboard()}
                 fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
                 fontSize={settings.editorFontSize}
               />
@@ -2624,6 +3109,86 @@ function App() {
     );
   }
 
+  /*
+   * The dashboard, shown whenever no project is active.
+   *
+   * Placed after the VS Code branch deliberately: `/ide` addresses that mode
+   * directly and has its own empty state, so arriving there must not be redirected
+   * into the dashboard.
+   *
+   * Drag-and-drop stays live here — the window-level import handlers are attached
+   * by `useImportDrop`, not by the editor's markup — so a folder can be dropped
+   * straight onto the dashboard to start a project.
+   */
+  if (!activeProjectId) {
+    return (
+      <>
+        <DropZoneOverlay isDragging={isImportDragging} isPreparing={isImportPreparing} />
+
+        <ProjectDashboard
+          projects={projects}
+          isLoading={isProjectListLoading}
+          onCreate={() => setShowNewProject(true)}
+          onOpen={(record) => void handleOpenProject(record)}
+          onDelete={(record) => void handleDeleteProject(record)}
+          onImport={() => setShowImport(true)}
+        />
+
+        {showNewProject && (
+          <Suspense fallback={<LazyFallback label="new project" variant="overlay" />}>
+            <NewProjectModal
+              suggestedName={suggestProjectName(projects)}
+              onCancel={() => setShowNewProject(false)}
+              onCreate={(input) => void handleCreateProject(input)}
+            />
+          </Suspense>
+        )}
+
+        {showImport && (
+          <Suspense fallback={<LazyFallback label="Import" variant="overlay" />}>
+            <ImportModal
+              isOpen={showImport}
+              onClose={() => setShowImport(false)}
+              onFiles={importFiles}
+              isDragging={isImportDragging}
+            />
+          </Suspense>
+        )}
+
+        {/* Import review, reachable from a drop onto the dashboard. */}
+        {importPlan && (
+          <Suspense fallback={<LazyFallback label="import review" variant="overlay" />}>
+            <ImportReviewModal
+              plan={importPlan}
+              onCancel={() => setImportPlan(null)}
+              onConfirm={handleConfirmImport}
+            />
+          </Suspense>
+        )}
+
+        <Toaster position="bottom-right" />
+      </>
+    );
+  }
+
+  /*
+   * A project is active but its files are still being read.
+   *
+   * Rendering the editor now would show the previous project's content, or the
+   * starter scaffold, for a frame before swapping — which reads as the wrong
+   * project having opened.
+   */
+  if (isOpeningProject) {
+    return (
+      <div
+        className={`grid min-h-screen place-items-center ${isDark ? 'bg-matte-black' : 'bg-bright-white'}`}
+        data-testid="project-opening"
+      >
+        <LazyFallback label={activeProject ? activeProject.name : 'your project'} variant="panel" />
+      </div>
+    );
+  }
+
   return (
     <div
       /* `compact:pb-14` reserves the strip the fixed Code/Preview bar occupies
@@ -2658,6 +3223,7 @@ function App() {
         onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
         onClear={handleClearAll}
         onNewProject={handleNewProject}
+        onNavigateHome={() => void handleReturnToDashboard()}
         currentProjectType={fileProject.projectType}
         autoSaveEnabled={autoSaveEnabled}
         onToggleVoice={handleToggleVoice}
@@ -2705,6 +3271,7 @@ function App() {
         )}
 
         <AppSidebar
+          onOpenProjects={() => void handleReturnToDashboard()}
           onToggleFiles={() => setShowFileExplorer((open) => !open)}
           isFilesOpen={showFileExplorer}
           onToggleDependencies={() => setShowDependencies((open) => !open)}
