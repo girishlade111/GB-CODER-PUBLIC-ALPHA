@@ -100,7 +100,7 @@ const templateRegistry: Record<string, TemplatePayload | (() => Promise<Template
 };
 
 // Template metadata
-let templateMetadata: Record<string, CodeTemplate> = {
+const templateMetadata: Record<string, CodeTemplate> = {
   'business-agency': {
     id: 'business-agency',
     name: 'Digital Agency',
@@ -378,7 +378,7 @@ class EnhancedTemplateService {
     // Persist metadata and payload to localStorage
     try {
       const stored = localStorage.getItem('gbcoder_custom_templates') || '[]';
-      const customTemplates = JSON.parse(stored) as any[];
+      const customTemplates = JSON.parse(stored) as (CodeTemplate & { payload: TemplatePayload })[];
       // We store both metadata and payload in localStorage for custom templates
       const existingIdx = customTemplates.findIndex(t => t.id === template.id);
       const dataToStore = { ...template, payload };
@@ -398,10 +398,10 @@ class EnhancedTemplateService {
     try {
       const stored = localStorage.getItem('gbcoder_custom_templates');
       if (stored) {
-        const customTemplates = JSON.parse(stored) as any[];
+        const customTemplates = JSON.parse(stored) as (CodeTemplate & { payload: TemplatePayload })[];
         // Return just metadata
         return customTemplates.map(t => {
-          const { payload, ...meta } = t;
+          const { payload: _, ...meta } = t;
           return meta as CodeTemplate;
         });
       }
@@ -417,7 +417,7 @@ class EnhancedTemplateService {
     try {
       const stored = localStorage.getItem('gbcoder_custom_templates');
       if (stored) {
-        const customTemplates = JSON.parse(stored) as any[];
+        const customTemplates = JSON.parse(stored) as (CodeTemplate & { payload: TemplatePayload })[];
         const filtered = customTemplates.filter(t => t.id !== id);
         localStorage.setItem('gbcoder_custom_templates', JSON.stringify(filtered));
       }
@@ -467,7 +467,7 @@ class EnhancedTemplateService {
       if (!templateRegistry[id]) {
         const stored = localStorage.getItem('gbcoder_custom_templates');
         if (stored) {
-          const customTemplates = JSON.parse(stored) as any[];
+          const customTemplates = JSON.parse(stored) as (CodeTemplate & { payload: TemplatePayload })[];
           const found = customTemplates.find(t => t.id === id);
           if (found && found.payload) {
             return found.payload;
