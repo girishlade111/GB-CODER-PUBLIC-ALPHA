@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package, RotateCcw, Laptop, ChevronDown, ZoomIn, Smartphone as MobileIcon } from 'lucide-react';
+import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package, RotateCcw, Laptop, ChevronDown, ZoomIn, Smartphone as MobileIcon, Sparkles, ShieldAlert } from 'lucide-react';
 import { JSEditorMode } from '../types';
 import { MOUNT_ELEMENT_ID, ProjectType } from '../types/files';
 import { externalLibraryService } from '../services/externalLibraryService';
@@ -140,6 +140,30 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   const [compilationError, setCompilationError] = useState<string | null>(null);
   // Holds the generated preview content to avoid recalculating on every render
   const [previewContent, setPreviewContent] = useState<string>('');
+  
+  // Heartbeat & Safe Mode state
+  const [isFrozen, setIsFrozen] = useState(false);
+  const [safeMode, setSafeMode] = useState(false);
+  const heartbeatTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const resetHeartbeat = useCallback(() => {
+    if (heartbeatTimeoutRef.current) clearTimeout(heartbeatTimeoutRef.current);
+    setIsFrozen(false);
+    heartbeatTimeoutRef.current = setTimeout(() => {
+      // If we don't receive a heartbeat for 5 seconds and it's not currently loading/empty, it's frozen
+      if (!isLoading && !isProjectEmpty && iframeRef.current?.contentWindow) {
+        setIsFrozen(true);
+        if (iframeRef.current) iframeRef.current.srcdoc = ''; // Pause iframe immediately
+      }
+    }, 5000);
+  }, [isLoading, isProjectEmpty]);
+
+  useEffect(() => {
+    // Clear heartbeat on unmount
+    return () => {
+      if (heartbeatTimeoutRef.current) clearTimeout(heartbeatTimeoutRef.current);
+    };
+  }, []);
 
   // Expose the container div to parent components via ref
   useImperativeHandle(ref, () => {
@@ -283,6 +307,12 @@ ${safeJavascript}
          </script>`
       : '';
 
+    const heartbeatScript = safeMode ? '' : `<script>
+      setInterval(() => {
+        window.parent.postMessage({ channel: 'gb-coder-preview-bridge', kind: 'heartbeat' }, '*');
+      }, 2000);
+    </script>`;
+
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -292,6 +322,7 @@ ${safeJavascript}
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:; object-src 'none';">
     <title>Preview</title>
     ${mockUAScript}
+    ${heartbeatScript}
     ${externalLibsHTML}
     ${jsxRuntimeScripts}
 ${importMapHTML}
@@ -367,14 +398,15 @@ ${importMapHTML}
         };
         
         // Start execution when DOM is ready
+        ${safeMode ? 'console.warn("Running in Safe Mode: JavaScript execution is disabled.");' : `
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', executeUserCode);
         } else {
             executeUserCode();
-        }
+        }`}
     </script>
-    ${userCodeScript}
-    ${moduleScript}
+    ${safeMode ? '' : userCodeScript}
+    ${safeMode ? '' : moduleScript}
     ${afterBodyInjections}
 </body>
 </html>`;
@@ -393,7 +425,12 @@ ${importMapHTML}
       currentRunIdRef.current = runId;
       const content = generatePreviewContent(runId);
       setPreviewContent(content);
-      iframeRef.current.srcdoc = content;
+      
+      // Throttle iframe refreshes to max 1 per 300ms visually
+      if (iframeRef.current) {
+         iframeRef.current.srcdoc = content;
+         resetHeartbeat();
+      }
       setTimeout(() => setIsLoading(false), 300);
     }
   }, [generatePreviewContent]);
@@ -404,17 +441,41 @@ ${importMapHTML}
     refreshPreviewRef.current = refreshPreview;
   }, [refreshPreview]);
 
-  // Refresh preview with debounce - HTML/CSS always update, JS only if autoRunJS is true
+  // Refresh preview with throttle (max 1 per previewDelay ms) - HTML/CSS always update, JS only if autoRunJS is true
   const jsForPreview = autoRunJS ? javascript : '';
   const isInitialMount = useRef(true);
+  const lastRunTime = useRef<number>(0);
+  const pendingTimeout = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    // On initial mount, fire immediately to avoid blank iframe flash
-    const delay = isInitialMount.current ? 0 : previewDelay;
-    isInitialMount.current = false;
-    const timeoutId = setTimeout(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
       refreshPreviewRef.current();
-    }, delay);
-    return () => clearTimeout(timeoutId);
+      lastRunTime.current = Date.now();
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceLastRun = now - lastRunTime.current;
+
+    if (pendingTimeout.current) {
+      clearTimeout(pendingTimeout.current);
+      pendingTimeout.current = null;
+    }
+
+    if (timeSinceLastRun >= previewDelay) {
+      refreshPreviewRef.current();
+      lastRunTime.current = now;
+    } else {
+      pendingTimeout.current = setTimeout(() => {
+        refreshPreviewRef.current();
+        lastRunTime.current = Date.now();
+      }, previewDelay - timeSinceLastRun);
+    }
+
+    return () => {
+      if (pendingTimeout.current) clearTimeout(pendingTimeout.current);
+    };
   }, [html, css, jsForPreview, jsEditorMode, previewDelay, manualRunTrigger, transpiledJs, bundledCode, bundledCss, projectType, importMap, isMobileUA]);
 
   // Refresh preview when external libraries change
@@ -457,6 +518,11 @@ ${importMapHTML}
       // from unrelated frames and from other panels' preview documents.
       const message = parseBridgeMessage(event, iframeRef.current?.contentWindow ?? null);
       if (!message) return;
+
+      if (message.kind === 'heartbeat') {
+        resetHeartbeat();
+        return;
+      }
 
       if (message.kind === 'lifecycle') {
         if (message.runId !== currentRunIdRef.current) return;
@@ -704,7 +770,54 @@ ${importMapHTML}
           </div>
         )}
 
-        {isLoading && !isResolvingPackages && (
+        {isFrozen && !safeMode && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 bg-black/80 px-6 text-center backdrop-blur-sm">
+            <ShieldAlert className="h-10 w-10 text-red-500 mb-2" />
+            <h3 className="text-lg font-bold text-white">Preview stopped responding</h3>
+            <p className="text-sm text-gray-300 max-w-sm mb-4">
+              We detected a possible infinite loop or heavy script that froze the preview. The preview has been paused to keep the editor responsive.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setIsFrozen(false);
+                  refreshPreviewRef.current();
+                }}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm font-medium"
+              >
+                Reload Preview
+              </button>
+              <button
+                onClick={() => {
+                  setSafeMode(true);
+                  setIsFrozen(false);
+                  refreshPreviewRef.current();
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium"
+              >
+                Edit in Safe Mode
+              </button>
+            </div>
+          </div>
+        )}
+
+        {safeMode && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 bg-amber-500/90 text-black px-3 py-1.5 rounded-md shadow-lg flex items-center gap-2 text-xs font-bold">
+            <ShieldAlert className="w-4 h-4" />
+            SAFE MODE: JS Disabled
+            <button 
+              onClick={() => {
+                setSafeMode(false);
+                refreshPreviewRef.current();
+              }}
+              className="ml-2 px-2 py-0.5 bg-black/20 hover:bg-black/30 rounded transition-colors"
+            >
+              Resume JS
+            </button>
+          </div>
+        )}
+
+        {isLoading && !isResolvingPackages && !isFrozen && (
           <div className="absolute inset-0 bg-surface-canvas/75 flex items-center justify-center z-10">
             <RefreshCw className="w-6 h-6 text-accent animate-spin" />
           </div>
@@ -722,9 +835,23 @@ ${importMapHTML}
             <p className="text-sm font-medium text-content-secondary">
               Start typing or use Build with AI to generate code
             </p>
-            <p className="text-xs text-content-muted">
+            <p className="text-xs text-content-muted mb-4">
               Your live preview will appear here as you type
             </p>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))}
+              className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors text-sm font-medium"
+            >
+              <Sparkles className="w-4 h-4" />
+              Build with AI
+            </button>
+          </div>
+        )}
+        
+        {/* Large HTML Warning */}
+        {html.length > 500000 && !isProjectEmpty && (
+          <div className="absolute bottom-2 right-2 z-20 bg-amber-500 text-black px-3 py-1.5 rounded-md shadow-lg flex items-center gap-2 text-xs font-bold opacity-75 hover:opacity-100 transition-opacity">
+            Large HTML detected — preview may be slower
           </div>
         )}
         <div

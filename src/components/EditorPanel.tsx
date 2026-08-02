@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { ChevronDown, Copy, Lock, Unlock, Wand2 } from 'lucide-react';
+import { ChevronDown, Copy, Lock, Unlock, Wand2, Code2 } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 import CopyToast from './ui/CopyToast';
 import { EditorLanguage, JSEditorMode } from '../types';
@@ -281,7 +281,13 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
             </div>
           )}
 
-          <div className="p-3">
+          <div className="p-3 relative">
+            {!hasContent && (
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-40 z-10">
+                <Code2 className="w-8 h-8 mb-2" />
+                <span className="text-sm font-medium">Type {language} here</span>
+              </div>
+            )}
             <CodeEditor
               language={language}
               value={value}

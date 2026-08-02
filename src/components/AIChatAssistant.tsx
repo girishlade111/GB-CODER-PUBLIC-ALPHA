@@ -86,8 +86,36 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
       setMessages(prev => [...prev, assistantMessage]);
       aiChatAssistant.addMessage(userMessage);
       aiChatAssistant.addMessage(assistantMessage);
-    } catch {
-      toast.error('Failed to get AI response');
+    } catch (error: any) {
+      toast((t) => (
+        <div className="flex flex-col gap-2">
+          <span className="font-semibold text-red-600 dark:text-red-400">AI request failed</span>
+          <span className="text-sm">{error.message || 'Network error or timeout occurred.'} Your code was not modified.</span>
+          <div className="flex gap-2 mt-1">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                handleSendMessage();
+              }}
+              className="px-3 py-1 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 rounded text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(error.stack || error.message || 'Unknown error');
+                toast.success('Error copied to clipboard', { id: t.id });
+              }}
+              className="px-3 py-1 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 rounded text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+            >
+              Copy Error
+            </button>
+          </div>
+        </div>
+      ), { duration: 8000 });
+      // Remove the optimistically added user message since it failed
+      setMessages(prev => prev.slice(0, -1));
+      setInputValue(userMessage.content);
     } finally {
       setIsLoading(false);
     }
@@ -241,10 +269,14 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
           </div>
         </div>
 
-        {/* Messages */}
-        <div className={`flex-1 overflow-y-auto p-4 space-y-4 ${
-          isDark ? 'bg-gray-900' : 'bg-gray-50'
-        }`}>
+        {/* Messages list */}
+        <div 
+          className={`flex-1 overflow-y-auto p-4 space-y-6 ${
+            isDark ? 'bg-gray-900' : 'bg-gray-50'
+          }`}
+          aria-live="polite"
+          aria-atomic="false"
+        >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
               <div className="p-6 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full mb-4">

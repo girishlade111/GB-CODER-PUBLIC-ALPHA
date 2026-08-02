@@ -78,33 +78,41 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
 
       <div className="min-h-0 flex-1">
         {activeFile ? (
-          <Editor
-            /* Per-file model: keyed by path so each file keeps its own state. */
-            path={activeFile.path}
-            language={monacoLanguageFor(activeFile.language)}
-            value={activeFile.content}
-            onChange={(value) => workspace.updateFileContent(activeFile.path, value ?? '')}
-            beforeMount={handleWillMount}
-            onMount={handleMount}
-            theme={GB_CODER_MONACO_THEME}
-            loading={
-              <div className="flex h-full items-center justify-center gap-2 text-sm text-content-muted">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading editor…
+          <div className="relative h-full w-full">
+            {!activeFile.content.trim() && (
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-40 z-10">
+                <FileCode2 className="w-8 h-8 mb-2" />
+                <span className="text-sm font-medium">Type {activeFile.language} here</span>
               </div>
-            }
-            options={{
-              minimap: { enabled: false },
-              fontSize,
-              fontFamily,
-              lineNumbers: 'on',
-              roundedSelection: false,
-              scrollBeyondLastLine: false,
-              automaticLayout: true,
-              tabSize: 2,
-              insertSpaces: true,
-            }}
-          />
+            )}
+            <Editor
+              /* Per-file model: keyed by path so each file keeps its own state. */
+              path={activeFile.path}
+              language={monacoLanguageFor(activeFile.language)}
+              value={activeFile.content}
+              onChange={(value) => workspace.updateFileContent(activeFile.path, value ?? '')}
+              beforeMount={handleWillMount}
+              onMount={handleMount}
+              theme={GB_CODER_MONACO_THEME}
+              loading={
+                <div className="flex h-full items-center justify-center gap-2 text-sm text-content-muted">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading editor…
+                </div>
+              }
+              options={{
+                minimap: { enabled: false },
+                fontSize,
+                fontFamily,
+                lineNumbers: 'on',
+                roundedSelection: false,
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                tabSize: 2,
+                insertSpaces: true,
+              }}
+            />
+          </div>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
             <div className="rounded-lg border border-stroke-subtle bg-surface-raised p-3">

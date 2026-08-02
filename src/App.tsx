@@ -90,6 +90,7 @@ const TemplateSelectorModal = lazyWithRecovery(() => import('./components/Templa
 const CodeStatsDashboard = lazyWithRecovery(() => import('./components/CodeStatsDashboard'));
 const CustomInjectionManager = lazyWithRecovery(() => import('./components/CustomInjectionManager'));
 const BuildFromPromptModal = lazyWithRecovery(() => import('./components/BuildFromPromptModal'));
+const WelcomeTourModal = lazyWithRecovery(() => import('./components/WelcomeTourModal'));
 
 /*
  * Everything past the core HTML/CSS/JS editor is a separate chunk, fetched the
@@ -270,81 +271,234 @@ const nextVoiceFilePath = (project: MultiFileProject): string => {
  * gave no sense that the editor was working. This renders something immediately
  * while staying small enough to read and delete in one pass.
  */
-const defaultHTML = `<div class="container">
-  <div class="card">
-    <h1 class="card-title">Hello World</h1>
-    <p class="card-text">Edit the HTML, CSS or JS to see this update live.</p>
-    <button class="card-button" type="button">Get started</button>
+const defaultHTML = `<!-- Welcome to GB Coder! -->
+<!-- This is a modern, responsive starter template. -->
+<div class="welcome-container">
+  <div class="hero-card">
+    <div class="hero-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="16 18 22 12 16 6"></polyline>
+        <polyline points="8 6 2 12 8 18"></polyline>
+      </svg>
+    </div>
+    <h1 class="hero-title">Welcome to <span class="gradient-text">GB Coder</span></h1>
+    <p class="hero-subtitle">The fastest way to prototype and build modern web applications directly in your browser.</p>
+    
+    <div class="feature-grid">
+      <div class="feature-item">
+        <span class="feature-icon">⚡</span>
+        <span>Instant Preview</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">✨</span>
+        <span>AI Assisted</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">📦</span>
+        <span>React & Vue</span>
+      </div>
+    </div>
+
+    <div class="action-group">
+      <button class="primary-button" id="startBtn">
+        Start Building
+      </button>
+      <input type="text" class="styled-input" id="nameInput" placeholder="Enter your name..." />
+    </div>
+    
+    <div id="greetingMsg" class="greeting-message hidden"></div>
   </div>
 </div>`;
 
-const defaultCSS = `:root {
-  --accent: #7c3aed;
-  --surface: #18181b;
-  --stroke: #27272a;
-  --text: #fafafa;
+const defaultCSS = `/* Modern CSS Reset & Variables */
+:root {
+  --bg-dark: #09090b;
+  --bg-card: #18181b;
+  --border-color: #27272a;
+  --text-main: #fafafa;
   --text-muted: #a1a1aa;
+  --accent-primary: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --gradient-start: #3b82f6;
+  --gradient-end: #8b5cf6;
 }
 
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: #0a0a0a;
-  color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
   line-height: 1.5;
 }
 
-.card {
-  max-width: 360px;
-  padding: 32px;
-  border: 1px solid var(--stroke);
-  border-radius: 8px;
-  background: var(--surface);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+/* Container & Card Styling */
+.welcome-container {
+  width: 100%;
+  max-width: 600px;
+}
+
+.hero-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 3rem 2rem;
   text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.card-title {
-  margin: 0 0 8px;
-  font-size: 24px;
-  line-height: 1.2;
+.hero-icon {
+  display: inline-flex;
+  padding: 1rem;
+  background: rgba(139, 92, 246, 0.1);
+  border-radius: 16px;
+  color: var(--accent-primary);
+  margin-bottom: 1.5rem;
 }
 
-.card-text {
-  margin: 0 0 24px;
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-bottom: 1rem;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 1.125rem;
+  margin-bottom: 2.5rem;
+  max-width: 400px;
+  margin-inline: auto;
 }
 
-.card-button {
-  padding: 8px 16px;
-  border: 0;
-  border-radius: 6px;
-  background: var(--accent);
-  color: #fff;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+/* Feature Grid */
+.feature-grid {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Interactive Elements */
+.action-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.primary-button {
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  transition: filter 120ms ease-out;
+  transition: all 0.2s ease;
 }
 
-.card-button:hover {
-  filter: brightness(1.12);
+.primary-button:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.styled-input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  max-width: 200px;
+}
+
+.styled-input:focus {
+  border-color: var(--accent-primary);
+}
+
+.greeting-message {
+  margin-top: 1.5rem;
+  font-weight: 500;
+  color: var(--accent-primary);
+  animation: fadeIn 0.3s ease;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }`;
 
-const defaultJS = `const button = document.querySelector('.card-button');
+const defaultJS = `// Interactive Logic
+const startBtn = document.getElementById('startBtn');
+const nameInput = document.getElementById('nameInput');
+const greetingMsg = document.getElementById('greetingMsg');
 
-button?.addEventListener('click', () => {
-  console.log('Button clicked');
+startBtn?.addEventListener('click', () => {
+  const name = nameInput.value.trim();
+  
+  // Add a simple animation class temporarily
+  startBtn.style.transform = 'scale(0.95)';
+  setTimeout(() => {
+    startBtn.style.transform = '';
+  }, 100);
+  
+  if (name) {
+    greetingMsg.textContent = \`Hello \${name}! Ready to build something amazing?\`;
+    greetingMsg.classList.remove('hidden');
+    console.log(\`User \${name} clicked start\`);
+  } else {
+    nameInput.focus();
+    nameInput.style.borderColor = '#ef4444'; // Red border for error state
+    setTimeout(() => {
+      nameInput.style.borderColor = '';
+    }, 1000);
+  }
 });`;
 
 /**
@@ -613,6 +767,13 @@ function App() {
   const [showInjectionManager, setShowInjectionManager] = useState(false);
   const [customInjections, setCustomInjections] = useState<any[]>([]);
   const previewRef = React.useRef<HTMLElement>(null);
+  const [showWelcomeTour, setShowWelcomeTour] = useState(() => {
+    try {
+      return !localStorage.getItem('gbcoder_onboarded');
+    } catch {
+      return false;
+    }
+  });
 
   // Settings
   const { settings, updateSettings, getFontFamilyCSS } = useSettings();
@@ -3628,6 +3789,42 @@ function App() {
                 />
               </Suspense>
             )}
+
+            {/* Welcome Tour Modal */}
+            {showWelcomeTour && (
+              <Suspense fallback={null}>
+                <WelcomeTourModal onClose={() => setShowWelcomeTour(false)} />
+              </Suspense>
+            )}
+
+            {/* Bottom Status Bar */}
+            <div className="flex-none border-t border-stroke-subtle bg-surface-base px-4 py-1.5 flex items-center justify-between text-xs text-content-muted">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1.5" title="Project Type">
+                  <Code2 className="w-3.5 h-3.5" />
+                  {PROJECT_TYPE_LABEL[fileProject.projectType]}
+                </span>
+                {fileProject.projectType !== 'plain' && (
+                  <span className="flex items-center gap-1" title="File Count">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent opacity-75"></span>
+                    {fileProject.files.length} files
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-4">
+                {fullStackProject && (
+                  <span className="flex items-center gap-1 text-green-500">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    Sandbox Connected
+                  </span>
+                )}
+                {autoSaveEnabled && (
+                  <span>
+                    {saveSignal ? `Saved ${new Date(saveSignal).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Saving...'}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

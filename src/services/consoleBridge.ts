@@ -90,7 +90,12 @@ export interface ConsoleBridgeLifecycleMessage {
   timestamp: number;
 }
 
-export type ConsoleBridgeMessage = ConsoleBridgeConsoleMessage | ConsoleBridgeLifecycleMessage;
+export interface ConsoleBridgeHeartbeatMessage {
+  channel: typeof CONSOLE_BRIDGE_CHANNEL;
+  kind: 'heartbeat';
+}
+
+export type ConsoleBridgeMessage = ConsoleBridgeConsoleMessage | ConsoleBridgeLifecycleMessage | ConsoleBridgeHeartbeatMessage;
 
 /** Caps, mirrored in the injected script. Bounded work per console call. */
 export const BRIDGE_LIMITS = {
@@ -113,7 +118,7 @@ export const parseBridgeMessage = (
   if (!data || typeof data !== 'object') return null;
   if (data.channel !== CONSOLE_BRIDGE_CHANNEL) return null;
   if (expectedSource && event.source !== expectedSource) return null;
-  if (data.kind !== 'console' && data.kind !== 'lifecycle') return null;
+  if (data.kind !== 'console' && data.kind !== 'lifecycle' && data.kind !== 'heartbeat') return null;
   return data;
 };
 

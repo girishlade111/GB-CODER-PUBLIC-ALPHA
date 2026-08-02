@@ -75,6 +75,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             onClick={onClose}
         >
             <div
+                role="dialog"
+                aria-modal="true"
                 className={`relative w-full max-w-2xl mx-4 rounded-xl shadow-vscode-modal animate-scale-in border ${isDark ? 'bg-dark-gray border-gray-700' : 'bg-white border-gray-200'
                     }`}
                 onClick={(e) => e.stopPropagation()}
