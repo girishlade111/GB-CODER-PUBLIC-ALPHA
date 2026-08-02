@@ -1,83 +1,69 @@
-import { useEffect, useRef, useState } from 'react';
-import { useLocalStorage } from './useLocalStorage';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { snapshotService, SnapshotProjectState } from '../services/snapshotService';
 
 interface UseAutoSaveProps {
-  html: string;
-  css: string;
-  javascript: string;
-  interval?: number;
+  projectState: SnapshotProjectState | null;
+  intervalMs?: number; // E.g. 2000 for 2 seconds
   enabled?: boolean;
-  projectId?: string; // Optional project ID for project-scoped storage
 }
 
 export const useAutoSave = ({
-  html,
-  css,
-  javascript,
-  interval = 30000, // 30 seconds
+  projectState,
+  intervalMs = 2000,
   enabled = true,
-  projectId // Optional project ID
 }: UseAutoSaveProps) => {
-  const [lastSaveTime, setLastSaveTime] = useLocalStorage<string | null>('gb-coder-last-save', null);
+  const [lastSaveTime, setLastSaveTime] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
-  const lastContentRef = useRef<string>('');
+  const autoSnapshotIntervalRef = useRef<NodeJS.Timeout>();
+  const lastSavedStateRef = useRef<string>('');
 
-  // Create a hash of current content to detect changes
-  const createContentHash = (h: string, c: string, j: string) => {
-    return btoa(h + c + j).slice(0, 16);
+  const createContentHash = (state: SnapshotProjectState) => {
+    // A simplified hash: just stringify the state.
+    // In a real app we might hash this properly to save performance, but JSON.stringify is fast enough for small projects.
+    return btoa(encodeURIComponent(JSON.stringify(state))).slice(0, 32);
   };
 
-  const performAutoSave = async () => {
-    if (!enabled) return;
+  const performAutoSave = useCallback(() => {
+    if (!enabled || !projectState) return;
 
-    const currentHash = createContentHash(html, css, javascript);
+    const currentHash = createContentHash(projectState);
 
     // Only save if content has changed
-    if (currentHash === lastContentRef.current) return;
+    if (currentHash === lastSavedStateRef.current) return;
 
     setIsSaving(true);
     try {
+      snapshotService.saveAutoSave(projectState);
+      
       const timestamp = new Date().toISOString();
-
-      // Use project-scoped key if projectId is available, otherwise use global key
-      const storageKey = projectId
-        ? `gb-coder-project-autosave-${projectId}`
-        : 'gb-coder-autosave';
-
-      // Save to local storage
-      localStorage.setItem(storageKey, JSON.stringify({
-        html,
-        css,
-        javascript,
-        timestamp
-      }));
-
-      lastContentRef.current = currentHash;
+      lastSavedStateRef.current = currentHash;
       setLastSaveTime(timestamp);
 
-      // Dispatch custom event for UI feedback
+      // Dispatch custom event for UI feedback (StatusBar)
       window.dispatchEvent(new CustomEvent('autosave', {
-        detail: { timestamp, projectId }
+        detail: { timestamp }
       }));
     } catch (error) {
       console.error('Auto-save failed:', error);
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [enabled, projectState]);
 
-  // Auto-save effect
+  // Handle continuous auto-save on inactivity (debounce)
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !projectState) return;
 
     // Clear existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
-    // Set new timeout
-    timeoutRef.current = setTimeout(performAutoSave, interval);
+    // Set new timeout (debounce)
+    timeoutRef.current = setTimeout(() => {
+      performAutoSave();
+    }, intervalMs);
 
     // Cleanup on unmount
     return () => {
@@ -85,33 +71,41 @@ export const useAutoSave = ({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [html, css, javascript, interval, enabled, projectId]);
+  }, [projectState, intervalMs, enabled, performAutoSave]);
 
-  // Manual save function
-  const manualSave = async (title?: string) => {
-    setIsSaving(true);
-    try {
-      const timestamp = new Date().toISOString();
+  // Handle 10-minute automatic snapshots
+  useEffect(() => {
+    if (!enabled) return;
+    
+    // Check every 10 minutes (600,000 ms)
+    autoSnapshotIntervalRef.current = setInterval(() => {
+      if (!projectState) return;
+      
+      const currentHash = createContentHash(projectState);
+      
+      // We don't want to snapshot if there are no changes since the last save
+      // But we need to track the last snapshot hash, not just the last auto-save hash.
+      // For simplicity, we just create a snapshot. The SnapshotService will prune old ones.
+      try {
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        snapshotService.createSnapshot(`Auto-save [${timeStr}]`, projectState, true);
+        window.dispatchEvent(new CustomEvent('snapshots-updated'));
+      } catch(e) {
+        console.error('Failed to create auto-snapshot', e);
+      }
+    }, 600000);
 
-      // Save to local storage
-      localStorage.setItem('gb-coder-manual-save', JSON.stringify({
-        html,
-        css,
-        javascript,
-        timestamp,
-        title: title || `Manual save ${new Date().toLocaleString()}`
-      }));
+    return () => {
+      if (autoSnapshotIntervalRef.current) {
+        clearInterval(autoSnapshotIntervalRef.current);
+      }
+    };
+  }, [enabled, projectState]);
 
-      const currentHash = createContentHash(html, css, javascript);
-      lastContentRef.current = currentHash;
-      setLastSaveTime(timestamp);
-
-      return { error: null };
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Save failed' };
-    } finally {
-      setIsSaving(false);
-    }
+  // Manual auto-save function (if needed)
+  const manualSave = async () => {
+    performAutoSave();
+    return { error: null };
   };
 
   return {

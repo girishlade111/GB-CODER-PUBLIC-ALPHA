@@ -14,6 +14,7 @@ import {
   Upload,
   X,
   Zap,
+  Database,
 } from 'lucide-react';
 import Tooltip from './ui/Tooltip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -45,6 +46,7 @@ interface AppSidebarProps {
   onOpenStatistics: () => void;
   onOpenInjection: () => void;
   onOpenSettings: () => void;
+  onOpenSnapshots: () => void;
   /**
    * False on narrow viewports, where the docked side panels (file explorer,
    * dependencies) have no room. Modal-based entries stay available at all sizes.
@@ -100,6 +102,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   onOpenStatistics,
   onOpenInjection,
   onOpenSettings,
+  onOpenSnapshots,
   canDockPanels = true,
   isDrawerOpen = false,
   onCloseDrawer,
@@ -195,6 +198,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
           label: 'Code Injection',
           icon: <Zap className="h-5 w-5" />,
           onClick: onOpenInjection,
+        },
+        {
+          id: 'snapshots',
+          label: 'Snapshots',
+          icon: <Database className="h-5 w-5" />,
+          onClick: onOpenSnapshots,
         },
       ],
     },

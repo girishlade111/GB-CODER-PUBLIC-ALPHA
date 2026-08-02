@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
-import { X, Settings as SettingsIcon } from 'lucide-react';
+import { X, Settings as SettingsIcon, Database, Trash2, Upload } from 'lucide-react';
 import { useSettings, EditorFontFamily, ThemeVariant } from '../hooks/useSettings';
 import { useTheme } from '../hooks/useTheme';
 import { useFocusMode } from '../hooks/useFocusMode';
 import { VOICE_LANGUAGES } from '../services/voiceCommandService';
+import { useSnapshots } from '../hooks/useSnapshots';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -17,6 +18,27 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     const { settings, updateSettings, resetSettings, getFontFamilyCSS } = useSettings();
     const { isDark } = useTheme();
     const { focusMode, toggleFocusMode } = useFocusMode();
+    const { storageUsage, cleanUpOldSnapshots, importProject } = useSnapshots();
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target?.result as string;
+            if (content) {
+                const success = importProject(content);
+                if (success) {
+                    alert('Project imported successfully! Reloading...');
+                    window.location.reload();
+                } else {
+                    alert('Failed to import project. Invalid file format.');
+                }
+            }
+        };
+        reader.readAsText(file);
+    };
 
     // Close on Escape key
     useEffect(() => {
@@ -336,6 +358,65 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                 Which language the microphone transcribes. Availability depends on your browser; English
                                 is the most reliable.
                             </p>
+                        </div>
+                    </div>
+
+                    {/* Storage & Snapshots Section */}
+                    <div>
+                        <h3
+                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
+                                }`}
+                        >
+                            Storage & Snapshots
+                        </h3>
+                        
+                        <div className={`p-4 rounded-lg border mb-4 ${isDark ? 'border-gray-700 bg-matte-black' : 'border-gray-300 bg-gray-50'}`}>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Database className={`w-5 h-5 ${storageUsage.percentage > 80 ? 'text-red-500' : isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                                <div className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+                                    Local Storage Usage
+                                </div>
+                            </div>
+                            
+                            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2 dark:bg-gray-700 overflow-hidden">
+                                <div 
+                                    className={`h-2.5 rounded-full ${storageUsage.percentage > 80 ? 'bg-red-500' : 'bg-blue-600'}`} 
+                                    style={{ width: `${storageUsage.percentage}%` }}
+                                ></div>
+                            </div>
+                            <div className={`text-xs flex justify-between ${storageUsage.percentage > 80 ? 'text-red-500 font-medium' : isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                <span>Using {(storageUsage.usedBytes / 1024 / 1024).toFixed(2)} MB / {(storageUsage.maxBytes / 1024 / 1024).toFixed(2)} MB ({storageUsage.percentage}%)</span>
+                                {storageUsage.percentage > 80 && <span>Storage nearly full!</span>}
+                            </div>
+                            
+                            <div className="flex gap-3 mt-4">
+                                <button
+                                    onClick={cleanUpOldSnapshots}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                                        isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
+                                    }`}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    Clean Up Old Auto-Snapshots
+                                </button>
+                                
+                                <input 
+                                    type="file" 
+                                    accept=".gbcoder,.json"
+                                    ref={fileInputRef}
+                                    onChange={handleImport}
+                                    className="hidden" 
+                                />
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                                        isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
+                                    }`}
+                                >
+                                    <Upload className="w-4 h-4" />
+                                    Import Project
+                                </button>
+                            </div>
                         </div>
                     </div>
 

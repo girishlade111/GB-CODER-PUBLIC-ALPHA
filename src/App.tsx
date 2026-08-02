@@ -143,6 +143,11 @@ const CommandPalette = lazyWithRecovery(() => import('./components/CommandPalett
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useCodeHistory } from './hooks/useCodeHistory';
 import { useAutoSave } from './hooks/useAutoSave';
+import { useSnapshots } from './hooks/useSnapshots';
+import SessionRecoveryModal from './components/SessionRecoveryModal';
+import SnapshotManagerModal from './components/SnapshotManagerModal';
+import StatusBar from './components/StatusBar';
+import { snapshotService, SnapshotProjectState } from './services/snapshotService';
 import { useTheme } from './hooks/useTheme';
 import { useCodeSelection } from './hooks/useCodeSelection';
 import { useSelectionOperations } from './hooks/useSelectionOperations';
@@ -575,6 +580,17 @@ function App() {
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [isProjectListLoading, setIsProjectListLoading] = useState<boolean>(true);
   const [showNewProject, setShowNewProject] = useState<boolean>(false);
+  const [showSnapshotManager, setShowSnapshotManager] = useState<boolean>(false);
+  const [sessionRecoveryData, setSessionRecoveryData] = useState<(SnapshotProjectState & { lastModified: string }) | null>(null);
+  
+  // Check for auto-save on mount
+  useEffect(() => {
+    const autoSave = snapshotService.getAutoSave();
+    if (autoSave) {
+      setSessionRecoveryData(autoSave);
+    }
+  }, []);
+
   const [diffData, setDiffData] = useState<{
     isOpen: boolean;
     files: DiffFile[];
@@ -628,16 +644,8 @@ function App() {
 
   // Code history for undo/redo functionality
   const codeHistory = useCodeHistory({ html, css, javascript });
-
-  // Auto-save functionality (project-aware)
-  const autoSave = useAutoSave({
-    html,
-    css,
-    javascript,
-    interval: 30000, // 30 seconds
-    enabled: autoSaveEnabled,
-    projectId: project.currentProject?.id, // Make auto-save project-aware
-  });
+  
+  const [saveSignal, setSaveSignal] = useState<number | null>(null);
 
   /**
    * Editor-facing view of the project: open tabs, focused file, per-file dirty
@@ -647,8 +655,28 @@ function App() {
   const workspace = useFileWorkspace(
     fileProject,
     setFileProject,
-    autoSave.lastSaveTime ? new Date(autoSave.lastSaveTime).getTime() : null,
+    saveSignal,
   );
+
+  const snapshotProjectState = React.useMemo(() => ({
+    project: fileProject,
+    openPaths: workspace.openPaths,
+    activePath: workspace.activePath,
+    externalLibraries,
+    settings: { autoSaveEnabled, theme: settings.theme, editorFontSize: settings.editorFontSize },
+  }), [fileProject, workspace.openPaths, workspace.activePath, externalLibraries, autoSaveEnabled, settings.theme, settings.editorFontSize]);
+
+  const autoSave = useAutoSave({
+    projectState: snapshotProjectState,
+    intervalMs: 2000,
+    enabled: autoSaveEnabled,
+  });
+
+  useEffect(() => {
+    if (autoSave.lastSaveTime) {
+      setSaveSignal(new Date(autoSave.lastSaveTime).getTime());
+    }
+  }, [autoSave.lastSaveTime]);
 
   /*
    * Validation. Debounced inside the hook, and driven from App rather than from
@@ -1756,7 +1784,23 @@ function App() {
     onOpenShortcutsHelp: () => setShowKeyboardShortcuts(true),
   });
 
+  const { createSnapshot } = useSnapshots();
+
+  const handleSaveSnapshot = useCallback(() => {
+    const name = prompt('Enter snapshot name:', `Snapshot ${new Date().toLocaleString()}`);
+    if (name) {
+      const res = createSnapshot(name, snapshotProjectState, false);
+      if (res.success) {
+        toast.success(`Snapshot '${name}' saved`);
+      } else {
+        toast.error(`Failed to save snapshot: ${res.error}`);
+      }
+    }
+  }, [createSnapshot, snapshotProjectState]);
+
   const commandPaletteActions = [
+    { id: 'save-snapshot', title: 'Save Snapshot', section: 'Files', perform: () => handleSaveSnapshot() },
+    { id: 'open-snapshot-manager', title: 'Open Snapshot Manager', section: 'Navigation', perform: () => setShowSnapshotManager(true) },
     { id: 'new-file', title: 'New Project', section: 'Files', perform: () => setShowNewProject(true) },
     { id: 'open-project', title: 'Open Project', section: 'Files', perform: () => handleReturnToDashboard() },
     { id: 'format-all', title: 'Format All Files', section: 'Editor', perform: async () => {
@@ -3386,6 +3430,7 @@ function App() {
           onOpenStatistics={() => setShowStats(true)}
           onOpenInjection={() => setShowInjectionManager(true)}
           onOpenSettings={handleSettingsToggle}
+          onOpenSnapshots={() => setShowSnapshotManager(true)}
           canDockPanels={!isMobile}
           isDrawerOpen={isNavDrawerOpen}
           onCloseDrawer={() => setIsNavDrawerOpen(false)}
@@ -3868,6 +3913,48 @@ function App() {
             actions={commandPaletteActions}
           />
         </Suspense>
+      )}
+      
+      <StatusBar />
+      <SnapshotManagerModal
+        isOpen={showSnapshotManager}
+        onClose={() => setShowSnapshotManager(false)}
+        onRestore={(snapshot) => {
+          if (window.confirm('Restore this snapshot? This will overwrite your current work.')) {
+            setFileProject(snapshot.projectState.project);
+            workspace.openFile(snapshot.projectState.activePath || '');
+            setShowSnapshotManager(false);
+          }
+        }}
+        onPreview={(snapshot) => {
+          const currentFiles = snapshotProjectState.project.files.map(f => ({ path: f.path, content: f.content }));
+          const snapFiles = snapshot.projectState.project.files.map(f => ({ path: f.path, content: f.content }));
+          
+          const allPaths = Array.from(new Set([...currentFiles.map(f => f.path), ...snapFiles.map(f => f.path)]));
+          
+          const diffFiles = allPaths.map(path => {
+            const cur = currentFiles.find(f => f.path === path)?.content ?? '';
+            const snp = snapFiles.find(f => f.path === path)?.content ?? '';
+            return { path, original: cur, modified: snp };
+          });
+          
+          setDiffData({ isOpen: true, files: diffFiles });
+        }}
+      />
+      {sessionRecoveryData && (
+        <SessionRecoveryModal
+          lastSavedAt={sessionRecoveryData.lastModified}
+          onRestore={() => {
+            setFileProject(sessionRecoveryData.project);
+            workspace.openFile(sessionRecoveryData.activePath || '');
+            setSessionRecoveryData(null);
+            toast.success('Session restored');
+          }}
+          onStartFresh={() => {
+            snapshotService.backupAutoSave();
+            setSessionRecoveryData(null);
+          }}
+        />
       )}
 
     </div>
