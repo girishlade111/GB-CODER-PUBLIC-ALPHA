@@ -1,4 +1,5 @@
 import { ExternalLibrary } from '../services/externalLibraryService';
+import { ThemeVariant } from '../hooks/useSettings';
 
 /**
  * Represents a complete project with all code and metadata
@@ -21,7 +22,7 @@ export interface Project {
  */
 export interface ProjectSettings {
     autoSaveEnabled?: boolean;
-    theme?: 'light' | 'dark';
+    theme?: ThemeVariant;
     editorFontSize?: number;
 }
 

@@ -401,7 +401,8 @@ class EnhancedTemplateService {
         const customTemplates = JSON.parse(stored) as (CodeTemplate & { payload: TemplatePayload })[];
         // Return just metadata
         return customTemplates.map(t => {
-          const { payload: _, ...meta } = t;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { payload, ...meta } = t;
           return meta as CodeTemplate;
         });
       }
