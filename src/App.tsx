@@ -581,6 +581,7 @@ function App() {
   );
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [aiSuggestionsUsed, setAiSuggestionsUsed] = useState(0);
   const [showInjectionManager, setShowInjectionManager] = useState(false);
   const [customInjectionCode, setCustomInjectionCode] = useState({ css: '', js: '' });
   const previewRef = React.useRef<HTMLElement>(null);
@@ -3674,9 +3675,8 @@ function App() {
       {showStats && (
         <Suspense fallback={null}>
           <CodeStatsDashboard
-            html={html}
-            css={css}
-            javascript={javascript}
+            project={fileProject}
+            aiSuggestionsUsed={aiSuggestionsUsed}
             isOpen={showStats}
             onClose={() => setShowStats(false)}
           />
