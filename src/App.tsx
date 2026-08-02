@@ -138,6 +138,7 @@ const ExtensionsMarketplace = lazyWithRecovery(() => import('./components/Extens
 const SettingsModal = lazyWithRecovery(() => import('./components/SettingsModal'));
 const HistoryPanel = lazyWithRecovery(() => import('./components/HistoryPanel'));
 const KeyboardShortcutsHelp = lazyWithRecovery(() => import('./components/KeyboardShortcutsHelp'));
+const CommandPalette = lazyWithRecovery(() => import('./components/CommandPalette'));
 
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useCodeHistory } from './hooks/useCodeHistory';
@@ -489,6 +490,7 @@ function App() {
   const [showExtensionsMarketplace, setShowExtensionsMarketplace] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState<boolean>(false);
+  const [showCommandPalette, setShowCommandPalette] = useState<boolean>(false);
   const [showExportShare, setShowExportShare] = useState<boolean>(false);
   const [exportModalTab, setExportModalTab] = useState<'screenshot' | 'export' | 'share'>('screenshot');
   const [showImport, setShowImport] = useState<boolean>(false);
@@ -1749,7 +1751,34 @@ function App() {
       ]);
       toast.success('Code formatted on save.');
     },
+    onOpenCommandPalette: () => setShowCommandPalette(true),
+    onOpenShortcutsHelp: () => setShowKeyboardShortcuts(true),
   });
+
+  const commandPaletteActions = [
+    { id: 'new-file', title: 'New Project', section: 'Files', perform: () => setShowNewProject(true) },
+    { id: 'open-project', title: 'Open Project', section: 'Files', perform: () => handleReturnToDashboard() },
+    { id: 'format-all', title: 'Format All Files', section: 'Editor', perform: async () => {
+        await Promise.all([handleFormatHtml(), handleFormatCss(), handleFormatJavascript()]);
+        toast.success('Code formatted.');
+      }
+    },
+    { id: 'build-ai', title: 'Build with AI', section: 'AI', perform: () => setShowBuildFromPrompt(true) },
+    { id: 'explain-code', title: 'Explain Selected Code', section: 'AI', perform: () => handleSelectionOperation('explain') },
+    { id: 'find-fix', title: 'Find and Fix', section: 'AI', perform: () => handleSelectionOperation('debug') },
+    { id: 'optimize-code', title: 'Optimize Performance', section: 'AI', perform: () => handleSelectionOperation('optimize') },
+    { id: 'enhance-design', title: 'Enhance Visual Design', section: 'AI', perform: () => handleSelectionOperation('improveUI') },
+    { id: 'run-preview', title: 'Run Preview', section: 'Run', perform: () => setManualRunTrigger(prev => prev + 1) },
+    { id: 'export-html', title: 'Export as HTML', section: 'Export', perform: () => handleOpenExport('export') },
+    { id: 'export-zip', title: 'Export as ZIP', section: 'Export', perform: () => handleOpenExport('export') },
+    { id: 'save-screenshot', title: 'Save Screenshot', section: 'Export', perform: () => handleQuickScreenshot() },
+    { id: 'toggle-sidebar', title: 'Toggle Sidebar', section: 'View', perform: () => setIsNavDrawerOpen(!isNavDrawerOpen) },
+    { id: 'open-templates', title: 'Open Templates Library', section: 'Navigation', perform: () => setShowTemplates(true) },
+    { id: 'open-stats', title: 'Open Code Statistics', section: 'Navigation', perform: () => setShowStats(true) },
+    { id: 'open-injection', title: 'Open Custom Code Injection', section: 'Navigation', perform: () => setShowInjectionManager(true) },
+    { id: 'open-settings', title: 'Open Settings', section: 'Navigation', perform: () => setShowSettings(true) },
+    { id: 'show-shortcuts', title: 'Show Keyboard Shortcuts', section: 'Help', perform: () => setShowKeyboardShortcuts(true) },
+  ];
 
   /*
    * Self-contained share links (`#project=...`).
@@ -3817,6 +3846,17 @@ function App() {
         onHistoryToggle={setIsHistoryPanelOpen}
         isHistoryOpen={isHistoryPanelOpen}
       />
+
+      {/* Command Palette */}
+      {showCommandPalette && (
+        <Suspense fallback={null}>
+          <CommandPalette
+            isOpen={showCommandPalette}
+            onClose={() => setShowCommandPalette(false)}
+            actions={commandPaletteActions}
+          />
+        </Suspense>
+      )}
 
     </div>
   );

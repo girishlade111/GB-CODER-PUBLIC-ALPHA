@@ -9,6 +9,10 @@ export interface AppShortcutHandlers {
   onQuickScreenshot?: () => void;
   /** Ctrl/Cmd+S */
   onSave?: () => void;
+  /** Ctrl/Cmd+K */
+  onOpenCommandPalette?: () => void;
+  /** ? (Question Mark) */
+  onOpenShortcutsHelp?: () => void;
 }
 
 /**
@@ -27,9 +31,26 @@ export const useAppShortcuts = ({
   onOpenImport,
   onQuickScreenshot,
   onSave,
+  onOpenCommandPalette,
+  onOpenShortcutsHelp,
 }: AppShortcutHandlers): void => {
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
+      const isInputFocused =
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement ||
+        (document.activeElement as HTMLElement)?.isContentEditable;
+
+      // Question mark without modifiers (Shift+/) - only if not typing
+      if (event.key === '?' && !isInputFocused) {
+        if (onOpenShortcutsHelp) {
+          event.preventDefault();
+          event.stopPropagation();
+          onOpenShortcutsHelp();
+        }
+        return;
+      }
+
       const modifier = event.ctrlKey || event.metaKey;
       if (!modifier || event.altKey) return;
 
@@ -40,6 +61,10 @@ export const useAppShortcuts = ({
           event.preventDefault();
           event.stopPropagation();
           onSave();
+        } else if (code === 'KeyK' && onOpenCommandPalette) {
+          event.preventDefault();
+          event.stopPropagation();
+          onOpenCommandPalette();
         }
         return;
       }
@@ -65,6 +90,8 @@ export const useAppShortcuts = ({
 
 /** Rendered in the shortcuts help dialog. */
 export const APP_SHORTCUTS: { keys: string; description: string }[] = [
+  { keys: 'Ctrl/Cmd+K', description: 'Open Command Palette' },
+  { keys: '?', description: 'Show Keyboard Shortcuts' },
   { keys: 'Ctrl/Cmd+S', description: 'Format and Save code' },
   { keys: 'Ctrl/Cmd+Shift+E', description: 'Open Export & Share' },
   { keys: 'Ctrl/Cmd+Shift+I', description: 'Open Import dialog' },

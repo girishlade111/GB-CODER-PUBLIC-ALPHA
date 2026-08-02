@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package } from 'lucide-react';
+import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package, RotateCcw, Laptop, ChevronDown, ZoomIn, Smartphone as MobileIcon } from 'lucide-react';
 import { JSEditorMode } from '../types';
 import { MOUNT_ELEMENT_ID, ProjectType } from '../types/files';
 import { externalLibraryService } from '../services/externalLibraryService';
@@ -11,7 +11,23 @@ import {
 } from '../services/consoleBridge';
 import type { ConsoleMessage, ResolvedStackFrame } from '../types/consoleFeed';
 
-type ViewMode = 'desktop' | 'tablet' | 'mobile' | 'fullscreen';
+export type DeviceType = 'mobile' | 'tablet' | 'laptop' | 'desktop' | 'full';
+
+export interface DevicePreset {
+  id: DeviceType;
+  name: string;
+  width: number | '100%';
+  height: number | '100%';
+  icon: React.ElementType;
+}
+
+const DEVICE_PRESETS: DevicePreset[] = [
+  { id: 'mobile', name: 'Mobile', width: 375, height: 667, icon: Smartphone },
+  { id: 'tablet', name: 'Tablet', width: 768, height: 1024, icon: Tablet },
+  { id: 'laptop', name: 'Laptop', width: 1024, height: 768, icon: Laptop },
+  { id: 'desktop', name: 'Desktop', width: 1440, height: 900, icon: Monitor },
+  { id: 'full', name: 'Full Width', width: '100%', height: '100%', icon: Maximize2 },
+];
 
 interface PreviewPanelProps {
   html: string;
@@ -98,7 +114,16 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   const runCounterRef = useRef(0);
   const currentRunIdRef = useRef<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('desktop');
+  const [viewMode, setViewMode] = useState<'normal' | 'fullscreen'>('normal');
+  const [devicePreset, setDevicePreset] = useState<DeviceType>(() => {
+    try { return (localStorage.getItem('gbcoder_device_preset') as DeviceType) || 'full'; }
+    catch { return 'full'; }
+  });
+  const [isPortrait, setIsPortrait] = useState(true);
+  const [scale, setScale] = useState(1);
+  const [showDeviceMenu, setShowDeviceMenu] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isMobileUA, setIsMobileUA] = useState(false);
   /** React/Vue projects render a bundled module graph instead of raw files. */
   const isFrameworkProject = projectType !== 'plain';
   // Drives the "nothing to preview yet" placeholder. Purely presentational —
@@ -224,14 +249,24 @@ ${safeJavascript}
 </script>`
       : '';
 
+    const mockUAScript = isMobileUA
+      ? `<script>
+          Object.defineProperty(navigator, 'userAgent', {
+            get: function () { return 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'; }
+          });
+          Object.defineProperty(navigator, 'maxTouchPoints', { get: function () { return 5; } });
+         </script>`
+      : '';
+
     return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0${isMobileUA ? ', maximum-scale=1.0, user-scalable=0' : ''}">
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:; object-src 'none';">
     <title>Preview</title>
+    ${mockUAScript}
     ${externalLibsHTML}
     ${jsxRuntimeScripts}
 ${importMapHTML}
@@ -315,7 +350,7 @@ ${importMapHTML}
     ${moduleScript}
 </body>
 </html>`;
-  }, [html, css, transpiledJs, compilationError, jsEditorMode, isFrameworkProject, projectType, bundledCode, bundledCss, importMap]);
+  }, [html, css, transpiledJs, compilationError, jsEditorMode, isFrameworkProject, projectType, bundledCode, bundledCss, importMap, isMobileUA]);
 
   const refreshPreview = useCallback(() => {
     if (iframeRef.current) {
@@ -352,7 +387,7 @@ ${importMapHTML}
       refreshPreviewRef.current();
     }, delay);
     return () => clearTimeout(timeoutId);
-  }, [html, css, jsForPreview, jsEditorMode, previewDelay, manualRunTrigger, transpiledJs, bundledCode, bundledCss, projectType, importMap]);
+  }, [html, css, jsForPreview, jsEditorMode, previewDelay, manualRunTrigger, transpiledJs, bundledCode, bundledCss, projectType, importMap, isMobileUA]);
 
   // Refresh preview when external libraries change
   useEffect(() => {
@@ -450,7 +485,7 @@ ${importMapHTML}
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && viewMode === 'fullscreen') {
-        setViewMode('desktop');
+        setViewMode('normal');
       }
     };
 
@@ -467,21 +502,48 @@ ${importMapHTML}
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
-  const handleViewModeChange = (mode: ViewMode) => {
+  const handleViewModeChange = (mode: 'fullscreen' | 'normal') => {
     setViewMode(mode);
   };
 
-  // Get iframe container width based on view mode
   const getContainerWidth = () => {
-    switch (viewMode) {
-      case 'mobile':
-        return '375px';
-      case 'tablet':
-        return '768px';
-      case 'desktop':
-      case 'fullscreen':
-        return '100%';
+    const preset = DEVICE_PRESETS.find(p => p.id === devicePreset);
+    if (!preset || preset.width === '100%') return '100%';
+    return isPortrait ? `${preset.width}px` : `${preset.height}px`;
+  };
+
+  const getContainerHeight = () => {
+    const preset = DEVICE_PRESETS.find(p => p.id === devicePreset);
+    if (!preset || preset.height === '100%') return '100%';
+    return isPortrait ? `${preset.height}px` : `${preset.width}px`;
+  };
+
+  useEffect(() => {
+    const preset = DEVICE_PRESETS.find(p => p.id === devicePreset);
+    if (!preset || preset.width === '100%') {
+      setScale(1);
+      return;
     }
+
+    const observer = new ResizeObserver((entries) => {
+      if (!entries[0]) return;
+      const { width, height } = entries[0].contentRect;
+      const deviceW = isPortrait ? (preset.width as number) : (preset.height as number);
+      const deviceH = isPortrait ? (preset.height as number) : (preset.width as number);
+      
+      const scaleX = Math.min(1, (width - 32) / deviceW);
+      const scaleY = Math.min(1, (height - 32) / deviceH);
+      setScale(Math.min(scaleX, scaleY));
+    });
+
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [devicePreset, isPortrait]);
+
+  const handleDeviceChange = (deviceId: DeviceType) => {
+    setDevicePreset(deviceId);
+    setShowDeviceMenu(false);
+    try { localStorage.setItem('gbcoder_device_preset', deviceId); } catch {}
   };
 
   // Render preview content (used in both normal and fullscreen modes)
@@ -491,44 +553,79 @@ ${importMapHTML}
         <h2 className="text-sm font-medium text-gray-300">Live Preview</h2>
         <div className="flex items-center gap-3">
           {/* View Mode Toggles */}
-          <div className="flex items-center gap-1 border border-gray-700 rounded bg-gray-800 p-1">
+          {/* Device Simulator Toggles */}
+          <div className="relative">
             <button
-              onClick={() => handleViewModeChange('mobile')}
-              className={`p-1.5 rounded transition-all ${viewMode === 'mobile'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-                }`}
-              title="Mobile View (375px)"
+              onClick={() => setShowDeviceMenu(!showDeviceMenu)}
+              className="flex items-center gap-2 px-3 py-1.5 border border-gray-700 rounded bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm"
             >
-              <Smartphone className="w-4 h-4" />
+              {(() => {
+                const preset = DEVICE_PRESETS.find(p => p.id === devicePreset);
+                const Icon = preset?.icon || Maximize2;
+                return <Icon className="w-4 h-4" />;
+              })()}
+              <span>{DEVICE_PRESETS.find(p => p.id === devicePreset)?.name}</span>
+              <ChevronDown className="w-4 h-4 text-gray-500" />
             </button>
-            <button
-              onClick={() => handleViewModeChange('tablet')}
-              className={`p-1.5 rounded transition-all ${viewMode === 'tablet'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-                }`}
-              title="Tablet View (768px)"
-            >
-              <Tablet className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => handleViewModeChange('desktop')}
-              className={`p-1.5 rounded transition-all ${viewMode === 'desktop'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-                }`}
-              title="Desktop View (Full Width)"
-            >
-              <Monitor className="w-4 h-4" />
-            </button>
+            
+            {showDeviceMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowDeviceMenu(false)}></div>
+                <div className="absolute top-full right-0 mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                  {DEVICE_PRESETS.map(preset => {
+                    const Icon = preset.icon;
+                    return (
+                      <button
+                        key={preset.id}
+                        onClick={() => handleDeviceChange(preset.id)}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left transition-colors ${
+                          devicePreset === preset.id ? 'bg-blue-600/20 text-blue-400' : 'text-gray-300 hover:bg-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Icon className="w-4 h-4" />
+                          {preset.name}
+                        </div>
+                        {preset.width !== '100%' && (
+                          <span className="text-xs text-gray-500">{isPortrait ? preset.width : preset.height}×{isPortrait ? preset.height : preset.width}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
+
+          {devicePreset !== 'full' && (
+            <button
+              onClick={() => setIsPortrait(!isPortrait)}
+              className="p-1.5 border border-gray-700 rounded bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors"
+              title="Rotate Device"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          )}
+
+          {scale < 1 && (
+            <div className="flex items-center gap-1 text-xs text-gray-400 font-mono bg-gray-800 px-2 py-1 rounded border border-gray-700" title="Auto-scaled to fit">
+              <ZoomIn className="w-3 h-3" />
+              {Math.round(scale * 100)}%
+            </div>
+          )}
 
           {/* Divider */}
           <div className="w-px h-6 bg-gray-700"></div>
 
           {/* Existing Controls */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsMobileUA(!isMobileUA)}
+              className={`p-1.5 rounded transition-colors flex items-center gap-1 text-xs font-semibold ${isMobileUA ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30' : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700 border border-gray-700'}`}
+              title="Toggle Mobile User Agent"
+            >
+              <MobileIcon className="w-3.5 h-3.5" /> UA
+            </button>
             {viewMode !== 'fullscreen' && (
               <button
                 onClick={() => handleViewModeChange('fullscreen')}
@@ -565,7 +662,10 @@ ${importMapHTML}
           </div>
         </div>
       </div>
-      <div className={`relative ${viewMode === 'fullscreen' ? 'h-full' : 'h-full'} flex items-start justify-center overflow-auto bg-surface-canvas`}>
+      <div 
+        ref={containerRef}
+        className={`relative ${viewMode === 'fullscreen' ? 'h-full' : 'h-full'} flex items-center justify-center overflow-auto bg-surface-canvas py-4`}
+      >
         {isResolvingPackages && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-surface-canvas/90 px-6 text-center">
             <Package className="h-6 w-6 animate-pulse text-accent" />
@@ -601,12 +701,22 @@ ${importMapHTML}
         )}
         <div
           id="preview-container"
-          className="transition-all duration-300 ease-in-out h-full"
+          className="transition-all duration-300 ease-in-out relative flex-shrink-0"
           style={{
             width: getContainerWidth(),
-            maxWidth: '100%'
+            height: getContainerHeight(),
+            maxWidth: devicePreset === 'full' ? '100%' : 'none',
+            transform: scale < 1 ? `scale(${scale})` : 'none',
+            transformOrigin: 'center center',
+            borderRadius: devicePreset !== 'full' ? '12px' : '0',
+            overflow: 'hidden',
+            boxShadow: devicePreset !== 'full' ? '0 0 0 10px #1a1a1a, 0 0 0 11px #333, 0 20px 40px rgba(0,0,0,0.5)' : 'none',
+            background: 'white'
           }}
         >
+          {devicePreset !== 'full' && (
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-4 bg-[#1a1a1a] rounded-b-xl z-20 pointer-events-none opacity-50"></div>
+          )}
           <iframe
             ref={iframeRef}
             className={`w-full h-full ${isProjectEmpty ? 'bg-transparent' : 'bg-white shadow-lg'}`}
@@ -639,9 +749,9 @@ ${importMapHTML}
       {viewMode === 'fullscreen' && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col">
           {/* Exit Button */}
-          <div className="absolute top-4 right-4 z-10">
+          <div className="absolute top-4 right-4 z-50">
             <button
-              onClick={() => setViewMode('desktop')}
+              onClick={() => setViewMode('normal')}
               className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-colors border border-gray-600 shadow-lg"
               title="Exit Fullscreen (ESC)"
             >
