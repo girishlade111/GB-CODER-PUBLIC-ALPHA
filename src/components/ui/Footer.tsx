@@ -1,12 +1,15 @@
 import React from 'react';
 import { useTheme } from '../../hooks/useTheme';
-import { Instagram, Linkedin, Github, Codepen, Mail } from 'lucide-react';
+import { Instagram, Linkedin, Github, Codepen, Mail, XCircle, AlertTriangle } from 'lucide-react';
 
 interface FooterProps {
   focusMode?: boolean;
+  errorCount?: number;
+  warningCount?: number;
+  onOpenValidator?: () => void;
 }
 
-const Footer: React.FC<FooterProps> = ({ focusMode = false }) => {
+const Footer: React.FC<FooterProps> = ({ focusMode = false, errorCount = 0, warningCount = 0, onOpenValidator }) => {
   const { isDark } = useTheme();
 
   const handleNavigation = (view: string) => {
@@ -25,8 +28,29 @@ const Footer: React.FC<FooterProps> = ({ focusMode = false }) => {
       {/* Compact Single-Line Layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 shadow-inner-subtle">
         <div className="flex flex-wrap items-center justify-between gap-4 text-sm">
-          {/* Left: Links */}
+          {/* Left: Problems & Links */}
           <div className="flex flex-wrap items-center gap-4">
+            {/* Problem Indicator */}
+            {(errorCount > 0 || warningCount > 0) && (
+              <>
+                <button
+                  onClick={onOpenValidator}
+                  className={`flex items-center gap-2 px-2 py-0.5 rounded-sm hover:bg-white/10 transition-colors ${errorCount > 0 ? 'text-red-400' : 'text-yellow-500'}`}
+                  title="View Problems"
+                >
+                  <div className="flex items-center gap-1">
+                    <XCircle className="w-3 h-3" />
+                    <span>{errorCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    <span>{warningCount}</span>
+                  </div>
+                </button>
+                <span className={isDark ? 'text-gray-600' : 'text-gray-400'}>|</span>
+              </>
+            )}
+
             <button
               onClick={() => handleNavigation('about')}
               className={`hover:text-vscode-statusbar transition-colors ${isDark ? '' : 'hover:text-gray-900'}`}

@@ -22,6 +22,8 @@ interface EditorPanelProps {
   onJsEditorModeChange?: (mode: JSEditorMode) => void;
   /** Fired once Monaco has mounted, for navigation and validation wiring. */
   onEditorReady?: (editor: unknown, monaco: unknown) => void;
+  errorCount?: number;
+  warningCount?: number;
 }
 
 const ACCEPTED_EXTENSIONS: Record<EditorLanguage, string[]> = {
@@ -69,6 +71,8 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
   jsEditorMode = 'javascript',
   onJsEditorModeChange,
   onEditorReady,
+  errorCount,
+  warningCount,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -196,6 +200,16 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           <span className="text-[10px] tracking-wider font-semibold bg-white/[0.07] text-content-secondary px-1.5 py-0.5 rounded-sm uppercase">
             {languageBadge}
           </span>
+          {(errorCount !== undefined && errorCount > 0) && (
+            <span className="flex items-center justify-center bg-red-500/20 text-red-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${errorCount} Errors`}>
+              {errorCount}
+            </span>
+          )}
+          {(warningCount !== undefined && warningCount > 0) && (
+            <span className="flex items-center justify-center bg-yellow-500/20 text-yellow-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${warningCount} Warnings`}>
+              {warningCount}
+            </span>
+          )}
           {isJavaScriptPanel && onJsEditorModeChange && (
             <select
               value={jsEditorMode}

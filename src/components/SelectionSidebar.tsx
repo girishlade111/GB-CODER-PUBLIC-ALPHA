@@ -361,7 +361,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                                 className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg"
                             >
                                 <Check className="w-5 h-5" />
-                                Apply Changes
+                                Review Changes
                             </button>
                         </div>
                     )}

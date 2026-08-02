@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { ValidationSummary } from '../services/validationService';
 
 interface EditorTabsProps {
   openPaths: string[];
@@ -7,6 +8,7 @@ interface EditorTabsProps {
   dirtyPaths: Set<string>;
   onSelect: (path: string) => void;
   onClose: (path: string) => void;
+  validationSummary?: ValidationSummary;
 }
 
 /** Shows just the file name; the full path is the tooltip. */
@@ -25,6 +27,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
   dirtyPaths,
   onSelect,
   onClose,
+  validationSummary,
 }) => {
   if (openPaths.length === 0) return null;
 
@@ -59,6 +62,19 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
             >
               <span className="block max-w-[160px] truncate">{displayName(path)}</span>
             </button>
+
+            <div className="flex items-center space-x-1 pr-2">
+              {validationSummary && (validationSummary.issues.filter(i => i.file === path && i.severity === 'error').length > 0) && (
+                <span className="flex items-center justify-center bg-red-500/20 text-red-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${validationSummary.issues.filter(i => i.file === path && i.severity === 'error').length} Errors`}>
+                  {validationSummary.issues.filter(i => i.file === path && i.severity === 'error').length}
+                </span>
+              )}
+              {validationSummary && (validationSummary.issues.filter(i => i.file === path && i.severity === 'warning').length > 0) && (
+                <span className="flex items-center justify-center bg-yellow-500/20 text-yellow-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${validationSummary.issues.filter(i => i.file === path && i.severity === 'warning').length} Warnings`}>
+                  {validationSummary.issues.filter(i => i.file === path && i.severity === 'warning').length}
+                </span>
+              )}
+            </div>
 
             <button
               type="button"

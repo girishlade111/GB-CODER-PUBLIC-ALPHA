@@ -80,8 +80,10 @@ import type { DetectedProjectKind as DetectedKind } from './services/import/proj
 // ===== NEW FEATURES IMPORTS =====
 import { Toaster, toast } from 'react-hot-toast';
 import { CodeTemplate } from './services/codeTemplatesService';
+import type { DiffFile } from './components/AiDiffModal';
 
 // Lazy-loaded modal components (only shown when their show* state is true)
+const AiDiffModal = lazyWithRecovery(() => import('./components/AiDiffModal'));
 const AIChatAssistant = lazyWithRecovery(() => import('./components/AIChatAssistant'));
 const VoiceCommandPanel = lazyWithRecovery(() => import('./components/VoiceCommandPanel'));
 const TemplateSelectorModal = lazyWithRecovery(() => import('./components/TemplateSelectorModal'));
@@ -570,6 +572,13 @@ function App() {
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [isProjectListLoading, setIsProjectListLoading] = useState<boolean>(true);
   const [showNewProject, setShowNewProject] = useState<boolean>(false);
+  const [diffData, setDiffData] = useState<{
+    isOpen: boolean;
+    files: DiffFile[];
+    onApplyAll: () => void;
+    onApplyFile: (path: string) => void;
+    title?: string;
+  } | null>(null);
   /**
    * What was last written for the active project, so a save can send only the
    * files that actually changed rather than rewriting the whole tree.
@@ -659,6 +668,15 @@ function App() {
       if (monaco) {
         validationService.setMonaco(monaco as never);
         setIsValidationReady(true);
+        
+        // Let Monaco pass Ctrl+S to the global app shortcut handler
+        const m = monaco as any;
+        const e = editor as any;
+        if (m.KeyMod && m.KeyCode && e.addCommand) {
+          e.addCommand(m.KeyMod.CtrlCmd | m.KeyCode.KeyS, () => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyS', ctrlKey: true }));
+          });
+        }
       }
     },
     [],
@@ -1722,6 +1740,15 @@ function App() {
     onOpenExport: () => handleOpenExport('export'),
     onOpenImport: () => setShowImport(true),
     onQuickScreenshot: handleQuickScreenshot,
+    onSave: async () => {
+      // Format-on-save functionality
+      await Promise.all([
+        handleFormatHtml(),
+        handleFormatCss(),
+        handleFormatJavascript()
+      ]);
+      toast.success('Code formatted on save.');
+    },
   });
 
   /*
@@ -2008,22 +2035,30 @@ function App() {
   }, [html, css, javascript, setFileProject, setHtml, setCss, setJavascript, codeHistory]);
 
   const handleBuildFromPrompt = useCallback(async (newHtml: string, newCss: string, newJavascript: string) => {
-    codeHistory.saveState({ html, css, javascript }, 'Built from prompt');
-    clearConsole();
-    setIsBuildAnimating(true);
-    setHtml('');
-    setCss('');
-    setJavascript('');
-
-    try {
-      await codeWriter.writeCode(newHtml, setHtml);
-      await codeWriter.writeCode(newCss, setCss);
-      await codeWriter.writeCode(newJavascript, setJavascript);
-      toast.success(' Built from prompt! Edit freely or generate again.');
-    } finally {
-      setIsBuildAnimating(false);
-    }
-  }, [autoSave, codeHistory, html, css, javascript]);
+    setDiffData({
+      isOpen: true,
+      title: 'Review Build with AI',
+      files: [
+        { path: 'index.html', original: html, suggested: newHtml, language: 'html' },
+        { path: 'styles.css', original: css, suggested: newCss, language: 'css' },
+        { path: 'script.js', original: javascript, suggested: newJavascript, language: 'javascript' },
+      ],
+      onApplyFile: (path: string) => {
+        if (path === 'index.html') setHtml(newHtml);
+        if (path === 'styles.css') setCss(newCss);
+        if (path === 'script.js') setJavascript(newJavascript);
+      },
+      onApplyAll: () => {
+        codeHistory.saveState({ html, css, javascript }, 'Built from prompt');
+        clearConsole();
+        setHtml(newHtml);
+        setCss(newCss);
+        setJavascript(newJavascript);
+        toast.success('Built from prompt! Edit freely or generate again.');
+        setDiffData(null);
+      }
+    });
+  }, [html, css, javascript, codeHistory, clearConsole]);
 
   const handleUpdateInjections = useCallback((css: string, js: string) => {
     setCustomInjectionCode({ css, js });
@@ -2102,33 +2137,49 @@ function App() {
       !!selection.editorInstance &&
       !!selection.range;
 
-    codeHistory.saveState({ html, css, javascript }, `Applied ${activeResult.operation}`);
+    const originalContent = canReplaceSelection ? (selection.code || '') : (targetFile === 'html' ? html : targetFile === 'css' ? css : javascript);
 
-    if (canReplaceSelection) {
-      const success = monacoHelper.replaceSelectedCode(selection.editorInstance, newCode, selection.range);
+    setDiffData({
+      isOpen: true,
+      title: `Review: ${activeResult.operation}`,
+      files: [{
+        path: targetFile === 'html' ? 'index.html' : targetFile === 'css' ? 'styles.css' : 'script.js',
+        original: originalContent,
+        suggested: newCode,
+        language: targetFile,
+      }],
+      onApplyFile: () => {}, // Handled by applyAll for single file
+      onApplyAll: () => {
+        codeHistory.saveState({ html, css, javascript }, `Applied ${activeResult.operation}`);
 
-      if (!success) {
-        toast.error('Could not apply the change to the editor.');
-        return;
+        if (canReplaceSelection) {
+          const success = monacoHelper.replaceSelectedCode(selection.editorInstance!, newCode, selection.range!);
+
+          if (!success) {
+            toast.error('Could not apply the change to the editor.');
+            return;
+          }
+        } else {
+          // Whole-file replacement — including the cross-file case where the real
+          // fix lives in a file the user did not have selected.
+          const setterByFile: Record<EditorLanguage, (value: string) => void> = {
+            html: setHtml,
+            css: setCss,
+            javascript: setJavascript,
+          };
+
+          setterByFile[targetFile](newCode);
+
+          if (targetFile !== selection.language) {
+            toast.success(`Applied to the ${targetFile.toUpperCase()} file — that is where the fix belonged.`);
+          }
+        }
+
+        clearSelection();
+        selectionOps.clearResult();
+        setDiffData(null);
       }
-    } else {
-      // Whole-file replacement — including the cross-file case where the real
-      // fix lives in a file the user did not have selected.
-      const setterByFile: Record<EditorLanguage, (value: string) => void> = {
-        html: setHtml,
-        css: setCss,
-        javascript: setJavascript,
-      };
-
-      setterByFile[targetFile](newCode);
-
-      if (targetFile !== selection.language) {
-        toast.success(`Applied to the ${targetFile.toUpperCase()} file — that is where the fix belonged.`);
-      }
-    }
-
-    clearSelection();
-    selectionOps.clearResult();
+    });
   }, [selection, selectionOps, codeHistory, html, css, javascript, clearSelection]);
 
   const handleCloseSelectionResult = useCallback(() => {
@@ -3374,6 +3425,8 @@ function App() {
               onEditorReady={(editor, monaco) => handleEditorReady('html', editor, monaco)}
               fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
               fontSize={settings.editorFontSize}
+              errorCount={validation.summary.issues.filter(i => i.source === 'html' && i.severity === 'error').length}
+              warningCount={validation.summary.issues.filter(i => i.source === 'html' && i.severity === 'warning').length}
             />
 
             <EditorPanel
@@ -3389,6 +3442,8 @@ function App() {
               onEditorReady={(editor, monaco) => handleEditorReady('css', editor, monaco)}
               fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
               fontSize={settings.editorFontSize}
+              errorCount={validation.summary.issues.filter(i => i.source === 'css' && i.severity === 'error').length}
+              warningCount={validation.summary.issues.filter(i => i.source === 'css' && i.severity === 'warning').length}
             />
 
             <EditorPanel
@@ -3406,6 +3461,8 @@ function App() {
               fontSize={settings.editorFontSize}
               jsEditorMode={jsEditorMode}
               onJsEditorModeChange={setJsEditorMode}
+              errorCount={validation.summary.issues.filter(i => i.source === 'js' && i.severity === 'error').length}
+              warningCount={validation.summary.issues.filter(i => i.source === 'js' && i.severity === 'warning').length}
             />
           </div>
           )}
@@ -3535,7 +3592,12 @@ function App() {
       </div>
 
       {/* Footer */}
-      <Footer focusMode={focusMode} />
+      <Footer
+        focusMode={focusMode}
+        errorCount={validation.summary.errors}
+        warningCount={validation.summary.warnings}
+        onOpenValidator={() => setRightPanelRequest({ tab: 'console', nonce: Date.now() })}
+      />
 
       {/* External Library Manager - Phase 3 */}
       {isPhase3Ready && (
@@ -3585,6 +3647,20 @@ function App() {
       )}
 
       {/* ===== NEW FEATURES MODALS ===== */}
+
+      {/* AI Diff Modal */}
+      {diffData && (
+        <Suspense fallback={null}>
+          <AiDiffModal
+            isOpen={diffData.isOpen}
+            onClose={() => setDiffData(null)}
+            onApplyAll={diffData.onApplyAll}
+            onApplyFile={diffData.onApplyFile}
+            files={diffData.files}
+            title={diffData.title}
+          />
+        </Suspense>
+      )}
 
       {/* Build from Prompt */}
       {showBuildFromPrompt && (

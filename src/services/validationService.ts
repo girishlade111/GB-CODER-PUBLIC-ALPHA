@@ -334,6 +334,27 @@ const ATTRIBUTE_RULES: AttributeRule[] = [
     message: '`<label>` has no `for` attribute; associate it with a form control.',
     test: (tag) => !tag.attributes.has('for'),
   },
+  {
+    rule: 'html(deprecated-tag)',
+    severity: 'warning',
+    tag: 'marquee',
+    message: '`<marquee>` is deprecated and should not be used.',
+    test: () => true,
+  },
+  {
+    rule: 'html(deprecated-tag)',
+    severity: 'warning',
+    tag: 'font',
+    message: '`<font>` is deprecated. Use CSS instead.',
+    test: () => true,
+  },
+  {
+    rule: 'html(deprecated-tag)',
+    severity: 'warning',
+    tag: 'center',
+    message: '`<center>` is deprecated. Use CSS instead.',
+    test: () => true,
+  },
 ];
 
 /** Attribute and accessibility rules, plus duplicate `id` detection. */
@@ -385,6 +406,80 @@ export const validateHtmlAttributes = (
       }
     }
   });
+
+  return issues;
+};
+
+/** Custom CSS Rules (!important overuse) */
+export const validateCssCustomRules = (
+  css: string,
+  file: string,
+  fileLabel: string,
+): ValidationIssue[] => {
+  const issues: ValidationIssue[] = [];
+  let importantCount = 0;
+  const regex = /!important/g;
+  let match;
+  while ((match = regex.exec(css)) !== null) {
+    importantCount++;
+    if (importantCount > 3) {
+      const { line, column } = offsetToPosition(css, match.index);
+      issues.push({
+        id: `css-important-${file}-${match.index}`,
+        file,
+        fileLabel,
+        line,
+        column,
+        severity: 'warning',
+        rule: 'css(important-overuse)',
+        message: 'Avoid overusing !important (found > 3). It makes CSS difficult to maintain.',
+        source: 'css',
+      });
+    }
+  }
+  return issues;
+};
+
+/** Custom JS Rules (console.log, eval) */
+export const validateJsCustomRules = (
+  js: string,
+  file: string,
+  fileLabel: string,
+): ValidationIssue[] => {
+  const issues: ValidationIssue[] = [];
+  
+  const consoleRegex = /console\.log\s*\(/g;
+  let match;
+  while ((match = consoleRegex.exec(js)) !== null) {
+    const { line, column } = offsetToPosition(js, match.index);
+    issues.push({
+      id: `js-console-${file}-${match.index}`,
+      file,
+      fileLabel,
+      line,
+      column,
+      severity: 'warning',
+      rule: 'js(no-console)',
+      message: 'Remove console.log before production.',
+      source: 'js',
+    });
+  }
+
+  const evalRegex = /\beval\s*\(/g;
+  while ((match = evalRegex.exec(js)) !== null) {
+    const { line, column } = offsetToPosition(js, match.index);
+    issues.push({
+      id: `js-eval-${file}-${match.index}`,
+      file,
+      fileLabel,
+      line,
+      column,
+      severity: 'warning',
+      rule: 'js(no-eval)',
+      message: 'eval() is a security risk and should be avoided.',
+      source: 'js',
+    });
+  }
 
   return issues;
 };
@@ -656,6 +751,7 @@ class ValidationService {
         const key = editorKeyFor(projectFile.path);
         const model = this.syncModel(key, projectFile.content, 'css');
         if (model) targets.push({ model, key, label: projectFile.path, language });
+        textIssues.push(...validateCssCustomRules(projectFile.content, key, projectFile.path));
       }
     }
 
@@ -677,6 +773,7 @@ class ValidationService {
       const key = projectFile ? editorKeyFor(projectFile.path) : isPlain ? 'javascript' : path;
       const label = projectFile?.path ?? (isPlain ? PLAIN_JS_PATH : path || 'script');
       targets.push({ model, key, label, language });
+      textIssues.push(...validateJsCustomRules(model.getValue(), key, label));
     }
 
     this.targets = targets;

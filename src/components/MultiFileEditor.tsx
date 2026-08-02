@@ -6,6 +6,7 @@ import { FileWorkspace } from '../hooks/useFileWorkspace';
 import { ProjectType, monacoLanguageFor } from '../types/files';
 import { GB_CODER_MONACO_THEME, defineGbCoderTheme } from '../utils/monacoTheme';
 import { BundleError, formatBundleError } from '../services/bundlerService';
+import { ValidationSummary } from '../services/validationService';
 
 interface MultiFileEditorProps {
   projectType: ProjectType;
@@ -18,6 +19,7 @@ interface MultiFileEditorProps {
   onSelectionChange?: (editor: unknown, path: string) => void;
   /** Registers the mounted editor for click-to-jump navigation. */
   onEditorReady?: (key: string, editor: unknown, monaco: unknown) => void;
+  validationSummary?: ValidationSummary;
 }
 
 const STATUS_LABEL: Record<MultiFileEditorProps['buildStatus'], string> = {
@@ -44,6 +46,7 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
   buildErrors,
   onSelectionChange,
   onEditorReady,
+  validationSummary,
 }) => {
   const { activeFile } = workspace;
 
@@ -70,6 +73,7 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
         dirtyPaths={workspace.dirtyPaths}
         onSelect={workspace.setActivePath}
         onClose={workspace.closeFile}
+        validationSummary={validationSummary}
       />
 
       <div className="min-h-0 flex-1">
