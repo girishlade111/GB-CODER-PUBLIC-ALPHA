@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, ChevronRight, Sparkles, Code2, Play, MousePointerClick } from 'lucide-react';
 
 interface WelcomeTourModalProps {
@@ -36,6 +36,14 @@ const WelcomeTourModal: React.FC<WelcomeTourModalProps> = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
 
+  const handleClose = useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      localStorage.setItem('gbcoder_onboarded', 'true');
+      onClose();
+    }, 300);
+  }, [onClose]);
+
   useEffect(() => {
     // Focus trap setup
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -45,15 +53,7 @@ const WelcomeTourModal: React.FC<WelcomeTourModalProps> = ({ onClose }) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      localStorage.setItem('gbcoder_onboarded', 'true');
-      onClose();
-    }, 300);
-  };
+  }, [handleClose]);
 
   const nextStep = () => {
     if (currentStep < TOUR_STEPS.length - 1) {
