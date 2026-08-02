@@ -82,7 +82,35 @@ const libraryTags = (libraries: ExternalLibrary[] = []): { head: string; body: s
 const escapeClosingScript = (code: string): string =>
   code.replace(/<\/script>/gi, "</scr' + 'ipt>");
 
+// ─── Custom Injections Helper ──────────────────────────────────────────────────
+
+const getInjections = (options: ArchiveOptions) => {
+  const result = { inlineCss: '', inlineJs: '', head: '', beforeBody: '', afterBody: '' };
+  
+  if (!options.includeInjections) return result;
+
+  const injections = customInjectionService.getCustomInjections(options.projectId)
+    .filter(inj => inj.enabled && inj.applyToExport);
+
+  injections.forEach(inj => {
+    const code = customInjectionService.sanitizeCode(inj.code, inj.type);
+    
+    if (inj.type === 'css') {
+      result.inlineCss += (result.inlineCss ? '\n' : '') + code;
+    } else if (inj.type === 'js') {
+      result.inlineJs += (result.inlineJs ? '\n' : '') + code;
+    } else if (inj.type === 'html') {
+      if (inj.target === 'head') result.head += (result.head ? '\n' : '') + code;
+      else if (inj.target === 'before-body') result.beforeBody += (result.beforeBody ? '\n' : '') + code;
+      else if (inj.target === 'after-body') result.afterBody += (result.afterBody ? '\n' : '') + code;
+    }
+  });
+
+  return result;
+};
+
 // ─── Standalone single-file HTML ──────────────────────────────────────────────
+
 
 /**
  * Bundles a plain project into one self-contained .html file with inline

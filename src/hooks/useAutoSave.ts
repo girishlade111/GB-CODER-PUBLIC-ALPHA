@@ -7,6 +7,25 @@ interface UseAutoSaveProps {
   enabled?: boolean;
 }
 
+/**
+ * Fast, Unicode-safe content hash based on djb2.
+ *
+ * Replaces the previous `btoa(encodeURIComponent(JSON.stringify(state)))` which
+ * threw on any file containing non-Latin characters (btoa only accepts Latin1),
+ * and was unnecessarily slow on large projects.
+ */
+const createContentHash = (state: SnapshotProjectState): number => {
+  const str = JSON.stringify(state);
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    // djb2: hash = hash * 33 ^ charCode
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+    // Keep in 32-bit signed integer range.
+    hash |= 0;
+  }
+  return hash;
+};
+
 export const useAutoSave = ({
   projectState,
   intervalMs = 2000,
@@ -16,13 +35,7 @@ export const useAutoSave = ({
   const [isSaving, setIsSaving] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
   const autoSnapshotIntervalRef = useRef<NodeJS.Timeout>();
-  const lastSavedStateRef = useRef<string>('');
-
-  const createContentHash = (state: SnapshotProjectState) => {
-    // A simplified hash: just stringify the state.
-    // In a real app we might hash this properly to save performance, but JSON.stringify is fast enough for small projects.
-    return btoa(encodeURIComponent(JSON.stringify(state))).slice(0, 32);
-  };
+  const lastSavedHashRef = useRef<number>(NaN);
 
   const performAutoSave = useCallback(() => {
     if (!enabled || !projectState) return;
@@ -30,14 +43,14 @@ export const useAutoSave = ({
     const currentHash = createContentHash(projectState);
 
     // Only save if content has changed
-    if (currentHash === lastSavedStateRef.current) return;
+    if (currentHash === lastSavedHashRef.current) return;
 
     setIsSaving(true);
     try {
       snapshotService.saveAutoSave(projectState);
       
       const timestamp = new Date().toISOString();
-      lastSavedStateRef.current = currentHash;
+      lastSavedHashRef.current = currentHash;
       setLastSaveTime(timestamp);
 
       // Dispatch custom event for UI feedback (StatusBar)
@@ -81,11 +94,6 @@ export const useAutoSave = ({
     autoSnapshotIntervalRef.current = setInterval(() => {
       if (!projectState) return;
       
-      const currentHash = createContentHash(projectState);
-      
-      // We don't want to snapshot if there are no changes since the last save
-      // But we need to track the last snapshot hash, not just the last auto-save hash.
-      // For simplicity, we just create a snapshot. The SnapshotService will prune old ones.
       try {
         const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         snapshotService.createSnapshot(`Auto-save [${timeStr}]`, projectState, true);

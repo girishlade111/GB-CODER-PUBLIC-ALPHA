@@ -458,15 +458,26 @@ class VoiceCommandService {
        * This previously only restarted in continuous mode, so a single-command
        * session that timed out before the user spoke simply went dead with the
        * overlay still showing "Listening...".
+       *
+       * IMPORTANT: Never call recognition.start() here — that would restart the
+       * *dying* instance, which Chrome/Edge reject after an abort. Instead,
+       * delegate to startListening() which tears the old instance down and builds
+       * a fresh one. The guard `this.recognition === recognition` ensures that a
+       * parallel startListening() call (e.g. from a language switch) that already
+       * replaced the instance does not spawn a second listener.
        */
       if (
         !this.intentionalStop &&
         this.wantsToListen &&
-        this.restartCount < MAX_CONSECUTIVE_RESTARTS
+        this.restartCount < MAX_CONSECUTIVE_RESTARTS &&
+        this.recognition === recognition
       ) {
         this.restartCount += 1;
+        // Null out before startListening so teardownRecognition inside it
+        // doesn't try to abort an already-ended instance.
+        this.recognition = null;
         try {
-          recognition.start();
+          this.startListening();
           return;
         } catch {
           // Fall through to idle if the engine refuses to restart.

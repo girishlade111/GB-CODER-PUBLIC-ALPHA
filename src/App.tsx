@@ -657,7 +657,6 @@ function App() {
   // ===== NEW FEATURES STATE =====
   const [showAIChat, setShowAIChat] = useState(false);
   const [showBuildFromPrompt, setShowBuildFromPrompt] = useState(false);
-  const [isBuildAnimating] = useState(false);
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
   /** Transcript routed into Build with AI, awaiting the user's confirmation. */
   const [voiceBuildPrompt, setVoiceBuildPrompt] = useState('');
@@ -1038,7 +1037,7 @@ function App() {
       const libraries = externalLibraryService.getLibraries();
       setExternalLibraries(libraries);
     } catch (error) {
-      console.error('[DEBUG] Error loading external libraries:', error);
+      console.error('Error loading external libraries:', error);
       // Set empty array as fallback to prevent crashes
       setExternalLibraries([]);
     }
@@ -2354,23 +2353,22 @@ function App() {
         : {}),
     };
 
-    try {
-      const result = await selectionOps.executeOperation(operation, selection.code, selection.language, projectContext);
+    const result = await selectionOps.executeOperation(operation, selection.code, selection.language, projectContext);
 
-      // Save to history if successful
-      if (result) {
-        const newItem: HistoryItem = {
-          id: Date.now().toString(),
-          timestamp: Date.now(),
-          operation: operation,
-          language: selection.language,
-          codePreview: selection.code.substring(0, 100) + (selection.code.length > 100 ? '...' : ''),
-          result: result
-        };
-        setSelectionHistory(prev => [newItem, ...prev]);
-      }
-    } catch (error) {
-      console.error('[App] Operation failed:', error);
+    // Save to history if successful.
+    // Errors are surfaced by useSelectionOperations via toast.error — no outer
+    // catch block is needed here, and adding one would silently swallow errors
+    // that the user needs to see.
+    if (result) {
+      const newItem: HistoryItem = {
+        id: Date.now().toString(),
+        timestamp: Date.now(),
+        operation: operation,
+        language: selection.language,
+        codePreview: selection.code.substring(0, 100) + (selection.code.length > 100 ? '...' : ''),
+        result: result
+      };
+      setSelectionHistory(prev => [newItem, ...prev]);
     }
   }, [hasSelection, selection, selectionOps, html, css, javascript, fileProject, workspace.activePath]);
 
@@ -2830,13 +2828,30 @@ function App() {
         return;
 
       case 'sandbox_connect':
-      case 'sandbox_stop':
         /*
-         * Registered so the vocabulary is complete, but the sandbox layer does
-         * not exist yet. Saying so is better than appearing to work.
+         * Route to the Sandbox panel so the user can connect their API key.
+         * The voice capability flag is set correctly so this only fires when
+         * the sandbox panel is available.
          */
-        toast.error('Sandbox mode is not available yet.');
-        voiceCommandService.speak('Sandbox mode is not available yet');
+        if (sandboxTerminal.isAvailable()) {
+          toast.success('Sandbox is already connected.');
+          voiceCommandService.speak('Sandbox already connected');
+        } else {
+          setRightPanelRequest({ tab: 'terminal', nonce: Date.now() });
+          toast.success('Open the Terminal panel to connect a Sandbox.');
+          voiceCommandService.speak('Open the Terminal panel to connect');
+        }
+        return;
+
+      case 'sandbox_stop':
+        if (sandboxTerminal.isAvailable()) {
+          setRightPanelRequest({ tab: 'terminal', nonce: Date.now() });
+          toast.success('Use the Terminal panel to disconnect the Sandbox.');
+          voiceCommandService.speak('Use the Terminal panel to disconnect');
+        } else {
+          toast.error('No Sandbox is currently connected.');
+          voiceCommandService.speak('No sandbox is connected');
+        }
         return;
 
       case 'help':
@@ -3002,6 +3017,7 @@ function App() {
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
+          onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -3060,6 +3076,7 @@ function App() {
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
+          onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -3119,6 +3136,7 @@ function App() {
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
+          onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -3176,6 +3194,7 @@ function App() {
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
+          onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -3208,6 +3227,7 @@ function App() {
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
+          onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -3240,6 +3260,7 @@ function App() {
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
+          onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -3272,6 +3293,7 @@ function App() {
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
+          onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -3304,6 +3326,7 @@ function App() {
           onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
+          onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
           autoSaveEnabled={autoSaveEnabled}
           customActions={
             <div className="flex items-center gap-4">
@@ -3755,7 +3778,7 @@ function App() {
               onConsoleMessage={appendConsoleMessage}
               onPreviewReset={clearPreviewMessages}
               autoRunJS={settings.autoRunJS}
-              previewDelay={isBuildAnimating ? 60000 : settings.previewDelay}
+              previewDelay={settings.previewDelay}
               // Console props
               consoleMessages={consoleFeed.messages}
               consoleCounts={consoleFeed.counts}

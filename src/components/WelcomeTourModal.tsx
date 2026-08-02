@@ -69,7 +69,6 @@ const WelcomeTourModal: React.FC<WelcomeTourModalProps> = ({ onClose }) => {
     <div 
       className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}
       role="dialog"
-      role="dialog"
       aria-modal="true"
       aria-labelledby="tour-modal-title"
     >

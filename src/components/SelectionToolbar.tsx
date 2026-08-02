@@ -85,6 +85,8 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
                             key={op.type}
                             onClick={() => !isDisabled && onOperation(op.type)}
                             disabled={isDisabled}
+                            aria-label={isLoading && isCurrentOp ? `${op.label}ing…` : op.tooltip}
+                            aria-busy={isLoading && isCurrentOp}
                             className={`relative p-2 rounded-md transition-all duration-200 ${isDisabled
                                     ? 'opacity-40 cursor-not-allowed'
                                     : `${op.color} hover:bg-gray-700`

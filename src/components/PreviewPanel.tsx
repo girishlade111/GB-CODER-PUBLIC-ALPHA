@@ -145,17 +145,39 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   const [isFrozen, setIsFrozen] = useState(false);
   const [safeMode, setSafeMode] = useState(false);
   const heartbeatTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  /*
+   * Consecutive-miss counter. A single missed heartbeat can happen on a slow
+   * machine or heavy React re-render — it must not be treated as a crash.
+   * Two consecutive misses at 10 s each (= 20 s of total silence) are a
+   * reliable signal that the preview has actually locked up.
+   */
+  const missedHeartbeatsRef = useRef(0);
 
   const resetHeartbeat = useCallback(() => {
     if (heartbeatTimeoutRef.current) clearTimeout(heartbeatTimeoutRef.current);
+    missedHeartbeatsRef.current = 0;
     setIsFrozen(false);
     heartbeatTimeoutRef.current = setTimeout(() => {
-      // If we don't receive a heartbeat for 5 seconds and it's not currently loading/empty, it's frozen
+      // If we don't receive a heartbeat for 10 seconds and it's not currently loading/empty
       if (!isLoading && !isProjectEmpty && iframeRef.current?.contentWindow) {
-        setIsFrozen(true);
-        if (iframeRef.current) iframeRef.current.srcdoc = ''; // Pause iframe immediately
+        missedHeartbeatsRef.current += 1;
+        // Require 2 consecutive misses before declaring the preview frozen, so
+        // a single slow render on a loaded machine doesn't trigger a false positive.
+        if (missedHeartbeatsRef.current >= 2) {
+          setIsFrozen(true);
+          // Do NOT zero srcdoc here — that destroys the console bridge listener.
+          // Show a user-visible banner instead (rendered below in JSX).
+        } else {
+          // Schedule another check window before giving up.
+          heartbeatTimeoutRef.current = setTimeout(() => {
+            if (!isLoading && !isProjectEmpty && iframeRef.current?.contentWindow) {
+              missedHeartbeatsRef.current += 1;
+              if (missedHeartbeatsRef.current >= 2) setIsFrozen(true);
+            }
+          }, 10000);
+        }
       }
-    }, 5000);
+    }, 10000);
   }, [isLoading, isProjectEmpty]);
 
   useEffect(() => {
@@ -848,12 +870,45 @@ ${importMapHTML}
           </div>
         )}
         
-        {/* Large HTML Warning */}
         {html.length > 500000 && !isProjectEmpty && (
           <div className="absolute bottom-2 right-2 z-20 bg-amber-500 text-black px-3 py-1.5 rounded-md shadow-lg flex items-center gap-2 text-xs font-bold opacity-75 hover:opacity-100 transition-opacity">
             Large HTML detected — preview may be slower
           </div>
         )}
+
+        {/* Frozen preview banner — shown after 2 consecutive 10 s heartbeat misses.
+            Visible to the user; does NOT zero srcdoc (that would destroy the
+            console bridge listener). The user can dismiss or reload. */}
+        {isFrozen && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-lg border border-amber-500/50 bg-gray-900/90 px-4 py-2 text-sm text-amber-300 shadow-lg backdrop-blur-sm">
+            <span>Preview may have frozen.</span>
+            <button
+              onClick={() => {
+                setIsFrozen(false);
+                missedHeartbeatsRef.current = 0;
+                // Force a full reload by toggling the content.
+                if (iframeRef.current) {
+                  const saved = iframeRef.current.srcdoc;
+                  iframeRef.current.srcdoc = '';
+                  requestAnimationFrame(() => {
+                    if (iframeRef.current) iframeRef.current.srcdoc = saved;
+                  });
+                }
+              }}
+              className="ml-1 rounded bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-200 hover:bg-amber-500/40 transition-colors"
+            >
+              Reload
+            </button>
+            <button
+              onClick={() => { setIsFrozen(false); missedHeartbeatsRef.current = 0; }}
+              className="ml-1 text-amber-400/60 hover:text-amber-200 transition-colors text-xs"
+              aria-label="Dismiss frozen warning"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         <div
           id="preview-container"
           className="transition-all duration-300 ease-in-out relative flex-shrink-0"
