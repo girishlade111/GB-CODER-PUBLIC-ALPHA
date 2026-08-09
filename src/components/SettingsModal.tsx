@@ -267,6 +267,35 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         </div>
                     </div>
 
+                    {/* CodeRabbit AI Section */}
+                    <div>
+                        <h3
+                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-orange-500 pl-2 text-orange-400 font-bold`}
+                        >
+                            CodeRabbit AI Bug & Error Scanner
+                        </h3>
+
+                        <div className={`p-4 rounded-lg border ${isDark ? 'border-gray-700 bg-matte-black' : 'border-gray-300 bg-gray-50'}`}>
+                            <label className={`block text-xs font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                CodeRabbit / Gemini API Key
+                            </label>
+                            <input
+                                type="password"
+                                value={settings.codeRabbitApiKey || ''}
+                                onChange={(e) => updateSettings({ codeRabbitApiKey: e.target.value })}
+                                placeholder="Enter your CodeRabbit API Key..."
+                                className={`w-full px-3 py-2 text-xs font-mono rounded-lg border focus:outline-none transition-all ${
+                                    isDark
+                                        ? 'bg-gray-800 border-gray-700 text-white focus:border-orange-500'
+                                        : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500'
+                                }`}
+                            />
+                            <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                Key used by the CodeRabbit AI Bug Scanner to audit project code for logic errors, security risks, and bug fixes.
+                            </p>
+                        </div>
+                    </div>
+
                     {/* Voice Commands Section */}
                     <div>
                         <h3

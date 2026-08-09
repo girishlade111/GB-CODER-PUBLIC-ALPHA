@@ -14,6 +14,7 @@ import {
   FilePlus,
   Mic,
   MicOff,
+  Bug,
 } from 'lucide-react';
 import { PROJECT_TYPE_LABEL, ProjectType } from '../types/files';
 import { useTheme } from '../hooks/useTheme';
@@ -24,6 +25,7 @@ interface NavigationBarProps {
   onAutoSaveToggle: () => void;
   onRun: () => void;
   onOpenBuildFromPrompt: () => void;
+  onOpenCodeRabbit?: () => void;
   onExternalLibraryManagerToggle: () => void;
   onClear?: () => void;
   /** Starts a new project of the given type. Plain is the default mode. */
