@@ -33,15 +33,12 @@ class AnalyticsService {
             gtag('config', trackingId);
 
             this.isInitialized = true;
-            console.log('Analytics initialized with ID:', trackingId);
         }
     }
 
     // Track page view
     trackPageView(path: string, title?: string) {
         if (typeof window === 'undefined') return;
-
-        console.log('Analytics: Page view', { path, title });
 
         if ((window as any).gtag) {
             (window as any).gtag('event', 'page_view', {
@@ -54,8 +51,6 @@ class AnalyticsService {
     // Track custom event
     trackEvent({ category, action, label, value }: AnalyticsEvent) {
         if (typeof window === 'undefined') return;
-
-        console.log('Analytics: Event', { category, action, label, value });
 
         if ((window as any).gtag) {
             (window as any).gtag('event', action, {
