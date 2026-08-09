@@ -1,0 +1,39 @@
+# CodeRabbit AI Configuration
+# Language & Code Review settings for GB-Coder
+
+version: "2"
+language: "en-US"
+tone_instructions: "Be helpful, precise, pragmatic, and point out logic bugs, security vulnerabilities, edge cases, and performance issues with executable code fix suggestions."
+
+reviews:
+  profile: "chill"
+  request_tools:
+    - name: "ast-grep"
+      enabled: true
+    - name: "eslint"
+      enabled: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "master"
+      - "dev"
+  collapse_walkthrough: true
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/*.min.js"
+    - "!package-lock.json"
+  path_instructions:
+    - path: "src/**/*"
+      instructions: "Check React components, custom hooks, and services for memory leaks, type safety, state management bugs, unhandled promise rejections, and XSS risks."
+    - path: "server/**/*"
+      instructions: "Check Express backend and WebSocket terminal handlers for command injection, memory leaks, unhandled exceptions, and resource cleanup on exit."
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
