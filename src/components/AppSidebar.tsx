@@ -15,6 +15,7 @@ import {
   X,
   Zap,
   Database,
+  Bug,
 } from 'lucide-react';
 import Tooltip from './ui/Tooltip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -42,6 +43,7 @@ interface AppSidebarProps {
    */
   onOpenVSCodeMode: () => void;
   onOpenAIChat: () => void;
+  onOpenCodeRabbit?: () => void;
   onOpenVoiceCommands: () => void;
   onOpenStatistics: () => void;
   onOpenInjection: () => void;
