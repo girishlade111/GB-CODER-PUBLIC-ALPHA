@@ -3942,6 +3942,24 @@ function App() {
         </Suspense>
       )}
 
+      {/* CodeRabbit AI Bug Scanner Modal */}
+      {isPhase3Ready && (
+        <Suspense fallback={null}>
+          <CodeRabbitReviewModal
+            isOpen={showCodeRabbitModal}
+            onClose={() => setShowCodeRabbitModal(false)}
+            files={fileProject.files.map((f) => ({
+              filename: f.path,
+              content: f.content,
+              language: f.language || (f.path.endsWith('.css') ? 'css' : f.path.endsWith('.html') ? 'html' : 'javascript'),
+            }))}
+            onApplyFixToFile={(filename, newContent) => {
+              setFileProject((current) => setFileContent(current, filename, newContent));
+            }}
+          />
+        </Suspense>
+      )}
+
       {/* Keyboard Shortcuts Help Modal - Phase 3 */}
       {isPhase3Ready && (
         <Suspense fallback={null}>
