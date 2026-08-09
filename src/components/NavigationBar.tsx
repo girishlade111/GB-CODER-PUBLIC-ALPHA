@@ -61,6 +61,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   onAutoSaveToggle,
   onRun,
   onOpenBuildFromPrompt,
+  onOpenCodeRabbit,
   onClear,
   onNewProject,
   onNavigateHome,
@@ -242,6 +243,20 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   <span className="hidden lg:inline text-sm font-semibold">Build with AI</span>
                 </button>
               </Tooltip>
+
+              {onOpenCodeRabbit && (
+                <Tooltip label="CodeRabbit AI Bug Scanner">
+                  <button
+                    onClick={onOpenCodeRabbit}
+                    className="p-2 sm:px-3 sm:py-2 rounded-md transition-all flex items-center gap-2 bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 text-white font-semibold shadow-md active:brightness-95 compact:justify-center compact:min-h-[44px] compact:min-w-[44px]"
+                    title="CodeRabbit AI Bug Scanner"
+                    aria-label="CodeRabbit AI Bug Scanner"
+                  >
+                    <Bug className="w-4 h-4 sm:w-5 sm:h-5 text-orange-200 animate-pulse" />
+                    <span className="hidden xl:inline text-sm font-semibold">CodeRabbit AI</span>
+                  </button>
+                </Tooltip>
+              )}
 
               {/* Custom Actions */}
               {customActions}
