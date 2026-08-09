@@ -545,8 +545,6 @@ form.addEventListener('submit', (e) => {
   const formData = new FormData(form);
   const data = Object.fromEntries(formData);
   
-  console.log('Form submitted:', data);
-  
   // Show success message
   successMessage.style.display = 'block';
   form.reset();
