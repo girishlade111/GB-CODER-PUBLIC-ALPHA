@@ -31,8 +31,6 @@ export class ScreenshotService {
     }
 
     try {
-      console.log('Starting screenshot capture...', { format, quality });
-
       // Wait for any images to load
       await this.waitForImages(previewElement);
 
@@ -50,24 +48,19 @@ export class ScreenshotService {
 
       switch (format) {
         case 'jpeg':
-          console.log('Capturing as JPEG...');
           dataUrl = await toJpeg(previewElement, {
             ...captureOptions,
             backgroundColor: '#ffffff',
           });
           break;
         case 'svg':
-          console.log('Capturing as SVG...');
           dataUrl = await toSvg(previewElement, captureOptions);
           break;
         case 'png':
         default:
-          console.log('Capturing as PNG...');
           dataUrl = await toPng(previewElement, captureOptions);
           break;
       }
-
-      console.log('Screenshot captured successfully');
 
       // Add watermark if requested
       if (includeWatermark && watermarkText) {
@@ -164,7 +157,6 @@ export class ScreenshotService {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      console.log('Screenshot downloaded:', filename);
     } catch (error: any) {
       console.error('Download failed:', error);
       throw new Error('Failed to download screenshot');
@@ -173,7 +165,6 @@ export class ScreenshotService {
 
   public async captureToClipboard(dataUrl: string): Promise<boolean> {
     try {
-      console.log('Copying screenshot to clipboard...');
       
       // Check if Clipboard API is available
       if (!navigator.clipboard || !navigator.clipboard.write) {
@@ -188,12 +179,10 @@ export class ScreenshotService {
         throw new Error('Failed to convert image to blob');
       }
 
-      console.log('Writing to clipboard...');
       await navigator.clipboard.write([
         new ClipboardItem({ [blob.type]: blob }),
       ]);
       
-      console.log('Screenshot copied to clipboard successfully');
       return true;
     } catch (error: any) {
       console.error('Clipboard write failed:', error);

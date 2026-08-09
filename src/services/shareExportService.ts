@@ -152,7 +152,6 @@ export class ShareExportService {
       // Use modern Clipboard API if available
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(text);
-        console.log('Text copied to clipboard');
         return true;
       }
       
@@ -168,7 +167,6 @@ export class ShareExportService {
       
       try {
         const successful = document.execCommand('copy');
-        console.log('Text copied to clipboard (fallback method)');
         return successful;
       } catch (err) {
         console.error('Fallback copy failed:', err);
