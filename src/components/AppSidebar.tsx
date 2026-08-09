@@ -100,6 +100,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   onOpenImport,
   onOpenVSCodeMode,
   onOpenAIChat,
+  onOpenCodeRabbit,
   onOpenVoiceCommands,
   onOpenStatistics,
   onOpenInjection,
@@ -176,6 +177,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
           label: 'AI Chat',
           icon: <MessageSquare className="h-5 w-5" />,
           onClick: onOpenAIChat,
+        },
+        {
+          id: 'coderabbit-ai',
+          label: 'CodeRabbit AI Bug Scanner',
+          icon: <Bug className="h-5 w-5 text-orange-400" />,
+          onClick: onOpenCodeRabbit,
         },
         {
           id: 'voice',
