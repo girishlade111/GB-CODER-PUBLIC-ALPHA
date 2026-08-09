@@ -76,7 +76,6 @@ class ProjectStore {
             this.saveAllProjects(projects);
             this.setCurrentProjectId(id);
 
-            console.log(`Created new project: ${name} (${id})`);
             return { success: true, projectId: id };
         } catch (error) {
             console.error('Failed to create project:', error);
@@ -99,7 +98,6 @@ class ProjectStore {
             projects[project.id] = project;
             this.saveAllProjects(projects);
 
-            console.log(`Saved project: ${project.name} (${project.id})`);
             return { success: true, projectId: project.id };
         } catch (error) {
             console.error('Failed to save project:', error);
@@ -167,7 +165,6 @@ class ProjectStore {
             this.saveAllProjects(projects);
             this.setCurrentProjectId(newId);
 
-            console.log(`Duplicated project: ${original.name} → ${duplicated.name}`);
             return { success: true, projectId: newId };
         } catch (error) {
             console.error('Failed to duplicate project:', error);
@@ -195,7 +192,6 @@ class ProjectStore {
                 localStorage.removeItem(ACTIVE_PROJECT_KEY);
             }
 
-            console.log(`Deleted project: ${projectName} (${id})`);
             return { success: true };
         } catch (error) {
             console.error('Failed to delete project:', error);
