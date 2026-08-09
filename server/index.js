@@ -50,12 +50,8 @@ function getDefaultShell() {
 const sessions = new Map();
 
 wss.on('connection', (ws) => {
-    console.log('New terminal connection established');
-
     const sessionId = Date.now().toString();
     const shell = getDefaultShell();
-
-    console.log(`Spawning shell: ${shell}`);
 
     // Spawn PTY process
     const ptyProcess = pty.spawn(shell, [], {
@@ -82,7 +78,6 @@ wss.on('connection', (ws) => {
 
     // Handle PTY exit
     ptyProcess.onExit(({ exitCode, signal }) => {
-        console.log(`PTY process exited with code ${exitCode}, signal ${signal}`);
         try {
             ws.send(JSON.stringify({
                 type: 'exit',
@@ -126,7 +121,6 @@ wss.on('connection', (ws) => {
 
     // Clean up on disconnect
     ws.on('close', () => {
-        console.log('Terminal connection closed');
         if (sessions.has(sessionId)) {
             const pty = sessions.get(sessionId);
             try {
