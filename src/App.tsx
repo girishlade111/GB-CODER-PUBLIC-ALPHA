@@ -649,6 +649,7 @@ function App() {
   const [externalLibraries, setExternalLibraries] = useState<ExternalLibrary[]>([]);
   const [showExtensionsMarketplace, setShowExtensionsMarketplace] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [showCodeRabbitModal, setShowCodeRabbitModal] = useState<boolean>(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState<boolean>(false);
   const [showCommandPalette, setShowCommandPalette] = useState<boolean>(false);
   const [showExportShare, setShowExportShare] = useState<boolean>(false);
@@ -3564,6 +3565,7 @@ function App() {
         onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
         onRun={() => handleCommand('run')}
         onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
+        onOpenCodeRabbit={() => setShowCodeRabbitModal(true)}
         onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
         onClear={handleClearAll}
         onNewProject={handleNewProject}
