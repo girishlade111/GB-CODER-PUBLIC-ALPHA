@@ -49,7 +49,6 @@ const ContactPage: React.FC = () => {
             return;
         }
 
-        console.log('Form submitted:', formData);
         setFormStatus('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
 
