@@ -136,6 +136,7 @@ const DisclaimerPage = lazyWithRecovery(() => import('./components/pages/Disclai
 const ContactPage = lazyWithRecovery(() => import('./components/pages/ContactPage'));
 const ExtensionsMarketplace = lazyWithRecovery(() => import('./components/ExtensionsMarketplace'));
 const SettingsModal = lazyWithRecovery(() => import('./components/SettingsModal'));
+const CodeRabbitReviewModal = lazyWithRecovery(() => import('./components/CodeRabbitReviewModal'));
 const HistoryPanel = lazyWithRecovery(() => import('./components/HistoryPanel'));
 const KeyboardShortcutsHelp = lazyWithRecovery(() => import('./components/KeyboardShortcutsHelp'));
 const CommandPalette = lazyWithRecovery(() => import('./components/CommandPalette'));
