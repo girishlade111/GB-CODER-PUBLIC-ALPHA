@@ -3626,6 +3626,7 @@ function App() {
           onOpenImport={() => setShowImport(true)}
           onOpenVSCodeMode={handleEnterVSCodeMode}
           onOpenAIChat={() => setShowAIChat(true)}
+          onOpenCodeRabbit={() => setShowCodeRabbitModal(true)}
           onOpenVoiceCommands={() => setShowVoiceCommands(true)}
           onOpenStatistics={() => setShowStats(true)}
           onOpenInjection={() => setShowInjectionManager(true)}
