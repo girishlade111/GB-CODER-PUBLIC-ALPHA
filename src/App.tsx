@@ -491,7 +491,6 @@ startBtn?.addEventListener('click', () => {
   if (name) {
     greetingMsg.textContent = \`Hello \${name}! Ready to build something amazing?\`;
     greetingMsg.classList.remove('hidden');
-    console.log(\`User \${name} clicked start\`);
   } else {
     nameInput.focus();
     nameInput.style.borderColor = '#ef4444'; // Red border for error state
