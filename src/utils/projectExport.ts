@@ -67,7 +67,6 @@ export async function exportProjectAsZip(project: Project): Promise<void> {
         // Clean up
         URL.revokeObjectURL(url);
 
-        console.log(`Exported project "${project.name}" as ZIP`);
     } catch (error) {
         console.error('Failed to export project:', error);
         throw new Error('Failed to export project as ZIP');
