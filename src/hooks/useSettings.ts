@@ -17,6 +17,8 @@ export interface AppSettings {
     voiceContinuous: boolean;
     /** BCP-47 tag passed to SpeechRecognition. */
     voiceLanguage: string;
+    /** CodeRabbit AI API Key for bug & error detection */
+    codeRabbitApiKey: string;
 }
 
 // Default settings matching current behavior
@@ -30,6 +32,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     voiceFeedback: false,
     voiceContinuous: false,
     voiceLanguage: 'en-US',
+    codeRabbitApiKey: '',
 };
 
 // Map theme variants to the base light/dark mode used by useTheme
