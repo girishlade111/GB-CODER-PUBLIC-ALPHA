@@ -367,7 +367,6 @@ ${importMapHTML}
     <script>
         // External Libraries Loading Indicator
         if (${externalLibraries.length} > 0) {
-            console.log('Loading ${externalLibraries.length} external libraries...');
         }
         ${compilationWarningScript}
         
@@ -409,7 +408,6 @@ ${importMapHTML}
                 `}
                 
                 if (${externalLibraries.length} > 0) {
-                    console.log('External libraries loaded successfully');
                 }
                 
             } catch (error) {
