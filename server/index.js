@@ -148,7 +148,6 @@ wss.on('connection', (ws) => {
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('Received SIGTERM, closing all sessions...');
     sessions.forEach((pty, sessionId) => {
         try {
             pty.kill();
@@ -158,13 +157,11 @@ process.on('SIGTERM', () => {
     });
     sessions.clear();
     server.close(() => {
-        console.log('Server closed');
         process.exit(0);
     });
 });
 
 process.on('SIGINT', () => {
-    console.log('Received SIGINT, closing all sessions...');
     sessions.forEach((pty, sessionId) => {
         try {
             pty.kill();
@@ -174,14 +171,10 @@ process.on('SIGINT', () => {
     });
     sessions.clear();
     server.close(() => {
-        console.log('Server closed');
         process.exit(0);
     });
 });
 
 // Start server
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-    console.log(`Terminal server running on port ${PORT}`);
-    console.log(`WebSocket endpoint: ws://localhost:${PORT}/terminal`);
-});
+server.listen(PORT);
