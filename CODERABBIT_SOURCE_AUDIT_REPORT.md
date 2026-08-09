@@ -1,15 +1,15 @@
 # 🐇 CodeRabbit AI - GB Coder Source Code Audit Report
 
-**Audit Date:** 2026-08-09T18:33:42.747Z  
+**Audit Date:** 2026-08-09T18:34:00.745Z  
 **Files Scanned:** 171 application files in `src/` and `server/`  
-**Total Issues Identified:** 40 (Critical: 0, Warnings: 6, Info: 34)
+**Total Issues Identified:** 34 (Critical: 0, Warnings: 0, Info: 34)
 
 ---
 
 ## 📊 Audit Metrics Summary
 
 - 🚨 **Critical Bugs & Security Risks:** 0
-- ⚠️ **Warnings & Reliability Flaws:** 6
+- ⚠️ **Warnings & Reliability Flaws:** 0
 - ℹ️ **Code Quality & Hygiene:** 34
 
 ---
@@ -246,67 +246,7 @@ console.log('Text copied to clipboard (fallback method)');
 
 ---
 
-### 24. [Warning] Direct State Array Mutation
-- **File:** [src/services/voiceCommandService.ts](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/src/services/voiceCommandService.ts) (Line 493)
-- **Category:** State Mutation
-- **Description:** Mutating state array in place can prevent React re-renders.
-```ts
-this.state.status === 'error' ||
-```
-
----
-
-### 25. [Warning] Direct State Array Mutation
-- **File:** [src/services/voiceCommandService.ts](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/src/services/voiceCommandService.ts) (Line 494)
-- **Category:** State Mutation
-- **Description:** Mutating state array in place can prevent React re-renders.
-```ts
-this.state.status === 'done' ||
-```
-
----
-
-### 26. [Warning] Direct State Array Mutation
-- **File:** [src/services/voiceCommandService.ts](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/src/services/voiceCommandService.ts) (Line 495)
-- **Category:** State Mutation
-- **Description:** Mutating state array in place can prevent React re-renders.
-```ts
-this.state.status === 'confirming'
-```
-
----
-
-### 27. [Warning] Direct State Array Mutation
-- **File:** [src/services/voiceCommandService.ts](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/src/services/voiceCommandService.ts) (Line 851)
-- **Category:** State Mutation
-- **Description:** Mutating state array in place can prevent React re-renders.
-```ts
-if (this.state.continuous === continuous) return;
-```
-
----
-
-### 28. [Warning] Direct State Array Mutation
-- **File:** [src/services/voiceCommandService.ts](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/src/services/voiceCommandService.ts) (Line 866)
-- **Category:** State Mutation
-- **Description:** Mutating state array in place can prevent React re-renders.
-```ts
-if (!language || this.state.language === language) return;
-```
-
----
-
-### 29. [Warning] Direct State Array Mutation
-- **File:** [src/services/voiceCommandService.ts](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/src/services/voiceCommandService.ts) (Line 909)
-- **Category:** State Mutation
-- **Description:** Mutating state array in place can prevent React re-renders.
-```ts
-if (this.state.voiceFeedback === enabled) return;
-```
-
----
-
-### 30. [Info] Leftover Debug Console Log
+### 24. [Info] Leftover Debug Console Log
 - **File:** [src/utils/projectExport.ts](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/src/utils/projectExport.ts) (Line 70)
 - **Category:** Code Hygiene
 - **Description:** Clean up unnecessary console.log statements from production components.
@@ -316,7 +256,7 @@ console.log(`Exported project "${project.name}" as ZIP`);
 
 ---
 
-### 31. [Info] Leftover Debug Console Log
+### 25. [Info] Leftover Debug Console Log
 - **File:** [server/index.js](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/server/index.js) (Line 53)
 - **Category:** Code Hygiene
 - **Description:** Clean up unnecessary console.log statements from production components.
@@ -326,7 +266,7 @@ console.log('New terminal connection established');
 
 ---
 
-### 32. [Info] Leftover Debug Console Log
+### 26. [Info] Leftover Debug Console Log
 - **File:** [server/index.js](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/server/index.js) (Line 58)
 - **Category:** Code Hygiene
 - **Description:** Clean up unnecessary console.log statements from production components.
@@ -336,7 +276,7 @@ console.log(`Spawning shell: ${shell}`);
 
 ---
 
-### 33. [Info] Leftover Debug Console Log
+### 27. [Info] Leftover Debug Console Log
 - **File:** [server/index.js](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/server/index.js) (Line 85)
 - **Category:** Code Hygiene
 - **Description:** Clean up unnecessary console.log statements from production components.
@@ -346,7 +286,7 @@ console.log(`PTY process exited with code ${exitCode}, signal ${signal}`);
 
 ---
 
-### 34. [Info] Leftover Debug Console Log
+### 28. [Info] Leftover Debug Console Log
 - **File:** [server/index.js](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/server/index.js) (Line 129)
 - **Category:** Code Hygiene
 - **Description:** Clean up unnecessary console.log statements from production components.
@@ -356,7 +296,7 @@ console.log('Terminal connection closed');
 
 ---
 
-### 35. [Info] Leftover Debug Console Log
+### 29. [Info] Leftover Debug Console Log
 - **File:** [server/index.js](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/server/index.js) (Line 157)
 - **Category:** Code Hygiene
 - **Description:** Clean up unnecessary console.log statements from production components.
@@ -366,7 +306,7 @@ console.log('Received SIGTERM, closing all sessions...');
 
 ---
 
-### 36. [Info] Leftover Debug Console Log
+### 30. [Info] Leftover Debug Console Log
 - **File:** [server/index.js](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/server/index.js) (Line 167)
 - **Category:** Code Hygiene
 - **Description:** Clean up unnecessary console.log statements from production components.
@@ -376,7 +316,7 @@ console.log('Server closed');
 
 ---
 
-### 37. [Info] Leftover Debug Console Log
+### 31. [Info] Leftover Debug Console Log
 - **File:** [server/index.js](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/server/index.js) (Line 173)
 - **Category:** Code Hygiene
 - **Description:** Clean up unnecessary console.log statements from production components.
@@ -386,7 +326,7 @@ console.log('Received SIGINT, closing all sessions...');
 
 ---
 
-### 38. [Info] Leftover Debug Console Log
+### 32. [Info] Leftover Debug Console Log
 - **File:** [server/index.js](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/server/index.js) (Line 183)
 - **Category:** Code Hygiene
 - **Description:** Clean up unnecessary console.log statements from production components.
@@ -396,7 +336,7 @@ console.log('Server closed');
 
 ---
 
-### 39. [Info] Leftover Debug Console Log
+### 33. [Info] Leftover Debug Console Log
 - **File:** [server/index.js](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/server/index.js) (Line 191)
 - **Category:** Code Hygiene
 - **Description:** Clean up unnecessary console.log statements from production components.
@@ -406,7 +346,7 @@ console.log(`Terminal server running on port ${PORT}`);
 
 ---
 
-### 40. [Info] Leftover Debug Console Log
+### 34. [Info] Leftover Debug Console Log
 - **File:** [server/index.js](file:///C:/Users/Girish Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/server/index.js) (Line 192)
 - **Category:** Code Hygiene
 - **Description:** Clean up unnecessary console.log statements from production components.

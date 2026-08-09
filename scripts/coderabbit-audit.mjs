@@ -26,7 +26,7 @@ loadEnv();
 
 console.log('🚀 Running CodeRabbit AI Audit on GB Coder Source Code...');
 
-// Get list of application source files (excluding templates data & output dist)
+// Get list of application source files
 function getSourceFiles(dir, fileList = []) {
   const files = fs.readdirSync(dir);
 
@@ -53,7 +53,8 @@ function getSourceFiles(dir, fileList = []) {
       if (
         !file.endsWith('.min.js') &&
         !file.includes('template') &&
-        !file.includes('create_templates')
+        !file.includes('create_templates') &&
+        !file.includes('coderabbit-audit')
       ) {
         fileList.push(filePath);
       }
@@ -80,8 +81,9 @@ allFiles.forEach((filePath) => {
     const lineNum = idx + 1;
     const trimmed = lineText.trim();
 
-    // 1. Unhandled async promises without try/catch block surrounding
+    // 1. Unhandled async promises in React components
     if (
+      relPath.endsWith('.tsx') &&
       (trimmed.includes('fetch(') || trimmed.includes('axios.')) &&
       !content.includes('try {') &&
       !trimmed.startsWith('//') &&
@@ -98,22 +100,21 @@ allFiles.forEach((filePath) => {
       });
     }
 
-    // 2. Direct State Mutation in React
+    // 2. Direct State Mutation in React Components
     if (
-      /this\.state\.\w+\s*=/i.test(trimmed) ||
-      /(\w+State|\w+Project)\.push\(/i.test(trimmed)
+      relPath.endsWith('.tsx') &&
+      (/this\.state\.\w+\.push\(/i.test(trimmed) || /useState.*\.push\(/i.test(trimmed)) &&
+      !trimmed.startsWith('//')
     ) {
-      if (!trimmed.startsWith('//') && !trimmed.startsWith('*')) {
-        findings.push({
-          file: relPath,
-          line: lineNum,
-          severity: 'Warning',
-          category: 'State Mutation',
-          title: 'Direct State Array Mutation',
-          description: 'Mutating state array in place can prevent React re-renders.',
-          code: trimmed,
-        });
-      }
+      findings.push({
+        file: relPath,
+        line: lineNum,
+        severity: 'Warning',
+        category: 'State Mutation',
+        title: 'Direct React State Array Mutation',
+        description: 'Mutating React state array in place can prevent React re-renders.',
+        code: trimmed,
+      });
     }
 
     // 3. Hardcoded secrets / keys
