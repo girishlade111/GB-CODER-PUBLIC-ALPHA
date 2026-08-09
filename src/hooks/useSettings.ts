@@ -32,7 +32,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     voiceFeedback: false,
     voiceContinuous: false,
     voiceLanguage: 'en-US',
-    codeRabbitApiKey: '',
+    codeRabbitApiKey: import.meta.env.VITE_CODERABBIT_API_KEY || '',
 };
 
 // Map theme variants to the base light/dark mode used by useTheme
