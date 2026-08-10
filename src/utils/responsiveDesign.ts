@@ -38,6 +38,11 @@ export class ResponsiveDesignService {
   private listeners: Set<(config: ResponsiveConfig) => void> = new Set();
   private resizeObserver?: ResizeObserver;
   private mediaQueryLists: Map<Breakpoint, MediaQueryList> = new Map();
+  private orientationTimer?: ReturnType<typeof setTimeout>;
+
+  private readonly boundHandleResize = this.handleResize.bind(this);
+  private readonly boundHandleOrientationChange = this.handleOrientationChange.bind(this);
+  private readonly boundHandleMediaQueryChange = this.handleMediaQueryChange.bind(this);
 
   constructor() {
     this.currentConfig = this.detectConfiguration();
@@ -93,16 +98,16 @@ export class ResponsiveDesignService {
    */
   private setupListeners(): void {
     // Window resize
-    window.addEventListener('resize', this.handleResize.bind(this));
+    window.addEventListener('resize', this.boundHandleResize);
 
     // Orientation change
-    window.addEventListener('orientationchange', this.handleOrientationChange.bind(this));
+    window.addEventListener('orientationchange', this.boundHandleOrientationChange);
 
     // Media query listeners
     for (const [breakpoint, minWidth] of Object.entries(BREAKPOINTS)) {
       const mql = window.matchMedia(`(min-width: ${minWidth}px)`);
       this.mediaQueryLists.set(breakpoint as Breakpoint, mql);
-      mql.addEventListener('change', this.handleMediaQueryChange.bind(this));
+      mql.addEventListener('change', this.boundHandleMediaQueryChange);
     }
   }
 
@@ -122,7 +127,10 @@ export class ResponsiveDesignService {
    * Handle orientation change
    */
   private handleOrientationChange(): void {
-    setTimeout(() => {
+    if (this.orientationTimer) {
+      clearTimeout(this.orientationTimer);
+    }
+    this.orientationTimer = setTimeout(() => {
       this.handleResize();
     }, 100);
   }
@@ -140,8 +148,12 @@ export class ResponsiveDesignService {
   private hasConfigChanged(newConfig: ResponsiveConfig): boolean {
     return (
       newConfig.breakpoint !== this.currentConfig.breakpoint ||
+      newConfig.width !== this.currentConfig.width ||
+      newConfig.height !== this.currentConfig.height ||
       newConfig.orientation !== this.currentConfig.orientation ||
-      newConfig.deviceType !== this.currentConfig.deviceType
+      newConfig.deviceType !== this.currentConfig.deviceType ||
+      newConfig.isTouchDevice !== this.currentConfig.isTouchDevice ||
+      newConfig.pixelRatio !== this.currentConfig.pixelRatio
     );
   }
 
@@ -442,12 +454,18 @@ export class ResponsiveDesignService {
    * Cleanup
    */
   destroy(): void {
-    window.removeEventListener('resize', this.handleResize.bind(this));
-    window.removeEventListener('orientationchange', this.handleOrientationChange.bind(this));
+    if (this.orientationTimer) {
+      clearTimeout(this.orientationTimer);
+      this.orientationTimer = undefined;
+    }
+
+    window.removeEventListener('resize', this.boundHandleResize);
+    window.removeEventListener('orientationchange', this.boundHandleOrientationChange);
 
     for (const mql of this.mediaQueryLists.values()) {
-      mql.removeEventListener('change', this.handleMediaQueryChange.bind(this));
+      mql.removeEventListener('change', this.boundHandleMediaQueryChange);
     }
+    this.mediaQueryLists.clear();
 
     this.listeners.clear();
   }
