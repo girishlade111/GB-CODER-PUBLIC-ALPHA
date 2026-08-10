@@ -10,9 +10,18 @@ const os = require('os');
 const app = express();
 const server = http.createServer(app);
 
-// Enable CORS for all routes
+const ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:4173',
+    'http://127.0.0.1:3000'
+];
+
+// Enable CORS for allowed origins
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:4173', 'http://localhost:3000'],
+    origin: ALLOWED_ORIGINS,
     credentials: true,
 }));
 
@@ -27,10 +36,34 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
-// WebSocket server for terminal connections
-const wss = new WebSocket.Server({
-    server,
-    path: '/terminal'
+// WebSocket server for terminal connections (unattached to server until origin check)
+const wss = new WebSocket.Server({ noServer: true });
+
+// Handle HTTP upgrade with origin & path authorization
+server.on('upgrade', (request, socket, head) => {
+    const origin = request.headers.origin;
+    let pathname = '';
+    try {
+        pathname = new URL(request.url, `http://${request.headers.host || 'localhost'}`).pathname;
+    } catch (_) {
+        pathname = request.url;
+    }
+
+    if (pathname !== '/terminal') {
+        socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+        socket.destroy();
+        return;
+    }
+
+    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+        socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+        socket.destroy();
+        return;
+    }
+
+    wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+    });
 });
 
 // Determine default shell based on OS
@@ -46,31 +79,67 @@ function getDefaultShell() {
     }
 }
 
-// Track active PTY sessions
+// Allowlist of environment variables passed to PTY shell to avoid leaking secrets
+const ENV_ALLOWLIST = [
+    'PATH', 'TERM', 'HOME', 'SHELL', 'LANG', 'LC_ALL', 'LC_CTYPE',
+    'USER', 'LOGNAME', 'TMPDIR', 'TMP', 'TEMP',
+    'APPDATA', 'LOCALAPPDATA', 'SystemRoot', 'SystemDrive', 'WINDIR',
+    'COMSPEC', 'PATHEXT', 'PSModulePath'
+];
+
+function getSanitizedEnv() {
+    const env = {};
+    for (const key of ENV_ALLOWLIST) {
+        if (process.env[key] !== undefined) {
+            env[key] = process.env[key];
+        }
+    }
+    env.TERM = env.TERM || 'xterm-256color';
+    return env;
+}
+
+// Track active PTY sessions with monotonic ID counter
+let nextSessionId = 0;
 const sessions = new Map();
 
 wss.on('connection', (ws) => {
-    const sessionId = Date.now().toString();
+    const sessionId = String(++nextSessionId);
     const shell = getDefaultShell();
 
-    // Spawn PTY process
-    const ptyProcess = pty.spawn(shell, [], {
-        name: 'xterm-color',
-        cols: 80,
-        rows: 30,
-        cwd: process.cwd(),
-        env: process.env
-    });
+    let ptyProcess;
+    try {
+        ptyProcess = pty.spawn(shell, [], {
+            name: 'xterm-color',
+            cols: 80,
+            rows: 30,
+            cwd: process.cwd(),
+            env: getSanitizedEnv()
+        });
+    } catch (err) {
+        console.error('Error spawning PTY process:', err);
+        try {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'error',
+                    data: 'Failed to launch shell process.'
+                }));
+                ws.close();
+            }
+        } catch (_) {}
+        return;
+    }
 
-    sessions.set(sessionId, ptyProcess);
+    sessions.set(sessionId, { pty: ptyProcess, ws });
 
     // Send PTY output to WebSocket client
     ptyProcess.onData((data) => {
         try {
-            ws.send(JSON.stringify({
-                type: 'data',
-                data: data
-            }));
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'data',
+                    data: data
+                }));
+            }
         } catch (error) {
             console.error('Error sending data to client:', error);
         }
@@ -79,16 +148,20 @@ wss.on('connection', (ws) => {
     // Handle PTY exit
     ptyProcess.onExit(({ exitCode, signal }) => {
         try {
-            ws.send(JSON.stringify({
-                type: 'exit',
-                exitCode,
-                signal
-            }));
-            ws.close();
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'exit',
+                    exitCode,
+                    signal
+                }));
+                ws.close();
+            }
         } catch (error) {
             console.error('Error sending exit message:', error);
         }
-        sessions.delete(sessionId);
+        if (sessions.get(sessionId)?.pty === ptyProcess) {
+            sessions.delete(sessionId);
+        }
     });
 
     // Handle WebSocket messages from client
@@ -98,15 +171,13 @@ wss.on('connection', (ws) => {
 
             switch (msg.type) {
                 case 'input':
-                    // Write user input to PTY
-                    if (msg.data) {
+                    if (msg.data && ptyProcess) {
                         ptyProcess.write(msg.data);
                     }
                     break;
 
                 case 'resize':
-                    // Resize PTY to match terminal dimensions
-                    if (msg.cols && msg.rows) {
+                    if (msg.cols && msg.rows && ptyProcess) {
                         ptyProcess.resize(msg.cols, msg.rows);
                     }
                     break;
@@ -121,60 +192,75 @@ wss.on('connection', (ws) => {
 
     // Clean up on disconnect
     ws.on('close', () => {
-        if (sessions.has(sessionId)) {
-            const pty = sessions.get(sessionId);
+        const session = sessions.get(sessionId);
+        if (session && session.pty === ptyProcess) {
             try {
-                pty.kill();
+                ptyProcess.kill();
             } catch (error) {
                 console.error('Error killing PTY process:', error);
             }
-            sessions.delete(sessionId);
+            setTimeout(() => {
+                if (sessions.get(sessionId)?.pty === ptyProcess) {
+                    sessions.delete(sessionId);
+                }
+            }, 2000);
         }
     });
 
     ws.on('error', (error) => {
         console.error('WebSocket error:', error);
-        if (sessions.has(sessionId)) {
-            const pty = sessions.get(sessionId);
+        const session = sessions.get(sessionId);
+        if (session && session.pty === ptyProcess) {
             try {
-                pty.kill();
+                ptyProcess.kill();
             } catch (err) {
                 console.error('Error killing PTY process:', err);
             }
-            sessions.delete(sessionId);
+            setTimeout(() => {
+                if (sessions.get(sessionId)?.pty === ptyProcess) {
+                    sessions.delete(sessionId);
+                }
+            }, 2000);
         }
     });
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-    sessions.forEach((pty, sessionId) => {
+// Graceful shutdown handling
+function gracefulShutdown(signal) {
+    console.log(`Received ${signal}. Shutting down terminal server gracefully...`);
+
+    for (const [sessionId, { pty: ptyProc, ws }] of sessions.entries()) {
         try {
-            pty.kill();
-        } catch (error) {
-            console.error(`Error killing session ${sessionId}:`, error);
-        }
-    });
-    sessions.clear();
-    server.close(() => {
-        process.exit(0);
-    });
-});
-
-process.on('SIGINT', () => {
-    sessions.forEach((pty, sessionId) => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close(1001, 'Server shutting down');
+            }
+        } catch (_) {}
         try {
-            pty.kill();
-        } catch (error) {
-            console.error(`Error killing session ${sessionId}:`, error);
-        }
-    });
+            if (ptyProc) {
+                ptyProc.kill();
+            }
+        } catch (_) {}
+    }
     sessions.clear();
-    server.close(() => {
-        process.exit(0);
-    });
-});
 
-// Start server
+    wss.close(() => {
+        server.close(() => {
+            console.log('Server closed successfully.');
+            process.exit(0);
+        });
+    });
+
+    setTimeout(() => {
+        console.error('Forced shutdown due to timeout.');
+        process.exit(1);
+    }, 5000).unref();
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Start server listening strictly on 127.0.0.1 for local host security
 const PORT = process.env.PORT || 3001;
-server.listen(PORT);
+server.listen(PORT, '127.0.0.1', () => {
+    console.log(`GB Coder terminal server listening on http://127.0.0.1:${PORT}`);
+});
