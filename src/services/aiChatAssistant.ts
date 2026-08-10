@@ -1,5 +1,6 @@
 // AI Code Chat Assistant Service
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { observe } from './laminarService';
 
 export interface ChatMessage {
   id: string;
@@ -47,9 +48,10 @@ class AIChatAssistantService {
     context: ChatContext,
     includeCodeContext: boolean = true
   ): Promise<string> {
-    if (!this.model) {
-      return 'AI assistant is not available. Please check your API key configuration.';
-    }
+    return observe({ name: 'ai_chat_send_message' }, async () => {
+      if (!this.model) {
+        return 'AI assistant is not available. Please check your API key configuration.';
+      }
 
     try {
       // Build context-aware prompt
@@ -96,6 +98,7 @@ Your response:`;
       console.error('AI Chat Error:', error);
       return `Sorry, I encountered an error: ${error.message}. Please try again.`;
     }
+    });
   }
 
   public async explainCode(
