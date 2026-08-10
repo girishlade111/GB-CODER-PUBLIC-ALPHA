@@ -105,12 +105,13 @@ Your response:`;
     code: string,
     language: 'html' | 'css' | 'javascript'
   ): Promise<string> {
-    if (!this.model) {
-      return 'AI assistant is not available.';
-    }
+    return observe({ name: 'ai_chat_explain_code' }, async () => {
+      if (!this.model) {
+        return 'AI assistant is not available.';
+      }
 
-    try {
-      const prompt = `Explain the following ${language.toUpperCase()} code in simple terms. Break down what each part does and why it's written that way.
+      try {
+        const prompt = `Explain the following ${language.toUpperCase()} code in simple terms. Break down what each part does and why it's written that way.
 
 Code to explain:
 \`\`\`${language}
@@ -119,12 +120,13 @@ ${code}
 
 Provide a clear, educational explanation:`;
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error: any) {
-      return `Error explaining code: ${error.message}`;
-    }
+        const result = await this.model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+      } catch (error: any) {
+        return `Error explaining code: ${error.message}`;
+      }
+    });
   }
 
   public async debugCode(
@@ -132,12 +134,13 @@ Provide a clear, educational explanation:`;
     language: 'html' | 'css' | 'javascript',
     errorMessage?: string
   ): Promise<string> {
-    if (!this.model) {
-      return 'AI assistant is not available.';
-    }
+    return observe({ name: 'ai_chat_debug_code' }, async () => {
+      if (!this.model) {
+        return 'AI assistant is not available.';
+      }
 
-    try {
-      const prompt = `Help me debug the following ${language.toUpperCase()} code.
+      try {
+        const prompt = `Help me debug the following ${language.toUpperCase()} code.
 ${errorMessage ? `\nError message: ${errorMessage}` : ''}
 
 Code:
@@ -151,12 +154,13 @@ Please:
 3. Provide the corrected code
 4. Explain how to prevent similar issues in the future`;
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error: any) {
-      return `Error debugging code: ${error.message}`;
-    }
+        const result = await this.model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+      } catch (error: any) {
+        return `Error debugging code: ${error.message}`;
+      }
+    });
   }
 
   public async refactorCode(
@@ -164,12 +168,13 @@ Please:
     language: 'html' | 'css' | 'javascript',
     goal: string = 'improve performance and readability'
   ): Promise<string> {
-    if (!this.model) {
-      return 'AI assistant is not available.';
-    }
+    return observe({ name: 'ai_chat_refactor_code' }, async () => {
+      if (!this.model) {
+        return 'AI assistant is not available.';
+      }
 
-    try {
-      const prompt = `Refactor the following ${language.toUpperCase()} code to ${goal}.
+      try {
+        const prompt = `Refactor the following ${language.toUpperCase()} code to ${goal}.
 
 Code:
 \`\`\`${language}
@@ -181,12 +186,13 @@ Please:
 2. Provide the refactored code
 3. Highlight the key changes and their benefits`;
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error: any) {
-      return `Error refactoring code: ${error.message}`;
-    }
+        const result = await this.model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+      } catch (error: any) {
+        return `Error refactoring code: ${error.message}`;
+      }
+    });
   }
 
   public async generateCode(
@@ -194,16 +200,17 @@ Please:
     language: 'html' | 'css' | 'javascript',
     requirements?: string[]
   ): Promise<string> {
-    if (!this.model) {
-      return 'AI assistant is not available.';
-    }
+    return observe({ name: 'ai_chat_generate_code' }, async () => {
+      if (!this.model) {
+        return 'AI assistant is not available.';
+      }
 
-    try {
-      const reqText = requirements?.length 
-        ? `\nRequirements:\n${requirements.map(r => `- ${r}`).join('\n')}` 
-        : '';
+      try {
+        const reqText = requirements?.length 
+          ? `\nRequirements:\n${requirements.map(r => `- ${r}`).join('\n')}` 
+          : '';
 
-      const prompt = `Generate ${language.toUpperCase()} code based on this description:
+        const prompt = `Generate ${language.toUpperCase()} code based on this description:
 
 Description: ${description}${reqText}
 
@@ -213,12 +220,13 @@ Please provide:
 3. Best practices and modern syntax
 4. Example usage if applicable`;
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error: any) {
-      return `Error generating code: ${error.message}`;
-    }
+        const result = await this.model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+      } catch (error: any) {
+        return `Error generating code: ${error.message}`;
+      }
+    });
   }
 
   public getMessageHistory(): ChatMessage[] {

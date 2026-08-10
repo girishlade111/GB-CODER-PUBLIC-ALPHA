@@ -1,5 +1,6 @@
 // CodeRabbit AI Service for Bug & Error Detection
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { observe } from './laminarService';
 
 export interface CodeRabbitIssue {
   id: string;
@@ -234,18 +235,19 @@ export class CodeRabbitService {
    * AI Deep Code Review powered by CodeRabbit AI framing
    */
   private async runAICodeReview(files: CodeFileInput[], apiKey: string): Promise<CodeRabbitIssue[]> {
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    return observe({ name: 'coderabbit_ai_scan' }, async () => {
+      try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-      const filesContentSummary = files
-        .map(
-          (f) => `--- File: ${f.filename} (${f.language}) ---
+        const filesContentSummary = files
+          .map(
+            (f) => `--- File: ${f.filename} (${f.language}) ---
 ${f.content.substring(0, 4000)}`
-        )
-        .join('\n\n');
+          )
+          .join('\n\n');
 
-      const prompt = `You are CodeRabbit AI, an expert code reviewer and automated bug finder.
+        const prompt = `You are CodeRabbit AI, an expert code reviewer and automated bug finder.
 Analyze the following source files for bugs, security vulnerabilities, logic errors, syntax issues, and performance bottlenecks.
 
 Project Source Files:
@@ -265,33 +267,34 @@ Respond ONLY with valid JSON (no markdown block, no extra text) matching this JS
   }
 ]`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      let text = response.text().trim();
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let text = response.text().trim();
 
-      // Clean markdown code fence if present
-      if (text.startsWith('```')) {
-        text = text.replace(/^```(json)?/, '').replace(/```$/, '').trim();
+        // Clean markdown code fence if present
+        if (text.startsWith('```')) {
+          text = text.replace(/^```(json)?/, '').replace(/```$/, '').trim();
+        }
+
+        const parsed: any[] = JSON.parse(text);
+        if (!Array.isArray(parsed)) return [];
+
+        return parsed.map((item, idx) => ({
+          id: `cr-ai-${item.file || 'file'}-${item.line || idx}-${Date.now()}`,
+          file: item.file || files[0]?.filename || 'index.js',
+          line: typeof item.line === 'number' ? item.line : 1,
+          title: item.title || 'Code Bug / Flaw',
+          description: item.description || 'CodeRabbit AI flagged an issue in this section.',
+          severity: item.severity === 'critical' ? 'critical' : item.severity === 'warning' ? 'warning' : 'info',
+          category: item.category || 'bug',
+          codeSnippet: item.codeSnippet || '',
+          suggestedFix: item.suggestedFix || undefined,
+        }));
+      } catch (err) {
+        console.error('CodeRabbit AI Scan Error:', err);
+        return [];
       }
-
-      const parsed: any[] = JSON.parse(text);
-      if (!Array.isArray(parsed)) return [];
-
-      return parsed.map((item, idx) => ({
-        id: `cr-ai-${item.file || 'file'}-${item.line || idx}-${Date.now()}`,
-        file: item.file || files[0]?.filename || 'index.js',
-        line: typeof item.line === 'number' ? item.line : 1,
-        title: item.title || 'Code Bug / Flaw',
-        description: item.description || 'CodeRabbit AI flagged an issue in this section.',
-        severity: item.severity === 'critical' ? 'critical' : item.severity === 'warning' ? 'warning' : 'info',
-        category: item.category || 'bug',
-        codeSnippet: item.codeSnippet || '',
-        suggestedFix: item.suggestedFix || undefined,
-      }));
-    } catch (err) {
-      console.error('CodeRabbit AI Scan Error:', err);
-      return [];
-    }
+    });
   }
 
   /**
