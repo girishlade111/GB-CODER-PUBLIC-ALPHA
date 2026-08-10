@@ -213,7 +213,7 @@ export class CodeRabbitService {
       }
 
       // 5. Check for hardcoded API keys or secrets
-      if (/(api[_-]?key|secret|password|auth[_-]?token)\s*=\s*['"][A-Za-z0-9_\-]{16,}['"]/i.test(lineText) && !lineText.includes('VITE_')) {
+      if (/(api[_-]?key|secret|password|auth[_-]?token)\s*=\s*['"][A-Za-z0-9_-]{16,}['"]/i.test(lineText) && !lineText.includes('VITE_')) {
         issues.push({
           id: `static-${file.filename}-${lineNum}-secret`,
           file: file.filename,

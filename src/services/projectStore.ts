@@ -183,7 +183,6 @@ class ProjectStore {
                 return { success: false, error: 'Project not found' };
             }
 
-            const projectName = projects[id].name;
             delete projects[id];
             this.saveAllProjects(projects);
 
