@@ -32,6 +32,8 @@ const collect = (pattern) => {
   return found;
 };
 
+const isExternal = (url) => /^[a-z][a-z\d+\-.]*:/i.test(url);
+
 const entries = collect(/<script[^>]+type="module"[^>]+src="([^"]+)"/g);
 const preloads = collect(/<link[^>]+rel="modulepreload"[^>]+href="([^"]+)"/g);
 const styles = collect(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/g);
@@ -39,7 +41,9 @@ const styles = collect(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/g);
 const measure = (urls) =>
   urls.map((url) => {
     const path = join(DIST, url.replace(/^\//, ''));
-    if (!existsSync(path)) return { file: basename(url), bytes: 0, gzip: 0, missing: true };
+    if (!existsSync(path)) {
+      throw new Error(`Missing critical asset: ${url}`);
+    }
     const buffer = readFileSync(path);
     return {
       file: basename(url),
@@ -49,7 +53,7 @@ const measure = (urls) =>
   });
 
 const criticalJs = measure([...entries, ...preloads]);
-const criticalCss = measure(styles);
+const criticalCss = measure(styles.filter((url) => !isExternal(url)));
 
 const sum = (rows, key) => rows.reduce((total, row) => total + row[key], 0);
 const kb = (bytes) => `${(bytes / 1024).toFixed(1)} kB`;
@@ -86,12 +90,16 @@ if (process.argv.includes('--json')) {
   const baselineFlag = process.argv.indexOf('--baseline');
   if (baselineFlag !== -1 && existsSync(process.argv[baselineFlag + 1])) {
     const baseline = JSON.parse(readFileSync(process.argv[baselineFlag + 1], 'utf8'));
-    const drop = (before, after) => (((before - after) / before) * 100).toFixed(1);
+    const change = (before, after) => {
+      if (before === 0) return after === 0 ? '0.0' : 'n/a';
+      const percentage = ((after - before) / before) * 100;
+      return `${percentage > 0 ? '+' : ''}${percentage.toFixed(1)}`;
+    };
     console.log(
       `\n  vs baseline: raw ${kb(baseline.criticalJsBytes)} -> ${kb(report.criticalJsBytes)} ` +
-        `(-${drop(baseline.criticalJsBytes, report.criticalJsBytes)}%), ` +
+        `(${change(baseline.criticalJsBytes, report.criticalJsBytes)}%), ` +
         `gzip ${kb(baseline.criticalJsGzip)} -> ${kb(report.criticalJsGzip)} ` +
-        `(-${drop(baseline.criticalJsGzip, report.criticalJsGzip)}%)`,
+        `(${change(baseline.criticalJsGzip, report.criticalJsGzip)}%)`,
     );
   }
   console.log('');
