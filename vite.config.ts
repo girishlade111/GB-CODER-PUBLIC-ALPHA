@@ -104,6 +104,7 @@ export default defineConfig({
     sourcemap: false,
     cssCodeSplit: true,
     rollupOptions: {
+      external: (id) => id.includes('@lmnr-ai/lmnr'),
       output: {
         manualChunks: (id) => {
           // Monaco Editor - separate chunk (loaded lazily)
