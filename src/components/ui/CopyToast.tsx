@@ -12,20 +12,21 @@ const CopyToast: React.FC<CopyToastProps> = ({
     type = 'success',
     onClose,
 }) => {
-    const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+    const borderColor = type === 'success' ? 'border-[#3ecf5e]/30' : 'border-[#e5484d]/30';
+    const iconColor = type === 'success' ? 'text-[#3ecf5e]' : 'text-[#e5484d]';
     const Icon = type === 'success' ? Check : AlertCircle;
 
     return (
         <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
             <div
-                className={`${bgColor} text-white px-4 py-3 rounded-lg shadow-vscode-widget flex items-center gap-3 min-w-[250px]`}
+                className={`bg-[#1c1c1c] border ${borderColor} px-4 py-3 rounded-lg flex items-center gap-3 min-w-[250px]`}
             >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className="flex-1 font-medium text-sm">{message}</span>
+                <Icon className={`w-5 h-5 flex-shrink-0 ${iconColor}`} />
+                <span className="flex-1 font-medium text-sm text-[#e8e8e8]">{message}</span>
 
                 <button
                     onClick={onClose}
-                    className="p-1 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
+                    className="p-1 hover:bg-[#2a2a2a] rounded transition-colors text-[#5c5c5c] hover:text-[#e8e8e8]"
                     title="Close"
                 >
                     <X className="w-4 h-4" />

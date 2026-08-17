@@ -1,6 +1,5 @@
 import React from 'react';
 import { AlertCircle, RotateCcw, Trash2, Code2 } from 'lucide-react';
-import { useSettings } from '../hooks/useSettings';
 
 interface SessionRecoveryModalProps {
   lastSavedAt: string;
@@ -15,9 +14,6 @@ const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
   onStartFresh,
   onViewDiff
 }) => {
-  const { settings } = useSettings();
-  const isDark = settings.theme === 'dark';
-
   const timeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -31,29 +27,27 @@ const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className={`w-full max-w-md p-6 rounded-xl shadow-2xl border ${
-        isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
-      }`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+      <div className="w-full max-w-md p-6 rounded-lg border border-[#2a2a2a] bg-[#161616]">
         <div className="flex items-center gap-3 mb-4">
-          <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
-            <AlertCircle className={`w-6 h-6 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+          <div className="p-2 rounded-md bg-[#e07856]/10">
+            <AlertCircle className="w-6 h-6 text-[#e07856]" />
           </div>
-          <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <h2 className="text-[18px] font-semibold text-[#e8e8e8]">
             Session Recovered
           </h2>
         </div>
 
-        <p className={`mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+        <p className="mb-6 text-[#8a8a8a] text-sm">
           We found unsaved work from your last session ({timeAgo(lastSavedAt)}). Would you like to restore it?
         </p>
 
         <div className="flex flex-col gap-3">
           <button
             onClick={onRestore}
-            className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-[#e07856] hover:bg-[#e88a6d] text-[#e8e8e8] rounded-md font-medium transition-colors text-sm"
           >
-            <RotateCcw className="w-5 h-5" />
+            <RotateCcw className="w-4 h-4" />
             Restore Session
           </button>
           
@@ -61,11 +55,7 @@ const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
             {onViewDiff && (
               <button
                 onClick={onViewDiff}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium transition-colors border ${
-                  isDark 
-                    ? 'border-gray-700 hover:bg-gray-800 text-gray-300' 
-                    : 'border-gray-300 hover:bg-gray-50 text-gray-700'
-                }`}
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md font-medium transition-colors border border-[#2a2a2a] bg-[#1c1c1c] hover:bg-[#242424] text-[#8a8a8a] hover:text-[#e8e8e8] text-sm"
               >
                 <Code2 className="w-4 h-4" />
                 View Diff
@@ -74,11 +64,7 @@ const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
             
             <button
               onClick={onStartFresh}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium transition-colors border ${
-                isDark 
-                  ? 'border-red-900/30 hover:bg-red-900/20 text-red-400' 
-                  : 'border-red-200 hover:bg-red-50 text-red-600'
-              }`}
+              className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md font-medium transition-colors border border-[#e5484d]/30 bg-[#e5484d]/08 hover:bg-[#e5484d]/15 text-[#e5484d] text-sm"
             >
               <Trash2 className="w-4 h-4" />
               Start Fresh

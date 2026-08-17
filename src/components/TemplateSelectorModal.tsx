@@ -270,10 +270,10 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start">
                             <h3 className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.name}</h3>
-                            <span className={`text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${
-                               template.difficulty === 'beginner' ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' :
-                               template.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400' :
-                               'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'
+                            <span className={`text-[10px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded-sm border ${
+                               template.difficulty === 'beginner' ? 'border-[#3ecf5e]/30 text-[#3ecf5e] bg-[#3ecf5e]/08' :
+                               template.difficulty === 'intermediate' ? 'border-[#e07856]/30 text-[#e07856] bg-[#e07856]/08' :
+                               'border-[#e5484d]/30 text-[#e5484d] bg-[#e5484d]/08'
                             }`}>{template.difficulty}</span>
                           </div>
                           <p className="text-xs text-gray-500 line-clamp-2 mt-1">{template.description}</p>
@@ -284,7 +284,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                         </div>
                         <button
                           onClick={(e) => handleLoadClick(e, template)}
-                          className="px-3 py-1 text-xs font-medium bg-accent text-white rounded hover:bg-accent-hover transition-colors shadow-sm whitespace-nowrap"
+                          className="px-3 py-1 text-xs font-medium bg-[#e07856] text-[#e8e8e8] rounded-md hover:bg-[#e88a6d] transition-colors whitespace-nowrap"
                         >
                           Select
                         </button>

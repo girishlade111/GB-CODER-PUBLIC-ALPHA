@@ -175,31 +175,27 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
   const statusTone = (() => {
     switch (voice.status) {
       case 'listening':
-        return isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-50 text-emerald-700';
+        return 'bg-[#3ecf5e]/12 text-[#3ecf5e]';
       case 'processing':
-        return isDark ? 'bg-sky-500/15 text-sky-300' : 'bg-sky-50 text-sky-700';
+        return 'bg-[#8a8a8a]/12 text-[#8a8a8a]';
       case 'done':
-        return isDark ? 'bg-violet-500/15 text-violet-300' : 'bg-violet-50 text-violet-700';
+        return 'bg-[#e07856]/12 text-[#e07856]';
       case 'switching':
-        return isDark ? 'bg-sky-500/15 text-sky-300' : 'bg-sky-50 text-sky-700';
+        return 'bg-[#8a8a8a]/12 text-[#8a8a8a]';
       case 'confirming':
-        return isDark ? 'bg-amber-500/15 text-amber-200' : 'bg-amber-50 text-amber-800';
+        return 'bg-[#e07856]/10 text-[#e07856]';
       case 'error':
-        return isDark ? 'bg-amber-500/15 text-amber-300' : 'bg-amber-50 text-amber-700';
+        return 'bg-[#e5484d]/10 text-[#e5484d]';
       default:
-        return isDark ? 'bg-white/10 text-gray-300' : 'bg-gray-100 text-gray-600';
+        return 'bg-[#1c1c1c] text-[#8a8a8a]';
     }
   })();
 
   const iconButtonClass = (active: boolean) =>
-    `p-2 rounded-lg transition-colors ${
+    `p-2 rounded-md transition-colors ${
       active
-        ? isDark
-          ? 'bg-white/15 text-white'
-          : 'bg-gray-900/10 text-gray-900'
-        : isDark
-          ? 'text-gray-400 hover:bg-white/10 hover:text-white'
-          : 'text-gray-500 hover:bg-gray-900/5 hover:text-gray-900'
+        ? 'bg-[#2a2a2a] text-[#e8e8e8]'
+        : 'text-[#5c5c5c] hover:bg-[#1c1c1c] hover:text-[#e8e8e8]'
     }`;
 
   const displayedTranscript = voice.transcript || voice.interimTranscript;
@@ -216,11 +212,7 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
       aria-label="Voice commands"
     >
       <div
-        className={`pointer-events-auto w-full max-w-3xl rounded-2xl border shadow-2xl animate-slide-up ${
-          isDark
-            ? 'bg-black/80 border-white/10 text-white'
-            : 'bg-white/90 border-gray-200 text-gray-900'
-        } backdrop-blur-xl`}
+        className="pointer-events-auto w-full max-w-3xl rounded-lg border border-[#2a2a2a] bg-[#161616]/97 animate-slide-up backdrop-blur-sm text-[#e8e8e8]"
       >
         {/* Status row */}
         <div className="flex items-center gap-3 px-4 pt-4 sm:px-5">
@@ -234,9 +226,7 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
             disabled={!voice.supported}
             className={`relative flex-shrink-0 grid place-items-center w-11 h-11 rounded-full transition-colors ${
               !voice.supported
-                ? isDark
-                  ? 'bg-white/10 text-gray-500 cursor-not-allowed'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-[#1c1c1c] text-[#5c5c5c] cursor-not-allowed'
                 : voice.isListening
                   ? 'bg-[#e5484d] text-[#e8e8e8] hover:bg-[#e5484d]/90'
                   : 'bg-[#e07856] text-[#e8e8e8] hover:bg-[#e88a6d]'
@@ -268,10 +258,8 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
                 key={index}
                 className={`w-1.5 rounded-full origin-bottom ${
                   voice.isListening
-                    ? `${isDark ? 'bg-emerald-400' : 'bg-emerald-500'} animate-voice-wave`
-                    : isDark
-                      ? 'bg-white/20'
-                      : 'bg-gray-300'
+                    ? 'bg-[#3ecf5e] animate-voice-wave'
+                    : 'bg-[#2a2a2a]'
                 }`}
                 style={{
                   height: `${height}rem`,
@@ -323,11 +311,7 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
             value={voice.language}
             onChange={handleLanguageSelect}
             title="Recognition language"
-            className={`hidden sm:block text-xs rounded-lg px-2 py-1.5 border outline-none ${
-              isDark
-                ? 'bg-white/5 border-white/10 text-gray-200'
-                : 'bg-white border-gray-200 text-gray-700'
-            }`}
+          className="hidden sm:block text-xs rounded-md px-2 py-1.5 border outline-none bg-[#1c1c1c] border-[#2a2a2a] text-[#8a8a8a]"
           >
             {VOICE_LANGUAGES.map((language) => (
               <option key={language.code} value={language.code}>
@@ -356,16 +340,16 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
           >
             {displayedTranscript ? (
               <>
-                <span className={isDark ? 'text-white' : 'text-gray-900'}>{voice.transcript}</span>
+                <span className="text-[#e8e8e8]">{voice.transcript}</span>
                 {voice.interimTranscript && (
-                  <span className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <span className="italic text-[#5c5c5c]">
                     {voice.transcript ? ' ' : ''}
                     {voice.interimTranscript}
                   </span>
                 )}
               </>
             ) : (
-              <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>
+              <span className="text-[#5c5c5c]">
                 {voice.isListening ? 'Say a command...' : 'Microphone paused.'}
               </span>
             )}
@@ -375,11 +359,7 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
         {/* Errors, permission help, and the unsupported-browser fallback */}
         {voice.error && (
           <div
-            className={`mx-4 sm:mx-5 mt-3 rounded-xl border px-3 py-2.5 ${
-              isDark
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
-                : 'bg-amber-50 border-amber-200 text-amber-800'
-            }`}
+          className="mx-4 sm:mx-5 mt-3 rounded-md border border-[#e5484d]/30 px-3 py-2.5 bg-[#1c1c1c] text-[#e8e8e8]"
             role="alert"
           >
             <p className="text-sm font-medium">
@@ -395,18 +375,14 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
         */}
         {voice.pendingSuggestion && (
           <div
-            className={`mx-4 sm:mx-5 mt-3 rounded-xl border px-3 py-2.5 ${
-              isDark
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-100'
-                : 'bg-amber-50 border-amber-200 text-amber-900'
-            }`}
+            className="mx-4 sm:mx-5 mt-3 rounded-md border border-[#e07856]/30 px-3 py-2.5 bg-[#1c1c1c] text-[#e8e8e8]"
             role="alert"
             data-testid="voice-did-you-mean"
           >
             <p className="text-sm">
               Did you mean{' '}
               <span className="font-semibold">{voice.pendingSuggestion.description}</span>?
-              <span className={`ml-1 text-xs ${isDark ? 'text-amber-200/60' : 'text-amber-700/70'}`}>
+              <span className="ml-1 text-xs text-[#5c5c5c]">
                 ({Math.round(voice.pendingSuggestion.score * 100)}% match)
               </span>
             </p>
@@ -415,7 +391,7 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
                 type="button"
                 onClick={() => voiceCommandService.confirmSuggestion()}
                 data-testid="voice-confirm-suggestion"
-                className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
+                className="px-2.5 py-1 rounded-md text-xs font-medium bg-[#3ecf5e]/15 text-[#3ecf5e] border border-[#3ecf5e]/30 hover:bg-[#3ecf5e]/25"
               >
                 Yes, do it
               </button>
@@ -423,13 +399,11 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
                 type="button"
                 onClick={() => voiceCommandService.dismissSuggestion()}
                 data-testid="voice-dismiss-suggestion"
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-                  isDark ? 'bg-white/10 text-gray-200 hover:bg-white/20' : 'bg-white text-gray-700 border border-gray-200'
-                }`}
+                className="px-2.5 py-1 rounded-md text-xs font-medium bg-[#1c1c1c] text-[#8a8a8a] border border-[#2a2a2a] hover:bg-[#242424]"
               >
                 No
               </button>
-              <span className={`text-[11px] ${isDark ? 'text-amber-200/60' : 'text-amber-700/70'}`}>
+              <span className="text-[11px] text-[#5c5c5c]">
                 or just say &ldquo;yes&rdquo; / &ldquo;no&rdquo;
               </span>
             </div>
@@ -439,7 +413,7 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
         {/* Suggestions */}
         <div className="px-4 sm:px-5 mt-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+            <span className="text-xs text-[#5c5c5c]">
               Try saying:
             </span>
             {VOICE_SUGGESTIONS.map((suggestion) => (

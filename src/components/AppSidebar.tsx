@@ -181,7 +181,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         {
           id: 'coderabbit-ai',
           label: 'CodeRabbit AI Bug Scanner',
-          icon: <Bug className="h-5 w-5 text-orange-400" />,
+          icon: <Bug className="h-5 w-5 text-[#e07856]" />,
           onClick: onOpenCodeRabbit,
         },
         {

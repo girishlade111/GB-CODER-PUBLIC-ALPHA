@@ -92,28 +92,28 @@ const iconFor = (name: string) => {
   switch (ext) {
     case 'html':
     case 'htm':
-      return <Globe className={`${ICON_CLASS} text-orange-400`} />;
+      return <Globe className={`${ICON_CLASS} text-[#e07856]`} />;
     case 'css':
-      return <Palette className={`${ICON_CLASS} text-sky-400`} />;
+      return <Palette className={`${ICON_CLASS} text-[#8a8a8a]`} />;
     case 'scss':
     case 'sass':
     case 'less':
-      return <Palette className={`${ICON_CLASS} text-pink-400`} />;
+      return <Palette className={`${ICON_CLASS} text-[#8a8a8a]`} />;
     case 'js':
     case 'mjs':
     case 'cjs':
-      return <FileCode className={`${ICON_CLASS} text-yellow-400`} />;
+      return <FileCode className={`${ICON_CLASS} text-[#8a8a8a]`} />;
     case 'jsx':
-      return <Atom className={`${ICON_CLASS} text-cyan-400`} />;
+      return <Atom className={`${ICON_CLASS} text-[#8a8a8a]`} />;
     case 'ts':
-      return <FileType className={`${ICON_CLASS} text-blue-400`} />;
+      return <FileType className={`${ICON_CLASS} text-[#8a8a8a]`} />;
     case 'tsx':
-      return <Atom className={`${ICON_CLASS} text-blue-400`} />;
+      return <Atom className={`${ICON_CLASS} text-[#8a8a8a]`} />;
     case 'vue':
-      return <Triangle className={`${ICON_CLASS} text-emerald-400`} />;
+      return <Triangle className={`${ICON_CLASS} text-[#3ecf5e]`} />;
     case 'json':
     case 'jsonc':
-      return <Braces className={`${ICON_CLASS} text-amber-400`} />;
+      return <Braces className={`${ICON_CLASS} text-[#8a8a8a]`} />;
     case 'md':
     case 'mdx':
     case 'txt':
@@ -184,9 +184,9 @@ const TreeRow: React.FC<RowProps> = ({
               <ChevronRight className="h-3 w-3 flex-shrink-0 text-vsc-textMuted" />
             )}
             {isOpen ? (
-              <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-sky-300/80" />
+              <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-[#5c5c5c]" />
             ) : (
-              <Folder className="h-3.5 w-3.5 flex-shrink-0 text-sky-300/70" />
+              <Folder className="h-3.5 w-3.5 flex-shrink-0 text-[#5c5c5c]" />
             )}
           </>
         ) : (

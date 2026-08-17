@@ -7,8 +7,6 @@ import {
   Play,
   FileText,
   Share2,
-  Sun,
-  Moon,
   Trash2,
   Wand2,
   FilePlus,
@@ -17,7 +15,6 @@ import {
   Bug,
 } from 'lucide-react';
 import { PROJECT_TYPE_LABEL, ProjectType } from '../types/files';
-import { useTheme } from '../hooks/useTheme';
 import { useSettings } from '../hooks/useSettings';
 import Tooltip from './ui/Tooltip';
 
@@ -74,7 +71,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   isNavDrawerOpen = false,
   onOpenExport,
 }) => {
-  const { isDark } = useTheme();
   const { updateSettings } = useSettings();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isOverflowOpen, setIsOverflowOpen] = useState(false);
@@ -111,10 +107,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
     <>
       {/* Main Navigation Bar — no drag events */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-40 backdrop-blur-md border-b transition-all duration-200 ${isDark
-          ? 'bg-surface-base/95 border-stroke-subtle'
-          : 'bg-white/95 border-gray-200'
-          }`}
+        className="fixed top-0 left-0 right-0 z-40 backdrop-blur-sm border-b border-[#2a2a2a] bg-[#161616]/97 transition-all duration-200"
       >
         <div className="w-full mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
@@ -127,11 +120,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               {onToggleNavDrawer && (
                 <button
                   onClick={onToggleNavDrawer}
-                  className={`hidden h-11 w-11 shrink-0 items-center justify-center rounded-md transition-colors compact:flex ${
-                    isDark
-                      ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                      : 'text-gray-700 hover:bg-black/5'
-                  }`}
+                  className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md transition-colors compact:flex text-content-secondary hover:bg-white/5 hover:text-content-primary"
                   aria-label={isNavDrawerOpen ? 'Close navigation menu' : 'Open navigation menu'}
                   aria-expanded={isNavDrawerOpen}
                 >
@@ -171,8 +160,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   alt="GB Coder Logo"
                   className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg sm:rounded-xl object-contain"
                 />
-                <h1 className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold truncate ${isDark ? 'text-bright-white' : 'text-gray-900'
-                  }`}>
+                <h1 className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold truncate text-[#e8e8e8]">
                   <span className="block sm:inline">GB Coder</span>
                 </h1>
               </div>
@@ -183,11 +171,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               <Tooltip label="Run">
                 <button
                   onClick={onRun}
-                  className={`p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 compact:justify-center compact:min-h-[44px] compact:min-w-[44px] ${
-                    isDark
-                      ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                      : 'text-gray-700 hover:bg-black/5'
-                  }`}
+                  className="p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 compact:justify-center compact:min-h-[44px] compact:min-w-[44px] text-content-secondary hover:bg-white/5 hover:text-content-primary"
                   title="Run"
                   aria-label="Run"
                 >
@@ -211,10 +195,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   <button
                     onClick={onToggleVoice}
                     className={`relative p-2 rounded-md transition-colors ${isVoiceListening
-                      ? 'bg-red-500/15 text-red-400'
-                      : (isDark
-                        ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                        : 'text-gray-700 hover:bg-black/5')
+                      ? 'bg-[#e5484d]/12 text-[#e5484d]'
+                      : 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
                       }`}
                     title={isVoiceListening ? 'Stop listening' : 'Voice commands'}
                     aria-label={isVoiceListening ? 'Stop listening' : 'Start voice commands'}
@@ -273,12 +255,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                     onClick={() => setIsOverflowOpen((open) => !open)}
                     className={`flex h-11 w-11 items-center justify-center rounded-md transition-colors ${
                       isOverflowOpen
-                        ? isDark
-                          ? 'bg-white/10 text-content-primary'
-                          : 'bg-gray-100 text-black'
-                        : isDark
-                          ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                          : 'text-gray-600 hover:bg-black/5'
+                        ? 'bg-white/8 text-content-primary'
+                        : 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
                     }`}
                     aria-label="More actions"
                     aria-expanded={isOverflowOpen}
@@ -290,9 +268,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
                   {isOverflowOpen && (
                     <div
-                      className={`absolute right-0 mt-2 w-56 overflow-hidden rounded-lg border border-[#2a2a2a] z-50 animate-slide-down ${
-                        isDark ? 'bg-surface-raised' : 'bg-white border-gray-200'
-                      }`}
+                      className="absolute right-0 mt-2 w-56 overflow-hidden rounded-lg border border-[#2a2a2a] bg-[#161616] z-50 animate-slide-down"
                       data-testid="nav-overflow-menu"
                     >
                       <div className="py-1">
@@ -302,11 +278,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               onToggleVoice();
                               setIsOverflowOpen(false);
                             }}
-                            className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left text-sm transition-colors ${
-                              isDark
-                                ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                                : 'text-gray-700 hover:bg-gray-50'
-                            }`}
+                            className="flex min-h-[44px] w-full items-center gap-3 px-4 text-left text-sm transition-colors text-content-secondary hover:bg-white/5 hover:text-content-primary"
                           >
                             {isVoiceListening ? (
                               <Mic className="w-4 h-4 text-red-400" />
@@ -344,11 +316,10 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 <Tooltip label="Project menu">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className={`p-2 rounded-md transition-colors compact:flex compact:h-11 compact:w-11 compact:items-center compact:justify-center ${isDropdownOpen
-                      ? (isDark ? 'bg-white/10 text-content-primary' : 'bg-gray-100 text-black')
-                      : (isDark
-                        ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                        : 'text-gray-600 hover:bg-black/5')
+                    className={`p-2 rounded-md transition-colors compact:flex compact:h-11 compact:w-11 compact:items-center compact:justify-center ${
+                      isDropdownOpen
+                        ? 'bg-white/8 text-content-primary'
+                        : 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
                       }`}
                     title="Project menu"
                     aria-label="Toggle project menu"
@@ -442,40 +413,22 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                         )}
                       </div>
 
-                      <div className={`border-t my-1 ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`} />
+                      <div className="border-t my-1 border-[#2a2a2a]" />
 
-                      <div className={`border-t my-1 ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`} />
+                      <div className="border-t my-1 border-[#2a2a2a]" />
 
-                      {/* Appearance & Info */}
+                      {/* Info */}
                       <div className="px-4 py-3">
-                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-accent/60 pl-2 ${isDark ? 'text-content-muted' : 'text-gray-500'
-                          }`}>
-                          Appearance & Info
+                        <h4 className="text-xs font-medium mb-3 border-l-2 border-accent/60 pl-2 text-content-muted">
+                          Info
                         </h4>
                         <div className="space-y-1">
-                          <button
-                            onClick={() => {
-                              updateSettings({ theme: isDark ? 'light' : 'dark' });
-                              setIsDropdownOpen(false);
-                            }}
-                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3 transition-colors rounded-md ${isDark
-                              ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                              : 'text-gray-700 hover:bg-gray-50'
-                              }`}
-                          >
-                            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                            {isDark ? 'Light Mode' : 'Dark Mode'}
-                          </button>
-
                           <button
                             onClick={() => {
                               window.dispatchEvent(new CustomEvent('navigate-to-about'));
                               setIsDropdownOpen(false);
                             }}
-                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3 transition-colors rounded-md ${isDark
-                              ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                              : 'text-gray-700 hover:bg-gray-50'
-                              }`}
+                            className="w-full px-3 py-2 text-left text-sm flex items-center gap-3 transition-colors rounded-md text-content-secondary hover:bg-white/5 hover:text-content-primary"
                           >
                             <FileText className="w-4 h-4" />
                             About Us

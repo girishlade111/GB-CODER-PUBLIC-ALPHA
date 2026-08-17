@@ -449,3 +449,111 @@ button:active:not(:disabled) {
     transition: background-color 200ms ease-out;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Global color-family remaps — Quiet Dark Mode enforcement
+   All blue / purple / indigo / violet / cyan / teal / sky → muted system tokens
+   All amber / yellow / orange (non-accent) → muted warning or text-secondary
+   All emerald / lime / green → success token
+   No white backgrounds, no neon, no light-mode surfaces anywhere
+   ───────────────────────────────────────────────────────────────────────────── */
+@layer utilities {
+
+    /* ── Blue family → surface tokens / accent ── */
+    .bg-blue-50, .bg-blue-100, .bg-blue-200 { background-color: #1c1c1c !important; }
+    .bg-blue-300, .bg-blue-400, .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-blue-800, .bg-blue-900 { background-color: #1c1c1c !important; }
+    .text-blue-50, .text-blue-100, .text-blue-200, .text-blue-300, .text-blue-400, .text-blue-500 { color: #8a8a8a !important; }
+    .text-blue-600, .text-blue-700, .text-blue-800, .text-blue-900 { color: #8a8a8a !important; }
+    .border-blue-200, .border-blue-300, .border-blue-400, .border-blue-500, .border-blue-600, .border-blue-700 { border-color: #2a2a2a !important; }
+    .ring-blue-500, .ring-blue-600 { --tw-ring-color: #e07856 !important; }
+    .hover\:bg-blue-700:hover, .hover\:bg-blue-600:hover, .hover\:bg-blue-500:hover { background-color: #242424 !important; }
+    .hover\:bg-blue-50:hover, .hover\:bg-blue-100:hover { background-color: #1c1c1c !important; }
+    .focus\:border-blue-500:focus, .focus\:ring-blue-500:focus { border-color: #e07856 !important; }
+
+    /* ── Purple / Indigo / Violet family → surface tokens ── */
+    .bg-purple-50, .bg-purple-100, .bg-purple-500, .bg-purple-600, .bg-purple-700, .bg-purple-800, .bg-purple-900 { background-color: #1c1c1c !important; }
+    .bg-indigo-50, .bg-indigo-100, .bg-indigo-500, .bg-indigo-600, .bg-indigo-700 { background-color: #1c1c1c !important; }
+    .bg-violet-50, .bg-violet-100, .bg-violet-500, .bg-violet-600, .bg-violet-700 { background-color: #1c1c1c !important; }
+    .text-purple-300, .text-purple-400, .text-purple-500, .text-purple-600, .text-purple-700 { color: #8a8a8a !important; }
+    .text-indigo-300, .text-indigo-400, .text-indigo-500, .text-indigo-600 { color: #8a8a8a !important; }
+    .text-violet-300, .text-violet-400, .text-violet-500 { color: #8a8a8a !important; }
+    .border-purple-500, .border-purple-600, .border-indigo-500, .border-violet-500 { border-color: #2a2a2a !important; }
+    .hover\:bg-purple-700:hover, .hover\:bg-purple-600:hover { background-color: #242424 !important; }
+
+    /* ── Emerald / Green / Lime family → success token ── */
+    .bg-emerald-400, .bg-emerald-500, .bg-emerald-600, .bg-emerald-700 { background-color: #3ecf5e !important; }
+    .bg-emerald-500\/15, .bg-emerald-500\/10 { background-color: rgba(62, 207, 94, 0.12) !important; }
+    .bg-green-500, .bg-green-600 { background-color: #3ecf5e !important; }
+    .text-emerald-300, .text-emerald-400, .text-emerald-500 { color: #3ecf5e !important; }
+    .text-green-400, .text-green-500 { color: #3ecf5e !important; }
+    .hover\:bg-emerald-700:hover, .hover\:bg-green-700:hover { background-color: rgba(62, 207, 94, 0.2) !important; }
+
+    /* ── Amber / Yellow / Orange (warning band) → muted secondary / accent ── */
+    .bg-amber-50, .bg-amber-100 { background-color: #1c1c1c !important; }
+    .bg-amber-500\/10, .bg-amber-500\/15, .bg-amber-500\/20 { background-color: rgba(224, 120, 86, 0.08) !important; }
+    .text-amber-100, .text-amber-200, .text-amber-300, .text-amber-400, .text-amber-500 { color: #8a8a8a !important; }
+    .text-amber-200\/60, .text-amber-200\/70 { color: #5c5c5c !important; }
+    .text-yellow-400, .text-yellow-500 { color: #8a8a8a !important; }
+    .text-orange-400, .text-orange-500 { color: #e07856 !important; }
+    .border-amber-200, .border-amber-500\/30 { border-color: #2a2a2a !important; }
+    .hover\:bg-amber-500\/30:hover { background-color: rgba(224, 120, 86, 0.12) !important; }
+
+    /* ── Sky / Cyan / Teal family → secondary text / surface ── */
+    .bg-sky-50, .bg-sky-500\/15 { background-color: #1c1c1c !important; }
+    .text-sky-300, .text-sky-400 { color: #8a8a8a !important; }
+    .text-sky-300\/80, .text-sky-300\/70 { color: #5c5c5c !important; }
+    .text-cyan-400, .text-teal-400 { color: #8a8a8a !important; }
+
+    /* ── Pink / Rose family → danger token ── */
+    .bg-pink-500, .bg-pink-600 { background-color: #e5484d !important; }
+    .text-pink-400, .text-pink-500, .text-rose-400, .text-rose-500 { color: #e5484d !important; }
+
+    /* ── Red family → danger token ── */
+    .bg-red-50, .bg-red-100 { background-color: #1c1c1c !important; }
+    .bg-red-500\/15 { background-color: rgba(229, 72, 77, 0.12) !important; }
+    .text-red-400, .text-red-500, .text-red-600 { color: #e5484d !important; }
+    .border-red-300, .border-red-400 { border-color: rgba(229, 72, 77, 0.35) !important; }
+
+    /* ── White backgrounds → panel surface ── */
+    .bg-white { background-color: #161616 !important; }
+    .bg-white\/95 { background-color: rgba(22, 22, 22, 0.97) !important; }
+    .bg-white\/10, .bg-white\/5 { background-color: rgba(255, 255, 255, 0.04) !important; }
+    .hover\:bg-white\/10:hover, .hover\:bg-white\/5:hover { background-color: rgba(255, 255, 255, 0.05) !important; }
+    .border-white\/10, .border-white\/20 { border-color: #2a2a2a !important; }
+    .text-white { color: #e8e8e8 !important; }
+
+    /* ── Light mode gray surfaces → dark equivalents ── */
+    .bg-gray-50, .bg-gray-100 { background-color: #161616 !important; }
+    .bg-gray-200 { background-color: #1c1c1c !important; }
+    .border-gray-200, .border-gray-300 { border-color: #2a2a2a !important; }
+    .text-gray-900 { color: #e8e8e8 !important; }
+    .text-gray-700, .text-gray-800 { color: #8a8a8a !important; }
+    .hover\:text-gray-900:hover, .hover\:text-gray-800:hover { color: #e8e8e8 !important; }
+    .hover\:bg-black\/5:hover { background-color: rgba(255, 255, 255, 0.03) !important; }
+
+    /* ── Dark difficulty badges (template selector etc.) ── */
+    .bg-yellow-100, .bg-yellow-500\/20 { background-color: rgba(224, 120, 86, 0.08) !important; }
+    .text-yellow-700, .text-yellow-400 { color: #e07856 !important; }
+    .dark\:bg-yellow-500\/20 { background-color: rgba(224, 120, 86, 0.08) !important; }
+    .dark\:text-yellow-400 { color: #e07856 !important; }
+
+    /* ── Bright / saturated orange → accent ── */
+    .bg-orange-50, .bg-orange-100 { background-color: #1c1c1c !important; }
+    .border-orange-200 { border-color: #2a2a2a !important; }
+    .text-orange-600 { color: #e07856 !important; }
+
+    /* ── Loading / spinner ── */
+    .animate-spin.text-blue-400 { color: #8a8a8a !important; }
+}
+
+/* ── Force the body background and ensure no pure-white surfaces leak through ── */
+html, body, #root {
+    background-color: #0d0d0d;
+    color: #e8e8e8;
+}
+
+/* ── Backdrop overrides — modals should use dark overlay ── */
+.bg-black\/70 { background-color: rgba(0, 0, 0, 0.75) !important; }
+.bg-black\/50 { background-color: rgba(0, 0, 0, 0.6) !important; }
+.bg-black\/30 { background-color: rgba(0, 0, 0, 0.4) !important; }
+
+

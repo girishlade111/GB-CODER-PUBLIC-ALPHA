@@ -241,7 +241,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
           type="text"
           value={snippetName}
           onChange={(e) => setSnippetName(e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+          className="w-full bg-[#1c1c1c] border border-[#2a2a2a] rounded-md px-3 py-2 text-[#e8e8e8] focus:outline-none focus:border-[#e07856]"
           placeholder="My Awesome Snippet"
         />
       </div>
@@ -253,7 +253,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
         <textarea
           value={snippetDescription}
           onChange={(e) => setSnippetDescription(e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500 h-20 resize-none"
+          className="w-full bg-[#1c1c1c] border border-[#2a2a2a] rounded-md px-3 py-2 text-[#e8e8e8] focus:outline-none focus:border-[#e07856] h-20 resize-none"
           placeholder="What does this snippet do?"
         />
       </div>
@@ -268,9 +268,9 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
               <button
                 key={type}
                 onClick={() => setSnippetType(type)}
-                className={`px-2 py-1.5 text-xs rounded border transition-colors ${snippetType === type
-                  ? 'bg-blue-600 border-blue-500 text-white'
-                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+                className={`px-2 py-1.5 text-xs rounded-md border transition-colors ${snippetType === type
+                  ? 'bg-[#e07856]/15 border-[#e07856]/50 text-[#e07856]'
+                  : 'bg-[#1c1c1c] border-[#2a2a2a] text-[#8a8a8a] hover:border-[#3a3a3a]'
                   }`}
               >
                 {type === 'full' ? 'Full Page' : type.toUpperCase()}
@@ -288,9 +288,9 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
               <button
                 key={scope}
                 onClick={() => setSnippetScope(scope)}
-                className={`px-2 py-1.5 text-xs rounded border transition-colors ${snippetScope === scope
-                  ? 'bg-purple-600 border-purple-500 text-white'
-                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+                className={`px-2 py-1.5 text-xs rounded-md border transition-colors ${snippetScope === scope
+                  ? 'bg-[#e07856]/15 border-[#e07856]/50 text-[#e07856]'
+                  : 'bg-[#1c1c1c] border-[#2a2a2a] text-[#8a8a8a] hover:border-[#3a3a3a]'
                   }`}
               >
                 {scope.charAt(0).toUpperCase() + scope.slice(1)}

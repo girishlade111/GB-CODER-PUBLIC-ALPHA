@@ -460,24 +460,24 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           as detected, and the empty state below says what to do instead. */}
       {showBanner && hasFiles && (
         <div
-          className="flex shrink-0 items-start gap-2.5 border-b border-amber-500/30 bg-amber-500/10 px-3 py-2"
+          className="flex shrink-0 items-start gap-2.5 border-b border-[#2a2a2a] bg-[#1c1c1c] px-3 py-2"
           data-testid="vscode-banner"
         >
-          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400" />
-          <p className="flex-1 text-xs text-amber-100">
+          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#8a8a8a]" />
+          <p className="flex-1 text-xs text-[#8a8a8a]">
             {entryReason === 'manual'
               ? 'VS Code mode — connect a Sandbox to run this project.'
               : 'Full-stack project detected — connect a Sandbox to run this project.'}
           </p>
           <button
             onClick={() => setRightTab('sandbox')}
-            className="rounded bg-amber-500/20 px-2 py-0.5 text-[11px] font-medium text-amber-100 hover:bg-amber-500/30"
+            className="rounded-md bg-[#2a2a2a] px-2 py-0.5 text-[11px] font-medium text-[#e8e8e8] hover:bg-[#3a3a3a]"
           >
             Open Sandbox
           </button>
           <button
             onClick={() => setShowBanner(false)}
-            className="text-amber-200/70 hover:text-amber-100"
+            className="text-[#5c5c5c] hover:text-[#8a8a8a]"
             aria-label="Dismiss banner"
           >
             <X className="h-3.5 w-3.5" />
@@ -580,7 +580,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               {devServerReady && (
                 <span
                   aria-hidden
-                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"
+                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#3ecf5e]"
                   title="Running"
                 />
               )}
@@ -785,7 +785,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               <div className="flex h-full min-h-0 flex-col">
                 <div className="flex shrink-0 items-center justify-between border-b border-vsc-border px-2.5 py-1.5">
                   <span className="flex items-center gap-1.5 text-[11px] text-vsc-text">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                     {activePreview.label}
                   </span>
                   <button
@@ -931,7 +931,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         <span className="ml-auto flex items-center gap-1.5" data-testid="status-sandbox">
           <span
             className={`h-1.5 w-1.5 rounded-full ${
-              sandbox.sandboxId ? 'bg-emerald-400' : 'bg-vsc-textMuted'
+              sandbox.sandboxId ? 'bg-[#3ecf5e]' : 'bg-vsc-textMuted'
             }`}
           />
           {sandbox.sandboxId ? 'Connected: Sandbox' : 'Local Mode'}
