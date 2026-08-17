@@ -112,28 +112,26 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        className={`relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl shadow-2xl border transition-all ${
-          isDark ? 'bg-gray-900/95 border-purple-500/30 text-white' : 'bg-white border-purple-200 text-gray-900'
-        }`}
+        className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-lg border border-[#2a2a2a] bg-[#161616] text-[#e8e8e8] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-purple-500/20 bg-gradient-to-r from-purple-900/30 via-indigo-900/20 to-orange-900/20 rounded-t-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a2a] bg-[#161616]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 via-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
-              <Bug className="w-6 h-6 text-white animate-bounce" />
+            <div className="w-8 h-8 rounded-md bg-[#1c1c1c] border border-[#2a2a2a] flex items-center justify-center">
+              <Bug className="w-4 h-4 text-[#e07856]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                <h2 className="text-[16px] font-semibold text-[#e8e8e8]">
                   CodeRabbit AI
                 </h2>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">
-                  Bug & Error Scanner
+                <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-[#1c1c1c] text-[#e07856] border border-[#2a2a2a]">
+                  Bug &amp; Error Scanner
                 </span>
               </div>
-              <p className="text-xs text-gray-400">
-                Automated AI code review, AST bug detection, security checks & one-click fixes
+              <p className="text-[12.5px] text-[#8a8a8a]">
+                AST bug detection, security checks &amp; one-click fixes
               </p>
             </div>
           </div>
@@ -142,16 +140,16 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
             <button
               onClick={handleRunScan}
               disabled={isScanning || files.length === 0}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 text-white shadow-md transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-3.5 py-1.5 text-[13px] font-medium rounded-md bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] text-[#e8e8e8] transition-colors disabled:opacity-50"
             >
-              <RefreshCw className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
               {isScanning ? 'Scanning...' : 'Rescan Code'}
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-1.5 rounded-md text-[#8a8a8a] hover:text-[#e8e8e8] hover:bg-[#1c1c1c] transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -208,9 +206,9 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
                 </span>
                 <span>{scanProgress}%</span>
               </div>
-              <div className="w-full h-2 rounded-full bg-gray-800 overflow-hidden">
+              <div className="w-full h-1.5 rounded-full bg-[#1c1c1c] border border-[#2a2a2a] overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-orange-500 via-purple-500 to-indigo-500 transition-all duration-300"
+                  className="h-full bg-[#e07856] transition-all duration-300"
                   style={{ width: `${scanProgress}%` }}
                 />
               </div>
@@ -219,54 +217,46 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
 
           {/* Stats Overview */}
           {scanResult && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className={`p-4 rounded-xl border flex items-center justify-between ${
-                isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-              }`}>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-3.5 rounded-lg border border-[#2a2a2a] bg-[#161616] flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-400 font-medium">Health Score</p>
-                  <p className="text-2xl font-black bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                  <p className="text-[11.5px] text-[#8a8a8a] font-medium">Health Score</p>
+                  <p className="text-[20px] font-semibold text-[#3ecf5e]">
                     {scanResult.stats.score}/100
                   </p>
                 </div>
-                <CheckCircle className="w-8 h-8 text-emerald-400/50" />
+                <CheckCircle className="w-6 h-6 text-[#3ecf5e]/70" />
               </div>
 
-              <div className={`p-4 rounded-xl border flex items-center justify-between ${
-                isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-              }`}>
+              <div className="p-3.5 rounded-lg border border-[#2a2a2a] bg-[#161616] flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-400 font-medium">Critical Bugs</p>
-                  <p className="text-2xl font-black text-red-400">{scanResult.stats.critical}</p>
+                  <p className="text-[11.5px] text-[#8a8a8a] font-medium">Critical Bugs</p>
+                  <p className="text-[20px] font-semibold text-[#e5484d]">{scanResult.stats.critical}</p>
                 </div>
-                <ShieldAlert className="w-8 h-8 text-red-400/50" />
+                <ShieldAlert className="w-6 h-6 text-[#e5484d]/70" />
               </div>
 
-              <div className={`p-4 rounded-xl border flex items-center justify-between ${
-                isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-              }`}>
+              <div className="p-3.5 rounded-lg border border-[#2a2a2a] bg-[#161616] flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-400 font-medium">Warnings</p>
-                  <p className="text-2xl font-black text-amber-400">{scanResult.stats.warning}</p>
+                  <p className="text-[11.5px] text-[#8a8a8a] font-medium">Warnings</p>
+                  <p className="text-[20px] font-semibold text-[#d97706]">{scanResult.stats.warning}</p>
                 </div>
-                <AlertTriangle className="w-8 h-8 text-amber-400/50" />
+                <AlertTriangle className="w-6 h-6 text-[#d97706]/70" />
               </div>
 
-              <div className={`p-4 rounded-xl border flex items-center justify-between ${
-                isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-              }`}>
+              <div className="p-3.5 rounded-lg border border-[#2a2a2a] bg-[#161616] flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-400 font-medium">Files Analyzed</p>
-                  <p className="text-2xl font-black text-purple-400">{scanResult.stats.totalFilesScanned}</p>
+                  <p className="text-[11.5px] text-[#8a8a8a] font-medium">Files Analyzed</p>
+                  <p className="text-[20px] font-semibold text-[#e8e8e8]">{scanResult.stats.totalFilesScanned}</p>
                 </div>
-                <FileCode className="w-8 h-8 text-purple-400/50" />
+                <FileCode className="w-6 h-6 text-[#8a8a8a]" />
               </div>
             </div>
           )}
 
           {/* Filter Tabs */}
           {scanResult && (
-            <div className="flex items-center gap-2 border-b border-gray-800 pb-3 overflow-x-auto">
+            <div className="flex items-center gap-2 border-b border-[#2a2a2a] pb-3 overflow-x-auto">
               {[
                 { id: 'all', label: `All Issues (${scanResult.issues.length})` },
                 { id: 'critical', label: `Critical (${scanResult.stats.critical})` },
@@ -277,12 +267,10 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                  className={`px-3 py-1 rounded-md text-[12px] font-medium whitespace-nowrap transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : isDark
-                      ? 'bg-gray-800 text-gray-400 hover:text-white'
-                      : 'bg-gray-100 text-gray-600 hover:text-gray-900'
+                      ? 'bg-[#242424] text-[#e8e8e8] border border-[#2a2a2a]'
+                      : 'bg-[#1c1c1c] text-[#8a8a8a] hover:text-[#e8e8e8] border border-transparent'
                   }`}
                 >
                   {tab.label}
@@ -293,58 +281,54 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
 
           {/* Issues List */}
           {scanResult && filteredIssues.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {filteredIssues.map((issue) => {
                 const isApplied = appliedIssues[issue.id];
 
                 return (
                   <div
                     key={issue.id}
-                    className={`p-4 rounded-xl border transition-all ${
-                      isDark
-                        ? 'bg-gray-850/60 border-gray-800 hover:border-purple-500/40'
-                        : 'bg-white border-gray-200 hover:border-purple-300'
-                    }`}
+                    className="p-4 rounded-lg border border-[#2a2a2a] bg-[#161616] transition-colors"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-extrabold rounded-md ${
+                            className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold rounded-md border ${
                               issue.severity === 'critical'
-                                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                ? 'bg-[#e5484d]/10 text-[#e5484d] border-[#e5484d]/30'
                                 : issue.severity === 'warning'
-                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                : 'bg-[#1c1c1c] text-[#8a8a8a] border-[#2a2a2a]'
                             }`}
                           >
                             {issue.severity}
                           </span>
 
-                          <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-gray-800 text-gray-300">
+                          <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-[#1c1c1c] text-[#8a8a8a] border border-[#2a2a2a]">
                             {issue.file}:{issue.line}
                           </span>
 
-                          <span className="text-xs font-semibold text-gray-400">
-                            Category: <span className="text-purple-400">{issue.category}</span>
+                          <span className="text-[11.5px] text-[#8a8a8a]">
+                            Category: <span className="text-[#e8e8e8]">{issue.category}</span>
                           </span>
                         </div>
 
-                        <h4 className="text-sm font-bold text-white pt-1">{issue.title}</h4>
-                        <p className="text-xs text-gray-300 leading-relaxed">{issue.description}</p>
+                        <h4 className="text-[13.5px] font-medium text-[#e8e8e8] pt-1">{issue.title}</h4>
+                        <p className="text-[12.5px] text-[#8a8a8a] leading-relaxed">{issue.description}</p>
                       </div>
 
                       {issue.suggestedFix && (
                         <button
                           onClick={() => handleApplyFix(issue)}
                           disabled={isApplied}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 transition-all ${
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium shrink-0 transition-colors ${
                             isApplied
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-gradient-to-r from-orange-500 to-purple-600 text-white hover:from-orange-600 hover:to-purple-700 shadow'
+                              ? 'bg-[#3ecf5e]/10 text-[#3ecf5e] border border-[#3ecf5e]/30'
+                              : 'bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] text-[#e8e8e8]'
                           }`}
                         >
-                          <Wand2 className="w-3.5 h-3.5" />
+                          <Wand2 className="w-3.5 h-3.5 text-[#e07856]" />
                           {isApplied ? 'Applied' : 'Apply Fix'}
                         </button>
                       )}
@@ -352,11 +336,11 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
 
                     {/* Code Snippet & Fix Diff Preview */}
                     {issue.codeSnippet && (
-                      <div className="mt-3 p-3 rounded-lg bg-gray-950 font-mono text-[11px] space-y-1.5 border border-gray-800">
-                        <div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold">
+                      <div className="mt-3 p-3 rounded-md bg-[#0d0d0d] font-mono text-[11px] space-y-1.5 border border-[#2a2a2a]">
+                        <div className="text-[#5c5c5c] text-[10px] uppercase tracking-wider font-medium">
                           Offending Code:
                         </div>
-                        <div className="text-red-400 bg-red-950/30 p-1.5 rounded border border-red-900/30 overflow-x-auto">
+                        <div className="text-[#e5484d] bg-[#e5484d]/10 p-1.5 rounded border border-[#e5484d]/20 overflow-x-auto">
                           - {issue.codeSnippet}
                         </div>
 

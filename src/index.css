@@ -3,9 +3,18 @@
 @tailwind utilities;
 
 /* ─── Design tokens ──────────────────────────────────────────────────────────
-   Modern dev-tool dark theme. Surfaces step up in lightness as elements lift
-   off the canvas; a single accent carries all interactive emphasis.
-   Keep in sync with theme.extend in tailwind.config.js.
+   Quiet Dark Mode design system.
+   - Background (base): #0d0d0d (near-black, not pure black)
+   - Panel/card background: #161616
+   - Panel hover / secondary surface: #1c1c1c to #242424
+   - Border (all dividers, card outlines, input borders): #2a2a2a (hairline, low contrast)
+   - Primary text: #e8e8e8 (off-white, never pure #fff)
+   - Secondary text / sublabels: #8a8a8a
+   - Faint/disabled text: #5c5c5c
+   - Accent (links, active handle, highlights): #e07856 (warm burnt-orange/terracotta)
+   - Success/active state (toggles, badges): #3ecf5e (muted green)
+   - Danger (delete, destructive actions): #e5484d (muted red, not saturated)
+   - Shadows: none (depth from border & background contrast only)
 --------------------------------------------------------------------------- */
 :root {
     /* Motion */
@@ -14,65 +23,66 @@
     --transition-slow: 300ms ease-out;
 
     /* Surfaces (darkest → lightest) */
-    --surface-canvas: #0a0a0a;
-    --surface-base: #111111;
-    --surface-raised: #18181b;
-    --surface-overlay: #1f1f23;
-    --surface-hover: #27272a;
+    --surface-canvas: #0d0d0d;
+    --surface-base: #161616;
+    --surface-raised: #161616;
+    --surface-overlay: #1c1c1c;
+    --surface-hover: #242424;
 
     /* Hover/active wash applied over any surface */
-    --hover-overlay: rgba(255, 255, 255, 0.05);
-    --active-overlay: rgba(255, 255, 255, 0.08);
+    --hover-overlay: rgba(255, 255, 255, 0.03);
+    --active-overlay: rgba(255, 255, 255, 0.06);
 
-    /* Strokes — subtle dividers rather than harsh borders */
-    --stroke-subtle: #27272a;
-    --stroke-strong: #3f3f46;
+    /* Strokes — hairline dividers */
+    --stroke-subtle: #2a2a2a;
+    --stroke-strong: #3a3a3a;
 
     /* Text */
-    --text-primary: #fafafa;
-    --text-secondary: #a1a1aa;
-    --text-muted: #71717a;
+    --text-primary: #e8e8e8;
+    --text-secondary: #8a8a8a;
+    --text-muted: #5c5c5c;
 
-    /* Accent (single accent colour for the whole product) */
-    --accent: #7c3aed;
-    --accent-hover: #8b5cf6;
-    --accent-muted: #6d28d9;
-    --accent-subtle: rgba(124, 58, 237, 0.12);
+    /* Accent (warm terracotta) */
+    --accent: #e07856;
+    --accent-hover: #e88a6d;
+    --accent-muted: #c86343;
+    --accent-subtle: rgba(224, 120, 86, 0.12);
 
-    /* Radius scale */
+    /* Functional states */
+    --success: #3ecf5e;
+    --danger: #e5484d;
+
+    /* Radius scale: 8px cards, 6px buttons/inputs, 4px tags/badges */
     --radius-sm: 4px;
-    /* tags, badges */
     --radius-md: 6px;
-    /* buttons, inputs */
     --radius-lg: 8px;
-    /* cards, modals, panels */
 
-    /* Elevation */
-    --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.4);
+    /* Elevation: none per design system */
+    --shadow-elevated: none;
 
-    /* Type */
-    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', Monaco, Consolas, monospace;
+    /* Type: Pure system-ui stack */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-    /* ── Legacy VS Code variable names, repointed at the new palette ── */
+    /* ── VS Code variable mappings ── */
     --vscode-bg-editor: var(--surface-canvas);
-    --vscode-bg-sidebar: var(--surface-raised);
+    --vscode-bg-sidebar: var(--surface-base);
     --vscode-bg-activitybar: var(--surface-base);
     --vscode-bg-panel: var(--surface-base);
-    --vscode-bg-statusbar: var(--accent);
+    --vscode-bg-statusbar: var(--surface-base);
     --vscode-border: var(--stroke-subtle);
     --vscode-border-subtle: var(--stroke-subtle);
     --vscode-border-light: var(--stroke-subtle);
     --vscode-text-primary: var(--text-primary);
     --vscode-text-secondary: var(--text-secondary);
-    --vscode-text-link: var(--accent-hover);
-    --vscode-selection: #3f3f46;
-    --vscode-line-highlight: var(--surface-raised);
-    --vscode-cursor: #fafafa;
-    --vscode-error: #f87171;
-    --vscode-warning: #fbbf24;
-    --vscode-info: #60a5fa;
-    --vscode-success: #4ade80;
+    --vscode-text-link: var(--accent);
+    --vscode-selection: #2a2a2a;
+    --vscode-line-highlight: var(--surface-overlay);
+    --vscode-cursor: var(--accent);
+    --vscode-error: var(--danger);
+    --vscode-warning: #d97706;
+    --vscode-info: var(--accent);
+    --vscode-success: var(--success);
 }
 
 /* ─── Base ─────────────────────────────────────────────────────────────────── */
@@ -85,21 +95,32 @@ body {
     background-color: var(--surface-canvas);
     color: var(--text-primary);
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: 13.5px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Headings use the tighter 1.2 leading from the type scale */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+/* Headings use the tight 1.2 leading */
+h1 {
+    font-size: 22px;
+    font-weight: 600;
     line-height: 1.2;
-    letter-spacing: -0.01em;
+    color: var(--text-primary);
+}
+
+h2 {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--text-primary);
+}
+
+h3 {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-primary);
 }
 
 code,
@@ -110,10 +131,11 @@ samp,
     font-family: var(--font-mono);
 }
 
-/* Unified focus ring — accent coloured */
+/* Unified quiet focus ring — subtle border shift */
 *:focus-visible {
     outline: none !important;
-    box-shadow: 0 0 0 2px var(--accent) !important;
+    box-shadow: none !important;
+    border-color: var(--accent) !important;
 }
 
 /* Global button press feedback */
@@ -121,19 +143,18 @@ button {
     transition: background-color var(--transition-fast),
         border-color var(--transition-fast),
         color var(--transition-fast),
-        transform 60ms ease-out,
-        box-shadow var(--transition-fast);
+        transform 60ms ease-out;
 }
 
 button:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: scale(0.98);
 }
 
 /* ─── Scrollbars ───────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -141,14 +162,14 @@ button:active:not(:disabled) {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #3f3f46;
-    border-radius: 5px;
+    background: #2a2a2a;
+    border-radius: 4px;
     border: 2px solid transparent;
     background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #52525b;
+    background: #3a3a3a;
     background-clip: content-box;
 }
 
@@ -157,116 +178,110 @@ button:active:not(:disabled) {
 }
 
 * {
-    scrollbar-color: #3f3f46 transparent;
+    scrollbar-color: #2a2a2a transparent;
+    box-shadow: none !important;
 }
 
 /* ─── Palette remap ────────────────────────────────────────────────────────────
-   The app's markup is written against Tailwind's gray scale. Repointing those
-   utilities here restyles every panel, card and label at once, which keeps this
-   redesign a token change rather than a thousand-line class rename.
-
-   `!important` is required because these compete with Tailwind's own utilities
-   of equal specificity.
+   Remapping Tailwind's gray scale utilities to the Quiet Dark Mode design tokens.
 --------------------------------------------------------------------------- */
 @layer utilities {
 
     /* ── Surfaces ── */
     .bg-gray-950 {
-        background-color: var(--surface-canvas) !important;
+        background-color: #0d0d0d !important;
     }
 
     .bg-gray-900 {
-        background-color: var(--surface-base) !important;
+        background-color: #161616 !important;
     }
 
     .bg-gray-800 {
-        background-color: var(--surface-raised) !important;
+        background-color: #161616 !important;
     }
 
     .bg-gray-700 {
-        background-color: var(--surface-overlay) !important;
+        background-color: #1c1c1c !important;
     }
 
     .bg-gray-600 {
-        background-color: var(--surface-hover) !important;
+        background-color: #242424 !important;
     }
 
     /* Semi-transparent surfaces */
     .bg-gray-800\/50 {
-        background-color: rgba(24, 24, 27, 0.5) !important;
+        background-color: rgba(22, 22, 22, 0.7) !important;
     }
 
     .bg-gray-900\/50 {
-        background-color: rgba(17, 17, 17, 0.5) !important;
+        background-color: rgba(22, 22, 22, 0.7) !important;
     }
 
     .bg-gray-900\/20 {
-        background-color: rgba(17, 17, 17, 0.2) !important;
+        background-color: rgba(22, 22, 22, 0.3) !important;
     }
 
-    /* ── Hover surfaces — a subtle white wash reads better on near-black
-          than a hard-coded lighter gray ── */
+    /* ── Hover surfaces ── */
     .hover\:bg-gray-800:hover,
     .hover\:bg-gray-700:hover {
-        background-color: var(--hover-overlay) !important;
+        background-color: #1c1c1c !important;
     }
 
     .hover\:bg-gray-600:hover {
-        background-color: var(--active-overlay) !important;
+        background-color: #242424 !important;
     }
 
     /* ── Strokes ── */
     .border-gray-800,
     .border-gray-700 {
-        border-color: var(--stroke-subtle) !important;
+        border-color: #2a2a2a !important;
     }
 
     .border-gray-600,
     .border-gray-500 {
-        border-color: var(--stroke-strong) !important;
+        border-color: #3a3a3a !important;
     }
 
-    .divide-gray-700> :not([hidden])~ :not([hidden]) {
-        border-color: var(--stroke-subtle) !important;
+    .divide-gray-700> :not([hidden])~ :not([hidden]),
+    .divide-gray-800> :not([hidden])~ :not([hidden]) {
+        border-color: #2a2a2a !important;
     }
 
     /* ── Text ── */
-    .text-gray-600 {
-        color: var(--text-muted) !important;
-    }
-
+    .text-gray-600,
     .text-gray-500 {
-        color: var(--text-muted) !important;
+        color: #5c5c5c !important;
     }
 
-    .text-gray-400 {
-        color: var(--text-secondary) !important;
-    }
-
+    .text-gray-400,
     .text-gray-300 {
-        color: #d4d4d8 !important;
+        color: #8a8a8a !important;
     }
 
     .text-gray-200,
-    .text-gray-100 {
-        color: var(--text-primary) !important;
+    .text-gray-100,
+    .text-white {
+        color: #e8e8e8 !important;
     }
 
     .hover\:text-gray-300:hover {
-        color: #d4d4d8 !important;
+        color: #8a8a8a !important;
     }
 
     .hover\:text-gray-200:hover,
-    .hover\:text-gray-100:hover {
-        color: var(--text-primary) !important;
+    .hover\:text-gray-100:hover,
+    .hover\:text-white:hover {
+        color: #e8e8e8 !important;
     }
 
     /* ── Focus rings ── */
-    .focus\:ring-gray-700:focus {
-        --tw-ring-color: var(--stroke-strong) !important;
+    .focus\:ring-gray-700:focus,
+    .focus\:ring-blue-500:focus,
+    .focus\:ring-purple-500:focus {
+        --tw-ring-color: #e07856 !important;
     }
 
-    /* ── Utility: standard interactive hover highlight for icon buttons ── */
+    /* ── Interactive hover highlight for icon buttons ── */
     .hover-highlight {
         transition: background-color var(--transition-fast), color var(--transition-fast);
     }
@@ -274,30 +289,163 @@ button:active:not(:disabled) {
     .hover-highlight:hover {
         background-color: var(--hover-overlay);
     }
+
+    /* ── Design System Reusable Component Helpers ── */
+
+    /* Cards: 1px border #2a2a2a on #161616, 8px radius, no shadows */
+    .quiet-card {
+        background-color: #161616;
+        border: 1px solid #2a2a2a;
+        border-radius: 8px;
+    }
+
+    /* Section labels / Eyebrows: 12-13px, weight 400-500, muted color #8a8a8a */
+    .quiet-section-label {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: #8a8a8a;
+    }
+
+    /* Rows: horizontal flex, space-between, 16-18px padding, 1px hairline divider */
+    .quiet-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 18px;
+        border-bottom: 1px solid #2a2a2a;
+    }
+
+    .quiet-row:last-child {
+        border-bottom: none;
+    }
+
+    /* Row title: 13.5px, weight 500 */
+    .quiet-row-title {
+        font-size: 13.5px;
+        font-weight: 500;
+        color: #e8e8e8;
+    }
+
+    /* Sub-descriptions: 12.5px, muted color, max-width constrained */
+    .quiet-row-desc {
+        font-size: 12.5px;
+        color: #8a8a8a;
+        max-width: 480px;
+        line-height: 1.4;
+    }
+
+    /* Buttons: small, low-key, background #1c1c1c, border 1px #2a2a2a, radius 6px, padding ~6-14px */
+    .quiet-btn {
+        background-color: #1c1c1c;
+        border: 1px solid #2a2a2a;
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #e8e8e8;
+        transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .quiet-btn:hover:not(:disabled) {
+        background-color: #242424;
+        border-color: #3a3a3a;
+    }
+
+    .quiet-btn-accent {
+        background-color: #e07856;
+        border: 1px solid #e07856;
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #e8e8e8;
+        transition: background-color var(--transition-fast);
+    }
+
+    .quiet-btn-accent:hover:not(:disabled) {
+        background-color: #e88a6d;
+        border-color: #e88a6d;
+    }
+
+    /* Inputs: filled with #1c1c1c, subtle border #2a2a2a, radius 6px */
+    .quiet-input {
+        background-color: #1c1c1c;
+        border: 1px solid #2a2a2a;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 13px;
+        color: #e8e8e8;
+        outline: none;
+        transition: border-color var(--transition-fast);
+    }
+
+    .quiet-input:focus {
+        border-color: #e07856;
+    }
+
+    .quiet-input::placeholder {
+        color: #5c5c5c;
+    }
+
+    /* Toggles: pill-shaped, green #3ecf5e when active, small white circle knob, no label text inside */
+    .quiet-toggle {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        border-radius: 10px;
+        background-color: #2a2a2a;
+        transition: background-color var(--transition-fast);
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+
+    .quiet-toggle[aria-checked="true"],
+    .quiet-toggle.active {
+        background-color: #3ecf5e;
+    }
+
+    .quiet-toggle-knob {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background-color: #e8e8e8;
+        transition: transform var(--transition-fast);
+    }
+
+    .quiet-toggle[aria-checked="true"] .quiet-toggle-knob,
+    .quiet-toggle.active .quiet-toggle-knob {
+        transform: translateX(16px);
+    }
+
+    /* Badges: tiny pill, 11px text, bordered, sits inline next to a title */
+    .quiet-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 1px 6px;
+        font-size: 11px;
+        font-weight: 500;
+        border-radius: 9999px;
+        border: 1px solid #2a2a2a;
+        background-color: #1c1c1c;
+        color: #8a8a8a;
+    }
+
+    .quiet-badge-active {
+        border-color: rgba(62, 207, 94, 0.3);
+        background-color: rgba(62, 207, 94, 0.1);
+        color: #3ecf5e;
+    }
 }
-
-/*
-  NOTE: two blanket `border-color: ... !important` rules previously lived here
-  (one matching `section, button, [class*="card"], [class*="panel"], …`, one
-  matching `div[class*="border"]`). They forced a single border colour onto
-  almost every element, which made per-component borders impossible to style.
-  They are intentionally removed — `borderColor.DEFAULT` in tailwind.config.js
-  now supplies the subtle stroke for bare `border` classes, and the remaps
-  above cover the explicit `border-gray-*` utilities.
-*/
-
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Jump-to-line highlight
-
-   Applied by `editorNavigator` as a whole-line Monaco decoration when a console
-   stack frame or a Validator problem row is clicked, then removed on a timer.
-   It has to live in plain CSS (not Tailwind) because Monaco applies the class
-   to elements it owns, which Tailwind never sees at build time.
    ───────────────────────────────────────────────────────────────────────────── */
 .gb-jump-highlight {
-    background-color: rgba(124, 58, 237, 0.28);
-    /* A left rule makes the target line obvious without shifting the layout. */
-    box-shadow: inset 3px 0 0 0 #7c3aed;
+    background-color: rgba(224, 120, 86, 0.25);
+    box-shadow: inset 3px 0 0 0 #e07856 !important;
     transition: background-color 200ms ease-out;
 }
+

@@ -212,83 +212,71 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <div
-        className={`w-full max-w-4xl h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden ${
-          isDark ? 'bg-matte-black border border-gray-700' : 'bg-white border border-gray-200'
-        }`}
+        className="w-full max-w-4xl h-[80vh] rounded-lg border border-[#2a2a2a] bg-[#161616] flex flex-col overflow-hidden text-[#e8e8e8]"
       >
         {/* Header */}
-        <div className={`flex items-center justify-between p-4 border-b ${
-          isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
-        }`}>
+        <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a] bg-[#161616]">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl">
-              <Sparkles className="w-6 h-6 text-white" />
+            <div className="p-2 bg-[#1c1c1c] border border-[#2a2a2a] rounded-md">
+              <Sparkles className="w-5 h-5 text-[#e07856]" />
             </div>
             <div>
-              <h2 className={`text-lg font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
+              <h2 className="text-[16px] font-semibold text-[#e8e8e8]">
                 AI Code Assistant
               </h2>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className="text-[12px] text-[#8a8a8a]">
                 Powered by Google Gemini AI
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <label className={`flex items-center gap-2 text-sm cursor-pointer ${
-              isDark ? 'text-gray-400' : 'text-gray-600'
-            }`}>
+            <label className="flex items-center gap-2 text-xs text-[#8a8a8a] cursor-pointer">
               <input
                 type="checkbox"
                 checked={includeCodeContext}
                 onChange={(e) => setIncludeCodeContext(e.target.checked)}
-                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                className="rounded border-[#2a2a2a] bg-[#1c1c1c] text-[#e07856] focus:ring-0"
               />
-              Include code context
+              Include current code context
             </label>
-            <button
-              onClick={clearChat}
-              className={`p-2 rounded-lg transition-colors ${
-                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-              }`}
-              title="Clear chat history"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
+            {messages.length > 0 && (
+              <button
+                onClick={clearChat}
+                className="p-1.5 rounded-md text-[#8a8a8a] hover:text-[#e8e8e8] hover:bg-[#1c1c1c] transition-colors"
+                title="Clear Chat"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={onClose}
-              title="Close"
-              aria-label="Close AI chat"
-              className={`p-2 rounded-lg transition-colors ${
-                isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-              }`}
+              className="p-1.5 rounded-md text-[#8a8a8a] hover:text-[#e8e8e8] hover:bg-[#1c1c1c] transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Messages list */}
         <div 
-          className={`flex-1 overflow-y-auto p-4 space-y-6 ${
-            isDark ? 'bg-gray-900' : 'bg-gray-50'
-          }`}
+          className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0d0d0d]"
           aria-live="polite"
           aria-atomic="false"
         >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
-              <div className="p-6 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full mb-4">
-                <MessageSquare className="w-16 h-16 text-purple-500" />
+              <div className="p-4 bg-[#161616] border border-[#2a2a2a] rounded-full mb-3">
+                <MessageSquare className="w-8 h-8 text-[#8a8a8a]" />
               </div>
-              <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
+              <h3 className="text-[16px] font-semibold text-[#e8e8e8] mb-1">
                 Start a Conversation
               </h3>
-              <p className={`max-w-md ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Ask me anything about your code! I can help with explanations, debugging, refactoring, or generating new code.
+              <p className="max-w-md text-[12.5px] text-[#8a8a8a]">
+                Ask questions about your code, request refactoring, debugging, or new feature implementations.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6 w-full max-w-2xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-6 w-full max-w-2xl">
                 {[
                   { icon: Code2, text: 'Explain my code', example: 'Explain what the CSS grid layout does in my code' },
                   { icon: Sparkles, text: 'Generate code', example: 'Generate a responsive navigation bar with dropdown menu' },
@@ -298,14 +286,10 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
                   <button
                     key={idx}
                     onClick={() => setInputValue(suggestion.example)}
-                    className={`p-4 rounded-xl border text-left transition-all hover:scale-105 ${
-                      isDark
-                        ? 'border-gray-700 bg-matte-black hover:bg-gray-800 text-gray-300'
-                        : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'
-                    }`}
+                    className="p-3.5 rounded-md border border-[#2a2a2a] bg-[#161616] hover:bg-[#1c1c1c] text-left transition-colors text-[#e8e8e8]"
                   >
-                    <suggestion.icon className="w-5 h-5 mb-2 text-purple-500" />
-                    <p className="font-semibold text-sm">{suggestion.text}</p>
+                    <suggestion.icon className="w-4 h-4 mb-1.5 text-[#e07856]" />
+                    <p className="font-medium text-[13px] text-[#e8e8e8]">{suggestion.text}</p>
                   </button>
                 ))}
               </div>
@@ -318,22 +302,14 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl p-4 ${
+                    className={`max-w-[85%] rounded-lg p-4 text-[13.5px] ${
                       message.role === 'user'
-                        ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white'
-                        : isDark
-                        ? 'bg-gray-800 text-gray-100'
-                        : 'bg-white text-gray-900 border border-gray-200'
+                        ? 'bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8]'
+                        : 'bg-[#161616] border border-[#2a2a2a] text-[#e8e8e8]'
                     }`}
                   >
                     {renderMessageContent(message)}
-                    <p className={`text-xs mt-2 ${
-                      message.role === 'user'
-                        ? 'text-white/70'
-                        : isDark
-                        ? 'text-gray-500'
-                        : 'text-gray-400'
-                    }`}>
+                    <p className="text-[11px] mt-2 text-[#5c5c5c]">
                       {new Date(message.timestamp).toLocaleTimeString()}
                     </p>
                   </div>
@@ -341,19 +317,9 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className={`rounded-2xl p-4 ${
-                    isDark ? 'bg-gray-800' : 'bg-white border border-gray-200'
-                  }`}>
-                    <div className="flex items-center gap-2">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
-                      <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                        AI is thinking...
-                      </span>
-                    </div>
+                  <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-3.5 flex items-center gap-2 text-[12.5px] text-[#8a8a8a]">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#e07856]" />
+                    Thinking...
                   </div>
                 </div>
               )}
@@ -363,9 +329,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
         </div>
 
         {/* Input */}
-        <div className={`p-4 border-t ${
-          isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-white'
-        }`}>
+        <div className="p-4 border-t border-[#2a2a2a] bg-[#161616]">
           <div className="flex items-end gap-2">
             <textarea
               ref={inputRef}
@@ -374,24 +338,14 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
               onKeyDown={handleKeyDown}
               placeholder="Ask anything about your code... (Shift+Enter for new line)"
               rows={2}
-              className={`flex-1 resize-none rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                isDark
-                  ? 'bg-gray-800 text-gray-100 placeholder-gray-500'
-                  : 'bg-gray-100 text-gray-900 placeholder-gray-400'
-              }`}
+              className="flex-1 resize-none rounded-md px-3.5 py-2.5 bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8] placeholder-[#5c5c5c] focus:border-[#e07856] outline-none text-[13px] transition-colors"
             />
             <button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading}
-              className={`p-3 rounded-xl transition-all ${
-                inputValue.trim() && !isLoading
-                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:shadow-lg hover:scale-105'
-                  : isDark
-                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
+              className="p-2.5 rounded-md bg-[#e07856] hover:bg-[#e88a6d] text-[#e8e8e8] disabled:bg-[#1c1c1c] disabled:border disabled:border-[#2a2a2a] disabled:text-[#5c5c5c] transition-colors"
             >
-              <Send className="w-5 h-5" />
+              <Send className="w-4 h-4" />
             </button>
           </div>
         </div>

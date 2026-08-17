@@ -22,37 +22,17 @@ interface SelectionSidebarProps {
 const LadeStackLoader: React.FC = () => {
     return (
         <div className="flex flex-col items-center justify-center py-12">
-            {/* Animated Lade Stack Logo/Loader */}
-            <div className="relative w-20 h-20 mb-6">
-                {/* Stacked layers animation */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                    <div className="w-12 h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-10 h-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-8 h-2 bg-gradient-to-r from-cyan-500 to-green-500 rounded animate-bounce" style={{ animationDelay: '300ms' }} />
-                    <div className="w-6 h-2 bg-gradient-to-r from-green-500 to-yellow-500 rounded animate-bounce" style={{ animationDelay: '450ms' }} />
-                </div>
-                {/* Glow effect */}
-                <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-xl animate-pulse" />
-            </div>
-
-            {/* Lade Stack Text with animated dots */}
+            <div className="w-10 h-10 border-2 border-[#2a2a2a] border-t-[#e07856] rounded-full animate-spin mb-4" />
             <div className="text-center">
-                <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                    Lade Stack
+                <h3 className="text-[15px] font-semibold text-[#e8e8e8]">
+                    Lade Stack AI
                 </h3>
-                <p className="text-sm text-gray-400 mt-1 flex items-center justify-center gap-1">
-                    Analyzing code
-                    <span className="inline-flex">
-                        <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
-                        <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
-                        <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
-                    </span>
+                <p className="text-[12.5px] text-[#8a8a8a] mt-1">
+                    Analyzing selected code...
                 </p>
             </div>
-
-            {/* Progress bar */}
-            <div className="w-48 h-1 bg-gray-700 rounded-full mt-6 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 rounded-full animate-progress" />
+            <div className="w-44 h-1 bg-[#1c1c1c] border border-[#2a2a2a] rounded-full mt-4 overflow-hidden">
+                <div className="h-full bg-[#e07856] rounded-full animate-progress" />
             </div>
         </div>
     );
@@ -82,7 +62,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
             case 'debug': return '🐛';
             case 'optimize': return '⚡';
             case 'improveUI': return '🎨';
-            default: return '✨';
+            default: return '🤖';
         }
     };
 
@@ -90,9 +70,9 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
         switch (result?.operation) {
             case 'explain': return 'Code Explanation';
             case 'debug': return 'Debug Analysis';
-            case 'optimize': return 'Code Optimization';
-            case 'improveUI': return 'UI Improvement';
-            default: return 'AI Analysis';
+            case 'optimize': return 'Optimization Suggestions';
+            case 'improveUI': return 'UI Improvements';
+            default: return 'AI Assistant';
         }
     };
 
@@ -112,47 +92,47 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
             {/* Minimized state - floating pill */}
             {isMinimized && (
                 <div
-                    className="fixed right-4 top-1/2 -translate-y-1/2 z-50 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 rounded-full shadow-2xl cursor-pointer hover:scale-105 transition-transform flex items-center gap-2"
+                    className="fixed right-4 top-1/2 -translate-y-1/2 z-50 bg-[#161616] border border-[#2a2a2a] text-[#e8e8e8] px-3.5 py-2.5 rounded-md cursor-pointer hover:bg-[#1c1c1c] transition-colors flex items-center gap-2"
                     onClick={() => setIsMinimized(false)}
                 >
                     {isLoading ? (
                         <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span className="text-sm font-medium">Analyzing...</span>
+                            <div className="w-3.5 h-3.5 border-2 border-[#2a2a2a] border-t-[#e07856] rounded-full animate-spin" />
+                            <span className="text-[12.5px] font-medium">Analyzing...</span>
                         </>
                     ) : (
                         <>
                             <span>{getOperationIcon()}</span>
-                            <span className="text-sm font-medium">View Result</span>
+                            <span className="text-[12.5px] font-medium">View Result</span>
                         </>
                     )}
-                    <Plus className="w-4 h-4 ml-1" />
+                    <Plus className="w-3.5 h-3.5 ml-1 text-[#8a8a8a]" />
                 </div>
             )}
 
             {/* Full sidebar */}
             {!isMinimized && (
-                <div className="fixed right-0 top-0 h-full w-full md:w-[420px] bg-matte-black border-l border-gray-700 shadow-2xl z-50 flex flex-col animate-slideIn">
+                <div className="fixed right-0 top-0 h-full w-full md:w-[420px] bg-[#161616] border-l border-[#2a2a2a] z-50 flex flex-col animate-slideIn">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 px-4 py-3 border-b border-gray-700 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                    <div className="bg-[#161616] px-4 py-3 border-b border-[#2a2a2a] flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
                             <button
                                 onClick={() => onHistoryToggle(!isHistoryOpen)}
-                                className={`p-2 rounded-lg transition-colors ${isHistoryOpen ? 'bg-purple-600 text-white' : 'hover:bg-gray-700/50 text-gray-400 hover:text-white'}`}
+                                className={`p-1.5 rounded-md transition-colors ${isHistoryOpen ? 'bg-[#1c1c1c] text-[#e8e8e8]' : 'text-[#8a8a8a] hover:text-[#e8e8e8] hover:bg-[#1c1c1c]'}`}
                                 title="View History"
                             >
-                                <Menu className="w-5 h-5" />
+                                <Menu className="w-4 h-4" />
                             </button>
 
                             {isLoading ? (
                                 <div className="flex items-center gap-2">
-                                    <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-                                    <span className="text-sm font-medium text-purple-300">Processing...</span>
+                                    <div className="w-4 h-4 border-2 border-[#2a2a2a] border-t-[#e07856] rounded-full animate-spin" />
+                                    <span className="text-[13px] font-medium text-[#8a8a8a]">Processing...</span>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xl">{getOperationIcon()}</span>
-                                    <span className="text-sm font-semibold text-white">{getOperationTitle()}</span>
+                                    <span>{getOperationIcon()}</span>
+                                    <span className="text-[14px] font-medium text-[#e8e8e8]">{getOperationTitle()}</span>
                                 </div>
                             )}
                         </div>
@@ -160,7 +140,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                         <div className="flex items-center gap-1">
                             <button
                                 onClick={() => setIsMinimized(true)}
-                                className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors text-gray-400 hover:text-white"
+                                className="p-2 hover:bg-[#2a2a2a] rounded-lg transition-colors text-[#8a8a8a] hover:text-[#e8e8e8]"
                                 title="Minimize"
                             >
                                 <Minus className="w-4 h-4" />
@@ -355,12 +335,12 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
 
                     {/* Footer - Apply Button */}
                     {result?.hasCodeChanges && result.suggestedCode && onApplyChanges && !isLoading && (
-                        <div className="p-4 border-t border-gray-700 bg-dark-gray">
+                        <div className="p-4 border-t border-[#2a2a2a] bg-[#161616]">
                             <button
                                 onClick={() => onApplyChanges(result.suggestedCode!)}
-                                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg"
+                                className="w-full px-4 py-2.5 bg-[#e07856] hover:bg-[#e88a6d] text-[#e8e8e8] font-medium rounded-md transition-colors flex items-center justify-center gap-2 text-[13px]"
                             >
-                                <Check className="w-5 h-5" />
+                                <Check className="w-4 h-4" />
                                 Review Changes
                             </button>
                         </div>

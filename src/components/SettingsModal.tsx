@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { X, Settings as SettingsIcon, Database, Trash2, Upload } from 'lucide-react';
 import { useSettings, EditorFontFamily, ThemeVariant } from '../hooks/useSettings';
-import { useTheme } from '../hooks/useTheme';
 import { useFocusMode } from '../hooks/useFocusMode';
 import { VOICE_LANGUAGES } from '../services/voiceCommandService';
 import { useSnapshots } from '../hooks/useSnapshots';
@@ -16,7 +15,6 @@ const voiceSynthesisSupported = typeof window !== 'undefined' && 'speechSynthesi
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     const { settings, updateSettings, resetSettings, getFontFamilyCSS } = useSettings();
-    const { isDark } = useTheme();
     const { focusMode, toggleFocusMode } = useFocusMode();
     const { storageUsage, cleanUpOldSnapshots, importProject } = useSnapshots();
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -62,449 +60,400 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         'Default',
     ];
 
-    const themeOptions: { value: ThemeVariant; label: string; color: string }[] = [
-        { value: 'dark', label: 'Dark', color: 'bg-gray-900' },
-        { value: 'dark-blue', label: 'Dark Blue', color: 'bg-blue-900' },
-        { value: 'dark-purple', label: 'Dark Purple', color: 'bg-purple-900' },
-        { value: 'light', label: 'Light', color: 'bg-gray-100' },
+    const themeOptions: { value: ThemeVariant; label: string }[] = [
+        { value: 'dark', label: 'Quiet Dark (Default)' },
+        { value: 'dark-blue', label: 'Dark Blue' },
+        { value: 'dark-purple', label: 'Dark Slate' },
+        { value: 'light', label: 'Light' },
     ];
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
             onClick={onClose}
         >
             <div
                 role="dialog"
                 aria-modal="true"
-                className={`relative w-full max-w-2xl mx-4 rounded-xl shadow-vscode-modal animate-scale-in border ${isDark ? 'bg-dark-gray border-gray-700' : 'bg-white border-gray-200'
-                    }`}
+                className="relative w-full max-w-2xl mx-4 rounded-lg border border-[#2a2a2a] bg-[#161616] animate-scale-in text-[#e8e8e8] overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div
-                    className={`flex items-center justify-between px-6 py-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'
-                        }`}
-                >
-                    <div className="flex items-center gap-3">
-                        <SettingsIcon className={`w-5 h-5 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
-                        <h2 className={`text-xl font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a2a] bg-[#161616]">
+                    <div className="flex items-center gap-2.5">
+                        <SettingsIcon className="w-4 h-4 text-[#8a8a8a]" />
+                        <h2 className="text-[18px] font-semibold text-[#e8e8e8]">
                             Settings
                         </h2>
                     </div>
                     <button
                         onClick={onClose}
-                        className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
-                            }`}
+                        className="p-1.5 rounded-md text-[#8a8a8a] hover:text-[#e8e8e8] hover:bg-[#1c1c1c] transition-colors"
                         title="Close"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4" />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="px-6 py-6 max-h-[70vh] overflow-y-auto space-y-6">
-                    {/* Editor Settings Section */}
+                <div className="px-6 py-6 max-h-[72vh] overflow-y-auto space-y-6">
+                    {/* Editor Settings */}
                     <div>
-                        <h3
-                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                        >
-                            Editor Settings
-                        </h3>
-
-                        {/* Font Family */}
-                        <div className="space-y-2 mb-4">
-                            <label
-                                className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'
-                                    }`}
-                            >
-                                Font Family
-                            </label>
-                            <select
-                                value={settings.editorFontFamily}
-                                onChange={(e) =>
-                                    updateSettings({ editorFontFamily: e.target.value as EditorFontFamily })
-                                }
-                                className={`w-full px-4 py-2.5 rounded-lg border transition-colors ${isDark
-                                        ? 'bg-matte-black border-gray-700 text-bright-white focus:border-blue-500'
-                                        : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
-                                    } focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
-                                style={{ fontFamily: getFontFamilyCSS(settings.editorFontFamily) }}
-                            >
-                                {fontFamilyOptions.map((font) => (
-                                    <option key={font} value={font} style={{ fontFamily: getFontFamilyCSS(font) }}>
-                                        {font}
-                                    </option>
-                                ))}
-                            </select>
-                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                Choose the font family for the code editor
-                            </p>
+                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                            Editor
                         </div>
-
-                        {/* Font Size */}
-                        <div className="space-y-2">
-                            <label
-                                className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'
-                                    }`}
-                            >
-                                Font Size: {settings.editorFontSize}px
-                            </label>
-                            <input
-                                type="range"
-                                min="12"
-                                max="20"
-                                value={settings.editorFontSize}
-                                onChange={(e) => updateSettings({ editorFontSize: parseInt(e.target.value) })}
-                                className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700 accent-blue-500"
-                            />
-                            <div className="flex justify-between text-xs text-gray-500">
-                                <span>12px</span>
-                                <span>20px</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Theme Settings Section */}
-                    <div>
-                        <h3
-                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                        >
-                            Theme
-                        </h3>
-                        <div className="grid grid-cols-2 gap-3">
-                            {themeOptions.map((theme) => (
-                                <button
-                                    key={theme.value}
-                                    onClick={() => updateSettings({ theme: theme.value })}
-                                    className={`p-4 rounded-lg border-2 transition-all ${settings.theme === theme.value
-                                            ? 'border-blue-500 ring-2 ring-blue-500/20'
-                                            : isDark
-                                                ? 'border-gray-700 hover:border-gray-600'
-                                                : 'border-gray-300 hover:border-gray-400'
-                                        }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-lg ${theme.color} border-2 border-gray-600`} />
-                                        <div className="text-left">
-                                            <div
-                                                className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'
-                                                    }`}
-                                            >
-                                                {theme.label}
-                                            </div>
-                                            {settings.theme === theme.value && (
-                                                <div className="text-xs text-blue-500">Active</div>
-                                            )}
-                                        </div>
+                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] overflow-hidden">
+                            {/* Font Family Row */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b border-[#2a2a2a] gap-3">
+                                <div>
+                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                        Font Family
                                     </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Behavior Settings Section */}
-                    <div>
-                        <h3
-                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                        >
-                            Behavior
-                        </h3>
-
-                        {/* Auto-run JS Toggle */}
-                        <div
-                            className={`flex items-center justify-between p-4 rounded-lg border ${isDark ? 'border-gray-700 bg-matte-black' : 'border-gray-300 bg-gray-50'
-                                } mb-4`}
-                        >
-                            <div className="flex-1">
-                                <div className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-                                    Auto-run JavaScript
+                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-sm mt-0.5">
+                                        Typeface used in the code editor panels.
+                                    </p>
                                 </div>
-                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                                    Automatically execute JavaScript when code changes. When disabled, use the "Run JS"
-                                    button in the preview panel.
-                                </p>
+                                <select
+                                    value={settings.editorFontFamily}
+                                    onChange={(e) =>
+                                        updateSettings({ editorFontFamily: e.target.value as EditorFontFamily })
+                                    }
+                                    className="bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8] text-[13px] rounded-md px-3 py-1.5 focus:border-[#e07856] outline-none transition-colors"
+                                    style={{ fontFamily: getFontFamilyCSS(settings.editorFontFamily) }}
+                                >
+                                    {fontFamilyOptions.map((font) => (
+                                        <option key={font} value={font} style={{ fontFamily: getFontFamilyCSS(font) }}>
+                                            {font}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
-                            <button
-                                onClick={() => updateSettings({ autoRunJS: !settings.autoRunJS })}
-                                className={`relative ml-4 w-12 h-6 rounded-full transition-colors ${settings.autoRunJS ? 'bg-blue-600' : 'bg-gray-600'
-                                    }`}
-                            >
-                                <div
-                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${settings.autoRunJS ? 'translate-x-6' : 'translate-x-0'
-                                        }`}
-                                />
-                            </button>
-                        </div>
 
-                        {/* Preview Delay Slider */}
-                        <div className="space-y-2">
-                            <label
-                                className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'
-                                    }`}
-                            >
-                                Preview Update Delay: {settings.previewDelay}ms
-                            </label>
-                            <input
-                                type="range"
-                                min="0"
-                                max="1500"
-                                step="100"
-                                value={settings.previewDelay}
-                                onChange={(e) => updateSettings({ previewDelay: parseInt(e.target.value) })}
-                                className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700 accent-blue-500"
-                            />
-                            <div className="flex justify-between text-xs text-gray-500">
-                                <span>Instant (0ms)</span>
-                                <span>Slow (1500ms)</span>
+                            {/* Font Size Row */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3">
+                                <div>
+                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                        Font Size ({settings.editorFontSize}px)
+                                    </div>
+                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-sm mt-0.5">
+                                        Base text size for editor line rendering.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-3 w-full sm:w-48">
+                                    <span className="text-[11px] text-[#5c5c5c]">12px</span>
+                                    <input
+                                        type="range"
+                                        min="12"
+                                        max="20"
+                                        value={settings.editorFontSize}
+                                        onChange={(e) => updateSettings({ editorFontSize: parseInt(e.target.value) })}
+                                        className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-[#2a2a2a] accent-[#e07856]"
+                                    />
+                                    <span className="text-[11px] text-[#5c5c5c]">20px</span>
+                                </div>
                             </div>
-                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                                Debounce delay before updating the preview after code changes
-                            </p>
                         </div>
                     </div>
 
-                    {/* CodeRabbit AI Section */}
+                    {/* Theme Settings */}
                     <div>
-                        <h3
-                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-orange-500 pl-2 text-orange-400 font-bold`}
-                        >
-                            CodeRabbit AI Bug & Error Scanner
-                        </h3>
+                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                            Appearance
+                        </div>
+                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] overflow-hidden">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3">
+                                <div>
+                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                        Theme Preset
+                                    </div>
+                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-sm mt-0.5">
+                                        Active color scheme for the application chrome.
+                                    </p>
+                                </div>
+                                <select
+                                    value={settings.theme}
+                                    onChange={(e) => updateSettings({ theme: e.target.value as ThemeVariant })}
+                                    className="bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8] text-[13px] rounded-md px-3 py-1.5 focus:border-[#e07856] outline-none transition-colors"
+                                >
+                                    {themeOptions.map((t) => (
+                                        <option key={t.value} value={t.value}>
+                                            {t.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-                        <div className={`p-4 rounded-lg border ${isDark ? 'border-gray-700 bg-matte-black' : 'border-gray-300 bg-gray-50'}`}>
-                            <label className={`block text-xs font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                CodeRabbit / Gemini API Key
-                            </label>
+                    {/* Behavior Settings */}
+                    <div>
+                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                            Behavior
+                        </div>
+                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] overflow-hidden">
+                            {/* Auto-run JS */}
+                            <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
+                                <div>
+                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                        Auto-run JavaScript
+                                    </div>
+                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-md mt-0.5">
+                                        Execute scripts automatically on code changes. When disabled, use the Run button.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={settings.autoRunJS}
+                                    onClick={() => updateSettings({ autoRunJS: !settings.autoRunJS })}
+                                    className={`relative ml-4 w-9 h-5 rounded-full transition-colors ${
+                                        settings.autoRunJS ? 'bg-[#3ecf5e]' : 'bg-[#2a2a2a]'
+                                    }`}
+                                >
+                                    <div
+                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-[#e8e8e8] rounded-full transition-transform ${
+                                            settings.autoRunJS ? 'translate-x-4' : 'translate-x-0'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
+
+                            {/* Preview Delay */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3">
+                                <div>
+                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                        Preview Delay ({settings.previewDelay}ms)
+                                    </div>
+                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-sm mt-0.5">
+                                        Debounce interval before refreshing the preview frame.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-3 w-full sm:w-48">
+                                    <span className="text-[11px] text-[#5c5c5c]">0ms</span>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="1500"
+                                        step="100"
+                                        value={settings.previewDelay}
+                                        onChange={(e) => updateSettings({ previewDelay: parseInt(e.target.value) })}
+                                        className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-[#2a2a2a] accent-[#e07856]"
+                                    />
+                                    <span className="text-[11px] text-[#5c5c5c]">1.5s</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* CodeRabbit AI */}
+                    <div>
+                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                            CodeRabbit AI Scanner
+                        </div>
+                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] p-4">
+                            <div className="text-[13.5px] font-medium text-[#e8e8e8] mb-1">
+                                API Key
+                            </div>
                             <input
                                 type="password"
                                 value={settings.codeRabbitApiKey || ''}
                                 onChange={(e) => updateSettings({ codeRabbitApiKey: e.target.value })}
-                                placeholder="Enter your CodeRabbit API Key..."
-                                className={`w-full px-3 py-2 text-xs font-mono rounded-lg border focus:outline-none transition-all ${
-                                    isDark
-                                        ? 'bg-gray-800 border-gray-700 text-white focus:border-orange-500'
-                                        : 'bg-white border-gray-300 text-gray-900 focus:border-orange-500'
-                                }`}
+                                placeholder="Enter your CodeRabbit / Gemini API Key..."
+                                className="w-full px-3 py-1.5 text-[13px] font-mono rounded-md bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8] focus:border-[#e07856] outline-none transition-colors"
                             />
-                            <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                Key used by the CodeRabbit AI Bug Scanner to audit project code for logic errors, security risks, and bug fixes.
+                            <p className="text-[12.5px] text-[#8a8a8a] mt-2">
+                                Used by the AI bug scanner to audit project code for logic issues and security vulnerabilities.
                             </p>
                         </div>
                     </div>
 
-                    {/* Voice Commands Section */}
+                    {/* Voice Commands */}
                     <div>
-                        <h3
-                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                        >
+                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
                             Voice Commands
-                        </h3>
-
-                        {/* Spoken Feedback Toggle */}
-                        <div
-                            className={`flex items-center justify-between p-4 rounded-lg border ${isDark ? 'border-gray-700 bg-matte-black' : 'border-gray-300 bg-gray-50'
-                                } mb-4`}
-                        >
-                            <div className="flex-1">
-                                <div className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-                                    Voice Feedback
-                                </div>
-                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                                    Speak a short confirmation after each voice command, such as "Running code".
-                                    {!voiceSynthesisSupported && ' Your browser does not support speech synthesis.'}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => updateSettings({ voiceFeedback: !settings.voiceFeedback })}
-                                disabled={!voiceSynthesisSupported}
-                                aria-label="Toggle voice feedback"
-                                aria-pressed={settings.voiceFeedback}
-                                className={`relative ml-4 w-12 h-6 rounded-full transition-colors ${settings.voiceFeedback ? 'bg-blue-600' : 'bg-gray-600'
-                                    } ${!voiceSynthesisSupported ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                <div
-                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${settings.voiceFeedback ? 'translate-x-6' : 'translate-x-0'
-                                        }`}
-                                />
-                            </button>
                         </div>
-
-                        {/* Continuous Listening Toggle */}
-                        <div
-                            className={`flex items-center justify-between p-4 rounded-lg border ${isDark ? 'border-gray-700 bg-matte-black' : 'border-gray-300 bg-gray-50'
-                                } mb-4`}
-                        >
-                            <div className="flex-1">
-                                <div className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-                                    Continuous Listening
+                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] overflow-hidden">
+                            {/* Spoken Feedback */}
+                            <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
+                                <div>
+                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                        Spoken Feedback
+                                    </div>
+                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-md mt-0.5">
+                                        Speak a short confirmation after each command.
+                                        {!voiceSynthesisSupported && ' (Unsupported in this browser)'}
+                                    </p>
                                 </div>
-                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                                    Keep the microphone open for several commands in a row. When off, listening stops
-                                    after each recognised command.
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => updateSettings({ voiceContinuous: !settings.voiceContinuous })}
-                                aria-label="Toggle continuous listening"
-                                aria-pressed={settings.voiceContinuous}
-                                className={`relative ml-4 w-12 h-6 rounded-full transition-colors ${settings.voiceContinuous ? 'bg-blue-600' : 'bg-gray-600'
-                                    }`}
-                            >
-                                <div
-                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${settings.voiceContinuous ? 'translate-x-6' : 'translate-x-0'
-                                        }`}
-                                />
-                            </button>
-                        </div>
-
-                        {/* Recognition Language */}
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="settings-voice-language"
-                                className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                            >
-                                Recognition Language
-                            </label>
-                            <select
-                                id="settings-voice-language"
-                                value={settings.voiceLanguage}
-                                onChange={(e) => updateSettings({ voiceLanguage: e.target.value })}
-                                className={`w-full px-3 py-2 rounded-lg border outline-none ${isDark
-                                    ? 'bg-matte-black border-gray-700 text-gray-200'
-                                    : 'bg-white border-gray-300 text-gray-900'
-                                    }`}
-                            >
-                                {VOICE_LANGUAGES.map((language) => (
-                                    <option key={language.code} value={language.code}>
-                                        {language.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                                Which language the microphone transcribes. Availability depends on your browser; English
-                                is the most reliable.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Storage & Snapshots Section */}
-                    <div>
-                        <h3
-                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                        >
-                            Storage & Snapshots
-                        </h3>
-                        
-                        <div className={`p-4 rounded-lg border mb-4 ${isDark ? 'border-gray-700 bg-matte-black' : 'border-gray-300 bg-gray-50'}`}>
-                            <div className="flex items-center gap-3 mb-2">
-                                <Database className={`w-5 h-5 ${storageUsage.percentage > 80 ? 'text-red-500' : isDark ? 'text-blue-400' : 'text-blue-600'}`} />
-                                <div className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-                                    Local Storage Usage
-                                </div>
-                            </div>
-                            
-                            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2 dark:bg-gray-700 overflow-hidden">
-                                <div 
-                                    className={`h-2.5 rounded-full ${storageUsage.percentage > 80 ? 'bg-red-500' : 'bg-blue-600'}`} 
-                                    style={{ width: `${storageUsage.percentage}%` }}
-                                ></div>
-                            </div>
-                            <div className={`text-xs flex justify-between ${storageUsage.percentage > 80 ? 'text-red-500 font-medium' : isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                <span>Using {(storageUsage.usedBytes / 1024 / 1024).toFixed(2)} MB / {(storageUsage.maxBytes / 1024 / 1024).toFixed(2)} MB ({storageUsage.percentage}%)</span>
-                                {storageUsage.percentage > 80 && <span>Storage nearly full!</span>}
-                            </div>
-                            
-                            <div className="flex gap-3 mt-4">
                                 <button
-                                    onClick={cleanUpOldSnapshots}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                                        isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={settings.voiceFeedback}
+                                    onClick={() => updateSettings({ voiceFeedback: !settings.voiceFeedback })}
+                                    disabled={!voiceSynthesisSupported}
+                                    className={`relative ml-4 w-9 h-5 rounded-full transition-colors ${
+                                        settings.voiceFeedback ? 'bg-[#3ecf5e]' : 'bg-[#2a2a2a]'
+                                    } ${!voiceSynthesisSupported ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                >
+                                    <div
+                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-[#e8e8e8] rounded-full transition-transform ${
+                                            settings.voiceFeedback ? 'translate-x-4' : 'translate-x-0'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
+
+                            {/* Continuous Listening */}
+                            <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
+                                <div>
+                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                        Continuous Listening
+                                    </div>
+                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-md mt-0.5">
+                                        Keep the microphone active for sequential commands.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={settings.voiceContinuous}
+                                    onClick={() => updateSettings({ voiceContinuous: !settings.voiceContinuous })}
+                                    className={`relative ml-4 w-9 h-5 rounded-full transition-colors ${
+                                        settings.voiceContinuous ? 'bg-[#3ecf5e]' : 'bg-[#2a2a2a]'
                                     }`}
                                 >
-                                    <Trash2 className="w-4 h-4" />
-                                    Clean Up Old Auto-Snapshots
+                                    <div
+                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-[#e8e8e8] rounded-full transition-transform ${
+                                            settings.voiceContinuous ? 'translate-x-4' : 'translate-x-0'
+                                        }`}
+                                    />
                                 </button>
-                                
-                                <input 
-                                    type="file" 
+                            </div>
+
+                            {/* Language */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3">
+                                <div>
+                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                        Recognition Language
+                                    </div>
+                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-sm mt-0.5">
+                                        Language model used for speech transcription.
+                                    </p>
+                                </div>
+                                <select
+                                    value={settings.voiceLanguage}
+                                    onChange={(e) => updateSettings({ voiceLanguage: e.target.value })}
+                                    className="bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8] text-[13px] rounded-md px-3 py-1.5 focus:border-[#e07856] outline-none transition-colors"
+                                >
+                                    {VOICE_LANGUAGES.map((lang) => (
+                                        <option key={lang.code} value={lang.code}>
+                                            {lang.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Storage & Snapshots */}
+                    <div>
+                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                            Storage & Snapshots
+                        </div>
+                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] p-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                    <Database className="w-4 h-4 text-[#8a8a8a]" />
+                                    <span className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                        Local Storage Usage
+                                    </span>
+                                </div>
+                                <span className="text-[12px] text-[#8a8a8a]">
+                                    {(storageUsage.usedBytes / 1024 / 1024).toFixed(2)} MB / {(storageUsage.maxBytes / 1024 / 1024).toFixed(2)} MB
+                                </span>
+                            </div>
+
+                            <div className="w-full bg-[#1c1c1c] rounded-full h-1.5 mb-4 overflow-hidden border border-[#2a2a2a]">
+                                <div
+                                    className={`h-full rounded-full transition-all ${
+                                        storageUsage.percentage > 80 ? 'bg-[#e5484d]' : 'bg-[#e07856]'
+                                    }`}
+                                    style={{ width: `${Math.min(100, storageUsage.percentage)}%` }}
+                                />
+                            </div>
+
+                            <div className="flex flex-wrap gap-2.5">
+                                <button
+                                    onClick={cleanUpOldSnapshots}
+                                    className="inline-flex items-center gap-1.5 bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] text-[#e8e8e8] px-3 py-1.5 rounded-md text-[12.5px] font-medium transition-colors"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5 text-[#8a8a8a]" />
+                                    Clean Auto-Snapshots
+                                </button>
+
+                                <input
+                                    type="file"
                                     accept=".gbcoder,.json"
                                     ref={fileInputRef}
                                     onChange={handleImport}
-                                    className="hidden" 
+                                    className="hidden"
                                 />
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                                        isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
-                                    }`}
+                                    className="inline-flex items-center gap-1.5 bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] text-[#e8e8e8] px-3 py-1.5 rounded-md text-[12.5px] font-medium transition-colors"
                                 >
-                                    <Upload className="w-4 h-4" />
+                                    <Upload className="w-3.5 h-3.5 text-[#8a8a8a]" />
                                     Import Project
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Layout Settings Section */}
+                    {/* Layout Settings */}
                     <div>
-                        <h3
-                            className={`text-xs tracking-wider font-semibold uppercase mb-4 border-l-2 border-vscode-statusbar pl-2 ${isDark ? 'text-gray-400' : 'text-gray-600'
-                                }`}
-                        >
-                            Layout Settings
-                        </h3>
-
-                        {/* Show Footer Toggle */}
-                        <div
-                            className={`flex items-center justify-between p-4 rounded-lg border ${isDark ? 'border-gray-700 bg-matte-black' : 'border-gray-300 bg-gray-50'
-                                }`}
-                        >
-                            <div className="flex-1">
-                                <div className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
-                                    Show Footer
+                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                            Layout
+                        </div>
+                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] overflow-hidden">
+                            <div className="flex items-center justify-between p-4">
+                                <div>
+                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                        Show Footer
+                                    </div>
+                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-md mt-0.5">
+                                        Toggle footer visibility. When hidden, the workspace fills the viewport.
+                                    </p>
                                 </div>
-                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                                    Toggle the footer visibility. When hidden, the editor and preview expand to fill the space.
-                                </p>
-                            </div>
-                            <button
-                                onClick={toggleFocusMode}
-                                className={`relative ml-4 w-12 h-6 rounded-full transition-colors ${!focusMode ? 'bg-blue-600' : 'bg-gray-600'
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={!focusMode}
+                                    onClick={toggleFocusMode}
+                                    className={`relative ml-4 w-9 h-5 rounded-full transition-colors ${
+                                        !focusMode ? 'bg-[#3ecf5e]' : 'bg-[#2a2a2a]'
                                     }`}
-                                aria-label="Toggle footer visibility"
-                            >
-                                <div
-                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${!focusMode ? 'translate-x-6' : 'translate-x-0'
+                                >
+                                    <div
+                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-[#e8e8e8] rounded-full transition-transform ${
+                                            !focusMode ? 'translate-x-4' : 'translate-x-0'
                                         }`}
-                                />
-                            </button>
+                                    />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div
-                    className={`flex items-center justify-between px-6 py-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'
-                        }`}
-                >
+                <div className="flex items-center justify-between px-6 py-4 border-t border-[#2a2a2a] bg-[#161616]">
                     <button
                         onClick={resetSettings}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isDark
-                                ? 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'
-                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                            }`}
+                        className="px-3 py-1.5 text-[12.5px] font-medium text-[#8a8a8a] hover:text-[#e8e8e8] transition-colors rounded-md"
                     >
                         Reset to Defaults
                     </button>
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 bg-vscode-statusbar hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                        className="px-4 py-1.5 bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] text-[#e8e8e8] rounded-md text-[13px] font-medium transition-colors"
                     >
                         Done
                     </button>

@@ -235,12 +235,12 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               <Tooltip label="Build with AI">
                 <button
                   onClick={onOpenBuildFromPrompt}
-                  className="p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 bg-accent text-accent-fg hover:bg-accent-hover active:brightness-95 compact:justify-center compact:min-h-[44px] compact:min-w-[44px]"
+                  className="p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 bg-[#e07856] text-[#e8e8e8] hover:bg-[#e88a6d] compact:justify-center compact:min-h-[44px] compact:min-w-[44px]"
                   title="Build with AI"
                   aria-label="Build with AI"
                 >
                   <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="hidden lg:inline text-sm font-semibold">Build with AI</span>
+                  <span className="hidden lg:inline text-sm font-medium">Build with AI</span>
                 </button>
               </Tooltip>
 
@@ -248,12 +248,12 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 <Tooltip label="CodeRabbit AI Bug Scanner">
                   <button
                     onClick={onOpenCodeRabbit}
-                    className="p-2 sm:px-3 sm:py-2 rounded-md transition-all flex items-center gap-2 bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 text-white font-semibold shadow-md active:brightness-95 compact:justify-center compact:min-h-[44px] compact:min-w-[44px]"
+                    className="p-2 sm:px-3 sm:py-2 rounded-md transition-colors flex items-center gap-2 bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] text-[#e8e8e8] font-medium compact:justify-center compact:min-h-[44px] compact:min-w-[44px]"
                     title="CodeRabbit AI Bug Scanner"
                     aria-label="CodeRabbit AI Bug Scanner"
                   >
-                    <Bug className="w-4 h-4 sm:w-5 sm:h-5 text-orange-200 animate-pulse" />
-                    <span className="hidden xl:inline text-sm font-semibold">CodeRabbit AI</span>
+                    <Bug className="w-4 h-4 sm:w-5 sm:h-5 text-[#e07856]" />
+                    <span className="hidden xl:inline text-sm font-medium">CodeRabbit AI</span>
                   </button>
                 </Tooltip>
               )}
@@ -290,8 +290,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
                   {isOverflowOpen && (
                     <div
-                      className={`absolute right-0 mt-2 w-56 overflow-hidden rounded-lg border shadow-elevated z-50 animate-slide-down ${
-                        isDark ? 'bg-surface-raised border-stroke-subtle' : 'bg-white border-gray-200'
+                      className={`absolute right-0 mt-2 w-56 overflow-hidden rounded-lg border border-[#2a2a2a] z-50 animate-slide-down ${
+                        isDark ? 'bg-surface-raised' : 'bg-white border-gray-200'
                       }`}
                       data-testid="nav-overflow-menu"
                     >
@@ -361,20 +361,16 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
                 {/* Dropdown Content */}
                 {isDropdownOpen && (
-                  <div className={`absolute right-0 mt-2 w-72 sm:w-80 rounded-lg shadow-elevated border z-50 animate-slide-down overflow-hidden ${isDark
-                    ? 'bg-surface-raised border-stroke-subtle'
-                    : 'bg-white border-gray-200'
-                    }`}>
+                  <div className="absolute right-0 mt-2 w-72 sm:w-80 rounded-lg border border-[#2a2a2a] bg-[#161616] z-50 animate-slide-down overflow-hidden">
                     {/* Menu Content */}
                     <div className="py-2 max-h-[calc(100vh-100px)] overflow-y-auto">
                       {/* New Project — project type selection */}
                       {onNewProject && (
                         <>
                           <div className="px-4 py-3">
-                            <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-accent/60 pl-2 ${isDark ? 'text-content-muted' : 'text-gray-500'
-                              }`}>
+                            <div className="text-[12px] font-medium text-[#8a8a8a] mb-2">
                               New Project
-                            </h4>
+                            </div>
                             <div className="space-y-1">
                               {(['plain', 'react', 'vue'] as ProjectType[]).map((type) => {
                                 const isCurrent = type === currentProjectType;
@@ -386,16 +382,14 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                                       setIsDropdownOpen(false);
                                     }}
                                     className={`w-full px-3 py-2 text-left text-sm flex items-center gap-3 transition-colors rounded-md ${isCurrent
-                                      ? (isDark ? 'bg-white/[0.07] text-content-primary' : 'bg-gray-100 text-gray-900')
-                                      : (isDark
-                                        ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                                        : 'text-gray-700 hover:bg-gray-50')
+                                      ? 'bg-[#1c1c1c] text-[#e8e8e8]'
+                                      : 'text-[#8a8a8a] hover:bg-[#1c1c1c] hover:text-[#e8e8e8]'
                                       }`}
                                   >
-                                    <FilePlus className="w-4 h-4" />
+                                    <FilePlus className="w-4 h-4 text-[#8a8a8a]" />
                                     {PROJECT_TYPE_LABEL[type]}
                                     {isCurrent && (
-                                      <span className="ml-auto rounded-sm bg-accent-subtle px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-hover">
+                                      <span className="ml-auto rounded-full border border-[#2a2a2a] bg-[#1c1c1c] px-1.5 py-0.5 text-[10px] font-medium text-[#3ecf5e]">
                                         Current
                                       </span>
                                     )}
@@ -403,42 +397,33 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                                 );
                               })}
                             </div>
-                            <p className={`mt-2 text-[11px] ${isDark ? 'text-content-muted' : 'text-gray-500'}`}>
-                              React and Vue projects are compiled in your browser. Switching replaces the editor contents.
+                            <p className="mt-2 text-[11.5px] text-[#5c5c5c]">
+                              React and Vue projects are compiled in your browser.
                             </p>
                           </div>
 
-                          <div className={`border-t my-1 ${isDark ? 'border-stroke-subtle' : 'border-gray-200'}`} />
+                          <div className="border-t border-[#2a2a2a] my-1" />
                         </>
                       )}
 
                       {/* Code Operations */}
                       <div className="px-4 py-3">
-                        <h4 className={`text-xs font-semibold uppercase tracking-wide mb-3 border-l-2 border-accent/60 pl-2 ${isDark ? 'text-content-muted' : 'text-gray-500'
-                          }`}>
+                        <div className="text-[12px] font-medium text-[#8a8a8a] mb-2">
                           Project
-                        </h4>
+                        </div>
                         <div className="grid grid-cols-1 gap-2">
                           <button
                             onClick={() => {
                               onAutoSaveToggle();
                               setIsDropdownOpen(false);
                             }}
-                            className={`px-3 py-2 text-sm flex items-center gap-2 transition-colors rounded-md ${autoSaveEnabled
-                              ? (isDark ? 'bg-white text-black' : 'bg-black text-white')
-                              : isDark
-                                ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                                : 'text-gray-700 hover:bg-gray-50'
-                              }`}
+                            className="px-3 py-2 text-sm flex items-center gap-2 transition-colors rounded-md text-[#8a8a8a] hover:bg-[#1c1c1c] hover:text-[#e8e8e8]"
                           >
-                            <Save className="w-4 h-4" />
-                            Save
-                            <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-full ${autoSaveEnabled
-                              ? (isDark ? 'bg-black text-white' : 'bg-white text-black')
-                              : isDark
-                                ? 'bg-gray-600 text-gray-300'
-                                : 'bg-gray-200 text-gray-600'
-                              }`}>
+                            <Save className="w-4 h-4 text-[#8a8a8a]" />
+                            Auto-Save
+                            <span className={`ml-auto text-[11px] px-2 py-0.5 rounded-full border border-[#2a2a2a] ${
+                              autoSaveEnabled ? 'text-[#3ecf5e] bg-[#3ecf5e]/10 border-[#3ecf5e]/30' : 'text-[#5c5c5c] bg-[#1c1c1c]'
+                            }`}>
                               {autoSaveEnabled ? 'ON' : 'OFF'}
                             </span>
                           </button>
@@ -449,10 +434,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               onClear();
                               setIsDropdownOpen(false);
                             }}
-                            className={`w-full mt-2 px-3 py-2 text-sm flex items-center gap-2 transition-colors rounded-md ${isDark
-                              ? 'text-red-400 hover:bg-red-900/20'
-                              : 'text-red-600 hover:bg-red-50'
-                              }`}
+                            className="w-full mt-2 px-3 py-2 text-sm flex items-center gap-2 transition-colors rounded-md text-[#e5484d] hover:bg-[#e5484d]/10"
                           >
                             <Trash2 className="w-4 h-4" />
                             Clear All Code

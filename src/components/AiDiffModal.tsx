@@ -223,7 +223,7 @@ const AiDiffModal: React.FC<AiDiffModalProps> = ({
           </button>
           <button
             onClick={onApplyAll}
-            className="px-5 py-2.5 bg-gradient-to-r from-accent to-accent-hover hover:brightness-110 text-white rounded-lg text-sm font-medium transition-all shadow-lg flex items-center gap-2"
+            className="px-4 py-2 bg-[#e07856] hover:bg-[#e88a6d] text-[#e8e8e8] rounded-md text-[13px] font-medium transition-colors flex items-center gap-2"
             title="Apply All Changes (Ctrl+Enter)"
           >
             <Check className="w-4 h-4" />

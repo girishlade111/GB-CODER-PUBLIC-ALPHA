@@ -96,16 +96,16 @@ const SelectionResultPanel: React.FC<SelectionResultPanelProps> = ({
 
                 {/* Confidence Score */}
                 {result.confidence !== undefined && (
-                    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                        <h3 className="text-sm font-semibold text-bright-white mb-2">Confidence</h3>
+                    <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-4">
+                        <h3 className="text-[13px] font-medium text-[#e8e8e8] mb-2">Confidence</h3>
                         <div className="flex items-center gap-3">
-                            <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
+                            <div className="flex-1 bg-[#1c1c1c] border border-[#2a2a2a] rounded-full h-1.5 overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500"
+                                    className="h-full bg-[#e07856] transition-all duration-500 rounded-full"
                                     style={{ width: `${result.confidence}%` }}
                                 />
                             </div>
-                            <span className="text-sm font-medium text-bright-white">{result.confidence}%</span>
+                            <span className="text-[12px] font-medium text-[#e8e8e8]">{result.confidence}%</span>
                         </div>
                     </div>
                 )}
@@ -187,15 +187,15 @@ const SelectionResultPanel: React.FC<SelectionResultPanelProps> = ({
 
             {/* Footer - Apply Changes Button */}
             {result.hasCodeChanges && result.suggestedCode && onApplyChanges && (
-                <div className="bg-matte-black px-6 py-4 border-t border-gray-700">
+                <div className="bg-[#161616] px-6 py-4 border-t border-[#2a2a2a]">
                     <button
                         onClick={() => onApplyChanges(result.suggestedCode!)}
-                        className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                        className="w-full px-4 py-2.5 bg-[#e07856] hover:bg-[#e88a6d] text-[#e8e8e8] font-medium rounded-md transition-colors flex items-center justify-center gap-2 text-[13px]"
                     >
-                        <Check className="w-5 h-5" />
+                        <Check className="w-4 h-4" />
                         Apply Changes
                     </button>
-                    <p className="text-xs text-gray-400 text-center mt-2">
+                    <p className="text-[11.5px] text-[#8a8a8a] text-center mt-2">
                         This will replace the selected code in your editor
                     </p>
                 </div>

@@ -23,113 +23,120 @@ export default {
       },
 
       // ─── Color palette ────────────────────────────────────────────────────
-      // Modern dev-tool dark theme: near-black canvas, layered surfaces that
-      // step up as elements lift off the page, one accent, muted secondary
-      // text, and low-contrast strokes instead of harsh borders.
+      // Quiet dark mode: near-black #0d0d0d canvas, #161616 panel/card surface,
+      // #1c1c1c secondary surface, #2a2a2a hairline borders, off-white #e8e8e8 text,
+      // muted secondary #8a8a8a, faint #5c5c5c, warm terracotta #e07856 accent,
+      // muted green #3ecf5e success, muted red #e5484d danger. Zero neon, zero pure white.
       colors: {
         surface: {
-          canvas: '#0a0a0a', // page background
-          base: '#111111', // panel bodies
-          raised: '#18181b', // cards, modals — visually lifts off the canvas
-          overlay: '#1f1f23', // inputs, nested cards, hover surfaces
-          hover: '#27272a', // pressed/active surfaces
+          canvas: '#0d0d0d', // base background (near-black)
+          base: '#161616', // panel/card background
+          raised: '#161616', // panel/card background
+          overlay: '#1c1c1c', // secondary surface / inputs / buttons / hover
+          hover: '#242424', // panel hover / active surfaces
         },
         stroke: {
-          subtle: '#27272a', // default divider between cards/panels
-          DEFAULT: '#27272a',
-          strong: '#3f3f46', // emphasised borders (focus, selected)
+          subtle: '#2a2a2a', // hairline divider / border
+          DEFAULT: '#2a2a2a',
+          strong: '#3a3a3a', // subtle emphasis border
         },
         content: {
-          primary: '#fafafa', // headings, active text
-          secondary: '#a1a1aa', // body/muted secondary text
-          muted: '#71717a', // captions, disabled, placeholders
+          primary: '#e8e8e8', // primary text (off-white, never pure #fff)
+          secondary: '#8a8a8a', // secondary text / sublabels / category headers
+          muted: '#5c5c5c', // faint / disabled text / placeholders
         },
         accent: {
-          subtle: 'rgba(124, 58, 237, 0.12)',
-          muted: '#6d28d9',
-          DEFAULT: '#7c3aed',
-          hover: '#8b5cf6',
-          fg: '#ffffff',
+          subtle: 'rgba(224, 120, 86, 0.12)',
+          muted: '#c86343',
+          DEFAULT: '#e07856', // warm burnt-orange / terracotta
+          hover: '#e88a6d',
+          fg: '#e8e8e8',
+        },
+        success: {
+          DEFAULT: '#3ecf5e', // muted green
+          subtle: 'rgba(62, 207, 94, 0.12)',
+        },
+        danger: {
+          DEFAULT: '#e5484d', // muted red
+          subtle: 'rgba(229, 72, 77, 0.12)',
         },
 
         /*
-         * Panel hierarchy for VS Code mode only.
-         *
-         * The rest of the app is intentionally flat-dark; this scale exists
-         * because an editor shell reads as broken without depth — the explorer
-         * has to sit *behind* the editor surface, and the active tab has to sit
-         * in front of the tab bar. Our own approximations of a familiar dark
-         * editor palette, not copied assets.
-         *
-         * Scoped under `vsc-` so no other mode can pick these up by accident.
+         * Panel hierarchy for VS Code mode
          */
         vsc: {
-          editor: '#1e1e1e', // editor canvas — the frontmost surface
-          sidebar: '#252526', // explorer + right panel, one step back
-          tabbar: '#2d2d2d', // inactive tab strip, behind the active tab
-          panel: '#181818', // terminal + status bar, furthest back
-          border: '#2b2b2b',
-          borderStrong: '#3c3c3c',
-          text: '#cccccc',
-          textMuted: '#8b8b8b',
-          indent: '#404040', // file-tree indentation guides
+          editor: '#0d0d0d',
+          sidebar: '#161616',
+          tabbar: '#161616',
+          panel: '#161616',
+          border: '#2a2a2a',
+          borderStrong: '#3a3a3a',
+          text: '#e8e8e8',
+          textMuted: '#8a8a8a',
+          indent: '#2a2a2a',
         },
 
-        // VS Code Dark Theme Colors (retained for compatibility)
-        'vscode-editor': '#0a0a0a',
-        'vscode-sidebar': '#18181b',
-        'vscode-activitybar': '#111111',
-        'vscode-panel': '#111111',
-        'vscode-border': '#27272a',
-        'vscode-selection': '#3f3f46',
-        'vscode-statusbar': '#7c3aed',
-        'vscode-text': '#fafafa',
-        'vscode-text-dim': '#a1a1aa',
-        'vscode-line-highlight': '#18181b',
-        'vscode-hover': '#1f1f23',
-        'vscode-active': '#27272a',
-        'vscode-focus-border': '#7c3aed',
-        'vscode-tab-inactive': '#111111',
+        // VS Code Dark Theme Colors
+        'vscode-editor': '#0d0d0d',
+        'vscode-sidebar': '#161616',
+        'vscode-activitybar': '#161616',
+        'vscode-panel': '#161616',
+        'vscode-border': '#2a2a2a',
+        'vscode-selection': '#2a2a2a',
+        'vscode-statusbar': '#161616',
+        'vscode-text': '#e8e8e8',
+        'vscode-text-dim': '#8a8a8a',
+        'vscode-line-highlight': '#1c1c1c',
+        'vscode-hover': '#1c1c1c',
+        'vscode-active': '#242424',
+        'vscode-focus-border': '#e07856',
+        'vscode-tab-inactive': '#161616',
 
-        // Legacy aliases — repointed at the new palette so the existing
-        // markup picks up the refreshed theme without renaming every class.
-        'matte-black': '#0a0a0a',
-        'bright-white': '#fafafa',
-        'dark-gray': '#18181b',
-        'light-gray': '#e4e4e7',
+        // Legacy aliases
+        'matte-black': '#0d0d0d',
+        'bright-white': '#e8e8e8',
+        'dark-gray': '#161616',
+        'light-gray': '#242424',
       },
 
       // ─── Typography ───────────────────────────────────────────────────────
-      // Inter for UI chrome, JetBrains Mono for code (both loaded in index.css).
+      // Pure system-ui stack — no custom webfont, no serif, no display font.
       fontFamily: {
         sans: [
-          'Inter',
-          'system-ui',
           '-apple-system',
           'BlinkMacSystemFont',
-          'Segoe UI',
+          '"Segoe UI"',
           'Roboto',
-          'Helvetica Neue',
+          'Helvetica',
           'Arial',
           'sans-serif',
         ],
-        mono: ['JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', 'monospace'],
+        mono: [
+          'ui-monospace',
+          'SFMono-Regular',
+          'Menlo',
+          'Monaco',
+          'Consolas',
+          '"Liberation Mono"',
+          '"Courier New"',
+          'monospace',
+        ],
       },
 
-      // 5-step scale. 1.5 line-height for body copy, 1.2 for headings.
+      // Dense, utilitarian developer-tool type scale
       fontSize: {
-        xs: ['12px', { lineHeight: '1.5' }],
-        sm: ['14px', { lineHeight: '1.5' }],
-        base: ['16px', { lineHeight: '1.5' }],
-        lg: ['20px', { lineHeight: '1.2' }],
-        xl: ['24px', { lineHeight: '1.2' }],
+        '2xs': ['11px', { lineHeight: '1.4' }],
+        xs: ['12px', { lineHeight: '1.4' }],
+        'sm-sub': ['12.5px', { lineHeight: '1.4' }],
+        sm: ['13.5px', { lineHeight: '1.5' }],
+        base: ['14px', { lineHeight: '1.5' }],
+        md: ['15px', { lineHeight: '1.4' }],
+        lg: ['18px', { lineHeight: '1.3' }],
+        xl: ['20px', { lineHeight: '1.25' }],
+        '2xl': ['22px', { lineHeight: '1.2' }],
       },
 
       // ─── Spacing ──────────────────────────────────────────────────────────
-      // Tailwind's default scale is already a 4px base unit
-      // (1=4 · 2=8 · 3=12 · 4=16 · 6=24 · 8=32). These named aliases make the
-      // intended steps explicit so new markup reaches for the scale, not
-      // arbitrary values.
       spacing: {
         1: '4px',
         2: '8px',
@@ -138,13 +145,11 @@ export default {
         6: '24px',
         8: '32px',
         'sidebar-collapsed': '52px',
-        'sidebar-expanded': '208px',
+        'sidebar-expanded': '260px',
       },
 
       // ─── Radius ───────────────────────────────────────────────────────────
-      // 8px cards/modals · 6px buttons/inputs · 4px small tags/badges.
-      // `xl`/`2xl` are retargeted to 8px so existing card and modal markup
-      // lands on the new scale without a per-file rename.
+      // 8px cards · 6px buttons/inputs · 4px small badges/tags.
       borderRadius: {
         sm: '4px',
         DEFAULT: '6px',
@@ -155,19 +160,18 @@ export default {
       },
 
       borderColor: {
-        // Elements using a bare `border` class default to the subtle stroke
-        // instead of Tailwind's light gray-200.
-        DEFAULT: '#27272a',
+        DEFAULT: '#2a2a2a',
       },
 
+      // No elevation shadows — depth comes from 1px #2a2a2a border and background contrast only
       boxShadow: {
-        // Card/modal elevation — lifts a surface off the canvas.
-        elevated: '0 4px 24px rgba(0, 0, 0, 0.4)',
-        'elevated-lg': '0 8px 40px rgba(0, 0, 0, 0.5)',
-        'vscode-widget': '0 4px 24px rgba(0, 0, 0, 0.4)',
-        'vscode-modal': '0 4px 24px rgba(0, 0, 0, 0.4)',
-        'vscode-toolbar': '0 2px 8px rgba(0, 0, 0, 0.3)',
-        'inner-subtle': 'inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+        none: 'none',
+        elevated: 'none',
+        'elevated-lg': 'none',
+        'vscode-widget': 'none',
+        'vscode-modal': 'none',
+        'vscode-toolbar': 'none',
+        'inner-subtle': 'none',
       },
 
       keyframes: {

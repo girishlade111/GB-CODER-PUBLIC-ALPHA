@@ -238,8 +238,8 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
                   ? 'bg-white/10 text-gray-500 cursor-not-allowed'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : voice.isListening
-                  ? 'bg-red-500 text-white hover:bg-red-600'
-                  : 'bg-gradient-to-br from-violet-500 to-blue-500 text-white hover:brightness-110'
+                  ? 'bg-[#e5484d] text-[#e8e8e8] hover:bg-[#e5484d]/90'
+                  : 'bg-[#e07856] text-[#e8e8e8] hover:bg-[#e88a6d]'
             }`}
           >
             {voice.isListening && (
@@ -486,12 +486,10 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
           <button
             type="submit"
             disabled={!typedCommand.trim()}
-            className={`px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
+            className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
               typedCommand.trim()
-                ? 'bg-gradient-to-r from-violet-500 to-blue-500 text-white hover:brightness-110'
-                : isDark
-                  ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-[#e07856] text-[#e8e8e8] hover:bg-[#e88a6d]'
+                : 'bg-[#1c1c1c] text-[#5c5c5c] border border-[#2a2a2a] cursor-not-allowed'
             }`}
           >
             Send

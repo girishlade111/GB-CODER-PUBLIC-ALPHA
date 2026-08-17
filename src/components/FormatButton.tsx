@@ -21,10 +21,10 @@ const FormatButton: React.FC<FormatButtonProps> = ({
         <button
             onClick={onFormat}
             disabled={isLoading}
-            className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg shadow-lg transition-all duration-200 text-sm font-medium z-10 group"
+            className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] disabled:opacity-40 disabled:cursor-not-allowed text-[#e8e8e8] rounded-md transition-colors text-[12.5px] font-medium z-10"
             title={`Auto-format ${language.toUpperCase()} (Ctrl+Shift+F)`}
         >
-            <Wand2 className={`w-4 h-4 ${isLoading ? 'animate-spin' : 'group-hover:rotate-12 transition-transform'}`} />
+            <Wand2 className={`w-3.5 h-3.5 text-[#e07856] ${isLoading ? 'animate-spin' : ''}`} />
             <span>{isLoading ? 'Formatting...' : 'Auto-format'}</span>
         </button>
     );
