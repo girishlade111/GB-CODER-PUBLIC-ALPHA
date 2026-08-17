@@ -15,7 +15,7 @@ import {
   Bug,
 } from 'lucide-react';
 import { PROJECT_TYPE_LABEL, ProjectType } from '../types/files';
-import { useSettings } from '../hooks/useSettings';
+
 import Tooltip from './ui/Tooltip';
 
 interface NavigationBarProps {
@@ -71,7 +71,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   isNavDrawerOpen = false,
   onOpenExport,
 }) => {
-  const { updateSettings } = useSettings();
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isOverflowOpen, setIsOverflowOpen] = useState(false);
 
@@ -295,11 +295,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                               onOpenExport();
                               setIsOverflowOpen(false);
                             }}
-                            className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left text-sm transition-colors ${
-                              isDark
-                                ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-                                : 'text-gray-700 hover:bg-gray-50'
-                            }`}
+                            className="flex min-h-[44px] w-full items-center gap-3 px-4 text-left text-sm transition-colors text-content-secondary hover:bg-white/5 hover:text-content-primary"
                           >
                             <Share2 className="w-4 h-4" />
                             Export &amp; Share

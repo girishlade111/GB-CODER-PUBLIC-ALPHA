@@ -1,5 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home, Download, Bug } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Download, Bug } from 'lucide-react';
 
 interface Props {
     children: ReactNode;
@@ -30,7 +30,7 @@ class ErrorBoundary extends Component<Props, State> {
         // Emergency auto-save
         try {
             // We use localStorage to save the current code state just in case
-            const currentProject = localStorage.getItem('gbcoder_active_project_id');
+            void localStorage.getItem('gbcoder_active_project_id');
             const fileProject = localStorage.getItem('gbcoder_snapshots');
             if (fileProject) {
                 localStorage.setItem('gbcoder_emergency_save', fileProject);
@@ -47,9 +47,7 @@ class ErrorBoundary extends Component<Props, State> {
         window.location.reload();
     };
 
-    private handleGoHome = () => {
-        window.location.href = '/';
-    };
+
 
     private handleExportCode = () => {
         try {

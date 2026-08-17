@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { X, Search, Code2, Layers, Grid, List, Plus, Download, Upload, Eye, FileCode, Check } from 'lucide-react';
+import { X, Search, Code2, Layers, Download, Upload, Eye, FileCode, Check } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
-import { enhancedTemplateService, TemplateCategoryInfo, CodeTemplate } from '../services/enhancedTemplateService';
+import { enhancedTemplateService, CodeTemplate } from '../services/enhancedTemplateService';
 import toast from 'react-hot-toast';
 
 interface TemplateSelectorModalProps {
@@ -37,10 +37,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   }, [searchQuery]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<'name' | 'difficulty'>('name');
-  
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   
   const [previewTemplate, setPreviewTemplate] = useState<CodeTemplate | null>(null);
   const [previewPayload, setPreviewPayload] = useState<any | null>(null);
@@ -66,12 +63,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
     }
   }, [isOpen, loadData]);
 
-  // Derived filter options
-  const allTags = useMemo(() => {
-    const tags = new Set<string>();
-    templateMetadata.forEach(t => t.tags?.forEach(tag => tags.add(tag)));
-    return Array.from(tags).sort();
-  }, [templateMetadata]);
+
 
   const filteredTemplates = useMemo(() => {
     let filtered = templateMetadata;
