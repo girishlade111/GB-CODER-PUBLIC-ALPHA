@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
-import { useSettings } from '../hooks/useSettings';
 
+/**
+ * Fixed bottom status bar — a hairline strip on the canvas, not a floating
+ * dark band. The "Saved" confirmation is the only content, so it stays right
+ * aligned and muted, fading in on the autosave event.
+ */
 const StatusBar: React.FC = () => {
-  const { settings } = useSettings();
-  const isDark = settings.theme === 'dark';
   const [showSaved, setShowSaved] = useState(false);
 
   useEffect(() => {
@@ -25,18 +27,16 @@ const StatusBar: React.FC = () => {
   }, []);
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 h-6 flex items-center px-4 border-t z-40 transition-colors ${
-      isDark ? 'bg-gray-950 border-gray-800' : 'bg-gray-100 border-gray-200'
-    }`}>
-      <div className="flex-1"></div>
-      
+    <div className="fixed bottom-0 left-0 right-0 z-40 flex h-6 items-center border-t border-stroke-subtle bg-surface-canvas px-4">
+      <div className="flex-1" />
+
       <div className="flex items-center">
-        <div 
-          className={`flex items-center gap-1.5 text-xs transition-opacity duration-300 ${
+        <div
+          className={`flex items-center gap-1.5 text-2xs font-medium text-content-muted transition-opacity duration-300 ${
             showSaved ? 'opacity-100' : 'opacity-0'
-          } ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+          }`}
         >
-          <Check className="w-3 h-3" />
+          <Check className="h-3 w-3 text-success" />
           <span>Saved</span>
         </div>
       </div>

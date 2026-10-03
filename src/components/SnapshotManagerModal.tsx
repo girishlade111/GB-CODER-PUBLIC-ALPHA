@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { X, Search, Clock, Save, Download, Trash2, Edit2, RotateCcw, Eye, Database } from 'lucide-react';
-import { useSettings } from '../hooks/useSettings';
 import { useSnapshots } from '../hooks/useSnapshots';
 import { Snapshot } from '../services/snapshotService';
 
@@ -17,9 +16,10 @@ const SnapshotManagerModal: React.FC<SnapshotManagerModalProps> = ({
   onRestore,
   onPreview
 }) => {
-  const { settings } = useSettings();
   const { snapshots, deleteSnapshot, renameSnapshot, exportProject } = useSnapshots();
-  const isDark = settings.theme === 'dark';
+  // DESIGN.md is light-only; the dark branches below are dead and get cleaned
+  // up when this modal is migrated to plain token classes in Stage 3a.
+  const isDark = false;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');

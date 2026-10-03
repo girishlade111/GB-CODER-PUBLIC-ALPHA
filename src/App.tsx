@@ -149,7 +149,6 @@ import SessionRecoveryModal from './components/SessionRecoveryModal';
 import SnapshotManagerModal from './components/SnapshotManagerModal';
 import StatusBar from './components/StatusBar';
 import { snapshotService, SnapshotProjectState } from './services/snapshotService';
-import { useTheme } from './hooks/useTheme';
 import { useCodeSelection } from './hooks/useCodeSelection';
 import { useSelectionOperations } from './hooks/useSelectionOperations';
 import { useProject } from './hooks/useProject';
@@ -501,15 +500,11 @@ startBtn?.addEventListener('click', () => {
 });`;
 
 /**
- * Shared styling for the icon-only buttons in the top toolbar: 6px radius and a
- * subtle white wash on hover so every icon target reads as interactive.
+ * Shared styling for the icon-only buttons in the top toolbar: 8px radius and
+ * a hairline-warm hover wash so every icon target reads as interactive.
  */
-const toolbarIconButtonClass = (isDark: boolean) =>
-  `rounded-md p-2 transition-colors ${
-    isDark
-      ? 'text-content-secondary hover:bg-white/5 hover:text-content-primary'
-      : 'text-gray-600 hover:bg-black/5 hover:text-gray-900'
-  }`;
+const toolbarIconButtonClass =
+  'rounded-md p-2 text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary';
 
 /**
  * The workspace VS Code mode shows when nothing has been loaded into it yet —
@@ -617,7 +612,6 @@ function App() {
     clear: clearConsole,
     clearPageMessages: clearPreviewMessages,
   } = consoleFeed;
-  const { isDark } = useTheme();
   const [snippets, setSnippets] = useLocalStorage<CodeSnippet[]>('gb-coder-snippets', []);
   const [selectionHistory, setSelectionHistory] = useState<HistoryItem[]>([]);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
@@ -2071,14 +2065,12 @@ function App() {
       case 'download':
         void handleExportZip();
         break;
-      case 'theme': {
-        const newTheme = args[0] === 'light' ? 'light' : 'dark';
-        updateSettings({ theme: newTheme });
+      case 'theme':
+        // DESIGN.md ships a single light system — there is no theme to switch.
         break;
-      }
       case 'toggle':
         if (args[0] === 'theme') {
-          updateSettings({ theme: isDark ? 'light' : 'dark' });
+          toast('The editor uses a single fixed theme.');
         }
         break;
       case 'history':
@@ -2732,11 +2724,9 @@ function App() {
         return;
 
       case 'toggle_theme': {
-        const nextTheme =
-          param === 'dark' || param === 'light' ? param : isDark ? 'light' : 'dark';
-        updateSettings({ theme: nextTheme });
-        toast.success(`Switched to ${nextTheme} theme.`);
-        voiceCommandService.speak(`${nextTheme} theme`);
+        // DESIGN.md ships a single light system — nothing to toggle.
+        toast('The editor uses a single fixed theme.');
+        voiceCommandService.speak('This editor uses a single fixed theme.');
         return;
       }
 
@@ -2992,13 +2982,13 @@ function App() {
 
   if (currentView === 'preview-share-error') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#1e1e1e] p-6 text-center text-gray-100">
+      <div className="flex min-h-screen items-center justify-center bg-surface-canvas p-6 text-center">
         <div className="max-w-md">
-          <h1 className="mb-3 text-[22px] font-semibold">Invalid preview link</h1>
-          <p className="mb-6 text-sm text-gray-400">The code could not be loaded.</p>
+          <h1 className="mb-3 text-display-md text-content-primary">Invalid preview link</h1>
+          <p className="mb-6 text-sm text-content-muted">The code could not be loaded.</p>
           <a
             href="https://code.ladestack.in"
-            className="inline-block rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-blue-600"
+            className="quiet-btn-accent no-underline"
           >
             Open LadeStack Coder
           </a>
@@ -3010,8 +3000,7 @@ function App() {
   // Render about page
   if (currentView === 'about') {
     return (
-      <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'
-        }`}>
+      <div className={`min-h-screen flex flex-col bg-surface-canvas`}>
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
@@ -3069,8 +3058,7 @@ function App() {
   // Render documentation page
   if (currentView === 'documentation') {
     return (
-      <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'
-        }`}>
+      <div className={`min-h-screen flex flex-col bg-surface-canvas`}>
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
@@ -3129,8 +3117,7 @@ function App() {
   // Render history view
   if (currentView === 'history') {
     return (
-      <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'
-        }`}>
+      <div className={`min-h-screen flex flex-col bg-surface-canvas`}>
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
@@ -3188,7 +3175,7 @@ function App() {
   // Render Privacy Policy page
   if (currentView === 'privacy') {
     return (
-      <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'}`}>
+      <div className={`min-h-screen flex flex-col transition-colors bg-surface-canvas`}>
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
@@ -3221,7 +3208,7 @@ function App() {
   // Render Terms of Service page
   if (currentView === 'terms') {
     return (
-      <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'}`}>
+      <div className={`min-h-screen flex flex-col transition-colors bg-surface-canvas`}>
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
@@ -3254,7 +3241,7 @@ function App() {
   // Render Cookie Policy page
   if (currentView === 'cookies') {
     return (
-      <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'}`}>
+      <div className={`min-h-screen flex flex-col transition-colors bg-surface-canvas`}>
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
@@ -3287,7 +3274,7 @@ function App() {
   // Render Disclaimer page
   if (currentView === 'disclaimer') {
     return (
-      <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'}`}>
+      <div className={`min-h-screen flex flex-col transition-colors bg-surface-canvas`}>
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
@@ -3320,7 +3307,7 @@ function App() {
   // Render Contact page
   if (currentView === 'contact') {
     return (
-      <div className={`min-h-screen flex flex-col transition-colors ${isDark ? 'bg-matte-black' : 'bg-bright-white'}`}>
+      <div className={`min-h-screen flex flex-col transition-colors bg-surface-canvas`}>
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
@@ -3525,7 +3512,7 @@ function App() {
   if (isOpeningProject) {
     return (
       <div
-        className={`grid min-h-screen place-items-center ${isDark ? 'bg-matte-black' : 'bg-bright-white'}`}
+        className={`grid min-h-screen place-items-center bg-surface-canvas`}
         data-testid="project-opening"
       >
         <LazyFallback label={activeProject ? activeProject.name : 'your project'} variant="panel" />
@@ -3537,8 +3524,7 @@ function App() {
     <div
       /* `compact:pb-14` reserves the strip the fixed Code/Preview bar occupies
          so it never covers the footer or the bottom of the active pane. */
-      className={`min-h-screen flex flex-col transition-colors compact:pb-14 ${isDark ? 'bg-matte-black' : 'bg-bright-white'
-      }`}
+      className="min-h-screen flex flex-col bg-surface-canvas compact:pb-14"
       /*
        * Window-wide drop target. Only the handlers live here; the code that can
        * read a drop is fetched on the first one.
@@ -3585,7 +3571,7 @@ function App() {
             <Tooltip label="Export & Share" shortcut="⇧⌘E" className="hidden desktop:inline-flex">
               <button
                 onClick={() => handleOpenExport('screenshot')}
-                className={toolbarIconButtonClass(isDark)}
+                className={toolbarIconButtonClass}
                 title="Export & Share"
               >
                 <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -3660,7 +3646,7 @@ function App() {
           </Suspense>
         )}
 
-        <div className={`grid flex-1 min-w-0 gap-3 px-3 py-3 lg:px-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`} data-testid="workspace-grid">
+        <div className={`grid flex-1 min-w-0 gap-3 px-4 py-4 lg:gap-4 lg:px-6 lg:py-5 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`} data-testid="workspace-grid">
           {/*
             Left column: the three fixed panels for plain projects, or the
             tabbed multi-file editor for React/Vue. Plain mode is unchanged.
@@ -3852,8 +3838,8 @@ function App() {
               </div>
               <div className="flex items-center gap-4">
                 {fullStackProject && (
-                  <span className="flex items-center gap-1 text-green-500">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                  <span className="flex items-center gap-1 text-success">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
                     Sandbox Connected
                   </span>
                 )}
@@ -4111,18 +4097,20 @@ function App() {
         </Suspense>
       )}
 
-      {/* Toast Notifications */}
+      {/* Toast Notifications — white card on cream, hairline border, no shadow. */}
       <Toaster
         position="top-right"
         toastOptions={{
           duration: 3000,
           style: {
-            background: isDark ? '#1a1a1a' : '#fff',
-            color: isDark ? '#fff' : '#000',
-            border: `1px solid ${isDark ? '#333' : '#eee'}`,
+            background: '#ffffff',
+            color: '#26251e',
+            border: '1px solid #e6e5e0',
+            borderRadius: '12px',
+            fontSize: '13.5px',
           },
-          success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
-          error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+          success: { iconTheme: { primary: '#1f8a65', secondary: '#ffffff' } },
+          error: { iconTheme: { primary: '#cf2d56', secondary: '#ffffff' } },
         }}
       />
 

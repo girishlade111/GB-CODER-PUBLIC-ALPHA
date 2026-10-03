@@ -30,23 +30,36 @@ export default {
       // Light: canvas #f7f7f4, card #ffffff, ink #26251e, accent #f54e00.
       // Dark:  canvas #0d0d0d, panel #161616, text #e8e8e8, accent #e07856.
       colors: {
+        // ── DESIGN.md surface ladder (lightest floor → deepest wash) ──────────
+        //   canvas  #f7f7f4  warm cream page floor (never pure white)
+        //   base    #ffffff  card surface, floats on cream via hairline
+        //   raised  #ffffff  header/tab bars sitting on a card
+        //   overlay #fafaf7  IDE pane / inset wells
+        //   hover   #efeee8  hover + active wash, replaces white/NN overlays
         surface: {
           canvas: 'var(--surface-canvas)',
           base: 'var(--surface-base)',
           raised: 'var(--surface-raised)',
           overlay: 'var(--surface-overlay)',
           hover: 'var(--surface-hover)',
+          strong: 'var(--surface-strong)',
         },
+        // 3-tier hairline scale. DEFAULT sits mid so a bare `border` is the
+        // canonical DESIGN.md hairline rather than the faintest divider.
         stroke: {
+          soft: 'var(--stroke-soft)',
           subtle: 'var(--stroke-subtle)',
           DEFAULT: 'var(--stroke-subtle)',
           strong: 'var(--stroke-strong)',
         },
+        // 4-tier warm ink scale: ink → body → muted → muted-soft.
         content: {
           primary: 'var(--text-primary)',
           secondary: 'var(--text-secondary)',
           muted: 'var(--text-muted)',
+          faint: 'var(--text-faint)',
         },
+        // Cursor Orange #f54e00 — scarce: primary CTAs + wordmark only.
         accent: {
           subtle: 'var(--accent-subtle)',
           muted: 'var(--accent-muted)',
@@ -62,8 +75,24 @@ export default {
           DEFAULT: 'var(--danger)',
           subtle: 'var(--danger-subtle)',
         },
+        warning: {
+          DEFAULT: 'var(--warning)',
+          subtle: 'var(--warning-subtle)',
+        },
 
-        // DESIGN.md first-class tokens (use directly for new work)
+        // DESIGN.md signature: AI-agent timeline stage pastels.
+        // Scoped to in-product agent timeline visualizations only — never
+        // reuse these as system action colors.
+        timeline: {
+          thinking: 'var(--timeline-thinking)',
+          grep: 'var(--timeline-grep)',
+          read: 'var(--timeline-read)',
+          edit: 'var(--timeline-edit)',
+          done: 'var(--timeline-done)',
+        },
+
+        // Raw DESIGN.md palette — reference values for one-off needs where a
+        // semantic token above doesn't fit. Prefer the semantic tokens.
         cursor: {
           canvas: '#f7f7f4',
           'canvas-soft': '#fafaf7',
@@ -174,6 +203,7 @@ export default {
       },
 
       // ─── Spacing ──────────────────────────────────────────────────────────
+      // 4px base unit. `section` carries the 80px editorial band rhythm.
       spacing: {
         1: '4px',
         2: '8px',
@@ -181,27 +211,32 @@ export default {
         4: '16px',
         6: '24px',
         8: '32px',
+        section: '80px',
         'sidebar-collapsed': '52px',
         'sidebar-expanded': '260px',
       },
 
       // ─── Radius ───────────────────────────────────────────────────────────
-      // DESIGN.md: 4px tags · 8px CTAs/inputs · 12px cards/panes · 16px large ·
-      // pill 9999px for timeline pills/badges.
+      // DESIGN.md: 4px inline tags · 6px compact rows · 8px CTAs & inputs ·
+      // 12px cards & IDE panes · 16px large · pill for timeline pills/badges.
       borderRadius: {
-        sm: '4px',
+        none: '0px',
+        xs: '4px',
+        sm: '6px',
         DEFAULT: '8px',
         md: '8px',
         lg: '12px',
         xl: '16px',
         '2xl': '16px',
+        pill: '9999px',
       },
 
       borderColor: {
-        DEFAULT: '#2a2a2a',
+        DEFAULT: 'var(--stroke-subtle)',
       },
 
-      // No elevation shadows — depth comes from 1px #2a2a2a border and background contrast only
+      // No elevation shadows — depth comes from 1px warm hairline + white-on-
+      // cream contrast only (DESIGN.md "hairline-only depth").
       boxShadow: {
         none: 'none',
         elevated: 'none',

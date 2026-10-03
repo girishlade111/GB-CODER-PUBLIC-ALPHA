@@ -60,12 +60,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         'Default',
     ];
 
-    const themeOptions: { value: ThemeVariant; label: string }[] = [
-        { value: 'dark', label: 'Quiet Dark (Default)' },
-        { value: 'dark-blue', label: 'Dark Blue' },
-        { value: 'dark-purple', label: 'Dark Slate' },
-        { value: 'light', label: 'Light' },
-    ];
+    // DESIGN.md defines a single warm-cream system, so there is nothing to
+    // pick here — the control is removed rather than left with one dead option.
+    const themeOptions: { value: ThemeVariant; label: string }[] = [];
 
     return (
         <div

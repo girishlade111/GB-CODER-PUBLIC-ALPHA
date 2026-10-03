@@ -8,6 +8,10 @@ interface FooterProps {
   onOpenValidator?: () => void;
 }
 
+/** footer-link per DESIGN.md: transparent, body colour, body-sm. */
+const linkClass = 'text-content-secondary transition-colors hover:text-content-primary';
+const socialClass = 'text-content-muted transition-colors hover:text-accent';
+
 const Footer: React.FC<FooterProps> = ({ focusMode = false, errorCount = 0, warningCount = 0, onOpenValidator }) => {
   const handleNavigation = (view: string) => {
     window.dispatchEvent(new CustomEvent(`navigate-to-${view}`));
@@ -18,9 +22,10 @@ const Footer: React.FC<FooterProps> = ({ focusMode = false, errorCount = 0, warn
   }
 
   return (
-    <footer className="mt-auto border-t border-[#2a2a2a] bg-[#161616] text-[#8a8a8a]">
-      {/* Compact Single-Line Layout */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+    /* Sits on the cream canvas rather than a darker band — the hairline alone
+       separates it from the workspace above. */
+    <footer className="mt-auto border-t border-stroke-subtle bg-surface-canvas text-content-secondary">
+      <div className="mx-auto w-full max-w-[1200px] px-4 py-2.5 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4 text-sm">
           {/* Left: Problems & Links */}
           <div className="flex flex-wrap items-center gap-4">
@@ -29,69 +34,71 @@ const Footer: React.FC<FooterProps> = ({ focusMode = false, errorCount = 0, warn
               <>
                 <button
                   onClick={onOpenValidator}
-                  className={`flex items-center gap-2 px-2 py-0.5 rounded-sm transition-colors hover:bg-[#1c1c1c] ${errorCount > 0 ? 'text-[#e5484d]' : 'text-[#8a8a8a]'}`}
+                  className={`flex items-center gap-2 rounded-xs px-2 py-0.5 transition-colors hover:bg-surface-hover ${
+                    errorCount > 0 ? 'text-danger' : 'text-content-secondary'
+                  }`}
                   title="View Problems"
                 >
-                  <div className="flex items-center gap-1">
-                    <XCircle className="w-3 h-3" />
+                  <span className="flex items-center gap-1">
+                    <XCircle className="h-3 w-3" />
                     <span>{errorCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
+                  </span>
+                  <span className="flex items-center gap-1 text-warning">
+                    <AlertTriangle className="h-3 w-3" />
                     <span>{warningCount}</span>
-                  </div>
+                  </span>
                 </button>
-                <span className="text-[#3a3a3a]">|</span>
+                <span aria-hidden className="text-stroke-strong">|</span>
               </>
             )}
 
-            <button onClick={() => handleNavigation('about')} className="hover:text-[#e8e8e8] transition-colors">About</button>
-            <button onClick={() => handleNavigation('documentation')} className="hover:text-[#e8e8e8] transition-colors">Documentation</button>
-            <button onClick={() => handleNavigation('contact')} className="hover:text-[#e8e8e8] transition-colors">Contact</button>
-            <span className="text-[#3a3a3a]">|</span>
-            <button onClick={() => handleNavigation('privacy')} className="hover:text-[#e8e8e8] transition-colors">Privacy</button>
-            <button onClick={() => handleNavigation('terms')} className="hover:text-[#e8e8e8] transition-colors">Terms</button>
-            <button onClick={() => handleNavigation('cookies')} className="hover:text-[#e8e8e8] transition-colors">Cookies</button>
-            <button onClick={() => handleNavigation('disclaimer')} className="hover:text-[#e8e8e8] transition-colors">Disclaimer</button>
+            <button onClick={() => handleNavigation('about')} className={linkClass}>About</button>
+            <button onClick={() => handleNavigation('documentation')} className={linkClass}>Documentation</button>
+            <button onClick={() => handleNavigation('contact')} className={linkClass}>Contact</button>
+            <span aria-hidden className="text-stroke-strong">|</span>
+            <button onClick={() => handleNavigation('privacy')} className={linkClass}>Privacy</button>
+            <button onClick={() => handleNavigation('terms')} className={linkClass}>Terms</button>
+            <button onClick={() => handleNavigation('cookies')} className={linkClass}>Cookies</button>
+            <button onClick={() => handleNavigation('disclaimer')} className={linkClass}>Disclaimer</button>
           </div>
 
           {/* Center: Copyright */}
-          <div className="text-xs text-[#5c5c5c] hidden lg:block">
+          <div className="hidden text-xs text-content-muted lg:block">
             © 2024 GB Coder. Created by Girish Lade in Mumbai, India.
           </div>
 
           {/* Right: Social Icons */}
           <div className="flex items-center gap-3">
             <a href="https://www.instagram.com/girish_lade_/" target="_blank" rel="noopener noreferrer"
-              className="transition-colors hover:text-[#e8e8e8] hover:scale-110"
+              className={socialClass}
               aria-label="Instagram">
-              <Instagram className="w-4 h-4" />
+              <Instagram className="h-4 w-4" />
             </a>
             <a href="https://www.linkedin.com/in/girish-lade-075bba201/" target="_blank" rel="noopener noreferrer"
-              className="transition-colors hover:text-[#e8e8e8] hover:scale-110"
+              className={socialClass}
               aria-label="LinkedIn">
-              <Linkedin className="w-4 h-4" />
+              <Linkedin className="h-4 w-4" />
             </a>
             <a href="https://github.com/girishlade111" target="_blank" rel="noopener noreferrer"
-              className="transition-colors hover:text-[#e8e8e8] hover:scale-110"
+              className={socialClass}
               aria-label="GitHub">
-              <Github className="w-4 h-4" />
+              <Github className="h-4 w-4" />
             </a>
             <a href="https://codepen.io/Girish-Lade-the-looper" target="_blank" rel="noopener noreferrer"
-              className="transition-colors hover:text-[#e8e8e8] hover:scale-110"
+              className={socialClass}
               aria-label="CodePen">
-              <Codepen className="w-4 h-4" />
+              <Codepen className="h-4 w-4" />
             </a>
             <a href="mailto:girishlade111@gmail.com"
-              className="transition-colors hover:text-[#e8e8e8] hover:scale-110"
+              className={socialClass}
               aria-label="Email">
-              <Mail className="w-4 h-4" />
+              <Mail className="h-4 w-4" />
             </a>
           </div>
         </div>
 
         {/* Mobile Copyright */}
-        <div className="text-xs text-[#5c5c5c] text-center mt-2 lg:hidden">
+        <div className="mt-2 text-center text-xs text-content-muted lg:hidden">
           © 2024 GB Coder. Created by Girish Lade in Mumbai, India.
         </div>
       </div>

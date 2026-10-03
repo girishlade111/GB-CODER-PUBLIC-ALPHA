@@ -1,8 +1,12 @@
-import { useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useLocalStorage } from './useLocalStorage';
-import { useTheme } from './useTheme';
 
-export type ThemeVariant = 'dark' | 'dark-blue' | 'dark-purple' | 'light';
+/**
+ * DESIGN.md ships a single light system, so there is no variant to choose.
+ * The type is retained as `'light'` so existing `settings.theme` reads and
+ * persisted blobs keep type-checking.
+ */
+export type ThemeVariant = 'light';
 export type EditorFontFamily = 'JetBrains Mono' | 'Fira Code' | 'Monaco' | 'Consolas' | 'Default';
 
 export interface AppSettings {
@@ -21,7 +25,6 @@ export interface AppSettings {
     codeRabbitApiKey: string;
 }
 
-// Default settings — DESIGN.md light editorial is the default, dark stays opt-in
 export const DEFAULT_SETTINGS: AppSettings = {
     editorFontFamily: 'JetBrains Mono',
     editorFontSize: 14,
@@ -33,11 +36,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
     voiceContinuous: false,
     voiceLanguage: 'en-US',
     codeRabbitApiKey: import.meta.env.VITE_CODERABBIT_API_KEY || '',
-};
-
-// Map theme variants to the base light/dark mode used by useTheme
-const getBaseTheme = (variant: ThemeVariant): 'light' | 'dark' => {
-    return variant === 'light' ? 'light' : 'dark';
 };
 
 export const useSettings = () => {
@@ -52,22 +50,17 @@ export const useSettings = () => {
      * controlled inputs uncontrolled. Defaults backfill on every read.
      */
     const settings = useMemo<AppSettings>(
-        () => ({ ...DEFAULT_SETTINGS, ...storedSettings }),
+        () => ({ ...DEFAULT_SETTINGS, ...storedSettings, theme: 'light' }),
         [storedSettings]
     );
-
-    const { setTheme } = useTheme();
-
-    // When the settings theme changes, sync it to the useTheme hook
-    useEffect(() => {
-        setTheme(getBaseTheme(settings.theme));
-    }, [settings.theme, setTheme]);
 
     // Update individual settings
     const updateSettings = useCallback((partial: Partial<AppSettings>) => {
         setSettings((prev) => ({
             ...prev,
             ...partial,
+            // The theme is no longer user-selectable.
+            theme: 'light',
         }));
     }, [setSettings]);
 

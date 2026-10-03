@@ -6,7 +6,6 @@ import {
     Plus,
     Loader2,
 } from 'lucide-react';
-import { useTheme } from '../hooks/useTheme';
 import { Project, ProjectMetadata } from '../types/project';
 import { exportProjectAsZip } from '../utils/projectExport';
 
@@ -19,6 +18,10 @@ interface ProjectBarProps {
     onUpdateName: (name: string) => Promise<boolean>;
 }
 
+/**
+ * Project strip that sits directly under the top nav. A canvas-coloured band
+ * separated by a single hairline — no blur, no shadow.
+ */
 const ProjectBar: React.FC<ProjectBarProps> = ({
     currentProject,
     projectList,
@@ -26,7 +29,6 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
     onSwitchProject,
     onUpdateName,
 }) => {
-    const { isDark } = useTheme();
     const [isEditing, setIsEditing] = useState(false);
     const [editedName, setEditedName] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
@@ -116,31 +118,24 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
     }
 
     return (
-        <div
-            className={`sticky top-14 sm:top-16 z-30 backdrop-blur-sm border-b shadow-inner-subtle transition-colors ${isDark ? 'bg-matte-black/95 border-gray-700' : 'bg-white/95 border-gray-200'
-                }`}
-        >
-            <div className="w-full mx-auto px-3 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-                <div className="flex items-center justify-between h-11 sm:h-12 gap-2 sm:gap-4">
+        <div className="sticky top-14 z-30 border-b border-stroke-subtle bg-surface-canvas sm:top-16">
+            <div className="mx-auto w-full max-w-[1200px] px-3 sm:px-6 lg:px-8">
+                <div className="flex h-11 items-center justify-between gap-2 sm:h-12 sm:gap-4">
                     {/* Left: Project Name & Selector */}
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
                         {/* Project Selector Dropdown */}
                         <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setShowDropdown(!showDropdown)}
-                                className={`p-1.5 sm:p-2 rounded-lg transition-colors ${isDark
-                                        ? 'hover:bg-gray-700 text-gray-300'
-                                        : 'hover:bg-gray-100 text-gray-600'
-                                    }`}
+                                className="rounded-md p-1.5 text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary sm:p-2"
                                 title="Switch Project"
                             >
-                                <ChevronDown className="w-4 h-4" />
+                                <ChevronDown className="h-4 w-4" />
                             </button>
 
                             {showDropdown && (
                                 <div
-                                    className={`absolute left-0 top-full mt-2 w-64 sm:w-80 rounded-lg shadow-vscode-widget border max-h-96 overflow-y-auto animate-slide-down ${isDark ? 'bg-dark-gray border-gray-700' : 'bg-white border-gray-200'
-                                        }`}
+                                    className="absolute left-0 top-full z-40 mt-2 max-h-96 w-64 animate-slide-down overflow-y-auto rounded-lg border border-stroke bg-surface-base sm:w-80"
                                 >
                                     <div className="p-2">
                                         <button
@@ -148,60 +143,48 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
                                                 onNewProject();
                                                 setShowDropdown(false);
                                             }}
-                                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 rounded-lg transition-colors ${isDark
-                                                    ? 'text-gray-300 hover:bg-gray-700'
-                                                    : 'text-gray-700 hover:bg-gray-100'
-                                                }`}
+                                            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-content-primary transition-colors hover:bg-surface-hover"
                                         >
-                                            <Plus className="w-4 h-4" />
+                                            <Plus className="h-4 w-4 text-accent" />
                                             New Project
                                         </button>
                                     </div>
 
-                                    <div className={`border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />
+                                    <div className="border-t border-stroke-soft" />
 
-                                    <div className="p-2 space-y-1">
+                                    <div className="space-y-1 p-2">
                                         {projectList.length === 0 ? (
-                                            <div className="px-3 py-4 text-center text-sm text-gray-500">
+                                            <div className="px-3 py-4 text-center text-sm text-content-muted">
                                                 No projects yet
                                             </div>
                                         ) : (
-                                            projectList.map(project => (
-                                                <button
-                                                    key={project.id}
-                                                    onClick={() => {
-                                                        onSwitchProject(project.id);
-                                                        setShowDropdown(false);
-                                                    }}
-                                                    className={`w-full px-3 py-2 text-left text-sm rounded-lg transition-colors ${project.id === currentProject.id
-                                                            ? isDark
-                                                                ? 'bg-white text-black border-l-2 border-vscode-statusbar'
-                                                                : 'bg-black text-white border-l-2 border-vscode-statusbar'
-                                                            : isDark
-                                                                ? 'text-gray-300 hover:bg-gray-700'
-                                                                : 'text-gray-700 hover:bg-gray-100'
+                                            projectList.map(project => {
+                                                const isCurrent = project.id === currentProject.id;
+                                                return (
+                                                    <button
+                                                        key={project.id}
+                                                        onClick={() => {
+                                                            onSwitchProject(project.id);
+                                                            setShowDropdown(false);
+                                                        }}
+                                                        className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                                                            isCurrent
+                                                                ? 'border-l-2 border-accent bg-surface-hover text-content-primary'
+                                                                : 'border-l-2 border-transparent text-content-secondary hover:bg-surface-hover hover:text-content-primary'
                                                         }`}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <FileText className="w-4 h-4 flex-shrink-0" />
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="font-medium truncate">{project.name}</div>
-                                                            <div
-                                                                className={`text-xs ${project.id === currentProject.id
-                                                                        ? isDark
-                                                                            ? 'text-gray-600'
-                                                                            : 'text-gray-400'
-                                                                        : isDark
-                                                                            ? 'text-gray-500'
-                                                                            : 'text-gray-500'
-                                                                    }`}
-                                                            >
-                                                                {formatDate(project.updatedAt)}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <FileText className="h-4 w-4 flex-shrink-0 text-content-muted" />
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="truncate font-medium">{project.name}</div>
+                                                                <div className={`text-xs ${isCurrent ? 'text-content-faint' : 'text-content-muted'}`}>
+                                                                    {formatDate(project.updatedAt)}
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                </button>
-                                            ))
+                                                    </button>
+                                                );
+                                            })
                                         )}
                                     </div>
                                 </div>
@@ -217,18 +200,13 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
                                 onChange={e => setEditedName(e.target.value)}
                                 onBlur={handleSaveName}
                                 onKeyDown={handleKeyDown}
-                                className={`px-2 py-1 text-sm sm:text-base font-semibold rounded border-2 outline-none min-w-0 flex-1 max-w-xs ${isDark
-                                        ? 'bg-gray-700 border-blue-500 text-white'
-                                        : 'bg-white border-blue-500 text-gray-900'
-                                    }`}
+                                aria-label="Project name"
+                                className="min-w-0 flex-1 max-w-xs rounded border-2 border-accent bg-surface-base px-2 py-1 text-sm font-medium text-content-primary outline-none sm:text-base"
                             />
                         ) : (
                             <button
                                 onClick={handleStartEdit}
-                                className={`px-2 py-1 text-sm sm:text-base font-semibold rounded transition-colors truncate hover:underline underline-offset-4 ${isDark
-                                        ? 'text-bright-white hover:bg-gray-700'
-                                        : 'text-gray-900 hover:bg-gray-100'
-                                    }`}
+                                className="truncate rounded px-2 py-1 text-left text-sm font-medium text-content-primary transition-colors hover:bg-surface-hover hover:underline hover:underline-offset-4 sm:text-base"
                                 title="Click to rename"
                             >
                                 {currentProject.name}
@@ -236,30 +214,24 @@ const ProjectBar: React.FC<ProjectBarProps> = ({
                         )}
 
                         {/* Last Saved */}
-                        <span
-                            className={`hidden sm:block text-xs whitespace-nowrap ${isDark ? 'text-gray-500' : 'text-gray-400'
-                                }`}
-                        >
+                        <span className="hidden whitespace-nowrap text-xs text-content-muted sm:block">
                             {formatDate(currentProject.updatedAt)}
                         </span>
                     </div>
 
                     {/* Right: Action Buttons */}
                     <div className="flex items-center gap-1 sm:gap-2">
-                        {/* Export ZIP Button */}
+                        {/* Export ZIP Button — button-secondary */}
                         <button
                             onClick={handleExport}
                             disabled={isExporting}
-                            className={`px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 ${isDark
-                                    ? 'bg-gray-700 hover:bg-gray-600 text-white disabled:bg-gray-800 disabled:text-gray-600'
-                                    : 'bg-gray-200 hover:bg-gray-300 text-gray-900 disabled:bg-gray-100 disabled:text-gray-400'
-                                }`}
+                            className="flex items-center gap-1.5 rounded-md border border-stroke-strong bg-surface-base px-2 py-1.5 text-xs font-medium text-content-primary transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:py-2 sm:text-sm"
                             title="Export as ZIP"
                         >
                             {isExporting ? (
-                                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                                <Loader2 className="h-3 w-3 animate-spin sm:h-4 sm:w-4" />
                             ) : (
-                                <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                                <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                             )}
                             <span className="hidden md:inline">Export ZIP</span>
                         </button>

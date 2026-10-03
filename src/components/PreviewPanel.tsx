@@ -663,15 +663,15 @@ ${importMapHTML}
   // Render preview content (used in both normal and fullscreen modes)
   const renderPreviewContent = () => (
     <>
-      <div className={`${viewMode === 'fullscreen' ? 'bg-gray-800' : 'bg-gray-900'} px-4 py-2 border-b border-gray-700 flex items-center justify-between`}>
-        <h2 className="text-sm font-medium text-gray-300">Live Preview</h2>
+      <div className={`${viewMode === 'fullscreen' ? 'bg-surface-overlay' : 'bg-surface-base'} px-4 py-2 border-b border-stroke-subtle flex items-center justify-between`}>
+        <h2 className="text-sm font-medium text-content-secondary">Live Preview</h2>
         <div className="flex items-center gap-3">
           {/* View Mode Toggles */}
           {/* Device Simulator Toggles */}
           <div className="relative">
             <button
               onClick={() => setShowDeviceMenu(!showDeviceMenu)}
-              className="flex items-center gap-2 px-3 py-1.5 border border-gray-700 rounded bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-sm"
+              className="flex items-center gap-2 px-3 py-1.5 border border-stroke-subtle rounded bg-surface-overlay text-content-secondary hover:text-content-primary hover:bg-surface-hover transition-colors text-sm"
             >
               {(() => {
                 const preset = DEVICE_PRESETS.find(p => p.id === devicePreset);
@@ -679,13 +679,13 @@ ${importMapHTML}
                 return <Icon className="w-4 h-4" />;
               })()}
               <span>{DEVICE_PRESETS.find(p => p.id === devicePreset)?.name}</span>
-              <ChevronDown className="w-4 h-4 text-gray-500" />
+              <ChevronDown className="w-4 h-4 text-content-muted" />
             </button>
             
             {showDeviceMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowDeviceMenu(false)}></div>
-                <div className="absolute top-full right-0 mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                <div className="absolute top-full right-0 mt-1 w-48 bg-surface-overlay border border-stroke-subtle rounded-lg shadow-xl z-50 overflow-hidden">
                   {DEVICE_PRESETS.map(preset => {
                     const Icon = preset.icon;
                     return (
@@ -693,7 +693,7 @@ ${importMapHTML}
                         key={preset.id}
                         onClick={() => handleDeviceChange(preset.id)}
                         className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left transition-colors ${
-                          devicePreset === preset.id ? 'bg-blue-600/20 text-blue-400' : 'text-gray-300 hover:bg-gray-700'
+                          devicePreset === preset.id ? 'bg-accent-subtle text-accent' : 'text-content-secondary hover:bg-surface-hover'
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -701,7 +701,7 @@ ${importMapHTML}
                           {preset.name}
                         </div>
                         {preset.width !== '100%' && (
-                          <span className="text-xs text-gray-500">{isPortrait ? preset.width : preset.height}×{isPortrait ? preset.height : preset.width}</span>
+                          <span className="text-xs text-content-muted">{isPortrait ? preset.width : preset.height}×{isPortrait ? preset.height : preset.width}</span>
                         )}
                       </button>
                     );
@@ -714,7 +714,7 @@ ${importMapHTML}
           {devicePreset !== 'full' && (
             <button
               onClick={() => setIsPortrait(!isPortrait)}
-              className="p-1.5 border border-gray-700 rounded bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors"
+              className="p-1.5 border border-stroke-subtle rounded bg-surface-overlay text-content-muted hover:text-content-primary hover:bg-surface-hover transition-colors"
               title="Rotate Device"
             >
               <RotateCcw className="w-4 h-4" />
@@ -722,20 +722,20 @@ ${importMapHTML}
           )}
 
           {scale < 1 && (
-            <div className="flex items-center gap-1 text-xs text-gray-400 font-mono bg-gray-800 px-2 py-1 rounded border border-gray-700" title="Auto-scaled to fit">
+            <div className="flex items-center gap-1 text-xs text-content-muted font-mono bg-surface-overlay px-2 py-1 rounded border border-stroke-subtle" title="Auto-scaled to fit">
               <ZoomIn className="w-3 h-3" />
               {Math.round(scale * 100)}%
             </div>
           )}
 
           {/* Divider */}
-          <div className="w-px h-6 bg-gray-700"></div>
+          <div className="w-px h-6 bg-surface-hover"></div>
 
           {/* Existing Controls */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsMobileUA(!isMobileUA)}
-              className={`p-1.5 rounded transition-colors flex items-center gap-1 text-xs font-semibold ${isMobileUA ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30' : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700 border border-gray-700'}`}
+              className={`p-1.5 rounded transition-colors flex items-center gap-1 text-xs font-semibold ${isMobileUA ? 'bg-accent-subtle text-accent border border-accent' : 'bg-surface-overlay text-content-muted hover:text-content-primary hover:bg-surface-hover border border-stroke-subtle'}`}
               title="Toggle Mobile User Agent"
             >
               <MobileIcon className="w-3.5 h-3.5" /> UA
@@ -743,7 +743,7 @@ ${importMapHTML}
             {viewMode !== 'fullscreen' && (
               <button
                 onClick={() => handleViewModeChange('fullscreen')}
-                className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-gray-200 transition-colors"
+                className="p-1.5 hover:bg-surface-hover rounded text-content-muted hover:text-content-primary transition-colors"
                 title="Fullscreen Mode"
               >
                 <Maximize2 className="w-4 h-4" />
@@ -751,7 +751,7 @@ ${importMapHTML}
             )}
             <button
               onClick={refreshPreview}
-              className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-gray-200 transition-colors"
+              className="p-1.5 hover:bg-surface-hover rounded text-content-muted hover:text-content-primary transition-colors"
               title="Refresh Preview"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -760,7 +760,7 @@ ${importMapHTML}
             {!autoRunJS && (
               <button
                 onClick={() => setManualRunTrigger(prev => prev + 1)}
-                className="p-1.5 hover:bg-gray-700 rounded text-green-400 hover:text-green-300 transition-colors"
+                className="p-1.5 hover:bg-surface-hover rounded text-success hover:text-success transition-colors"
                 title="Run JavaScript"
               >
                 <Play className="w-4 h-4" />
@@ -768,7 +768,7 @@ ${importMapHTML}
             )}
             <button
               onClick={openInNewTab}
-              className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-gray-200 transition-colors"
+              className="p-1.5 hover:bg-surface-hover rounded text-content-muted hover:text-content-primary transition-colors"
               title="Open in New Tab"
             >
               <ExternalLink className="w-4 h-4" />
@@ -793,8 +793,8 @@ ${importMapHTML}
         {isFrozen && !safeMode && (
           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 bg-black/80 px-6 text-center backdrop-blur-sm">
             <ShieldAlert className="h-10 w-10 text-red-500 mb-2" />
-            <h3 className="text-lg font-bold text-white">Preview stopped responding</h3>
-            <p className="text-sm text-gray-300 max-w-sm mb-4">
+            <h3 className="text-lg font-bold text-content-primary">Preview stopped responding</h3>
+            <p className="text-sm text-content-secondary max-w-sm mb-4">
               We detected a possible infinite loop or heavy script that froze the preview. The preview has been paused to keep the editor responsive.
             </p>
             <div className="flex gap-3">
@@ -803,7 +803,7 @@ ${importMapHTML}
                   setIsFrozen(false);
                   refreshPreviewRef.current();
                 }}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-surface-hover hover:bg-active-overlay text-content-primary rounded-lg transition-colors text-sm font-medium"
               >
                 Reload Preview
               </button>
@@ -813,7 +813,7 @@ ${importMapHTML}
                   setIsFrozen(false);
                   refreshPreviewRef.current();
                 }}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-content-primary rounded-lg transition-colors text-sm font-medium"
               >
                 Edit in Safe Mode
               </button>
@@ -860,7 +860,7 @@ ${importMapHTML}
             </p>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))}
-              className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-content-primary rounded-lg transition-colors text-sm font-medium"
             >
               <Sparkles className="w-4 h-4" />
               Build with AI
@@ -878,7 +878,7 @@ ${importMapHTML}
             Visible to the user; does NOT zero srcdoc (that would destroy the
             console bridge listener). The user can dismiss or reload. */}
         {isFrozen && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-lg border border-amber-500/50 bg-gray-900/90 px-4 py-2 text-sm text-amber-300 shadow-lg backdrop-blur-sm">
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-lg border border-warning bg-surface-base px-4 py-2 text-sm text-warning shadow-lg backdrop-blur-sm">
             <span>Preview may have frozen.</span>
             <button
               onClick={() => {
@@ -918,16 +918,18 @@ ${importMapHTML}
             transformOrigin: 'center center',
             borderRadius: devicePreset !== 'full' ? '12px' : '0',
             overflow: 'hidden',
-            boxShadow: devicePreset !== 'full' ? '0 0 0 10px #1a1a1a, 0 0 0 11px #333, 0 20px 40px rgba(0,0,0,0.5)' : 'none',
-            background: 'white'
+            // Device frame is a hairline, not a shadow — this system has no
+            // drop shadows anywhere.
+            border: devicePreset !== 'full' ? '1px solid #cfcdc4' : 'none',
+            background: '#ffffff'
           }}
         >
           {devicePreset !== 'full' && (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-4 bg-[#1a1a1a] rounded-b-xl z-20 pointer-events-none opacity-50"></div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-4 bg-surface-strong rounded-b-xl z-20 pointer-events-none"></div>
           )}
           <iframe
             ref={iframeRef}
-            className={`w-full h-full ${isProjectEmpty ? 'bg-transparent' : 'bg-white shadow-lg'}`}
+            className={`w-full h-full ${isProjectEmpty ? 'bg-transparent' : 'bg-white'}`}
             title="Code Preview"
             // Security trust model: The sandbox restricts the iframe to only scripts
             // and same-origin access. allow-same-origin is required for console message
@@ -960,7 +962,7 @@ ${importMapHTML}
           <div className="absolute top-4 right-4 z-50">
             <button
               onClick={() => setViewMode('normal')}
-              className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-colors border border-gray-600 shadow-lg"
+              className="p-2 bg-surface-overlay hover:bg-surface-hover rounded-lg text-content-secondary hover:text-content-primary transition-colors border border-stroke-strong shadow-lg"
               title="Exit Fullscreen (ESC)"
             >
               <X className="w-5 h-5" />

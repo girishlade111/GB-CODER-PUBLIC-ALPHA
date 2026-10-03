@@ -181,7 +181,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         {
           id: 'coderabbit-ai',
           label: 'CodeRabbit AI Bug Scanner',
-          icon: <Bug className="h-5 w-5 text-[#e07856]" />,
+          icon: <Bug className="h-5 w-5 text-accent" />,
           onClick: onOpenCodeRabbit,
         },
         {
@@ -252,7 +252,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
             ? 'cursor-not-allowed border-transparent text-content-muted opacity-50'
             : item.isActive
               ? 'border-accent bg-accent-subtle text-content-primary'
-              : 'border-transparent text-content-secondary hover:border-accent/40 hover:bg-white/5 hover:text-content-primary'
+              : 'border-transparent text-content-secondary hover:border-accent/40 hover:bg-surface-hover hover:text-content-primary'
         }`}
       >
         <span className="flex shrink-0 items-center justify-center">{item.icon}</span>
@@ -313,7 +313,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
           type="button"
           onClick={onCloseDrawer}
           aria-label="Close navigation menu"
-          className="flex h-11 w-11 items-center justify-center rounded-md text-content-secondary transition-colors hover:bg-white/5 hover:text-content-primary"
+          className="flex h-11 w-11 items-center justify-center rounded-md text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary"
         >
           <X className="h-5 w-5" />
         </button>
@@ -355,7 +355,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
             onClick={() => setIsExpanded(false)}
             /* Rail width is fixed inside the drawer, so the rail collapse
                control is hidden there — the drawer closes instead. */
-            className="mt-1 flex w-full items-center gap-3 rounded-md border-l-2 border-transparent pl-2.5 pr-3 py-2 text-sm font-medium text-content-secondary transition-colors hover:bg-white/5 hover:text-content-primary compact:hidden"
+            className="mt-1 flex w-full items-center gap-3 rounded-md border-l-2 border-transparent pl-2.5 pr-3 py-2 text-sm font-medium text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary compact:hidden"
             aria-label="Collapse sidebar"
           >
             <PanelLeftClose className="h-5 w-5 shrink-0" />
@@ -366,7 +366,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
             <button
               type="button"
               onClick={() => setIsExpanded(true)}
-              className="mt-1 flex w-full items-center justify-center rounded-md px-2 py-2 text-content-secondary transition-colors hover:bg-white/5 hover:text-content-primary compact:hidden"
+              className="mt-1 flex w-full items-center justify-center rounded-md px-2 py-2 text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary compact:hidden"
             >
               <PanelLeftOpen className="h-5 w-5" />
             </button>

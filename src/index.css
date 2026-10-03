@@ -2,80 +2,90 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Design tokens ──────────────────────────────────────────────────────────
-   DESIGN.md — Cursor editorial light system (default).
-   - Canvas: #f7f7f4 warm cream (never pure white as page floor)
-   - Card: #ffffff on cream, hairline 1px #e6e5e0, no shadows
-   - Ink: #26251e warm near-black · Body: #5a5852 · Muted: #807d72
-   - Accent: #f54e00 Cursor Orange, scarce (primary CTAs + wordmark only)
-   - Display weight 400 with negative tracking (magazine voice, never bold)
-   - JetBrains Mono on every code surface
-   - Dark quiet mode lives under `.dark` and preserves the previous palette.
---------------------------------------------------------------------------- */
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN.md — Cursor editorial system (light only)
+   ---------------------------------------------------------------------------
+   The brand is a single warm-cream editorial canvas. There is no dark theme:
+   DESIGN.md defines one system and the app now honours exactly that.
+
+     canvas  #f7f7f4  warm cream page floor — never pure white
+     card    #ffffff  floats on cream via a 1px hairline, no shadow
+     ink     #26251e  warm near-black for display + body
+     accent  #f54e00  Cursor Orange — primary CTAs + wordmark, used scarcely
+     depth   hairline-only: #efeee8 / #e6e5e0 / #cfcdc4
+
+   Type is Inter (the open-source substitute for the licensed CursorGothic) at
+   weight 400 with negative tracking on display, JetBrains Mono on every code
+   surface. Section rhythm is 80px.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 :root {
     /* Motion */
     --transition-fast: 120ms ease-out;
     --transition-normal: 200ms ease-out;
     --transition-slow: 300ms ease-out;
 
-    /* Surfaces — DESIGN.md light (darkest → lightest) */
-    --surface-canvas: #f7f7f4;
-    --surface-base: #ffffff;
-    --surface-raised: #ffffff;
-    --surface-overlay: #fafaf7;
-    --surface-hover: #efeee8;
+    /* ── Surfaces: lightest floor → deepest wash ── */
+    --surface-canvas: #f7f7f4;   /* page floor */
+    --surface-base: #ffffff;     /* card */
+    --surface-raised: #ffffff;   /* header / tab bar on a card */
+    --surface-overlay: #fafaf7;  /* IDE pane, inset well */
+    --surface-hover: #efeee8;    /* hover + active wash */
+    --surface-strong: #e6e5e0;   /* badge / tag pill fill */
 
-    /* Hover/active wash applied over any surface */
+    /* Hover/active wash, for layered use over any surface */
     --hover-overlay: rgba(38, 37, 30, 0.04);
     --active-overlay: rgba(38, 37, 30, 0.08);
 
-    /* Strokes — hairline dividers */
-    --stroke-subtle: #e6e5e0;
+    /* ── Strokes: 3-tier warm hairline ── */
     --stroke-soft: #efeee8;
+    --stroke-subtle: #e6e5e0;
     --stroke-strong: #cfcdc4;
 
-    /* Text — warm ink scale */
+    /* ── Text: 4-tier warm ink ── */
     --text-primary: #26251e;
     --text-secondary: #5a5852;
     --text-muted: #807d72;
     --text-faint: #a09c92;
 
-    /* Accent — Cursor Orange, scarce */
+    /* ── Accent: Cursor Orange, scarce ── */
     --accent: #f54e00;
     --accent-hover: #d04200;
     --accent-muted: #d04200;
     --accent-subtle: rgba(245, 78, 0, 0.08);
     --accent-fg: #ffffff;
 
-    /* Functional states */
+    /* ── Semantic ── */
     --success: #1f8a65;
     --success-subtle: rgba(31, 138, 101, 0.1);
     --danger: #cf2d56;
     --danger-subtle: rgba(207, 45, 86, 0.08);
     --warning: #c08532;
+    --warning-subtle: rgba(192, 133, 50, 0.1);
 
-    /* Timeline signature pastels (in-product agent stages only) */
+    /* ── Timeline signature pastels (agent stages only) ── */
     --timeline-thinking: #dfa88f;
     --timeline-grep: #9fc9a2;
     --timeline-read: #9fbbe0;
     --timeline-edit: #c0a8dd;
     --timeline-done: #c08532;
 
-    /* Radius scale: 4px tags, 8px buttons/inputs, 12px cards, 16px large */
-    --radius-sm: 4px;
+    /* ── Radius: 4 tags · 6 rows · 8 controls · 12 cards · pill ── */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
     --radius-md: 8px;
     --radius-lg: 12px;
     --radius-xl: 16px;
 
-    /* Elevation: none per design system — hairlines only */
+    /* Depth is hairline-only — no drop shadows anywhere in the system. */
     --shadow-elevated: none;
 
-    /* Type: Inter substitutes CursorGothic, JetBrains Mono for code */
+    /* ── Type ── */
     --font-sans: 'Inter', 'CursorGothic', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-    /* ── VS Code variable mappings (light) ── */
-    --vscode-bg-editor: var(--surface-canvas);
+    /* ── Monaco / editor chrome mappings ── */
+    --vscode-bg-editor: var(--surface-overlay);
     --vscode-bg-sidebar: var(--surface-base);
     --vscode-bg-activitybar: var(--surface-base);
     --vscode-bg-panel: var(--surface-base);
@@ -90,49 +100,12 @@
     --vscode-line-highlight: var(--surface-overlay);
     --vscode-cursor: var(--accent);
     --vscode-error: var(--danger);
-    --vscode-warning: #c08532;
+    --vscode-warning: var(--warning);
     --vscode-info: var(--accent);
     --vscode-success: var(--success);
 }
 
-/* ─── Dark quiet mode (opt-in via .dark, preserved legacy palette) ───────── */
-.dark {
-    --surface-canvas: #0d0d0d;
-    --surface-base: #161616;
-    --surface-raised: #161616;
-    --surface-overlay: #1c1c1c;
-    --surface-hover: #242424;
-
-    --hover-overlay: rgba(255, 255, 255, 0.03);
-    --active-overlay: rgba(255, 255, 255, 0.06);
-
-    --stroke-subtle: #2a2a2a;
-    --stroke-soft: #2a2a2a;
-    --stroke-strong: #3a3a3a;
-
-    --text-primary: #e8e8e8;
-    --text-secondary: #8a8a8a;
-    --text-muted: #5c5c5c;
-    --text-faint: #5c5c5c;
-
-    --accent: #e07856;
-    --accent-hover: #e88a6d;
-    --accent-muted: #c86343;
-    --accent-subtle: rgba(224, 120, 86, 0.12);
-    --accent-fg: #e8e8e8;
-
-    --success: #3ecf5e;
-    --success-subtle: rgba(62, 207, 94, 0.12);
-    --danger: #e5484d;
-    --danger-subtle: rgba(229, 72, 77, 0.12);
-
-    --vscode-selection: #e0785633;
-    --vscode-line-highlight: #161616;
-    --vscode-cursor: #e07856;
-    --vscode-warning: #d97706;
-}
-
-/* ─── Base ─────────────────────────────────────────────────────────────────── */
+/* ─── Base ───────────────────────────────────────────────────────────────── */
 
 html {
     -webkit-text-size-adjust: 100%;
@@ -149,7 +122,8 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Headings — DESIGN.md magazine voice: weight 400 + negative tracking */
+/* Display type: weight 400 with negative tracking — the magazine voice.
+   Bold display reads as "tech site"; DESIGN.md forbids it. */
 h1 {
     font-size: 26px;
     font-weight: 400;
@@ -181,14 +155,13 @@ samp,
     font-family: var(--font-mono);
 }
 
-/* Unified quiet focus ring — subtle accent border shift */
+/* Focus ring: a quiet accent border shift rather than a glow. */
 *:focus-visible {
     outline: none !important;
     box-shadow: none !important;
     border-color: var(--accent) !important;
 }
 
-/* Global button press feedback */
 button {
     transition: background-color var(--transition-fast),
         border-color var(--transition-fast),
@@ -200,137 +173,278 @@ button:active:not(:disabled) {
     transform: scale(0.98);
 }
 
-/* ─── Scrollbars ───────────────────────────────────────────────────────────── */
+/* ─── Scrollbars ─────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
-::-webkit-scrollbar-track {
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
     background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #e6e5e0;
+    background: var(--stroke-subtle);
     border-radius: 4px;
     border: 2px solid transparent;
     background-clip: content-box;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-    background: #2a2a2a;
-    background-clip: content-box;
-}
-
 ::-webkit-scrollbar-thumb:hover {
-    background: #cfcdc4;
+    background: var(--stroke-strong);
     background-clip: content-box;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-    background: #3a3a3a;
-    background-clip: content-box;
-}
-
-::-webkit-scrollbar-corner {
-    background: transparent;
 }
 
 * {
-    scrollbar-color: #cfcdc4 transparent;
+    scrollbar-color: var(--stroke-strong) transparent;
     box-shadow: none !important;
 }
 
-.dark * {
-    scrollbar-color: #2a2a2a transparent;
-}
+/* ─────────────────────────────────────────────────────────────────────────────
+   LEGACY PALETTE BRIDGE  ·  temporary
+   ---------------------------------------------------------------------------
+   ~2,400 class occurrences across ~90 components still carry the old dark-IDE
+   Tailwind grays (bg-gray-900, text-gray-400, hover:bg-gray-700, bg-white/5,
+   …). Rather than break the app while those migrate file-by-file, each legacy
+   token is re-pointed at its DESIGN.md equivalent.
 
-/* ─── Palette remap (light default) ──────────────────────────────────────────
-   Light mode leans on real Tailwind grays warmed toward DESIGN.md hairlines.
-   Dark overrides live under `.dark` further below.
---------------------------------------------------------------------------- */
+   This layer is deliberately exhaustive — it covers state-prefixed variants
+   (hover:/focus:/active:) and opacity-modified forms, which a plain
+   `.bg-gray-900` rule never matches and which were silently rendering as cool
+   near-black on the cream canvas.
+
+   Delete this whole block in Stage 4b once the component migration lands.
+   ───────────────────────────────────────────────────────────────────────────── */
 @layer utilities {
 
-    /* ── Surfaces (light) ── */
-    .bg-gray-950 {
-        background-color: var(--surface-canvas) !important;
-    }
+    /* ── Backgrounds ──
+       Legacy dark ladder → DESIGN.md surface ladder (order inverts: the
+       darkest legacy token is the lightest surface). */
+    .bg-gray-950 { background-color: var(--surface-canvas) !important; }
+    .bg-gray-900 { background-color: var(--surface-base) !important; }
+    .bg-gray-800 { background-color: var(--surface-raised) !important; }
+    .bg-gray-700 { background-color: var(--surface-overlay) !important; }
+    .bg-gray-600 { background-color: var(--surface-hover) !important; }
+    /* Light-origin tokens → canvas-relative washes. */
+    .bg-gray-500\/20,
+    .bg-gray-500\/10 { background-color: var(--hover-overlay) !important; }
+    .bg-gray-200 { background-color: var(--surface-strong) !important; }
+    .bg-gray-100 { background-color: var(--surface-hover) !important; }
+    .bg-gray-50 { background-color: var(--surface-overlay) !important; }
+    .bg-white { background-color: var(--surface-base) !important; }
+    .bg-white\/95,
+    .bg-white\/90 { background-color: var(--surface-base) !important; }
 
-    .bg-gray-900 {
-        background-color: var(--surface-base) !important;
-    }
+    /* Opacity-modified darks → translucent surfaces, never near-black. */
+    .bg-gray-900\/90 { background-color: rgba(255, 255, 255, 0.94) !important; }
+    .bg-gray-900\/50,
+    .bg-gray-800\/50 { background-color: rgba(255, 255, 255, 0.7) !important; }
+    .bg-gray-900\/20,
+    .bg-gray-800\/30 { background-color: rgba(255, 255, 255, 0.5) !important; }
+    .bg-gray-950\/60,
+    .bg-gray-700\/50 { background-color: rgba(247, 247, 244, 0.75) !important; }
 
-    .bg-gray-800 {
-        background-color: var(--surface-base) !important;
-    }
+    /* White translucency was a hover/press wash on dark; on cream it would be
+       invisible, so it becomes an ink wash at the same intent-weighted level. */
+    .bg-white\/5,
+    .bg-white\/8 { background-color: var(--hover-overlay) !important; }
+    .bg-white\/10,
+    .bg-white\/15,
+    .bg-white\/20 { background-color: var(--active-overlay) !important; }
 
-    .bg-gray-700 {
-        background-color: var(--surface-overlay) !important;
-    }
+    /* Black washes → warm-ink scrims. Backdrop overlays and hover tints. */
+    .bg-black\/5,
+    .bg-black\/10,
+    .bg-black\/20 { background-color: var(--hover-overlay) !important; }
+    .bg-black\/30,
+    .bg-black\/40,
+    .bg-black\/50 { background-color: rgba(38, 37, 30, 0.35) !important; }
+    .bg-black\/60,
+    .bg-black\/65,
+    .bg-black\/70,
+    .bg-black\/75,
+    .bg-black\/80 { background-color: rgba(38, 37, 30, 0.45) !important; }
 
-    .bg-gray-600 {
-        background-color: var(--surface-hover) !important;
-    }
-
-    /* ── Strokes (light) ── */
+    /* ── Borders ── */
     .border-gray-800,
-    .border-gray-700 {
-        border-color: var(--stroke-subtle) !important;
-    }
-
+    .border-gray-700 { border-color: var(--stroke-subtle) !important; }
     .border-gray-600,
-    .border-gray-500 {
-        border-color: var(--stroke-strong) !important;
-    }
+    .border-gray-500,
+    .border-gray-400 { border-color: var(--stroke-strong) !important; }
+    .border-gray-300 { border-color: var(--stroke-strong) !important; }
+    .border-gray-200,
+    .border-gray-100 { border-color: var(--stroke-soft) !important; }
+    .border-gray-800\/40,
+    .border-gray-700\/50,
+    .border-gray-700\/60,
+    .border-gray-500\/30 { border-color: var(--stroke-subtle) !important; }
+    .border-white\/20,
+    .border-white\/30 { border-color: var(--stroke-subtle) !important; }
 
     .divide-gray-700> :not([hidden])~ :not([hidden]),
     .divide-gray-800> :not([hidden])~ :not([hidden]) {
         border-color: var(--stroke-subtle) !important;
     }
 
-    /* ── Text (light) ── */
-    .text-gray-600,
-    .text-gray-500 {
-        color: var(--text-muted) !important;
-    }
-
-    .text-gray-400,
-    .text-gray-300 {
-        color: var(--text-secondary) !important;
-    }
-
+    /* ── Text ──
+       4-tier target. Legacy 900/800 → ink, 700/600 → body, 500/400 → muted,
+       300/200/100 → faint. `text-white` was the dark-theme default text and
+       becomes ink; on an accent fill it must be `text-accent-fg` instead
+       (Stage 2 handles those call sites). */
+    .text-gray-900,
+    .text-gray-800 { color: var(--text-primary) !important; }
+    .text-gray-700,
+    .text-gray-600 { color: var(--text-secondary) !important; }
+    .text-gray-500,
+    .text-gray-400 { color: var(--text-muted) !important; }
+    .text-gray-300,
     .text-gray-200,
-    .text-gray-100 {
-        color: var(--text-primary) !important;
-    }
+    .text-gray-100 { color: var(--text-faint) !important; }
+    .text-white { color: var(--text-primary) !important; }
 
-    /* ── Focus rings → Cursor Orange ── */
+    .placeholder-gray-600::placeholder { color: var(--text-secondary) !important; }
+    .placeholder-gray-500::placeholder,
+    .placeholder-gray-400::placeholder { color: var(--text-faint) !important; }
+
+    /* ── Rings → Cursor Orange ── */
+    .ring-gray-500,
+    .ring-gray-700 { --tw-ring-color: var(--stroke-strong) !important; }
+    .ring-blue-500,
+    .ring-purple-500,
+    .ring-violet-500,
+    .ring-red-500 { --tw-ring-color: var(--accent) !important; }
+
+    /* ── Non-neutral accents → DESIGN.md semantic tokens ──
+       The system has exactly one brand colour, so every third-party hue
+       collapses onto accent / success / danger. */
+    .border-blue-500 { border-color: var(--accent) !important; }
+    .bg-blue-500,
+    .bg-blue-600 { background-color: var(--accent) !important; }
+    .text-blue-400,
+    .text-blue-500,
+    .text-blue-600,
+    .text-blue-700,
+    .text-blue-800,
+    .text-blue-900 { color: var(--accent) !important; }
+    .bg-purple-500,
+    .bg-purple-600,
+    .bg-violet-500 { background-color: var(--accent-muted) !important; }
+    .text-purple-300,
+    .text-purple-400,
+    .text-purple-500,
+    .text-purple-600,
+    .text-purple-700,
+    .text-violet-400,
+    .text-violet-500 { color: var(--accent) !important; }
+    .bg-emerald-400,
+    .bg-emerald-500,
+    .bg-emerald-600,
+    .bg-emerald-700,
+    .bg-green-500,
+    .bg-green-600 { background-color: var(--success) !important; }
+    .text-emerald-300,
+    .text-emerald-400,
+    .text-emerald-500,
+    .text-green-400,
+    .text-green-500 { color: var(--success) !important; }
+    .text-red-400,
+    .text-red-500,
+    .text-red-600,
+    .text-pink-400,
+    .text-pink-500,
+    .text-rose-400,
+    .text-rose-500 { color: var(--danger) !important; }
+    .bg-red-500,
+    .bg-pink-500,
+    .bg-pink-600 { background-color: var(--danger) !important; }
+    .bg-yellow-100,
+    .bg-yellow-500 { background-color: var(--warning-subtle) !important; }
+    .text-yellow-400,
+    .text-yellow-500,
+    .text-yellow-700,
+    .text-amber-400,
+    .text-amber-500 { color: var(--warning) !important; }
+    .text-orange-400,
+    .text-orange-500,
+    .text-orange-600 { color: var(--accent) !important; }
+    .text-cyan-400,
+    .text-teal-400,
+    .text-sky-300,
+    .text-sky-400 { color: var(--text-secondary) !important; }
+    .text-green-500\/50,
+    .text-green-400\/50 { color: var(--success) !important; }
+
+    /* ── State-prefixed variants ──
+       A `.bg-gray-700` rule cannot match `hover:bg-gray-700`, so these needed
+       their own definitions. Previously unhandled: 54 hover:bg-gray-700 were
+       painting a near-black wash on the cream canvas. */
+    .hover\:bg-gray-950:hover,
+    .hover\:bg-gray-900:hover { background-color: var(--surface-hover) !important; }
+    .hover\:bg-gray-800:hover,
+    .hover\:bg-gray-700:hover { background-color: var(--surface-hover) !important; }
+    .hover\:bg-gray-600:hover { background-color: var(--active-overlay) !important; }
+    .hover\:bg-gray-500:hover,
+    .hover\:bg-gray-300:hover { background-color: var(--surface-hover) !important; }
+    .hover\:bg-gray-200:hover,
+    .hover\:bg-gray-100:hover,
+    .hover\:bg-gray-50:hover { background-color: var(--surface-hover) !important; }
+    .hover\:bg-white:hover { background-color: var(--surface-hover) !important; }
+
+    .hover\:bg-white\/5:hover,
+    .hover\:bg-white\/10:hover,
+    .hover\:bg-white\/15:hover,
+    .hover\:bg-white\/20:hover { background-color: var(--active-overlay) !important; }
+
+    .hover\:bg-black\/5:hover,
+    .hover\:bg-black\/10:hover,
+    .hover\:bg-black\/30:hover { background-color: var(--active-overlay) !important; }
+
+    .hover\:text-gray-900:hover,
+    .hover\:text-gray-800:hover { color: var(--text-primary) !important; }
+    .hover\:text-gray-700:hover,
+    .hover\:text-gray-600:hover { color: var(--text-primary) !important; }
+    .hover\:text-gray-500:hover,
+    .hover\:text-gray-400:hover { color: var(--text-secondary) !important; }
+    .hover\:text-gray-300:hover,
+    .hover\:text-gray-200:hover { color: var(--text-primary) !important; }
+    .hover\:text-white:hover { color: var(--text-primary) !important; }
+
+    .hover\:border-gray-700:hover,
+    .hover\:border-gray-600:hover,
+    .hover\:border-gray-500:hover { border-color: var(--stroke-strong) !important; }
+    .hover\:border-gray-400:hover,
+    .hover\:border-gray-300:hover,
+    .hover\:border-gray-200:hover { border-color: var(--stroke-strong) !important; }
+    .hover\:border-white\/20:hover,
+    .hover\:border-white\/30:hover { border-color: var(--stroke-strong) !important; }
+
+    .focus\:bg-gray-700:focus,
+    .focus\:bg-gray-800:focus { background-color: var(--surface-hover) !important; }
     .focus\:ring-gray-700:focus,
     .focus\:ring-blue-500:focus,
-    .focus\:ring-purple-500:focus {
-        --tw-ring-color: var(--accent) !important;
-    }
+    .focus\:ring-purple-500:focus { --tw-ring-color: var(--accent) !important; }
 
-    /* ── Interactive hover highlight for icon buttons ── */
-    .hover-highlight {
-        transition: background-color var(--transition-fast), color var(--transition-fast);
-    }
+    .active\:bg-gray-700:active,
+    .active\:bg-gray-800:active { background-color: var(--active-overlay) !important; }
+}
 
-    .hover-highlight:hover {
-        background-color: var(--hover-overlay);
-    }
+/* ─────────────────────────────────────────────────────────────────────────────
+   DESIGN.md component recipes
+   Reusable classes matching the component specs in DESIGN.md. Prefer these over
+   re-declaring the same declarations at each call site.
+   ───────────────────────────────────────────────────────────────────────────── */
+@layer components {
 
-    /* ── Design System Reusable Component Helpers (theme-aware) ── */
-
-    /* Cards: 1px hairline on white (light) / #161616 (dark), 12px radius, no shadows */
+    /* feature-card · ide-mockup-card · pricing-tier-card — hairline, no shadow */
     .quiet-card {
         background-color: var(--surface-base);
         border: 1px solid var(--stroke-subtle);
         border-radius: 12px;
     }
 
-    /* Section labels: 11px uppercase, 600, muted — DESIGN.md caption-uppercase */
+    /* caption-uppercase: section labels, timeline pill labels */
     .quiet-section-label {
         font-size: 11px;
         font-weight: 600;
@@ -339,7 +453,6 @@ button:active:not(:disabled) {
         color: var(--text-muted);
     }
 
-    /* Rows: horizontal flex, space-between, 16-18px padding, 1px hairline divider */
     .quiet-row {
         display: flex;
         align-items: center;
@@ -348,18 +461,14 @@ button:active:not(:disabled) {
         border-bottom: 1px solid var(--stroke-subtle);
     }
 
-    .quiet-row:last-child {
-        border-bottom: none;
-    }
+    .quiet-row:last-child { border-bottom: none; }
 
-    /* Row title: 13.5px, weight 500 */
     .quiet-row-title {
         font-size: 13.5px;
         font-weight: 500;
         color: var(--text-primary);
     }
 
-    /* Sub-descriptions: 12.5px, secondary color, max-width constrained */
     .quiet-row-desc {
         font-size: 12.5px;
         color: var(--text-secondary);
@@ -367,31 +476,40 @@ button:active:not(:disabled) {
         line-height: 1.4;
     }
 
-    /* Buttons: DESIGN.md 8px radius. Default quiet, accent = Cursor Orange */
+    /* button-secondary: white pill on cream, hairline-strong border */
     .quiet-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         background-color: var(--surface-base);
         border: 1px solid var(--stroke-strong);
         border-radius: 8px;
         padding: 9px 17px;
         font-size: 14px;
         font-weight: 500;
+        line-height: 1;
         color: var(--text-primary);
         transition: background-color var(--transition-fast), border-color var(--transition-fast);
     }
 
-    .quiet-btn:hover:not(:disabled) {
-        background-color: var(--surface-hover);
-    }
+    .quiet-btn:hover:not(:disabled) { background-color: var(--surface-hover); }
 
+    /* button-primary: the signature Cursor Orange CTA */
     .quiet-btn-accent {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         background-color: var(--accent);
         border: 1px solid var(--accent);
         border-radius: 8px;
         padding: 10px 18px;
         font-size: 14px;
         font-weight: 500;
+        line-height: 1;
         color: var(--accent-fg);
-        transition: background-color var(--transition-fast);
+        transition: background-color var(--transition-fast), border-color var(--transition-fast);
     }
 
     .quiet-btn-accent:hover:not(:disabled) {
@@ -399,19 +517,41 @@ button:active:not(:disabled) {
         border-color: var(--accent-hover);
     }
 
-    /* Ink download-style CTA (DESIGN.md button-download) */
+    /* button-download: larger ink-on-canvas CTA */
     .quiet-btn-ink {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         background-color: var(--text-primary);
         border: 1px solid var(--text-primary);
         border-radius: 8px;
         padding: 12px 20px;
         font-size: 14px;
         font-weight: 500;
+        line-height: 1;
         color: var(--surface-canvas);
+        transition: background-color var(--transition-fast), opacity var(--transition-fast);
     }
 
-    /* Inputs: filled canvas-soft, hairline border, 8px radius */
+    .quiet-btn-ink:hover:not(:disabled) { opacity: 0.88; }
+
+    /* button-tertiary-text */
+    .quiet-btn-text {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        transition: color var(--transition-fast), opacity var(--transition-fast);
+    }
+
+    .quiet-btn-text:hover:not(:disabled) { color: var(--accent); }
+
+    /* text-input: 8px radius, 44px tall, hairline border */
     .quiet-input {
+        width: 100%;
         background-color: var(--surface-base);
         border: 1px solid var(--stroke-subtle);
         border-radius: 8px;
@@ -422,20 +562,40 @@ button:active:not(:disabled) {
         transition: border-color var(--transition-fast);
     }
 
-    .quiet-input:focus {
-        border-color: var(--accent);
+    .quiet-input:focus { border-color: var(--accent); }
+    .quiet-input::placeholder { color: var(--text-faint); }
+
+    /* badge-pill: surface-strong fill, caption-uppercase */
+    .quiet-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.88px;
+        text-transform: uppercase;
+        border-radius: 9999px;
+        background-color: var(--surface-strong);
+        color: var(--text-primary);
     }
 
-    .quiet-input::placeholder {
-        color: var(--text-faint);
+    .quiet-badge-active {
+        background-color: var(--success-subtle);
+        color: var(--success);
     }
 
-    /* Toggles: pill-shaped, success green when active */
+    .quiet-badge-accent {
+        background-color: var(--accent-subtle);
+        color: var(--accent);
+    }
+
+    /* Toggle: pill switch, success when on */
     .quiet-toggle {
         position: relative;
         width: 36px;
         height: 20px;
-        border-radius: 10px;
+        border-radius: 9999px;
         background-color: var(--stroke-strong);
         transition: background-color var(--transition-fast);
         flex-shrink: 0;
@@ -443,9 +603,7 @@ button:active:not(:disabled) {
     }
 
     .quiet-toggle[aria-checked="true"],
-    .quiet-toggle.active {
-        background-color: var(--success);
-    }
+    .quiet-toggle.active { background-color: var(--success); }
 
     .quiet-toggle-knob {
         position: absolute;
@@ -460,51 +618,19 @@ button:active:not(:disabled) {
     }
 
     .quiet-toggle[aria-checked="true"] .quiet-toggle-knob,
-    .quiet-toggle.active .quiet-toggle-knob {
-        transform: translateX(16px);
+    .quiet-toggle.active .quiet-toggle-knob { transform: translateX(16px); }
+
+    /* ide-pane */
+    .cursor-ide-pane {
+        background-color: var(--surface-overlay);
+        border-radius: 8px;
+        padding: 16px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--text-secondary);
     }
 
-    /* Badges: tiny uppercase pill — DESIGN.md badge-pill */
-    .quiet-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 10px;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.88px;
-        text-transform: uppercase;
-        border-radius: 9999px;
-        border: 1px solid var(--stroke-subtle);
-        background-color: var(--surface-hover);
-        color: var(--text-primary);
-    }
-
-    .quiet-badge-active {
-        border-color: var(--success);
-        background-color: var(--success-subtle);
-        color: var(--success);
-    }
-
-    /* ── DESIGN.md signature: AI timeline pills (agent stages only) ── */
-    .timeline-pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 10px;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.88px;
-        text-transform: uppercase;
-        border-radius: 9999px;
-        color: #26251e;
-    }
-
-    .timeline-pill-thinking { background-color: var(--timeline-thinking); }
-    .timeline-pill-grep { background-color: var(--timeline-grep); }
-    .timeline-pill-read { background-color: var(--timeline-read); }
-    .timeline-pill-edit { background-color: var(--timeline-edit); }
-    .timeline-pill-done { background-color: var(--timeline-done); color: #ffffff; }
-
-    /* ── DESIGN.md code block + IDE pane ── */
+    /* code-block */
     .cursor-code-block {
         background-color: var(--surface-base);
         border: 1px solid var(--stroke-subtle);
@@ -514,118 +640,53 @@ button:active:not(:disabled) {
         font-size: 13px;
         line-height: 1.5;
         color: var(--text-primary);
+        overflow-x: auto;
     }
 
-    .cursor-ide-pane {
-        background-color: var(--surface-overlay);
-        border-radius: 8px;
-        padding: 16px;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        color: var(--text-secondary);
+    /* ── AI timeline signature: five stage pastels ──
+       Scoped to in-product agent timeline visualizations only. */
+    .timeline-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.88px;
+        line-height: 1.4;
+        text-transform: uppercase;
+        border-radius: 9999px;
+        white-space: nowrap;
+        color: var(--text-primary);
     }
+
+    .timeline-pill-thinking { background-color: var(--timeline-thinking); }
+    .timeline-pill-grep { background-color: var(--timeline-grep); }
+    .timeline-pill-read { background-color: var(--timeline-read); }
+    .timeline-pill-edit { background-color: var(--timeline-edit); }
+    .timeline-pill-done { background-color: var(--timeline-done); color: #ffffff; }
+
+    /* Icon-button hover wash */
+    .hover-highlight {
+        transition: background-color var(--transition-fast), color var(--transition-fast);
+    }
+
+    .hover-highlight:hover { background-color: var(--hover-overlay); }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Dark-mode remaps — the previous Quiet Dark Mode enforcement, now scoped so
-   light mode (the default) is untouched. All blue/purple/green/amber/sky/pink
-   families collapse to muted system tokens; no neon, no pure white surfaces.
-   ───────────────────────────────────────────────────────────────────────────── */
+/* ─── Utilities ───────────────────────────────────────────────────────────── */
+
 @layer utilities {
-    .dark .bg-gray-950 { background-color: #0d0d0d !important; }
-    .dark .bg-gray-900 { background-color: #161616 !important; }
-    .dark .bg-gray-800 { background-color: #161616 !important; }
-    .dark .bg-gray-700 { background-color: #1c1c1c !important; }
-    .dark .bg-gray-600 { background-color: #242424 !important; }
-    .dark .bg-gray-800\/50 { background-color: rgba(22, 22, 22, 0.7) !important; }
-    .dark .bg-gray-900\/50 { background-color: rgba(22, 22, 22, 0.7) !important; }
-    .dark .bg-gray-900\/20 { background-color: rgba(22, 22, 22, 0.3) !important; }
-    .dark .hover\:bg-gray-800:hover,
-    .dark .hover\:bg-gray-700:hover { background-color: #1c1c1c !important; }
-    .dark .hover\:bg-gray-600:hover { background-color: #242424 !important; }
-    .dark .border-gray-800,
-    .dark .border-gray-700 { border-color: #2a2a2a !important; }
-    .dark .border-gray-600,
-    .dark .border-gray-500 { border-color: #3a3a3a !important; }
-    .dark .text-gray-600,
-    .dark .text-gray-500 { color: #5c5c5c !important; }
-    .dark .text-gray-400,
-    .dark .text-gray-300 { color: #8a8a8a !important; }
-    .dark .text-gray-200,
-    .dark .text-gray-100,
-    .dark .text-white { color: #e8e8e8 !important; }
 
-    /* Blue family → surface tokens / accent */
-    .dark .bg-blue-50, .dark .bg-blue-100, .dark .bg-blue-200 { background-color: #1c1c1c !important; }
-    .dark .bg-blue-300, .dark .bg-blue-400, .dark .bg-blue-500, .dark .bg-blue-600, .dark .bg-blue-700, .dark .bg-blue-800, .dark .bg-blue-900 { background-color: #1c1c1c !important; }
-    .dark .text-blue-50, .dark .text-blue-100, .dark .text-blue-200, .dark .text-blue-300, .dark .text-blue-400, .dark .text-blue-500 { color: #8a8a8a !important; }
-    .dark .text-blue-600, .dark .text-blue-700, .dark .text-blue-800, .dark .text-blue-900 { color: #8a8a8a !important; }
-    .dark .border-blue-200, .dark .border-blue-300, .dark .border-blue-400, .dark .border-blue-500, .dark .border-blue-600, .dark .border-blue-700 { border-color: #2a2a2a !important; }
-    .dark .hover\:bg-blue-700:hover, .dark .hover\:bg-blue-600:hover, .dark .hover\:bg-blue-500:hover { background-color: #242424 !important; }
-
-    /* Purple / Indigo / Violet family → surface tokens */
-    .dark .bg-purple-50, .dark .bg-purple-100, .dark .bg-purple-500, .dark .bg-purple-600, .dark .bg-purple-700, .dark .bg-purple-800, .dark .bg-purple-900 { background-color: #1c1c1c !important; }
-    .dark .bg-indigo-50, .dark .bg-indigo-100, .dark .bg-indigo-500, .dark .bg-indigo-600, .dark .bg-indigo-700 { background-color: #1c1c1c !important; }
-    .dark .bg-violet-50, .dark .bg-violet-100, .dark .bg-violet-500, .dark .bg-violet-600, .dark .bg-violet-700 { background-color: #1c1c1c !important; }
-    .dark .text-purple-300, .dark .text-purple-400, .dark .text-purple-500, .dark .text-purple-600, .dark .text-purple-700 { color: #8a8a8a !important; }
-    .dark .text-indigo-300, .dark .text-indigo-400, .dark .text-indigo-500, .dark .text-indigo-600 { color: #8a8a8a !important; }
-    .dark .hover\:bg-purple-700:hover, .dark .hover\:bg-purple-600:hover { background-color: #242424 !important; }
-
-    /* Emerald / Green family → success token */
-    .dark .bg-emerald-400, .dark .bg-emerald-500, .dark .bg-emerald-600, .dark .bg-emerald-700 { background-color: #3ecf5e !important; }
-    .dark .bg-green-500, .dark .bg-green-600 { background-color: #3ecf5e !important; }
-    .dark .text-emerald-300, .dark .text-emerald-400, .dark .text-emerald-500 { color: #3ecf5e !important; }
-    .dark .text-green-400, .dark .text-green-500 { color: #3ecf5e !important; }
-
-    /* Amber / Yellow / Orange warning band */
-    .dark .bg-amber-50, .dark .bg-amber-100 { background-color: #1c1c1c !important; }
-    .dark .text-amber-100, .dark .text-amber-200, .dark .text-amber-300, .dark .text-amber-400, .dark .text-amber-500 { color: #8a8a8a !important; }
-    .dark .text-yellow-400, .dark .text-yellow-500 { color: #8a8a8a !important; }
-    .dark .text-orange-400, .dark .text-orange-500 { color: #e07856 !important; }
-
-    /* Sky / Cyan / Teal family */
-    .dark .bg-sky-50 { background-color: #1c1c1c !important; }
-    .dark .text-sky-300, .dark .text-sky-400 { color: #8a8a8a !important; }
-    .dark .text-cyan-400, .dark .text-teal-400 { color: #8a8a8a !important; }
-
-    /* Pink / Rose / Red families → danger token */
-    .dark .bg-pink-500, .dark .bg-pink-600 { background-color: #e5484d !important; }
-    .dark .text-pink-400, .dark .text-pink-500, .dark .text-rose-400, .dark .text-rose-500 { color: #e5484d !important; }
-    .dark .bg-red-50, .dark .bg-red-100 { background-color: #1c1c1c !important; }
-    .dark .text-red-400, .dark .text-red-500, .dark .text-red-600 { color: #e5484d !important; }
-
-    /* White backgrounds → panel surface (dark only) */
-    .dark .bg-white { background-color: #161616 !important; }
-    .dark .bg-white\/95 { background-color: rgba(22, 22, 22, 0.97) !important; }
-    .dark .bg-gray-50, .dark .bg-gray-100 { background-color: #161616 !important; }
-    .dark .bg-gray-200 { background-color: #1c1c1c !important; }
-    .dark .text-gray-900 { color: #e8e8e8 !important; }
-    .dark .text-gray-700, .dark .text-gray-800 { color: #8a8a8a !important; }
-    .dark .bg-yellow-100 { background-color: rgba(224, 120, 86, 0.08) !important; }
-    .dark .text-yellow-700, .dark .text-yellow-400 { color: #e07856 !important; }
-    .dark .bg-orange-50, .dark .bg-orange-100 { background-color: #1c1c1c !important; }
-    .dark .text-orange-600 { color: #e07856 !important; }
+    /* Jump-to-line highlight: accent wash with an ink-anchored left bar */
+    .gb-jump-highlight {
+        background-color: var(--accent-subtle);
+        box-shadow: inset 3px 0 0 0 var(--accent) !important;
+        transition: background-color var(--transition-normal);
+    }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Jump-to-line highlight (theme-aware)
-   ───────────────────────────────────────────────────────────────────────────── */
-.gb-jump-highlight {
-    background-color: var(--accent-subtle);
-    box-shadow: inset 3px 0 0 0 var(--accent) !important;
-    transition: background-color 200ms ease-out;
-}
-
-/* ── Force the body background via vars (theme-aware) ── */
 html, body, #root {
     background-color: var(--surface-canvas);
     color: var(--text-primary);
 }
-
-/* ── Backdrop overlays ── */
-.bg-black\/70 { background-color: rgba(38, 37, 30, 0.45) !important; }
-.dark .bg-black\/70 { background-color: rgba(0, 0, 0, 0.75) !important; }
-.bg-black\/50 { background-color: rgba(38, 37, 30, 0.35) !important; }
-.dark .bg-black\/50 { background-color: rgba(0, 0, 0, 0.6) !important; }
-.bg-black\/30 { background-color: rgba(38, 37, 30, 0.22) !important; }
-.dark .bg-black\/30 { background-color: rgba(0, 0, 0, 0.4) !important; }
