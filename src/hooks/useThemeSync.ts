@@ -13,7 +13,7 @@ interface UseThemeSyncReturn {
 export function useThemeSync(): UseThemeSyncReturn {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('gb-coder-theme-mode');
-    return (saved as ThemeMode) || 'system';
+    return (saved as ThemeMode) || 'light';
   });
 
   const [isDark, setIsDark] = useState<boolean>(() => {

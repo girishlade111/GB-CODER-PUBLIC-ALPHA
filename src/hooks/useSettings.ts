@@ -21,11 +21,11 @@ export interface AppSettings {
     codeRabbitApiKey: string;
 }
 
-// Default settings matching current behavior
+// Default settings — DESIGN.md light editorial is the default, dark stays opt-in
 export const DEFAULT_SETTINGS: AppSettings = {
     editorFontFamily: 'JetBrains Mono',
     editorFontSize: 14,
-    theme: 'dark',
+    theme: 'light',
     autoRunJS: true,
     previewDelay: 300,
     // Off by default: audio that starts talking unprompted is intrusive.

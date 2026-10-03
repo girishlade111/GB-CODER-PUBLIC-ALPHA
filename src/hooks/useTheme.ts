@@ -4,7 +4,7 @@ import { useLocalStorage } from './useLocalStorage';
 export type Theme = 'light' | 'dark';
 
 export const useTheme = () => {
-  const [theme, setTheme] = useLocalStorage<Theme>('gb-coder-theme', 'dark');
+  const [theme, setTheme] = useLocalStorage<Theme>('gb-coder-theme', 'light');
 
   useEffect(() => {
     const root = document.documentElement;

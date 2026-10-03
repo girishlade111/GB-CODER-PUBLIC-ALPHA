@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import Editor, { type Monaco } from '@monaco-editor/react';
-import { GB_CODER_MONACO_THEME, defineGbCoderTheme } from '../utils/monacoTheme';
+import { monacoThemeFor, defineGbCoderTheme } from '../utils/monacoTheme';
+import { useTheme } from '../hooks/useTheme';
 import { EditorLanguage, JSEditorMode } from '../types';
 
 interface CodeEditorProps {
@@ -31,6 +32,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   jsEditorMode = 'javascript',
 }) => {
   const internalEditorRef = useRef<any>(null);
+  const { isDark } = useTheme();
 
   const handleEditorChange = (value: string | undefined) => {
     onChange(value || '');
@@ -86,8 +88,16 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   }, [fontSize, fontFamily, readOnly]);
 
+  // Keep a mounted editor in sync when the user flips light/dark.
+  useEffect(() => {
+    const monaco = (window as any)?.monaco;
+    if (monaco && internalEditorRef.current) {
+      monaco.editor.setTheme(monacoThemeFor(isDark));
+    }
+  }, [isDark]);
+
   return (
-    <div className="w-full h-full border border-stroke-subtle rounded-md overflow-hidden">
+    <div className="w-full h-full border border-stroke-subtle rounded-lg overflow-hidden bg-[var(--surface-overlay)]">
       <Editor
         height={height}
         language={getLanguageForMonaco(language)}
@@ -95,7 +105,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         onChange={handleEditorChange}
         beforeMount={handleEditorWillMount}
         onMount={handleEditorDidMount}
-        theme={GB_CODER_MONACO_THEME}
+        theme={monacoThemeFor(isDark)}
         options={{
           minimap: { enabled: false },
           fontSize: fontSize,

@@ -4,7 +4,8 @@ import { FileCode2, Loader2 } from 'lucide-react';
 import EditorTabs from './EditorTabs';
 import { FileWorkspace } from '../hooks/useFileWorkspace';
 import { ProjectType, monacoLanguageFor } from '../types/files';
-import { GB_CODER_MONACO_THEME, defineGbCoderTheme } from '../utils/monacoTheme';
+import { monacoThemeFor, defineGbCoderTheme } from '../utils/monacoTheme';
+import { useTheme } from '../hooks/useTheme';
 import { BundleError, formatBundleError } from '../services/bundlerService';
 import { ValidationSummary } from '../services/validationService';
 
@@ -49,6 +50,7 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
   validationSummary,
 }) => {
   const { activeFile } = workspace;
+  const { isDark } = useTheme();
 
   const handleWillMount = (monaco: Monaco) => defineGbCoderTheme(monaco);
 
@@ -93,7 +95,7 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
               onChange={(value) => workspace.updateFileContent(activeFile.path, value ?? '')}
               beforeMount={handleWillMount}
               onMount={handleMount}
-              theme={GB_CODER_MONACO_THEME}
+              theme={monacoThemeFor(isDark)}
               loading={
                 <div className="flex h-full items-center justify-center gap-2 text-sm text-content-muted">
                   <Loader2 className="h-4 w-4 animate-spin" />

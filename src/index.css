@@ -3,18 +3,14 @@
 @tailwind utilities;
 
 /* ─── Design tokens ──────────────────────────────────────────────────────────
-   Quiet Dark Mode design system.
-   - Background (base): #0d0d0d (near-black, not pure black)
-   - Panel/card background: #161616
-   - Panel hover / secondary surface: #1c1c1c to #242424
-   - Border (all dividers, card outlines, input borders): #2a2a2a (hairline, low contrast)
-   - Primary text: #e8e8e8 (off-white, never pure #fff)
-   - Secondary text / sublabels: #8a8a8a
-   - Faint/disabled text: #5c5c5c
-   - Accent (links, active handle, highlights): #e07856 (warm burnt-orange/terracotta)
-   - Success/active state (toggles, badges): #3ecf5e (muted green)
-   - Danger (delete, destructive actions): #e5484d (muted red, not saturated)
-   - Shadows: none (depth from border & background contrast only)
+   DESIGN.md — Cursor editorial light system (default).
+   - Canvas: #f7f7f4 warm cream (never pure white as page floor)
+   - Card: #ffffff on cream, hairline 1px #e6e5e0, no shadows
+   - Ink: #26251e warm near-black · Body: #5a5852 · Muted: #807d72
+   - Accent: #f54e00 Cursor Orange, scarce (primary CTAs + wordmark only)
+   - Display weight 400 with negative tracking (magazine voice, never bold)
+   - JetBrains Mono on every code surface
+   - Dark quiet mode lives under `.dark` and preserves the previous palette.
 --------------------------------------------------------------------------- */
 :root {
     /* Motion */
@@ -22,67 +18,118 @@
     --transition-normal: 200ms ease-out;
     --transition-slow: 300ms ease-out;
 
-    /* Surfaces (darkest → lightest) */
-    --surface-canvas: #0d0d0d;
-    --surface-base: #161616;
-    --surface-raised: #161616;
-    --surface-overlay: #1c1c1c;
-    --surface-hover: #242424;
+    /* Surfaces — DESIGN.md light (darkest → lightest) */
+    --surface-canvas: #f7f7f4;
+    --surface-base: #ffffff;
+    --surface-raised: #ffffff;
+    --surface-overlay: #fafaf7;
+    --surface-hover: #efeee8;
 
     /* Hover/active wash applied over any surface */
-    --hover-overlay: rgba(255, 255, 255, 0.03);
-    --active-overlay: rgba(255, 255, 255, 0.06);
+    --hover-overlay: rgba(38, 37, 30, 0.04);
+    --active-overlay: rgba(38, 37, 30, 0.08);
 
     /* Strokes — hairline dividers */
-    --stroke-subtle: #2a2a2a;
-    --stroke-strong: #3a3a3a;
+    --stroke-subtle: #e6e5e0;
+    --stroke-soft: #efeee8;
+    --stroke-strong: #cfcdc4;
 
-    /* Text */
-    --text-primary: #e8e8e8;
-    --text-secondary: #8a8a8a;
-    --text-muted: #5c5c5c;
+    /* Text — warm ink scale */
+    --text-primary: #26251e;
+    --text-secondary: #5a5852;
+    --text-muted: #807d72;
+    --text-faint: #a09c92;
 
-    /* Accent (warm terracotta) */
-    --accent: #e07856;
-    --accent-hover: #e88a6d;
-    --accent-muted: #c86343;
-    --accent-subtle: rgba(224, 120, 86, 0.12);
+    /* Accent — Cursor Orange, scarce */
+    --accent: #f54e00;
+    --accent-hover: #d04200;
+    --accent-muted: #d04200;
+    --accent-subtle: rgba(245, 78, 0, 0.08);
+    --accent-fg: #ffffff;
 
     /* Functional states */
-    --success: #3ecf5e;
-    --danger: #e5484d;
+    --success: #1f8a65;
+    --success-subtle: rgba(31, 138, 101, 0.1);
+    --danger: #cf2d56;
+    --danger-subtle: rgba(207, 45, 86, 0.08);
+    --warning: #c08532;
 
-    /* Radius scale: 8px cards, 6px buttons/inputs, 4px tags/badges */
+    /* Timeline signature pastels (in-product agent stages only) */
+    --timeline-thinking: #dfa88f;
+    --timeline-grep: #9fc9a2;
+    --timeline-read: #9fbbe0;
+    --timeline-edit: #c0a8dd;
+    --timeline-done: #c08532;
+
+    /* Radius scale: 4px tags, 8px buttons/inputs, 12px cards, 16px large */
     --radius-sm: 4px;
-    --radius-md: 6px;
-    --radius-lg: 8px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
 
-    /* Elevation: none per design system */
+    /* Elevation: none per design system — hairlines only */
     --shadow-elevated: none;
 
-    /* Type: Pure system-ui stack */
-    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    /* Type: Inter substitutes CursorGothic, JetBrains Mono for code */
+    --font-sans: 'Inter', 'CursorGothic', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-    /* ── VS Code variable mappings ── */
+    /* ── VS Code variable mappings (light) ── */
     --vscode-bg-editor: var(--surface-canvas);
     --vscode-bg-sidebar: var(--surface-base);
     --vscode-bg-activitybar: var(--surface-base);
     --vscode-bg-panel: var(--surface-base);
     --vscode-bg-statusbar: var(--surface-base);
     --vscode-border: var(--stroke-subtle);
-    --vscode-border-subtle: var(--stroke-subtle);
-    --vscode-border-light: var(--stroke-subtle);
+    --vscode-border-subtle: var(--stroke-soft);
+    --vscode-border-light: var(--stroke-soft);
     --vscode-text-primary: var(--text-primary);
     --vscode-text-secondary: var(--text-secondary);
     --vscode-text-link: var(--accent);
-    --vscode-selection: #2a2a2a;
+    --vscode-selection: rgba(245, 78, 0, 0.14);
     --vscode-line-highlight: var(--surface-overlay);
     --vscode-cursor: var(--accent);
     --vscode-error: var(--danger);
-    --vscode-warning: #d97706;
+    --vscode-warning: #c08532;
     --vscode-info: var(--accent);
     --vscode-success: var(--success);
+}
+
+/* ─── Dark quiet mode (opt-in via .dark, preserved legacy palette) ───────── */
+.dark {
+    --surface-canvas: #0d0d0d;
+    --surface-base: #161616;
+    --surface-raised: #161616;
+    --surface-overlay: #1c1c1c;
+    --surface-hover: #242424;
+
+    --hover-overlay: rgba(255, 255, 255, 0.03);
+    --active-overlay: rgba(255, 255, 255, 0.06);
+
+    --stroke-subtle: #2a2a2a;
+    --stroke-soft: #2a2a2a;
+    --stroke-strong: #3a3a3a;
+
+    --text-primary: #e8e8e8;
+    --text-secondary: #8a8a8a;
+    --text-muted: #5c5c5c;
+    --text-faint: #5c5c5c;
+
+    --accent: #e07856;
+    --accent-hover: #e88a6d;
+    --accent-muted: #c86343;
+    --accent-subtle: rgba(224, 120, 86, 0.12);
+    --accent-fg: #e8e8e8;
+
+    --success: #3ecf5e;
+    --success-subtle: rgba(62, 207, 94, 0.12);
+    --danger: #e5484d;
+    --danger-subtle: rgba(229, 72, 77, 0.12);
+
+    --vscode-selection: #e0785633;
+    --vscode-line-highlight: #161616;
+    --vscode-cursor: #e07856;
+    --vscode-warning: #d97706;
 }
 
 /* ─── Base ─────────────────────────────────────────────────────────────────── */
@@ -95,31 +142,34 @@ body {
     background-color: var(--surface-canvas);
     color: var(--text-primary);
     font-family: var(--font-sans);
-    font-size: 13.5px;
+    font-size: 14px;
     line-height: 1.5;
+    letter-spacing: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Headings use the tight 1.2 leading */
+/* Headings — DESIGN.md magazine voice: weight 400 + negative tracking */
 h1 {
-    font-size: 22px;
-    font-weight: 600;
-    line-height: 1.2;
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: -0.325px;
     color: var(--text-primary);
 }
 
 h2 {
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1.25;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.3;
+    letter-spacing: -0.11px;
     color: var(--text-primary);
 }
 
 h3 {
-    font-size: 15px;
+    font-size: 18px;
     font-weight: 600;
-    line-height: 1.3;
+    line-height: 1.4;
     color: var(--text-primary);
 }
 
@@ -131,7 +181,7 @@ samp,
     font-family: var(--font-mono);
 }
 
-/* Unified quiet focus ring — subtle border shift */
+/* Unified quiet focus ring — subtle accent border shift */
 *:focus-visible {
     outline: none !important;
     box-shadow: none !important;
@@ -162,13 +212,23 @@ button:active:not(:disabled) {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #2a2a2a;
+    background: #e6e5e0;
     border-radius: 4px;
     border: 2px solid transparent;
     background-clip: content-box;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+    background: #2a2a2a;
+    background-clip: content-box;
+}
+
 ::-webkit-scrollbar-thumb:hover {
+    background: #cfcdc4;
+    background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
     background: #3a3a3a;
     background-clip: content-box;
 }
@@ -178,107 +238,78 @@ button:active:not(:disabled) {
 }
 
 * {
-    scrollbar-color: #2a2a2a transparent;
+    scrollbar-color: #cfcdc4 transparent;
     box-shadow: none !important;
 }
 
-/* ─── Palette remap ────────────────────────────────────────────────────────────
-   Remapping Tailwind's gray scale utilities to the Quiet Dark Mode design tokens.
+.dark * {
+    scrollbar-color: #2a2a2a transparent;
+}
+
+/* ─── Palette remap (light default) ──────────────────────────────────────────
+   Light mode leans on real Tailwind grays warmed toward DESIGN.md hairlines.
+   Dark overrides live under `.dark` further below.
 --------------------------------------------------------------------------- */
 @layer utilities {
 
-    /* ── Surfaces ── */
+    /* ── Surfaces (light) ── */
     .bg-gray-950 {
-        background-color: #0d0d0d !important;
+        background-color: var(--surface-canvas) !important;
     }
 
     .bg-gray-900 {
-        background-color: #161616 !important;
+        background-color: var(--surface-base) !important;
     }
 
     .bg-gray-800 {
-        background-color: #161616 !important;
+        background-color: var(--surface-base) !important;
     }
 
     .bg-gray-700 {
-        background-color: #1c1c1c !important;
+        background-color: var(--surface-overlay) !important;
     }
 
     .bg-gray-600 {
-        background-color: #242424 !important;
+        background-color: var(--surface-hover) !important;
     }
 
-    /* Semi-transparent surfaces */
-    .bg-gray-800\/50 {
-        background-color: rgba(22, 22, 22, 0.7) !important;
-    }
-
-    .bg-gray-900\/50 {
-        background-color: rgba(22, 22, 22, 0.7) !important;
-    }
-
-    .bg-gray-900\/20 {
-        background-color: rgba(22, 22, 22, 0.3) !important;
-    }
-
-    /* ── Hover surfaces ── */
-    .hover\:bg-gray-800:hover,
-    .hover\:bg-gray-700:hover {
-        background-color: #1c1c1c !important;
-    }
-
-    .hover\:bg-gray-600:hover {
-        background-color: #242424 !important;
-    }
-
-    /* ── Strokes ── */
+    /* ── Strokes (light) ── */
     .border-gray-800,
     .border-gray-700 {
-        border-color: #2a2a2a !important;
+        border-color: var(--stroke-subtle) !important;
     }
 
     .border-gray-600,
     .border-gray-500 {
-        border-color: #3a3a3a !important;
+        border-color: var(--stroke-strong) !important;
     }
 
     .divide-gray-700> :not([hidden])~ :not([hidden]),
     .divide-gray-800> :not([hidden])~ :not([hidden]) {
-        border-color: #2a2a2a !important;
+        border-color: var(--stroke-subtle) !important;
     }
 
-    /* ── Text ── */
+    /* ── Text (light) ── */
     .text-gray-600,
     .text-gray-500 {
-        color: #5c5c5c !important;
+        color: var(--text-muted) !important;
     }
 
     .text-gray-400,
     .text-gray-300 {
-        color: #8a8a8a !important;
+        color: var(--text-secondary) !important;
     }
 
     .text-gray-200,
-    .text-gray-100,
-    .text-white {
-        color: #e8e8e8 !important;
+    .text-gray-100 {
+        color: var(--text-primary) !important;
     }
 
-    .hover\:text-gray-300:hover {
-        color: #8a8a8a !important;
-    }
-
-    .hover\:text-gray-200:hover,
-    .hover\:text-gray-100:hover,
-    .hover\:text-white:hover {
-        color: #e8e8e8 !important;
-    }
-
-    /* ── Focus rings ── */
+    /* ── Focus rings → Cursor Orange ── */
     .focus\:ring-gray-700:focus,
     .focus\:ring-blue-500:focus,
     .focus\:ring-purple-500:focus {
-        --tw-ring-color: #e07856 !important;
+        --tw-ring-color: var(--accent) !important;
     }
 
     /* ── Interactive hover highlight for icon buttons ── */
@@ -290,20 +321,22 @@ button:active:not(:disabled) {
         background-color: var(--hover-overlay);
     }
 
-    /* ── Design System Reusable Component Helpers ── */
+    /* ── Design System Reusable Component Helpers (theme-aware) ── */
 
-    /* Cards: 1px border #2a2a2a on #161616, 8px radius, no shadows */
+    /* Cards: 1px hairline on white (light) / #161616 (dark), 12px radius, no shadows */
     .quiet-card {
-        background-color: #161616;
-        border: 1px solid #2a2a2a;
-        border-radius: 8px;
+        background-color: var(--surface-base);
+        border: 1px solid var(--stroke-subtle);
+        border-radius: 12px;
     }
 
-    /* Section labels / Eyebrows: 12-13px, weight 400-500, muted color #8a8a8a */
+    /* Section labels: 11px uppercase, 600, muted — DESIGN.md caption-uppercase */
     .quiet-section-label {
-        font-size: 12.5px;
-        font-weight: 500;
-        color: #8a8a8a;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.88px;
+        text-transform: uppercase;
+        color: var(--text-muted);
     }
 
     /* Rows: horizontal flex, space-between, 16-18px padding, 1px hairline divider */
@@ -312,7 +345,7 @@ button:active:not(:disabled) {
         align-items: center;
         justify-content: space-between;
         padding: 16px 18px;
-        border-bottom: 1px solid #2a2a2a;
+        border-bottom: 1px solid var(--stroke-subtle);
     }
 
     .quiet-row:last-child {
@@ -323,77 +356,87 @@ button:active:not(:disabled) {
     .quiet-row-title {
         font-size: 13.5px;
         font-weight: 500;
-        color: #e8e8e8;
+        color: var(--text-primary);
     }
 
-    /* Sub-descriptions: 12.5px, muted color, max-width constrained */
+    /* Sub-descriptions: 12.5px, secondary color, max-width constrained */
     .quiet-row-desc {
         font-size: 12.5px;
-        color: #8a8a8a;
+        color: var(--text-secondary);
         max-width: 480px;
         line-height: 1.4;
     }
 
-    /* Buttons: small, low-key, background #1c1c1c, border 1px #2a2a2a, radius 6px, padding ~6-14px */
+    /* Buttons: DESIGN.md 8px radius. Default quiet, accent = Cursor Orange */
     .quiet-btn {
-        background-color: #1c1c1c;
-        border: 1px solid #2a2a2a;
-        border-radius: 6px;
-        padding: 6px 14px;
-        font-size: 13px;
+        background-color: var(--surface-base);
+        border: 1px solid var(--stroke-strong);
+        border-radius: 8px;
+        padding: 9px 17px;
+        font-size: 14px;
         font-weight: 500;
-        color: #e8e8e8;
+        color: var(--text-primary);
         transition: background-color var(--transition-fast), border-color var(--transition-fast);
     }
 
     .quiet-btn:hover:not(:disabled) {
-        background-color: #242424;
-        border-color: #3a3a3a;
+        background-color: var(--surface-hover);
     }
 
     .quiet-btn-accent {
-        background-color: #e07856;
-        border: 1px solid #e07856;
-        border-radius: 6px;
-        padding: 6px 14px;
-        font-size: 13px;
+        background-color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-size: 14px;
         font-weight: 500;
-        color: #e8e8e8;
+        color: var(--accent-fg);
         transition: background-color var(--transition-fast);
     }
 
     .quiet-btn-accent:hover:not(:disabled) {
-        background-color: #e88a6d;
-        border-color: #e88a6d;
+        background-color: var(--accent-hover);
+        border-color: var(--accent-hover);
     }
 
-    /* Inputs: filled with #1c1c1c, subtle border #2a2a2a, radius 6px */
+    /* Ink download-style CTA (DESIGN.md button-download) */
+    .quiet-btn-ink {
+        background-color: var(--text-primary);
+        border: 1px solid var(--text-primary);
+        border-radius: 8px;
+        padding: 12px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--surface-canvas);
+    }
+
+    /* Inputs: filled canvas-soft, hairline border, 8px radius */
     .quiet-input {
-        background-color: #1c1c1c;
-        border: 1px solid #2a2a2a;
-        border-radius: 6px;
-        padding: 6px 12px;
-        font-size: 13px;
-        color: #e8e8e8;
+        background-color: var(--surface-base);
+        border: 1px solid var(--stroke-subtle);
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+        color: var(--text-primary);
         outline: none;
         transition: border-color var(--transition-fast);
     }
 
     .quiet-input:focus {
-        border-color: #e07856;
+        border-color: var(--accent);
     }
 
     .quiet-input::placeholder {
-        color: #5c5c5c;
+        color: var(--text-faint);
     }
 
-    /* Toggles: pill-shaped, green #3ecf5e when active, small white circle knob, no label text inside */
+    /* Toggles: pill-shaped, success green when active */
     .quiet-toggle {
         position: relative;
         width: 36px;
         height: 20px;
         border-radius: 10px;
-        background-color: #2a2a2a;
+        background-color: var(--stroke-strong);
         transition: background-color var(--transition-fast);
         flex-shrink: 0;
         cursor: pointer;
@@ -401,7 +444,7 @@ button:active:not(:disabled) {
 
     .quiet-toggle[aria-checked="true"],
     .quiet-toggle.active {
-        background-color: #3ecf5e;
+        background-color: var(--success);
     }
 
     .quiet-toggle-knob {
@@ -411,7 +454,8 @@ button:active:not(:disabled) {
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background-color: #e8e8e8;
+        background-color: var(--surface-base);
+        border: 1px solid var(--stroke-strong);
         transition: transform var(--transition-fast);
     }
 
@@ -420,140 +464,168 @@ button:active:not(:disabled) {
         transform: translateX(16px);
     }
 
-    /* Badges: tiny pill, 11px text, bordered, sits inline next to a title */
+    /* Badges: tiny uppercase pill — DESIGN.md badge-pill */
     .quiet-badge {
         display: inline-flex;
         align-items: center;
-        padding: 1px 6px;
+        padding: 4px 10px;
         font-size: 11px;
-        font-weight: 500;
+        font-weight: 600;
+        letter-spacing: 0.88px;
+        text-transform: uppercase;
         border-radius: 9999px;
-        border: 1px solid #2a2a2a;
-        background-color: #1c1c1c;
-        color: #8a8a8a;
+        border: 1px solid var(--stroke-subtle);
+        background-color: var(--surface-hover);
+        color: var(--text-primary);
     }
 
     .quiet-badge-active {
-        border-color: rgba(62, 207, 94, 0.3);
-        background-color: rgba(62, 207, 94, 0.1);
-        color: #3ecf5e;
+        border-color: var(--success);
+        background-color: var(--success-subtle);
+        color: var(--success);
+    }
+
+    /* ── DESIGN.md signature: AI timeline pills (agent stages only) ── */
+    .timeline-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.88px;
+        text-transform: uppercase;
+        border-radius: 9999px;
+        color: #26251e;
+    }
+
+    .timeline-pill-thinking { background-color: var(--timeline-thinking); }
+    .timeline-pill-grep { background-color: var(--timeline-grep); }
+    .timeline-pill-read { background-color: var(--timeline-read); }
+    .timeline-pill-edit { background-color: var(--timeline-edit); }
+    .timeline-pill-done { background-color: var(--timeline-done); color: #ffffff; }
+
+    /* ── DESIGN.md code block + IDE pane ── */
+    .cursor-code-block {
+        background-color: var(--surface-base);
+        border: 1px solid var(--stroke-subtle);
+        border-radius: 12px;
+        padding: 20px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-primary);
+    }
+
+    .cursor-ide-pane {
+        background-color: var(--surface-overlay);
+        border-radius: 8px;
+        padding: 16px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--text-secondary);
     }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Jump-to-line highlight
+   Dark-mode remaps — the previous Quiet Dark Mode enforcement, now scoped so
+   light mode (the default) is untouched. All blue/purple/green/amber/sky/pink
+   families collapse to muted system tokens; no neon, no pure white surfaces.
    ───────────────────────────────────────────────────────────────────────────── */
-.gb-jump-highlight {
-    background-color: rgba(224, 120, 86, 0.25);
-    box-shadow: inset 3px 0 0 0 #e07856 !important;
-    transition: background-color 200ms ease-out;
+@layer utilities {
+    .dark .bg-gray-950 { background-color: #0d0d0d !important; }
+    .dark .bg-gray-900 { background-color: #161616 !important; }
+    .dark .bg-gray-800 { background-color: #161616 !important; }
+    .dark .bg-gray-700 { background-color: #1c1c1c !important; }
+    .dark .bg-gray-600 { background-color: #242424 !important; }
+    .dark .bg-gray-800\/50 { background-color: rgba(22, 22, 22, 0.7) !important; }
+    .dark .bg-gray-900\/50 { background-color: rgba(22, 22, 22, 0.7) !important; }
+    .dark .bg-gray-900\/20 { background-color: rgba(22, 22, 22, 0.3) !important; }
+    .dark .hover\:bg-gray-800:hover,
+    .dark .hover\:bg-gray-700:hover { background-color: #1c1c1c !important; }
+    .dark .hover\:bg-gray-600:hover { background-color: #242424 !important; }
+    .dark .border-gray-800,
+    .dark .border-gray-700 { border-color: #2a2a2a !important; }
+    .dark .border-gray-600,
+    .dark .border-gray-500 { border-color: #3a3a3a !important; }
+    .dark .text-gray-600,
+    .dark .text-gray-500 { color: #5c5c5c !important; }
+    .dark .text-gray-400,
+    .dark .text-gray-300 { color: #8a8a8a !important; }
+    .dark .text-gray-200,
+    .dark .text-gray-100,
+    .dark .text-white { color: #e8e8e8 !important; }
+
+    /* Blue family → surface tokens / accent */
+    .dark .bg-blue-50, .dark .bg-blue-100, .dark .bg-blue-200 { background-color: #1c1c1c !important; }
+    .dark .bg-blue-300, .dark .bg-blue-400, .dark .bg-blue-500, .dark .bg-blue-600, .dark .bg-blue-700, .dark .bg-blue-800, .dark .bg-blue-900 { background-color: #1c1c1c !important; }
+    .dark .text-blue-50, .dark .text-blue-100, .dark .text-blue-200, .dark .text-blue-300, .dark .text-blue-400, .dark .text-blue-500 { color: #8a8a8a !important; }
+    .dark .text-blue-600, .dark .text-blue-700, .dark .text-blue-800, .dark .text-blue-900 { color: #8a8a8a !important; }
+    .dark .border-blue-200, .dark .border-blue-300, .dark .border-blue-400, .dark .border-blue-500, .dark .border-blue-600, .dark .border-blue-700 { border-color: #2a2a2a !important; }
+    .dark .hover\:bg-blue-700:hover, .dark .hover\:bg-blue-600:hover, .dark .hover\:bg-blue-500:hover { background-color: #242424 !important; }
+
+    /* Purple / Indigo / Violet family → surface tokens */
+    .dark .bg-purple-50, .dark .bg-purple-100, .dark .bg-purple-500, .dark .bg-purple-600, .dark .bg-purple-700, .dark .bg-purple-800, .dark .bg-purple-900 { background-color: #1c1c1c !important; }
+    .dark .bg-indigo-50, .dark .bg-indigo-100, .dark .bg-indigo-500, .dark .bg-indigo-600, .dark .bg-indigo-700 { background-color: #1c1c1c !important; }
+    .dark .bg-violet-50, .dark .bg-violet-100, .dark .bg-violet-500, .dark .bg-violet-600, .dark .bg-violet-700 { background-color: #1c1c1c !important; }
+    .dark .text-purple-300, .dark .text-purple-400, .dark .text-purple-500, .dark .text-purple-600, .dark .text-purple-700 { color: #8a8a8a !important; }
+    .dark .text-indigo-300, .dark .text-indigo-400, .dark .text-indigo-500, .dark .text-indigo-600 { color: #8a8a8a !important; }
+    .dark .hover\:bg-purple-700:hover, .dark .hover\:bg-purple-600:hover { background-color: #242424 !important; }
+
+    /* Emerald / Green family → success token */
+    .dark .bg-emerald-400, .dark .bg-emerald-500, .dark .bg-emerald-600, .dark .bg-emerald-700 { background-color: #3ecf5e !important; }
+    .dark .bg-green-500, .dark .bg-green-600 { background-color: #3ecf5e !important; }
+    .dark .text-emerald-300, .dark .text-emerald-400, .dark .text-emerald-500 { color: #3ecf5e !important; }
+    .dark .text-green-400, .dark .text-green-500 { color: #3ecf5e !important; }
+
+    /* Amber / Yellow / Orange warning band */
+    .dark .bg-amber-50, .dark .bg-amber-100 { background-color: #1c1c1c !important; }
+    .dark .text-amber-100, .dark .text-amber-200, .dark .text-amber-300, .dark .text-amber-400, .dark .text-amber-500 { color: #8a8a8a !important; }
+    .dark .text-yellow-400, .dark .text-yellow-500 { color: #8a8a8a !important; }
+    .dark .text-orange-400, .dark .text-orange-500 { color: #e07856 !important; }
+
+    /* Sky / Cyan / Teal family */
+    .dark .bg-sky-50 { background-color: #1c1c1c !important; }
+    .dark .text-sky-300, .dark .text-sky-400 { color: #8a8a8a !important; }
+    .dark .text-cyan-400, .dark .text-teal-400 { color: #8a8a8a !important; }
+
+    /* Pink / Rose / Red families → danger token */
+    .dark .bg-pink-500, .dark .bg-pink-600 { background-color: #e5484d !important; }
+    .dark .text-pink-400, .dark .text-pink-500, .dark .text-rose-400, .dark .text-rose-500 { color: #e5484d !important; }
+    .dark .bg-red-50, .dark .bg-red-100 { background-color: #1c1c1c !important; }
+    .dark .text-red-400, .dark .text-red-500, .dark .text-red-600 { color: #e5484d !important; }
+
+    /* White backgrounds → panel surface (dark only) */
+    .dark .bg-white { background-color: #161616 !important; }
+    .dark .bg-white\/95 { background-color: rgba(22, 22, 22, 0.97) !important; }
+    .dark .bg-gray-50, .dark .bg-gray-100 { background-color: #161616 !important; }
+    .dark .bg-gray-200 { background-color: #1c1c1c !important; }
+    .dark .text-gray-900 { color: #e8e8e8 !important; }
+    .dark .text-gray-700, .dark .text-gray-800 { color: #8a8a8a !important; }
+    .dark .bg-yellow-100 { background-color: rgba(224, 120, 86, 0.08) !important; }
+    .dark .text-yellow-700, .dark .text-yellow-400 { color: #e07856 !important; }
+    .dark .bg-orange-50, .dark .bg-orange-100 { background-color: #1c1c1c !important; }
+    .dark .text-orange-600 { color: #e07856 !important; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Global color-family remaps — Quiet Dark Mode enforcement
-   All blue / purple / indigo / violet / cyan / teal / sky → muted system tokens
-   All amber / yellow / orange (non-accent) → muted warning or text-secondary
-   All emerald / lime / green → success token
-   No white backgrounds, no neon, no light-mode surfaces anywhere
+   Jump-to-line highlight (theme-aware)
    ───────────────────────────────────────────────────────────────────────────── */
-@layer utilities {
-
-    /* ── Blue family → surface tokens / accent ── */
-    .bg-blue-50, .bg-blue-100, .bg-blue-200 { background-color: #1c1c1c !important; }
-    .bg-blue-300, .bg-blue-400, .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-blue-800, .bg-blue-900 { background-color: #1c1c1c !important; }
-    .text-blue-50, .text-blue-100, .text-blue-200, .text-blue-300, .text-blue-400, .text-blue-500 { color: #8a8a8a !important; }
-    .text-blue-600, .text-blue-700, .text-blue-800, .text-blue-900 { color: #8a8a8a !important; }
-    .border-blue-200, .border-blue-300, .border-blue-400, .border-blue-500, .border-blue-600, .border-blue-700 { border-color: #2a2a2a !important; }
-    .ring-blue-500, .ring-blue-600 { --tw-ring-color: #e07856 !important; }
-    .hover\:bg-blue-700:hover, .hover\:bg-blue-600:hover, .hover\:bg-blue-500:hover { background-color: #242424 !important; }
-    .hover\:bg-blue-50:hover, .hover\:bg-blue-100:hover { background-color: #1c1c1c !important; }
-    .focus\:border-blue-500:focus, .focus\:ring-blue-500:focus { border-color: #e07856 !important; }
-
-    /* ── Purple / Indigo / Violet family → surface tokens ── */
-    .bg-purple-50, .bg-purple-100, .bg-purple-500, .bg-purple-600, .bg-purple-700, .bg-purple-800, .bg-purple-900 { background-color: #1c1c1c !important; }
-    .bg-indigo-50, .bg-indigo-100, .bg-indigo-500, .bg-indigo-600, .bg-indigo-700 { background-color: #1c1c1c !important; }
-    .bg-violet-50, .bg-violet-100, .bg-violet-500, .bg-violet-600, .bg-violet-700 { background-color: #1c1c1c !important; }
-    .text-purple-300, .text-purple-400, .text-purple-500, .text-purple-600, .text-purple-700 { color: #8a8a8a !important; }
-    .text-indigo-300, .text-indigo-400, .text-indigo-500, .text-indigo-600 { color: #8a8a8a !important; }
-    .text-violet-300, .text-violet-400, .text-violet-500 { color: #8a8a8a !important; }
-    .border-purple-500, .border-purple-600, .border-indigo-500, .border-violet-500 { border-color: #2a2a2a !important; }
-    .hover\:bg-purple-700:hover, .hover\:bg-purple-600:hover { background-color: #242424 !important; }
-
-    /* ── Emerald / Green / Lime family → success token ── */
-    .bg-emerald-400, .bg-emerald-500, .bg-emerald-600, .bg-emerald-700 { background-color: #3ecf5e !important; }
-    .bg-emerald-500\/15, .bg-emerald-500\/10 { background-color: rgba(62, 207, 94, 0.12) !important; }
-    .bg-green-500, .bg-green-600 { background-color: #3ecf5e !important; }
-    .text-emerald-300, .text-emerald-400, .text-emerald-500 { color: #3ecf5e !important; }
-    .text-green-400, .text-green-500 { color: #3ecf5e !important; }
-    .hover\:bg-emerald-700:hover, .hover\:bg-green-700:hover { background-color: rgba(62, 207, 94, 0.2) !important; }
-
-    /* ── Amber / Yellow / Orange (warning band) → muted secondary / accent ── */
-    .bg-amber-50, .bg-amber-100 { background-color: #1c1c1c !important; }
-    .bg-amber-500\/10, .bg-amber-500\/15, .bg-amber-500\/20 { background-color: rgba(224, 120, 86, 0.08) !important; }
-    .text-amber-100, .text-amber-200, .text-amber-300, .text-amber-400, .text-amber-500 { color: #8a8a8a !important; }
-    .text-amber-200\/60, .text-amber-200\/70 { color: #5c5c5c !important; }
-    .text-yellow-400, .text-yellow-500 { color: #8a8a8a !important; }
-    .text-orange-400, .text-orange-500 { color: #e07856 !important; }
-    .border-amber-200, .border-amber-500\/30 { border-color: #2a2a2a !important; }
-    .hover\:bg-amber-500\/30:hover { background-color: rgba(224, 120, 86, 0.12) !important; }
-
-    /* ── Sky / Cyan / Teal family → secondary text / surface ── */
-    .bg-sky-50, .bg-sky-500\/15 { background-color: #1c1c1c !important; }
-    .text-sky-300, .text-sky-400 { color: #8a8a8a !important; }
-    .text-sky-300\/80, .text-sky-300\/70 { color: #5c5c5c !important; }
-    .text-cyan-400, .text-teal-400 { color: #8a8a8a !important; }
-
-    /* ── Pink / Rose family → danger token ── */
-    .bg-pink-500, .bg-pink-600 { background-color: #e5484d !important; }
-    .text-pink-400, .text-pink-500, .text-rose-400, .text-rose-500 { color: #e5484d !important; }
-
-    /* ── Red family → danger token ── */
-    .bg-red-50, .bg-red-100 { background-color: #1c1c1c !important; }
-    .bg-red-500\/15 { background-color: rgba(229, 72, 77, 0.12) !important; }
-    .text-red-400, .text-red-500, .text-red-600 { color: #e5484d !important; }
-    .border-red-300, .border-red-400 { border-color: rgba(229, 72, 77, 0.35) !important; }
-
-    /* ── White backgrounds → panel surface ── */
-    .bg-white { background-color: #161616 !important; }
-    .bg-white\/95 { background-color: rgba(22, 22, 22, 0.97) !important; }
-    .bg-white\/10, .bg-white\/5 { background-color: rgba(255, 255, 255, 0.04) !important; }
-    .hover\:bg-white\/10:hover, .hover\:bg-white\/5:hover { background-color: rgba(255, 255, 255, 0.05) !important; }
-    .border-white\/10, .border-white\/20 { border-color: #2a2a2a !important; }
-    .text-white { color: #e8e8e8 !important; }
-
-    /* ── Light mode gray surfaces → dark equivalents ── */
-    .bg-gray-50, .bg-gray-100 { background-color: #161616 !important; }
-    .bg-gray-200 { background-color: #1c1c1c !important; }
-    .border-gray-200, .border-gray-300 { border-color: #2a2a2a !important; }
-    .text-gray-900 { color: #e8e8e8 !important; }
-    .text-gray-700, .text-gray-800 { color: #8a8a8a !important; }
-    .hover\:text-gray-900:hover, .hover\:text-gray-800:hover { color: #e8e8e8 !important; }
-    .hover\:bg-black\/5:hover { background-color: rgba(255, 255, 255, 0.03) !important; }
-
-    /* ── Dark difficulty badges (template selector etc.) ── */
-    .bg-yellow-100, .bg-yellow-500\/20 { background-color: rgba(224, 120, 86, 0.08) !important; }
-    .text-yellow-700, .text-yellow-400 { color: #e07856 !important; }
-    .dark\:bg-yellow-500\/20 { background-color: rgba(224, 120, 86, 0.08) !important; }
-    .dark\:text-yellow-400 { color: #e07856 !important; }
-
-    /* ── Bright / saturated orange → accent ── */
-    .bg-orange-50, .bg-orange-100 { background-color: #1c1c1c !important; }
-    .border-orange-200 { border-color: #2a2a2a !important; }
-    .text-orange-600 { color: #e07856 !important; }
-
-    /* ── Loading / spinner ── */
-    .animate-spin.text-blue-400 { color: #8a8a8a !important; }
+.gb-jump-highlight {
+    background-color: var(--accent-subtle);
+    box-shadow: inset 3px 0 0 0 var(--accent) !important;
+    transition: background-color 200ms ease-out;
 }
 
-/* ── Force the body background and ensure no pure-white surfaces leak through ── */
+/* ── Force the body background via vars (theme-aware) ── */
 html, body, #root {
-    background-color: #0d0d0d;
-    color: #e8e8e8;
+    background-color: var(--surface-canvas);
+    color: var(--text-primary);
 }
 
-/* ── Backdrop overrides — modals should use dark overlay ── */
-.bg-black\/70 { background-color: rgba(0, 0, 0, 0.75) !important; }
-.bg-black\/50 { background-color: rgba(0, 0, 0, 0.6) !important; }
-.bg-black\/30 { background-color: rgba(0, 0, 0, 0.4) !important; }
-
-
+/* ── Backdrop overlays ── */
+.bg-black\/70 { background-color: rgba(38, 37, 30, 0.45) !important; }
+.dark .bg-black\/70 { background-color: rgba(0, 0, 0, 0.75) !important; }
+.bg-black\/50 { background-color: rgba(38, 37, 30, 0.35) !important; }
+.dark .bg-black\/50 { background-color: rgba(0, 0, 0, 0.6) !important; }
+.bg-black\/30 { background-color: rgba(38, 37, 30, 0.22) !important; }
+.dark .bg-black\/30 { background-color: rgba(0, 0, 0, 0.4) !important; }

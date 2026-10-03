@@ -23,95 +23,128 @@ export default {
       },
 
       // ─── Color palette ────────────────────────────────────────────────────
-      // Quiet dark mode: near-black #0d0d0d canvas, #161616 panel/card surface,
-      // #1c1c1c secondary surface, #2a2a2a hairline borders, off-white #e8e8e8 text,
-      // muted secondary #8a8a8a, faint #5c5c5c, warm terracotta #e07856 accent,
-      // muted green #3ecf5e success, muted red #e5484d danger. Zero neon, zero pure white.
+      // DESIGN.md (Cursor editorial light) is the default theme; dark quiet
+      // mode lives under `.dark`. All theme-aware tokens resolve via CSS vars
+      // defined in src/index.css so the existing `surface-*` / `stroke-*` /
+      // `content-*` / `accent-*` classes auto-switch with the toggle.
+      // Light: canvas #f7f7f4, card #ffffff, ink #26251e, accent #f54e00.
+      // Dark:  canvas #0d0d0d, panel #161616, text #e8e8e8, accent #e07856.
       colors: {
         surface: {
-          canvas: '#0d0d0d', // base background (near-black)
-          base: '#161616', // panel/card background
-          raised: '#161616', // panel/card background
-          overlay: '#1c1c1c', // secondary surface / inputs / buttons / hover
-          hover: '#242424', // panel hover / active surfaces
+          canvas: 'var(--surface-canvas)',
+          base: 'var(--surface-base)',
+          raised: 'var(--surface-raised)',
+          overlay: 'var(--surface-overlay)',
+          hover: 'var(--surface-hover)',
         },
         stroke: {
-          subtle: '#2a2a2a', // hairline divider / border
-          DEFAULT: '#2a2a2a',
-          strong: '#3a3a3a', // subtle emphasis border
+          subtle: 'var(--stroke-subtle)',
+          DEFAULT: 'var(--stroke-subtle)',
+          strong: 'var(--stroke-strong)',
         },
         content: {
-          primary: '#e8e8e8', // primary text (off-white, never pure #fff)
-          secondary: '#8a8a8a', // secondary text / sublabels / category headers
-          muted: '#5c5c5c', // faint / disabled text / placeholders
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          muted: 'var(--text-muted)',
         },
         accent: {
-          subtle: 'rgba(224, 120, 86, 0.12)',
-          muted: '#c86343',
-          DEFAULT: '#e07856', // warm burnt-orange / terracotta
-          hover: '#e88a6d',
-          fg: '#e8e8e8',
+          subtle: 'var(--accent-subtle)',
+          muted: 'var(--accent-muted)',
+          DEFAULT: 'var(--accent)',
+          hover: 'var(--accent-hover)',
+          fg: 'var(--accent-fg)',
         },
         success: {
-          DEFAULT: '#3ecf5e', // muted green
-          subtle: 'rgba(62, 207, 94, 0.12)',
+          DEFAULT: 'var(--success)',
+          subtle: 'var(--success-subtle)',
         },
         danger: {
-          DEFAULT: '#e5484d', // muted red
-          subtle: 'rgba(229, 72, 77, 0.12)',
+          DEFAULT: 'var(--danger)',
+          subtle: 'var(--danger-subtle)',
+        },
+
+        // DESIGN.md first-class tokens (use directly for new work)
+        cursor: {
+          canvas: '#f7f7f4',
+          'canvas-soft': '#fafaf7',
+          card: '#ffffff',
+          strong: '#e6e5e0',
+          ink: '#26251e',
+          body: '#5a5852',
+          muted: '#807d72',
+          'muted-soft': '#a09c92',
+          hairline: '#e6e5e0',
+          'hairline-soft': '#efeee8',
+          'hairline-strong': '#cfcdc4',
+          primary: '#f54e00',
+          'primary-active': '#d04200',
+          'on-primary': '#ffffff',
+          'timeline-thinking': '#dfa88f',
+          'timeline-grep': '#9fc9a2',
+          'timeline-read': '#9fbbe0',
+          'timeline-edit': '#c0a8dd',
+          'timeline-done': '#c08532',
+          success: '#1f8a65',
+          error: '#cf2d56',
         },
 
         /*
          * Panel hierarchy for VS Code mode
          */
         vsc: {
-          editor: '#0d0d0d',
-          sidebar: '#161616',
-          tabbar: '#161616',
-          panel: '#161616',
-          border: '#2a2a2a',
-          borderStrong: '#3a3a3a',
-          text: '#e8e8e8',
-          textMuted: '#8a8a8a',
-          indent: '#2a2a2a',
+          editor: 'var(--surface-canvas)',
+          sidebar: 'var(--surface-base)',
+          tabbar: 'var(--surface-base)',
+          panel: 'var(--surface-base)',
+          border: 'var(--stroke-subtle)',
+          borderStrong: 'var(--stroke-strong)',
+          text: 'var(--text-primary)',
+          textMuted: 'var(--text-secondary)',
+          indent: 'var(--stroke-subtle)',
         },
 
-        // VS Code Dark Theme Colors
-        'vscode-editor': '#0d0d0d',
-        'vscode-sidebar': '#161616',
-        'vscode-activitybar': '#161616',
-        'vscode-panel': '#161616',
-        'vscode-border': '#2a2a2a',
-        'vscode-selection': '#2a2a2a',
-        'vscode-statusbar': '#161616',
-        'vscode-text': '#e8e8e8',
-        'vscode-text-dim': '#8a8a8a',
-        'vscode-line-highlight': '#1c1c1c',
-        'vscode-hover': '#1c1c1c',
-        'vscode-active': '#242424',
-        'vscode-focus-border': '#e07856',
-        'vscode-tab-inactive': '#161616',
+        // VS Code Theme Colors (theme-aware via vars)
+        'vscode-editor': 'var(--surface-canvas)',
+        'vscode-sidebar': 'var(--surface-base)',
+        'vscode-activitybar': 'var(--surface-base)',
+        'vscode-panel': 'var(--surface-base)',
+        'vscode-border': 'var(--stroke-subtle)',
+        'vscode-selection': 'var(--vscode-selection)',
+        'vscode-statusbar': 'var(--surface-base)',
+        'vscode-text': 'var(--text-primary)',
+        'vscode-text-dim': 'var(--text-secondary)',
+        'vscode-line-highlight': 'var(--surface-overlay)',
+        'vscode-hover': 'var(--surface-overlay)',
+        'vscode-active': 'var(--surface-hover)',
+        'vscode-focus-border': 'var(--accent)',
+        'vscode-tab-inactive': 'var(--surface-base)',
 
-        // Legacy aliases
-        'matte-black': '#0d0d0d',
-        'bright-white': '#e8e8e8',
-        'dark-gray': '#161616',
-        'light-gray': '#242424',
+        // Legacy aliases (theme-aware)
+        'matte-black': 'var(--surface-canvas)',
+        'bright-white': 'var(--text-primary)',
+        'dark-gray': 'var(--surface-base)',
+        'light-gray': 'var(--surface-hover)',
       },
 
       // ─── Typography ───────────────────────────────────────────────────────
-      // Pure system-ui stack — no custom webfont, no serif, no display font.
+      // DESIGN.md: CursorGothic (licensed) → Inter substitute for display/body,
+      // JetBrains Mono on every code surface.
       fontFamily: {
         sans: [
+          'Inter',
+          "'CursorGothic'",
           '-apple-system',
           'BlinkMacSystemFont',
           '"Segoe UI"',
           'Roboto',
+          '"Helvetica Neue"',
           'Helvetica',
           'Arial',
           'sans-serif',
         ],
         mono: [
+          "'JetBrains Mono'",
+          "'Fira Code'",
           'ui-monospace',
           'SFMono-Regular',
           'Menlo',
@@ -123,9 +156,9 @@ export default {
         ],
       },
 
-      // Dense, utilitarian developer-tool type scale
+      // Dense, utilitarian developer-tool type scale + DESIGN.md display scale
       fontSize: {
-        '2xs': ['11px', { lineHeight: '1.4' }],
+        '2xs': ['11px', { lineHeight: '1.4', letterSpacing: '0.88px' }],
         xs: ['12px', { lineHeight: '1.4' }],
         'sm-sub': ['12.5px', { lineHeight: '1.4' }],
         sm: ['13.5px', { lineHeight: '1.5' }],
@@ -133,7 +166,11 @@ export default {
         md: ['15px', { lineHeight: '1.4' }],
         lg: ['18px', { lineHeight: '1.3' }],
         xl: ['20px', { lineHeight: '1.25' }],
-        '2xl': ['22px', { lineHeight: '1.2' }],
+        '2xl': ['22px', { lineHeight: '1.2', letterSpacing: '-0.11px' }],
+        'display-sm': ['22px', { lineHeight: '1.3', letterSpacing: '-0.11px' }],
+        'display-md': ['26px', { lineHeight: '1.25', letterSpacing: '-0.325px' }],
+        'display-lg': ['36px', { lineHeight: '1.2', letterSpacing: '-0.72px' }],
+        'display-mega': ['72px', { lineHeight: '1.1', letterSpacing: '-2.16px' }],
       },
 
       // ─── Spacing ──────────────────────────────────────────────────────────
@@ -149,14 +186,15 @@ export default {
       },
 
       // ─── Radius ───────────────────────────────────────────────────────────
-      // 8px cards · 6px buttons/inputs · 4px small badges/tags.
+      // DESIGN.md: 4px tags · 8px CTAs/inputs · 12px cards/panes · 16px large ·
+      // pill 9999px for timeline pills/badges.
       borderRadius: {
         sm: '4px',
-        DEFAULT: '6px',
-        md: '6px',
-        lg: '8px',
-        xl: '8px',
-        '2xl': '8px',
+        DEFAULT: '8px',
+        md: '8px',
+        lg: '12px',
+        xl: '16px',
+        '2xl': '16px',
       },
 
       borderColor: {

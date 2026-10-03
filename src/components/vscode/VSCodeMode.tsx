@@ -22,7 +22,8 @@ import FileTreeView from './FileTreeView';
 import TerminalTab from '../Console/TerminalTab';
 import SandboxPanel from '../sandbox/SandboxPanel';
 import Tooltip from '../ui/Tooltip';
-import { GB_CODER_MONACO_THEME, defineGbCoderTheme } from '../../utils/monacoTheme';
+import { monacoThemeFor, defineGbCoderTheme } from '../../utils/monacoTheme';
+import { useTheme } from '../../hooks/useTheme';
 import { MultiFileProject } from '../../types/files';
 import { sandboxSession } from '../../services/sandbox/sandboxSession';
 import { carriesFiles, collectTransfer } from '../../utils/dropTransfer';
@@ -166,6 +167,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   onOpenProjects,
 }) => {
   const sandbox = useSyncExternalStore(subscribeSandbox, getSandboxSnapshot, getSandboxSnapshot);
+  const { isDark } = useTheme();
 
   /*
    * Tabs come back from the previous visit, reconciled against the files that
@@ -692,7 +694,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 onChange={handleChange}
                 beforeMount={defineGbCoderTheme}
                 onMount={handleEditorMount}
-                theme={GB_CODER_MONACO_THEME}
+                theme={monacoThemeFor(isDark)}
                 options={{
                   fontFamily,
                   fontSize,
