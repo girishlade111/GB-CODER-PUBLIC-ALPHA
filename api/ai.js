@@ -25,16 +25,16 @@ try {
 
 // ─── Config & AI Provider Resolution ──────────────────────────────────────────
 
-function getProviderConfig() {
-  const provider = (process.env.AI_PROVIDER || '').trim().toLowerCase();
+function getProviderConfig(requestedProvider, customApiKey) {
+  const provider = (requestedProvider || process.env.AI_PROVIDER || '').trim().toLowerCase();
 
   // 1. Inception Labs (Mercury 2.5 - Ultra-fast reasoning & code gen)
-  if (provider === 'inception' || (!provider && process.env.INCEPTION_API_KEY)) {
+  if (provider === 'inception' || (!provider && (customApiKey || process.env.INCEPTION_API_KEY))) {
     return {
       id: 'inception',
       name: 'Inception Labs',
       invokeUrl: `${(process.env.INCEPTION_BASE_URL || 'https://api.inceptionlabs.ai/v1').replace(/\/+$/, '')}/chat/completions`,
-      apiKey: process.env.INCEPTION_API_KEY,
+      apiKey: customApiKey || process.env.INCEPTION_API_KEY,
       model: process.env.INCEPTION_MODEL || 'mercury-2.5',
       keyEnvName: 'INCEPTION_API_KEY',
       clampTemp: true,
@@ -43,12 +43,12 @@ function getProviderConfig() {
   }
 
   // 2. Atria ASI (Atria-Dawn-Preview - Deep reasoning & 256k context)
-  if (provider === 'atria' || (!provider && process.env.ATRIA_API_KEY)) {
+  if (provider === 'atria' || (!provider && (customApiKey || process.env.ATRIA_API_KEY))) {
     return {
       id: 'atria',
       name: 'Atria ASI',
       invokeUrl: `${(process.env.ATRIA_BASE_URL || 'https://api.atria-asi.ai/v1').replace(/\/+$/, '')}/chat/completions`,
-      apiKey: process.env.ATRIA_API_KEY,
+      apiKey: customApiKey || process.env.ATRIA_API_KEY,
       model: process.env.ATRIA_MODEL || 'Atria-Dawn-Preview',
       keyEnvName: 'ATRIA_API_KEY',
     };
@@ -57,9 +57,9 @@ function getProviderConfig() {
   // 3. Fallback to NVIDIA NIM
   return {
     id: 'nvidia',
-    name: 'NVIDIA AI',
+    name: 'NVIDIA NIM',
     invokeUrl: `${(process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1').replace(/\/+$/, '')}/chat/completions`,
-    apiKey: process.env.NVIDIA_API_KEY,
+    apiKey: customApiKey || process.env.NVIDIA_API_KEY,
     model: process.env.NVIDIA_MODEL || 'qwen/qwen3.5-397b-a17b',
     keyEnvName: 'NVIDIA_API_KEY',
     isNvidia: true,
@@ -581,11 +581,11 @@ function satisfiesContract(feature, parsed) {
 
 // ─── AI Provider caller (supports Inception Labs, Atria ASI, NVIDIA NIM) ────────
 
-async function callAI(messages, options = {}) {
-  const provider = getProviderConfig();
+async function callAI(messages, options = {}, requestedProvider, customApiKey) {
+  const provider = getProviderConfig(requestedProvider, customApiKey);
 
   if (!provider.apiKey) {
-    throw new Error(`${provider.keyEnvName} is not set in environment variables.`);
+    throw new Error(`${provider.keyEnvName} is not configured.`);
   }
 
   let { stream = false, temperature = 0.6, maxTokens = 16384 } = options;
@@ -664,12 +664,12 @@ const callNvidiaAI = callAI;
  * matching the feature contract, retries EXACTLY ONCE with a stricter
  * "Return ONLY valid JSON, nothing else" instruction appended.
  */
-async function completeWithJsonRetry(feature, payload, options) {
+async function completeWithJsonRetry(feature, payload, options, requestedProvider, customApiKey) {
   let firstError = null;
   let rawFirst = '';
 
   try {
-    rawFirst = await callNvidiaAI(buildMessages(feature, payload, false), options);
+    rawFirst = await callAI(buildMessages(feature, payload, false), options, requestedProvider, customApiKey);
     const parsed = tryParseJsonObject(rawFirst);
     if (satisfiesContract(feature, parsed)) {
       return { raw: rawFirst, retried: false };
@@ -680,7 +680,7 @@ async function completeWithJsonRetry(feature, payload, options) {
 
   // ── Single stricter retry ──
   try {
-    const rawSecond = await callNvidiaAI(buildMessages(feature, payload, true), options);
+    const rawSecond = await callAI(buildMessages(feature, payload, true), options, requestedProvider, customApiKey);
     const parsed = tryParseJsonObject(rawSecond);
     if (satisfiesContract(feature, parsed)) {
       return { raw: rawSecond, retried: true };
