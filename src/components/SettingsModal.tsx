@@ -208,7 +208,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                     }`}
                                 >
                                     <div
-                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-[#e8e8e8] rounded-full transition-transform ${
+                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-content-on-dark rounded-full transition-transform ${
                                             settings.autoRunJS ? 'translate-x-4' : 'translate-x-0'
                                         }`}
                                     />
@@ -292,7 +292,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                     } ${!voiceSynthesisSupported ? 'opacity-40 cursor-not-allowed' : ''}`}
                                 >
                                     <div
-                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-[#e8e8e8] rounded-full transition-transform ${
+                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-content-on-dark rounded-full transition-transform ${
                                             settings.voiceFeedback ? 'translate-x-4' : 'translate-x-0'
                                         }`}
                                     />
@@ -319,7 +319,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                     }`}
                                 >
                                     <div
-                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-[#e8e8e8] rounded-full transition-transform ${
+                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-content-on-dark rounded-full transition-transform ${
                                             settings.voiceContinuous ? 'translate-x-4' : 'translate-x-0'
                                         }`}
                                     />
@@ -430,7 +430,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                     }`}
                                 >
                                     <div
-                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-[#e8e8e8] rounded-full transition-transform ${
+                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-content-on-dark rounded-full transition-transform ${
                                             !focusMode ? 'translate-x-4' : 'translate-x-0'
                                         }`}
                                     />

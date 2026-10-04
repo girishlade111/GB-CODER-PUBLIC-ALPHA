@@ -177,11 +177,11 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
       case 'listening':
         return 'bg-teal/12 text-teal';
       case 'processing':
-        return 'bg-[#8a8a8a]/12 text-content-on-dark-soft';
+        return 'bg-white/10 text-content-on-dark-soft';
       case 'done':
         return 'bg-accent/12 text-accent';
       case 'switching':
-        return 'bg-[#8a8a8a]/12 text-content-on-dark-soft';
+        return 'bg-white/10 text-content-on-dark-soft';
       case 'confirming':
         return 'bg-accent/10 text-accent';
       case 'error':
