@@ -617,7 +617,6 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .card {
   display: grid; gap: .4rem; align-content: start;
   padding: 1.1rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-2);
-  will-change: transform, opacity;
 }
 .card__no { font-family: var(--font-display); font-size: .72rem; font-weight: 700; color: var(--accent); letter-spacing: .1em; }
 .card__title { font-size: 1rem; }
