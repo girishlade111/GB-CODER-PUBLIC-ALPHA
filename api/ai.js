@@ -804,9 +804,9 @@ module.exports = async function handler(req, res) {
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
 
-      let nvidiaStream;
+      let aiStream;
       try {
-        nvidiaStream = await callNvidiaAI(messages, { stream: true, temperature: 0.7 });
+        aiStream = await callAI(messages, { stream: true, temperature: 0.7 }, requestedProvider, customApiKey);
       } catch (err) {
         res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
         res.end();
@@ -815,7 +815,7 @@ module.exports = async function handler(req, res) {
 
       let buffer = '';
 
-      nvidiaStream.on('data', (chunk) => {
+      aiStream.on('data', (chunk) => {
         buffer += chunk.toString();
         const lines = buffer.split('\n');
         buffer = lines.pop() ?? '';
@@ -835,12 +835,12 @@ module.exports = async function handler(req, res) {
         }
       });
 
-      nvidiaStream.on('end', () => {
+      aiStream.on('end', () => {
         res.write('data: [DONE]\n\n');
         res.end();
       });
 
-      nvidiaStream.on('error', () => {
+      aiStream.on('error', () => {
         try {
           res.write(`data: ${JSON.stringify({ error: 'Stream interrupted.' })}\n\n`);
           res.end();
@@ -849,12 +849,14 @@ module.exports = async function handler(req, res) {
 
       req.on('close', () => {
         try {
-          nvidiaStream.destroy();
+          aiStream.destroy();
         } catch {}
       });
 
       return;
     }
+
+    const activeProvider = getProviderConfig(requestedProvider, customApiKey);
 
     // ── JSON-mode core features: fix / optimize / enhance / generate ───────
     if (feature === 'fix' || feature === 'optimize' || feature === 'enhance' || feature === 'generate') {
@@ -864,35 +866,42 @@ module.exports = async function handler(req, res) {
           ? { stream: false, temperature: 0.55, maxTokens: 8192 }
           : { stream: false, temperature: 0.15, maxTokens: 16384 };
 
-      const { raw, retried, malformed } = await completeWithJsonRetry(feature, payload, options);
+      const { raw, retried, malformed } = await completeWithJsonRetry(feature, payload, options, requestedProvider, customApiKey);
 
-      return res.json({ result: raw, jsonMode: true, retried: !!retried, malformed: !!malformed });
+      return res.json({
+        result: raw,
+        jsonMode: true,
+        retried: !!retried,
+        malformed: !!malformed,
+        provider: activeProvider.name,
+        model: activeProvider.model,
+      });
     }
 
     // ── Plain-text core feature: explain ──────────────────────────────────
     if (feature === 'explain') {
-      const result = await callNvidiaAI(buildMessages(feature, payload), {
+      const result = await callAI(buildMessages(feature, payload), {
         stream: false,
         temperature: 0.3,
         maxTokens: 1024,
-      });
-      return res.json({ result, jsonMode: false });
+      }, requestedProvider, customApiKey);
+      return res.json({ result, jsonMode: false, provider: activeProvider.name, model: activeProvider.model });
     }
 
     // ── Secondary features ────────────────────────────────────────────────
-    const result = await callNvidiaAI(buildMessages(feature, payload), {
+    const result = await callAI(buildMessages(feature, payload), {
       stream: false,
       temperature: 0.6,
-    });
+    }, requestedProvider, customApiKey);
 
     if (feature === 'inline-edit') {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       return res.status(200).send(result);
     }
 
-    return res.json({ result });
+    return res.json({ result, provider: activeProvider.name, model: activeProvider.model });
   } catch (err) {
-    const provider = getProviderConfig();
+    const provider = getProviderConfig(requestedProvider, customApiKey);
     const message = err?.message || 'Unknown error';
     const clientMsg =
       message.includes(provider.keyEnvName) || message.includes('API_KEY')
