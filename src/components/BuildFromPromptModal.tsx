@@ -367,6 +367,54 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
           </button>
         </div>
 
+        {/* Model Provider Selector */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[12px] font-medium text-content-on-dark-soft">
+              AI Model:
+            </span>
+            <span className="text-[11.5px] font-mono text-content-on-dark-soft">
+              {AI_PROVIDERS.find((p) => p.id === selectedProvider)?.model}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {AI_PROVIDERS.map((p) => {
+              const isSelected = selectedProvider === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => handleProviderSelect(p.id)}
+                  disabled={isLoading}
+                  className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all ${
+                    isSelected
+                      ? 'border-accent bg-accent/15 text-content-on-dark shadow-sm ring-1 ring-accent/30'
+                      : 'border-stroke-dark bg-product hover:border-stroke-subtle text-content-on-dark-soft hover:text-content-on-dark'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-[12px] font-medium leading-tight">
+                      {p.name}
+                    </span>
+                    <span
+                      className={`text-[9.5px] px-1.5 py-0.5 rounded font-mono font-medium leading-tight ${
+                        isSelected
+                          ? 'bg-accent text-white'
+                          : 'bg-product-elevated text-content-on-dark-soft'
+                      }`}
+                    >
+                      {p.badge}
+                    </span>
+                  </div>
+                  <span className="text-[10.5px] text-content-on-dark-soft/75 mt-1 font-mono truncate w-full">
+                    {p.model}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="relative">
           <textarea
             ref={textareaRef}
