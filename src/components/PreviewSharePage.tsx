@@ -110,7 +110,7 @@ const PreviewSharePage: React.FC<PreviewSharePageProps> = ({
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex h-screen w-screen flex-col items-center justify-center overflow-hidden bg-[#1e1e1e] text-white">
+      <div className="fixed inset-0 flex h-screen w-screen flex-col items-center justify-center overflow-hidden bg-product text-white">
         <div className="mb-4 flex items-center gap-3">
           <span className="text-3xl font-bold tracking-[0.14em]">LADE</span>
           <span className="h-2 w-2 rounded-full bg-white" />
@@ -128,7 +128,7 @@ const PreviewSharePage: React.FC<PreviewSharePageProps> = ({
 
   if (error) {
     return (
-      <div className="fixed inset-0 flex h-screen w-screen items-center justify-center overflow-hidden bg-[#1e1e1e] p-6 text-center text-gray-100">
+      <div className="fixed inset-0 flex h-screen w-screen items-center justify-center overflow-hidden bg-product p-6 text-center text-gray-100">
         <div className="max-w-md">
           <h1 className="mb-3 text-[22px] font-semibold">Preview unavailable</h1>
           <p className="mb-6 text-sm text-gray-400">{error}</p>

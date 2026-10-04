@@ -12,21 +12,21 @@ const CopyToast: React.FC<CopyToastProps> = ({
     type = 'success',
     onClose,
 }) => {
-    const borderColor = type === 'success' ? 'border-[#3ecf5e]/30' : 'border-[#e5484d]/30';
-    const iconColor = type === 'success' ? 'text-[#3ecf5e]' : 'text-[#e5484d]';
+    const borderColor = type === 'success' ? 'border-teal' : 'border-danger';
+    const iconColor = type === 'success' ? 'text-teal' : 'text-danger';
     const Icon = type === 'success' ? Check : AlertCircle;
 
     return (
         <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
             <div
-                className={`bg-[#1c1c1c] border ${borderColor} px-4 py-3 rounded-lg flex items-center gap-3 min-w-[250px]`}
+                className={`bg-product-elevated border ${borderColor} px-4 py-3 rounded-lg flex items-center gap-3 min-w-[250px]`}
             >
                 <Icon className={`w-5 h-5 flex-shrink-0 ${iconColor}`} />
-                <span className="flex-1 font-medium text-sm text-[#e8e8e8]">{message}</span>
+                <span className="flex-1 font-medium text-sm text-content-on-dark">{message}</span>
 
                 <button
                     onClick={onClose}
-                    className="p-1 hover:bg-[#2a2a2a] rounded transition-colors text-[#5c5c5c] hover:text-[#e8e8e8]"
+                    className="p-1 hover:bg-product-active rounded transition-colors text-content-on-dark-soft hover:text-content-on-dark"
                     title="Close"
                 >
                     <X className="w-4 h-4" />

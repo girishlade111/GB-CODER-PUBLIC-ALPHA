@@ -89,29 +89,29 @@ class ErrorBoundary extends Component<Props, State> {
             }
 
             return (
-                <div className="min-h-screen flex items-center justify-center bg-[#0d0d0d] p-4">
-                    <div className="max-w-md w-full bg-[#161616] border border-[#2a2a2a] rounded-lg p-8 text-center">
+                <div className="min-h-screen flex items-center justify-center bg-product-soft p-4">
+                    <div className="max-w-md w-full bg-product border border-stroke-dark rounded-lg p-8 text-center">
                         <div className="mb-6 flex justify-center">
-                            <div className="p-4 bg-[#e5484d]/10 rounded-full">
-                                <AlertTriangle className="w-12 h-12 text-[#e5484d]" />
+                            <div className="p-4 bg-danger rounded-full">
+                                <AlertTriangle className="w-12 h-12 text-danger" />
                             </div>
                         </div>
 
-                        <h1 className="text-xl font-semibold text-[#e8e8e8] mb-2">
+                        <h1 className="text-xl font-semibold text-content-on-dark mb-2">
                             Something went wrong
                         </h1>
 
-                        <p className="text-[#8a8a8a] text-sm mb-4">
+                        <p className="text-content-on-dark-soft text-sm mb-4">
                             We apologize for the inconvenience. The application has encountered an unexpected error.
                         </p>
                         
-                        <div className="bg-[#3ecf5e]/08 border border-[#3ecf5e]/20 rounded-md p-3 mb-6 text-sm text-[#3ecf5e]">
+                        <div className="bg-teal/08 border border-teal rounded-md p-3 mb-6 text-sm text-teal">
                             Your work is safe — we've auto-saved your progress.
                         </div>
 
                         {process.env.NODE_ENV === 'development' && this.state.error && (
-                            <div className="mb-6 text-left bg-[#0d0d0d] border border-[#2a2a2a] p-4 rounded-md overflow-auto max-h-48">
-                                <p className="font-mono text-sm text-[#e5484d] break-words">
+                            <div className="mb-6 text-left bg-product-soft border border-stroke-dark p-4 rounded-md overflow-auto max-h-48">
+                                <p className="font-mono text-sm text-danger break-words">
                                     {this.state.error.toString()}
                                 </p>
                             </div>
@@ -120,7 +120,7 @@ class ErrorBoundary extends Component<Props, State> {
                         <div className="flex flex-col gap-3 justify-center">
                             <button
                                 onClick={this.handleReload}
-                                className="flex items-center justify-center px-4 py-2 bg-[#e07856] hover:bg-[#e88a6d] text-[#e8e8e8] rounded-md transition-colors font-medium text-sm"
+                                className="flex items-center justify-center px-4 py-2 bg-accent hover:bg-accent-hover text-content-on-dark rounded-md transition-colors font-medium text-sm"
                             >
                                 <RefreshCw className="w-4 h-4 mr-2" />
                                 Reload App
@@ -128,7 +128,7 @@ class ErrorBoundary extends Component<Props, State> {
 
                             <button
                                 onClick={this.handleExportCode}
-                                className="flex items-center justify-center px-4 py-2 bg-[#1c1c1c] border border-[#2a2a2a] hover:bg-[#242424] text-[#e8e8e8] rounded-md transition-colors text-sm"
+                                className="flex items-center justify-center px-4 py-2 bg-product-elevated border border-stroke-dark hover:bg-product-active text-content-on-dark rounded-md transition-colors text-sm"
                             >
                                 <Download className="w-4 h-4 mr-2" />
                                 Export Current Code
@@ -136,7 +136,7 @@ class ErrorBoundary extends Component<Props, State> {
 
                             <button
                                 onClick={this.handleReportIssue}
-                                className="flex items-center justify-center px-4 py-2 bg-[#1c1c1c] border border-[#2a2a2a] hover:bg-[#242424] text-[#8a8a8a] hover:text-[#e8e8e8] rounded-md transition-colors text-sm"
+                                className="flex items-center justify-center px-4 py-2 bg-product-elevated border border-stroke-dark hover:bg-product-active text-content-on-dark-soft hover:text-content-on-dark rounded-md transition-colors text-sm"
                             >
                                 <Bug className="w-4 h-4 mr-2" />
                                 Report Issue

@@ -11,7 +11,7 @@ const CookiePolicyPage: React.FC = () => {
     }, []);
 
     return (
-        <div className={`min-h-screen transition-colors ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-50'}`}>
+        <div className={`min-h-screen transition-colors ${isDark ? 'bg-product' : 'bg-gray-50'}`}>
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {/* Header */}
                 <div className="text-center mb-12">

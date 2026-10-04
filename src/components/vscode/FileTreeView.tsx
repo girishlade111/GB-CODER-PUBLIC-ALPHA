@@ -92,28 +92,28 @@ const iconFor = (name: string) => {
   switch (ext) {
     case 'html':
     case 'htm':
-      return <Globe className={`${ICON_CLASS} text-[#e07856]`} />;
+      return <Globe className={`${ICON_CLASS} text-accent`} />;
     case 'css':
-      return <Palette className={`${ICON_CLASS} text-[#8a8a8a]`} />;
+      return <Palette className={`${ICON_CLASS} text-content-on-dark-soft`} />;
     case 'scss':
     case 'sass':
     case 'less':
-      return <Palette className={`${ICON_CLASS} text-[#8a8a8a]`} />;
+      return <Palette className={`${ICON_CLASS} text-content-on-dark-soft`} />;
     case 'js':
     case 'mjs':
     case 'cjs':
-      return <FileCode className={`${ICON_CLASS} text-[#8a8a8a]`} />;
+      return <FileCode className={`${ICON_CLASS} text-content-on-dark-soft`} />;
     case 'jsx':
-      return <Atom className={`${ICON_CLASS} text-[#8a8a8a]`} />;
+      return <Atom className={`${ICON_CLASS} text-content-on-dark-soft`} />;
     case 'ts':
-      return <FileType className={`${ICON_CLASS} text-[#8a8a8a]`} />;
+      return <FileType className={`${ICON_CLASS} text-content-on-dark-soft`} />;
     case 'tsx':
-      return <Atom className={`${ICON_CLASS} text-[#8a8a8a]`} />;
+      return <Atom className={`${ICON_CLASS} text-content-on-dark-soft`} />;
     case 'vue':
-      return <Triangle className={`${ICON_CLASS} text-[#3ecf5e]`} />;
+      return <Triangle className={`${ICON_CLASS} text-teal`} />;
     case 'json':
     case 'jsonc':
-      return <Braces className={`${ICON_CLASS} text-[#8a8a8a]`} />;
+      return <Braces className={`${ICON_CLASS} text-content-on-dark-soft`} />;
     case 'md':
     case 'mdx':
     case 'txt':
@@ -184,9 +184,9 @@ const TreeRow: React.FC<RowProps> = ({
               <ChevronRight className="h-3 w-3 flex-shrink-0 text-vsc-textMuted" />
             )}
             {isOpen ? (
-              <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-[#5c5c5c]" />
+              <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-content-on-dark-soft" />
             ) : (
-              <Folder className="h-3.5 w-3.5 flex-shrink-0 text-[#5c5c5c]" />
+              <Folder className="h-3.5 w-3.5 flex-shrink-0 text-content-on-dark-soft" />
             )}
           </>
         ) : (

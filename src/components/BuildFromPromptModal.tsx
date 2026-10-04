@@ -374,7 +374,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
                 textareaRef.current?.focus();
               }}
               disabled={isLoading}
-              className="rounded-full border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-1 text-[12px] text-[#8a8a8a] transition-colors hover:border-[#e07856] hover:text-[#e8e8e8] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-stroke-dark bg-product-elevated px-3 py-1 text-[12px] text-content-on-dark-soft transition-colors hover:border-accent hover:text-content-on-dark disabled:cursor-not-allowed disabled:opacity-50"
             >
               {chip}
             </button>
@@ -385,7 +385,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
           type="button"
           onClick={handleGenerate}
           disabled={isGenerateDisabled}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-[#e07856] hover:bg-[#e88a6d] px-4 py-2.5 text-[13px] font-medium text-[#e8e8e8] transition-colors disabled:cursor-not-allowed disabled:bg-[#1c1c1c] disabled:border disabled:border-[#2a2a2a] disabled:text-[#5c5c5c]"
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-accent hover:bg-accent-hover px-4 py-2.5 text-[13px] font-medium text-content-on-dark transition-colors disabled:cursor-not-allowed disabled:bg-product-elevated disabled:border disabled:border-stroke-dark disabled:text-content-on-dark-soft"
         >
           {isLoading ? (
             <>
@@ -401,7 +401,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
         </button>
 
         {isLoading && (
-          <p className="mt-3 text-center text-[12.5px] text-[#8a8a8a]">
+          <p className="mt-3 text-center text-[12.5px] text-content-on-dark-soft">
             {LOADING_MESSAGES[loadingMessageIndex]}
           </p>
         )}

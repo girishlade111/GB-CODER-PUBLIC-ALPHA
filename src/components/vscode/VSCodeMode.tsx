@@ -462,24 +462,24 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           as detected, and the empty state below says what to do instead. */}
       {showBanner && hasFiles && (
         <div
-          className="flex shrink-0 items-start gap-2.5 border-b border-[#2a2a2a] bg-[#1c1c1c] px-3 py-2"
+          className="flex shrink-0 items-start gap-2.5 border-b border-stroke-dark bg-product-elevated px-3 py-2"
           data-testid="vscode-banner"
         >
-          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#8a8a8a]" />
-          <p className="flex-1 text-xs text-[#8a8a8a]">
+          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-content-on-dark-soft" />
+          <p className="flex-1 text-xs text-content-on-dark-soft">
             {entryReason === 'manual'
               ? 'VS Code mode — connect a Sandbox to run this project.'
               : 'Full-stack project detected — connect a Sandbox to run this project.'}
           </p>
           <button
             onClick={() => setRightTab('sandbox')}
-            className="rounded-md bg-[#2a2a2a] px-2 py-0.5 text-[11px] font-medium text-[#e8e8e8] hover:bg-[#3a3a3a]"
+            className="rounded-md bg-product-active px-2 py-0.5 text-[11px] font-medium text-content-on-dark hover:bg-product-active"
           >
             Open Sandbox
           </button>
           <button
             onClick={() => setShowBanner(false)}
-            className="text-[#5c5c5c] hover:text-[#8a8a8a]"
+            className="text-content-on-dark-soft hover:text-content-on-dark-soft"
             aria-label="Dismiss banner"
           >
             <X className="h-3.5 w-3.5" />

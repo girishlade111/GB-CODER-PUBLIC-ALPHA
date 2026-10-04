@@ -22,17 +22,17 @@ interface SelectionSidebarProps {
 const LadeStackLoader: React.FC = () => {
     return (
         <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-10 h-10 border-2 border-[#2a2a2a] border-t-[#e07856] rounded-full animate-spin mb-4" />
+            <div className="w-10 h-10 border-2 border-stroke-dark border-t-accent rounded-full animate-spin mb-4" />
             <div className="text-center">
-                <h3 className="text-[15px] font-semibold text-[#e8e8e8]">
+                <h3 className="text-[15px] font-semibold text-content-on-dark">
                     Lade Stack AI
                 </h3>
-                <p className="text-[12.5px] text-[#8a8a8a] mt-1">
+                <p className="text-[12.5px] text-content-on-dark-soft mt-1">
                     Analyzing selected code...
                 </p>
             </div>
-            <div className="w-44 h-1 bg-[#1c1c1c] border border-[#2a2a2a] rounded-full mt-4 overflow-hidden">
-                <div className="h-full bg-[#e07856] rounded-full animate-progress" />
+            <div className="w-44 h-1 bg-product-elevated border border-stroke-dark rounded-full mt-4 overflow-hidden">
+                <div className="h-full bg-accent rounded-full animate-progress" />
             </div>
         </div>
     );
@@ -92,12 +92,12 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
             {/* Minimized state - floating pill */}
             {isMinimized && (
                 <div
-                    className="fixed right-4 top-1/2 -translate-y-1/2 z-50 bg-[#161616] border border-[#2a2a2a] text-[#e8e8e8] px-3.5 py-2.5 rounded-md cursor-pointer hover:bg-[#1c1c1c] transition-colors flex items-center gap-2"
+                    className="fixed right-4 top-1/2 -translate-y-1/2 z-50 bg-product border border-stroke-dark text-content-on-dark px-3.5 py-2.5 rounded-md cursor-pointer hover:bg-product-elevated transition-colors flex items-center gap-2"
                     onClick={() => setIsMinimized(false)}
                 >
                     {isLoading ? (
                         <>
-                            <div className="w-3.5 h-3.5 border-2 border-[#2a2a2a] border-t-[#e07856] rounded-full animate-spin" />
+                            <div className="w-3.5 h-3.5 border-2 border-stroke-dark border-t-accent rounded-full animate-spin" />
                             <span className="text-[12.5px] font-medium">Analyzing...</span>
                         </>
                     ) : (
@@ -106,19 +106,19 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                             <span className="text-[12.5px] font-medium">View Result</span>
                         </>
                     )}
-                    <Plus className="w-3.5 h-3.5 ml-1 text-[#8a8a8a]" />
+                    <Plus className="w-3.5 h-3.5 ml-1 text-content-on-dark-soft" />
                 </div>
             )}
 
             {/* Full sidebar */}
             {!isMinimized && (
-                <div className="fixed right-0 top-0 h-full w-full md:w-[420px] bg-[#161616] border-l border-[#2a2a2a] z-50 flex flex-col animate-slideIn">
+                <div className="fixed right-0 top-0 h-full w-full md:w-[420px] bg-product border-l border-stroke-dark z-50 flex flex-col animate-slideIn">
                     {/* Header */}
-                    <div className="bg-[#161616] px-4 py-3 border-b border-[#2a2a2a] flex items-center justify-between">
+                    <div className="bg-product px-4 py-3 border-b border-stroke-dark flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                             <button
                                 onClick={() => onHistoryToggle(!isHistoryOpen)}
-                                className={`p-1.5 rounded-md transition-colors ${isHistoryOpen ? 'bg-[#1c1c1c] text-[#e8e8e8]' : 'text-[#8a8a8a] hover:text-[#e8e8e8] hover:bg-[#1c1c1c]'}`}
+                                className={`p-1.5 rounded-md transition-colors ${isHistoryOpen ? 'bg-product-elevated text-content-on-dark' : 'text-content-on-dark-soft hover:text-content-on-dark hover:bg-product-elevated'}`}
                                 title="View History"
                             >
                                 <Menu className="w-4 h-4" />
@@ -126,13 +126,13 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
 
                             {isLoading ? (
                                 <div className="flex items-center gap-2">
-                                    <div className="w-4 h-4 border-2 border-[#2a2a2a] border-t-[#e07856] rounded-full animate-spin" />
-                                    <span className="text-[13px] font-medium text-[#8a8a8a]">Processing...</span>
+                                    <div className="w-4 h-4 border-2 border-stroke-dark border-t-accent rounded-full animate-spin" />
+                                    <span className="text-[13px] font-medium text-content-on-dark-soft">Processing...</span>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2">
                                     <span>{getOperationIcon()}</span>
-                                    <span className="text-[14px] font-medium text-[#e8e8e8]">{getOperationTitle()}</span>
+                                    <span className="text-[14px] font-medium text-content-on-dark">{getOperationTitle()}</span>
                                 </div>
                             )}
                         </div>
@@ -140,7 +140,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                         <div className="flex items-center gap-1">
                             <button
                                 onClick={() => setIsMinimized(true)}
-                                className="p-2 hover:bg-[#2a2a2a] rounded-lg transition-colors text-[#8a8a8a] hover:text-[#e8e8e8]"
+                                className="p-2 hover:bg-product-active rounded-lg transition-colors text-content-on-dark-soft hover:text-content-on-dark"
                                 title="Minimize"
                             >
                                 <Minus className="w-4 h-4" />
@@ -335,10 +335,10 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
 
                     {/* Footer - Apply Button */}
                     {result?.hasCodeChanges && result.suggestedCode && onApplyChanges && !isLoading && (
-                        <div className="p-4 border-t border-[#2a2a2a] bg-[#161616]">
+                        <div className="p-4 border-t border-stroke-dark bg-product">
                             <button
                                 onClick={() => onApplyChanges(result.suggestedCode!)}
-                                className="w-full px-4 py-2.5 bg-[#e07856] hover:bg-[#e88a6d] text-[#e8e8e8] font-medium rounded-md transition-colors flex items-center justify-center gap-2 text-[13px]"
+                                className="w-full px-4 py-2.5 bg-accent hover:bg-accent-hover text-content-on-dark font-medium rounded-md transition-colors flex items-center justify-center gap-2 text-[13px]"
                             >
                                 <Check className="w-4 h-4" />
                                 Review Changes

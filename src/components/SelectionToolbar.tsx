@@ -55,8 +55,8 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
         <>
             {/* Main Toolbar */}
             <div
-                className={`fixed z-50 bg-[#161616] border rounded-md p-1 flex items-center gap-1 transition-all ${
-                    isLoading ? 'border-[#e07856]' : 'border-[#2a2a2a]'
+                className={`fixed z-50 bg-product border rounded-md p-1 flex items-center gap-1 transition-all ${
+                    isLoading ? 'border-accent' : 'border-stroke-dark'
                 }`}
                 style={{
                     top: `${position.top + 20}px`,
@@ -77,15 +77,15 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
                             aria-busy={isLoading && isCurrentOp}
                             className={`p-1.5 rounded-md transition-colors ${
                                 isDisabled
-                                    ? 'opacity-40 cursor-not-allowed text-[#5c5c5c]'
+                                    ? 'opacity-40 cursor-not-allowed text-content-on-dark-soft'
                                     : isCurrentOp
-                                    ? 'bg-[#1c1c1c] text-[#e07856]'
-                                    : 'text-[#8a8a8a] hover:text-[#e8e8e8] hover:bg-[#1c1c1c]'
+                                    ? 'bg-product-elevated text-accent'
+                                    : 'text-content-on-dark-soft hover:text-content-on-dark hover:bg-product-elevated'
                             }`}
                             title={isLoading && isCurrentOp ? `${op.label}ing...` : op.tooltip}
                         >
                             {isLoading && isCurrentOp ? (
-                                <Loader2 className="w-4 h-4 animate-spin text-[#e07856]" />
+                                <Loader2 className="w-4 h-4 animate-spin text-accent" />
                             ) : (
                                 <Icon className="w-4 h-4" />
                             )}
@@ -95,8 +95,8 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
 
                 {/* Loading indicator text */}
                 {isLoading && currentOp && (
-                    <div className="ml-1.5 pr-2 flex items-center gap-2 text-[12px] text-[#8a8a8a] border-l border-[#2a2a2a] pl-2.5">
-                        <span className="whitespace-nowrap font-medium text-[#e8e8e8]">
+                    <div className="ml-1.5 pr-2 flex items-center gap-2 text-[12px] text-content-on-dark-soft border-l border-stroke-dark pl-2.5">
+                        <span className="whitespace-nowrap font-medium text-content-on-dark">
                             {currentOp.label}ing...
                         </span>
                     </div>
@@ -105,11 +105,11 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
 
             {/* Notification Toast */}
             {isLoading && currentOp && (
-                <div className="fixed top-4 right-4 z-[100] bg-[#161616] border border-[#2a2a2a] text-[#e8e8e8] px-4 py-3 rounded-lg flex items-center gap-3 animate-fade-in">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#e07856]" />
+                <div className="fixed top-4 right-4 z-[100] bg-product border border-stroke-dark text-content-on-dark px-4 py-3 rounded-lg flex items-center gap-3 animate-fade-in">
+                    <Loader2 className="w-4 h-4 animate-spin text-accent" />
                     <div>
-                        <p className="text-[13px] font-medium text-[#e8e8e8]">{currentOp.label}ing Code</p>
-                        <p className="text-[11.5px] text-[#8a8a8a]">Analyzing selection...</p>
+                        <p className="text-[13px] font-medium text-content-on-dark">{currentOp.label}ing Code</p>
+                        <p className="text-[11.5px] text-content-on-dark-soft">Analyzing selection...</p>
                     </div>
                 </div>
             )}

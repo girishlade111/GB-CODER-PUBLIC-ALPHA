@@ -112,25 +112,25 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-lg border border-[#2a2a2a] bg-[#161616] text-[#e8e8e8] overflow-hidden"
+        className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-lg border border-stroke-dark bg-product text-content-on-dark overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a2a] bg-[#161616]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stroke-dark bg-product">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md bg-[#1c1c1c] border border-[#2a2a2a] flex items-center justify-center">
-              <Bug className="w-4 h-4 text-[#e07856]" />
+            <div className="w-8 h-8 rounded-md bg-product-elevated border border-stroke-dark flex items-center justify-center">
+              <Bug className="w-4 h-4 text-accent" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-[16px] font-semibold text-[#e8e8e8]">
+                <h2 className="text-[16px] font-semibold text-content-on-dark">
                   CodeRabbit AI
                 </h2>
-                <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-[#1c1c1c] text-[#e07856] border border-[#2a2a2a]">
+                <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-product-elevated text-accent border border-stroke-dark">
                   Bug &amp; Error Scanner
                 </span>
               </div>
-              <p className="text-[12.5px] text-[#8a8a8a]">
+              <p className="text-[12.5px] text-content-on-dark-soft">
                 AST bug detection, security checks &amp; one-click fixes
               </p>
             </div>
@@ -140,14 +140,14 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
             <button
               onClick={handleRunScan}
               disabled={isScanning || files.length === 0}
-              className="flex items-center gap-2 px-3.5 py-1.5 text-[13px] font-medium rounded-md bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] text-[#e8e8e8] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3.5 py-1.5 text-[13px] font-medium rounded-md bg-product-elevated hover:bg-product-active border border-stroke-dark text-content-on-dark transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
               {isScanning ? 'Scanning...' : 'Rescan Code'}
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-md text-[#8a8a8a] hover:text-[#e8e8e8] hover:bg-[#1c1c1c] transition-colors"
+              className="p-1.5 rounded-md text-content-on-dark-soft hover:text-content-on-dark hover:bg-product-elevated transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -206,9 +206,9 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
                 </span>
                 <span>{scanProgress}%</span>
               </div>
-              <div className="w-full h-1.5 rounded-full bg-[#1c1c1c] border border-[#2a2a2a] overflow-hidden">
+              <div className="w-full h-1.5 rounded-full bg-product-elevated border border-stroke-dark overflow-hidden">
                 <div
-                  className="h-full bg-[#e07856] transition-all duration-300"
+                  className="h-full bg-accent transition-all duration-300"
                   style={{ width: `${scanProgress}%` }}
                 />
               </div>
@@ -218,45 +218,45 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
           {/* Stats Overview */}
           {scanResult && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3.5 rounded-lg border border-[#2a2a2a] bg-[#161616] flex items-center justify-between">
+              <div className="p-3.5 rounded-lg border border-stroke-dark bg-product flex items-center justify-between">
                 <div>
-                  <p className="text-[11.5px] text-[#8a8a8a] font-medium">Health Score</p>
-                  <p className="text-[20px] font-semibold text-[#3ecf5e]">
+                  <p className="text-[11.5px] text-content-on-dark-soft font-medium">Health Score</p>
+                  <p className="text-[20px] font-semibold text-teal">
                     {scanResult.stats.score}/100
                   </p>
                 </div>
-                <CheckCircle className="w-6 h-6 text-[#3ecf5e]/70" />
+                <CheckCircle className="w-6 h-6 text-teal" />
               </div>
 
-              <div className="p-3.5 rounded-lg border border-[#2a2a2a] bg-[#161616] flex items-center justify-between">
+              <div className="p-3.5 rounded-lg border border-stroke-dark bg-product flex items-center justify-between">
                 <div>
-                  <p className="text-[11.5px] text-[#8a8a8a] font-medium">Critical Bugs</p>
-                  <p className="text-[20px] font-semibold text-[#e5484d]">{scanResult.stats.critical}</p>
+                  <p className="text-[11.5px] text-content-on-dark-soft font-medium">Critical Bugs</p>
+                  <p className="text-[20px] font-semibold text-danger">{scanResult.stats.critical}</p>
                 </div>
-                <ShieldAlert className="w-6 h-6 text-[#e5484d]/70" />
+                <ShieldAlert className="w-6 h-6 text-danger" />
               </div>
 
-              <div className="p-3.5 rounded-lg border border-[#2a2a2a] bg-[#161616] flex items-center justify-between">
+              <div className="p-3.5 rounded-lg border border-stroke-dark bg-product flex items-center justify-between">
                 <div>
-                  <p className="text-[11.5px] text-[#8a8a8a] font-medium">Warnings</p>
+                  <p className="text-[11.5px] text-content-on-dark-soft font-medium">Warnings</p>
                   <p className="text-[20px] font-semibold text-[#d97706]">{scanResult.stats.warning}</p>
                 </div>
                 <AlertTriangle className="w-6 h-6 text-[#d97706]/70" />
               </div>
 
-              <div className="p-3.5 rounded-lg border border-[#2a2a2a] bg-[#161616] flex items-center justify-between">
+              <div className="p-3.5 rounded-lg border border-stroke-dark bg-product flex items-center justify-between">
                 <div>
-                  <p className="text-[11.5px] text-[#8a8a8a] font-medium">Files Analyzed</p>
-                  <p className="text-[20px] font-semibold text-[#e8e8e8]">{scanResult.stats.totalFilesScanned}</p>
+                  <p className="text-[11.5px] text-content-on-dark-soft font-medium">Files Analyzed</p>
+                  <p className="text-[20px] font-semibold text-content-on-dark">{scanResult.stats.totalFilesScanned}</p>
                 </div>
-                <FileCode className="w-6 h-6 text-[#8a8a8a]" />
+                <FileCode className="w-6 h-6 text-content-on-dark-soft" />
               </div>
             </div>
           )}
 
           {/* Filter Tabs */}
           {scanResult && (
-            <div className="flex items-center gap-2 border-b border-[#2a2a2a] pb-3 overflow-x-auto">
+            <div className="flex items-center gap-2 border-b border-stroke-dark pb-3 overflow-x-auto">
               {[
                 { id: 'all', label: `All Issues (${scanResult.issues.length})` },
                 { id: 'critical', label: `Critical (${scanResult.stats.critical})` },
@@ -269,8 +269,8 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`px-3 py-1 rounded-md text-[12px] font-medium whitespace-nowrap transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-[#242424] text-[#e8e8e8] border border-[#2a2a2a]'
-                      : 'bg-[#1c1c1c] text-[#8a8a8a] hover:text-[#e8e8e8] border border-transparent'
+                      ? 'bg-product-active text-content-on-dark border border-stroke-dark'
+                      : 'bg-product-elevated text-content-on-dark-soft hover:text-content-on-dark border border-transparent'
                   }`}
                 >
                   {tab.label}
@@ -288,7 +288,7 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
                 return (
                   <div
                     key={issue.id}
-                    className="p-4 rounded-lg border border-[#2a2a2a] bg-[#161616] transition-colors"
+                    className="p-4 rounded-lg border border-stroke-dark bg-product transition-colors"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-1">
@@ -296,26 +296,26 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
                           <span
                             className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold rounded-md border ${
                               issue.severity === 'critical'
-                                ? 'bg-[#e5484d]/10 text-[#e5484d] border-[#e5484d]/30'
+                                ? 'bg-danger text-danger border-danger'
                                 : issue.severity === 'warning'
                                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                                : 'bg-[#1c1c1c] text-[#8a8a8a] border-[#2a2a2a]'
+                                : 'bg-product-elevated text-content-on-dark-soft border-stroke-dark'
                             }`}
                           >
                             {issue.severity}
                           </span>
 
-                          <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-[#1c1c1c] text-[#8a8a8a] border border-[#2a2a2a]">
+                          <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-product-elevated text-content-on-dark-soft border border-stroke-dark">
                             {issue.file}:{issue.line}
                           </span>
 
-                          <span className="text-[11.5px] text-[#8a8a8a]">
-                            Category: <span className="text-[#e8e8e8]">{issue.category}</span>
+                          <span className="text-[11.5px] text-content-on-dark-soft">
+                            Category: <span className="text-content-on-dark">{issue.category}</span>
                           </span>
                         </div>
 
-                        <h4 className="text-[13.5px] font-medium text-[#e8e8e8] pt-1">{issue.title}</h4>
-                        <p className="text-[12.5px] text-[#8a8a8a] leading-relaxed">{issue.description}</p>
+                        <h4 className="text-[13.5px] font-medium text-content-on-dark pt-1">{issue.title}</h4>
+                        <p className="text-[12.5px] text-content-on-dark-soft leading-relaxed">{issue.description}</p>
                       </div>
 
                       {issue.suggestedFix && (
@@ -324,11 +324,11 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
                           disabled={isApplied}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium shrink-0 transition-colors ${
                             isApplied
-                              ? 'bg-[#3ecf5e]/10 text-[#3ecf5e] border border-[#3ecf5e]/30'
-                              : 'bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] text-[#e8e8e8]'
+                              ? 'bg-teal/10 text-teal border border-teal'
+                              : 'bg-product-elevated hover:bg-product-active border border-stroke-dark text-content-on-dark'
                           }`}
                         >
-                          <Wand2 className="w-3.5 h-3.5 text-[#e07856]" />
+                          <Wand2 className="w-3.5 h-3.5 text-accent" />
                           {isApplied ? 'Applied' : 'Apply Fix'}
                         </button>
                       )}
@@ -336,11 +336,11 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
 
                     {/* Code Snippet & Fix Diff Preview */}
                     {issue.codeSnippet && (
-                      <div className="mt-3 p-3 rounded-md bg-[#0d0d0d] font-mono text-[11px] space-y-1.5 border border-[#2a2a2a]">
-                        <div className="text-[#5c5c5c] text-[10px] uppercase tracking-wider font-medium">
+                      <div className="mt-3 p-3 rounded-md bg-product-soft font-mono text-[11px] space-y-1.5 border border-stroke-dark">
+                        <div className="text-content-on-dark-soft text-[10px] uppercase tracking-wider font-medium">
                           Offending Code:
                         </div>
-                        <div className="text-[#e5484d] bg-[#e5484d]/10 p-1.5 rounded border border-[#e5484d]/20 overflow-x-auto">
+                        <div className="text-danger bg-danger p-1.5 rounded border border-danger overflow-x-auto">
                           - {issue.codeSnippet}
                         </div>
 

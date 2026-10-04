@@ -394,7 +394,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                         </span>
                       </label>
                       <div className={`p-1 rounded-xl border focus-within:ring-2 focus-within:ring-accent focus-within:border-accent transition-all ${
-                        isDark ? 'bg-[#1e1e1e] border-stroke-subtle' : 'bg-[#1e1e1e] border-gray-300'
+                        isDark ? 'bg-product border-stroke-subtle' : 'bg-product border-gray-300'
                       }`}>
                         <textarea
                           value={newInjection.code}

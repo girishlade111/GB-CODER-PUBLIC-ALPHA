@@ -241,7 +241,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
           type="text"
           value={snippetName}
           onChange={(e) => setSnippetName(e.target.value)}
-          className="w-full bg-[#1c1c1c] border border-[#2a2a2a] rounded-md px-3 py-2 text-[#e8e8e8] focus:outline-none focus:border-[#e07856]"
+          className="w-full bg-product-elevated border border-stroke-dark rounded-md px-3 py-2 text-content-on-dark focus:outline-none focus:border-accent"
           placeholder="My Awesome Snippet"
         />
       </div>
@@ -253,7 +253,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
         <textarea
           value={snippetDescription}
           onChange={(e) => setSnippetDescription(e.target.value)}
-          className="w-full bg-[#1c1c1c] border border-[#2a2a2a] rounded-md px-3 py-2 text-[#e8e8e8] focus:outline-none focus:border-[#e07856] h-20 resize-none"
+          className="w-full bg-product-elevated border border-stroke-dark rounded-md px-3 py-2 text-content-on-dark focus:outline-none focus:border-accent h-20 resize-none"
           placeholder="What does this snippet do?"
         />
       </div>
@@ -269,8 +269,8 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                 key={type}
                 onClick={() => setSnippetType(type)}
                 className={`px-2 py-1.5 text-xs rounded-md border transition-colors ${snippetType === type
-                  ? 'bg-[#e07856]/15 border-[#e07856]/50 text-[#e07856]'
-                  : 'bg-[#1c1c1c] border-[#2a2a2a] text-[#8a8a8a] hover:border-[#3a3a3a]'
+                  ? 'bg-accent/15 border-accent text-accent'
+                  : 'bg-product-elevated border-stroke-dark text-content-on-dark-soft hover:border-stroke-dark-strong'
                   }`}
               >
                 {type === 'full' ? 'Full Page' : type.toUpperCase()}
@@ -289,8 +289,8 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                 key={scope}
                 onClick={() => setSnippetScope(scope)}
                 className={`px-2 py-1.5 text-xs rounded-md border transition-colors ${snippetScope === scope
-                  ? 'bg-[#e07856]/15 border-[#e07856]/50 text-[#e07856]'
-                  : 'bg-[#1c1c1c] border-[#2a2a2a] text-[#8a8a8a] hover:border-[#3a3a3a]'
+                  ? 'bg-accent/15 border-accent text-accent'
+                  : 'bg-product-elevated border-stroke-dark text-content-on-dark-soft hover:border-stroke-dark-strong'
                   }`}
               >
                 {scope.charAt(0).toUpperCase() + scope.slice(1)}

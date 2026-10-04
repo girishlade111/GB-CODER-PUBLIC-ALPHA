@@ -60,7 +60,7 @@ const ContactPage: React.FC = () => {
     };
 
     return (
-        <div className={`min-h-screen transition-colors ${isDark ? 'bg-[#1e1e1e] text-gray-100' : 'bg-gray-50 text-gray-900'
+        <div className={`min-h-screen transition-colors ${isDark ? 'bg-product text-gray-100' : 'bg-gray-50 text-gray-900'
             }`}>
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {/* Header */}

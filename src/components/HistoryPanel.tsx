@@ -85,14 +85,14 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
             />
 
             {/* Panel */}
-            <div className="fixed right-0 top-0 h-full w-full md:w-[480px] bg-[#161616] border-l border-[#2a2a2a] z-50 flex flex-col animate-slideIn">
+            <div className="fixed right-0 top-0 h-full w-full md:w-[480px] bg-product border-l border-stroke-dark z-50 flex flex-col animate-slideIn">
                 {/* Header */}
-                <div className="bg-[#161616] px-6 py-4 border-b border-[#2a2a2a] flex items-center justify-between">
+                <div className="bg-product px-6 py-4 border-b border-stroke-dark flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Clock className="w-5 h-5 text-[#8a8a8a]" />
+                        <Clock className="w-5 h-5 text-content-on-dark-soft" />
                         <div>
-                            <h2 className="text-[16px] font-semibold text-[#e8e8e8]">History Timeline</h2>
-                            <p className="text-[12px] text-[#8a8a8a]">{history.length} snapshots</p>
+                            <h2 className="text-[16px] font-semibold text-content-on-dark">History Timeline</h2>
+                            <p className="text-[12px] text-content-on-dark-soft">{history.length} snapshots</p>
                         </div>
                     </div>
 

@@ -47,12 +47,12 @@ export const CodeWriteConfirmationModal: React.FC<CodeWriteConfirmationModalProp
             />
 
             {/* Modal */}
-            <div className="relative bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+            <div className="relative bg-product-soft border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
                 {!showWarning ? (
                     /* Initial Confirmation */
                     <>
                         {/* Header */}
-                        <div className="bg-[#0a0a0a] border-b border-white/10 px-8 py-6 flex items-center justify-between">
+                        <div className="bg-product-soft border-b border-white/10 px-8 py-6 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-white/5 rounded-lg">
                                     <Code className="w-5 h-5 text-white" />
@@ -130,7 +130,7 @@ export const CodeWriteConfirmationModal: React.FC<CodeWriteConfirmationModalProp
                     /* Warning Step */
                     <>
                         {/* Header */}
-                        <div className="bg-[#0a0a0a] border-b border-white/10 px-8 py-6 flex items-center justify-between">
+                        <div className="bg-product-soft border-b border-white/10 px-8 py-6 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-red-500/10 rounded-lg">
                                     <AlertTriangle className="w-5 h-5 text-red-400" />

@@ -130,7 +130,7 @@ const AboutPage: React.FC = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
-      isDark ? 'bg-[#1e1e1e]' : 'bg-gray-50'
+      isDark ? 'bg-product' : 'bg-gray-50'
     }`}>
       {/* Structured Data for SEO */}
       <script type="application/ld+json">

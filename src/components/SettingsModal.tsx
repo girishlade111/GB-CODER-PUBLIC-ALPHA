@@ -72,20 +72,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             <div
                 role="dialog"
                 aria-modal="true"
-                className="relative w-full max-w-2xl mx-4 rounded-lg border border-[#2a2a2a] bg-[#161616] animate-scale-in text-[#e8e8e8] overflow-hidden"
+                className="relative w-full max-w-2xl mx-4 rounded-lg border border-stroke-dark bg-product animate-scale-in text-content-on-dark overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a2a] bg-[#161616]">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-stroke-dark bg-product">
                     <div className="flex items-center gap-2.5">
-                        <SettingsIcon className="w-4 h-4 text-[#8a8a8a]" />
-                        <h2 className="text-[18px] font-semibold text-[#e8e8e8]">
+                        <SettingsIcon className="w-4 h-4 text-content-on-dark-soft" />
+                        <h2 className="text-[18px] font-semibold text-content-on-dark">
                             Settings
                         </h2>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-1.5 rounded-md text-[#8a8a8a] hover:text-[#e8e8e8] hover:bg-[#1c1c1c] transition-colors"
+                        className="p-1.5 rounded-md text-content-on-dark-soft hover:text-content-on-dark hover:bg-product-elevated transition-colors"
                         title="Close"
                     >
                         <X className="w-4 h-4" />
@@ -96,17 +96,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 <div className="px-6 py-6 max-h-[72vh] overflow-y-auto space-y-6">
                     {/* Editor Settings */}
                     <div>
-                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                        <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
                             Editor
                         </div>
-                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] overflow-hidden">
+                        <div className="rounded-lg border border-stroke-dark bg-product overflow-hidden">
                             {/* Font Family Row */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b border-[#2a2a2a] gap-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b border-stroke-dark gap-3">
                                 <div>
-                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                    <div className="text-[13.5px] font-medium text-content-on-dark">
                                         Font Family
                                     </div>
-                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-sm mt-0.5">
+                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-sm mt-0.5">
                                         Typeface used in the code editor panels.
                                     </p>
                                 </div>
@@ -115,7 +115,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                     onChange={(e) =>
                                         updateSettings({ editorFontFamily: e.target.value as EditorFontFamily })
                                     }
-                                    className="bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8] text-[13px] rounded-md px-3 py-1.5 focus:border-[#e07856] outline-none transition-colors"
+                                    className="bg-product-elevated border border-stroke-dark text-content-on-dark text-[13px] rounded-md px-3 py-1.5 focus:border-accent outline-none transition-colors"
                                     style={{ fontFamily: getFontFamilyCSS(settings.editorFontFamily) }}
                                 >
                                     {fontFamilyOptions.map((font) => (
@@ -129,24 +129,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                             {/* Font Size Row */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3">
                                 <div>
-                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                    <div className="text-[13.5px] font-medium text-content-on-dark">
                                         Font Size ({settings.editorFontSize}px)
                                     </div>
-                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-sm mt-0.5">
+                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-sm mt-0.5">
                                         Base text size for editor line rendering.
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3 w-full sm:w-48">
-                                    <span className="text-[11px] text-[#5c5c5c]">12px</span>
+                                    <span className="text-[11px] text-content-on-dark-soft">12px</span>
                                     <input
                                         type="range"
                                         min="12"
                                         max="20"
                                         value={settings.editorFontSize}
                                         onChange={(e) => updateSettings({ editorFontSize: parseInt(e.target.value) })}
-                                        className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-[#2a2a2a] accent-[#e07856]"
+                                        className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-product-active accent-accent"
                                     />
-                                    <span className="text-[11px] text-[#5c5c5c]">20px</span>
+                                    <span className="text-[11px] text-content-on-dark-soft">20px</span>
                                 </div>
                             </div>
                         </div>
@@ -154,23 +154,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
                     {/* Theme Settings */}
                     <div>
-                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                        <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
                             Appearance
                         </div>
-                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] overflow-hidden">
+                        <div className="rounded-lg border border-stroke-dark bg-product overflow-hidden">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3">
                                 <div>
-                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                    <div className="text-[13.5px] font-medium text-content-on-dark">
                                         Theme Preset
                                     </div>
-                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-sm mt-0.5">
+                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-sm mt-0.5">
                                         Active color scheme for the application chrome.
                                     </p>
                                 </div>
                                 <select
                                     value={settings.theme}
                                     onChange={(e) => updateSettings({ theme: e.target.value as ThemeVariant })}
-                                    className="bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8] text-[13px] rounded-md px-3 py-1.5 focus:border-[#e07856] outline-none transition-colors"
+                                    className="bg-product-elevated border border-stroke-dark text-content-on-dark text-[13px] rounded-md px-3 py-1.5 focus:border-accent outline-none transition-colors"
                                 >
                                     {themeOptions.map((t) => (
                                         <option key={t.value} value={t.value}>
@@ -184,17 +184,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
                     {/* Behavior Settings */}
                     <div>
-                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                        <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
                             Behavior
                         </div>
-                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] overflow-hidden">
+                        <div className="rounded-lg border border-stroke-dark bg-product overflow-hidden">
                             {/* Auto-run JS */}
-                            <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
+                            <div className="flex items-center justify-between p-4 border-b border-stroke-dark">
                                 <div>
-                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                    <div className="text-[13.5px] font-medium text-content-on-dark">
                                         Auto-run JavaScript
                                     </div>
-                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-md mt-0.5">
+                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-md mt-0.5">
                                         Execute scripts automatically on code changes. When disabled, use the Run button.
                                     </p>
                                 </div>
@@ -204,7 +204,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                     aria-checked={settings.autoRunJS}
                                     onClick={() => updateSettings({ autoRunJS: !settings.autoRunJS })}
                                     className={`relative ml-4 w-9 h-5 rounded-full transition-colors ${
-                                        settings.autoRunJS ? 'bg-[#3ecf5e]' : 'bg-[#2a2a2a]'
+                                        settings.autoRunJS ? 'bg-teal' : 'bg-product-active'
                                     }`}
                                 >
                                     <div
@@ -218,15 +218,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                             {/* Preview Delay */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3">
                                 <div>
-                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                    <div className="text-[13.5px] font-medium text-content-on-dark">
                                         Preview Delay ({settings.previewDelay}ms)
                                     </div>
-                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-sm mt-0.5">
+                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-sm mt-0.5">
                                         Debounce interval before refreshing the preview frame.
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3 w-full sm:w-48">
-                                    <span className="text-[11px] text-[#5c5c5c]">0ms</span>
+                                    <span className="text-[11px] text-content-on-dark-soft">0ms</span>
                                     <input
                                         type="range"
                                         min="0"
@@ -234,9 +234,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                         step="100"
                                         value={settings.previewDelay}
                                         onChange={(e) => updateSettings({ previewDelay: parseInt(e.target.value) })}
-                                        className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-[#2a2a2a] accent-[#e07856]"
+                                        className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-product-active accent-accent"
                                     />
-                                    <span className="text-[11px] text-[#5c5c5c]">1.5s</span>
+                                    <span className="text-[11px] text-content-on-dark-soft">1.5s</span>
                                 </div>
                             </div>
                         </div>
@@ -244,11 +244,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
                     {/* CodeRabbit AI */}
                     <div>
-                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                        <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
                             CodeRabbit AI Scanner
                         </div>
-                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] p-4">
-                            <div className="text-[13.5px] font-medium text-[#e8e8e8] mb-1">
+                        <div className="rounded-lg border border-stroke-dark bg-product p-4">
+                            <div className="text-[13.5px] font-medium text-content-on-dark mb-1">
                                 API Key
                             </div>
                             <input
@@ -256,9 +256,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                 value={settings.codeRabbitApiKey || ''}
                                 onChange={(e) => updateSettings({ codeRabbitApiKey: e.target.value })}
                                 placeholder="Enter your CodeRabbit / Gemini API Key..."
-                                className="w-full px-3 py-1.5 text-[13px] font-mono rounded-md bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8] focus:border-[#e07856] outline-none transition-colors"
+                                className="w-full px-3 py-1.5 text-[13px] font-mono rounded-md bg-product-elevated border border-stroke-dark text-content-on-dark focus:border-accent outline-none transition-colors"
                             />
-                            <p className="text-[12.5px] text-[#8a8a8a] mt-2">
+                            <p className="text-[12.5px] text-content-on-dark-soft mt-2">
                                 Used by the AI bug scanner to audit project code for logic issues and security vulnerabilities.
                             </p>
                         </div>
@@ -266,17 +266,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
                     {/* Voice Commands */}
                     <div>
-                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                        <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
                             Voice Commands
                         </div>
-                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] overflow-hidden">
+                        <div className="rounded-lg border border-stroke-dark bg-product overflow-hidden">
                             {/* Spoken Feedback */}
-                            <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
+                            <div className="flex items-center justify-between p-4 border-b border-stroke-dark">
                                 <div>
-                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                    <div className="text-[13.5px] font-medium text-content-on-dark">
                                         Spoken Feedback
                                     </div>
-                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-md mt-0.5">
+                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-md mt-0.5">
                                         Speak a short confirmation after each command.
                                         {!voiceSynthesisSupported && ' (Unsupported in this browser)'}
                                     </p>
@@ -288,7 +288,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                     onClick={() => updateSettings({ voiceFeedback: !settings.voiceFeedback })}
                                     disabled={!voiceSynthesisSupported}
                                     className={`relative ml-4 w-9 h-5 rounded-full transition-colors ${
-                                        settings.voiceFeedback ? 'bg-[#3ecf5e]' : 'bg-[#2a2a2a]'
+                                        settings.voiceFeedback ? 'bg-teal' : 'bg-product-active'
                                     } ${!voiceSynthesisSupported ? 'opacity-40 cursor-not-allowed' : ''}`}
                                 >
                                     <div
@@ -300,12 +300,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                             </div>
 
                             {/* Continuous Listening */}
-                            <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
+                            <div className="flex items-center justify-between p-4 border-b border-stroke-dark">
                                 <div>
-                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                    <div className="text-[13.5px] font-medium text-content-on-dark">
                                         Continuous Listening
                                     </div>
-                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-md mt-0.5">
+                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-md mt-0.5">
                                         Keep the microphone active for sequential commands.
                                     </p>
                                 </div>
@@ -315,7 +315,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                     aria-checked={settings.voiceContinuous}
                                     onClick={() => updateSettings({ voiceContinuous: !settings.voiceContinuous })}
                                     className={`relative ml-4 w-9 h-5 rounded-full transition-colors ${
-                                        settings.voiceContinuous ? 'bg-[#3ecf5e]' : 'bg-[#2a2a2a]'
+                                        settings.voiceContinuous ? 'bg-teal' : 'bg-product-active'
                                     }`}
                                 >
                                     <div
@@ -329,17 +329,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                             {/* Language */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3">
                                 <div>
-                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                    <div className="text-[13.5px] font-medium text-content-on-dark">
                                         Recognition Language
                                     </div>
-                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-sm mt-0.5">
+                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-sm mt-0.5">
                                         Language model used for speech transcription.
                                     </p>
                                 </div>
                                 <select
                                     value={settings.voiceLanguage}
                                     onChange={(e) => updateSettings({ voiceLanguage: e.target.value })}
-                                    className="bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8] text-[13px] rounded-md px-3 py-1.5 focus:border-[#e07856] outline-none transition-colors"
+                                    className="bg-product-elevated border border-stroke-dark text-content-on-dark text-[13px] rounded-md px-3 py-1.5 focus:border-accent outline-none transition-colors"
                                 >
                                     {VOICE_LANGUAGES.map((lang) => (
                                         <option key={lang.code} value={lang.code}>
@@ -353,26 +353,26 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
                     {/* Storage & Snapshots */}
                     <div>
-                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                        <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
                             Storage & Snapshots
                         </div>
-                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] p-4">
+                        <div className="rounded-lg border border-stroke-dark bg-product p-4">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                    <Database className="w-4 h-4 text-[#8a8a8a]" />
-                                    <span className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                    <Database className="w-4 h-4 text-content-on-dark-soft" />
+                                    <span className="text-[13.5px] font-medium text-content-on-dark">
                                         Local Storage Usage
                                     </span>
                                 </div>
-                                <span className="text-[12px] text-[#8a8a8a]">
+                                <span className="text-[12px] text-content-on-dark-soft">
                                     {(storageUsage.usedBytes / 1024 / 1024).toFixed(2)} MB / {(storageUsage.maxBytes / 1024 / 1024).toFixed(2)} MB
                                 </span>
                             </div>
 
-                            <div className="w-full bg-[#1c1c1c] rounded-full h-1.5 mb-4 overflow-hidden border border-[#2a2a2a]">
+                            <div className="w-full bg-product-elevated rounded-full h-1.5 mb-4 overflow-hidden border border-stroke-dark">
                                 <div
                                     className={`h-full rounded-full transition-all ${
-                                        storageUsage.percentage > 80 ? 'bg-[#e5484d]' : 'bg-[#e07856]'
+                                        storageUsage.percentage > 80 ? 'bg-danger' : 'bg-accent'
                                     }`}
                                     style={{ width: `${Math.min(100, storageUsage.percentage)}%` }}
                                 />
@@ -381,9 +381,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                             <div className="flex flex-wrap gap-2.5">
                                 <button
                                     onClick={cleanUpOldSnapshots}
-                                    className="inline-flex items-center gap-1.5 bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] text-[#e8e8e8] px-3 py-1.5 rounded-md text-[12.5px] font-medium transition-colors"
+                                    className="inline-flex items-center gap-1.5 bg-product-elevated hover:bg-product-active border border-stroke-dark text-content-on-dark px-3 py-1.5 rounded-md text-[12.5px] font-medium transition-colors"
                                 >
-                                    <Trash2 className="w-3.5 h-3.5 text-[#8a8a8a]" />
+                                    <Trash2 className="w-3.5 h-3.5 text-content-on-dark-soft" />
                                     Clean Auto-Snapshots
                                 </button>
 
@@ -396,9 +396,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                 />
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="inline-flex items-center gap-1.5 bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] text-[#e8e8e8] px-3 py-1.5 rounded-md text-[12.5px] font-medium transition-colors"
+                                    className="inline-flex items-center gap-1.5 bg-product-elevated hover:bg-product-active border border-stroke-dark text-content-on-dark px-3 py-1.5 rounded-md text-[12.5px] font-medium transition-colors"
                                 >
-                                    <Upload className="w-3.5 h-3.5 text-[#8a8a8a]" />
+                                    <Upload className="w-3.5 h-3.5 text-content-on-dark-soft" />
                                     Import Project
                                 </button>
                             </div>
@@ -407,16 +407,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
                     {/* Layout Settings */}
                     <div>
-                        <div className="text-[12.5px] font-medium text-[#8a8a8a] mb-2.5">
+                        <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
                             Layout
                         </div>
-                        <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] overflow-hidden">
+                        <div className="rounded-lg border border-stroke-dark bg-product overflow-hidden">
                             <div className="flex items-center justify-between p-4">
                                 <div>
-                                    <div className="text-[13.5px] font-medium text-[#e8e8e8]">
+                                    <div className="text-[13.5px] font-medium text-content-on-dark">
                                         Show Footer
                                     </div>
-                                    <p className="text-[12.5px] text-[#8a8a8a] max-w-md mt-0.5">
+                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-md mt-0.5">
                                         Toggle footer visibility. When hidden, the workspace fills the viewport.
                                     </p>
                                 </div>
@@ -426,7 +426,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                     aria-checked={!focusMode}
                                     onClick={toggleFocusMode}
                                     className={`relative ml-4 w-9 h-5 rounded-full transition-colors ${
-                                        !focusMode ? 'bg-[#3ecf5e]' : 'bg-[#2a2a2a]'
+                                        !focusMode ? 'bg-teal' : 'bg-product-active'
                                     }`}
                                 >
                                     <div
@@ -441,16 +441,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between px-6 py-4 border-t border-[#2a2a2a] bg-[#161616]">
+                <div className="flex items-center justify-between px-6 py-4 border-t border-stroke-dark bg-product">
                     <button
                         onClick={resetSettings}
-                        className="px-3 py-1.5 text-[12.5px] font-medium text-[#8a8a8a] hover:text-[#e8e8e8] transition-colors rounded-md"
+                        className="px-3 py-1.5 text-[12.5px] font-medium text-content-on-dark-soft hover:text-content-on-dark transition-colors rounded-md"
                     >
                         Reset to Defaults
                     </button>
                     <button
                         onClick={onClose}
-                        className="px-4 py-1.5 bg-[#1c1c1c] hover:bg-[#242424] border border-[#2a2a2a] text-[#e8e8e8] rounded-md text-[13px] font-medium transition-colors"
+                        className="px-4 py-1.5 bg-product-elevated hover:bg-product-active border border-stroke-dark text-content-on-dark rounded-md text-[13px] font-medium transition-colors"
                     >
                         Done
                     </button>

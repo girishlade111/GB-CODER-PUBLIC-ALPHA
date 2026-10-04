@@ -49,15 +49,15 @@ const FormatToast: React.FC<FormatToastProps> = ({
     if (!isVisible) return null;
 
     const bgColor = {
-        success: 'bg-[#1c1c1c] border border-[#3ecf5e]/30',
-        error: 'bg-[#1c1c1c] border border-[#e5484d]/30',
-        info: 'bg-[#1c1c1c] border border-[#2a2a2a]',
+        success: 'bg-product-elevated border border-teal',
+        error: 'bg-product-elevated border border-danger',
+        info: 'bg-product-elevated border border-stroke-dark',
     }[type];
 
     const iconColor = {
-        success: 'text-[#3ecf5e]',
-        error: 'text-[#e5484d]',
-        info: 'text-[#8a8a8a]',
+        success: 'text-teal',
+        error: 'text-danger',
+        info: 'text-content-on-dark-soft',
     }[type];
 
     const Icon = {
@@ -73,12 +73,12 @@ const FormatToast: React.FC<FormatToastProps> = ({
         >
         <div className={`${bgColor} px-4 py-3 rounded-lg flex items-center gap-3 min-w-[300px] max-w-md`}>
                 <Icon className={`w-5 h-5 flex-shrink-0 ${iconColor}`} />
-                <span className="flex-1 text-[#e8e8e8] font-medium">{message}</span>
+                <span className="flex-1 text-content-on-dark font-medium">{message}</span>
 
                 {onUndo && (
                     <button
                         onClick={handleUndo}
-                        className="flex items-center gap-1 px-2 py-1 bg-[#2a2a2a] hover:bg-[#3a3a3a] rounded-md transition-colors text-sm text-[#8a8a8a] hover:text-[#e8e8e8]"
+                        className="flex items-center gap-1 px-2 py-1 bg-product-active hover:bg-product-active rounded-md transition-colors text-sm text-content-on-dark-soft hover:text-content-on-dark"
                         title="Undo format"
                     >
                         <Undo className="w-3 h-3" />
@@ -88,7 +88,7 @@ const FormatToast: React.FC<FormatToastProps> = ({
 
                 <button
                     onClick={handleClose}
-                    className="p-1 hover:bg-[#2a2a2a] rounded transition-colors text-[#5c5c5c] hover:text-[#e8e8e8]"
+                    className="p-1 hover:bg-product-active rounded transition-colors text-content-on-dark-soft hover:text-content-on-dark"
                     title="Close"
                 >
                     <X className="w-4 h-4" />

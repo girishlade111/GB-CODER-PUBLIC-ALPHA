@@ -67,15 +67,15 @@ const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({
 
   const getStatusIcon = () => {
     if (isSaving) {
-      return <Loader className="w-4 h-4 animate-spin text-[#8a8a8a]" />;
+      return <Loader className="w-4 h-4 animate-spin text-content-on-dark-soft" />;
     }
     if (showSaved) {
-      return <CheckCircle className="w-4 h-4 text-[#3ecf5e]" />;
+      return <CheckCircle className="w-4 h-4 text-teal" />;
     }
     if (autoSaveEnabled) {
-      return <Save className="w-4 h-4 text-[#5c5c5c]" />;
+      return <Save className="w-4 h-4 text-content-on-dark-soft" />;
     }
-    return <AlertCircle className="w-4 h-4 text-[#e07856]" />;
+    return <AlertCircle className="w-4 h-4 text-accent" />;
   };
 
   const getStatusText = () => {
@@ -87,10 +87,10 @@ const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({
   };
 
   const getStatusColor = () => {
-    if (isSaving) return 'text-[#8a8a8a] bg-[#1c1c1c] border-[#2a2a2a]';
-    if (showSaved) return 'text-[#3ecf5e] bg-[#3ecf5e]/10 border-[#3ecf5e]/25';
-    if (!autoSaveEnabled) return 'text-[#e07856] bg-[#e07856]/08 border-[#2a2a2a]';
-    return 'text-[#5c5c5c] bg-[#1c1c1c] border-[#2a2a2a]';
+    if (isSaving) return 'text-content-on-dark-soft bg-product-elevated border-stroke-dark';
+    if (showSaved) return 'text-teal bg-teal/10 border-teal';
+    if (!autoSaveEnabled) return 'text-accent bg-accent/08 border-stroke-dark';
+    return 'text-content-on-dark-soft bg-product-elevated border-stroke-dark';
   };
 
   return (
@@ -104,7 +104,7 @@ const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({
       <button
         onClick={onManualSave}
         disabled={isSaving}
-        className="flex items-center gap-2 px-3 py-1.5 bg-[#1c1c1c] border border-[#2a2a2a] hover:bg-[#242424] disabled:opacity-50 text-[#e8e8e8] rounded-md transition-colors text-sm"
+        className="flex items-center gap-2 px-3 py-1.5 bg-product-elevated border border-stroke-dark hover:bg-product-active disabled:opacity-50 text-content-on-dark rounded-md transition-colors text-sm"
         title="Save manually"
       >
         <Save className="w-4 h-4" />
@@ -113,7 +113,7 @@ const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({
 
       {/* Last Save Time (detailed) */}
       {lastSaveTime && (
-        <div className="flex items-center gap-1 text-xs text-[#5c5c5c]">
+        <div className="flex items-center gap-1 text-xs text-content-on-dark-soft">
           <Clock className="w-3 h-3" />
           <span className="hidden md:inline">
             {new Date(lastSaveTime).toLocaleString()}

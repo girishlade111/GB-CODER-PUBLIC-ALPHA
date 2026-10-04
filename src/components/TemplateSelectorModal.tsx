@@ -263,9 +263,9 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                           <div className="flex justify-between items-start">
                             <h3 className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.name}</h3>
                             <span className={`text-[10px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded-sm border ${
-                               template.difficulty === 'beginner' ? 'border-[#3ecf5e]/30 text-[#3ecf5e] bg-[#3ecf5e]/08' :
-                               template.difficulty === 'intermediate' ? 'border-[#e07856]/30 text-[#e07856] bg-[#e07856]/08' :
-                               'border-[#e5484d]/30 text-[#e5484d] bg-[#e5484d]/08'
+                               template.difficulty === 'beginner' ? 'border-teal text-teal bg-teal/08' :
+                               template.difficulty === 'intermediate' ? 'border-accent text-accent bg-accent/08' :
+                               'border-danger text-danger bg-danger'
                             }`}>{template.difficulty}</span>
                           </div>
                           <p className="text-xs text-gray-500 line-clamp-2 mt-1">{template.description}</p>
@@ -276,7 +276,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                         </div>
                         <button
                           onClick={(e) => handleLoadClick(e, template)}
-                          className="px-3 py-1 text-xs font-medium bg-[#e07856] text-[#e8e8e8] rounded-md hover:bg-[#e88a6d] transition-colors whitespace-nowrap"
+                          className="px-3 py-1 text-xs font-medium bg-accent text-content-on-dark rounded-md hover:bg-accent-hover transition-colors whitespace-nowrap"
                         >
                           Select
                         </button>
@@ -305,7 +305,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                 <div className="flex-1 p-5 overflow-y-auto">
                    <div className="aspect-video bg-white rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm flex flex-col overflow-hidden mb-6 relative group">
                       {previewPayload?.files ? (
-                        <div className="flex-1 p-4 overflow-y-auto text-xs font-mono text-gray-300 bg-[#1e1e1e]">
+                        <div className="flex-1 p-4 overflow-y-auto text-xs font-mono text-gray-300 bg-product">
                            <div className="text-gray-500 mb-4">// Project structure</div>
                            {previewPayload.files.map((f: any) => (
                              <div key={f.path} className="flex items-center gap-2 py-1.5">

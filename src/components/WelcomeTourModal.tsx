@@ -9,25 +9,25 @@ const TOUR_STEPS = [
   {
     title: 'Welcome to GB Coder',
     description: 'The fastest way to prototype and build modern web applications directly in your browser.',
-    icon: <Code2 className="w-12 h-12 text-[#e07856]" />,
+    icon: <Code2 className="w-12 h-12 text-accent" />,
     target: null, // Center screen
   },
   {
     title: 'This is your Editor',
     description: 'Write HTML, CSS, and JavaScript. We support TypeScript, JSX, and multi-file projects out of the box.',
-    icon: <Code2 className="w-8 h-8 text-[#8a8a8a]" />,
+    icon: <Code2 className="w-8 h-8 text-content-on-dark-soft" />,
     target: 'editor',
   },
   {
     title: 'Live Preview',
     description: 'Your code runs instantly in a secure, sandboxed iframe as you type. No refreshing needed.',
-    icon: <Play className="w-8 h-8 text-[#3ecf5e]" />,
+    icon: <Play className="w-8 h-8 text-teal" />,
     target: 'preview',
   },
   {
     title: 'AI is one click away',
     description: 'Select code and click the wand, or open the AI Chat to generate and fix code instantly.',
-    icon: <Sparkles className="w-8 h-8 text-[#e07856]" />,
+    icon: <Sparkles className="w-8 h-8 text-accent" />,
     target: 'ai',
   }
 ];
@@ -73,20 +73,20 @@ const WelcomeTourModal: React.FC<WelcomeTourModalProps> = ({ onClose }) => {
       aria-labelledby="tour-modal-title"
     >
       <div 
-        className={`bg-[#161616] border border-[#2a2a2a] rounded-lg w-full max-w-md overflow-hidden transform transition-all duration-300 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}
+        className={`bg-product border border-stroke-dark rounded-lg w-full max-w-md overflow-hidden transform transition-all duration-300 ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}
       >
-        <div className="flex justify-between items-center p-4 border-b border-[#2a2a2a]">
+        <div className="flex justify-between items-center p-4 border-b border-stroke-dark">
           <div className="flex space-x-1">
             {TOUR_STEPS.map((_, idx) => (
               <div 
                 key={idx} 
-                className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentStep ? 'w-6 bg-[#e07856]' : 'w-2 bg-[#2a2a2a]'}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentStep ? 'w-6 bg-accent' : 'w-2 bg-product-active'}`}
               />
             ))}
           </div>
           <button 
             onClick={handleClose}
-            className="text-[#5c5c5c] hover:text-[#e8e8e8] transition-colors rounded-md"
+            className="text-content-on-dark-soft hover:text-content-on-dark transition-colors rounded-md"
             aria-label="Skip Tour"
           >
             <X className="w-5 h-5" />
@@ -94,7 +94,7 @@ const WelcomeTourModal: React.FC<WelcomeTourModalProps> = ({ onClose }) => {
         </div>
 
         <div className="p-8 flex flex-col items-center text-center">
-          <div className="mb-6 p-4 rounded-full bg-[#0d0d0d] border border-[#2a2a2a]">
+          <div className="mb-6 p-4 rounded-full bg-product-soft border border-stroke-dark">
             {step.icon}
           </div>
           

@@ -25,7 +25,7 @@ const DocumentationPage: React.FC = () => {
     };
 
     return (
-        <div className={`min-h-screen transition-colors ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-50'}`}>
+        <div className={`min-h-screen transition-colors ${isDark ? 'bg-product' : 'bg-gray-50'}`}>
             {/* SEO Meta */}
             <div style={{ display: 'none' }}>
                 <script type="application/ld+json">

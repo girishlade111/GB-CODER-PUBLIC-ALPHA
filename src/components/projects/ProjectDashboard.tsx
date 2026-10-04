@@ -211,7 +211,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
                           onDelete(project);
                         }}
                         data-testid="dashboard-confirm-delete"
-                        className="rounded-md bg-[#e5484d] px-2.5 py-1 text-xs font-medium text-[#e8e8e8] hover:bg-[#e5484d]/90 transition-colors"
+                        className="rounded-md bg-danger px-2.5 py-1 text-xs font-medium text-content-on-dark hover:bg-danger transition-colors"
                       >
                         Delete
                       </button>
@@ -230,7 +230,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
                       onClick={() => setPendingDeleteId(project.id)}
                       aria-label={`Delete ${project.name}`}
                       data-testid="dashboard-delete-project"
-                      className="shrink-0 rounded-md p-1.5 text-content-muted opacity-0 transition-opacity hover:bg-surface-hover hover:text-[#e5484d] focus-visible:opacity-100 group-hover:opacity-100"
+                      className="shrink-0 rounded-md p-1.5 text-content-muted opacity-0 transition-opacity hover:bg-surface-hover hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
