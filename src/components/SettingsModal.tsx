@@ -245,54 +245,37 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     {/* AI Model Provider */}
                     <div>
                         <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
-                            AI Model Provider (Build with AI & Code Operations)
+                            AI Model Provider
                         </div>
-                        <div className="rounded-lg border border-stroke-dark bg-product p-4 space-y-4">
-                            <div>
-                                <div className="text-[13.5px] font-medium text-content-on-dark mb-0.5">
-                                    Default AI Model
+                        <div className="rounded-lg border border-stroke-dark bg-product overflow-hidden">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3">
+                                <div>
+                                    <div className="text-[13.5px] font-medium text-content-on-dark">
+                                        Default AI Model
+                                    </div>
+                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-sm mt-0.5">
+                                        Select which model powers Build with AI, code explain, fix, and optimize.
+                                    </p>
                                 </div>
-                                <p className="text-[12.5px] text-content-on-dark-soft mb-3">
-                                    Select which AI model powers "Build with AI", code enhancement, explanations, and fixes.
-                                </p>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                                    {AI_PROVIDERS.map((provider) => {
-                                        const isSelected = (settings.aiProvider || 'inception') === provider.id;
-                                        return (
-                                            <button
-                                                key={provider.id}
-                                                type="button"
-                                                onClick={() => updateSettings({ aiProvider: provider.id })}
-                                                className={`flex flex-col items-start p-3 rounded-lg border text-left transition-all ${
-                                                    isSelected
-                                                        ? 'border-accent bg-accent/15 text-content-on-dark shadow-sm ring-1 ring-accent/30'
-                                                        : 'border-stroke-dark bg-product-elevated hover:border-stroke-subtle text-content-on-dark-soft hover:text-content-on-dark'
-                                                }`}
-                                            >
-                                                <div className="flex items-center justify-between w-full">
-                                                    <span className="text-[13px] font-medium">
-                                                        {provider.name}
-                                                    </span>
-                                                    <span
-                                                        className={`text-[9.5px] px-1.5 py-0.5 rounded font-mono font-medium ${
-                                                            isSelected
-                                                                ? 'bg-accent text-white'
-                                                                : 'bg-dark-gray text-content-on-dark-soft'
-                                                        }`}
-                                                    >
-                                                        {provider.badge}
-                                                    </span>
-                                                </div>
-                                                <span className="text-[11.5px] font-mono text-content-on-dark-soft mt-1">
-                                                    {provider.model}
-                                                </span>
-                                                <p className="text-[11px] text-content-on-dark-soft/75 mt-1.5 line-clamp-2">
-                                                    {provider.description}
-                                                </p>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                                <select
+                                    value={settings.aiProvider || 'inception'}
+                                    onChange={(e) => updateSettings({ aiProvider: e.target.value as AIProviderId })}
+                                    className="bg-product-elevated border border-stroke-dark text-content-on-dark text-[13px] rounded-md px-3 py-1.5 focus:border-accent outline-none transition-colors"
+                                >
+                                    {AI_PROVIDERS.map((provider) => (
+                                        <option key={provider.id} value={provider.id}>
+                                            {provider.name} — {provider.model} ({provider.badge})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="px-4 py-2.5 bg-product-elevated/40 border-t border-stroke-dark flex items-center justify-between text-[11.5px] text-content-on-dark-soft">
+                                <span className="truncate mr-2">
+                                    {AI_PROVIDERS.find((p) => p.id === (settings.aiProvider || 'inception'))?.description}
+                                </span>
+                                <span className="font-mono text-[10.5px] px-2 py-0.5 rounded bg-product-elevated border border-stroke-dark shrink-0">
+                                    {AI_PROVIDERS.find((p) => p.id === (settings.aiProvider || 'inception'))?.model}
+                                </span>
                             </div>
                         </div>
                     </div>
