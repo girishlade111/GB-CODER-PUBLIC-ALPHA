@@ -69,6 +69,14 @@ import businessLocal from './templates/business/local';
 import startupWaitlist from './templates/startup/waitlist';
 import saasPricing from './templates/saas/pricing';
 
+// Phase 3 Enterprise Framework Templates (React, Vue, Next.js)
+import reactSaasPlatform from './templates/react/saasPlatform';
+import reactEcommerceStore from './templates/react/ecommerceStore';
+import vueCloudDashboard from './templates/vue/cloudDashboard';
+import vueAgencyPortfolio from './templates/vue/agencyPortfolio';
+import nextjsAiStartup from './templates/nextjs/aiStartup';
+import nextjsCrmPlatform from './templates/nextjs/crmPlatform';
+
 // Exported payload type
 export type TemplatePayload = 
   | { html: string; css: string; javascript: string }
@@ -90,8 +98,14 @@ const templateRegistry: Record<string, TemplatePayload | (() => Promise<Template
   'react-todo': reactTodo,
   'react-weather': reactWeather,
   'react-dashboard': reactDashboard,
+  'react-saas-platform': reactSaasPlatform,
+  'react-ecommerce-store': reactEcommerceStore,
   'vue-tasks': vueTasks,
+  'vue-cloud-dashboard': vueCloudDashboard,
+  'vue-agency-portfolio': vueAgencyPortfolio,
   'nextjs-blog': nextjsBlog,
+  'nextjs-ai-startup': nextjsAiStartup,
+  'nextjs-crm-platform': nextjsCrmPlatform,
   'business-agency': businessAgency,
   'business-consulting': businessConsulting,
   'business-local': businessLocal,
@@ -339,6 +353,78 @@ const templateMetadata: Record<string, CodeTemplate> = {
     difficulty: 'advanced',
     features: ['App Router folder structure', 'Nested layout + page composition', 'Dynamic [slug] route simulation', 'generateStaticParams equivalent', 'notFound() handling', 'Hand-written markdown parser', 'Auto table of contents with scroll-spy', 'Frontmatter post dataset', 'Tag filtering and search', 'History-API back/forward navigation'],
     projectType: 'react', // App Router conventions, emulated client-side so it runs in the playground.
+    author: 'GB Coder',
+  },
+  'react-saas-platform': {
+    id: 'react-saas-platform',
+    name: 'Nexus AI Enterprise Platform',
+    description: 'Enterprise AI orchestration & workspace: interactive prompt playground, model switcher, live KPI cards with SVG sparklines, workflow pipelines, and audit log.',
+    category: 'react',
+    subcategory: 'SaaS',
+    tags: ['react', 'saas', 'ai', 'dashboard', 'enterprise', 'dark-mode'],
+    difficulty: 'advanced',
+    features: ['Collapsible sidebar with cluster switcher', 'Interactive AI prompt playground with simulated streaming & model switcher', '4 KPI cards with SVG sparklines & trend delta', 'Workflow pipeline kanban with stage transitions & tags', 'Interactive SVG analytics chart with dual datasets & hover tooltips', 'Real-time activity audit log with severity filtering', 'Team members & role-based access control modal', 'Dark mode glassmorphism with subtle glows'],
+    projectType: 'react',
+    author: 'GB Coder',
+  },
+  'react-ecommerce-store': {
+    id: 'react-ecommerce-store',
+    name: 'Aura Luxury Tech Storefront',
+    description: 'Ultra-premium lifestyle & hardware storefront: 3D-styled hero showcase, category filters, interactive slide-over cart drawer with promo codes, product modal, and rating breakdown.',
+    category: 'react',
+    subcategory: 'E-commerce',
+    tags: ['react', 'ecommerce', 'store', 'cart', 'luxury', 'hardware'],
+    difficulty: 'advanced',
+    features: ['Floating glassmorphic navigation with live cart count & currency selector', 'Hero spotlight with dynamic device render & feature callouts', '8 premium tech products with category filtering & instant search', 'Interactive slide-over cart drawer with quantity steppers & free shipping meter', 'Validating promo code system (AURA20)', 'Product quick-view modal with specs table, color swatches & stock badge', 'Customer reviews section with star distribution & verified buyer tags'],
+    projectType: 'react',
+    author: 'GB Coder',
+  },
+  'vue-cloud-dashboard': {
+    id: 'vue-cloud-dashboard',
+    name: 'CloudPulse DevOps Console',
+    description: 'Enterprise serverless & container monitoring dashboard built with Vue 3 Composition API: real-time server health matrix, live SVG metric gauges, CI/CD pipeline visualizer, and log stream viewer.',
+    category: 'vue',
+    subcategory: 'DevOps',
+    tags: ['vue', 'cloud', 'devops', 'monitoring', 'charts', 'infrastructure'],
+    difficulty: 'advanced',
+    features: ['Vue 3 script setup with reactive composables', 'Cluster health status matrix with animated pulse indicators', 'Interactive SVG radial gauges for CPU, Memory, Disk, and Network', 'Interactive deployment pipeline tracker with stage durations & logs', 'Live terminal log stream with auto-scroll, severity filter & search', 'Multi-region cluster switcher (US-East, EU-Central, AP-East)', 'Worker node fleet management with cordon & drain actions'],
+    projectType: 'vue',
+    author: 'GB Coder',
+  },
+  'vue-agency-portfolio': {
+    id: 'vue-agency-portfolio',
+    name: 'Vanguard Creative Studio',
+    description: 'Avant-garde design studio site built with Vue 3: kinetic typography hero, interactive case study grid with hover reveals, live project budget estimator, and consultation modal.',
+    category: 'vue',
+    subcategory: 'Portfolio',
+    tags: ['vue', 'portfolio', 'agency', 'creative', 'animation', 'minimal'],
+    difficulty: 'advanced',
+    features: ['Kinetic typography entrance reveal with glowing gradient mesh', 'Filterable case study showcase (Design Systems, 3D/Motion, Web Platforms, AI Tools)', 'Interactive project budget & scope calculator with real-time price estimation', 'Accordion-based interactive capabilities & deliverables list', 'Dynamic client logo marquee with continuous smooth ticker animation', 'Validated inquiry / consultation booking modal with budget selector'],
+    projectType: 'vue',
+    author: 'GB Coder',
+  },
+  'nextjs-ai-startup': {
+    id: 'nextjs-ai-startup',
+    name: 'Synapse AI Platform & Docs',
+    description: 'App-Router-architected Next.js AI platform: interactive model playground with streaming replies, full documentation portal with code tabs, interactive pricing matrix, and terminal hero.',
+    category: 'nextjs',
+    subcategory: 'AI Platform',
+    tags: ['nextjs', 'react', 'ai', 'docs', 'app-router', 'saas'],
+    difficulty: 'advanced',
+    features: ['Next.js 14 App Router layout & page structure simulation', 'Client-side routing across /, /playground, /pricing, and /docs', 'Glowing aurora hero with interactive terminal typing effect', 'Live AI Model Playground with temperature, prompt templates & streaming responses', 'Interactive pricing matrix with monthly/yearly billing & volume discount slider', 'Full Documentation center with categorized sidebar, search filter, and copyable API code', 'Feature comparison table with enterprise security & compliance details'],
+    projectType: 'react', // App Router conventions emulated client-side
+    author: 'GB Coder',
+  },
+  'nextjs-crm-platform': {
+    id: 'nextjs-crm-platform',
+    name: 'Relate Enterprise CRM',
+    description: 'Full Next.js App Router CRM suite: multi-stage sales pipeline kanban with stage advancement, searchable customer directory, revenue forecasting charts, and deal management.',
+    category: 'nextjs',
+    subcategory: 'CRM & Sales',
+    tags: ['nextjs', 'react', 'crm', 'sales', 'kanban', 'app-router'],
+    difficulty: 'advanced',
+    features: ['App Router nested layouts with persistent command sidebar', 'Route navigation: /dashboard, /pipeline, /customers, /analytics', 'Multi-stage Sales Pipeline Kanban with click stage advancement & total deal value', 'Customer & Account directory with instant search, status pills, and sorting', 'Revenue forecasting charts with quarterly target progress indicators', 'Enterprise aesthetic: tabular data typography, crisp badges, micro-interactions'],
+    projectType: 'react', // App Router conventions emulated client-side
     author: 'GB Coder',
   },
 };

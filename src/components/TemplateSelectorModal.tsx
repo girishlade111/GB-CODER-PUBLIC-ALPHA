@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { X, Search, Code2, Layers, Download, Upload, Eye, FileCode, Check } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { enhancedTemplateService, CodeTemplate } from '../services/enhancedTemplateService';
+import { buildProject } from '../services/bundlerService';
+import { languageForPath, ProjectType } from '../types/files';
 import toast from 'react-hot-toast';
 
 interface TemplateSelectorModalProps {
@@ -43,6 +45,74 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   const [previewTemplate, setPreviewTemplate] = useState<CodeTemplate | null>(null);
   const [previewPayload, setPreviewPayload] = useState<any | null>(null);
   const [confirmTemplate, setConfirmTemplate] = useState<CodeTemplate | null>(null);
+
+  const [previewTab, setPreviewTab] = useState<'live' | 'files'>('live');
+  const [bundledHtml, setBundledHtml] = useState<string | null>(null);
+  const [isBundling, setIsBundling] = useState(false);
+
+  // Compile multi-file templates (React, Vue, Next.js) for interactive live preview
+  useEffect(() => {
+    if (!previewPayload?.files || !previewTemplate) {
+      setBundledHtml(null);
+      setIsBundling(false);
+      return;
+    }
+    let isCurrent = true;
+    setIsBundling(true);
+
+    const rawType = previewTemplate.projectType;
+    const projType = (rawType === 'vue' ? 'vue' : 'react') as ProjectType;
+    const files = previewPayload.files.map((f: any) => ({
+      path: f.path,
+      content: f.content,
+      language: languageForPath(f.path),
+    }));
+    const entry = files.find((f: any) => f.path === (projType === 'vue' ? 'main.js' : 'main.jsx'))?.path;
+
+    buildProject({ projectType: projType, files, entry })
+      .then((res) => {
+        if (!isCurrent) return;
+        if (res.code) {
+          const importMapHtml = res.importMap && Object.keys(res.importMap).length > 0
+            ? `<script type="importmap">${JSON.stringify({ imports: res.importMap })}</script>`
+            : '';
+          const mountNode = projType === 'vue' ? '<div id="app"></div>' : '<div id="root"></div>';
+          const doc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  ${importMapHtml}
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+    ${res.css || ''}
+  </style>
+</head>
+<body>
+  ${mountNode}
+  <script type="module">
+    ${res.code}
+  </script>
+</body>
+</html>`;
+          setBundledHtml(doc);
+        } else {
+          setBundledHtml(null);
+        }
+      })
+      .catch((err) => {
+        console.warn('Live preview bundling error:', err);
+        if (isCurrent) setBundledHtml(null);
+      })
+      .finally(() => {
+        if (isCurrent) setIsBundling(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [previewPayload, previewTemplate]);
 
   const [templateMetadata, setTemplateMetadata] = useState<CodeTemplate[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -344,17 +414,70 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                 </div>
                 
                 <div className="flex-1 p-5 overflow-y-auto">
+                   {previewPayload?.files && (
+                     <div className="flex items-center justify-between mb-2">
+                       <div className="flex gap-1.5 p-0.5 rounded-lg bg-black/5 dark:bg-surface-hover">
+                         <button
+                           onClick={() => setPreviewTab('live')}
+                           className={`px-3 py-1 text-xs rounded-md font-medium flex items-center gap-1.5 transition-all ${
+                             previewTab === 'live'
+                               ? 'bg-accent text-white shadow-sm'
+                               : 'text-content-secondary hover:text-content-primary'
+                           }`}
+                         >
+                           <Eye className="w-3.5 h-3.5" /> Live Preview
+                         </button>
+                         <button
+                           onClick={() => setPreviewTab('files')}
+                           className={`px-3 py-1 text-xs rounded-md font-medium flex items-center gap-1.5 transition-all ${
+                             previewTab === 'files'
+                               ? 'bg-accent text-white shadow-sm'
+                               : 'text-content-secondary hover:text-content-primary'
+                           }`}
+                         >
+                           <FileCode className="w-3.5 h-3.5" /> Files ({previewPayload.files.length})
+                         </button>
+                       </div>
+                       <span className="text-[10px] text-content-secondary font-mono">
+                         {previewTemplate.projectType.toUpperCase()}
+                       </span>
+                     </div>
+                   )}
+
                    <div className="aspect-video bg-white rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm flex flex-col overflow-hidden mb-6 relative group">
                       {previewPayload?.files ? (
-                        <div className="flex-1 p-4 overflow-y-auto text-xs font-mono text-content-on-dark bg-product">
-                           <div className="text-content-on-dark-soft mb-4">// Project structure</div>
-                           {previewPayload.files.map((f: any) => (
-                             <div key={f.path} className="flex items-center gap-2 py-1.5">
-                                <FileCode className="w-4 h-4 text-accent" />
-                                {f.path}
-                             </div>
-                           ))}
-                        </div>
+                        previewTab === 'files' ? (
+                          <div className="flex-1 p-4 overflow-y-auto text-xs font-mono text-content-on-dark bg-product">
+                             <div className="text-content-on-dark-soft mb-4">// Project structure</div>
+                             {previewPayload.files.map((f: any) => (
+                               <div key={f.path} className="flex items-center gap-2 py-1.5">
+                                  <FileCode className="w-4 h-4 text-accent" />
+                                  {f.path}
+                               </div>
+                             ))}
+                          </div>
+                        ) : isBundling ? (
+                          <div className="flex-1 flex flex-col items-center justify-center bg-gray-950 text-white gap-3 p-4">
+                             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+                             <span className="text-xs text-gray-400">Compiling interactive preview...</span>
+                          </div>
+                        ) : bundledHtml ? (
+                          <iframe 
+                             srcDoc={bundledHtml}
+                             className="w-full h-full border-0 bg-white"
+                             title="Live Preview"
+                          />
+                        ) : (
+                          <div className="flex-1 p-4 overflow-y-auto text-xs font-mono text-content-on-dark bg-product">
+                             <div className="text-content-on-dark-soft mb-4">// Project structure</div>
+                             {previewPayload.files.map((f: any) => (
+                               <div key={f.path} className="flex items-center gap-2 py-1.5">
+                                  <FileCode className="w-4 h-4 text-accent" />
+                                  {f.path}
+                               </div>
+                             ))}
+                          </div>
+                        )
                       ) : previewPayload?.html ? (
                         <iframe 
                            srcDoc={`<!DOCTYPE html><html><head><style>${previewPayload.css}</style></head><body>${previewPayload.html}<script>${previewPayload.javascript}</script></body></html>`}
@@ -364,9 +487,6 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                       ) : (
                         <div className="flex-1 flex items-center justify-center text-content-secondary">Loading Preview...</div>
                       )}
-                      
-                      {/* Interactive overlay just to block clicks on iframe */}
-                      <div className="absolute inset-0 z-10" />
                    </div>
 
                    <div className="space-y-6">
