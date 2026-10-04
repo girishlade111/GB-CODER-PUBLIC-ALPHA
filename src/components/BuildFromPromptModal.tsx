@@ -361,15 +361,15 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onClick={handleOverlayClick}
     >
-      <div className="w-full max-w-[560px] rounded-lg border border-stroke-subtle bg-surface-raised p-6 shadow-elevated">
+      <div className="w-full max-w-[560px] rounded-xl border border-stroke-dark bg-product p-6 shadow-2xl text-content-on-dark animate-scale-in">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="rounded-lg bg-violet-600/20 p-2 text-violet-300">
+            <div className="rounded-lg bg-accent/15 p-2 text-accent">
               <Wand2 className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="font-sans text-lg font-medium text-bright-white">Build with AI</h2>
-              <p className="mt-1 text-sm text-gray-400">
+              <h2 className="font-sans text-lg font-semibold text-content-on-dark">Build with AI</h2>
+              <p className="mt-0.5 text-sm text-content-on-dark-soft">
                 Describe what you want to build in plain English
               </p>
             </div>
@@ -377,7 +377,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg p-2 text-content-on-dark-soft transition-colors hover:bg-product-elevated hover:text-content-on-dark disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Close Build with AI modal"
             title="Close"
           >
@@ -385,10 +385,10 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
           </button>
         </div>
 
-        {/* Model Provider Dropdown Selector */}
-        <div className="mb-4">
+        {/* Model Provider Custom Dropdown */}
+        <div className="mb-4 relative" ref={dropdownRef}>
           <div className="flex items-center justify-between mb-1.5">
-            <label htmlFor="ai-model-select" className="text-[12px] font-medium text-content-on-dark-soft flex items-center gap-1.5">
+            <label className="text-[12px] font-medium text-content-on-dark-soft flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 text-accent" />
               <span>AI Model:</span>
             </label>
@@ -396,24 +396,93 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
               {AI_PROVIDERS.find((p) => p.id === selectedProvider)?.badge}
             </span>
           </div>
-          <div className="relative">
-            <select
-              id="ai-model-select"
-              value={selectedProvider}
-              onChange={(e) => handleProviderSelect(e.target.value as AIProviderId)}
-              disabled={isLoading}
-              className="w-full bg-product border border-stroke-dark hover:border-stroke-subtle focus:border-accent text-content-on-dark text-[13px] rounded-lg px-3.5 py-2 outline-none transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed appearance-none pr-10 font-sans"
-            >
-              {AI_PROVIDERS.map((p) => (
-                <option key={p.id} value={p.id} className="bg-surface-raised text-content-on-dark py-1">
-                  {p.name} — {p.model} ({p.badge})
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-content-on-dark-soft">
-              <ChevronDown className="h-4 w-4" />
+
+          {/* Custom Dropdown Trigger Button */}
+          <button
+            type="button"
+            id="ai-model-dropdown-trigger"
+            aria-haspopup="listbox"
+            aria-expanded={isDropdownOpen}
+            onClick={() => !isLoading && setIsDropdownOpen((prev) => !prev)}
+            disabled={isLoading}
+            className={`w-full flex items-center justify-between bg-product-elevated border ${
+              isDropdownOpen ? 'border-accent ring-1 ring-accent/30' : 'border-stroke-dark hover:border-stroke-subtle'
+            } text-content-on-dark text-[13px] rounded-lg px-3.5 py-2.5 outline-none transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
+          >
+            <div className="flex items-center gap-2 overflow-hidden text-left">
+              <span className="font-medium text-white truncate">
+                {AI_PROVIDERS.find((p) => p.id === selectedProvider)?.name}
+              </span>
+              <span className="text-content-on-dark-soft text-[11.5px] font-mono truncate">
+                — {AI_PROVIDERS.find((p) => p.id === selectedProvider)?.model}
+              </span>
             </div>
-          </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-accent/15 text-accent border border-accent/20">
+                {AI_PROVIDERS.find((p) => p.id === selectedProvider)?.badge}
+              </span>
+              <ChevronDown className={`h-4 w-4 text-content-on-dark-soft transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </div>
+          </button>
+
+          {/* Custom Dropdown Menu Listbox */}
+          {isDropdownOpen && (
+            <div
+              role="listbox"
+              className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-lg border border-stroke-dark bg-[#1e1c19] shadow-2xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100"
+            >
+              {AI_PROVIDERS.map((p) => {
+                const isSelected = selectedProvider === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => {
+                      handleProviderSelect(p.id);
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-md text-left transition-all ${
+                      isSelected
+                        ? 'bg-accent/15 text-white border border-accent/30'
+                        : 'hover:bg-product-elevated text-content-on-dark hover:text-white border border-transparent'
+                    }`}
+                  >
+                    <div className="flex flex-col min-w-0 pr-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-medium text-white leading-tight">
+                          {p.name}
+                        </span>
+                        <span className="text-[11px] font-mono text-content-on-dark-soft">
+                          {p.model}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-content-on-dark-soft/80 mt-0.5 truncate">
+                        {p.description}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded ${
+                        isSelected
+                          ? 'bg-accent text-white'
+                          : 'bg-product-elevated text-content-on-dark-soft border border-stroke-dark'
+                      }`}>
+                        {p.badge}
+                      </span>
+                      {isSelected ? (
+                        <Check className="h-4 w-4 text-accent" />
+                      ) : (
+                        <div className="w-4 h-4" />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <p className="mt-1.5 text-[11.5px] text-content-on-dark-soft/80">
             {AI_PROVIDERS.find((p) => p.id === selectedProvider)?.description}
           </p>
@@ -431,9 +500,9 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
             maxLength={MAX_PROMPT_LENGTH}
             disabled={isLoading}
             placeholder="Example: A glassmorphism login form with animated gradient background and smooth input focus effects"
-            className="min-h-[120px] w-full resize-y rounded-lg border border-gray-700 bg-dark-gray px-4 py-3 pb-8 text-sm text-bright-white placeholder-gray-500 outline-none transition-colors focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-[120px] w-full resize-y rounded-lg border border-stroke-dark bg-product-elevated px-4 py-3 pb-8 text-sm text-content-on-dark placeholder-content-on-dark-soft/50 outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent/30 disabled:cursor-not-allowed disabled:opacity-60"
           />
-          <div className="absolute bottom-3 right-3 text-xs text-gray-500">
+          <div className="absolute bottom-3 right-3 text-xs text-content-on-dark-soft">
             {promptText.length} / {MAX_PROMPT_LENGTH}
           </div>
         </div>
@@ -460,17 +529,21 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
           type="button"
           onClick={handleGenerate}
           disabled={isGenerateDisabled}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-accent hover:bg-accent-hover px-4 py-2.5 text-[13px] font-medium text-content-on-dark transition-colors disabled:cursor-not-allowed disabled:bg-product-elevated disabled:border disabled:border-stroke-dark disabled:text-content-on-dark-soft"
+          className={`mt-5 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 px-4 text-[13.5px] font-semibold transition-all shadow-sm ${
+            isGenerateDisabled
+              ? 'bg-product-elevated border border-stroke-dark text-content-on-dark-soft/60 cursor-not-allowed'
+              : 'bg-accent hover:bg-accent-hover text-white cursor-pointer active:scale-[0.99]'
+          }`}
         >
           {isLoading ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Generating...
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
+              <span>Generating...</span>
             </>
           ) : (
             <>
               <Wand2 className="h-4 w-4" />
-              Generate Code
+              <span>Generate Code</span>
             </>
           )}
         </button>
@@ -494,8 +567,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
           </div>
         )}
 
-        <p className="mt-4 text-xs text-gray-500">
-          {' '}
+        <p className="mt-4 text-xs text-content-on-dark-soft/75">
           Your current code is auto-saved before generation
         </p>
       </div>
