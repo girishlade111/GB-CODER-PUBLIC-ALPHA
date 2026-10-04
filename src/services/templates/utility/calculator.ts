@@ -118,7 +118,7 @@ export default {
           <li><code>(2 + 3) * 4</code><span>20</span></li>
           <li><code>2 + 3 * 4</code><span>14</span></li>
           <li><code>2 ^ 3 ^ 2</code><span>512</span></li>
-          <li><code>-2 ^ 2</code><span>4</span></li>
+          <li><code>-2 ^ 2</code><span>-4</span></li>
         </ul>
       </aside>
     </div>
@@ -234,7 +234,7 @@ export default {
               <button class="key key-num" type="button" data-act="digit" data-value="3" data-key="3">3</button>
               <button class="key key-op" type="button" data-act="op" data-value="+" data-key="+" aria-label="Plus">+</button>
 
-              <button class="key key-num" type="button" data-act="sign" data-key="n" aria-label="Toggle the sign of the number before the cursor">±</button>
+              <button class="key key-num" type="button" data-act="sign" aria-label="Toggle the sign of the number before the cursor">±</button>
               <button class="key key-num" type="button" data-act="digit" data-value="0" data-key="0">0</button>
               <button class="key key-num" type="button" data-act="dot" data-key="." aria-label="Decimal point">.</button>
               <button class="key key-eq" type="button" data-act="equals" data-key="Enter" aria-label="Evaluate">=</button>
@@ -252,7 +252,7 @@ export default {
               </button>
             </div>
 
-            <p class="calc-foot">Keyboard: digits, <code>+ - * /</code>, <code>^</code>, <code>(</code> <code>)</code>, <code>Enter</code>, <code>Esc</code>, <code>Backspace</code>, <code>n</code> sign, <code>p</code> percent, <code>q</code> root, <code>r</code> reciprocal, <code>s</code> square.</p>
+            <p class="calc-foot">Keyboard: digits, <code>+ - * /</code>, <code>^</code>, <code>(</code> <code>)</code>, <code>%</code>, <code>Enter</code>, <code>Esc</code>, <code>Backspace</code> and <code>Delete</code>. Letters are left free so you can type function names: try <code>sqrt(9)</code> or <code>asin(0.5)</code>.</p>
           </div>
         </div>
 
@@ -327,7 +327,7 @@ export default {
         <article class="feature" data-reveal style="--delay:70ms">
           <span class="feature-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><use href="#i-target"></use></svg></span>
           <h3>Powers bind tightest, and to the right</h3>
-          <p><code>2 ^ 3 ^ 2</code> is 512, not 64. Unary minus reaches below the exponent, so <code>-2 ^ 2</code> is <code>(-2) ^ 2</code> &mdash; and the expression line stays visible so you can see which it picked.</p>
+          <p><code>2 ^ 3 ^ 2</code> is 512, not 64. Unary minus sits <em>below</em> the power, the way serious calculators treat it, so <code>-2 ^ 2</code> is <code>-(2 ^ 2)</code> = -4. The expression line stays visible so you can see which reading it took.</p>
         </article>
         <article class="feature" data-reveal style="--delay:140ms">
           <span class="feature-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><use href="#i-guard"></use></svg></span>
@@ -403,13 +403,11 @@ export default {
             <tr><th scope="col">Key</th><th scope="col">Action</th><th scope="col">Key</th><th scope="col">Action</th></tr>
           </thead>
           <tbody>
-            <tr><td><kbd>0</kbd>&ndash;<kbd>9</kbd></td><td>Append a digit at the cursor</td><td><kbd>n</kbd></td><td>Toggle the sign of the number before the cursor</td></tr>
-            <tr><td><kbd>.</kbd></td><td>Decimal point</td><td><kbd>p</kbd></td><td>Append a percent sign</td></tr>
-            <tr><td><kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd></td><td>Operators, or continue from a finished expression</td><td><kbd>q</kbd></td><td>Square root, bracketed</td></tr>
-            <tr><td><kbd>^</kbd></td><td>Power</td><td><kbd>r</kbd></td><td>Reciprocal, bracketed</td></tr>
-            <tr><td><kbd>(</kbd> <kbd>)</kbd></td><td>Grouping</td><td><kbd>s</kbd></td><td>Square, bracketed</td></tr>
-            <tr><td><kbd>Enter</kbd> or <kbd>=</kbd></td><td>Evaluate and push to history</td><td><kbd>Esc</kbd></td><td>All clear</td></tr>
-            <tr><td><kbd>Backspace</kbd></td><td>Delete before the cursor</td><td><kbd>Delete</kbd></td><td>Delete after the cursor</td></tr>
+            <tr><td><kbd>0</kbd>&ndash;<kbd>9</kbd></td><td>Append a digit at the cursor</td><td><kbd>%</kbd></td><td>Append a percent sign</td></tr>
+            <tr><td><kbd>.</kbd></td><td>Decimal point</td><td><kbd>sin</kbd> <kbd>ln</kbd> <kbd>sqrt</kbd></td><td>Type the name, then the argument in brackets</td></tr>
+            <tr><td><kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd></td><td>Operators; a committed result carries forward</td><td><kbd>Enter</kbd> or <kbd>=</kbd></td><td>Evaluate and push to history</td></tr>
+            <tr><td><kbd>^</kbd></td><td>Power</td><td><kbd>Esc</kbd></td><td>All clear</td></tr>
+            <tr><td><kbd>(</kbd> <kbd>)</kbd></td><td>Grouping</td><td><kbd>Backspace</kbd> / <kbd>Delete</kbd></td><td>Delete before / after the cursor</td></tr>
           </tbody>
         </table>
       </div>
@@ -469,8 +467,8 @@ export default {
           <div class="acc-panel" id="faq-1" hidden><p>The last thirty calculations are written to this browser&rsquo;s local storage, along with the memory register and your settings. Nothing leaves the tab. Clear the history from the History tab and the record is deleted on the spot.</p></div>
         </div>
         <div class="acc-item">
-          <h3><button class="acc-trigger" type="button" aria-expanded="false" aria-controls="faq-2"><span>What happens when I press an operator mid-expression?</span><svg class="icon acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#i-chevron"></use></svg></button></h3>
-          <div class="acc-panel" id="faq-2" hidden><p>Slate tries to evaluate what you have so far. If it evaluates cleanly, the result replaces the expression and the operator is appended, so <code>2 + 3 *</code> becomes <code>8 *</code> and you carry straight on. If it does not evaluate &mdash; a dangling <code>/</code>, say &mdash; the operator is simply inserted.</p></div>
+          <h3><button class="acc-trigger" type="button" aria-expanded="false" aria-controls="faq-2"><span>When does a result carry forward?</span><svg class="icon acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#i-chevron"></use></svg></button></h3>
+          <div class="acc-panel" id="faq-2" hidden><p>Only a result you have just committed carries forward. Chain it and Slate evaluates the answer and keeps it on the pad, so <kbd>2</kbd> <kbd>=</kbd> <kbd>+</kbd> <kbd>4</kbd> <kbd>=</kbd> gives 9. Type an operator without committing first and nothing is collapsed, which is why <code>2 + 3 * 4</code> stays 14 rather than becoming 20.</p></div>
         </div>
         <div class="acc-item">
           <h3><button class="acc-trigger" type="button" aria-expanded="false" aria-controls="faq-3"><span>Does decimal precision change the arithmetic?</span><svg class="icon acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#i-chevron"></use></svg></button></h3>
@@ -1509,12 +1507,14 @@ kbd {
       while (tk && (tk.t === '*' || tk.t === '/')) {
         pos++;
         var right = parseUnary();
+        /* A trailing % is a plain division by a hundred after * and /, and
+           only becomes a share of the left operand after + and -. */
+        var factor = right.pct ? right.v / 100 : right.v;
         if (tk.t === '/') {
-          var divisor = right.pct ? right.v / 100 : right.v;
-          if (Math.abs(divisor) < 1e-12) { throw calcError('Cannot divide by zero'); }
-          left = { v: left.v / divisor, pct: false };
+          if (Math.abs(factor) < 1e-12) { throw calcError('Cannot divide by zero'); }
+          left = { v: left.v / factor, pct: false };
         } else {
-          left = { v: left.v * right.v, pct: false };
+          left = { v: left.v * factor, pct: false };
         }
         tk = peek();
       }
@@ -1546,6 +1546,18 @@ kbd {
   }
 
   /* ---------------------------- formatting ---------------------------- */
+  /* The pad holds a value the parser can read again; the display holds a
+     formatted version of it. Keeping the two apart is what stops a result
+     like 2,468.00 being fed back in as an expression. */
+  function machineString(n) {
+    if (!isFinite(n)) { return String(n); }
+    var s = String(n);
+    if (s.indexOf('e') < 0 && s.indexOf('E') < 0) { return s === '-0' ? '0' : s; }
+    var fixed = n.toFixed(20).replace(/0+$/, '');
+    if (fixed.charAt(fixed.length - 1) === '.') { fixed = fixed.slice(0, -1); }
+    return fixed === '-0' ? '0' : fixed;
+  }
+
   function format(n, s) {
     if (typeof n !== 'number' || isNaN(n)) { throw calcError('That is not a number'); }
     if (!isFinite(n)) { throw calcError('The result is not a finite number'); }
@@ -1562,6 +1574,7 @@ kbd {
   /* ================================ state ============================= */
   var expr = '';
   var caret = 0;
+  var pending = false;
   var memory = 0;
   var history = [];
   var lastCommitted = '';
@@ -1589,7 +1602,7 @@ kbd {
 
   var REFERENCE = [
     { tag: 'power', expr: '2 ^ 3 ^ 2', why: 'powers run right to left, so this is 2^(3^2)' },
-    { tag: 'unary', expr: '-2 ^ 2', why: 'unary minus reaches below the power' },
+    { tag: 'unary', expr: '-2 ^ 2', why: 'unary minus sits below the power, so this is -4' },
     { tag: 'times', expr: '2 + 3 * 4', why: 'multiplication before addition' },
     { tag: 'percent', expr: '200 + 10%', why: 'a trailing % shares the left operand' },
     { tag: 'brackets', expr: '(2 + 3) * 4', why: 'brackets win over everything' },
@@ -1648,6 +1661,7 @@ kbd {
   function insert(text) {
     expr = expr.slice(0, caret) + text + expr.slice(caret);
     caret += text.length;
+    pending = false;
     setHint('');
     render();
   }
@@ -1655,6 +1669,7 @@ kbd {
   function clearAll() {
     expr = '';
     caret = 0;
+    pending = false;
     setHint('');
     render();
   }
@@ -1678,6 +1693,7 @@ kbd {
 
   function backspace() {
     if (caret <= 0) { return; }
+    pending = false;
     if (expr.charAt(caret - 1) === '(') {
       var close = matchClose(expr, caret - 1);
       if (close > -1) {
@@ -1696,6 +1712,7 @@ kbd {
 
   function deleteForward() {
     if (caret >= expr.length) { return; }
+    pending = false;
     if (expr.charAt(caret) === ')') {
       var open = matchOpen(expr, caret);
       if (open > -1) {
@@ -1738,6 +1755,7 @@ kbd {
   }
 
   function toggleSign() {
+    pending = false;
     var lit = trailingLiteral();
     if (!lit) { insert('-'); return; }
     if (lit.start > 0 && expr.charAt(lit.start - 1) === '-' && isUnaryMinusAt(lit.start - 1)) {
@@ -1751,12 +1769,15 @@ kbd {
     render();
   }
 
+/* Wrapping an existing literal leaves the cursor after the closing bracket,
+     because the argument is already there; an empty wrap keeps it inside. */
   function applyFunction(name) {
+    pending = false;
     var lit = trailingLiteral();
-    if (lit && !expr.slice(0, lit.start).match(/[a-zA-Z0-9_]\\s*$/)) {
+    if (lit && !expr.slice(0, lit.start).match(/[a-zA-Z0-9_]\s*$/)) {
       var inner = expr.slice(lit.start, lit.end);
       expr = expr.slice(0, lit.start) + name + '(' + inner + ')' + expr.slice(lit.end);
-      caret = lit.start + name.length + 1 + inner.length;
+      caret = lit.start + name.length + inner.length + 2;
     } else {
       expr = expr.slice(0, caret) + name + '()' + expr.slice(caret);
       caret = caret + name.length + 1;
@@ -1764,8 +1785,12 @@ kbd {
     setHint('');
     render();
   }
+    setHint('');
+    render();
+  }
 
   function applyDot() {
+    pending = false;
     var before = expr.slice(0, caret);
     var m = /[0-9.]+$/.exec(before);
     if (m && m[0].indexOf('.') >= 0) { setHint('That number already has a decimal point'); return; }
@@ -1773,17 +1798,21 @@ kbd {
     insert('.');
   }
 
+  /* Only a *committed* result is carried into the next operator, so a typed
+     expression keeps its precedence: 2 + 3 * 4 is 14, not 20. */
   function applyOperator(op) {
     var before = expr.slice(0, caret);
-    if (before.trim() && before !== lastCommitted) {
+    if (pending && caret === expr.length && before.trim()) {
       try {
-        var text = format(evaluate(before, settings.angle), settings);
-        expr = text;
-        caret = text.length;
-        lastCommitted = text;
-        pushHistory(before, text);
+        var value = evaluate(before, settings.angle);
+        var text = format(value, settings);
+        expr = machineString(value);
+        caret = expr.length;
+        lastCommitted = expr;
+        pushHistory(before, text, expr);
         setHint('Carried ' + text + ' forward', 'ok');
       } catch (err) { /* incomplete: just append the operator */ }
+      pending = false;
     }
     insert(op);
   }
@@ -1791,21 +1820,68 @@ kbd {
   function commit() {
     var before = expr.slice(0, caret);
     if (!before.trim()) { setHint('Type something first', 'bad'); return; }
+    var value;
     var text;
     try {
-      text = format(evaluate(before, settings.angle), settings);
+      value = evaluate(before, settings.angle);
+      text = format(value, settings);
     } catch (err) {
       setHint(err && err.message ? err.message : 'That expression will not parse', 'bad');
       flash('is-error');
       return;
     }
-    expr = text;
-    caret = text.length;
-    lastCommitted = text;
-    pushHistory(before, text);
+    expr = machineString(value);
+    caret = expr.length;
+    lastCommitted = expr;
+    pending = true;
+    pushHistory(before, text, expr);
     setHint('Stored in history — click any entry to reuse it', 'ok');
     flash('is-flash');
     render();
+  }
+
+  /* Clicking the display moves the caret, which is what makes the forward
+     delete key and mid-expression editing possible at all. */
+  function caretFromEvent(e) {
+    var line = $('#disp-expr');
+    if (!line) { return -1; }
+    var pos = null;
+    try {
+      if (document.caretRangeFromPoint) {
+        var range = document.caretRangeFromPoint(e.clientX, e.clientY);
+        if (range) { pos = range.startContainer; }
+      } else if (document.caretPositionFromPoint) {
+        var offset = document.caretPositionFromPoint(e.clientX, e.clientY);
+        if (offset) { pos = offset.offsetNode; }
+      }
+    } catch (err) { pos = null; }
+    if (pos && line.contains(pos)) {
+      try {
+        var probe = document.createRange();
+        probe.selectNodeContents(line);
+        probe.setEnd(pos, pos.nodeType === 3 ? pos.textContent.length : 0);
+        return Math.min(probe.toString().length, expr.length);
+      } catch (err2) { /* fall through to the proportional guess */ }
+    }
+    var box = line.getBoundingClientRect();
+    if (!box || !box.width) { return -1; }
+    var text = line.textContent || '';
+    if (!text.length) { return 0; }
+    var ratio = (e.clientX - box.left) / box.width;
+    if (ratio < 0) { ratio = 0; }
+    if (ratio > 1) { ratio = 1; }
+    return Math.min(Math.round(ratio * text.length), expr.length);
+  }
+
+  var displayBox = $('#display');
+  if (displayBox) {
+    displayBox.addEventListener('click', function (e) {
+      var at = caretFromEvent(e);
+      if (at < 0) { return; }
+      caret = at;
+      setHint('');
+      render();
+    });
   }
 
   function currentNumber() {
@@ -1845,7 +1921,7 @@ kbd {
     else if (op === 'clear') { memory = 0; }
     else if (op === 'recall') {
       if (memory === 0) { setHint('The memory register is empty', 'bad'); return; }
-      insert(format(memory, settings));
+      insert(machineString(memory));
       setHint('Recalled ' + format(memory, settings), 'ok');
       return;
     }
@@ -1865,8 +1941,8 @@ kbd {
   }
 
   /* ============================== history ============================= */
-  function pushHistory(source, result) {
-    history.unshift({ source: source, result: result });
+  function pushHistory(source, result, value) {
+    history.unshift({ source: source, result: result, value: value === undefined ? result : value });
     while (history.length > HISTORY_MAX) { history.pop(); }
     save();
     renderHistory();
@@ -2120,8 +2196,10 @@ kbd {
       if (act === 'hist-use') {
         var entry = history[idx];
         if (!entry) { return; }
-        expr = entry.result;
-        caret = entry.result.length;
+        var reusable = typeof entry.value === 'string' ? entry.value : entry.result;
+        expr = reusable;
+        caret = expr.length;
+        pending = true;
         setHint('Reused ' + entry.result, 'ok');
         render();
         return;
@@ -2135,10 +2213,12 @@ kbd {
         var recipe = RECIPES[idx];
         if (!recipe) { return; }
         try {
-          var value = format(evaluate(recipe.expr, settings.angle), settings);
-          pushHistory(recipe.expr, value);
-          expr = value;
-          caret = value.length;
+          var recipeValue = evaluate(recipe.expr, settings.angle);
+          var value = format(recipeValue, settings);
+          pushHistory(recipe.expr, value, machineString(recipeValue));
+          expr = machineString(recipeValue);
+          caret = expr.length;
+          pending = true;
           setHint(recipe.label + ' — ' + value, 'ok');
           flash('is-flash');
           render();
@@ -2195,13 +2275,12 @@ kbd {
     if (k === 'Escape') { e.preventDefault(); hit('Escape'); clearAll(); return; }
     if (k === 'Backspace') { e.preventDefault(); hit('Backspace'); backspace(); return; }
     if (k === 'Delete') { e.preventDefault(); hit('Delete'); deleteForward(); return; }
+    if (k.length === 1 && /[a-z]/i.test(k)) { insert(k.toLowerCase()); return; }
 
-    var lower = k.length === 1 ? k.toLowerCase() : '';
-    if (lower === 'n') { e.preventDefault(); hit('n'); toggleSign(); return; }
-    if (lower === 'p') { e.preventDefault(); hit('%'); insert('%'); return; }
-    if (lower === 'q') { e.preventDefault(); applyFunction('sqrt'); return; }
-    if (lower === 'r') { e.preventDefault(); applyFunction('inv'); return; }
-    if (lower === 's') { e.preventDefault(); applyFunction('sq'); return; }
+    /* Letters are deliberately not bound to the square, root and reciprocal
+       keys, so that function names can be typed directly: sin(30), ln(e),
+       sqrt(9) and asin(0.5) all work from the keyboard. Those three actions
+       live on the pad instead. */
   });
 
   /* ============================ navigation ============================ */
@@ -2340,7 +2419,8 @@ kbd {
     if (!data || typeof data !== 'object') { return; }
     if (Object.prototype.toString.call(data.history) === '[object Array]') {
       history = data.history.filter(function (h) {
-        return h && typeof h.source === 'string' && typeof h.result === 'string';
+        return h && typeof h.source === 'string' && typeof h.result === 'string' &&
+          (h.value === undefined || typeof h.value === 'string');
       }).slice(0, HISTORY_MAX);
     }
     if (typeof data.memory === 'number' && isFinite(data.memory)) { memory = data.memory; }
