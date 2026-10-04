@@ -172,14 +172,14 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
                 placeholder="Paste your CodeRabbit API Key here..."
                 className={`w-full px-3 py-1.5 pr-8 rounded-lg text-xs font-mono border focus:outline-none transition-all ${
                   isDark
-                    ? 'bg-product-elevated border-stroke-dark text-white focus:border-purple-500'
-                    : 'bg-white border-gray-300 text-gray-900 focus:border-purple-500'
+                    ? 'bg-product-elevated border-stroke-dark text-content-on-dark focus:border-accent'
+                    : 'bg-product-elevated border-stroke-dark text-content-on-dark focus:border-accent'
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-content-on-dark-soft hover:text-white"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-content-on-dark-soft hover:text-content-on-dark"
               >
                 {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
@@ -187,7 +187,7 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
 
             <button
               onClick={handleSaveApiKey}
-              className="px-3 py-1.5 rounded-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-colors text-xs shrink-0"
+              className="px-3 py-1.5 rounded-lg font-semibold bg-accent hover:bg-accent-hover text-content-on-dark transition-colors text-xs shrink-0"
             >
               {keySaved ? 'Saved!' : 'Save Key'}
             </button>
@@ -198,8 +198,8 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
         <div className="p-6 overflow-y-auto flex-1 space-y-6">
           {/* Scan Progress Bar */}
           {isScanning && (
-            <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 space-y-2">
-              <div className="flex items-center justify-between text-xs text-purple-300 font-semibold">
+            <div className="p-4 rounded-xl bg-accent-subtle border border-accent/20 space-y-2">
+              <div className="flex items-center justify-between text-xs text-accent font-semibold">
                 <span className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-orange-400 animate-spin" />
                   {scanStage}
@@ -349,7 +349,7 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
                             <div className="text-content-on-dark-soft text-[10px] uppercase tracking-wider font-semibold pt-1">
                               CodeRabbit AI Recommendation:
                             </div>
-                            <div className="text-emerald-400 bg-emerald-950/30 p-1.5 rounded border border-emerald-900/30 overflow-x-auto">
+                            <div className="text-success bg-success-subtle p-1.5 rounded border border-success/30 overflow-x-auto">
                               + {issue.suggestedFix}
                             </div>
                           </>
@@ -362,8 +362,8 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
             </div>
           ) : scanResult ? (
             <div className="text-center py-12 space-y-3">
-              <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto" />
-              <h3 className="text-base font-bold text-white">No Bugs Found!</h3>
+              <CheckCircle className="w-12 h-12 text-success mx-auto" />
+              <h3 className="text-base font-bold text-content-on-dark">No Bugs Found!</h3>
               <p className="text-xs text-content-on-dark-soft">
                 CodeRabbit AI scanned your project files and found no bugs matching the active filters.
               </p>
@@ -371,7 +371,7 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
           ) : (
             <div className="text-center py-16 space-y-4">
               <Bug className="w-12 h-12 text-orange-400/80 mx-auto animate-pulse" />
-              <h3 className="text-base font-bold text-white">Ready to Scan for Bugs & Errors</h3>
+              <h3 className="text-base font-bold text-content-on-dark">Ready to Scan for Bugs & Errors</h3>
               <p className="text-xs text-content-on-dark-soft max-w-md mx-auto">
                 Click "Rescan Code" above to initiate a deep CodeRabbit AI audit across your HTML, CSS, and JS/TS files.
               </p>

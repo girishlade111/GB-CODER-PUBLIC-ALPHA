@@ -309,7 +309,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             type="text"
             value={snippetCategory}
             onChange={(e) => setSnippetCategory(e.target.value)}
-            className="w-full bg-product-elevated border border-stroke-dark rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+            className="w-full bg-product-elevated border border-stroke-dark rounded px-3 py-2 text-content-on-dark focus:outline-none focus:border-accent"
             placeholder="e.g., UI, Logic"
           />
         </div>
@@ -321,7 +321,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             type="text"
             value={snippetTags}
             onChange={(e) => setSnippetTags(e.target.value)}
-            className="w-full bg-product-elevated border border-stroke-dark rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+            className="w-full bg-product-elevated border border-stroke-dark rounded px-3 py-2 text-content-on-dark focus:outline-none focus:border-accent"
             placeholder="comma, separated"
           />
         </div>
@@ -335,7 +335,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
               if (viewMode === 'sidebar' && onTabChange) onTabChange('list');
               else setIsModalOpen(false);
             }}
-            className="flex-1 px-4 py-2 bg-product-elevated text-white rounded hover:bg-product-active transition-colors"
+            className="flex-1 px-4 py-2 bg-product-elevated text-content-on-dark rounded hover:bg-product-active transition-colors"
           >
             Cancel
           </button>
@@ -343,7 +343,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
         <button
           onClick={handleSave}
           disabled={!snippetName.trim()}
-          className={`flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 ${!snippetName.trim() ? 'opacity-50 cursor-not-allowed' : ''
+          className={`flex-1 px-4 py-2 bg-accent text-content-on-dark rounded hover:bg-accent-hover transition-colors flex items-center justify-center gap-2 ${!snippetName.trim() ? 'opacity-50 cursor-not-allowed' : ''
             }`}
         >
           <Save className="w-4 h-4" />
@@ -366,12 +366,12 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             placeholder="Search snippets by name, tags, or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-product-elevated border border-stroke-dark rounded-lg pl-9 pr-10 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+            className="w-full bg-product-elevated border border-stroke-dark rounded-lg pl-9 pr-10 py-2.5 text-sm text-content-on-dark placeholder-content-on-dark-soft focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-product-active rounded text-content-on-dark-soft hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-product-active rounded text-content-on-dark-soft hover:text-content-on-dark transition-colors"
               title="Clear search"
             >
               <X className="w-4 h-4" />
@@ -387,7 +387,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
               {selectedTag !== 'all' && (
                 <button
                   onClick={() => setSelectedTag('all')}
-                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  className="text-xs text-teal hover:text-teal transition-colors"
                 >
                   Clear
                 </button>
@@ -397,8 +397,8 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
               <button
                 onClick={() => setSelectedTag('all')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${selectedTag === 'all'
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                    : 'bg-product-elevated text-content-on-dark-soft border border-stroke-dark hover:border-gray-600 hover:text-content-on-dark'
+                    ? 'bg-accent text-content-on-dark '
+                    : 'bg-product-elevated text-content-on-dark-soft border border-stroke-dark hover:border-stroke-dark-strong hover:text-content-on-dark'
                   }`}
               >
                 All Tags
@@ -408,8 +408,8 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                   key={tag}
                   onClick={() => setSelectedTag(tag)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${selectedTag === tag
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                      : 'bg-product-elevated text-content-on-dark-soft border border-stroke-dark hover:border-gray-600 hover:text-content-on-dark'
+                      ? 'bg-accent text-content-on-dark '
+                      : 'bg-product-elevated text-content-on-dark-soft border border-stroke-dark hover:border-stroke-dark-strong hover:text-content-on-dark'
                     }`}
                 >
                   #{tag}
@@ -425,7 +425,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as SnippetType | 'all')}
-              className="bg-product-elevated border border-stroke-dark rounded px-2 py-1.5 text-xs text-content-on-dark focus:outline-none focus:border-blue-500"
+              className="bg-product-elevated border border-stroke-dark rounded px-2 py-1.5 text-xs text-content-on-dark focus:outline-none focus:border-accent"
             >
               <option value="all">All Types</option>
               <option value="full">Full Page</option>
@@ -437,7 +437,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-product-elevated border border-stroke-dark rounded px-2 py-1.5 text-xs text-content-on-dark focus:outline-none focus:border-blue-500"
+              className="bg-product-elevated border border-stroke-dark rounded px-2 py-1.5 text-xs text-content-on-dark focus:outline-none focus:border-accent"
             >
               {categories.map(cat => (
                 <option key={cat} value={cat}>
@@ -449,7 +449,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="bg-product-elevated border border-stroke-dark rounded px-2 py-1.5 text-xs text-content-on-dark focus:outline-none focus:border-blue-500"
+              className="bg-product-elevated border border-stroke-dark rounded px-2 py-1.5 text-xs text-content-on-dark focus:outline-none focus:border-accent"
             >
               <option value="updated">Recent</option>
               <option value="date">Newest</option>
@@ -462,8 +462,8 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             <button
               onClick={() => setViewLayout('list')}
               className={`p-1.5 rounded transition-colors ${viewLayout === 'list'
-                  ? 'bg-product-active text-white'
-                  : 'text-content-on-dark-soft hover:text-white'
+                  ? 'bg-product-active text-content-on-dark'
+                  : 'text-content-on-dark-soft hover:text-content-on-dark'
                 }`}
               title="List view"
             >
@@ -472,8 +472,8 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             <button
               onClick={() => setViewLayout('grid')}
               className={`p-1.5 rounded transition-colors ${viewLayout === 'grid'
-                  ? 'bg-product-active text-white'
-                  : 'text-content-on-dark-soft hover:text-white'
+                  ? 'bg-product-active text-content-on-dark'
+                  : 'text-content-on-dark-soft hover:text-content-on-dark'
                 }`}
               title="Grid view"
             >
@@ -485,7 +485,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
         {/* Recommended Toggle */}
         <button
           onClick={() => setShowRecommended(!showRecommended)}
-          className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors w-full justify-center py-1 border border-blue-900/30 rounded bg-blue-900/10"
+          className="flex items-center gap-2 text-xs text-teal hover:text-teal transition-colors w-full justify-center py-1 border border-stroke-dark rounded bg-accent-subtle"
         >
           <Sparkles className="w-3 h-3" />
           {showRecommended ? 'Hide Recommended' : 'Show Recommended Snippets'}
@@ -498,14 +498,14 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
           <h3 className="text-xs font-semibold text-content-on-dark-soft uppercase tracking-wider pl-1">Recommended</h3>
           <div className={viewLayout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-3' : 'space-y-3'}>
             {recommendedSnippets.map((snippet) => (
-              <div key={snippet.id} className="bg-product-soft border border-stroke-dark/50 rounded-lg p-3 hover:border-blue-500/50 transition-colors group">
+              <div key={snippet.id} className="bg-product-soft border border-stroke-dark/50 rounded-lg p-3 hover:border-accent/50 transition-colors group">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="p-1.5 bg-blue-900/20 rounded text-blue-400">
+                    <span className="p-1.5 bg-accent-subtle rounded text-teal">
                       <Sparkles className="w-3 h-3" />
                     </span>
                     <div>
-                      <h4 className="font-medium text-white text-sm">{snippet.name}</h4>
+                      <h4 className="font-medium text-content-on-dark text-sm">{snippet.name}</h4>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-product-active text-content-on-dark">
                           {snippet.type}
@@ -528,7 +528,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                       );
                       setShowRecommended(false);
                     }}
-                    className="p-1.5 hover:bg-blue-600 rounded text-content-on-dark-soft hover:text-white transition-colors"
+                    className="p-1.5 hover:bg-accent rounded text-content-on-dark-soft hover:text-content-on-dark transition-colors"
                     title="Add to My Snippets"
                   >
                     <Plus className="w-4 h-4" />
@@ -554,7 +554,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                   setSearchQuery('');
                   setSelectedTag('all');
                 }}
-                className="mt-2 text-sm text-blue-400 hover:text-blue-300"
+                className="mt-2 text-sm text-teal hover:text-teal"
               >
                 Clear filters
               </button>
@@ -564,14 +564,14 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
           filteredSnippets.map((snippet) => (
             <div
               key={snippet.id}
-              className="bg-product-elevated border border-stroke-dark rounded-lg p-3 hover:border-gray-600 transition-all group relative"
+              className="bg-product-elevated border border-stroke-dark rounded-lg p-3 hover:border-stroke-dark-strong transition-all group relative"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className={`p-1.5 rounded ${snippet.type === 'html' ? 'bg-orange-900/20 text-orange-400' :
-                    snippet.type === 'css' ? 'bg-blue-900/20 text-blue-400' :
+                    snippet.type === 'css' ? 'bg-accent-subtle text-teal' :
                       snippet.type === 'javascript' ? 'bg-yellow-900/20 text-yellow-400' :
-                        'bg-purple-900/20 text-purple-400'
+                        'bg-accent-subtle text-accent'
                     }`}>
                     {snippet.type === 'html' ? <FileCode className="w-3 h-3" /> :
                       snippet.type === 'css' ? <Palette className="w-3 h-3" /> :
@@ -579,10 +579,10 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                           <Globe className="w-3 h-3" />}
                   </span>
                   <div>
-                    <h4 className="font-medium text-white text-sm">{snippet.name}</h4>
+                    <h4 className="font-medium text-content-on-dark text-sm">{snippet.name}</h4>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${snippet.scope === 'public'
-                        ? 'border-green-900/30 bg-green-900/10 text-green-400'
+                        ? 'border-stroke-dark bg-success-subtle text-success'
                         : 'border-stroke-dark bg-product-elevated text-content-on-dark-soft'
                         }`}>
                         {snippet.scope || 'private'}
@@ -598,7 +598,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                 <div className="relative">
                   <button
                     onClick={() => setOpenActionMenu(openActionMenu === snippet.id ? null : snippet.id)}
-                    className="p-1 hover:bg-product-active rounded text-content-on-dark-soft hover:text-white transition-colors"
+                    className="p-1 hover:bg-product-active rounded text-content-on-dark-soft hover:text-content-on-dark transition-colors"
                   >
                     <ChevronDown className="w-4 h-4" />
                   </button>
@@ -611,7 +611,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                           onLoad(snippet);
                           setOpenActionMenu(null);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-white flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-content-on-dark flex items-center gap-2"
                       >
                         <Archive className="w-4 h-4" />
                         Replace All
@@ -621,7 +621,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                           onInsert(snippet);
                           setOpenActionMenu(null);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-white flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-content-on-dark flex items-center gap-2"
                       >
                         <Plus className="w-4 h-4" />
                         Insert Code
@@ -632,7 +632,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                           handleEdit(snippet);
                           setOpenActionMenu(null);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-white flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-content-on-dark flex items-center gap-2"
                       >
                         <Edit3 className="w-4 h-4" />
                         Edit
@@ -642,7 +642,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                           exportSnippetAsJSON(snippet);
                           setOpenActionMenu(null);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-white flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-content-on-dark flex items-center gap-2"
                       >
                         <Download className="w-4 h-4" />
                         Export
@@ -653,7 +653,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                           onDelete(snippet.id);
                           setOpenActionMenu(null);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-900/20 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-danger-subtle flex items-center gap-2"
                       >
                         <Trash2 className="w-4 h-4" />
                         Delete
@@ -673,7 +673,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                     <button
                       key={index}
                       onClick={() => setSelectedTag(tag)}
-                      className="text-[10px] px-1.5 py-0.5 bg-product-active text-content-on-dark-soft rounded hover:bg-product-active hover:text-white transition-colors"
+                      className="text-[10px] px-1.5 py-0.5 bg-product-active text-content-on-dark-soft rounded hover:bg-product-active hover:text-content-on-dark transition-colors"
                       title={`Filter by #${tag}`}
                     >
                       #{tag}
@@ -686,13 +686,13 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => onLoad(snippet)}
-                  className="flex-1 py-1.5 text-xs bg-product-active hover:bg-gray-600 text-white rounded transition-colors"
+                  className="flex-1 py-1.5 text-xs bg-product-active hover:bg-product-hover text-content-on-dark rounded transition-colors"
                 >
                   Replace
                 </button>
                 <button
                   onClick={() => onInsert(snippet)}
-                  className="flex-1 py-1.5 px-2 text-xs bg-green-600 hover:bg-green-700 text-white rounded transition-colors font-medium flex items-center justify-center gap-1 shadow-lg shadow-green-600/20"
+                  className="flex-1 py-1.5 px-2 text-xs bg-success hover:brightness-110 text-content-on-dark rounded transition-colors font-medium flex items-center justify-center gap-1 "
                   title="Quick insert snippet code"
                 >
                   <Zap className="w-3 h-3" />
@@ -718,14 +718,14 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
       <div className="p-4 border-b border-stroke-dark flex flex-wrap gap-2">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 bg-accent hover:bg-accent-hover text-content-on-dark rounded text-sm transition-colors"
         >
           <Save className="w-4 h-4" />
           Save Snippet
         </button>
         <button
           onClick={() => setShowSnippets(!showSnippets)}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors ${showSnippets ? 'bg-product-active text-white' : 'bg-product-elevated text-content-on-dark hover:bg-product-active'
+          className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors ${showSnippets ? 'bg-product-active text-content-on-dark' : 'bg-product-elevated text-content-on-dark hover:bg-product-active'
             }`}
         >
           <FolderOpen className="w-4 h-4" />
@@ -753,13 +753,13 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
 
       {/* Import Status Messages */}
       {importError && (
-        <div className="px-4 py-2 bg-red-900/20 border-b border-red-900/30 text-red-400 text-sm flex items-center gap-2">
+        <div className="px-4 py-2 bg-danger-subtle border-b border-danger/30 text-red-300 text-sm flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
           {importError}
         </div>
       )}
       {importSuccess && (
-        <div className="px-4 py-2 bg-green-900/20 border-b border-green-900/30 text-green-400 text-sm flex items-center gap-2">
+        <div className="px-4 py-2 bg-success-subtle border-b border-stroke-dark text-success text-sm flex items-center gap-2">
           <Check className="w-4 h-4" />
           {importSuccess}
         </div>
@@ -770,7 +770,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-product border border-stroke-dark rounded-lg w-full max-w-md shadow-xl">
             <div className="flex items-center justify-between p-4 border-b border-stroke-dark">
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-content-on-dark">
                 {editingSnippet ? 'Edit Snippet' : 'Save New Snippet'}
               </h3>
               <button
@@ -778,7 +778,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                   resetForm();
                   setIsModalOpen(false);
                 }}
-                className="text-content-on-dark-soft hover:text-white"
+                className="text-content-on-dark-soft hover:text-content-on-dark"
               >
                 <X className="w-5 h-5" />
               </button>

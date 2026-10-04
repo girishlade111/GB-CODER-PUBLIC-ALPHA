@@ -147,7 +147,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                             </button>
                             <button
                                 onClick={onClose}
-                                className="p-2 hover:bg-product-active rounded-lg transition-colors text-content-on-dark-soft hover:text-white"
+                                className="p-2 hover:bg-product-active rounded-lg transition-colors text-content-on-dark-soft hover:text-content-on-dark"
                                 title="Close"
                             >
                                 <X className="w-4 h-4" />
@@ -157,9 +157,9 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
 
                     {/* History Panel (slides in from left) */}
                     {isHistoryOpen && (
-                        <div className="absolute left-0 top-0 h-full w-64 bg-dark-gray border-r border-stroke-dark z-10 shadow-2xl animate-slideIn">
+                        <div className="absolute left-0 top-0 h-full w-64 bg-product-soft border-r border-stroke-dark z-10 shadow-2xl animate-slideIn">
                             <div className="p-4 border-b border-stroke-dark flex items-center justify-between">
-                                <h3 className="font-semibold text-white flex items-center gap-2">
+                                <h3 className="font-semibold text-content-on-dark flex items-center gap-2">
                                     <History className="w-4 h-4" />
                                     Recent History
                                 </h3>
@@ -167,7 +167,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                                     {history.length > 0 && (
                                         <button
                                             onClick={onClearHistory}
-                                            className="p-1.5 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300 transition-colors"
+                                            className="p-1.5 hover:bg-danger-subtle rounded text-red-300 hover:text-red-300 transition-colors"
                                             title="Clear History"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -175,7 +175,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                                     )}
                                     <button
                                         onClick={() => onHistoryToggle(false)}
-                                        className="p-1.5 hover:bg-product-active rounded text-content-on-dark-soft hover:text-white transition-colors"
+                                        className="p-1.5 hover:bg-product-active rounded text-content-on-dark-soft hover:text-content-on-dark transition-colors"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -197,7 +197,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                                                 className="w-full p-3 text-left hover:bg-product-elevated transition-colors"
                                             >
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <span className="text-xs font-medium text-purple-400 uppercase">
+                                                    <span className="text-xs font-medium text-accent uppercase">
                                                         {item.operation}
                                                     </span>
                                                     <span className="text-xs text-content-on-dark-soft">
@@ -222,10 +222,10 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                         {/* Error State */}
                         {error && !isLoading && (
                             <div className="p-6">
-                                <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 flex items-start gap-3">
-                                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                <div className="bg-danger-subtle border border-red-700 rounded-lg p-4 flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 text-red-300 flex-shrink-0 mt-0.5" />
                                     <div>
-                                        <h4 className="font-semibold text-red-400">Operation Failed</h4>
+                                        <h4 className="font-semibold text-red-300">Operation Failed</h4>
                                         <p className="text-sm text-red-300 mt-1">{error}</p>
                                     </div>
                                 </div>
@@ -237,8 +237,8 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                             <div className="p-4 space-y-4">
                                 {/* Explanation */}
                                 <div className="bg-product-soft border border-stroke-dark rounded-lg p-4">
-                                    <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                                        <Code2 className="w-4 h-4 text-purple-400" />
+                                    <h3 className="text-sm font-semibold text-content-on-dark mb-2 flex items-center gap-2">
+                                        <Code2 className="w-4 h-4 text-accent" />
                                         Analysis
                                     </h3>
                                     <p className="text-sm text-content-on-dark whitespace-pre-wrap leading-relaxed">
@@ -249,15 +249,15 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                                 {/* Confidence */}
                                 {result.confidence !== undefined && (
                                     <div className="bg-product-soft border border-stroke-dark rounded-lg p-4">
-                                        <h3 className="text-sm font-semibold text-white mb-2">Confidence</h3>
+                                        <h3 className="text-sm font-semibold text-content-on-dark mb-2">Confidence</h3>
                                         <div className="flex items-center gap-3">
                                             <div className="flex-1 bg-product-active rounded-full h-2 overflow-hidden">
                                                 <div
-                                                    className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500"
+                                                    className="h-full bg-gradient-to-r from-accent to-accent-hover transition-all duration-500"
                                                     style={{ width: `${result.confidence}%` }}
                                                 />
                                             </div>
-                                            <span className="text-sm font-medium text-white">{result.confidence}%</span>
+                                            <span className="text-sm font-medium text-content-on-dark">{result.confidence}%</span>
                                         </div>
                                     </div>
                                 )}
@@ -265,21 +265,21 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                                 {/* Issues */}
                                 {result.issues && result.issues.length > 0 && (
                                     <div className="bg-product-soft border border-stroke-dark rounded-lg p-4">
-                                        <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                                            <AlertCircle className="w-4 h-4 text-red-400" />
+                                        <h3 className="text-sm font-semibold text-content-on-dark mb-3 flex items-center gap-2">
+                                            <AlertCircle className="w-4 h-4 text-red-300" />
                                             Issues ({result.issues.length})
                                         </h3>
                                         <div className="space-y-2">
                                             {result.issues.map((issue, i) => (
-                                                <div key={i} className={`p-3 rounded border ${issue.severity === 'high' ? 'border-red-700 bg-red-900/20' :
+                                                <div key={i} className={`p-3 rounded border ${issue.severity === 'high' ? 'border-red-700 bg-danger-subtle' :
                                                     issue.severity === 'medium' ? 'border-yellow-700 bg-yellow-900/20' :
-                                                        'border-blue-700 bg-blue-900/20'
+                                                        'border-accent/50 bg-accent-subtle'
                                                     }`}>
                                                     <div className="flex items-center justify-between mb-1">
                                                         <span className="text-xs font-semibold uppercase">{issue.type}</span>
                                                         <span className={`text-xs px-2 py-0.5 rounded ${issue.severity === 'high' ? 'bg-red-800 text-red-200' :
                                                             issue.severity === 'medium' ? 'bg-yellow-800 text-yellow-200' :
-                                                                'bg-blue-800 text-blue-200'
+                                                                'bg-accent-subtle text-accent'
                                                             }`}>{issue.severity}</span>
                                                     </div>
                                                     <p className="text-sm text-content-on-dark">{issue.description}</p>
@@ -292,14 +292,14 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                                 {/* Improvements */}
                                 {result.improvements && result.improvements.length > 0 && (
                                     <div className="bg-product-soft border border-stroke-dark rounded-lg p-4">
-                                        <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                                            <Check className="w-4 h-4 text-green-400" />
+                                        <h3 className="text-sm font-semibold text-content-on-dark mb-3 flex items-center gap-2">
+                                            <Check className="w-4 h-4 text-success" />
                                             Improvements
                                         </h3>
                                         <ul className="space-y-2">
                                             {result.improvements.map((imp, i) => (
                                                 <li key={i} className="flex items-start gap-2 text-sm text-content-on-dark">
-                                                    <span className="text-green-400 mt-0.5">✓</span>
+                                                    <span className="text-success mt-0.5">✓</span>
                                                     <span>{imp}</span>
                                                 </li>
                                             ))}
@@ -314,7 +314,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                                             onClick={() => setShowDiff(!showDiff)}
                                             className="w-full px-4 py-3 flex items-center justify-between hover:bg-product-active transition-colors"
                                         >
-                                            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                                            <h3 className="text-sm font-semibold text-content-on-dark flex items-center gap-2">
                                                 <Code2 className="w-4 h-4" />
                                                 Suggested Code
                                             </h3>

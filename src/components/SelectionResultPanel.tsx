@@ -51,18 +51,18 @@ const SelectionResultPanel: React.FC<SelectionResultPanelProps> = ({
     const getSeverityColor = (severity: string) => {
         switch (severity) {
             case 'high':
-                return 'text-red-400 bg-red-900/20 border-red-700';
+                return 'text-red-300 bg-danger-subtle border-red-700';
             case 'medium':
                 return 'text-yellow-400 bg-yellow-900/20 border-yellow-700';
             case 'low':
-                return 'text-blue-400 bg-blue-900/20 border-blue-700';
+                return 'text-teal bg-accent-subtle border-accent/50';
             default:
                 return 'text-content-on-dark-soft bg-product/20 border-stroke-dark';
         }
     };
 
     return (
-        <div className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-dark-gray border-l border-stroke-dark shadow-2xl z-50 flex flex-col">
+        <div className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-product-soft border-l border-stroke-dark shadow-2xl z-50 flex flex-col">
             {/* Header */}
             <div className="bg-product px-6 py-4 border-b border-stroke-dark flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -146,7 +146,7 @@ const SelectionResultPanel: React.FC<SelectionResultPanelProps> = ({
                         <ul className="space-y-2">
                             {result.improvements.map((improvement, index) => (
                                 <li key={index} className="flex items-start gap-2 text-sm text-content-on-dark">
-                                    <span className="text-green-400 mt-0.5">✓</span>
+                                    <span className="text-success mt-0.5">✓</span>
                                     <span>{improvement}</span>
                                 </li>
                             ))}
