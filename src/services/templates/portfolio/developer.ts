@@ -1062,7 +1062,9 @@ html[data-theme='light'] .icon--moon { display: block; }
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .hero__inner, .about, .activity, .contact, .footer__inner { grid-template-columns: 1fr; }
+  /* minmax(0,...) rather than a bare 1fr: a bare 1fr track is minmax(auto,1fr),
+     so the 742px-wide heatmap would blow the track out past the viewport. */
+  .hero__inner, .about, .activity, .contact, .footer__inner { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 860px) {
   .nav { position: fixed; inset: var(--header-h) 0 auto; margin: 0; padding: 1.5rem; background: var(--bg-elev); border-bottom: 1px solid var(--border); box-shadow: var(--shadow-2); display: none; }
