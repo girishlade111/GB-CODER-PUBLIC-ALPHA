@@ -110,9 +110,19 @@ function readApiKey(body) {
 /* ── Request helpers ────────────────────────────────────────────────────────── */
 
 function sendJson(res, status, payload) {
-  res.status(status).setHeader('Content-Type', 'application/json');
-  res.setHeader('Cache-Control', 'no-store');
-  res.end(JSON.stringify(payload));
+  if (typeof res.status === 'function') {
+    res.status(status);
+  } else {
+    res.statusCode = status;
+  }
+  if (typeof res.setHeader === 'function') {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-store');
+  }
+  if (typeof res.json === 'function') {
+    return res.json(payload);
+  }
+  return res.end(JSON.stringify(payload));
 }
 
 /**
