@@ -27,7 +27,7 @@ const SnapshotManagerModal: React.FC<SnapshotManagerModalProps> = ({
   const [editName, setEditName] = useState('');
 
   const filteredAndSortedSnapshots = useMemo(() => {
-    let result = snapshots.filter(s => 
+    const result = snapshots.filter(s => 
       s.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 

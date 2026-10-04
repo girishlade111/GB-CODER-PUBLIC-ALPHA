@@ -70,5 +70,7 @@ export const defineGbCoderTheme = (monaco: Monaco): void => {
   });
 };
 
-/** The Monaco theme id. Retained for call sites that passed `isDark` through. */
-export const monacoThemeFor = (_isDark?: boolean): string => GB_CODER_MONACO_THEME;
+export const monacoThemeFor = (_isDark?: boolean): string => {
+  void _isDark;
+  return GB_CODER_MONACO_THEME;
+};

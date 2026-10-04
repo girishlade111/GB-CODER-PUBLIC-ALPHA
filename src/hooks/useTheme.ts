@@ -16,7 +16,7 @@ export type Theme = 'light';
 /** No-op retained for call sites that still pass a theme around. */
 export const useTheme = () => ({
   theme: 'light' as Theme,
-  setTheme: (_next: Theme) => {},
+  setTheme: (_next?: Theme) => { void _next; },
   toggleTheme: () => {},
   isDark: false,
   isLight: true,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Command, FileText, Settings, Play, Download, Layout, HelpCircle, Sparkles, Terminal } from 'lucide-react';
+import { Command, Terminal } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 
 export interface PaletteAction {
@@ -115,7 +115,9 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, action
     setRecentCommandIds(newRecents);
     try {
       localStorage.setItem('gbcoder_recent_commands', JSON.stringify(newRecents));
-    } catch {}
+    } catch (_err) {
+      // LocalStorage quota exceeded or disabled
+    }
     
     action.perform();
     onClose();
