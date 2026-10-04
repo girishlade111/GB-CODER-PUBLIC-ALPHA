@@ -78,18 +78,22 @@ export default {
 
   <div class="marquee" aria-label="Selected clients">
     <div class="marquee__row">
-      <span>Halvorsen Rail</span><i aria-hidden="true"></i>
-      <span>Cobalt Health</span><i aria-hidden="true"></i>
-      <span>Vantage Freight</span><i aria-hidden="true"></i>
-      <span>Meridian Pay</span><i aria-hidden="true"></i>
-      <span>Northfold Studio</span><i aria-hidden="true"></i>
-      <span>Arclight Media</span><i aria-hidden="true"></i>
-      <span>Halvorsen Rail</span><i aria-hidden="true"></i>
-      <span>Cobalt Health</span><i aria-hidden="true"></i>
-      <span>Vantage Freight</span><i aria-hidden="true"></i>
-      <span>Meridian Pay</span><i aria-hidden="true"></i>
-      <span>Northfold Studio</span><i aria-hidden="true"></i>
-      <span>Arclight Media</span><i aria-hidden="true"></i>
+      <div class="marquee__half">
+        <span>Halvorsen Rail</span><i aria-hidden="true"></i>
+        <span>Cobalt Health</span><i aria-hidden="true"></i>
+        <span>Vantage Freight</span><i aria-hidden="true"></i>
+        <span>Meridian Pay</span><i aria-hidden="true"></i>
+        <span>Northfold Studio</span><i aria-hidden="true"></i>
+        <span>Arclight Media</span>
+      </div>
+      <div class="marquee__half" aria-hidden="true">
+        <span>Halvorsen Rail</span><i></i>
+        <span>Cobalt Health</span><i></i>
+        <span>Vantage Freight</span><i></i>
+        <span>Meridian Pay</span><i></i>
+        <span>Northfold Studio</span><i></i>
+        <span>Arclight Media</span>
+      </div>
     </div>
   </div>
 
@@ -759,10 +763,11 @@ textarea { font: inherit; resize: vertical; }
 
 /* ----------------------------------------------------------------- marquee */
 .marquee { overflow: hidden; border-block: 1px solid var(--line); background: var(--bg-2); padding-block: 1.1rem; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-.marquee__row { display: flex; align-items: center; gap: clamp(1.25rem, 4vw, 3rem); width: max-content; animation: slide-loop 30s linear infinite; }
-.marquee__row span { font-family: var(--font-display); font-size: clamp(1rem, 2.2vw, 1.4rem); font-weight: 600; letter-spacing: -.02em; color: var(--ink-2); white-space: nowrap; transition: color .2s var(--ease); }
-.marquee__row span:hover { color: var(--accent-hi); }
-.marquee__row i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex: none; }
+.marquee__row { display: flex; width: max-content; animation: slide-loop 30s linear infinite; }
+.marquee__half { display: flex; align-items: center; gap: clamp(1.25rem, 4vw, 3rem); padding-right: clamp(1.25rem, 4vw, 3rem); }
+.marquee__half span { font-family: var(--font-display); font-size: clamp(1rem, 2.2vw, 1.4rem); font-weight: 600; letter-spacing: -.02em; color: var(--ink-2); white-space: nowrap; transition: color .2s var(--ease); }
+.marquee__half span:hover { color: var(--accent-hi); }
+.marquee__half i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex: none; }
 
 /* ---------------------------------------------------------------- sections */
 .section { padding-block: clamp(3rem, 7vw, 5.5rem); }
