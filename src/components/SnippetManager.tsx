@@ -234,7 +234,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
   const renderForm = () => (
     <div className="space-y-4 p-4">
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-1">
+        <label className="block text-sm font-medium text-content-on-dark-soft mb-1">
           Name *
         </label>
         <input
@@ -247,7 +247,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-1">
+        <label className="block text-sm font-medium text-content-on-dark-soft mb-1">
           Description
         </label>
         <textarea
@@ -260,7 +260,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-1">
+          <label className="block text-sm font-medium text-content-on-dark-soft mb-1">
             Type *
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -280,7 +280,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-1">
+          <label className="block text-sm font-medium text-content-on-dark-soft mb-1">
             Scope *
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -302,26 +302,26 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-1">
+          <label className="block text-sm font-medium text-content-on-dark-soft mb-1">
             Category
           </label>
           <input
             type="text"
             value={snippetCategory}
             onChange={(e) => setSnippetCategory(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+            className="w-full bg-product-elevated border border-stroke-dark rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
             placeholder="e.g., UI, Logic"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-1">
+          <label className="block text-sm font-medium text-content-on-dark-soft mb-1">
             Tags
           </label>
           <input
             type="text"
             value={snippetTags}
             onChange={(e) => setSnippetTags(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+            className="w-full bg-product-elevated border border-stroke-dark rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
             placeholder="comma, separated"
           />
         </div>
@@ -335,7 +335,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
               if (viewMode === 'sidebar' && onTabChange) onTabChange('list');
               else setIsModalOpen(false);
             }}
-            className="flex-1 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
+            className="flex-1 px-4 py-2 bg-product-elevated text-white rounded hover:bg-product-active transition-colors"
           >
             Cancel
           </button>
@@ -357,21 +357,21 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
   const renderList = () => (
     <div className="space-y-4 p-4">
       {/* Search and Filter */}
-      <div className="space-y-3 sticky top-0 bg-matte-black z-10 pb-2">
+      <div className="space-y-3 sticky top-0 bg-product z-10 pb-2">
         {/* Enhanced Search Bar */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-content-on-dark-soft" />
           <input
             type="text"
             placeholder="Search snippets by name, tags, or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-9 pr-10 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+            className="w-full bg-product-elevated border border-stroke-dark rounded-lg pl-9 pr-10 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-product-active rounded text-content-on-dark-soft hover:text-white transition-colors"
               title="Clear search"
             >
               <X className="w-4 h-4" />
@@ -383,7 +383,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
         {allTags.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Filter by Tag</span>
+              <span className="text-xs font-medium text-content-on-dark-soft uppercase tracking-wider">Filter by Tag</span>
               {selectedTag !== 'all' && (
                 <button
                   onClick={() => setSelectedTag('all')}
@@ -398,7 +398,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                 onClick={() => setSelectedTag('all')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${selectedTag === 'all'
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                    : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-600 hover:text-gray-300'
+                    : 'bg-product-elevated text-content-on-dark-soft border border-stroke-dark hover:border-gray-600 hover:text-content-on-dark'
                   }`}
               >
                 All Tags
@@ -409,7 +409,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                   onClick={() => setSelectedTag(tag)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${selectedTag === tag
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                      : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-600 hover:text-gray-300'
+                      : 'bg-product-elevated text-content-on-dark-soft border border-stroke-dark hover:border-gray-600 hover:text-content-on-dark'
                     }`}
                 >
                   #{tag}
@@ -425,7 +425,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as SnippetType | 'all')}
-              className="bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500"
+              className="bg-product-elevated border border-stroke-dark rounded px-2 py-1.5 text-xs text-content-on-dark focus:outline-none focus:border-blue-500"
             >
               <option value="all">All Types</option>
               <option value="full">Full Page</option>
@@ -437,7 +437,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500"
+              className="bg-product-elevated border border-stroke-dark rounded px-2 py-1.5 text-xs text-content-on-dark focus:outline-none focus:border-blue-500"
             >
               {categories.map(cat => (
                 <option key={cat} value={cat}>
@@ -449,7 +449,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500"
+              className="bg-product-elevated border border-stroke-dark rounded px-2 py-1.5 text-xs text-content-on-dark focus:outline-none focus:border-blue-500"
             >
               <option value="updated">Recent</option>
               <option value="date">Newest</option>
@@ -458,12 +458,12 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
           </div>
 
           {/* View Toggle */}
-          <div className="flex gap-1 bg-gray-800 border border-gray-700 rounded p-1">
+          <div className="flex gap-1 bg-product-elevated border border-stroke-dark rounded p-1">
             <button
               onClick={() => setViewLayout('list')}
               className={`p-1.5 rounded transition-colors ${viewLayout === 'list'
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-product-active text-white'
+                  : 'text-content-on-dark-soft hover:text-white'
                 }`}
               title="List view"
             >
@@ -472,8 +472,8 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
             <button
               onClick={() => setViewLayout('grid')}
               className={`p-1.5 rounded transition-colors ${viewLayout === 'grid'
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-product-active text-white'
+                  : 'text-content-on-dark-soft hover:text-white'
                 }`}
               title="Grid view"
             >
@@ -495,10 +495,10 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
       {/* Recommended Snippets Section */}
       {showRecommended && (
         <div className="space-y-3 mb-6">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider pl-1">Recommended</h3>
+          <h3 className="text-xs font-semibold text-content-on-dark-soft uppercase tracking-wider pl-1">Recommended</h3>
           <div className={viewLayout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-3' : 'space-y-3'}>
             {recommendedSnippets.map((snippet) => (
-              <div key={snippet.id} className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-3 hover:border-blue-500/50 transition-colors group">
+              <div key={snippet.id} className="bg-product-soft border border-stroke-dark/50 rounded-lg p-3 hover:border-blue-500/50 transition-colors group">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="p-1.5 bg-blue-900/20 rounded text-blue-400">
@@ -507,7 +507,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                     <div>
                       <h4 className="font-medium text-white text-sm">{snippet.name}</h4>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-700 text-gray-300">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-product-active text-content-on-dark">
                           {snippet.type}
                         </span>
                       </div>
@@ -528,14 +528,14 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                       );
                       setShowRecommended(false);
                     }}
-                    className="p-1.5 hover:bg-blue-600 rounded text-gray-400 hover:text-white transition-colors"
+                    className="p-1.5 hover:bg-blue-600 rounded text-content-on-dark-soft hover:text-white transition-colors"
                     title="Add to My Snippets"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
                 {snippet.description && (
-                  <p className="text-xs text-gray-400 line-clamp-2 mb-2">{snippet.description}</p>
+                  <p className="text-xs text-content-on-dark-soft line-clamp-2 mb-2">{snippet.description}</p>
                 )}
               </div>
             ))}
@@ -546,7 +546,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
       {/* Snippet List */}
       <div className={viewLayout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-3' : 'space-y-3'}>
         {filteredSnippets.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 col-span-full">
+          <div className="text-center py-8 text-content-on-dark-soft col-span-full">
             <p>No snippets found</p>
             {(searchQuery || selectedTag !== 'all') && (
               <button
@@ -564,7 +564,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
           filteredSnippets.map((snippet) => (
             <div
               key={snippet.id}
-              className="bg-gray-800 border border-gray-700 rounded-lg p-3 hover:border-gray-600 transition-all group relative"
+              className="bg-product-elevated border border-stroke-dark rounded-lg p-3 hover:border-gray-600 transition-all group relative"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -583,11 +583,11 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${snippet.scope === 'public'
                         ? 'border-green-900/30 bg-green-900/10 text-green-400'
-                        : 'border-gray-700 bg-gray-800 text-gray-400'
+                        : 'border-stroke-dark bg-product-elevated text-content-on-dark-soft'
                         }`}>
                         {snippet.scope || 'private'}
                       </span>
-                      <span className="text-[10px] text-gray-500">
+                      <span className="text-[10px] text-content-on-dark-soft">
                         {new Date(snippet.updatedAt || snippet.createdAt).toLocaleDateString()}
                       </span>
                     </div>
@@ -598,20 +598,20 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                 <div className="relative">
                   <button
                     onClick={() => setOpenActionMenu(openActionMenu === snippet.id ? null : snippet.id)}
-                    className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+                    className="p-1 hover:bg-product-active rounded text-content-on-dark-soft hover:text-white transition-colors"
                   >
                     <ChevronDown className="w-4 h-4" />
                   </button>
 
                   {/* Dropdown Menu */}
                   {openActionMenu === snippet.id && (
-                    <div className="absolute right-0 top-full mt-1 w-48 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-20 py-1">
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-product border border-stroke-dark rounded-lg shadow-xl z-20 py-1">
                       <button
                         onClick={() => {
                           onLoad(snippet);
                           setOpenActionMenu(null);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-800 hover:text-white flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-white flex items-center gap-2"
                       >
                         <Archive className="w-4 h-4" />
                         Replace All
@@ -621,18 +621,18 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                           onInsert(snippet);
                           setOpenActionMenu(null);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-800 hover:text-white flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-white flex items-center gap-2"
                       >
                         <Plus className="w-4 h-4" />
                         Insert Code
                       </button>
-                      <div className="h-px bg-gray-800 my-1" />
+                      <div className="h-px bg-product-elevated my-1" />
                       <button
                         onClick={() => {
                           handleEdit(snippet);
                           setOpenActionMenu(null);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-800 hover:text-white flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-white flex items-center gap-2"
                       >
                         <Edit3 className="w-4 h-4" />
                         Edit
@@ -642,12 +642,12 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                           exportSnippetAsJSON(snippet);
                           setOpenActionMenu(null);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-800 hover:text-white flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-content-on-dark hover:bg-product-elevated hover:text-white flex items-center gap-2"
                       >
                         <Download className="w-4 h-4" />
                         Export
                       </button>
-                      <div className="h-px bg-gray-800 my-1" />
+                      <div className="h-px bg-product-elevated my-1" />
                       <button
                         onClick={() => {
                           onDelete(snippet.id);
@@ -664,7 +664,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
               </div>
 
               {snippet.description && (
-                <p className="text-xs text-gray-400 line-clamp-2 mb-2">{snippet.description}</p>
+                <p className="text-xs text-content-on-dark-soft line-clamp-2 mb-2">{snippet.description}</p>
               )}
 
               {snippet.tags && snippet.tags.length > 0 && (
@@ -673,7 +673,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                     <button
                       key={index}
                       onClick={() => setSelectedTag(tag)}
-                      className="text-[10px] px-1.5 py-0.5 bg-gray-700/50 text-gray-400 rounded hover:bg-gray-700 hover:text-white transition-colors"
+                      className="text-[10px] px-1.5 py-0.5 bg-product-active text-content-on-dark-soft rounded hover:bg-product-active hover:text-white transition-colors"
                       title={`Filter by #${tag}`}
                     >
                       #{tag}
@@ -686,7 +686,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => onLoad(snippet)}
-                  className="flex-1 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+                  className="flex-1 py-1.5 text-xs bg-product-active hover:bg-gray-600 text-white rounded transition-colors"
                 >
                   Replace
                 </button>
@@ -713,9 +713,9 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
 
   // Inline mode (Original UI)
   return (
-    <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+    <div className="bg-product-elevated rounded-lg border border-stroke-dark overflow-hidden">
       {/* Header Actions */}
-      <div className="p-4 border-b border-gray-700 flex flex-wrap gap-2">
+      <div className="p-4 border-b border-stroke-dark flex flex-wrap gap-2">
         <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
@@ -725,7 +725,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
         </button>
         <button
           onClick={() => setShowSnippets(!showSnippets)}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors ${showSnippets ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors ${showSnippets ? 'bg-product-active text-white' : 'bg-product-elevated text-content-on-dark hover:bg-product-active'
             }`}
         >
           <FolderOpen className="w-4 h-4" />
@@ -733,12 +733,12 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
         </button>
         <button
           onClick={handleExportAll}
-          className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 text-gray-300 hover:bg-gray-700 rounded text-sm transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 bg-product-elevated text-content-on-dark hover:bg-product-active rounded text-sm transition-colors"
         >
           <Download className="w-4 h-4" />
           Export All
         </button>
-        <label className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 text-gray-300 hover:bg-gray-700 rounded text-sm transition-colors cursor-pointer">
+        <label className="flex items-center gap-2 px-3 py-1.5 bg-product-elevated text-content-on-dark hover:bg-product-active rounded text-sm transition-colors cursor-pointer">
           <Upload className="w-4 h-4" />
           Import
           <input
@@ -768,8 +768,8 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
       {/* Save Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-lg w-full max-w-md shadow-xl">
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+          <div className="bg-product border border-stroke-dark rounded-lg w-full max-w-md shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b border-stroke-dark">
               <h3 className="text-lg font-semibold text-white">
                 {editingSnippet ? 'Edit Snippet' : 'Save New Snippet'}
               </h3>
@@ -778,7 +778,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
                   resetForm();
                   setIsModalOpen(false);
                 }}
-                className="text-gray-400 hover:text-white"
+                className="text-content-on-dark-soft hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -790,7 +790,7 @@ const SnippetManager: React.FC<SnippetManagerProps> = ({
 
       {/* Snippet List (Inline) */}
       {showSnippets && (
-        <div className="border-t border-gray-700">
+        <div className="border-t border-stroke-dark">
           {renderList()}
         </div>
       )}

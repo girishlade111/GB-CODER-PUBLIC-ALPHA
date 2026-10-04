@@ -99,7 +99,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setShowCreateModal(true)}
-                            className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors text-green-400 hover:text-green-300"
+                            className="p-2 hover:bg-product-active rounded-lg transition-colors text-green-400 hover:text-green-300"
                             title="Create Snapshot"
                         >
                             <Plus className="w-5 h-5" />
@@ -108,7 +108,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                         {onClearHistory && history.length > 1 && (
                             <button
                                 onClick={handleClearHistory}
-                                className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors text-red-400 hover:text-red-300"
+                                className="p-2 hover:bg-product-active rounded-lg transition-colors text-red-400 hover:text-red-300"
                                 title="Clear History"
                             >
                                 <Trash2 className="w-5 h-5" />
@@ -117,7 +117,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
                         <button
                             onClick={onClose}
-                            className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors text-gray-400 hover:text-white"
+                            className="p-2 hover:bg-product-active rounded-lg transition-colors text-content-on-dark-soft hover:text-white"
                             title="Close"
                         >
                             <X className="w-5 h-5" />
@@ -126,9 +126,9 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                 </div>
 
                 {/* Search Bar */}
-                <div className="px-6 py-4 border-b border-gray-700">
+                <div className="px-6 py-4 border-b border-stroke-dark">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-content-on-dark-soft" />
                         <input
                             type="text"
                             placeholder="Search snapshots..."
@@ -143,10 +143,10 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                 <div className="flex-1 overflow-y-auto px-6 py-4">
                     {filteredHistory.length === 0 ? (
                         <div className="text-center py-12">
-                            <Clock className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                            <p className="text-gray-500">No snapshots found</p>
+                            <Clock className="w-12 h-12 text-content-on-dark-soft mx-auto mb-4" />
+                            <p className="text-content-on-dark-soft">No snapshots found</p>
                             {searchQuery && (
-                                <p className="text-gray-600 text-sm mt-2">Try a different search term</p>
+                                <p className="text-content-on-dark-soft text-sm mt-2">Try a different search term</p>
                             )}
                         </div>
                     ) : (
@@ -161,7 +161,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                         key={entry.id}
                                         className={`relative group cursor-pointer transition-all duration-200 ${isCurrent
                                                 ? 'bg-blue-900/30 border-blue-500/50'
-                                                : 'bg-dark-gray border-gray-700 hover:bg-gray-800 hover:border-gray-600'
+                                                : 'bg-dark-gray border-stroke-dark hover:bg-product-elevated hover:border-gray-600'
                                             } border rounded-lg p-4`}
                                         onClick={() => !isCurrent && onJumpToSnapshot(entry.id)}
                                     >
@@ -174,7 +174,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
                                         {/* Timeline connector */}
                                         {index < filteredHistory.length - 1 && (
-                                            <div className="absolute left-1/2 -bottom-3 w-0.5 h-3 bg-gray-700" />
+                                            <div className="absolute left-1/2 -bottom-3 w-0.5 h-3 bg-product-active" />
                                         )}
 
                                         <div className="space-y-2">
@@ -187,13 +187,13 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                                             <h3 className="font-semibold text-bright-white truncate">{entry.label}</h3>
                                                         </div>
                                                     ) : null}
-                                                    <p className={`text-sm ${entry.label ? 'text-gray-400' : 'text-gray-300'} truncate`}>
+                                                    <p className={`text-sm ${entry.label ? 'text-content-on-dark-soft' : 'text-content-on-dark'} truncate`}>
                                                         {entry.description}
                                                     </p>
                                                 </div>
 
                                                 <div className="text-right flex-shrink-0">
-                                                    <div className="text-xs text-gray-500">{formatTime(entry.timestamp)}</div>
+                                                    <div className="text-xs text-content-on-dark-soft">{formatTime(entry.timestamp)}</div>
                                                     {isCurrent && (
                                                         <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">
                                                             Current
@@ -204,8 +204,8 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
                                             {/* Diff Preview */}
                                             {diff && (diff.hasHtmlChanges || diff.hasCssChanges || diff.hasJavascriptChanges) && (
-                                                <div className="flex items-center gap-2 pt-2 border-t border-gray-700/50">
-                                                    <span className="text-xs text-gray-500">Changed:</span>
+                                                <div className="flex items-center gap-2 pt-2 border-t border-stroke-dark/50">
+                                                    <span className="text-xs text-content-on-dark-soft">Changed:</span>
                                                     <div className="flex items-center gap-2">
                                                         {diff.hasHtmlChanges && (
                                                             <span className="flex items-center gap-1 text-xs px-2 py-1 bg-orange-900/30 text-orange-400 rounded border border-orange-700/30">
@@ -237,8 +237,8 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                 </div>
 
                 {/* Footer Help */}
-                <div className="px-6 py-3 border-t border-gray-700 bg-dark-gray">
-                    <p className="text-xs text-gray-500 text-center">
+                <div className="px-6 py-3 border-t border-stroke-dark bg-dark-gray">
+                    <p className="text-xs text-content-on-dark-soft text-center">
                         Click a snapshot to jump to it • Jumps are non-destructive and can be undone
                     </p>
                 </div>
@@ -247,13 +247,13 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
             {/* Create Snapshot Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
-                    <div className="bg-dark-gray border border-gray-700 rounded-lg shadow-2xl w-full max-w-md">
-                        <div className="px-6 py-4 border-b border-gray-700">
+                    <div className="bg-dark-gray border border-stroke-dark rounded-lg shadow-2xl w-full max-w-md">
+                        <div className="px-6 py-4 border-b border-stroke-dark">
                             <h3 className="text-lg font-bold text-bright-white">Create Snapshot</h3>
                         </div>
 
                         <div className="px-6 py-4">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-content-on-dark mb-2">
                                 Snapshot Name (Optional)
                             </label>
                             <input
@@ -261,22 +261,22 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                 value={newSnapshotLabel}
                                 onChange={(e) => setNewSnapshotLabel(e.target.value)}
                                 placeholder="e.g., Before refactoring"
-                                className="w-full px-4 py-2 bg-matte-black border border-gray-600 text-bright-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
+                                className="w-full px-4 py-2 bg-product border border-gray-600 text-bright-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
                                 autoFocus
                                 onKeyDown={(e) => e.key === 'Enter' && handleCreateSnapshot()}
                             />
-                            <p className="text-xs text-gray-500 mt-2">
+                            <p className="text-xs text-content-on-dark-soft mt-2">
                                 Leave empty for an auto-generated name
                             </p>
                         </div>
 
-                        <div className="px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
+                        <div className="px-6 py-4 border-t border-stroke-dark flex justify-end gap-3">
                             <button
                                 onClick={() => {
                                     setShowCreateModal(false);
                                     setNewSnapshotLabel('');
                                 }}
-                                className="px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                                className="px-4 py-2 text-sm text-content-on-dark hover:text-white hover:bg-product-active rounded-lg transition-colors"
                             >
                                 Cancel
                             </button>

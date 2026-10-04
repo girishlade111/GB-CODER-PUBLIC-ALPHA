@@ -147,7 +147,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                             </button>
                             <button
                                 onClick={onClose}
-                                className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors text-gray-400 hover:text-white"
+                                className="p-2 hover:bg-product-active rounded-lg transition-colors text-content-on-dark-soft hover:text-white"
                                 title="Close"
                             >
                                 <X className="w-4 h-4" />
@@ -157,8 +157,8 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
 
                     {/* History Panel (slides in from left) */}
                     {isHistoryOpen && (
-                        <div className="absolute left-0 top-0 h-full w-64 bg-dark-gray border-r border-gray-700 z-10 shadow-2xl animate-slideIn">
-                            <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+                        <div className="absolute left-0 top-0 h-full w-64 bg-dark-gray border-r border-stroke-dark z-10 shadow-2xl animate-slideIn">
+                            <div className="p-4 border-b border-stroke-dark flex items-center justify-between">
                                 <h3 className="font-semibold text-white flex items-center gap-2">
                                     <History className="w-4 h-4" />
                                     Recent History
@@ -175,7 +175,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                                     )}
                                     <button
                                         onClick={() => onHistoryToggle(false)}
-                                        className="p-1.5 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+                                        className="p-1.5 hover:bg-product-active rounded text-content-on-dark-soft hover:text-white transition-colors"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -184,9 +184,9 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
 
                             <div className="overflow-y-auto h-[calc(100%-60px)]">
                                 {history.length === 0 ? (
-                                    <p className="text-gray-500 text-center py-8 text-sm">No history yet</p>
+                                    <p className="text-content-on-dark-soft text-center py-8 text-sm">No history yet</p>
                                 ) : (
-                                    <div className="divide-y divide-gray-700">
+                                    <div className="divide-y divide-stroke-dark">
                                         {history.map((item) => (
                                             <button
                                                 key={item.id}
@@ -194,18 +194,18 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                                                     onSelectHistory(item);
                                                     onHistoryToggle(false);
                                                 }}
-                                                className="w-full p-3 text-left hover:bg-gray-800 transition-colors"
+                                                className="w-full p-3 text-left hover:bg-product-elevated transition-colors"
                                             >
                                                 <div className="flex items-center justify-between mb-1">
                                                     <span className="text-xs font-medium text-purple-400 uppercase">
                                                         {item.operation}
                                                     </span>
-                                                    <span className="text-xs text-gray-500">
+                                                    <span className="text-xs text-content-on-dark-soft">
                                                         {formatTime(item.timestamp)}
                                                     </span>
                                                 </div>
-                                                <p className="text-sm text-gray-300 truncate">{item.codePreview}</p>
-                                                <span className="text-xs text-gray-500 uppercase">{item.language}</span>
+                                                <p className="text-sm text-content-on-dark truncate">{item.codePreview}</p>
+                                                <span className="text-xs text-content-on-dark-soft uppercase">{item.language}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -236,22 +236,22 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                         {result && !isLoading && (
                             <div className="p-4 space-y-4">
                                 {/* Explanation */}
-                                <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                                <div className="bg-product-soft border border-stroke-dark rounded-lg p-4">
                                     <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
                                         <Code2 className="w-4 h-4 text-purple-400" />
                                         Analysis
                                     </h3>
-                                    <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                    <p className="text-sm text-content-on-dark whitespace-pre-wrap leading-relaxed">
                                         {result.explanation}
                                     </p>
                                 </div>
 
                                 {/* Confidence */}
                                 {result.confidence !== undefined && (
-                                    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                                    <div className="bg-product-soft border border-stroke-dark rounded-lg p-4">
                                         <h3 className="text-sm font-semibold text-white mb-2">Confidence</h3>
                                         <div className="flex items-center gap-3">
-                                            <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
+                                            <div className="flex-1 bg-product-active rounded-full h-2 overflow-hidden">
                                                 <div
                                                     className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500"
                                                     style={{ width: `${result.confidence}%` }}
@@ -264,7 +264,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
 
                                 {/* Issues */}
                                 {result.issues && result.issues.length > 0 && (
-                                    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                                    <div className="bg-product-soft border border-stroke-dark rounded-lg p-4">
                                         <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                                             <AlertCircle className="w-4 h-4 text-red-400" />
                                             Issues ({result.issues.length})
@@ -282,7 +282,7 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
                                                                 'bg-blue-800 text-blue-200'
                                                             }`}>{issue.severity}</span>
                                                     </div>
-                                                    <p className="text-sm text-gray-300">{issue.description}</p>
+                                                    <p className="text-sm text-content-on-dark">{issue.description}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -291,14 +291,14 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
 
                                 {/* Improvements */}
                                 {result.improvements && result.improvements.length > 0 && (
-                                    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                                    <div className="bg-product-soft border border-stroke-dark rounded-lg p-4">
                                         <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                                             <Check className="w-4 h-4 text-green-400" />
                                             Improvements
                                         </h3>
                                         <ul className="space-y-2">
                                             {result.improvements.map((imp, i) => (
-                                                <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                                                <li key={i} className="flex items-start gap-2 text-sm text-content-on-dark">
                                                     <span className="text-green-400 mt-0.5">✓</span>
                                                     <span>{imp}</span>
                                                 </li>
@@ -309,20 +309,20 @@ const SelectionSidebar: React.FC<SelectionSidebarProps> = ({
 
                                 {/* Suggested Code */}
                                 {result.hasCodeChanges && result.suggestedCode && (
-                                    <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+                                    <div className="bg-product-soft border border-stroke-dark rounded-lg overflow-hidden">
                                         <button
                                             onClick={() => setShowDiff(!showDiff)}
-                                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-700/50 transition-colors"
+                                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-product-active transition-colors"
                                         >
                                             <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                                                 <Code2 className="w-4 h-4" />
                                                 Suggested Code
                                             </h3>
-                                            <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${showDiff ? 'rotate-90' : ''}`} />
+                                            <ChevronRight className={`w-4 h-4 text-content-on-dark-soft transition-transform ${showDiff ? 'rotate-90' : ''}`} />
                                         </button>
                                         {showDiff && (
-                                            <div className="border-t border-gray-700 p-3 bg-gray-900/50">
-                                                <pre className="text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap">
+                                            <div className="border-t border-stroke-dark p-3 bg-product">
+                                                <pre className="text-xs text-content-on-dark overflow-x-auto whitespace-pre-wrap">
                                                     <code>{result.suggestedCode}</code>
                                                 </pre>
                                             </div>

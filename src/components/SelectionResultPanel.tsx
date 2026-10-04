@@ -57,24 +57,24 @@ const SelectionResultPanel: React.FC<SelectionResultPanelProps> = ({
             case 'low':
                 return 'text-blue-400 bg-blue-900/20 border-blue-700';
             default:
-                return 'text-gray-400 bg-gray-900/20 border-gray-700';
+                return 'text-content-on-dark-soft bg-product/20 border-stroke-dark';
         }
     };
 
     return (
-        <div className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-dark-gray border-l border-gray-700 shadow-2xl z-50 flex flex-col">
+        <div className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-dark-gray border-l border-stroke-dark shadow-2xl z-50 flex flex-col">
             {/* Header */}
-            <div className="bg-matte-black px-6 py-4 border-b border-gray-700 flex items-center justify-between">
+            <div className="bg-product px-6 py-4 border-b border-stroke-dark flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <span className="text-2xl">{getOperationIcon()}</span>
                     <div>
                         <h2 className="text-lg font-semibold text-bright-white">{getOperationTitle()}</h2>
-                        <p className="text-xs text-gray-400 uppercase">{language}</p>
+                        <p className="text-xs text-content-on-dark-soft uppercase">{language}</p>
                     </div>
                 </div>
                 <button
                     onClick={onClose}
-                    className="p-2 hover:bg-gray-700 rounded transition-colors text-gray-400 hover:text-bright-white"
+                    className="p-2 hover:bg-product-active rounded transition-colors text-content-on-dark-soft hover:text-bright-white"
                     title="Close"
                 >
                     <X className="w-5 h-5" />
@@ -84,12 +84,12 @@ const SelectionResultPanel: React.FC<SelectionResultPanelProps> = ({
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {/* Explanation */}
-                <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                <div className="bg-product-soft border border-stroke-dark rounded-lg p-4">
                     <h3 className="text-sm font-semibold text-bright-white mb-2 flex items-center gap-2">
                         <Code2 className="w-4 h-4" />
                         Analysis
                     </h3>
-                    <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-sm text-content-on-dark whitespace-pre-wrap leading-relaxed">
                         {result.explanation}
                     </p>
                 </div>
@@ -112,7 +112,7 @@ const SelectionResultPanel: React.FC<SelectionResultPanelProps> = ({
 
                 {/* Issues (Debug) */}
                 {result.issues && result.issues.length > 0 && (
-                    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                    <div className="bg-product-soft border border-stroke-dark rounded-lg p-4">
                         <h3 className="text-sm font-semibold text-bright-white mb-3 flex items-center gap-2">
                             <AlertCircle className="w-4 h-4" />
                             Issues Found ({result.issues.length})
@@ -138,14 +138,14 @@ const SelectionResultPanel: React.FC<SelectionResultPanelProps> = ({
 
                 {/* Improvements (Optimize/ImproveUI) */}
                 {result.improvements && result.improvements.length > 0 && (
-                    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                    <div className="bg-product-soft border border-stroke-dark rounded-lg p-4">
                         <h3 className="text-sm font-semibold text-bright-white mb-3 flex items-center gap-2">
                             <Check className="w-4 h-4" />
                             Improvements ({result.improvements.length})
                         </h3>
                         <ul className="space-y-2">
                             {result.improvements.map((improvement, index) => (
-                                <li key={index} className="flex items-start gap-2 text-sm text-gray-300">
+                                <li key={index} className="flex items-start gap-2 text-sm text-content-on-dark">
                                     <span className="text-green-400 mt-0.5">✓</span>
                                     <span>{improvement}</span>
                                 </li>
@@ -156,26 +156,26 @@ const SelectionResultPanel: React.FC<SelectionResultPanelProps> = ({
 
                 {/* Code Changes */}
                 {result.hasCodeChanges && result.suggestedCode && (
-                    <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+                    <div className="bg-product-soft border border-stroke-dark rounded-lg overflow-hidden">
                         <button
                             onClick={() => setShowDiff(!showDiff)}
-                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-700/50 transition-colors"
+                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-product-active transition-colors"
                         >
                             <h3 className="text-sm font-semibold text-bright-white flex items-center gap-2">
                                 <Code2 className="w-4 h-4" />
                                 Suggested Code
                             </h3>
                             {showDiff ? (
-                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                                <ChevronDown className="w-4 h-4 text-content-on-dark-soft" />
                             ) : (
-                                <ChevronRight className="w-4 h-4 text-gray-400" />
+                                <ChevronRight className="w-4 h-4 text-content-on-dark-soft" />
                             )}
                         </button>
 
                         {showDiff && (
-                            <div className="border-t border-gray-700">
-                                <div className="p-4 bg-gray-900/50">
-                                    <pre className="text-xs text-gray-300 overflow-x-auto">
+                            <div className="border-t border-stroke-dark">
+                                <div className="p-4 bg-product">
+                                    <pre className="text-xs text-content-on-dark overflow-x-auto">
                                         <code>{result.suggestedCode}</code>
                                     </pre>
                                 </div>

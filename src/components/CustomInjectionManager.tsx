@@ -136,7 +136,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
       case 'css': return 'bg-blue-500/20 text-blue-500 border-blue-500/30';
       case 'js': return 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30';
       case 'html': return 'bg-purple-500/20 text-purple-500 border-purple-500/30';
-      default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
+      default: return 'bg-gray-500/20 text-content-on-dark-soft border-gray-500/30';
     }
   };
 
@@ -164,7 +164,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
               <h2 className={`text-xl font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
                 Custom Code Injection <span className="text-sm font-normal text-content-muted ml-2">({activeInjections.length} active)</span>
               </h2>
-              <p className={`text-sm mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`text-sm mt-0.5 ${isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'}`}>
                 Enhance your project with custom HTML, CSS, and JS
               </p>
             </div>
@@ -173,7 +173,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
             <button
               onClick={handleClose}
               className={`p-2.5 rounded-lg transition-colors ${
-                isDark ? 'hover:bg-white/5 text-content-secondary hover:text-content-primary' : 'hover:bg-gray-200 text-gray-600'
+                isDark ? 'hover:bg-product-hover text-content-secondary hover:text-content-primary' : 'hover:bg-gray-200 text-content-on-dark-soft'
               }`}
               title="Close"
             >
@@ -190,8 +190,8 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
               activeTab === 'active'
                 ? isDark ? 'bg-surface-canvas text-accent border-b-2 border-accent' : 'bg-white text-purple-600 border-b-2 border-purple-600'
                 : isDark
-                ? 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                ? 'text-content-on-dark-soft hover:text-content-on-dark hover:bg-product-hover'
+                : 'text-content-on-dark-soft hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
             <LayoutList className="w-4 h-4" />
@@ -203,8 +203,8 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
               activeTab === 'custom'
                 ? isDark ? 'bg-surface-canvas text-accent border-b-2 border-accent' : 'bg-white text-purple-600 border-b-2 border-purple-600'
                 : isDark
-                ? 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                ? 'text-content-on-dark-soft hover:text-content-on-dark hover:bg-product-hover'
+                : 'text-content-on-dark-soft hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
             <Code2 className="w-4 h-4" />
@@ -216,8 +216,8 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
               activeTab === 'presets'
                 ? isDark ? 'bg-surface-canvas text-accent border-b-2 border-accent' : 'bg-white text-purple-600 border-b-2 border-purple-600'
                 : isDark
-                ? 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                ? 'text-content-on-dark-soft hover:text-content-on-dark hover:bg-product-hover'
+                : 'text-content-on-dark-soft hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
             <BookOpen className="w-4 h-4" />
@@ -232,57 +232,57 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
           {activeTab === 'active' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center mb-6">
-                <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'}`}>
                   Manage Active Injections
                 </h3>
                 <div className="flex gap-2">
                   <button onClick={() => handleToggleAll(true)} className="text-xs px-3 py-1.5 rounded-md bg-accent/10 text-accent hover:bg-accent/20 transition-colors font-medium">Enable All</button>
-                  <button onClick={() => handleToggleAll(false)} className="text-xs px-3 py-1.5 rounded-md bg-gray-500/10 text-gray-400 hover:bg-gray-500/20 transition-colors font-medium">Disable All</button>
+                  <button onClick={() => handleToggleAll(false)} className="text-xs px-3 py-1.5 rounded-md bg-gray-500/10 text-content-on-dark-soft hover:bg-gray-500/20 transition-colors font-medium">Disable All</button>
                   <button onClick={handleResetToDefaults} className="text-xs px-3 py-1.5 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors font-medium flex items-center gap-1"><RefreshCcw className="w-3 h-3"/> Reset</button>
                 </div>
               </div>
 
               {activeInjections.length === 0 ? (
                 <div className="text-center py-16 border-2 border-dashed rounded-xl border-stroke-subtle">
-                  <LayoutList className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
-                  <p className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>No active injections</p>
-                  <p className={`text-sm mt-1 mb-6 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                  <LayoutList className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'}`} />
+                  <p className={`font-medium ${isDark ? 'text-content-on-dark' : 'text-gray-700'}`}>No active injections</p>
+                  <p className={`text-sm mt-1 mb-6 ${isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'}`}>
                     Add presets from the library or create custom injections.
                   </p>
                   <div className="flex justify-center gap-4">
                     <button onClick={() => setActiveTab('presets')} className="px-4 py-2 bg-accent/10 text-accent rounded-lg text-sm font-medium hover:bg-accent/20 transition-colors">Browse Presets</button>
-                    <button onClick={() => setActiveTab('custom')} className="px-4 py-2 bg-surface-raised border border-stroke-subtle text-content-primary rounded-lg text-sm font-medium hover:bg-white/5 transition-colors">Add Custom</button>
+                    <button onClick={() => setActiveTab('custom')} className="px-4 py-2 bg-surface-raised border border-stroke-subtle text-content-primary rounded-lg text-sm font-medium hover:bg-product-hover transition-colors">Add Custom</button>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {activeInjections.map((inj, idx) => (
                     <div key={inj.id} className={`flex items-center gap-4 p-4 rounded-xl border ${!inj.enabled ? 'opacity-60' : ''} ${isDark ? 'bg-surface-raised border-stroke-subtle' : 'bg-white border-gray-200'} transition-opacity`}>
-                      <div className="flex flex-col gap-1 text-gray-500">
+                      <div className="flex flex-col gap-1 text-content-on-dark-soft">
                         <button onClick={() => handleMoveInjection(idx, 'up')} disabled={idx === 0} className="hover:text-content-primary disabled:opacity-30"><ChevronUp className="w-4 h-4"/></button>
                         <button onClick={() => handleMoveInjection(idx, 'down')} disabled={idx === activeInjections.length - 1} className="hover:text-content-primary disabled:opacity-30"><ChevronDown className="w-4 h-4"/></button>
                       </div>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className={`font-semibold truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{inj.name}</h4>
+                          <h4 className={`font-semibold truncate ${isDark ? 'text-content-on-dark' : 'text-gray-800'}`}>{inj.name}</h4>
                           <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${getTypeBadgeColor(inj.type)}`}>{inj.type}</span>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${isDark ? 'bg-gray-800 text-gray-400 border-gray-700' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${isDark ? 'bg-product-elevated text-content-on-dark-soft border-stroke-dark' : 'bg-gray-100 text-content-on-dark-soft border-gray-200'}`}>
                             {inj.target === 'before-body' ? 'Before </body>' : inj.target === 'after-body' ? 'After <body>' : inj.target === 'head' ? '<head>' : 'Inline'}
                           </span>
                         </div>
-                        <p className={`text-xs truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{inj.description || 'No description'}</p>
+                        <p className={`text-xs truncate ${isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'}`}>{inj.description || 'No description'}</p>
                       </div>
 
                       <div className="flex items-center gap-3">
                         <label className="flex items-center cursor-pointer">
                           <div className="relative">
                             <input type="checkbox" className="sr-only" checked={inj.enabled} onChange={() => handleToggleInjection(inj.id)} />
-                            <div className={`block w-10 h-6 rounded-full transition-colors ${inj.enabled ? 'bg-accent' : isDark ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
+                            <div className={`block w-10 h-6 rounded-full transition-colors ${inj.enabled ? 'bg-accent' : isDark ? 'bg-product-active' : 'bg-gray-300'}`}></div>
                             <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${inj.enabled ? 'transform translate-x-4' : ''}`}></div>
                           </div>
                         </label>
-                        <button onClick={() => handleDeleteInjection(inj.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete">
+                        <button onClick={() => handleDeleteInjection(inj.id)} className="p-2 text-content-on-dark-soft hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -308,12 +308,12 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                 </div>
               ) : (
                 <div className={`p-6 rounded-xl border ${isDark ? 'bg-surface-raised border-stroke-subtle' : 'bg-white border-gray-200'}`}>
-                  <h3 className={`text-lg font-bold mb-5 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Create Custom Injection</h3>
+                  <h3 className={`text-lg font-bold mb-5 ${isDark ? 'text-content-on-dark' : 'text-gray-800'}`}>Create Custom Injection</h3>
                   
                   <div className="space-y-5">
                     <div className="grid grid-cols-2 gap-5">
                       <div>
-                        <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Name *</label>
+                        <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-content-on-dark' : 'text-gray-700'}`}>Name *</label>
                         <input
                           type="text"
                           value={newInjection.name}
@@ -325,7 +325,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                         />
                       </div>
                       <div>
-                        <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Description</label>
+                        <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-content-on-dark' : 'text-gray-700'}`}>Description</label>
                         <input
                           type="text"
                           value={newInjection.description}
@@ -340,7 +340,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
 
                     <div className="grid grid-cols-2 gap-5">
                       <div>
-                        <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Type *</label>
+                        <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-content-on-dark' : 'text-gray-700'}`}>Type *</label>
                         <select
                           value={newInjection.type}
                           onChange={(e) => {
@@ -361,7 +361,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                         </select>
                       </div>
                       <div>
-                        <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Target Location *</label>
+                        <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-content-on-dark' : 'text-gray-700'}`}>Target Location *</label>
                         <select
                           value={newInjection.target}
                           onChange={(e) => setNewInjection({ ...newInjection, target: e.target.value as InjectionTarget })}
@@ -388,8 +388,8 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
 
                     <div>
                       <label className={`flex justify-between items-end mb-1.5`}>
-                        <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Code *</span>
-                        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        <span className={`text-sm font-medium ${isDark ? 'text-content-on-dark' : 'text-gray-700'}`}>Code *</span>
+                        <span className={`text-xs ${isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'}`}>
                           {newInjection.type === 'html' ? 'Provide valid HTML tags' : `Provide raw ${newInjection.type?.toUpperCase()} (no tags unless inline)`}
                         </span>
                       </label>
@@ -401,7 +401,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                           onChange={(e) => setNewInjection({ ...newInjection, code: e.target.value })}
                           rows={8}
                           spellCheck={false}
-                          className="w-full p-4 bg-transparent text-gray-300 font-mono text-sm leading-relaxed focus:outline-none resize-y"
+                          className="w-full p-4 bg-transparent text-content-on-dark font-mono text-sm leading-relaxed focus:outline-none resize-y"
                           placeholder={
                             newInjection.type === 'css' ? '.my-custom-class {n  color: #7c3aed;n}' : 
                             newInjection.type === 'js' ? 'console.log("Custom injection active");' : 
@@ -425,8 +425,8 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                           </div>
                         </div>
                         <div>
-                          <span className={`block text-sm font-medium group-hover:text-accent transition-colors ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Apply to Export Too</span>
-                          <span className={`block text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Include this injection in downloaded HTML</span>
+                          <span className={`block text-sm font-medium group-hover:text-accent transition-colors ${isDark ? 'text-content-on-dark' : 'text-gray-700'}`}>Apply to Export Too</span>
+                          <span className={`block text-xs ${isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'}`}>Include this injection in downloaded HTML</span>
                         </div>
                       </label>
 
@@ -434,7 +434,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                         <button
                           onClick={() => setIsAddingNew(false)}
                           className={`px-5 py-2.5 rounded-lg font-medium transition-colors ${
-                            isDark ? 'bg-surface-canvas hover:bg-white/5 text-gray-300 border border-stroke-subtle' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300'
+                            isDark ? 'bg-surface-canvas hover:bg-product-hover text-content-on-dark border border-stroke-subtle' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300'
                           }`}
                         >
                           Cancel
@@ -467,13 +467,13 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                     isDark ? 'bg-surface-raised border-stroke-subtle text-content-primary' : 'bg-white border-gray-200 text-gray-900'
                   }`}
                 />
-                <BookOpen className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+                <BookOpen className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'}`} />
               </div>
 
               <div className="space-y-8">
                 {presetCategories.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>No presets found matching "{searchQuery}"</p>
+                    <p className={`${isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'}`}>No presets found matching "{searchQuery}"</p>
                   </div>
                 ) : (
                   presetCategories.map(category => {
@@ -481,7 +481,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                     return (
                       <div key={category} className="space-y-4">
                         <h3 className={`text-sm font-bold uppercase tracking-wider pl-1 ${
-                          isDark ? 'text-gray-400' : 'text-gray-500'
+                          isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'
                         }`}>
                           {category} <span className="text-xs font-normal ml-1 bg-gray-500/10 px-2 py-0.5 rounded-full">{categoryPresets.length}</span>
                         </h3>
@@ -496,14 +496,14 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                               <div className="flex items-start justify-between mb-3">
                                 <div>
                                   <div className="flex items-center gap-2 mb-1.5">
-                                    <h4 className={`font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                                    <h4 className={`font-bold ${isDark ? 'text-content-on-dark' : 'text-gray-800'}`}>
                                       {preset.name}
                                     </h4>
                                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium border ${getTypeBadgeColor(preset.type)}`}>
                                       {preset.type.toUpperCase()}
                                     </span>
                                   </div>
-                                  <span className={`text-[10px] uppercase font-semibold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>v{preset.version}</span>
+                                  <span className={`text-[10px] uppercase font-semibold ${isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'}`}>v{preset.version}</span>
                                 </div>
                                 <button
                                   onClick={() => handleAddPreset(preset.id)}
@@ -516,7 +516,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                                   Add
                                 </button>
                               </div>
-                              <p className={`text-sm mt-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              <p className={`text-sm mt-auto ${isDark ? 'text-content-on-dark-soft' : 'text-content-on-dark-soft'}`}>
                                 {preset.description}
                               </p>
                             </div>
