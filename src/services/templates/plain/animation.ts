@@ -356,7 +356,7 @@ export default {
             <button class="btn btn--outline" type="button" data-toast="error">Error</button>
           </div>
           <div class="toast-stack" id="toastStack" aria-live="polite" aria-label="Notification previews"></div>
-          <p class="toast-note">Built in-page, no <code>alert()</code>, dismissible by click and by keyboard.</p>
+          <p class="toast-note">Built in page, no modal dialogs, dismissible by click and by keyboard.</p>
         </div>
         <ul class="spec">
           <li><b>Enter</b> 380ms slide and fade</li>

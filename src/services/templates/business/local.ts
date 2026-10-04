@@ -136,7 +136,7 @@ export default {
       <header class="head">
         <div>
           <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>The menu</p>
-          <h2 class="head__title" id="menuTitle">Twenty things we make every day</h2>
+          <h2 class="head__title" id="menuTitle">Nineteen things we make every day</h2>
         </div>
         <p class="head__note">Prices include VAT. We do not offer a three-course menu because we are a cafe, not a restaurant, and we would rather not pretend otherwise.</p>
       </header>
