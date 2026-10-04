@@ -245,6 +245,13 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
         body: JSON.stringify({
           feature: 'generate',
           prompt: normalizedPrompt,
+          provider: selectedProvider,
+          apiKey:
+            selectedProvider === 'inception'
+              ? settings.inceptionApiKey
+              : selectedProvider === 'atria'
+                ? settings.atriaApiKey
+                : settings.nvidiaApiKey,
           // Full current editor contents travel with every AI request.
           projectContext: {
             html: projectContext?.html ?? '',
