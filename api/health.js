@@ -2,13 +2,20 @@
  * Vercel Serverless Function — GET /api/health
  */
 
-'use strict';
+try {
+  require('dotenv').config();
+  require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+} catch (_) {}
+
+const { getProviderConfig } = require('./ai');
 
 module.exports = function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  const provider = getProviderConfig();
   res.json({
     status: 'ok',
-    ai: !!process.env.NVIDIA_API_KEY,
-    model: process.env.NVIDIA_MODEL || 'qwen/qwen3.5-397b-a17b',
+    ai: !!provider.apiKey,
+    provider: provider.name,
+    model: provider.model,
   });
 };

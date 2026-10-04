@@ -18,11 +18,53 @@
 
 const axios = require('axios');
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+try {
+  require('dotenv').config();
+  require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+} catch (_) {}
 
-const INVOKE_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
-const MODEL = process.env.NVIDIA_MODEL || 'qwen/qwen3.5-397b-a17b';
-const API_KEY = process.env.NVIDIA_API_KEY;
+// ─── Config & AI Provider Resolution ──────────────────────────────────────────
+
+function getProviderConfig() {
+  const provider = (process.env.AI_PROVIDER || '').trim().toLowerCase();
+
+  // 1. Inception Labs (Mercury 2.5 - Ultra-fast reasoning & code gen)
+  if (provider === 'inception' || (!provider && process.env.INCEPTION_API_KEY)) {
+    return {
+      id: 'inception',
+      name: 'Inception Labs',
+      invokeUrl: `${(process.env.INCEPTION_BASE_URL || 'https://api.inceptionlabs.ai/v1').replace(/\/+$/, '')}/chat/completions`,
+      apiKey: process.env.INCEPTION_API_KEY,
+      model: process.env.INCEPTION_MODEL || 'mercury-2.5',
+      keyEnvName: 'INCEPTION_API_KEY',
+      clampTemp: true,
+      useMaxCompletionTokens: true,
+    };
+  }
+
+  // 2. Atria ASI (Atria-Dawn-Preview - Deep reasoning & 256k context)
+  if (provider === 'atria' || (!provider && process.env.ATRIA_API_KEY)) {
+    return {
+      id: 'atria',
+      name: 'Atria ASI',
+      invokeUrl: `${(process.env.ATRIA_BASE_URL || 'https://api.atria-asi.ai/v1').replace(/\/+$/, '')}/chat/completions`,
+      apiKey: process.env.ATRIA_API_KEY,
+      model: process.env.ATRIA_MODEL || 'Atria-Dawn-Preview',
+      keyEnvName: 'ATRIA_API_KEY',
+    };
+  }
+
+  // 3. Fallback to NVIDIA NIM
+  return {
+    id: 'nvidia',
+    name: 'NVIDIA AI',
+    invokeUrl: `${(process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1').replace(/\/+$/, '')}/chat/completions`,
+    apiKey: process.env.NVIDIA_API_KEY,
+    model: process.env.NVIDIA_MODEL || 'qwen/qwen3.5-397b-a17b',
+    keyEnvName: 'NVIDIA_API_KEY',
+    isNvidia: true,
+  };
+}
 
 // ─── Rate limiting (simple in-memory tracker) ────────────────────────────────
 
@@ -537,35 +579,51 @@ function satisfiesContract(feature, parsed) {
   return typeof parsed.fixedCode === 'string' && typeof parsed.file === 'string';
 }
 
-// ─── NVIDIA API caller ────────────────────────────────────────────────────────
+// ─── AI Provider caller (supports Inception Labs, Atria ASI, NVIDIA NIM) ────────
 
-async function callNvidiaAI(messages, options = {}) {
-  if (!API_KEY) {
-    throw new Error('NVIDIA_API_KEY is not set in environment variables.');
+async function callAI(messages, options = {}) {
+  const provider = getProviderConfig();
+
+  if (!provider.apiKey) {
+    throw new Error(`${provider.keyEnvName} is not set in environment variables.`);
   }
 
-  const { stream = false, temperature = 0.6, maxTokens = 16384 } = options;
+  let { stream = false, temperature = 0.6, maxTokens = 16384 } = options;
+
+  // Inception Labs mercury-2.5 requires temperature in [0.5, 1.0]
+  if (provider.clampTemp) {
+    temperature = Math.max(0.5, Math.min(1.0, temperature));
+  }
 
   const payload = {
-    model: MODEL,
+    model: provider.model,
     messages,
-    max_tokens: maxTokens,
     temperature,
-    top_p: 0.95,
-    top_k: 20,
-    presence_penalty: 0,
-    repetition_penalty: 1,
     stream,
-    chat_template_kwargs: { enable_thinking: false },
   };
 
+  if (provider.useMaxCompletionTokens) {
+    payload.max_completion_tokens = maxTokens;
+  } else {
+    payload.max_tokens = maxTokens;
+  }
+
+  // NVIDIA-specific parameters only
+  if (provider.isNvidia) {
+    payload.top_p = 0.95;
+    payload.top_k = 20;
+    payload.presence_penalty = 0;
+    payload.repetition_penalty = 1;
+    payload.chat_template_kwargs = { enable_thinking: false };
+  }
+
   const headers = {
-    Authorization: `Bearer ${API_KEY}`,
+    Authorization: `Bearer ${provider.apiKey}`,
     'Content-Type': 'application/json',
     Accept: stream ? 'text/event-stream' : 'application/json',
   };
 
-  const response = await axios.post(INVOKE_URL, payload, {
+  const response = await axios.post(provider.invokeUrl, payload, {
     headers,
     responseType: stream ? 'stream' : 'json',
     timeout: 120_000,
@@ -589,15 +647,17 @@ async function callNvidiaAI(messages, options = {}) {
     } else {
       errBody = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
     }
-    throw new Error(`NVIDIA API returned ${response.status}: ${errBody.slice(0, 200)}`);
+    throw new Error(`${provider.name} API returned ${response.status}: ${errBody.slice(0, 200)}`);
   }
 
   if (stream) return response.data;
 
   const content = response.data?.choices?.[0]?.message?.content;
-  if (!content) throw new Error('NVIDIA returned an empty response.');
+  if (!content) throw new Error(`${provider.name} returned an empty response.`);
   return content;
 }
+
+const callNvidiaAI = callAI;
 
 /**
  * Calls the model and, if the call fails or the output is not valid JSON
@@ -829,14 +889,16 @@ module.exports = async function handler(req, res) {
 
     return res.json({ result });
   } catch (err) {
+    const provider = getProviderConfig();
     const message = err?.message || 'Unknown error';
-    const clientMsg = message.includes('NVIDIA_API_KEY')
-      ? 'AI not configured — NVIDIA_API_KEY missing in environment variables'
-      : message.includes('ECONNREFUSED') || message.includes('ENOTFOUND')
-        ? 'Cannot reach NVIDIA API — check internet connection.'
-        : message.includes('timeout')
-          ? 'AI request timed out — please try again.'
-          : `AI error: ${message}`;
+    const clientMsg =
+      message.includes(provider.keyEnvName) || message.includes('API_KEY')
+        ? `AI not configured — ${provider.keyEnvName} missing in environment variables`
+        : message.includes('ECONNREFUSED') || message.includes('ENOTFOUND')
+          ? `Cannot reach ${provider.name} API — check internet connection.`
+          : message.includes('timeout')
+            ? 'AI request timed out — please try again.'
+            : `AI error: ${message}`;
 
     return res.status(502).json({ error: clientMsg });
   }
@@ -846,3 +908,6 @@ module.exports = async function handler(req, res) {
 module.exports.SYSTEM_PROMPTS = SYSTEM_PROMPTS;
 module.exports.buildMessages = buildMessages;
 module.exports.tryParseJsonObject = tryParseJsonObject;
+module.exports.getProviderConfig = getProviderConfig;
+module.exports.callAI = callAI;
+module.exports.callNvidiaAI = callAI;
