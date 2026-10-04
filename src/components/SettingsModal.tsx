@@ -242,6 +242,61 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         </div>
                     </div>
 
+                    {/* AI Model Provider */}
+                    <div>
+                        <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
+                            AI Model Provider (Build with AI & Code Operations)
+                        </div>
+                        <div className="rounded-lg border border-stroke-dark bg-product p-4 space-y-4">
+                            <div>
+                                <div className="text-[13.5px] font-medium text-content-on-dark mb-0.5">
+                                    Default AI Model
+                                </div>
+                                <p className="text-[12.5px] text-content-on-dark-soft mb-3">
+                                    Select which AI model powers "Build with AI", code enhancement, explanations, and fixes.
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                    {AI_PROVIDERS.map((provider) => {
+                                        const isSelected = (settings.aiProvider || 'inception') === provider.id;
+                                        return (
+                                            <button
+                                                key={provider.id}
+                                                type="button"
+                                                onClick={() => updateSettings({ aiProvider: provider.id })}
+                                                className={`flex flex-col items-start p-3 rounded-lg border text-left transition-all ${
+                                                    isSelected
+                                                        ? 'border-accent bg-accent/15 text-content-on-dark shadow-sm ring-1 ring-accent/30'
+                                                        : 'border-stroke-dark bg-product-elevated hover:border-stroke-subtle text-content-on-dark-soft hover:text-content-on-dark'
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between w-full">
+                                                    <span className="text-[13px] font-medium">
+                                                        {provider.name}
+                                                    </span>
+                                                    <span
+                                                        className={`text-[9.5px] px-1.5 py-0.5 rounded font-mono font-medium ${
+                                                            isSelected
+                                                                ? 'bg-accent text-white'
+                                                                : 'bg-dark-gray text-content-on-dark-soft'
+                                                        }`}
+                                                    >
+                                                        {provider.badge}
+                                                    </span>
+                                                </div>
+                                                <span className="text-[11.5px] font-mono text-content-on-dark-soft mt-1">
+                                                    {provider.model}
+                                                </span>
+                                                <p className="text-[11px] text-content-on-dark-soft/75 mt-1.5 line-clamp-2">
+                                                    {provider.description}
+                                                </p>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* CodeRabbit AI */}
                     <div>
                         <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
