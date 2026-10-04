@@ -1785,9 +1785,6 @@ kbd {
     setHint('');
     render();
   }
-    setHint('');
-    render();
-  }
 
   function applyDot() {
     pending = false;
