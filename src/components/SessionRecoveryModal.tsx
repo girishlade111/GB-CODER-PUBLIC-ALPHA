@@ -64,9 +64,9 @@ const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
             
             <button
               onClick={onStartFresh}
-              className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md font-medium transition-colors border border-danger bg-danger hover:bg-danger text-danger text-sm"
+              className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md font-medium transition-colors bg-danger hover:bg-danger/90 text-white text-sm"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4 text-white" />
               Start Fresh
             </button>
           </div>
