@@ -89,10 +89,10 @@ const CodeHistoryPage: React.FC<CodeHistoryPageProps> = ({ onLoadCode, selection
 
   const getLanguageColor = (language: string) => {
     switch (language) {
-      case 'html': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'html': return 'bg-accent/15 text-accent border-accent/30';
       case 'css': return 'bg-teal/15 text-teal border-teal/30';
-      case 'javascript': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-gray-100 text-content-on-dark border-stroke-dark';
+      case 'javascript': return 'bg-amber/15 text-amber border-amber/30';
+      default: return 'bg-product-active text-content-on-dark-soft border-stroke-dark';
     }
   };
 
