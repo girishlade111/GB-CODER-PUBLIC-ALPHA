@@ -3686,7 +3686,7 @@ function App() {
               language="html"
               value={html}
               onChange={setHtml}
-              icon={<Code2 className="w-4 h-4 text-orange-400" />}
+              icon={<Code2 className="w-4 h-4 text-accent" />}
               onFormat={handleFormatHtml}
               isFormatLoading={formatLoadingStates.html}
               editorRef={htmlEditorRef}
@@ -3703,7 +3703,7 @@ function App() {
               language="css"
               value={css}
               onChange={setCss}
-              icon={<Code2 className="w-4 h-4 text-blue-400" />}
+              icon={<Code2 className="w-4 h-4 text-teal" />}
               onFormat={handleFormatCss}
               isFormatLoading={formatLoadingStates.css}
               editorRef={cssEditorRef}
@@ -3720,7 +3720,7 @@ function App() {
               language="javascript"
               value={javascript}
               onChange={setJavascript}
-              icon={<Code2 className="w-4 h-4 text-yellow-400" />}
+              icon={<Code2 className="w-4 h-4 text-amber" />}
               onFormat={handleFormatJavascript}
               isFormatLoading={formatLoadingStates.javascript}
               editorRef={jsEditorRef}

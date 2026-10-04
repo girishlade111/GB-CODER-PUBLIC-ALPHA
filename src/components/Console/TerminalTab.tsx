@@ -142,28 +142,32 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       fontFamily: FONT_FAMILY,
       convertEol: false,
       scrollback: 2000,
-      // Matches the VS Code integrated terminal palette.
+      // Drawn from the DESIGN.md product surface: the same warm navy as the
+      // editor, with coral as the cursor and accent. The ANSI ramp keeps its
+      // full separation — shell output needs it — but each hue is a warm or
+      // desaturated relative of the documented palette rather than a cool
+      // stock terminal palette.
       theme: {
-        background: '#0a0a0a',
-        foreground: '#e4e4e7',
-        cursor: '#a78bfa',
-        selectionBackground: '#334155',
-        black: '#18181b',
-        red: '#f87171',
-        green: '#4ade80',
-        yellow: '#fbbf24',
-        blue: '#60a5fa',
-        magenta: '#c084fc',
-        cyan: '#22d3ee',
-        white: '#e4e4e7',
-        brightBlack: '#71717a',
-        brightRed: '#fca5a5',
-        brightGreen: '#86efac',
-        brightYellow: '#fde68a',
-        brightBlue: '#93c5fd',
-        brightMagenta: '#d8b4fe',
-        brightCyan: '#67e8f9',
-        brightWhite: '#fafafa',
+        background: '#181715',
+        foreground: '#faf9f5',
+        cursor: '#cc785c',
+        selectionBackground: '#3a3631',
+        black: '#252320',
+        red: '#c64545',
+        green: '#5db872',
+        yellow: '#d4a017',
+        blue: '#8fa9c4',
+        magenta: '#d09a7c',
+        cyan: '#5db8a6',
+        white: '#faf9f5',
+        brightBlack: '#8e8b82',
+        brightRed: '#e07070',
+        brightGreen: '#7fcf92',
+        brightYellow: '#e8b544',
+        brightBlue: '#adc4d8',
+        brightMagenta: '#e8b89c',
+        brightCyan: '#8ad4c4',
+        brightWhite: '#ffffff',
       },
     });
 
@@ -378,22 +382,22 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   }, [sandboxAvailable, termReady]);
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-[#0a0a0a]">
-      {/* Mode header with a status dot: green when a sandbox is live, grey otherwise. */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-stroke-subtle bg-surface-raised flex-shrink-0">
+    <div className="flex flex-col h-full min-h-0 bg-product">
+      {/* Mode header with a status dot: teal when a sandbox is live, muted otherwise. */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-stroke-dark bg-product-soft flex-shrink-0">
         <div className="flex items-center gap-2">
           <span
             className={`w-2 h-2 rounded-full ${
               isSandboxMode
-                ? 'bg-emerald-500'
+                ? 'bg-teal'
                 : sandboxStatus === 'connecting'
-                  ? 'bg-amber-500 animate-pulse'
-                  : 'bg-gray-500'
+                  ? 'bg-amber animate-pulse'
+                  : 'bg-content-on-dark-soft'
             }`}
             aria-hidden="true"
           />
           <span
-            className="text-xs font-medium text-content-secondary"
+            className="text-xs font-medium text-content-on-dark"
             data-testid="terminal-mode"
           >
             {isSandboxMode
@@ -403,7 +407,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
                 : 'Local'}
           </span>
         </div>
-        <span className="text-[10px] uppercase tracking-wide text-content-muted">
+        <span className="text-[10px] uppercase tracking-wide text-content-on-dark-soft">
           {/*
             Not "Real shell": commands run one-per-HTTP-request against the
             sandbox, so there is no persistent TTY. Interactive programs and

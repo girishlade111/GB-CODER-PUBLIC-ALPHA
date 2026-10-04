@@ -97,7 +97,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   }, [isDark]);
 
   return (
-    <div className="w-full h-full border border-stroke-subtle rounded-lg overflow-hidden bg-[var(--surface-overlay)]">
+    /* code-window-card: DESIGN.md puts the editor on the dark product surface.
+       Monaco paints its own background, so this wrapper only carries the
+       product-navy fill behind it plus the hairline the window is framed by. */
+    <div className="w-full h-full border border-stroke-dark rounded-lg overflow-hidden bg-product">
       <Editor
         height={height}
         language={getLanguageForMonaco(language)}

@@ -26,24 +26,24 @@ const Primitive: React.FC<{ value: SerializedValue }> = ({ value }) => {
       return (
         <span className="text-amber-300">
           &quot;{value.value}
-          {value.truncated && <span className="text-gray-500">… (truncated)</span>}&quot;
+          {value.truncated && <span className="text-content-on-dark-soft">… (truncated)</span>}&quot;
         </span>
       );
     case 'number':
-      return <span className="text-sky-300">{value.value}</span>;
+      return <span className="text-teal-300">{value.value}</span>;
     case 'bigint':
-      return <span className="text-sky-300">{value.value}n</span>;
+      return <span className="text-teal-300">{value.value}n</span>;
     case 'boolean':
-      return <span className="text-violet-300">{String(value.value)}</span>;
+      return <span className="text-accent">{String(value.value)}</span>;
     case 'null':
-      return <span className="text-gray-500">null</span>;
+      return <span className="text-content-on-dark-soft">null</span>;
     case 'undefined':
-      return <span className="text-gray-500">undefined</span>;
+      return <span className="text-content-on-dark-soft">undefined</span>;
     case 'symbol':
       return <span className="text-emerald-300">{value.value}</span>;
     case 'function':
       return (
-        <span className="text-violet-300 italic">
+        <span className="text-accent italic">
           {value.isClass ? 'class' : 'ƒ'} {value.name}
           {value.isClass ? '' : '()'}
         </span>
@@ -55,11 +55,11 @@ const Primitive: React.FC<{ value: SerializedValue }> = ({ value }) => {
     case 'node':
       return <span className="text-orange-300">{value.preview}</span>;
     case 'circular':
-      return <span className="text-gray-500 italic">[Circular]</span>;
+      return <span className="text-content-on-dark-soft italic">[Circular]</span>;
     case 'max-depth':
-      return <span className="text-gray-500 italic">{value.preview} …</span>;
+      return <span className="text-content-on-dark-soft italic">{value.preview} …</span>;
     case 'unserializable':
-      return <span className="text-gray-500 italic">[{value.preview}]</span>;
+      return <span className="text-content-on-dark-soft italic">[{value.preview}]</span>;
     case 'error':
       /* The stack renders below the row as clickable frames, not inline here. */
       return (
@@ -103,7 +103,7 @@ const ConsoleValueTree: React.FC<ConsoleValueTreeProps> = ({ value, depth = 0, l
   if (!isExpandable(value)) {
     return (
       <span>
-        {label !== undefined && <span className="text-purple-300">{label}: </span>}
+        {label !== undefined && <span className="text-accent">{label}: </span>}
         <Primitive value={value} />
       </span>
     );
@@ -116,28 +116,28 @@ const ConsoleValueTree: React.FC<ConsoleValueTreeProps> = ({ value, depth = 0, l
       <button
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        className="inline-flex items-start gap-0.5 text-left hover:bg-white/5 rounded px-0.5 -mx-0.5"
+        className="inline-flex items-start gap-0.5 text-left hover:bg-product-hover rounded px-0.5 -mx-0.5"
         aria-expanded={isOpen}
         title={isOpen ? 'Collapse' : 'Expand'}
       >
         {isOpen ? (
-          <ChevronDown className="w-3 h-3 mt-[3px] flex-shrink-0 text-gray-400" />
+          <ChevronDown className="w-3 h-3 mt-[3px] flex-shrink-0 text-content-on-dark-soft" />
         ) : (
-          <ChevronRight className="w-3 h-3 mt-[3px] flex-shrink-0 text-gray-400" />
+          <ChevronRight className="w-3 h-3 mt-[3px] flex-shrink-0 text-content-on-dark-soft" />
         )}
-        {label !== undefined && <span className="text-purple-300">{label}: </span>}
-        <span className="text-gray-300">{summaryOf(value)}</span>
+        {label !== undefined && <span className="text-accent">{label}: </span>}
+        <span className="text-content-on-dark-soft">{summaryOf(value)}</span>
       </button>
 
       {isOpen && (
-        <div className="ml-4 border-l border-gray-700/60 pl-2 mt-0.5 space-y-0.5">
+        <div className="ml-4 border-l border-stroke-dark pl-2 mt-0.5 space-y-0.5">
           {entries.map((entry) => (
             <div key={entry.key} className="leading-relaxed">
               <ConsoleValueTree value={entry.value} depth={depth + 1} label={entry.key} />
             </div>
           ))}
           {truncated && (
-            <div className="text-gray-500 italic text-xs">
+            <div className="text-content-on-dark-soft italic text-xs">
               … more entries not captured (limit reached)
             </div>
           )}

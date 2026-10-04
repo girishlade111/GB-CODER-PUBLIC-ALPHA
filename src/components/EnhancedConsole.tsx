@@ -157,7 +157,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
       label: 'Console',
       icon: <Terminal className="w-4 h-4" />,
       badge: counts.total > 0 ? String(counts.total) : null,
-      tone: counts.error > 0 ? 'bg-red-500/20 text-red-300' : 'bg-white/10 text-content-secondary',
+      tone: counts.error > 0 ? 'bg-danger/20 text-red-300' : 'bg-product-active text-content-on-dark-soft',
     },
     {
       key: 'validator',
@@ -166,10 +166,10 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
       badge: validatorBadge,
       tone:
         validation.errors > 0
-          ? 'bg-red-500/20 text-red-300'
+          ? 'bg-danger/20 text-red-300'
           : validation.warnings > 0
-            ? 'bg-amber-500/20 text-amber-300'
-            : 'bg-white/10 text-content-secondary',
+            ? 'bg-warning/20 text-yellow-300'
+            : 'bg-product-active text-content-on-dark-soft',
     },
     { key: 'preview', label: 'Preview', icon: <Play className="w-4 h-4" /> },
     { key: 'terminal', label: 'Terminal', icon: <TerminalSquare className="w-4 h-4" /> },
@@ -177,19 +177,19 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
 
   return (
     <div
-      className={`bg-surface-base border border-stroke-subtle rounded-lg overflow-hidden flex flex-col h-full min-h-0 ${
+      className={`bg-product border border-stroke-dark rounded-lg overflow-hidden flex flex-col h-full min-h-0 ${
         isExpanded ? 'fixed inset-4 z-50' : 'relative'
       } ${className}`}
     >
       {/* Header */}
-      <div className="bg-surface-raised px-3 py-1.5 border-b border-stroke-subtle flex items-center justify-between flex-shrink-0">
+      <div className="bg-product-soft px-3 py-1.5 border-b border-stroke-dark flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-emerald-400" />
-          <h2 className="text-xs uppercase tracking-wide font-semibold text-content-secondary">
+          <Terminal className="w-4 h-4 text-teal" />
+          <h2 className="text-xs uppercase tracking-wide font-semibold text-content-on-dark-soft">
             GB Console
           </h2>
           <span
-            className="text-[10px] bg-accent/80 text-white px-2 py-0.5 rounded"
+            className="text-[10px] bg-accent text-accent-fg px-2 py-0.5 rounded"
             data-testid="console-item-count"
           >
             {itemCount} item{itemCount === 1 ? '' : 's'}
@@ -200,7 +200,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
           {activeMode === 'validator' && (
             <button
               onClick={onRevalidate}
-              className="px-2 py-1 rounded text-xs flex items-center gap-1 text-content-secondary hover:bg-white/10"
+              className="px-2 py-1 rounded text-xs flex items-center gap-1 text-content-on-dark-soft hover:bg-product-hover"
               title="Re-run validation now"
             >
               <RefreshCw className={`w-3 h-3 ${isValidating ? 'animate-spin' : ''}`} />
@@ -212,14 +212,14 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
             <>
               <button
                 onClick={() => setShowPreviewPane((value) => !value)}
-                className="px-2 py-1 rounded text-xs text-content-secondary hover:bg-white/10"
+                className="px-2 py-1 rounded text-xs text-content-on-dark-soft hover:bg-product-hover"
                 title="Toggle the preview pane"
               >
                 {showPreviewPane ? 'Hide pane' : 'Show pane'}
               </button>
               <button
                 onClick={() => setPreviewRunSignal((value) => value + 1)}
-                className="px-2 py-1 rounded text-xs flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="px-2 py-1 rounded text-xs flex items-center gap-1 bg-accent hover:bg-accent-hover text-accent-fg"
                 title="Run this snippet"
               >
                 <Play className="w-3 h-3" />
@@ -231,7 +231,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
           {(activeMode === 'console' || activeMode === 'validator') && (
             <button
               onClick={copyActiveOutput}
-              className="p-1.5 rounded text-content-muted hover:bg-white/10 hover:text-content-primary"
+              className="p-1.5 rounded text-content-on-dark-soft hover:bg-product-hover hover:text-content-on-dark"
               title="Copy output"
               aria-label="Copy output"
             >
@@ -242,7 +242,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
           {activeMode !== 'terminal' && (
             <button
               onClick={clearActive}
-              className="p-1.5 rounded text-content-muted hover:bg-white/10 hover:text-content-primary"
+              className="p-1.5 rounded text-content-on-dark-soft hover:bg-product-hover hover:text-content-on-dark"
               title={activeMode === 'validator' ? 'Re-run validation' : 'Clear console'}
               aria-label="Clear console"
             >
@@ -252,7 +252,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
 
           <button
             onClick={() => setIsExpanded((value) => !value)}
-            className="p-1.5 rounded text-content-muted hover:bg-white/10 hover:text-content-primary"
+            className="p-1.5 rounded text-content-on-dark-soft hover:bg-product-hover hover:text-content-on-dark"
             title={isExpanded ? 'Minimize' : 'Maximize'}
             aria-label={isExpanded ? 'Minimize console' : 'Maximize console'}
           >
@@ -262,7 +262,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
       </div>
 
       {/* Sub-tab strip, with live counts */}
-      <div className="bg-surface-raised border-b border-stroke-subtle flex items-center px-2 flex-shrink-0 compact:overflow-x-auto">
+      <div className="bg-product-soft border-b border-stroke-dark flex items-center px-2 flex-shrink-0 compact:overflow-x-auto">
         {tabs.map(({ key, label, icon, badge, tone }) => (
           <button
             key={key}
@@ -275,8 +275,8 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
             data-testid={`console-subtab-${key}`}
             className={`px-3 py-2 -mb-[1px] text-sm font-medium border-b-2 flex items-center gap-2 transition-colors compact:min-h-[44px] compact:shrink-0 compact:whitespace-nowrap ${
               activeMode === key
-                ? 'text-content-primary border-accent'
-                : 'text-content-muted border-transparent hover:text-content-primary'
+                ? 'text-content-on-dark border-accent'
+                : 'text-content-on-dark-soft border-transparent hover:text-content-on-dark'
             }`}
           >
             {icon}
@@ -292,8 +292,8 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
 
       {/* Filter rows */}
       {activeMode === 'console' && (
-        <div className="bg-surface-base border-b border-stroke-subtle px-3 py-1.5 flex items-center gap-2 flex-shrink-0">
-          <Filter className="w-3.5 h-3.5 text-content-muted" />
+        <div className="bg-product border-b border-stroke-dark px-3 py-1.5 flex items-center gap-2 flex-shrink-0">
+          <Filter className="w-3.5 h-3.5 text-content-on-dark-soft" />
           {CONSOLE_FILTERS.map((filter) => {
             const count =
               filter === 'all' ? counts.total : counts[filter as keyof ConsoleCounts];
@@ -305,7 +305,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
                 className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
                   consoleFilter === filter
                     ? 'bg-accent text-accent-fg'
-                    : 'bg-white/5 text-content-secondary hover:bg-white/10'
+                    : 'bg-product-hover text-content-on-dark-soft hover:bg-product-active'
                 }`}
               >
                 {filter === 'all' ? 'All' : filter.toUpperCase()}
@@ -317,8 +317,8 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
       )}
 
       {activeMode === 'validator' && (
-        <div className="bg-surface-base border-b border-stroke-subtle px-3 py-1.5 flex items-center gap-2 flex-shrink-0">
-          <Filter className="w-3.5 h-3.5 text-content-muted" />
+        <div className="bg-product border-b border-stroke-dark px-3 py-1.5 flex items-center gap-2 flex-shrink-0">
+          <Filter className="w-3.5 h-3.5 text-content-on-dark-soft" />
           {VALIDATOR_FILTERS.map((filter) => {
             const count =
               filter === 'all'
@@ -334,7 +334,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
                 className={`px-2 py-0.5 rounded text-xs font-medium capitalize transition-colors ${
                   validatorFilter === filter
                     ? 'bg-accent text-accent-fg'
-                    : 'bg-white/5 text-content-secondary hover:bg-white/10'
+                    : 'bg-product-hover text-content-on-dark-soft hover:bg-product-active'
                 }`}
               >
                 {filter}

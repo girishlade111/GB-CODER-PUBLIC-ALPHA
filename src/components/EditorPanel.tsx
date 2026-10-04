@@ -179,34 +179,37 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
   return (
     <div
-      className={`bg-surface-base border rounded-lg overflow-hidden w-full transition-colors ${
+      /* code-window-card — DESIGN.md's signature dark product surface. The
+         card, its chrome and the editor inside it are all warm-navy; the
+         cream canvas is what surrounds it. */
+      className={`bg-product border rounded-lg overflow-hidden w-full transition-colors ${
         isDragOver
           ? 'border-accent ring-2 ring-accent/30'
-          : 'border-stroke-subtle'
+          : 'border-stroke-dark'
       }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       <div
-        className="bg-surface-raised px-4 py-2 border-b border-stroke-subtle flex items-center justify-between cursor-pointer hover:bg-surface-hover transition-colors compact:min-h-[44px] compact:flex-wrap compact:gap-x-2 compact:gap-y-1"
+        className="bg-product-soft px-4 py-2 border-b border-stroke-dark flex items-center justify-between cursor-pointer hover:bg-product-hover transition-colors compact:min-h-[44px] compact:flex-wrap compact:gap-x-2 compact:gap-y-1"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         {/* Left side: Icon, Title, File Label, Language Badge */}
         <div className="flex items-center gap-2 compact:min-w-0">
           {icon}
-          <h3 className="text-sm font-medium text-content-primary">{title}</h3>
-          <span className="text-xs text-content-muted font-mono mobile:hidden">{fileName}</span>
-          <span className="text-[10px] tracking-wider font-semibold bg-surface-strong text-content-secondary px-1.5 py-0.5 rounded-sm uppercase">
+          <h3 className="text-sm font-medium text-content-on-dark">{title}</h3>
+          <span className="text-xs text-content-on-dark-soft font-mono mobile:hidden">{fileName}</span>
+          <span className="text-[10px] tracking-wider font-semibold bg-product-active text-content-on-dark-soft px-1.5 py-0.5 rounded-sm uppercase">
             {languageBadge}
           </span>
           {(errorCount !== undefined && errorCount > 0) && (
-            <span className="flex items-center justify-center bg-red-500/20 text-red-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${errorCount} Errors`}>
+            <span className="flex items-center justify-center bg-danger/20 text-red-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${errorCount} Errors`}>
               {errorCount}
             </span>
           )}
           {(warningCount !== undefined && warningCount > 0) && (
-            <span className="flex items-center justify-center bg-yellow-500/20 text-yellow-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${warningCount} Warnings`}>
+            <span className="flex items-center justify-center bg-warning/20 text-yellow-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${warningCount} Warnings`}>
               {warningCount}
             </span>
           )}
@@ -215,7 +218,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
               value={jsEditorMode}
               onChange={(e) => onJsEditorModeChange(e.target.value as JSEditorMode)}
               onClick={(e) => e.stopPropagation()}
-              className="h-6 bg-surface-overlay border border-stroke-strong text-content-primary text-[11px] font-semibold rounded-md px-2 py-0.5 hover:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+              className="h-6 bg-product-elevated border border-stroke-dark-strong text-content-on-dark text-[11px] font-semibold rounded-md px-2 py-0.5 hover:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
               title="JavaScript editor language mode"
             >
               {JS_MODE_OPTIONS.map((option) => (
@@ -234,7 +237,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
             <button
               onClick={handleFormat}
               disabled={!canFormat}
-              className="p-1.5 rounded-md compact:flex compact:min-h-[44px] compact:min-w-[44px] compact:items-center compact:justify-center hover:bg-accent-subtle disabled:opacity-40 disabled:cursor-not-allowed text-accent-hover hover:text-accent-hover transition-colors"
+              className="p-1.5 rounded-md compact:flex compact:min-h-[44px] compact:min-w-[44px] compact:items-center compact:justify-center hover:bg-product-hover disabled:opacity-40 disabled:cursor-not-allowed text-accent transition-colors"
               title={`Format ${language.toUpperCase()} code (Prettier)`}
             >
               <Wand2 className={`w-4 h-4 ${isFormatLoading ? 'animate-spin' : ''}`} />
@@ -245,7 +248,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           <button
             onClick={handleCopy}
             disabled={!hasContent}
-            className="p-1.5 rounded-md compact:flex compact:min-h-[44px] compact:min-w-[44px] compact:items-center compact:justify-center hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed text-content-secondary hover:text-content-primary transition-colors"
+            className="p-1.5 rounded-md compact:flex compact:min-h-[44px] compact:min-w-[44px] compact:items-center compact:justify-center hover:bg-product-hover disabled:opacity-40 disabled:cursor-not-allowed text-content-on-dark-soft hover:text-content-on-dark transition-colors"
             title="Copy code to clipboard"
           >
             <Copy className="w-4 h-4" />
@@ -254,7 +257,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           {/* Lock/Unlock Button */}
           <button
             onClick={toggleLock}
-            className={`p-1.5 rounded-md compact:flex compact:min-h-[44px] compact:min-w-[44px] compact:items-center compact:justify-center hover:bg-surface-hover transition-colors ${isLocked ? 'text-warning bg-warning-subtle' : 'text-content-secondary hover:text-content-primary'
+            className={`p-1.5 rounded-md compact:flex compact:min-h-[44px] compact:min-w-[44px] compact:items-center compact:justify-center hover:bg-product-hover transition-colors ${isLocked ? 'text-warning bg-warning/15' : 'text-content-on-dark-soft hover:text-content-on-dark'
               }`}
             title={isLocked ? 'Unlock editor (make editable)' : 'Lock editor (read-only)'}
           >
@@ -263,7 +266,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
           {/* Collapse Icon */}
           <ChevronDown
-            className={`w-4 h-4 text-content-muted transition-transform ml-1 compact:mr-1 compact:h-8 compact:w-8 compact:p-2 ${isCollapsed ? 'rotate-180' : ''
+            className={`w-4 h-4 text-content-on-dark-soft transition-transform ml-1 compact:mr-1 compact:h-8 compact:w-8 compact:p-2 ${isCollapsed ? 'rotate-180' : ''
               }`}
             onClick={() => setIsCollapsed(!isCollapsed)}
           />
@@ -274,8 +277,8 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
         <div className="relative">
           {/* Drag overlay */}
           {isDragOver && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-accent-subtle border-2 border-dashed border-accent rounded-lg pointer-events-none">
-              <p className="text-accent-hover font-medium text-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-product-elevated border-2 border-dashed border-accent rounded-lg pointer-events-none">
+              <p className="text-accent font-medium text-sm">
                 Drop {ACCEPTED_EXTENSIONS[language].join(', ')} file here
               </p>
             </div>
@@ -283,7 +286,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
           <div className="p-3 relative">
             {!hasContent && (
-              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-40 z-10">
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-60 z-10 text-content-on-dark-soft">
                 <Code2 className="w-8 h-8 mb-2" />
                 <span className="text-sm font-medium">Type {language} here</span>
               </div>
@@ -306,9 +309,9 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
         </div>
       )}
 
-      {/* Drop error message */}
+      {/* Drop error message — an alert strip on the product surface */}
       {dropError && (
-        <div className="px-4 py-2 bg-red-900/60 border-t border-red-700 text-red-300 text-xs">
+        <div className="px-4 py-2 bg-danger/15 border-t border-danger/40 text-red-300 text-xs">
           {dropError}
         </div>
       )}

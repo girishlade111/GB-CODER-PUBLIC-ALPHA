@@ -28,12 +28,12 @@ const LEVEL_ICON: Record<ConsoleMessage['level'], React.ReactNode> = {
   warn: <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />,
   info: <Info className="w-3.5 h-3.5 text-sky-400" />,
   debug: <Bug className="w-3.5 h-3.5 text-violet-400" />,
-  log: <ChevronRight className="w-3.5 h-3.5 text-gray-500" />,
+  log: <ChevronRight className="w-3.5 h-3.5 text-content-on-dark-soft" />,
 };
 
 /** Row tint, matching devtools' error/warning banding. */
 const LEVEL_ROW: Record<ConsoleMessage['level'], string> = {
-  error: 'bg-red-500/10 border-l-2 border-red-500/70',
+  error: 'bg-danger/10 border-l-2 border-danger',
   warn: 'bg-amber-500/10 border-l-2 border-amber-500/70',
   info: 'border-l-2 border-transparent',
   debug: 'border-l-2 border-transparent',
@@ -50,7 +50,7 @@ const StackFrameRow: React.FC<{ resolved: ResolvedStackFrame }> = ({ resolved })
   const label = frame.fn ? `${frame.fn} (${frame.file}:${frame.line}:${frame.column})` : `${frame.file}:${frame.line}:${frame.column}`;
 
   if (!location) {
-    return <div className="text-[11px] text-gray-600 font-mono pl-5 truncate">at {label}</div>;
+    return <div className="text-[11px] text-content-on-dark-soft font-mono pl-5 truncate">at {label}</div>;
   }
 
   return (
@@ -98,7 +98,7 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({ messages, filter }) => {
 
   if (visible.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-center px-4 text-gray-600">
+      <div className="h-full flex flex-col items-center justify-center text-center px-4 text-content-on-dark-soft">
         <Terminal className="w-6 h-6 mb-2 opacity-50" />
         <p className="text-sm">
           {messages.length === 0
@@ -106,7 +106,7 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({ messages, filter }) => {
             : `No ${filter} messages. ${messages.length} hidden by the filter.`}
         </p>
         {messages.length === 0 && (
-          <p className="text-xs mt-1 text-gray-700">
+          <p className="text-xs mt-1 text-content-on-dark-soft">
             Calls to console.log, warn, error and info from the Live Preview appear here.
           </p>
         )}
@@ -118,7 +118,7 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({ messages, filter }) => {
     <div
       ref={scrollRef}
       onScroll={handleScroll}
-      className="h-full overflow-y-auto font-mono text-xs bg-matte-black"
+      className="h-full overflow-y-auto font-mono text-xs bg-product text-content-on-dark"
       data-testid="console-feed"
     >
       {visible.map((message) => (
@@ -126,10 +126,10 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({ messages, filter }) => {
           key={message.id}
           data-testid="console-row"
           data-level={message.level}
-          className={`flex items-start gap-2 px-2 py-1 border-b border-gray-800/40 ${LEVEL_ROW[message.level]}`}
+          className={`flex items-start gap-2 px-2 py-1 border-b border-stroke-dark ${LEVEL_ROW[message.level]}`}
           style={{ paddingLeft: `${8 + message.groupDepth * 14}px` }}
         >
-          <span className="text-[10px] tabular-nums text-gray-600 mt-0.5 flex-shrink-0">
+          <span className="text-[10px] tabular-nums text-content-on-dark-soft mt-0.5 flex-shrink-0">
             {formatTimestamp(message.timestamp)}
           </span>
           <span className="mt-0.5 flex-shrink-0">{LEVEL_ICON[message.level]}</span>
@@ -141,7 +141,7 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({ messages, filter }) => {
                 <ConsoleValueTree key={index} value={arg} />
               ))}
               {message.origin === 'build' && (
-                <span className="text-[10px] uppercase tracking-wide text-gray-600 border border-gray-700 rounded px-1">
+                <span className="text-[10px] uppercase tracking-wide text-content-on-dark-soft border border-stroke-dark-strong rounded px-1">
                   build
                 </span>
               )}
@@ -158,7 +158,7 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({ messages, filter }) => {
 
           {message.count > 1 && (
             <span
-              className="flex-shrink-0 text-[10px] font-bold bg-gray-700 text-gray-200 rounded-full px-1.5 py-0.5"
+              className="flex-shrink-0 text-[10px] font-bold bg-product-active text-content-on-dark rounded-full px-1.5 py-0.5"
               title={`${message.count} identical messages`}
             >
               {message.count}
