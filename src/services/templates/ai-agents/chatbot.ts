@@ -486,7 +486,7 @@ html[data-theme="light"] {
 
 *, *::before, *::after { box-sizing: border-box; }
 
-body { margin: 0; padding: 0; font-family: var(--font-text); font-size: 15px; line-height: 1.6; color: var(--body); background: var(--bg); -webkit-font-smoothing: antialiased; }
+body { margin: 0; padding: 0; font-family: var(--font-text); font-size: 15px; line-height: 1.6; color: var(--body); background: var(--bg); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 h1, h2, h3 { font-family: var(--font-display); color: var(--ink); line-height: 1.16; margin: 0; font-weight: 600; letter-spacing: -0.026em; }
 h1 { font-size: clamp(1.1rem, 1.8vw, 1.35rem); }
 h2 { font-size: clamp(1.75rem, 3.3vw, 2.6rem); }
@@ -787,7 +787,7 @@ html[data-theme="dark"] #theme-btn .i-sun { display: block; }
   .footer-brand { grid-column: 1 / -1; }
 }
 @media (max-width: 1024px) {
-  .rel-grid, .faq-grid { grid-template-columns: 1fr; }
+  .rel-grid, .faq-grid { grid-template-columns: minmax(0, 1fr); }
   .rel-head, .faq-head { position: static; }
 }
 @media (max-width: 860px) {
@@ -802,8 +802,9 @@ html[data-theme="dark"] #theme-btn .i-sun { display: block; }
   .status-pill, .brand-tag { display: none; }
   .chat-head { flex-wrap: wrap; }
   .composer-actions .icon-btn { display: none; }
-  .trust-strip { grid-template-columns: 1fr; }
-  .footer-top { grid-template-columns: 1fr; }
+  .trust-strip { grid-template-columns: minmax(0, 1fr); }
+  .trust-strip > p { grid-column: 1; }
+  .footer-top { grid-template-columns: minmax(0, 1fr); }
   .footer-bottom { flex-direction: column; align-items: flex-start; }
   .suggestions { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
   .chip { white-space: nowrap; }
