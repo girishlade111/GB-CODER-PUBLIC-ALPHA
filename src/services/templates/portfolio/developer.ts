@@ -941,7 +941,7 @@ html[data-theme='light'] .icon--moon { display: block; }
 .activity__stats > div { display: grid; gap: .1rem; }
 .activity__num { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; }
 .activity__label { font-size: .78rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: .07em; }
-.heatmap-scroll { overflow-x: auto; padding-bottom: .5rem; }
+.heatmap-scroll { overflow-x: auto; padding-bottom: .5rem; max-width: 100%; }
 .heatmap { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 3px; min-width: max-content; }
 .heatmap i { width: 11px; height: 11px; border-radius: 3px; background: var(--bg-elev-2); transition: transform .12s var(--ease); }
 .heatmap i:hover { transform: scale(1.35); outline: 1px solid var(--text-muted); }
