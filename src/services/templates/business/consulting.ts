@@ -588,6 +588,8 @@ export default {
   --on-gold: #1a1305;
   --pos: #1c6b4a;
   --neg: #a5333a;
+  --pos-hi: #58c79b;
+  --neg-hi: #e88a90;
   --radius-sm: 7px;
   --radius: 12px;
   --radius-lg: 18px;
@@ -976,7 +978,7 @@ textarea { font: inherit; resize: vertical; }
   }
   [data-reveal] { opacity: 1 !important; transform: none !important; }
   .ticker__row { animation: none; transform: none; }
-  .process.is-drawn::after { width: 88%; }
+  .process.is-drawn .process__line { width: 88%; }
 }
 `,
   javascript: `
