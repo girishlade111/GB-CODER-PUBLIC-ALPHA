@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, MessageSquare, Trash2, Copy, Check, Code2, Sparkles } from 'lucide-react';
-import { useTheme } from '../hooks/useTheme';
 import { aiChatAssistant, ChatMessage } from '../services/aiChatAssistant';
 import { ExternalLibrary } from '../services/externalLibraryService';
 import toast from 'react-hot-toast';
@@ -22,7 +21,6 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
   javascript,
   externalLibraries,
 }) => {
-  const { isDark } = useTheme();
   // Escape to dismiss, consistent with the other sidebar-triggered panels.
   useEffect(() => {
     if (!isOpen) return;
@@ -86,11 +84,12 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
       setMessages(prev => [...prev, assistantMessage]);
       aiChatAssistant.addMessage(userMessage);
       aiChatAssistant.addMessage(assistantMessage);
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Network error or timeout occurred.';
       toast((t) => (
         <div className="flex flex-col gap-2">
           <span className="font-semibold text-red-600 dark:text-red-400">AI request failed</span>
-          <span className="text-sm">{error.message || 'Network error or timeout occurred.'} Your code was not modified.</span>
+          <span className="text-sm">{errorMsg} Your code was not modified.</span>
           <div className="flex gap-2 mt-1">
             <button
               onClick={() => {
