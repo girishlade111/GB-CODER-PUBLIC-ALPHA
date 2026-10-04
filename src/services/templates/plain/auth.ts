@@ -18,7 +18,10 @@ export default {
       <span class="topbar__sep" aria-hidden="true"></span>
       <a class="topbar__link" href="#security">Security</a>
       <span class="topbar__sep" aria-hidden="true"></span>
-      <a class="topbar__link" href="#status">Status</a>
+      <span class="topbar__status">
+        <span class="topbar__status-dot" aria-hidden="true"></span>
+        All systems operational
+      </span>
     </nav>
   </div>
 </header>
