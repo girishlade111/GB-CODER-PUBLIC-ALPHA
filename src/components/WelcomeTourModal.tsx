@@ -98,7 +98,7 @@ const WelcomeTourModal: React.FC<WelcomeTourModalProps> = ({ onClose }) => {
             {step.icon}
           </div>
           
-          <h2 id="tour-modal-title" className="text-2xl font-bold text-content-primary mb-3">
+          <h2 id="tour-modal-title" className="font-sans text-2xl font-medium text-content-primary mb-3">
             {step.title}
           </h2>
           
