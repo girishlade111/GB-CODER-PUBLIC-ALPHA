@@ -903,7 +903,6 @@ textarea { font: inherit; resize: vertical; }
 .quote__role { display: block; font-size: .78rem; color: var(--muted); }
 .avatar { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; color: #fff; overflow: hidden; }
 .avatar--lg { width: 62px; height: 62px; }
-.avatar .icon { width: 100%; height: 100%; }
 .avatar svg { width: 100%; height: 100%; }
 .av--1 { background: linear-gradient(150deg, #8b5cf6, #4c1d95); }
 .av--2 { background: linear-gradient(150deg, #a855f7, #6b21a8); }
@@ -1229,8 +1228,6 @@ function initSlider() {
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'sdot';
-        btn.setAttribute('role', 'tab');
-        btn.setAttribute('aria-selected', order === 0 ? 'true' : 'false');
         btn.setAttribute('aria-label', 'Testimonial ' + (order + 1) + ' of ' + slides.length);
         btn.addEventListener('click', function () { goTo(order); restart(); });
         dot.appendChild(btn);
