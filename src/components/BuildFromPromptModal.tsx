@@ -61,6 +61,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
   onGenerate,
   projectContext,
   initialPrompt = '',
+}) => {
   const { settings, updateSettings } = useSettings();
   const [selectedProvider, setSelectedProvider] = useState<AIProviderId>(
     settings.aiProvider || 'inception'
