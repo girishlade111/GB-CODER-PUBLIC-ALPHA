@@ -123,7 +123,7 @@ const SnapshotManagerModal: React.FC<SnapshotManagerModalProps> = ({
           
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
             className={`px-3 py-2 rounded-lg border text-sm outline-none ${
               isDark 
                 ? 'bg-gray-950 border-gray-800 text-white' 

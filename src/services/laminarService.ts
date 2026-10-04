@@ -1,4 +1,15 @@
-let lmnrModule: any = null;
+interface LaminarModule {
+  Laminar?: {
+    initialize: (options: Record<string, unknown>) => void;
+    shutdown?: () => Promise<void>;
+  };
+  observe?: <T>(
+    options: { name: string; [key: string]: unknown },
+    fn: (...args: unknown[]) => Promise<T> | T
+  ) => Promise<T> | T;
+}
+
+let lmnrModule: LaminarModule | null = null;
 let isInitialized = false;
 
 export async function initLaminar() {
@@ -13,7 +24,7 @@ export async function initLaminar() {
     try {
       // Dynamic import prevents static Rollup bundling of Node-specific dependencies in Vite browser build
       const mod = await import('@lmnr-ai/lmnr');
-      lmnrModule = mod;
+      lmnrModule = mod as unknown as LaminarModule;
       if (mod?.Laminar?.initialize) {
         mod.Laminar.initialize({
           projectApiKey: apiKey,
@@ -27,8 +38,8 @@ export async function initLaminar() {
 }
 
 export function observe<T>(
-  options: { name: string; [key: string]: any },
-  fn: (...args: any[]) => Promise<T> | T
+  options: { name: string; [key: string]: unknown },
+  fn: (...args: unknown[]) => Promise<T> | T
 ): Promise<T> | T {
   if (lmnrModule && typeof lmnrModule.observe === 'function') {
     try {
@@ -41,7 +52,7 @@ export function observe<T>(
 }
 
 export const Laminar = {
-  initialize: (options: any) => {
+  initialize: (options: Record<string, unknown>) => {
     if (lmnrModule?.Laminar?.initialize) {
       return lmnrModule.Laminar.initialize(options);
     }

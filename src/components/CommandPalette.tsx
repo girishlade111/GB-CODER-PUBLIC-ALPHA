@@ -115,7 +115,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, action
     setRecentCommandIds(newRecents);
     try {
       localStorage.setItem('gbcoder_recent_commands', JSON.stringify(newRecents));
-    } catch (_err) {
+    } catch {
       // LocalStorage quota exceeded or disabled
     }
     

@@ -584,7 +584,7 @@ const ScoreRow = ({ label, score, isDark }: ScoreRowProps) => {
 
 interface InsightRowProps {
   label: string;
-  value: string;
+  value: string | number;
   severity: Severity;
   isDark: boolean;
 }

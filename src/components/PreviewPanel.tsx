@@ -10,6 +10,7 @@ import {
   parseBridgeMessage,
 } from '../services/consoleBridge';
 import type { ConsoleMessage, ResolvedStackFrame } from '../types/consoleFeed';
+import type { CustomInjection } from '../services/customInjectionService';
 
 export type DeviceType = 'mobile' | 'tablet' | 'laptop' | 'desktop' | 'full';
 
@@ -57,7 +58,7 @@ interface PreviewPanelProps {
   /** True while CDN packages are being resolved for the first time. */
   isResolvingPackages?: boolean;
   /** Custom Code Injections */
-  customInjections?: any[];
+  customInjections?: CustomInjection[];
 }
 
 /**
@@ -243,14 +244,14 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
       : html;
     const effectiveCss = isFrameworkProject ? bundledCss : css;
 
-    const activeInjections = (customInjections || []).filter((i: any) => i.enabled);
+    const activeInjections = (customInjections || []).filter((i: CustomInjection) => i.enabled);
     
     // Process inline injections
-    const inlineCssInjections = activeInjections.filter((i: any) => i.type === 'css' && i.target === 'inline');
-    const inlineJsInjections = activeInjections.filter((i: any) => i.type === 'js' && i.target === 'inline');
+    const inlineCssInjections = activeInjections.filter((i: CustomInjection) => i.type === 'css' && i.target === 'inline');
+    const inlineJsInjections = activeInjections.filter((i: CustomInjection) => i.type === 'js' && i.target === 'inline');
     
-    const inlineCss = inlineCssInjections.map((i: any) => i.code).join('\n\n');
-    const inlineJs = inlineJsInjections.map((i: any) => i.code).join('\n\n');
+    const inlineCss = inlineCssInjections.map((i: CustomInjection) => i.code).join('\n\n');
+    const inlineJs = inlineJsInjections.map((i: CustomInjection) => i.code).join('\n\n');
 
     const sanitizedCss = sanitizeCode(effectiveCss + (inlineCss ? '\n/* Custom Injections */\n' + inlineCss : ''), 'css');
     const usesBabel = !isFrameworkProject && (jsEditorMode === 'jsx' || jsEditorMode === 'tsx');
@@ -308,17 +309,17 @@ ${safeJavascript}
       : '';
 
     // Process tag injections
-    const renderInjections = (injections: any[]) => {
-      return injections.map((inj: any) => {
+    const renderInjections = (injections: CustomInjection[]) => {
+      return injections.map((inj: CustomInjection) => {
         if (inj.type === 'css') return `<style>\n${inj.code}\n</style>`;
         if (inj.type === 'js') return `<script>\n${inj.code}\n</script>`;
         return inj.code;
       }).join('\n');
     };
 
-    const headInjections = renderInjections(activeInjections.filter((i: any) => i.target === 'head'));
-    const beforeBodyInjections = renderInjections(activeInjections.filter((i: any) => i.target === 'before-body'));
-    const afterBodyInjections = renderInjections(activeInjections.filter((i: any) => i.target === 'after-body'));
+    const headInjections = renderInjections(activeInjections.filter((i: CustomInjection) => i.target === 'head'));
+    const beforeBodyInjections = renderInjections(activeInjections.filter((i: CustomInjection) => i.target === 'before-body'));
+    const afterBodyInjections = renderInjections(activeInjections.filter((i: CustomInjection) => i.target === 'after-body'));
 
     const mockUAScript = isMobileUA
       ? `<script>
@@ -430,7 +431,7 @@ ${importMapHTML}
     ${afterBodyInjections}
 </body>
 </html>`;
-  }, [html, css, transpiledJs, compilationError, jsEditorMode, isFrameworkProject, projectType, bundledCode, bundledCss, importMap, isMobileUA, customInjections]);
+  }, [html, css, transpiledJs, compilationError, jsEditorMode, isFrameworkProject, projectType, bundledCode, bundledCss, importMap, isMobileUA, customInjections, safeMode]);
 
   const refreshPreview = useCallback(() => {
     if (iframeRef.current) {
@@ -453,7 +454,7 @@ ${importMapHTML}
       }
       setTimeout(() => setIsLoading(false), 300);
     }
-  }, [generatePreviewContent]);
+  }, [generatePreviewContent, resetHeartbeat]);
 
   // Use a ref for refreshPreview to avoid dependency issues in event-listener effects
   const refreshPreviewRef = useRef(refreshPreview);
@@ -593,7 +594,7 @@ ${importMapHTML}
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [onConsoleMessage, onPreviewReset, stackContext]);
+  }, [onConsoleMessage, onPreviewReset, resetHeartbeat, stackContext]);
 
   // Handle ESC key to exit fullscreen
   useEffect(() => {
@@ -659,7 +660,7 @@ ${importMapHTML}
     setShowDeviceMenu(false);
     try {
       localStorage.setItem('gbcoder_device_preset', deviceId);
-    } catch (_e) {
+    } catch {
       // storage quota or disabled
     }
   };

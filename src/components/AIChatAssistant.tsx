@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, MessageSquare, Trash2, Copy, Check, Code2, Sparkles } from 'lucide-react';
+import { X, Send, MessageSquare, Trash2, Copy, Check, Code2, Sparkles, Loader2 } from 'lucide-react';
 import { aiChatAssistant, ChatMessage } from '../services/aiChatAssistant';
 import { ExternalLibrary } from '../services/externalLibraryService';
 import toast from 'react-hot-toast';
@@ -102,7 +102,8 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
             </button>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(error.stack || error.message || 'Unknown error');
+                const stackOrMsg = err instanceof Error ? err.stack || err.message : String(err || 'Unknown error');
+                navigator.clipboard.writeText(stackOrMsg);
                 toast.success('Error copied to clipboard', { id: t.id });
               }}
               className="px-3 py-1 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 rounded text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"

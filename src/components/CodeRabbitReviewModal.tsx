@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   X,
   Bug,
@@ -47,25 +47,7 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
   const [activeTab, setActiveTab] = useState<'all' | 'critical' | 'warning' | 'security' | 'performance'>('all');
   const [appliedIssues, setAppliedIssues] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    if (isOpen) {
-      const storedKey = codeRabbitService.getApiKey();
-      setApiKey(storedKey);
-      if (storedKey && files.length > 0 && !scanResult) {
-        handleRunScan();
-      }
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  const handleSaveApiKey = () => {
-    codeRabbitService.setApiKey(apiKey);
-    setKeySaved(true);
-    setTimeout(() => setKeySaved(false), 2500);
-  };
-
-  const handleRunScan = async () => {
+  const handleRunScan = useCallback(async () => {
     if (files.length === 0) return;
     setIsScanning(true);
     setScanProgress(0);
@@ -81,6 +63,24 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
     } finally {
       setIsScanning(false);
     }
+  }, [files]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const storedKey = codeRabbitService.getApiKey();
+      setApiKey(storedKey);
+      if (storedKey && files.length > 0 && !scanResult) {
+        handleRunScan();
+      }
+    }
+  }, [isOpen, files.length, handleRunScan, scanResult]);
+
+  if (!isOpen) return null;
+
+  const handleSaveApiKey = () => {
+    codeRabbitService.setApiKey(apiKey);
+    setKeySaved(true);
+    setTimeout(() => setKeySaved(false), 2500);
   };
 
   const handleApplyFix = (issue: CodeRabbitIssue) => {

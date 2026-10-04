@@ -10,6 +10,24 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+interface ApiServerResponse {
+  statusCode?: number;
+  headersSent?: boolean;
+  setHeader: (name: string, value: string) => void;
+  status?: (code: number) => ApiServerResponse;
+  json?: (data: unknown) => ApiServerResponse;
+  send?: (data: unknown) => ApiServerResponse;
+  end: (chunk?: string | Buffer) => void;
+}
+
+interface ApiServerRequest {
+  method?: string;
+  url?: string;
+  body?: unknown;
+  query?: Record<string, string>;
+  [Symbol.asyncIterator]?: () => AsyncIterableIterator<Buffer | string>;
+}
+
 function localApiPlugin(): Plugin {
   return {
     name: 'local-api-handler',
@@ -29,15 +47,15 @@ function localApiPlugin(): Plugin {
         const handlerFile = candidateFile;
 
         try {
-          const anyRes = res as any;
-          if (!anyRes.status) {
-            anyRes.status = function (code: number) {
+          const apiRes = res as unknown as ApiServerResponse;
+          if (!apiRes.status) {
+            apiRes.status = function (code: number) {
               this.statusCode = code;
               return this;
             };
           }
-          if (!anyRes.json) {
-            anyRes.json = function (data: any) {
+          if (!apiRes.json) {
+            apiRes.json = function (data: unknown) {
               if (!this.headersSent) {
                 this.setHeader('Content-Type', 'application/json');
               }
@@ -45,48 +63,49 @@ function localApiPlugin(): Plugin {
               return this;
             };
           }
-          if (!anyRes.send) {
-            anyRes.send = function (data: any) {
-              this.end(data);
+          if (!apiRes.send) {
+            apiRes.send = function (data: unknown) {
+              this.end(typeof data === 'string' ? data : JSON.stringify(data));
               return this;
             };
           }
 
-          const anyReq = req as any;
+          const apiReq = req as unknown as ApiServerRequest;
 
           if (['POST', 'PUT', 'PATCH'].includes(req.method || '')) {
-            if (!anyReq.body) {
+            if (!apiReq.body) {
               const chunks: Buffer[] = [];
               for await (const chunk of req) {
                 chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
               }
               const bodyStr = Buffer.concat(chunks).toString('utf-8');
               try {
-                anyReq.body = bodyStr ? JSON.parse(bodyStr) : {};
+                apiReq.body = bodyStr ? JSON.parse(bodyStr) : {};
               } catch {
-                anyReq.body = bodyStr;
+                apiReq.body = bodyStr;
               }
             }
           }
 
-          if (!anyReq.query && req.url.includes('?')) {
+          if (!apiReq.query && req.url.includes('?')) {
             const searchParams = new URL(req.url, 'http://localhost').searchParams;
             const queryObj: Record<string, string> = {};
             searchParams.forEach((val, key) => { queryObj[key] = val; });
-            anyReq.query = queryObj;
+            apiReq.query = queryObj;
           }
 
           const resolvedPath = require.resolve(handlerFile);
           delete require.cache[resolvedPath];
           const handler = require(resolvedPath);
           const fn = typeof handler === 'function' ? handler : handler.default || handler;
-          await fn(anyReq, anyRes);
-        } catch (err: any) {
+          await fn(apiReq, apiRes);
+        } catch (err: unknown) {
           console.error(`[local-api-handler] error on ${urlPath}:`, err);
           if (!res.headersSent) {
             res.statusCode = 500;
             res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify({ error: err.message || 'Internal Server Error' }));
+            const message = err instanceof Error ? err.message : 'Internal Server Error';
+            res.end(JSON.stringify({ error: message }));
           }
         }
       });
@@ -99,8 +118,6 @@ export default defineConfig({
   plugins: [
     localApiPlugin(),
     react({
-      // Fast refresh for development
-      fastRefresh: true,
       // Exclude storybook stories
       exclude: [],
     }),
