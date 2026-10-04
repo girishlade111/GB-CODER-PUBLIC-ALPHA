@@ -20,7 +20,7 @@ const CookiePolicyPage: React.FC = () => {
                             <Cookie className={`w-12 h-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
                         </div>
                     </div>
-                    <h1 className={`font-sans text-4xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <h1 className={`font-display text-4xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         Cookie Policy
                     </h1>
                     <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -32,7 +32,7 @@ const CookiePolicyPage: React.FC = () => {
                 <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                     {/* Introduction */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Introduction</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Introduction</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             This Cookie Policy explains how GB Coder uses cookies and similar technologies. Unlike most websites, GB Coder does <strong>not use traditional HTTP cookies</strong>. Instead, we use browser LocalStorage for essential functionality.
                         </p>
@@ -40,7 +40,7 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* What We Use */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             <Database className="w-6 h-6 text-gray-400" />
                             What We Use Instead of Cookies
                         </h2>
@@ -58,7 +58,7 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* What We Store */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>What We Store</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>What We Store</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             We store the following data in LocalStorage:
                         </p>
@@ -128,7 +128,7 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* Third-Party Cookies */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Third-Party Cookies</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Third-Party Cookies</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder itself does not use cookies, but third-party services we integrate with may use cookies:
                         </p>
@@ -140,7 +140,7 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* How to Control */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             <Settings className="w-6 h-6 text-gray-400" />
                             How to Control LocalStorage
                         </h2>
@@ -167,7 +167,7 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* Impact of Disabling */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             <Trash2 className="w-6 h-6 text-gray-400" />
                             Impact of Clearing LocalStorage
                         </h2>
@@ -188,7 +188,7 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* Updates to Policy */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Updates to This Policy</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Updates to This Policy</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             We may update this Cookie Policy from time to time. Changes will be posted on this page with an updated "Last updated" date.
                         </p>
@@ -196,7 +196,7 @@ const CookiePolicyPage: React.FC = () => {
 
                     {/* Contact */}
                     <section>
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Contact Us</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Contact Us</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             Questions about our LocalStorage usage?
                         </p>

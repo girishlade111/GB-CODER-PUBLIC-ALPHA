@@ -20,7 +20,7 @@ const DisclaimerPage: React.FC = () => {
                             <AlertTriangle className={`w-12 h-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
                         </div>
                     </div>
-                    <h1 className={`font-sans text-4xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <h1 className={`font-display text-4xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         Disclaimer
                     </h1>
                     <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -35,7 +35,7 @@ const DisclaimerPage: React.FC = () => {
                 <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                     {/* General Disclaimer */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>General Disclaimer</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>General Disclaimer</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder is provided "as is" for educational and development purposes. The information and tools provided on this platform are offered without any warranties of any kind, either express or implied.
                         </p>
@@ -46,7 +46,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* AI-Generated Code Disclaimer */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             <Code className="w-6 h-6 text-gray-400" />
                             AI-Generated Code Disclaimer
                         </h2>
@@ -80,7 +80,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* No Warranty Disclaimer */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>No Warranty</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>No Warranty</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder makes no warranties or representations about:
                         </p>
@@ -95,7 +95,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* External Libraries Disclaimer */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             <ExternalLink className="w-6 h-6 text-gray-400" />
                             External Libraries Disclaimer
                         </h2>
@@ -114,7 +114,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Data Loss Disclaimer */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             <Shield className="w-6 h-6 text-gray-400" />
                             Data Loss Disclaimer
                         </h2>
@@ -134,7 +134,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Service Availability Disclaimer */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Service Availability</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Service Availability</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder is a free service and we make no guarantees about:
                         </p>
@@ -148,7 +148,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Educational Purpose */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Educational Purpose</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Educational Purpose</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder is designed primarily for:
                         </p>
@@ -165,7 +165,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Third-Party Services */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Third-Party Services</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Third-Party Services</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder integrates with third-party services:
                         </p>
@@ -181,7 +181,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Limitation of Liability */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Limitation of Liability</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Limitation of Liability</h2>
                         <p className={`mb-4 font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder and its creator shall not be liable for:
                         </p>
@@ -197,7 +197,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* User Responsibility */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Your Responsibility</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Your Responsibility</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             As a user of GB Coder, you are solely responsible for:
                         </p>
@@ -213,7 +213,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Updates to Disclaimer */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Updates to This Disclaimer</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Updates to This Disclaimer</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             This disclaimer may be updated from time to time. Continued use of GB Coder after changes constitutes acceptance of the updated disclaimer.
                         </p>
@@ -221,7 +221,7 @@ const DisclaimerPage: React.FC = () => {
 
                     {/* Contact */}
                     <section>
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Questions?</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Questions?</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             If you have questions about this disclaimer:
                         </p>

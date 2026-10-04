@@ -20,7 +20,7 @@ const PrivacyPolicyPage: React.FC = () => {
               <Shield className={`w-12 h-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
             </div>
           </div>
-          <h1 className={`font-sans text-4xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <h1 className={`font-display text-4xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Privacy Policy
           </h1>
           <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -32,7 +32,7 @@ const PrivacyPolicyPage: React.FC = () => {
         <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           {/* Introduction */}
           <section className="mb-8">
-            <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Introduction
             </h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -45,7 +45,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Information We Collect */}
           <section className="mb-8">
-            <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               <Database className="w-6 h-6 text-gray-400" />
               Information We Collect
             </h2>
@@ -85,7 +85,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* How We Use Your Information */}
           <section className="mb-8">
-            <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               <Lock className="w-6 h-6 text-gray-400" />
               How We Use Your Information
             </h2>
@@ -113,7 +113,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Data Storage and Security */}
           <section className="mb-8">
-            <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Data Storage and Security</h2>
+            <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Data Storage and Security</h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               All your code and preferences are stored locally in your browser's LocalStorage. This means:
             </p>
@@ -127,7 +127,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Your Rights and Choices */}
           <section className="mb-8">
-            <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Your Rights and Choices</h2>
+            <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Your Rights and Choices</h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               You have complete control over your data:
             </p>
@@ -141,7 +141,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Third-Party Services */}
           <section className="mb-8">
-            <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Third-Party Services</h2>
+            <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Third-Party Services</h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               GB Coder integrates with the following third-party services:
             </p>
@@ -154,7 +154,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Children's Privacy */}
           <section className="mb-8">
-            <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Children's Privacy</h2>
+            <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Children's Privacy</h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               GB Coder is suitable for users of all ages. We do not knowingly collect personal information from children. Since we don't require registration and only use local storage, there is no collection of personally identifiable information.
             </p>
@@ -162,7 +162,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Changes to This Policy */}
           <section className="mb-8">
-            <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Changes to This Privacy Policy</h2>
+            <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Changes to This Privacy Policy</h2>
             <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date.
             </p>
@@ -170,7 +170,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           {/* Contact Us */}
           <section>
-            <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               <Mail className="w-6 h-6 text-gray-400" />
               Contact Us
             </h2>

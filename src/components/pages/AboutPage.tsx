@@ -162,7 +162,7 @@ const AboutPage: React.FC = () => {
             </div>
 
             {/* Main Heading */}
-            <h1 className={`font-sans text-4xl sm:text-5xl lg:text-6xl font-medium tracking-tight mb-6 ${
+            <h1 className={`font-display text-4xl sm:text-5xl lg:text-6xl font-medium tracking-tight mb-6 ${
               isDark ? 'text-white' : 'text-gray-900'
             }`}>
               Code Smarter with{' '}
@@ -241,7 +241,7 @@ const AboutPage: React.FC = () => {
       <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className={`font-sans text-3xl sm:text-4xl font-medium mb-4 ${
+            <h2 className={`font-display text-3xl sm:text-4xl font-medium mb-4 ${
               isDark ? 'text-white' : 'text-gray-900'
             }`}>
               Everything You Need to Code
@@ -288,7 +288,7 @@ const AboutPage: React.FC = () => {
       <section className={`py-16 sm:py-24 ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className={`font-sans text-3xl sm:text-4xl font-medium mb-4 ${
+            <h2 className={`font-display text-3xl sm:text-4xl font-medium mb-4 ${
               isDark ? 'text-white' : 'text-gray-900'
             }`}>
               Why Developers Love GB Coder
@@ -326,7 +326,7 @@ const AboutPage: React.FC = () => {
       <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className={`font-sans text-3xl sm:text-4xl font-medium mb-4 ${
+            <h2 className={`font-display text-3xl sm:text-4xl font-medium mb-4 ${
               isDark ? 'text-white' : 'text-gray-900'
             }`}>
               Powered by Advanced AI
@@ -378,7 +378,7 @@ const AboutPage: React.FC = () => {
             <Users className="w-8 h-8" />
           </div>
 
-          <h2 className={`font-sans text-3xl sm:text-4xl font-medium mb-6 ${
+          <h2 className={`font-display text-3xl sm:text-4xl font-medium mb-6 ${
             isDark ? 'text-white' : 'text-gray-900'
           }`}>
             Built by Developers, for Developers
@@ -418,7 +418,7 @@ const AboutPage: React.FC = () => {
       {/* Connect Section */}
       <section className="py-16 sm:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className={`font-sans text-3xl sm:text-4xl font-medium mb-4 ${
+          <h2 className={`font-display text-3xl sm:text-4xl font-medium mb-4 ${
             isDark ? 'text-white' : 'text-gray-900'
           }`}>
             Connect With Us
@@ -459,7 +459,7 @@ const AboutPage: React.FC = () => {
               : 'bg-white border-gray-200'
           }`}>
             <div className="relative">
-              <h2 className={`font-sans text-3xl sm:text-4xl font-medium mb-4 ${
+              <h2 className={`font-display text-3xl sm:text-4xl font-medium mb-4 ${
                 isDark ? 'text-white' : 'text-gray-900'
               }`}>
                 Ready to Code Smarter?

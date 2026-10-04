@@ -20,7 +20,7 @@ const TermsOfServicePage: React.FC = () => {
                             <FileText className={`w-12 h-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
                         </div>
                     </div>
-                    <h1 className={`font-sans text-4xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <h1 className={`font-display text-4xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         Terms of Service
                     </h1>
                     <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -32,7 +32,7 @@ const TermsOfServicePage: React.FC = () => {
                 <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                     {/* Introduction */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Introduction</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Introduction</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             Welcome to GB Coder. By accessing or using our service, you agree to be bound by these Terms of Service ("Terms"). Please read them carefully.
                         </p>
@@ -40,7 +40,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* Acceptance of Terms */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>1. Acceptance of Terms</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>1. Acceptance of Terms</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             By using GB Coder, you acknowledge that you have read, understood, and agree to be bound by these Terms. If you do not agree to these Terms, please do not use our service.
                         </p>
@@ -48,7 +48,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* Service Description */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>2. Service Description</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>2. Service Description</h2>
                         <p className={`mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             GB Coder is a free, web-based code editor that provides:
                         </p>
@@ -65,7 +65,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* User Responsibilities */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             <Scale className="w-6 h-6 text-gray-400" />
                             3. User Responsibilities
                         </h2>
@@ -85,7 +85,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* Intellectual Property */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>4. Intellectual Property</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>4. Intellectual Property</h2>
                         <h3 className={`text-xl font-semibold mb-3 mt-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Your Code</h3>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             You retain full ownership of any code you create using GB Coder. We do not claim any rights to your code. Your code is stored locally in your browser and is not transmitted to our servers.
@@ -98,7 +98,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* API Usage and Limitations */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>5. API Usage and Limitations</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>5. API Usage and Limitations</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             AI features require your own Google Gemini API key. You are responsible for:
                         </p>
@@ -112,7 +112,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* Disclaimer of Warranties */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             <AlertTriangle className="w-6 h-6 text-gray-400" />
                             6. Disclaimer of Warranties
                         </h2>
@@ -130,7 +130,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* Limitation of Liability */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>7. Limitation of Liability</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>7. Limitation of Liability</h2>
                         <p className={`mb-4 font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             TO THE MAXIMUM EXTENT PERMITTED BY LAW, GB CODER AND ITS CREATOR SHALL NOT BE LIABLE FOR ANY:
                         </p>
@@ -146,7 +146,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* Service Availability */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>8. Service Availability</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>8. Service Availability</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             We strive to provide GB Coder as a free service, but we reserve the right to:
                         </p>
@@ -159,7 +159,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* Termination */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <h2 className={`font-display text-2xl font-medium mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             <XCircle className="w-6 h-6 text-gray-400" />
                             9. Termination
                         </h2>
@@ -170,7 +170,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* Governing Law */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>10. Governing Law</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>10. Governing Law</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             These Terms shall be governed by and construed in accordance with the laws of India, without regard to its conflict of law provisions. Any disputes shall be subject to the exclusive jurisdiction of the courts in Mumbai, India.
                         </p>
@@ -178,7 +178,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* Changes to Terms */}
                     <section className="mb-8">
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>11. Changes to Terms</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>11. Changes to Terms</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             We reserve the right to modify these Terms at any time. Changes will be effective immediately upon posting on this page. Your continued use of GB Coder after changes constitutes acceptance of the modified Terms.
                         </p>
@@ -186,7 +186,7 @@ const TermsOfServicePage: React.FC = () => {
 
                     {/* Contact */}
                     <section>
-                        <h2 className={`font-sans text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>12. Contact Information</h2>
+                        <h2 className={`font-display text-2xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>12. Contact Information</h2>
                         <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             For questions about these Terms, contact:
                         </p>

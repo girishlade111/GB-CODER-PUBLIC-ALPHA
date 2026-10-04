@@ -70,7 +70,7 @@ const ContactPage: React.FC = () => {
                             <Mail className={`w-12 h-12 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
                         </div>
                     </div>
-                    <h1 className="font-sans text-4xl font-medium mb-4">Contact Us</h1>
+                    <h1 className="font-display text-4xl font-medium mb-4">Contact Us</h1>
                     <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         Have questions? We'd love to hear from you.
                     </p>
@@ -80,7 +80,7 @@ const ContactPage: React.FC = () => {
                     {/* Contact Form */}
                     <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                         }`}>
-                        <h2 className="font-sans text-2xl font-medium mb-6">Send us a Message</h2>
+                        <h2 className="font-display text-2xl font-medium mb-6">Send us a Message</h2>
 
                         {formStatus === 'success' && (
                             <div className={`mb-6 p-4 rounded-lg border flex items-center gap-2 ${
@@ -202,7 +202,7 @@ const ContactPage: React.FC = () => {
                         {/* Direct Contact */}
                         <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                             }`}>
-                            <h2 className="font-sans text-2xl font-medium mb-6">Get in Touch</h2>
+                            <h2 className="font-display text-2xl font-medium mb-6">Get in Touch</h2>
 
                             <div className="space-y-4">
                                 {/* Email */}
@@ -246,7 +246,7 @@ const ContactPage: React.FC = () => {
                         {/* Social Media */}
                         <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                             }`}>
-                            <h2 className="font-sans text-2xl font-medium mb-6">Connect With Us</h2>
+                            <h2 className="font-display text-2xl font-medium mb-6">Connect With Us</h2>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <a
@@ -306,7 +306,7 @@ const ContactPage: React.FC = () => {
                         {/* Creator Info */}
                         <div className={`rounded-lg border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                             }`}>
-                            <h2 className="font-sans text-2xl font-medium mb-4">About the Creator</h2>
+                            <h2 className="font-display text-2xl font-medium mb-4">About the Creator</h2>
                             <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
                                 GB Coder is created and maintained by <strong>Girish Lade</strong>, a passionate developer from Mumbai, India. Feel free to reach out for questions, feedback, or collaboration opportunities!
                             </p>

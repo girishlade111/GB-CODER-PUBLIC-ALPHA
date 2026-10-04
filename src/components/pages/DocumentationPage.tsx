@@ -43,7 +43,7 @@ const DocumentationPage: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
                 <div className="mb-12 text-center">
-                    <h1 className={`font-sans text-4xl md:text-5xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <h1 className={`font-display text-4xl md:text-5xl font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         GB Coder Documentation
                     </h1>
                     <p className={`text-xl ${isDark ? 'text-gray-400' : 'text-gray-600'} max-w-3xl mx-auto`}>
@@ -93,7 +93,7 @@ const DocumentationPage: React.FC = () => {
                     <main className="flex-1 space-y-12">
                         {/* Getting Started */}
                         <section id="getting-started" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className={`font-sans text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <h2 className={`font-display text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 <Zap className="w-8 h-8 text-gray-400" />
                                 Getting Started
                             </h2>
@@ -125,7 +125,7 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Editor Features */}
                         <section id="editor" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className={`font-sans text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <h2 className={`font-display text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 <Code2 className="w-8 h-8 text-gray-400" />
                                 Editor Features
                             </h2>
@@ -199,7 +199,7 @@ const DocumentationPage: React.FC = () => {
 
                         {/* AI Features */}
                         <section id="ai" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className={`font-sans text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <h2 className={`font-display text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 <Brain className="w-8 h-8 text-gray-400" />
                                 AI Features
                             </h2>
@@ -301,7 +301,7 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Preview & Console */}
                         <section id="preview" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className={`font-sans text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <h2 className={`font-display text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 <Eye className="w-8 h-8 text-gray-400" />
                                 Preview & Console
                             </h2>
@@ -388,7 +388,7 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Project Management */}
                         <section id="projects" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className={`font-sans text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <h2 className={`font-display text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 <FileText className="w-8 h-8 text-gray-400" />
                                 Project Management
                             </h2>
@@ -457,7 +457,7 @@ const DocumentationPage: React.FC = () => {
 
                         {/* File Management */}
                         <section id="files" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className={`font-sans text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <h2 className={`font-display text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 <Upload className="w-8 h-8 text-gray-400" />
                                 File Management
                             </h2>
@@ -507,7 +507,7 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Settings */}
                         <section id="settings" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className={`font-sans text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <h2 className={`font-display text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 <Settings className="w-8 h-8 text-gray-400" />
                                 Settings & Customization
                             </h2>
@@ -576,7 +576,7 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Snippets */}
                         <section id="snippets" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className={`font-sans text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <h2 className={`font-display text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 <Package className="w-8 h-8 text-gray-400" />
                                 Code Snippets
                             </h2>
@@ -635,7 +635,7 @@ const DocumentationPage: React.FC = () => {
 
                         {/* Keyboard Shortcuts */}
                         <section id="shortcuts" className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-8`}>
-                            <h2 className={`font-sans text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <h2 className={`font-display text-3xl font-medium mb-6 flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 <Keyboard className="w-8 h-8 text-gray-400" />
                                 Keyboard Shortcuts
                             </h2>
