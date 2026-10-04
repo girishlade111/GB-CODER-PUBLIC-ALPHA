@@ -2032,3 +2032,396 @@ a { color: var(--color-accent); text-decoration: none; }
   .app-window { transform: none; }
 }
 `;
+
+export const javascript = `'use strict';
+
+(function () {
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $ = function (sel, root) { return (root || document).querySelector(sel); };
+  var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+
+  /* ---------- Scroll reveal ---------- */
+  var revealables = $$('[data-reveal]');
+  if (revealables.length) {
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      revealables.forEach(function (el) { el.classList.add('is-visible'); });
+    } else {
+      var revealObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.1 });
+      revealables.forEach(function (el) { revealObserver.observe(el); });
+    }
+  }
+
+  /* ---------- Animated counters ---------- */
+  function formatValue(value, decimals) {
+    return decimals > 0
+      ? value.toFixed(decimals)
+      : Math.round(value).toLocaleString('en-US');
+  }
+
+  function runCounter(el) {
+    var target = parseFloat(el.getAttribute('data-count'));
+    var decimals = parseInt(el.getAttribute('data-decimals') || '0', 10);
+    if (isNaN(target)) { return; }
+    if (reduceMotion) { el.textContent = formatValue(target, decimals); return; }
+    var duration = 1500;
+    var start = null;
+    var step = function (ts) {
+      if (start === null) { start = ts; }
+      var p = Math.min(1, (ts - start) / duration);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = formatValue(target * eased, decimals);
+      if (p < 1) { window.requestAnimationFrame(step); }
+    };
+    window.requestAnimationFrame(step);
+  }
+
+  var counters = $$('[data-count]');
+  if (counters.length) {
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      counters.forEach(runCounter);
+    } else {
+      var countObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) { runCounter(entry.target); countObserver.unobserve(entry.target); }
+        });
+      }, { threshold: 0.5 });
+      counters.forEach(function (el) { countObserver.observe(el); });
+    }
+  }
+
+  /* ---------- Header, progress, back-to-top ---------- */
+  var siteHeader = $('#siteHeader');
+  var scrollProgress = $('#scrollProgress');
+  var toTop = $('#toTop');
+  var queued = false;
+
+  function syncScroll() {
+    var y = window.scrollY || document.documentElement.scrollTop;
+    if (siteHeader) { siteHeader.classList.toggle('is-stuck', y > 8); }
+    if (scrollProgress) {
+      var doc = document.documentElement;
+      var max = doc.scrollHeight - doc.clientHeight;
+      scrollProgress.style.width = (max > 0 ? Math.min(100, (y / max) * 100) : 0) + '%';
+    }
+    if (toTop) {
+      var show = y > 600;
+      toTop.hidden = !show;
+      toTop.classList.toggle('is-shown', show);
+    }
+    queued = false;
+  }
+
+  window.addEventListener('scroll', function () {
+    if (queued) { return; }
+    queued = true;
+    window.requestAnimationFrame(syncScroll);
+  }, { passive: true });
+  syncScroll();
+
+  if (toTop) {
+    toTop.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    });
+  }
+
+  /* ---------- Product dropdown ---------- */
+  var navProductBtn = $('#navProductBtn');
+  var navProductMenu = $('#navProductMenu');
+
+  function setDropdown(open) {
+    if (!navProductBtn || !navProductMenu) { return; }
+    navProductBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    navProductMenu.classList.toggle('is-open', open);
+  }
+  if (navProductBtn && navProductMenu) {
+    navProductBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setDropdown(navProductBtn.getAttribute('aria-expanded') !== 'true');
+    });
+    document.addEventListener('click', function (e) {
+      if (!navProductMenu.contains(e.target)) { setDropdown(false); }
+    });
+  }
+
+  /* ---------- Mobile navigation ---------- */
+  var navToggle = $('#navToggle');
+  var mobileNav = $('#mobileNav');
+
+  function setMobileNav(open) {
+    if (!navToggle || !mobileNav) { return; }
+    navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    navToggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+    mobileNav.classList.toggle('is-open', open);
+  }
+  if (navToggle && mobileNav) {
+    navToggle.addEventListener('click', function () {
+      setMobileNav(navToggle.getAttribute('aria-expanded') !== 'true');
+    });
+    $$('a', mobileNav).forEach(function (link) {
+      link.addEventListener('click', function () { setMobileNav(false); });
+    });
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 900) { setMobileNav(false); }
+    });
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') { return; }
+    if (navProductBtn && navProductBtn.getAttribute('aria-expanded') === 'true') {
+      setDropdown(false);
+      navProductBtn.focus();
+      return;
+    }
+    if (mobileNav && mobileNav.classList.contains('is-open')) {
+      setMobileNav(false);
+      navToggle.focus();
+    }
+  });
+
+  /* ---------- Smooth in-page anchors ---------- */
+  $$('a[href^="#"]').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      var hash = link.getAttribute('href');
+      if (!hash || hash === '#') { return; }
+      var target = document.getElementById(hash.slice(1));
+      if (!target) { return; }
+      e.preventDefault();
+      var top = target.getBoundingClientRect().top + window.scrollY - 76;
+      window.scrollTo({ top: top, behavior: reduceMotion ? 'auto' : 'smooth' });
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', hash);
+      }
+    });
+  });
+
+  /* ---------- Scroll-spy ---------- */
+  var navLinks = $$('.nav-link[href^="#"], .mobile-nav a[href^="#"]');
+  var spyTargets = navLinks.map(function (link) {
+    var id = (link.getAttribute('href') || '').replace('#', '');
+    return id ? document.getElementById(id) : null;
+  }).filter(Boolean);
+
+  if (spyTargets.length && 'IntersectionObserver' in window) {
+    var spyObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) { return; }
+        navLinks.forEach(function (link) {
+          link.classList.toggle('is-active', link.getAttribute('href') === '#' + entry.target.id);
+        });
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    spyTargets.forEach(function (section) { spyObserver.observe(section); });
+  }
+
+  /* ---------- Product tabs ---------- */
+  var tabs = $$('[role="tab"][aria-controls]');
+  tabs.forEach(function (tab, index) {
+    var select = function () {
+      tabs.forEach(function (other) {
+        var panel = document.getElementById(other.getAttribute('aria-controls'));
+        var on = other === tab;
+        other.classList.toggle('is-active', on);
+        other.setAttribute('aria-selected', on ? 'true' : 'false');
+        other.setAttribute('tabindex', on ? '0' : '-1');
+        if (panel) { panel.classList.toggle('is-active', on); }
+      });
+    };
+    tab.addEventListener('click', select);
+    tab.addEventListener('keydown', function (e) {
+      var next = null;
+      if (e.key === 'ArrowRight') { next = tabs[(index + 1) % tabs.length]; }
+      else if (e.key === 'ArrowLeft') { next = tabs[(index - 1 + tabs.length) % tabs.length]; }
+      if (next) {
+        e.preventDefault();
+        next.focus();
+        next.click();
+      }
+    });
+  });
+
+  /* ---------- Billing switch ---------- */
+  var billingSwitch = $('#billingSwitch');
+  var monthlyLabel = $('#billingMonthlyLabel');
+  var yearlyLabel = $('#billingYearlyLabel');
+  var amounts = $$('.plan-amount[data-monthly]');
+  var bills = $$('[data-bill]');
+
+  function setBilling(yearly) {
+    if (!billingSwitch) { return; }
+    billingSwitch.setAttribute('aria-checked', yearly ? 'true' : 'false');
+    if (monthlyLabel) { monthlyLabel.classList.toggle('is-active', !yearly); }
+    if (yearlyLabel) { yearlyLabel.classList.toggle('is-active', yearly); }
+    amounts.forEach(function (el) {
+      var next = yearly ? el.getAttribute('data-yearly') : el.getAttribute('data-monthly');
+      if (next !== null && next !== '') { el.textContent = next; }
+    });
+    bills.forEach(function (el) {
+      el.textContent = yearly ? 'Billed yearly' : 'Billed monthly';
+    });
+  }
+  if (billingSwitch) {
+    billingSwitch.addEventListener('click', function () {
+      setBilling(billingSwitch.getAttribute('aria-checked') !== 'true');
+    });
+  }
+
+  /* ---------- Testimonial slider ---------- */
+  var slider = $('[data-slider]');
+  if (slider) {
+    var track = $('#sliderTrack', slider);
+    var slides = track ? $$('.slide', track) : [];
+    var prevBtn = $('#sliderPrev', slider);
+    var nextBtn = $('#sliderNext', slider);
+    var dotsWrap = $('#sliderDots', slider);
+    var index = 0;
+    var timer = null;
+
+    var dots = slides.map(function (_, i) {
+      var dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'slider-dot';
+      dot.setAttribute('role', 'tab');
+      dot.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+      dot.setAttribute('aria-label', 'Testimonial ' + (i + 1));
+      dot.addEventListener('click', function () { go(i); restart(); });
+      if (dotsWrap) { dotsWrap.appendChild(dot); }
+      return dot;
+    });
+
+    var go = function (next) {
+      if (!slides.length) { return; }
+      index = (next + slides.length) % slides.length;
+      if (track) { track.style.transform = 'translateX(' + (-100 * index) + '%)'; }
+      dots.forEach(function (dot, i) {
+        dot.setAttribute('aria-selected', i === index ? 'true' : 'false');
+      });
+      slides.forEach(function (slide, i) {
+        slide.setAttribute('aria-hidden', i === index ? 'false' : 'true');
+      });
+    };
+
+    var restart = function () {
+      if (timer) { window.clearInterval(timer); }
+      if (reduceMotion || slides.length < 2) { return; }
+      timer = window.setInterval(function () { go(index + 1); }, 6500);
+    };
+
+    if (prevBtn) { prevBtn.addEventListener('click', function () { go(index - 1); restart(); }); }
+    if (nextBtn) { nextBtn.addEventListener('click', function () { go(index + 1); restart(); }); }
+
+    slider.addEventListener('mouseenter', function () {
+      if (timer) { window.clearInterval(timer); }
+    });
+    slider.addEventListener('mouseleave', restart);
+
+    slider.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { go(index + 1); restart(); }
+      if (e.key === 'ArrowLeft') { go(index - 1); restart(); }
+    });
+
+    go(0);
+    restart();
+  }
+
+  /* ---------- FAQ accordion ---------- */
+  $$('.faq-q[aria-controls]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var panel = document.getElementById(btn.getAttribute('aria-controls'));
+      var open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      if (panel) { panel.hidden = open; }
+      var item = btn.closest ? btn.closest('.faq-item') : null;
+      if (item) { item.classList.toggle('is-open', !open); }
+    });
+  });
+
+  /* ---------- Kinetic word rotator ---------- */
+  var kineticWord = $('#kineticWord');
+  if (kineticWord && !reduceMotion) {
+    var WORDS = ['not the process', 'not another dashboard', 'your whole company', 'one workspace'];
+    var wordIndex = 0;
+    var swap = function () {
+      var swapEl = kineticWord.parentElement;
+      if (swapEl) { swapEl.classList.add('is-swapping'); }
+      window.setTimeout(function () {
+        wordIndex = (wordIndex + 1) % WORDS.length;
+        kineticWord.textContent = WORDS[wordIndex];
+        if (swapEl) { swapEl.classList.remove('is-swapping'); }
+      }, 320);
+    };
+    window.setInterval(swap, 3200);
+  }
+
+  /* ---------- Toast ---------- */
+  var toastEl = $('#toast');
+  var toastTimer = null;
+  function showToast(message) {
+    if (!toastEl) { return; }
+    toastEl.textContent = message;
+    toastEl.classList.add('is-shown');
+    if (toastTimer) { window.clearTimeout(toastTimer); }
+    toastTimer = window.setTimeout(function () {
+      toastEl.classList.remove('is-shown');
+    }, 4200);
+  }
+
+  /* ---------- CTA form ---------- */
+  var ctaForm = $('#ctaForm');
+  if (ctaForm) {
+    var ctaEmail = $('#ctaEmail');
+    var ctaError = $('#ctaError');
+    var ctaNote = $('#ctaNote');
+
+    var setError = function (message) {
+      if (ctaEmail) { ctaEmail.classList.add('is-invalid'); }
+      if (ctaError) { ctaError.textContent = message; ctaError.hidden = false; }
+    };
+    var clearError = function () {
+      if (ctaEmail) { ctaEmail.classList.remove('is-invalid'); }
+      if (ctaError) { ctaError.hidden = true; }
+    };
+    var validEmail = function (v) { return /^[^\\s@]+@[^\\s@]+\\.[a-z]{2,}$/i.test(v); };
+
+    ctaForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var value = ctaEmail ? ctaEmail.value.trim() : '';
+      if (!value) { setError('Enter your work email to continue.'); if (ctaEmail) { ctaEmail.focus(); } return; }
+      if (!validEmail(value)) { setError('That does not look like a valid email address.'); if (ctaEmail) { ctaEmail.focus(); } return; }
+      if (/@(gmail|yahoo|hotmail|outlook|icloud|proton)\\./i.test(value)) {
+        setError('Please use your work email address.');
+        if (ctaEmail) { ctaEmail.focus(); }
+        return;
+      }
+      clearError();
+      var submitBtn = $('button[type="submit"]', ctaForm);
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('is-busy'); }
+      window.setTimeout(function () {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('is-busy'); }
+        ctaForm.reset();
+        if (ctaNote) { ctaNote.textContent = 'Check your inbox — this is a demo, so nothing was actually sent.'; }
+        showToast('Workspace request received for ' + value);
+      }, 900);
+    });
+
+    if (ctaEmail) {
+      ctaEmail.addEventListener('input', function () {
+        if (validEmail(ctaEmail.value.trim())) { clearError(); }
+      });
+    }
+  }
+
+  /* ---------- Footer year ---------- */
+  var footerYear = $('#footerYear');
+  if (footerYear) { footerYear.textContent = String(new Date().getFullYear()); }
+})();
+`;
+
+// The registry imports this module's default export.
+export default { html, css, javascript };
