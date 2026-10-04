@@ -1,4 +1,7 @@
 require('dotenv').config();
+try {
+    require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+} catch (_) {}
 
 const express = require('express');
 const http = require('http');
@@ -6,6 +9,8 @@ const WebSocket = require('ws');
 const pty = require('node-pty');
 const cors = require('cors');
 const os = require('os');
+const aiHandler = require('../api/ai');
+const healthHandler = require('../api/health');
 
 const app = express();
 const server = http.createServer(app);
@@ -25,16 +30,15 @@ app.use(cors({
     credentials: true,
 }));
 
-// Parse JSON bodies
-app.use(express.json({ limit: '100kb' }));
+// Parse JSON bodies (up to 10MB to accommodate multi-file project contexts)
+app.use(express.json({ limit: '10mb' }));
 
-// Health check endpoints
+// Health check and AI endpoints
 app.get('/', (req, res) => {
     res.json({ status: 'ok', service: 'GB Coder Server' });
 });
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok' });
-});
+app.all('/api/health', (req, res) => healthHandler(req, res));
+app.all('/api/ai', (req, res) => aiHandler(req, res));
 
 // WebSocket server for terminal connections (unattached to server until origin check)
 const wss = new WebSocket.Server({ noServer: true });
