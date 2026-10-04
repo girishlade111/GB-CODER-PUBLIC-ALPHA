@@ -473,10 +473,12 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
           </div>
         )}
 
-        {/* Logs */}
+        {/*
+          Logs. Command output is product chrome, so the log well takes the dark
+          product surface even though the panel around it stays cream — the
+          cream-to-dark rhythm is what makes each surface mode legible.
+        */}
         {state.logs.length > 0 && (
-          {/* Command output is product chrome, so the log well takes the dark
-            product surface even though the panel around it stays cream. */}
           <div className="mt-3 rounded-xl border border-stroke-dark bg-product p-2">
             <div className="mb-1 flex items-center gap-1.5 px-1">
               <Terminal className="h-3 w-3 text-teal" />
