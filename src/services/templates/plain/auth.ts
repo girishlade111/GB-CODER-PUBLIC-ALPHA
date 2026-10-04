@@ -403,6 +403,18 @@ button { font: inherit; color: inherit; }
 .topbar__nav { display: flex; align-items: center; gap: .9rem; }
 .topbar__link { font-size: .85rem; color: var(--muted); transition: color .18s var(--ease); }
 .topbar__link:hover { color: var(--accent-2); }
+.topbar__status { display: inline-flex; align-items: center; gap: .45rem; font-size: .82rem; color: var(--muted); }
+.topbar__status-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, .55);
+  animation: status-pulse 2.6s ease-out infinite;
+}
+@keyframes status-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, .5); }
+  70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
 .topbar__sep { width: 4px; height: 4px; border-radius: 50%; background: var(--line-2); }
 
 /* ---------- split ---------- */
