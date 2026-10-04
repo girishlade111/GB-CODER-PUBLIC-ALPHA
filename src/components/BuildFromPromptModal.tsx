@@ -61,7 +61,22 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
   onGenerate,
   projectContext,
   initialPrompt = '',
-}) => {
+  const { settings, updateSettings } = useSettings();
+  const [selectedProvider, setSelectedProvider] = useState<AIProviderId>(
+    settings.aiProvider || 'inception'
+  );
+
+  useEffect(() => {
+    if (settings.aiProvider) {
+      setSelectedProvider(settings.aiProvider);
+    }
+  }, [settings.aiProvider]);
+
+  const handleProviderSelect = (id: AIProviderId) => {
+    setSelectedProvider(id);
+    updateSettings({ aiProvider: id });
+  };
+
   const [promptText, setPromptText] = useState(initialPrompt);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
