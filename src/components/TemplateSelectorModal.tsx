@@ -232,6 +232,27 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                 </select>
               </div>
 
+              {selectedTags.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-content-secondary">Filtered by tags:</span>
+                  {selectedTags.map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => toggleTag(tag)}
+                      className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-accent text-white hover:bg-accent-hover"
+                    >
+                      {tag} <X className="w-3 h-3" />
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setSelectedTags([])}
+                    className="text-xs underline text-content-secondary hover:text-accent"
+                  >
+                    Clear all
+                  </button>
+                </div>
+              )}
+
               {/* Categories */}
               <div className="flex gap-2 flex-wrap pb-1">
                 <button onClick={() => setSelectedCategory('all')} className={`px-3 py-1.5 text-sm rounded-full whitespace-nowrap ${selectedCategory === 'all' ? 'bg-accent text-white font-medium' : 'bg-black/5 dark:bg-surface-hover text-content-secondary dark:text-content-secondary hover:bg-black/10 dark:hover:bg-surface-strong'}`}>All</button>
@@ -280,6 +301,19 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                       </div>
                       <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-stroke">
                         <div className="flex gap-2 flex-wrap">
+                          {template.tags?.slice(0, 4).map(tag => (
+                            <button
+                              key={tag}
+                              onClick={(e) => { e.stopPropagation(); toggleTag(tag); }}
+                              className={`text-[10px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded-sm border transition-colors ${
+                                selectedTags.includes(tag)
+                                  ? 'border-accent text-white bg-accent'
+                                  : 'border-gray-300 dark:border-stroke-subtle text-content-secondary hover:border-accent hover:text-accent'
+                              }`}
+                            >
+                              {tag}
+                            </button>
+                          ))}
                         </div>
                         <button
                           onClick={(e) => handleLoadClick(e, template)}
