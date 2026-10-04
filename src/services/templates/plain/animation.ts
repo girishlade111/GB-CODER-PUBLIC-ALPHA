@@ -486,7 +486,6 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 5px; }
 .shell { width: 100%; max-width: 1240px; margin-inline: auto; padding-inline: clamp(1rem, 4vw, 2.5rem); }
 .icon { width: 1.1em; height: 1.1em; flex: none; }
-.sr-only, [aria-hidden='true']:not(.sr-only) { }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 .skip-link {
