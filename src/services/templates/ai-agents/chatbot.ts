@@ -726,7 +726,11 @@ html[data-theme="dark"] #theme-btn .i-sun { display: block; }
 
 /* ---------- trust ---------- */
 .trust { padding-block: 0 var(--pad-section); }
-.trust-strip { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-4) var(--s-5); align-items: center; padding: clamp(24px, 3.4vw, 44px); border: 1px solid var(--accent); border-radius: var(--r-xl); background: var(--accent-soft); }
+.trust-strip { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: var(--s-4) var(--s-5); align-items: center; padding: clamp(24px, 3.4vw, 44px); border: 1px solid var(--accent); border-radius: var(--r-xl); background: var(--accent-soft); }
+/* The icon is the only item in column 1. Without an explicit placement the
+   paragraph falls into the next implicit column-1 cell, where the auto track
+   sizes to its unwrapped max-content and squeezes column 2 to zero width. */
+.trust-strip > p { grid-column: 2; }
 .trust-ico { display: grid; place-items: center; width: 60px; height: 60px; border-radius: var(--r-lg); background: var(--accent); color: #fff; animation: floatY 7.5s ease-in-out infinite; }
 .trust-ico svg { width: 31px; height: 31px; }
 .trust-strip h2 { font-size: clamp(1.15rem, 1.9vw, 1.55rem); margin-bottom: 6px; }
