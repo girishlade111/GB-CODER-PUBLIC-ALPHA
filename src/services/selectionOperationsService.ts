@@ -52,10 +52,25 @@ export class SelectionOperationsService {
     const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
     try {
+      let provider = request.provider;
+      let apiKey = request.apiKey;
+      if (!provider) {
+        try {
+          const raw = localStorage.getItem('gb-coder-settings');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed.aiProvider) provider = parsed.aiProvider;
+            if (parsed.aiProvider === 'inception' && parsed.inceptionApiKey) apiKey = parsed.inceptionApiKey;
+            if (parsed.aiProvider === 'atria' && parsed.atriaApiKey) apiKey = parsed.atriaApiKey;
+            if (parsed.aiProvider === 'nvidia' && parsed.nvidiaApiKey) apiKey = parsed.nvidiaApiKey;
+          }
+        } catch {}
+      }
+
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request),
+        body: JSON.stringify({ ...request, provider, apiKey }),
         signal: controller.signal,
       });
 
