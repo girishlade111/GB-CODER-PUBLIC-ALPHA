@@ -1,16 +1,16 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { X, Search, Code2, Layers, Download, Upload, Eye, FileCode, Check } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
-import { enhancedTemplateService, CodeTemplate } from '../services/enhancedTemplateService';
+import { enhancedTemplateService, CodeTemplate, TemplatePayload, TemplateCategoryInfo } from '../services/enhancedTemplateService';
 import { buildProject } from '../services/bundlerService';
-import { languageForPath, ProjectType } from '../types/files';
+import { languageForPath, ProjectType, MultiFileProject } from '../types/files';
 import toast from 'react-hot-toast';
 
 interface TemplateSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoadTemplate: (payload: any, meta: any) => void;
-  currentProject?: any; // To allow saving current project
+  onLoadTemplate: (payload: TemplatePayload, meta: CodeTemplate) => void;
+  currentProject?: MultiFileProject | null; // To allow saving current project
 }
 
 const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
@@ -43,7 +43,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   const [sortOption, setSortOption] = useState<'name' | 'difficulty'>('name');
   
   const [previewTemplate, setPreviewTemplate] = useState<CodeTemplate | null>(null);
-  const [previewPayload, setPreviewPayload] = useState<any | null>(null);
+  const [previewPayload, setPreviewPayload] = useState<TemplatePayload | null>(null);
   const [confirmTemplate, setConfirmTemplate] = useState<CodeTemplate | null>(null);
 
   const [previewTab, setPreviewTab] = useState<'live' | 'files'>('live');
@@ -52,7 +52,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
 
   // Compile multi-file templates (React, Vue, Next.js) for interactive live preview
   useEffect(() => {
-    if (!previewPayload?.files || !previewTemplate) {
+    if (!previewPayload || !('files' in previewPayload) || !previewTemplate) {
       setBundledHtml(null);
       setIsBundling(false);
       return;
@@ -62,12 +62,12 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
 
     const rawType = previewTemplate.projectType;
     const projType = (rawType === 'vue' ? 'vue' : 'react') as ProjectType;
-    const files = previewPayload.files.map((f: any) => ({
+    const files = previewPayload.files.map((f: { path: string; content: string }) => ({
       path: f.path,
       content: f.content,
       language: languageForPath(f.path),
     }));
-    const entry = files.find((f: any) => f.path === (projType === 'vue' ? 'main.js' : 'main.jsx'))?.path;
+    const entry = files.find((f: { path: string }) => f.path === (projType === 'vue' ? 'main.js' : 'main.jsx'))?.path;
 
     buildProject({ projectType: projType, files, entry })
       .then((res) => {
@@ -115,7 +115,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   }, [previewPayload, previewTemplate]);
 
   const [templateMetadata, setTemplateMetadata] = useState<CodeTemplate[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Array<TemplateCategoryInfo & { count: number }>>([]);
   const [customTemplates, setCustomTemplates] = useState<CodeTemplate[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -204,7 +204,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
       setPreviewPayload(payload);
       setConfirmTemplate(template);
       toast.dismiss(toastId);
-    } catch (err) {
+    } catch {
       toast.error('Failed to load template');
       toast.dismiss(toastId);
     }
@@ -225,7 +225,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
         } else {
           toast.error('Invalid template format');
         }
-      } catch (err) {
+      } catch {
         toast.error('Failed to parse file');
       }
     };
@@ -294,7 +294,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                 </div>
                 <select 
                   value={sortOption} 
-                  onChange={(e) => setSortOption(e.target.value as any)}
+                  onChange={(e) => setSortOption(e.target.value as 'name' | 'difficulty')}
                   className={`px-3 py-2 rounded-md text-sm outline-none ${isDark ? 'bg-surface-overlay text-white border border-stroke' : 'bg-white border border-gray-300'}`}
                 >
                   <option value="name">Name (A-Z)</option>
@@ -414,7 +414,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                 </div>
                 
                 <div className="flex-1 p-5 overflow-y-auto">
-                   {previewPayload?.files && (
+                   {previewPayload && 'files' in previewPayload && (
                      <div className="flex items-center justify-between mb-2">
                        <div className="flex gap-1.5 p-0.5 rounded-lg bg-black/5 dark:bg-surface-hover">
                          <button
@@ -445,11 +445,11 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                    )}
 
                    <div className="aspect-video bg-white rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm flex flex-col overflow-hidden mb-6 relative group">
-                      {previewPayload?.files ? (
+                      {previewPayload && 'files' in previewPayload ? (
                         previewTab === 'files' ? (
                           <div className="flex-1 p-4 overflow-y-auto text-xs font-mono text-content-on-dark bg-product">
                              <div className="text-content-on-dark-soft mb-4">// Project structure</div>
-                             {previewPayload.files.map((f: any) => (
+                             {previewPayload.files.map((f: { path: string }) => (
                                <div key={f.path} className="flex items-center gap-2 py-1.5">
                                   <FileCode className="w-4 h-4 text-accent" />
                                   {f.path}
@@ -470,7 +470,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                         ) : (
                           <div className="flex-1 p-4 overflow-y-auto text-xs font-mono text-content-on-dark bg-product">
                              <div className="text-content-on-dark-soft mb-4">// Project structure</div>
-                             {previewPayload.files.map((f: any) => (
+                             {previewPayload.files.map((f: { path: string }) => (
                                <div key={f.path} className="flex items-center gap-2 py-1.5">
                                   <FileCode className="w-4 h-4 text-accent" />
                                   {f.path}
@@ -478,7 +478,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                              ))}
                           </div>
                         )
-                      ) : previewPayload?.html ? (
+                      ) : previewPayload && 'html' in previewPayload ? (
                         <iframe 
                            srcDoc={`<!DOCTYPE html><html><head><style>${previewPayload.css}</style></head><body>${previewPayload.html}<script>${previewPayload.javascript}</script></body></html>`}
                            className="w-full h-full border-0 bg-white"
@@ -510,7 +510,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                          <div>
                             <span className="block text-xs text-content-secondary mb-1">Files</span>
                             <span className="text-sm font-medium dark:text-content-primary">
-                               {previewPayload?.files ? previewPayload.files.length : 3}
+                               {'files' in (previewPayload || {}) ? (previewPayload as { files: unknown[] }).files.length : 3}
                             </span>
                          </div>
                       </div>

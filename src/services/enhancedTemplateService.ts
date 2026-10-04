@@ -445,6 +445,7 @@ class EnhancedTemplateService {
 
   private loadCustomTemplates() {
     try {
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
       const stored = localStorage.getItem('gbcoder_custom_templates');
       if (stored) {
         const customTemplates = JSON.parse(stored) as CodeTemplate[];
@@ -463,6 +464,7 @@ class EnhancedTemplateService {
     
     // Persist metadata and payload to localStorage
     try {
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
       const stored = localStorage.getItem('gbcoder_custom_templates') || '[]';
       const customTemplates = JSON.parse(stored) as (CodeTemplate & { payload: TemplatePayload })[];
       // We store both metadata and payload in localStorage for custom templates
@@ -482,6 +484,7 @@ class EnhancedTemplateService {
 
   public getCustomTemplates(): CodeTemplate[] {
     try {
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') return [];
       const stored = localStorage.getItem('gbcoder_custom_templates');
       if (stored) {
         const customTemplates = JSON.parse(stored) as (CodeTemplate & { payload: TemplatePayload })[];
@@ -502,6 +505,7 @@ class EnhancedTemplateService {
     delete templateMetadata[id];
     delete templateRegistry[id];
     try {
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
       const stored = localStorage.getItem('gbcoder_custom_templates');
       if (stored) {
         const customTemplates = JSON.parse(stored) as (CodeTemplate & { payload: TemplatePayload })[];

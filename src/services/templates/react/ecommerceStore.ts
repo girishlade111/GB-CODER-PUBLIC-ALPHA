@@ -512,7 +512,7 @@ export default function ProductGrid({ activeCategory, setActiveCategory, searchQ
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
               <h3 style={{ fontSize: '17px', fontWeight: 800, margin: 0, color: '#fff' }}>{p.name}</h3>
-              <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--accent-cyan)' }}>${p.price}</span>
+              <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--accent-cyan)' }}>\${p.price}</span>
             </div>
 
             <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 16px', flex: 1 }}>{p.specs}</p>
@@ -601,7 +601,7 @@ export default function CartDrawer({ cart, onClose, onUpdateQty, showToast }) {
           {subtotal >= 300 ? (
             <span style={{ color: 'var(--accent-cyan)', fontWeight: 700 }}>🎉 You qualified for Free Express Shipping!</span>
           ) : (
-            <span style={{ color: 'var(--text-muted)' }}>Add <strong style={{ color: '#fff' }}>${300 - subtotal}</strong> more for Free Shipping.</span>
+            <span style={{ color: 'var(--text-muted)' }}>Add <strong style={{ color: '#fff' }}>\${300 - subtotal}</strong> more for Free Shipping.</span>
           )}
         </div>
 
@@ -615,7 +615,7 @@ export default function CartDrawer({ cart, onClose, onUpdateQty, showToast }) {
                 <span style={{ fontSize: '32px' }}>{item.image}</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>{item.name}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 600 }}>${item.price}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 600 }}>\${item.price}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button onClick={() => onUpdateQty(item.id, -1)} style={{ background: '#1e2434', border: 'none', color: '#fff', width: '26px', height: '26px', borderRadius: '4px', cursor: 'pointer' }}>-</button>
@@ -643,21 +643,21 @@ export default function CartDrawer({ cart, onClose, onUpdateQty, showToast }) {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '6px' }}>
             <span>Subtotal</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>\${subtotal.toFixed(2)}</span>
           </div>
           {discountAmount > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--accent-cyan)', marginBottom: '6px' }}>
               <span>Discount (20%)</span>
-              <span>-${discountAmount.toFixed(2)}</span>
+              <span>-\${discountAmount.toFixed(2)}</span>
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '14px' }}>
             <span>Shipping</span>
-            <span>{shipping === 0 ? 'FREE' : \`$\${shipping}.00\`}</span>
+            <span>{shipping === 0 ? 'FREE' : '$' + shipping + '.00'}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '20px' }}>
             <span>Total</span>
-            <span>${grandTotal.toFixed(2)}</span>
+            <span>\${grandTotal.toFixed(2)}</span>
           </div>
 
           <button
@@ -719,7 +719,7 @@ export default function ProductModal({ product, onClose, onAddToCart }) {
           <div>
             <span style={{ fontSize: '11px', color: 'var(--accent-neon)', fontWeight: 700, textTransform: 'uppercase' }}>{product.category}</span>
             <h2 style={{ fontSize: '24px', fontWeight: 800, margin: '4px 0 12px', color: '#fff' }}>{product.name}</h2>
-            <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--accent-cyan)', marginBottom: '16px' }}>${product.price}</div>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--accent-cyan)', marginBottom: '16px' }}>\${product.price}</div>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '24px' }}>
               Precision CNC engineered with aerospace titanium housing, low-loss transmission lines, and bespoke tuned transducers. Includes a 3-year international warranty.
             </p>
@@ -741,7 +741,7 @@ export default function ProductModal({ product, onClose, onAddToCart }) {
                 cursor: 'pointer'
               }}
             >
-              Add to Bag — ${product.price}
+              Add to Bag — \${product.price}
             </button>
           </div>
         </div>
