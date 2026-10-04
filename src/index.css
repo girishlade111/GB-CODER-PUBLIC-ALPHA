@@ -3,20 +3,28 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DESIGN.md — Cursor editorial system (light only)
+   DESIGN.md — warm-canvas editorial system
    ---------------------------------------------------------------------------
-   The brand is a single warm-cream editorial canvas. There is no dark theme:
-   DESIGN.md defines one system and the app now honours exactly that.
+   The base atmosphere is a tinted cream canvas — deliberately not the cool
+   gray-white every other AI brand uses.
 
-     canvas  #f7f7f4  warm cream page floor — never pure white
-     card    #ffffff  floats on cream via a 1px hairline, no shadow
-     ink     #26251e  warm near-black for display + body
-     accent  #f54e00  Cursor Orange — primary CTAs + wordmark, used scarcely
-     depth   hairline-only: #efeee8 / #e6e5e0 / #cfcdc4
+     canvas   #faf9f5  warm cream page floor (never pure white)
+     card     #efe9de  light cream content cards, one step darker
+     coral    #cc785c  the signature accent; scarce on single elements,
+                      generous on full-bleed callouts
+     ink      #141413  warm near-black
+     product  #181715  dark warm-navy product surface — code editors,
+                      terminal, console output. This is where the app shows
+                      its own chrome, exactly as DESIGN.md prescribes.
 
-   Type is Inter (the open-source substitute for the licensed CursorGothic) at
-   weight 400 with negative tracking on display, JetBrains Mono on every code
-   surface. Section rhythm is 80px.
+   Six surface modes alternate as the page's pacing rhythm:
+     cream canvas → cream card → dark product → cream → coral → dark footer
+
+   Type is a three-way editorial split:
+     Cormorant Garamond (stand-in for the licensed Copernicus / Tiempos
+     Headline) at weight 500 with negative tracking for display;
+     Inter (stand-in for StyreneB) for body and UI labels;
+     JetBrains Mono for every code surface.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
@@ -25,83 +33,110 @@
     --transition-normal: 200ms ease-out;
     --transition-slow: 300ms ease-out;
 
-    /* ── Surfaces: lightest floor → deepest wash ── */
-    --surface-canvas: #f7f7f4;   /* page floor */
-    --surface-base: #ffffff;     /* card */
-    --surface-raised: #ffffff;   /* header / tab bar on a card */
-    --surface-overlay: #fafaf7;  /* IDE pane, inset well */
-    --surface-hover: #efeee8;    /* hover + active wash */
-    --surface-strong: #e6e5e0;   /* badge / tag pill fill */
+    /* ── Surfaces: the cream ladder, lightest floor → deepest wash ── */
+    --surface-canvas: #faf9f5;   /* page floor, top nav */
+    --surface-base: #f5f0e8;     /* surface-soft: sidebar + panel chrome */
+    --surface-raised: #ffffff;   /* tab bars, popovers, modals */
+    --surface-overlay: #efe9de;  /* surface-card: inset wells, gutters */
+    --surface-hover: #eee8dc;    /* hover + active wash */
+    --surface-strong: #e8e0d2;   /* surface-cream-strong: badge / tag fill */
 
-    /* Hover/active wash, for layered use over any surface */
-    --hover-overlay: rgba(38, 37, 30, 0.04);
-    --active-overlay: rgba(38, 37, 30, 0.08);
+    /* Hover/active wash, for layered use over any cream surface */
+    --hover-overlay: rgba(20, 20, 19, 0.04);
+    --active-overlay: rgba(20, 20, 19, 0.08);
+
+    /* ── Dark product surfaces ──
+       DESIGN.md puts the product's own chrome — code editors, terminal
+       output — on a dark warm-navy. It is the one place depth comes from
+       surface contrast rather than hairlines, and it is why the editor is
+       readable for long sessions. */
+    --product: #181715;
+    --product-elevated: #252320;
+    --product-soft: #1f1e1b;
+    --product-border: rgba(250, 249, 245, 0.1);
+    --product-border-strong: rgba(250, 249, 245, 0.18);
+    --product-hover: rgba(250, 249, 245, 0.06);
+    --product-active: rgba(250, 249, 245, 0.12);
 
     /* ── Strokes: 3-tier warm hairline ── */
-    --stroke-soft: #efeee8;
-    --stroke-subtle: #e6e5e0;
-    --stroke-strong: #cfcdc4;
+    --stroke-soft: #ebe6df;
+    --stroke-subtle: #e6dfd8;
+    --stroke-strong: #d6cdbd;
 
     /* ── Text: 4-tier warm ink ── */
-    --text-primary: #26251e;
-    --text-secondary: #5a5852;
-    --text-muted: #807d72;
-    --text-faint: #a09c92;
+    --text-primary: #141413;
+    --text-secondary: #3d3d3a;
+    --text-muted: #6c6a64;
+    --text-faint: #8e8b82;
 
-    /* ── Accent: Cursor Orange, scarce ── */
-    --accent: #f54e00;
-    --accent-hover: #d04200;
-    --accent-muted: #d04200;
-    --accent-subtle: rgba(245, 78, 0, 0.08);
+    /* Text on the dark product surfaces — the cream tone, echoed */
+    --text-on-dark: #faf9f5;
+    --text-on-dark-soft: #a09d96;
+
+    /* ── Accent: warm coral, scarce ── */
+    --accent: #cc785c;
+    --accent-hover: #a9583e;
+    --accent-muted: #a9583e;
+    --accent-subtle: rgba(204, 120, 92, 0.12);
     --accent-fg: #ffffff;
+    --accent-disabled: #e6dfd8;
+
+    /* ── Companion accents: teal + amber, used sparingly on product chrome ── */
+    --accent-teal: #5db8a6;
+    --accent-teal-subtle: rgba(93, 184, 166, 0.14);
+    --accent-amber: #e8a55a;
+    --accent-amber-subtle: rgba(232, 165, 90, 0.14);
 
     /* ── Semantic ── */
-    --success: #1f8a65;
-    --success-subtle: rgba(31, 138, 101, 0.1);
-    --danger: #cf2d56;
-    --danger-subtle: rgba(207, 45, 86, 0.08);
-    --warning: #c08532;
-    --warning-subtle: rgba(192, 133, 50, 0.1);
+    --success: #5db872;
+    --success-subtle: rgba(93, 184, 72, 0.12);
+    --danger: #c64545;
+    --danger-subtle: rgba(198, 69, 69, 0.1);
+    --warning: #d4a017;
+    --warning-subtle: rgba(212, 160, 23, 0.12);
 
-    /* ── Timeline signature pastels (agent stages only) ── */
-    --timeline-thinking: #dfa88f;
-    --timeline-grep: #9fc9a2;
-    --timeline-read: #9fbbe0;
-    --timeline-edit: #c0a8dd;
-    --timeline-done: #c08532;
+    /* ── Timeline signature (agent stages only) ──
+       Re-tuned into the documented palette: amber → teal → neutral → coral →
+       green reads as a progression without introducing a fourth hue. */
+    --timeline-thinking: #e8a55a;
+    --timeline-grep: #5db8a6;
+    --timeline-read: #a8a49b;
+    --timeline-edit: #cc785c;
+    --timeline-done: #5db872;
 
-    /* ── Radius: 4 tags · 6 rows · 8 controls · 12 cards · pill ── */
+    /* ── Radius: 4 tags · 6 rows · 8 controls · 12 cards · 16 hero · pill ── */
     --radius-xs: 4px;
     --radius-sm: 6px;
     --radius-md: 8px;
     --radius-lg: 12px;
     --radius-xl: 16px;
 
-    /* Depth is hairline-only — no drop shadows anywhere in the system. */
+    /* Depth is hairline-only on cream; dark product surfaces need no shadow. */
     --shadow-elevated: none;
 
     /* ── Type ── */
-    --font-sans: 'Inter', 'CursorGothic', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-sans: 'Inter', 'StyreneB', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-display: 'Cormorant Garamond', 'Copernicus', 'Tiempos Headline', 'EB Garamond', Garamond, "Times New Roman", serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-    /* ── Monaco / editor chrome mappings ── */
-    --vscode-bg-editor: var(--surface-overlay);
+    /* ── Monaco / editor chrome mappings (dark product surface) ── */
+    --vscode-bg-editor: var(--product);
     --vscode-bg-sidebar: var(--surface-base);
     --vscode-bg-activitybar: var(--surface-base);
-    --vscode-bg-panel: var(--surface-base);
-    --vscode-bg-statusbar: var(--surface-base);
+    --vscode-bg-panel: var(--product);
+    --vscode-bg-statusbar: var(--product-soft);
     --vscode-border: var(--stroke-subtle);
     --vscode-border-subtle: var(--stroke-soft);
     --vscode-border-light: var(--stroke-soft);
     --vscode-text-primary: var(--text-primary);
     --vscode-text-secondary: var(--text-secondary);
     --vscode-text-link: var(--accent);
-    --vscode-selection: rgba(245, 78, 0, 0.14);
-    --vscode-line-highlight: var(--surface-overlay);
+    --vscode-selection: rgba(204, 120, 92, 0.24);
+    --vscode-line-highlight: rgba(250, 249, 245, 0.04);
     --vscode-cursor: var(--accent);
     --vscode-error: var(--danger);
     --vscode-warning: var(--warning);
-    --vscode-info: var(--accent);
+    --vscode-info: var(--accent-teal);
     --vscode-success: var(--success);
 }
 
@@ -122,29 +157,47 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Display type: weight 400 with negative tracking — the magazine voice.
-   Bold display reads as "tech site"; DESIGN.md forbids it. */
+/*
+   The display/body split is editorial and unbreakable.
+   h1–h2 are display-md and above → serif, weight 500, negative tracking.
+   h3 and below are title-lg and below → sans, weight 500.
+   Bolding a serif display reads as bombastic, so display weight never exceeds
+   500.
+*/
 h1 {
-    font-size: 26px;
-    font-weight: 400;
-    line-height: 1.25;
-    letter-spacing: -0.325px;
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
     color: var(--text-primary);
 }
 
 h2 {
-    font-size: 22px;
-    font-weight: 400;
-    line-height: 1.3;
-    letter-spacing: -0.11px;
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+    color: var(--text-primary);
+}
+
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 500;
     color: var(--text-primary);
 }
 
 h3 {
     font-size: 18px;
-    font-weight: 600;
     line-height: 1.4;
-    color: var(--text-primary);
+}
+
+h4 {
+    font-size: 16px;
+    line-height: 1.4;
 }
 
 code,
@@ -155,10 +208,10 @@ samp,
     font-family: var(--font-mono);
 }
 
-/* Focus ring: a quiet accent border shift rather than a glow. */
+/* Focus ring: a quiet coral border shift plus a 15% outer wash. */
 *:focus-visible {
     outline: none !important;
-    box-shadow: none !important;
+    box-shadow: 0 0 0 3px var(--accent-subtle) !important;
     border-color: var(--accent) !important;
 }
 
@@ -202,6 +255,14 @@ button:active:not(:disabled) {
     box-shadow: none !important;
 }
 
+/* Dark product surfaces get a light-tinted scrollbar, since the hairline ramp
+   would otherwise vanish against the navy. */
+.bg-product ::-webkit-scrollbar-thumb,
+.bg-product-elevated ::-webkit-scrollbar-thumb {
+    background: var(--product-border-strong);
+    background-clip: content-box;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    LEGACY PALETTE BRIDGE  ·  temporary
    ---------------------------------------------------------------------------
@@ -215,12 +276,12 @@ button:active:not(:disabled) {
    `.bg-gray-900` rule never matches and which were silently rendering as cool
    near-black on the cream canvas.
 
-   Delete this whole block in Stage 4b once the component migration lands.
+   Delete this whole block once the component migration lands.
    ───────────────────────────────────────────────────────────────────────────── */
 @layer utilities {
 
     /* ── Backgrounds ──
-       Legacy dark ladder → DESIGN.md surface ladder (order inverts: the
+       Legacy dark ladder → DESIGN.md cream ladder (order inverts: the
        darkest legacy token is the lightest surface). */
     .bg-gray-950 { background-color: var(--surface-canvas) !important; }
     .bg-gray-900 { background-color: var(--surface-base) !important; }
@@ -237,14 +298,14 @@ button:active:not(:disabled) {
     .bg-white\/95,
     .bg-white\/90 { background-color: var(--surface-base) !important; }
 
-    /* Opacity-modified darks → translucent surfaces, never near-black. */
-    .bg-gray-900\/90 { background-color: rgba(255, 255, 255, 0.94) !important; }
+    /* Opacity-modified darks → translucent cream, never near-black. */
+    .bg-gray-900\/90 { background-color: rgba(250, 249, 245, 0.96) !important; }
     .bg-gray-900\/50,
-    .bg-gray-800\/50 { background-color: rgba(255, 255, 255, 0.7) !important; }
+    .bg-gray-800\/50 { background-color: rgba(250, 249, 245, 0.72) !important; }
     .bg-gray-900\/20,
-    .bg-gray-800\/30 { background-color: rgba(255, 255, 255, 0.5) !important; }
+    .bg-gray-800\/30 { background-color: rgba(250, 249, 245, 0.5) !important; }
     .bg-gray-950\/60,
-    .bg-gray-700\/50 { background-color: rgba(247, 247, 244, 0.75) !important; }
+    .bg-gray-700\/50 { background-color: rgba(250, 249, 245, 0.78) !important; }
 
     /* White translucency was a hover/press wash on dark; on cream it would be
        invisible, so it becomes an ink wash at the same intent-weighted level. */
@@ -260,12 +321,12 @@ button:active:not(:disabled) {
     .bg-black\/20 { background-color: var(--hover-overlay) !important; }
     .bg-black\/30,
     .bg-black\/40,
-    .bg-black\/50 { background-color: rgba(38, 37, 30, 0.35) !important; }
+    .bg-black\/50 { background-color: rgba(20, 20, 19, 0.35) !important; }
     .bg-black\/60,
     .bg-black\/65,
     .bg-black\/70,
     .bg-black\/75,
-    .bg-black\/80 { background-color: rgba(38, 37, 30, 0.45) !important; }
+    .bg-black\/80 { background-color: rgba(20, 20, 19, 0.45) !important; }
 
     /* ── Borders ── */
     .border-gray-800,
@@ -291,8 +352,7 @@ button:active:not(:disabled) {
     /* ── Text ──
        4-tier target. Legacy 900/800 → ink, 700/600 → body, 500/400 → muted,
        300/200/100 → faint. `text-white` was the dark-theme default text and
-       becomes ink; on an accent fill it must be `text-accent-fg` instead
-       (Stage 2 handles those call sites). */
+       becomes ink; on an accent fill it must be `text-accent-fg` instead. */
     .text-gray-900,
     .text-gray-800 { color: var(--text-primary) !important; }
     .text-gray-700,
@@ -308,7 +368,7 @@ button:active:not(:disabled) {
     .placeholder-gray-500::placeholder,
     .placeholder-gray-400::placeholder { color: var(--text-faint) !important; }
 
-    /* ── Rings → Cursor Orange ── */
+    /* ── Rings → coral ── */
     .ring-gray-500,
     .ring-gray-700 { --tw-ring-color: var(--stroke-strong) !important; }
     .ring-blue-500,
@@ -318,7 +378,7 @@ button:active:not(:disabled) {
 
     /* ── Non-neutral accents → DESIGN.md semantic tokens ──
        The system has exactly one brand colour, so every third-party hue
-       collapses onto accent / success / danger. */
+       collapses onto accent / teal / success / danger. */
     .border-blue-500 { border-color: var(--accent) !important; }
     .bg-blue-500,
     .bg-blue-600 { background-color: var(--accent) !important; }
@@ -370,16 +430,26 @@ button:active:not(:disabled) {
     .text-orange-500,
     .text-orange-600 { color: var(--accent) !important; }
     .text-cyan-400,
-    .text-teal-400,
+    .text-teal-400 { color: var(--accent-teal) !important; }
     .text-sky-300,
     .text-sky-400 { color: var(--text-secondary) !important; }
     .text-green-500\/50,
     .text-green-400\/50 { color: var(--success) !important; }
 
+    /* Dark-on-dark alert strips (legacy `bg-red-900/60 border-red-700`) now
+       sit on the product surface rather than a grey wash. */
+    .bg-red-900\/60,
+    .bg-yellow-900\/60 { background-color: var(--product-elevated) !important; }
+    .border-red-700,
+    .border-red-800,
+    .border-red-900 { border-color: var(--danger) !important; }
+    .border-yellow-700,
+    .border-yellow-800,
+    .border-yellow-900 { border-color: var(--warning) !important; }
+
     /* ── State-prefixed variants ──
        A `.bg-gray-700` rule cannot match `hover:bg-gray-700`, so these needed
-       their own definitions. Previously unhandled: 54 hover:bg-gray-700 were
-       painting a near-black wash on the cream canvas. */
+       their own definitions. */
     .hover\:bg-gray-950:hover,
     .hover\:bg-gray-900:hover { background-color: var(--surface-hover) !important; }
     .hover\:bg-gray-800:hover,
@@ -437,18 +507,28 @@ button:active:not(:disabled) {
    ───────────────────────────────────────────────────────────────────────────── */
 @layer components {
 
-    /* feature-card · ide-mockup-card · pricing-tier-card — hairline, no shadow */
+    /* feature-card · model-comparison-card · pricing-tier-card — cream, hairline,
+       no shadow. Depth comes from the card being one step darker than canvas. */
     .quiet-card {
-        background-color: var(--surface-base);
+        background-color: var(--surface-overlay);
         border: 1px solid var(--stroke-subtle);
         border-radius: 12px;
     }
 
-    /* caption-uppercase: section labels, timeline pill labels */
+    /* display type — the serif voice, for one-off headings outside the base
+       element rules. */
+    .font-display {
+        font-family: var(--font-display);
+        font-weight: 500;
+        letter-spacing: -0.3px;
+    }
+
+    /* caption-uppercase: section labels, tab labels */
     .quiet-section-label {
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.88px;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.4;
+        letter-spacing: 1.5px;
         text-transform: uppercase;
         color: var(--text-muted);
     }
@@ -464,28 +544,29 @@ button:active:not(:disabled) {
     .quiet-row:last-child { border-bottom: none; }
 
     .quiet-row-title {
-        font-size: 13.5px;
+        font-size: 14px;
         font-weight: 500;
         color: var(--text-primary);
     }
 
     .quiet-row-desc {
-        font-size: 12.5px;
+        font-size: 13px;
         color: var(--text-secondary);
         max-width: 480px;
-        line-height: 1.4;
+        line-height: 1.5;
     }
 
-    /* button-secondary: white pill on cream, hairline-strong border */
+    /* button-secondary: cream button with a hairline outline */
     .quiet-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        background-color: var(--surface-base);
-        border: 1px solid var(--stroke-strong);
+        background-color: var(--surface-canvas);
+        border: 1px solid var(--stroke-subtle);
         border-radius: 8px;
-        padding: 9px 17px;
+        padding: 12px 20px;
+        height: 40px;
         font-size: 14px;
         font-weight: 500;
         line-height: 1;
@@ -495,7 +576,7 @@ button:active:not(:disabled) {
 
     .quiet-btn:hover:not(:disabled) { background-color: var(--surface-hover); }
 
-    /* button-primary: the signature Cursor Orange CTA */
+    /* button-primary: the signature coral CTA. Active state darkens. */
     .quiet-btn-accent {
         display: inline-flex;
         align-items: center;
@@ -504,7 +585,8 @@ button:active:not(:disabled) {
         background-color: var(--accent);
         border: 1px solid var(--accent);
         border-radius: 8px;
-        padding: 10px 18px;
+        padding: 12px 20px;
+        height: 40px;
         font-size: 14px;
         font-weight: 500;
         line-height: 1;
@@ -517,7 +599,14 @@ button:active:not(:disabled) {
         border-color: var(--accent-hover);
     }
 
-    /* button-download: larger ink-on-canvas CTA */
+    .quiet-btn-accent:disabled {
+        background-color: var(--accent-disabled);
+        border-color: var(--accent-disabled);
+        color: var(--text-muted);
+    }
+
+    /* button-ink: the inverse CTA — ink fill on cream, used for the one
+       primary action a cream band cannot carry in coral. */
     .quiet-btn-ink {
         display: inline-flex;
         align-items: center;
@@ -536,7 +625,27 @@ button:active:not(:disabled) {
 
     .quiet-btn-ink:hover:not(:disabled) { opacity: 0.88; }
 
-    /* button-tertiary-text */
+    /* button-secondary-on-dark: stays dark, never inverts to a light fill */
+    .quiet-btn-dark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background-color: var(--product-elevated);
+        border: 1px solid var(--product-border);
+        border-radius: 8px;
+        padding: 12px 20px;
+        height: 40px;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1;
+        color: var(--text-on-dark);
+        transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .quiet-btn-dark:hover:not(:disabled) { background-color: var(--product-active); }
+
+    /* button-text-link */
     .quiet-btn-text {
         display: inline-flex;
         align-items: center;
@@ -549,14 +658,24 @@ button:active:not(:disabled) {
 
     .quiet-btn-text:hover:not(:disabled) { color: var(--accent); }
 
-    /* text-input: 8px radius, 44px tall, hairline border */
+    /* text-link: the coral inline link — one of the system's best small details */
+    .quiet-link {
+        color: var(--accent);
+        transition: color var(--transition-fast), opacity var(--transition-fast);
+    }
+
+    .quiet-link:hover { color: var(--accent-hover); }
+
+    /* text-input: 8px radius, 40px tall, hairline border.
+       Focus shifts the border to coral with a 12% outer wash. */
     .quiet-input {
         width: 100%;
-        background-color: var(--surface-base);
+        background-color: var(--surface-canvas);
         border: 1px solid var(--stroke-subtle);
         border-radius: 8px;
-        padding: 12px 16px;
-        font-size: 14px;
+        padding: 10px 14px;
+        height: 40px;
+        font-size: 16px;
         color: var(--text-primary);
         outline: none;
         transition: border-color var(--transition-fast);
@@ -565,16 +684,15 @@ button:active:not(:disabled) {
     .quiet-input:focus { border-color: var(--accent); }
     .quiet-input::placeholder { color: var(--text-faint); }
 
-    /* badge-pill: surface-strong fill, caption-uppercase */
+    /* badge-pill: cream-strong fill, caption weight */
     .quiet-badge {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 4px 10px;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.88px;
-        text-transform: uppercase;
+        padding: 4px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.4;
         border-radius: 9999px;
         background-color: var(--surface-strong);
         color: var(--text-primary);
@@ -586,8 +704,29 @@ button:active:not(:disabled) {
     }
 
     .quiet-badge-accent {
-        background-color: var(--accent-subtle);
-        color: var(--accent);
+        background-color: var(--accent);
+        color: var(--accent-fg);
+        font-size: 12px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+
+    /* category-tab / category-tab-active */
+    .quiet-tab {
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+        color: var(--text-muted);
+        transition: background-color var(--transition-fast), color var(--transition-fast);
+    }
+
+    .quiet-tab:hover { color: var(--text-primary); }
+
+    .quiet-tab-active {
+        background-color: var(--surface-overlay);
+        color: var(--text-primary);
     }
 
     /* Toggle: pill switch, success when on */
@@ -612,7 +751,7 @@ button:active:not(:disabled) {
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background-color: var(--surface-base);
+        background-color: var(--surface-raised);
         border: 1px solid var(--stroke-strong);
         transition: transform var(--transition-fast);
     }
@@ -620,30 +759,44 @@ button:active:not(:disabled) {
     .quiet-toggle[aria-checked="true"] .quiet-toggle-knob,
     .quiet-toggle.active .quiet-toggle-knob { transform: translateX(16px); }
 
-    /* ide-pane */
+    /* ide-pane: an inset well on cream */
     .cursor-ide-pane {
         background-color: var(--surface-overlay);
         border-radius: 8px;
         padding: 16px;
         font-family: var(--font-mono);
-        font-size: 13px;
+        font-size: 14px;
         color: var(--text-secondary);
     }
 
-    /* code-block */
+    /* code-window-card: the signature dark product surface. Code lives on the
+       product navy; it never returns to cream. */
+    .product-code-block {
+        background-color: var(--product-soft);
+        border: 1px solid var(--product-border);
+        border-radius: 8px;
+        padding: 20px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-on-dark);
+        overflow-x: auto;
+    }
+
+    /* code-block on cream — for inline snippets, never for the editor itself */
     .cursor-code-block {
-        background-color: var(--surface-base);
+        background-color: var(--surface-canvas);
         border: 1px solid var(--stroke-subtle);
         border-radius: 12px;
         padding: 20px;
         font-family: var(--font-mono);
-        font-size: 13px;
-        line-height: 1.5;
+        font-size: 14px;
+        line-height: 1.6;
         color: var(--text-primary);
         overflow-x: auto;
     }
 
-    /* ── AI timeline signature: five stage pastels ──
+    /* ── AI timeline signature: five stages ──
        Scoped to in-product agent timeline visualizations only. */
     .timeline-pill {
         display: inline-flex;
@@ -663,8 +816,8 @@ button:active:not(:disabled) {
     .timeline-pill-thinking { background-color: var(--timeline-thinking); }
     .timeline-pill-grep { background-color: var(--timeline-grep); }
     .timeline-pill-read { background-color: var(--timeline-read); }
-    .timeline-pill-edit { background-color: var(--timeline-edit); }
-    .timeline-pill-done { background-color: var(--timeline-done); color: #ffffff; }
+    .timeline-pill-edit { background-color: var(--timeline-edit); color: #ffffff; }
+    .timeline-pill-done { background-color: var(--timeline-done); color: #141413; }
 
     /* Icon-button hover wash */
     .hover-highlight {
@@ -672,15 +825,30 @@ button:active:not(:disabled) {
     }
 
     .hover-highlight:hover { background-color: var(--hover-overlay); }
+
+    /* Same wash, tuned for the dark product surfaces */
+    .hover-highlight-dark {
+        transition: background-color var(--transition-fast), color var(--transition-fast);
+    }
+
+    .hover-highlight-dark:hover { background-color: var(--product-hover); }
 }
 
 /* ─── Utilities ───────────────────────────────────────────────────────────── */
 
 @layer utilities {
 
-    /* Jump-to-line highlight: accent wash with an ink-anchored left bar */
+    /* Jump-to-line highlight: coral wash with an ink-anchored left bar */
     .gb-jump-highlight {
         background-color: var(--accent-subtle);
+        box-shadow: inset 3px 0 0 0 var(--accent) !important;
+        transition: background-color var(--transition-normal);
+    }
+
+    /* Same highlight on the dark editor surface, where the cream wash would
+       never be visible. */
+    .gb-jump-highlight-dark {
+        background-color: rgba(204, 120, 92, 0.18);
         box-shadow: inset 3px 0 0 0 var(--accent) !important;
         transition: background-color var(--transition-normal);
     }
