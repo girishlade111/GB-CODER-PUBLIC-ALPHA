@@ -669,7 +669,6 @@ button { font: inherit; color: inherit; }
 }
 .toast[hidden] { display: none; }
 .toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
-.toast[hidden][data-shown] { display: none; }
 
 .is-shake { animation: shake .38s var(--ease); }
 
@@ -843,13 +842,13 @@ function initTabs() {
 
   function select(name, focus) {
     wrap.setAttribute('data-active', name);
+    panels.login.hidden = name !== 'login';
+    panels.signup.hidden = name !== 'signup';
     for (var i = 0; i < buttons.length; i++) {
       var on = buttons[i].getAttribute('id') === 'tab-' + name;
       buttons[i].classList.toggle('is-active', on);
       buttons[i].setAttribute('aria-selected', on ? 'true' : 'false');
       buttons[i].setAttribute('tabindex', on ? '0' : '-1');
-      panels[name === 'login' ? 'signup' : 'login'].hidden = true;
-      panels[name].hidden = !on;
       if (on && focus) buttons[i].focus();
     }
   }
