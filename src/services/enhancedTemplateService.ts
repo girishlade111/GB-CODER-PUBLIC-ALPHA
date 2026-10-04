@@ -77,6 +77,16 @@ import vueAgencyPortfolio from './templates/vue/agencyPortfolio';
 import nextjsAiStartup from './templates/nextjs/aiStartup';
 import nextjsCrmPlatform from './templates/nextjs/crmPlatform';
 
+// Phase 4 Enterprise Domain Templates
+import landingOmniflow from './templates/landing/omniflow';
+import dashboardAnalytics from './templates/dashboard/analytics';
+import aiAgentStudio from './templates/ai-agents/agentStudio';
+import portfolioArchitect from './templates/portfolio/architect';
+import utilityDevpulse from './templates/utility/devpulse';
+import saasTelemetry from './templates/saas/telemetry';
+import startupFintech from './templates/startup/fintech';
+import ecommerceBoutique from './templates/ecommerce/boutique';
+
 // Exported payload type
 export type TemplatePayload = 
   | { html: string; css: string; javascript: string }
@@ -111,6 +121,14 @@ const templateRegistry: Record<string, TemplatePayload | (() => Promise<Template
   'business-local': businessLocal,
   'startup-waitlist': startupWaitlist,
   'saas-pricing': saasPricing,
+  'landing-omniflow': landingOmniflow,
+  'dashboard-analytics': dashboardAnalytics,
+  'ai-agent-studio': aiAgentStudio,
+  'portfolio-architect': portfolioArchitect,
+  'utility-devpulse': utilityDevpulse,
+  'saas-telemetry': saasTelemetry,
+  'startup-fintech': startupFintech,
+  'ecommerce-boutique': ecommerceBoutique,
 };
 
 // Template metadata
@@ -425,6 +443,102 @@ const templateMetadata: Record<string, CodeTemplate> = {
     difficulty: 'advanced',
     features: ['App Router nested layouts with persistent command sidebar', 'Route navigation: /dashboard, /pipeline, /customers, /analytics', 'Multi-stage Sales Pipeline Kanban with click stage advancement & total deal value', 'Customer & Account directory with instant search, status pills, and sorting', 'Revenue forecasting charts with quarterly target progress indicators', 'Enterprise aesthetic: tabular data typography, crisp badges, micro-interactions'],
     projectType: 'react', // App Router conventions emulated client-side
+    author: 'GB Coder',
+  },
+  'landing-omniflow': {
+    id: 'landing-omniflow',
+    name: 'OmniFlow Cloud Platform',
+    description: 'High-converting enterprise infrastructure landing page: animated gradient-glow hero, dynamic tabbed interactive platform previewer, annual pricing discount calculator, and FAQ accordion.',
+    category: 'landing',
+    subcategory: 'Cloud Infrastructure',
+    tags: ['landing', 'b2b', 'saas', 'cloud', 'animation', 'pricing'],
+    difficulty: 'intermediate',
+    features: ['Interactive pipeline preview canvas with dynamic tab switcher', 'Annual billing toggle with 20% savings calculator', 'Animated metric stat cards with real-time counters', 'Interactive FAQ accordion with smooth open/close', 'Newsletter lead capture with live feedback', 'Responsive navigation with mobile toggle'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'dashboard-analytics': {
+    id: 'dashboard-analytics',
+    name: 'Apex Operations & Analytics Console',
+    description: 'Mission-control operations dashboard: interactive SVG time-series charts, regional edge mesh status meters, searchable microservices table, and live streaming audit log.',
+    category: 'dashboard',
+    subcategory: 'Operations',
+    tags: ['dashboard', 'analytics', 'charts', 'telemetry', 'operations', 'admin'],
+    difficulty: 'advanced',
+    features: ['SVG time-series ingress volume chart with dual line curves', 'Regional edge latency health indicators with animated bars', 'Searchable services table with instant filter and restart actions', 'Live automated audit log stream with pause/resume and level filters', 'KPI metric cards with delta comparison pills', 'Time range selector (1H, 24H, 7D, 30D)'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'ai-agent-studio': {
+    id: 'ai-agent-studio',
+    name: 'Cognition Agent Studio',
+    description: 'Autonomous multi-agent orchestration canvas: multi-agent fleet status cards, visual execution pipeline DAG, live chain-of-thought streaming, and hyperparameter controls.',
+    category: 'ai-agents',
+    subcategory: 'Multi-Agent',
+    tags: ['ai', 'agents', 'workflow', 'orchestration', 'llm', 'studio'],
+    difficulty: 'advanced',
+    features: ['Multi-agent fleet selector (Architect, Researcher, Coder, Auditor)', 'Interactive Pipeline DAG with status indicators', 'Live chain-of-thought reasoning stream & artifact viewer', 'Real-time hyperparameter sliders (Temperature, Autonomous Loops)', 'Pre-configured scenario selector for instant demos', 'Client-side isolated simulation mode'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'portfolio-architect': {
+    id: 'portfolio-architect',
+    name: 'Aether Principal Architect',
+    description: 'Minimalist staff architect portfolio: kinetic typography hero, filterable architecture case studies, interactive case study modal with architecture diagrams, and interactive contact terminal.',
+    category: 'portfolio',
+    subcategory: 'Staff Engineer',
+    tags: ['portfolio', 'architect', 'minimal', 'terminal', 'dark-mode', 'case-study'],
+    difficulty: 'intermediate',
+    features: ['Kinetic typography headline with serif accent highlights', 'Filterable case studies (Distributed Systems, AI Infrastructure, Fintech)', 'Interactive modal popup with problem, solution, and outcome metrics', 'Interactive command-line contact terminal with instant feedback', 'One-click copy email button with clipboard integration', 'Availability badge for advisory / consulting'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'utility-devpulse': {
+    id: 'utility-devpulse',
+    name: 'DevPulse Universal Developer Toolbox',
+    description: 'Complete client-side developer toolbox: JWT token decoder with claim inspector, live Regex studio with group highlighter, JSON formatter/minifier, UUID/NanoID generator, and Base64 encoder.',
+    category: 'utility',
+    subcategory: 'Developer Tools',
+    tags: ['utility', 'tools', 'jwt', 'regex', 'json', 'uuid', 'base64'],
+    difficulty: 'intermediate',
+    features: ['JWT Inspector with live decoded header & payload claims', 'Regex Studio with live match count and real-time color highlighting', 'JSON Formatter with 2-space beautification and minification', 'Cryptographic UUIDv4, NanoID, and 256-bit API key generator', 'Base64 and URL encoder/decoder with one-click copy', '100% Client-side execution with zero external data leaks'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'saas-telemetry': {
+    id: 'saas-telemetry',
+    name: 'PulseGuard APM Telemetry',
+    description: 'High-performance cloud APM & incident triage suite: 24-node Kubernetes cluster heatmap, live P1 incident simulator with auto-remediation, latency charts, and PromQL query console.',
+    category: 'saas',
+    subcategory: 'APM & Observability',
+    tags: ['saas', 'apm', 'telemetry', 'kubernetes', 'monitoring', 'incident-ops'],
+    difficulty: 'advanced',
+    features: ['Interactive 24-node Kubernetes cluster heatmap with CPU load meters', 'Live P1 Outage Simulator with visual degradation and on-call pager', 'One-click automated remediation (cordon & drain pods)', 'PromQL query execution bar with sample metrics', 'Dual-line p95 and p99 latency SVG charts', 'Cluster health summary indicators'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'startup-fintech': {
+    id: 'startup-fintech',
+    name: 'Starlight Global Fintech',
+    description: 'YC-grade programmable payment infrastructure startup site: customizable 3D-feel corporate virtual cards, dynamic interchange ROI calculator slider, and multi-language API playground.',
+    category: 'startup',
+    subcategory: 'Fintech Rails',
+    tags: ['startup', 'fintech', 'payments', 'cards', 'api', 'calculator'],
+    difficulty: 'advanced',
+    features: ['Interactive virtual charge card visualizer with Obsidian/Titanium/Cyber skins', 'Card reveal, freeze, and issue-new simulation buttons', 'Annual processing volume slider with dynamic interchange savings ROI', 'Interactive API Playground (cURL, Node.js, Python) with sandbox runner', 'Live payment execution status simulator', 'Global payment metrics and network indicators'],
+    projectType: 'plain',
+    author: 'GB Coder',
+  },
+  'ecommerce-boutique': {
+    id: 'ecommerce-boutique',
+    name: 'Luminary Luxury Atelier',
+    description: 'Minimalist high-end electronics & lifestyle marketplace: category filters, interactive sliding cart drawer, free shipping milestone progress bar, wishlist toggles, and promo code discounts.',
+    category: 'ecommerce',
+    subcategory: 'Luxury Lifestyle',
+    tags: ['ecommerce', 'store', 'luxury', 'cart', 'drawer', 'checkout'],
+    difficulty: 'advanced',
+    features: ['Category filter pills (Acoustics, Precision Input, Lighting)', 'Interactive slide-out Cart Drawer with real-time price calculations', 'Dynamic free shipping milestone tracker with animated progress bar', 'Promo code discount engine (LUMINARY15 for 15% off)', 'Wishlist heart toggle with active item count badge', 'Simulated 1-click Apple Pay & Stripe checkout flow'],
+    projectType: 'plain',
     author: 'GB Coder',
   },
 };
