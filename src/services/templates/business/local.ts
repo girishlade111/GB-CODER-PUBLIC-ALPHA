@@ -656,7 +656,7 @@ export default {
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 86px; }
+html { scroll-padding-top: 86px; }
 body {
   margin: 0; padding: 0;
   background: var(--cream); color: var(--ink);
@@ -1051,7 +1051,6 @@ textarea { font: inherit; resize: vertical; }
 
 /* ------------------------------------------------------- reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
   *, *::before, *::after {
     animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;

@@ -394,7 +394,7 @@ export default {
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 92px; }
+html { scroll-padding-top: 92px; }
 body {
   margin: 0;
   padding: 0;
@@ -906,7 +906,6 @@ a.pill:hover { background: var(--accent); color: var(--on-accent); }
 
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
   *, *::before, *::after {
     animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;

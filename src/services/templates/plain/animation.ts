@@ -469,7 +469,7 @@ export default {
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 86px; }
+html { scroll-padding-top: 86px; }
 body {
   margin: 0; padding: 0;
   background: var(--bg); color: var(--ink);
@@ -930,7 +930,6 @@ html.sim-reduce *, html.sim-reduce *::before, html.sim-reduce *::after {
   animation-duration: .001ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: .001ms !important;
-  scroll-behavior: auto !important;
 }
 html.sim-reduce .stage.is-playing .rise,
 html.sim-reduce .stage.is-playing .slide-left,
@@ -943,7 +942,6 @@ html.sim-reduce .magnet { transform: none !important; }
 
 /* ------------------------------------------------------- system preference */
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
   *, *::before, *::after {
     animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;
