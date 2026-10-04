@@ -656,7 +656,7 @@ export default {
        * three server-side mechanisms are reproduced client-side:
        *
        *   1. ROUTING. \`ROUTES\` below is the explicit table Next.js derives from the
-       *      directory structure. \`matchRoute\` in \`lib/router.js\` matches the current
+       *      directory structure. \`matchRoute\` in \`lib/router.jsx\` matches the current
        *      path against it and captures the \`[slug]\` segment into \`params\`, giving
        *      the page component the identical prop shape it would receive on a server.
        *
@@ -679,7 +679,7 @@ export default {
       import PostPage from './app/blog/[slug]/page.jsx';
       import NotFound from './app/not-found.jsx';
 
-      import { matchRoute, useRouter } from './lib/router.js';
+      import { matchRoute, useRouter } from './lib/router.jsx';
       import { postBySlug } from './lib/posts.js';
 
       /**
@@ -779,7 +779,7 @@ export default {
     {
       path: 'app/blog/[slug]/page.jsx',
       content: `      import { useRef } from 'react';
-      import { Link } from '../../../lib/router.js';
+      import { Link } from '../../../lib/router.jsx';
       import MDXBlock from '../../../components/MDXBlock.jsx';
       import TableOfContents from '../../../components/TableOfContents.jsx';
       import PostCard from '../../../components/PostCard.jsx';
@@ -804,7 +804,7 @@ export default {
        * by the filesystem:
        *
        *   - \`App.jsx\` holds a route table and matches the current path against it. The
-       *     \`[slug]\` entry is matched by hand in \`lib/router.js\`, and the captured
+       *     \`[slug]\` entry is matched by hand in \`lib/router.jsx\`, and the captured
        *     segment is passed down as \`params\` - the identical prop shape.
        *   - \`generateStaticParams\` is exported so the shape is visible, and \`App.jsx\`
        *     calls it to seed the slug list.
@@ -948,7 +948,7 @@ export default {
     {
       path: 'app/blog/page.jsx',
       content: `      import { useMemo } from 'react';
-      import { Link } from '../../lib/router.js';
+      import { Link } from '../../lib/router.jsx';
       import PostCard from '../../components/PostCard.jsx';
       import { SORTED_POSTS, TAGS } from '../../lib/posts.js';
 
@@ -1147,7 +1147,7 @@ export default {
     },
     {
       path: 'app/not-found.jsx',
-      content: `      import { Link } from '../../lib/router.js';
+      content: `      import { Link } from '../../lib/router.jsx';
 
       /**
        * \`app/not-found.jsx\` — the App Router's 404 boundary.
@@ -1189,7 +1189,7 @@ export default {
     },
     {
       path: 'app/page.jsx',
-      content: `      import { Link } from '../lib/router.js';
+      content: `      import { Link } from '../lib/router.jsx';
       import PostCard from '../components/PostCard.jsx';
       import { SORTED_POSTS, TAGS, authorOf } from '../lib/posts.js';
 
@@ -1556,7 +1556,7 @@ export default {
     },
     {
       path: 'components/PostCard.jsx',
-      content: `      import { Link } from '../lib/router.js';
+      content: `      import { Link } from '../lib/router.jsx';
       import { authorOf, formatDate, timeSince } from '../lib/posts.js';
 
       /**
@@ -1614,7 +1614,7 @@ export default {
     },
     {
       path: 'components/SiteFooter.jsx',
-      content: `      import { Link } from '../lib/router.js';
+      content: `      import { Link } from '../lib/router.jsx';
       import { SORTED_POSTS } from '../lib/posts.js';
 
       const columns = [
@@ -1730,7 +1730,7 @@ export default {
     {
       path: 'components/SiteHeader.jsx',
       content: `      import { useEffect, useState } from 'react';
-      import { Link } from '../lib/router.js';
+      import { Link } from '../lib/router.jsx';
       import { TAGS } from '../lib/posts.js';
 
       const Mark = () => (
@@ -1882,7 +1882,7 @@ export default {
     {
       path: 'components/TableOfContents.jsx',
       content: `      import { useCallback, useEffect, useState } from 'react';
-      import { Link } from '../lib/router.js';
+      import { Link } from '../lib/router.jsx';
       import { extractHeadings } from '../lib/markdown.js';
 
       /**
@@ -2686,7 +2686,7 @@ export default {
       }`,
     },
     {
-      path: 'lib/router.js',
+      path: 'lib/router.jsx',
       content: `      /**
        * A minimal client-side router built on the History API.
        *
