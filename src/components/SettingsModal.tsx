@@ -260,10 +260,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                 <select
                                     value={settings.aiProvider || 'inception'}
                                     onChange={(e) => updateSettings({ aiProvider: e.target.value as AIProviderId })}
-                                    className="bg-product-elevated border border-stroke-dark text-content-on-dark text-[13px] rounded-md px-3 py-1.5 focus:border-accent outline-none transition-colors"
+                                    className="bg-product-elevated border border-stroke-dark text-content-on-dark text-[13px] rounded-md px-3 py-1.5 focus:border-accent outline-none transition-colors cursor-pointer"
                                 >
                                     {AI_PROVIDERS.map((provider) => (
-                                        <option key={provider.id} value={provider.id}>
+                                        <option
+                                            key={provider.id}
+                                            value={provider.id}
+                                            style={{ backgroundColor: '#181715', color: '#faf9f5' }}
+                                        >
                                             {provider.name} — {provider.model} ({provider.badge})
                                         </option>
                                     ))}
