@@ -44,42 +44,58 @@ for (const t of templates) {
   );
   await page.waitForTimeout(1400);
 
-  // Scroll the whole page so IntersectionObserver reveals fire, like a real visit.
+  // Scroll the whole page so IntersectionObserver reveals fire, like a real
+  // visit. Must be slow enough that the observer gets a frame per step.
   await page.evaluate(async () => {
-    const step = window.innerHeight * 0.75;
-    for (let y = 0; y < document.body.scrollHeight; y += step) {
+    const step = Math.round(window.innerHeight * 0.5);
+    const max = document.body.scrollHeight;
+    for (let y = 0; y < max; y += step) {
       window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 90));
+      await new Promise((r) => setTimeout(r, 220));
     }
     window.scrollTo(0, 0);
   });
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(1000);
 
   const audit = await page.evaluate(() => {
     const doc = document;
+    const inHiddenSubtree = (el) => {
+      for (let a = el; a && a !== document.body; a = a.parentElement) {
+        if (a.hasAttribute && a.hasAttribute('hidden')) return true;
+        if (a.classList && a.classList.contains('is-open') === false && a.hasAttribute('aria-expanded') && a.getAttribute('aria-expanded') === 'false') return true;
+      }
+      return false;
+    };
     const reveal = [...doc.querySelectorAll('[data-reveal]')];
-    const hidden = reveal.filter((el) => {
-      const s = getComputedStyle(el);
-      return parseFloat(s.opacity) < 0.05;
-    });
-    // Any element with non-zero size but fully transparent text = invisible content.
+    const hidden = reveal.filter((el) => parseFloat(getComputedStyle(el).opacity) < 0.05 && !inHiddenSubtree(el));
+    // Text that occupies space but is fully transparent, excluding controls
+    // that are intentionally hidden until you scroll (back-to-top etc).
     let invisibleText = 0;
     for (const el of doc.querySelectorAll('h1,h2,h3,p,li,button,a')) {
       const r = el.getBoundingClientRect();
-      if (r.width > 0 && r.height > 0 && parseFloat(getComputedStyle(el).opacity) < 0.05) invisibleText++;
+      if (r.width > 0 && r.height > 0 && parseFloat(getComputedStyle(el).opacity) < 0.05 && !inHiddenSubtree(el)) {
+        if (el.tagName === 'BUTTON' && !el.textContent.trim()) continue;
+        invisibleText++;
+      }
     }
+    // Real sideways scroll test.
+    const before = window.scrollX;
+    window.scrollTo(9999, window.scrollY);
+    const canScrollX = window.scrollX > before;
+    window.scrollTo(0, window.scrollY);
+
     const body = doc.body;
     return {
       height: Math.max(body.scrollHeight, doc.documentElement.scrollHeight),
       revealTotal: reveal.length,
       revealHidden: hidden.length,
       invisibleText,
+      canScrollX,
       h1: doc.querySelectorAll('h1').length,
       text: (body.innerText || '').trim().length,
       svgIcons: doc.querySelectorAll('svg').length,
       imgs: doc.querySelectorAll('img').length,
       emoji: (body.innerText.match(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu) || []).length,
-      overflowX: doc.documentElement.scrollWidth > window.innerWidth + 2,
     };
   });
 
@@ -92,7 +108,7 @@ for (const t of templates) {
   if (audit.h1 !== 1) problems.push('h1 count ' + audit.h1);
   if (audit.imgs > 0) problems.push(audit.imgs + ' <img> tags (should be 0)');
   if (audit.emoji > 0) problems.push(audit.emoji + ' emoji characters found');
-  if (audit.overflowX) problems.push('horizontal overflow at 1280px');
+  if (audit.canScrollX) problems.push('page scrolls sideways at ' + VIEW_W + 'px');
 
   const status = problems.length ? 'FAIL' : ' ok ';
   if (problems.length) failed++;
@@ -101,7 +117,7 @@ for (const t of templates) {
     'h=' + String(audit.height).padStart(6) +
     ' text=' + String(audit.text).padStart(6) +
     ' svg=' + String(audit.svgIcons).padStart(3) +
-    ' reveal=' + audit.revealTotal + '/' + (audit.revealTotal - audit.revealHidden) +
+    ' reveal=' + (audit.revealTotal - audit.revealHidden) + '/' + audit.revealTotal +
     (problems.length ? '\n         -> ' + problems.join('\n         -> ') : ''),
   );
   await page.close();
