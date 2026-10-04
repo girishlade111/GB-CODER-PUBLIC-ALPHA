@@ -985,8 +985,6 @@ function initLoginForm() {
       window.setTimeout(function () {
         loginPanel.hidden = true;
         successPanel.hidden = false;
-        var title = $('successTitle');
-        if (title) title.focus && title.focus();
       }, reduce ? 0 : 550);
     }
   });
