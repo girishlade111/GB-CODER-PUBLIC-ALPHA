@@ -1519,7 +1519,7 @@ html[data-theme='light'] .icon--moon { display: block; }
         'Ran a published security review and a bug-bounty programme for the first six months.',
         'Shipped session management UI so users can see and revoke their own devices.'
       ],
-      metrics: [['Services', '11'], ['Phishing resistance', 'High'], 'Uptime', '99.99%']
+      metrics: [['Services', '11'], ['Phishing resistance', 'High'], ['Uptime', '99.99%']]
     },
     relay: {
       eyebrow: 'Developer experience · 2023—2024',
