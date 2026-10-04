@@ -540,6 +540,17 @@ export default {
       </ul>
     </nav>
 
+    <nav class="footer-col" aria-labelledby="fc-keys">
+      <h2 class="footer-h" id="fc-keys">On the pad</h2>
+      <ul role="list">
+        <li><a href="#workspace">Memory register</a></li>
+        <li><a href="#workspace">Angle mode</a></li>
+        <li><a href="#workspace">Decimal precision</a></li>
+        <li><a href="#workspace">Thousands separators</a></li>
+        <li><a href="#shortcuts">Delete and Escape</a></li>
+      </ul>
+    </nav>
+
     <nav class="footer-col" aria-labelledby="fc-project">
       <h2 class="footer-h" id="fc-project">Project</h2>
       <ul role="list">
