@@ -936,7 +936,7 @@ html[data-theme='light'] .icon--moon { display: block; }
 
 /* Activity */
 .activity { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .6fr); gap: 1.5rem; align-items: start; }
-.activity__panel { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-elev); padding: 1.5rem; }
+.activity__panel { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-elev); padding: 1.5rem; min-width: 0; }
 .activity__stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 1rem; padding-bottom: 1.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
 .activity__stats > div { display: grid; gap: .1rem; }
 .activity__num { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; }
