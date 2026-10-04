@@ -35,7 +35,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
     <div
       role="tablist"
       aria-label="Open files"
-      className="flex items-stretch overflow-x-auto border-b border-stroke-subtle bg-surface-raised"
+      className="flex items-stretch overflow-x-auto border-b border-stroke-dark bg-product-soft"
     >
       {openPaths.map((path) => {
         const isActive = path === activePath;
@@ -44,10 +44,10 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
         return (
           <div
             key={path}
-            className={`group flex shrink-0 items-center border-b-2 border-r border-r-stroke-subtle -mb-[1px] transition-colors ${
+            className={`group flex shrink-0 items-center border-b-2 border-r border-r-stroke-dark -mb-[1px] transition-colors ${
               isActive
-                ? 'border-b-accent bg-surface-base'
-                : 'border-b-transparent hover:bg-white/[0.03]'
+                ? 'border-b-accent bg-product'
+                : 'border-b-transparent hover:bg-product-hover'
             }`}
           >
             <button
@@ -57,7 +57,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
               onClick={() => onSelect(path)}
               title={path}
               className={`py-2 pl-3 pr-1 font-mono text-xs transition-colors ${
-                isActive ? 'text-content-primary' : 'text-content-muted hover:text-content-secondary'
+                isActive ? 'text-content-on-dark' : 'text-content-on-dark-soft hover:text-content-on-dark'
               }`}
             >
               <span className="block max-w-[160px] truncate">{displayName(path)}</span>
@@ -65,12 +65,12 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
 
             <div className="flex items-center space-x-1 pr-2">
               {validationSummary && (validationSummary.issues.filter(i => i.file === path && i.severity === 'error').length > 0) && (
-                <span className="flex items-center justify-center bg-red-500/20 text-red-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${validationSummary.issues.filter(i => i.file === path && i.severity === 'error').length} Errors`}>
+                <span className="flex items-center justify-center bg-danger/20 text-red-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${validationSummary.issues.filter(i => i.file === path && i.severity === 'error').length} Errors`}>
                   {validationSummary.issues.filter(i => i.file === path && i.severity === 'error').length}
                 </span>
               )}
               {validationSummary && (validationSummary.issues.filter(i => i.file === path && i.severity === 'warning').length > 0) && (
-                <span className="flex items-center justify-center bg-yellow-500/20 text-yellow-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${validationSummary.issues.filter(i => i.file === path && i.severity === 'warning').length} Warnings`}>
+                <span className="flex items-center justify-center bg-warning/20 text-yellow-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px]" title={`${validationSummary.issues.filter(i => i.file === path && i.severity === 'warning').length} Warnings`}>
                   {validationSummary.issues.filter(i => i.file === path && i.severity === 'warning').length}
                 </span>
               )}
@@ -79,7 +79,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
             <button
               type="button"
               onClick={() => onClose(path)}
-              className="mr-1.5 flex h-5 w-5 items-center justify-center rounded-sm text-content-muted transition-colors hover:bg-white/10 hover:text-content-primary"
+              className="mr-1.5 flex h-5 w-5 items-center justify-center rounded-sm text-content-on-dark-soft transition-colors hover:bg-product-active hover:text-content-on-dark"
               title={isDirty ? `Close ${path} (unsaved changes)` : `Close ${path}`}
               aria-label={`Close ${path}`}
             >

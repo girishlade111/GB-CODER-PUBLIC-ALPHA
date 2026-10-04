@@ -68,7 +68,7 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-stroke-subtle bg-surface-base">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-stroke-dark bg-product">
       <EditorTabs
         openPaths={workspace.openPaths}
         activePath={workspace.activePath}
@@ -82,7 +82,7 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
         {activeFile ? (
           <div className="relative h-full w-full">
             {!activeFile.content.trim() && (
-              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-40 z-10">
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-60 z-10 text-content-on-dark-soft">
                 <FileCode2 className="w-8 h-8 mb-2" />
                 <span className="text-sm font-medium">Type {activeFile.language} here</span>
               </div>
@@ -97,7 +97,7 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
               onMount={handleMount}
               theme={monacoThemeFor(isDark)}
               loading={
-                <div className="flex h-full items-center justify-center gap-2 text-sm text-content-muted">
+                <div className="flex h-full items-center justify-center gap-2 text-sm text-content-on-dark-soft">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading editor…
                 </div>
@@ -116,12 +116,12 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
             />
           </div>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-            <div className="rounded-lg border border-stroke-subtle bg-surface-raised p-3">
-              <FileCode2 className="h-6 w-6 text-content-muted" />
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-content-on-dark">
+            <div className="rounded-lg border border-stroke-dark bg-product-elevated p-3">
+              <FileCode2 className="h-6 w-6 text-content-on-dark-soft" />
             </div>
-            <p className="text-sm font-medium text-content-secondary">No file open</p>
-            <p className="text-xs text-content-muted">
+            <p className="text-sm font-medium text-content-on-dark">No file open</p>
+            <p className="text-xs text-content-on-dark-soft">
               Pick a file from the explorer to start editing.
             </p>
           </div>
@@ -130,26 +130,26 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
 
       {/* Build status strip. Full error text still goes to the Console tab. */}
       {projectType !== 'plain' && buildStatus !== 'idle' && (
-        <div className="flex items-center gap-2 border-t border-stroke-subtle bg-surface-raised px-3 py-1.5 text-[11px]">
+        <div className="flex items-center gap-2 border-t border-stroke-dark bg-product-soft px-3 py-1.5 text-[11px] text-content-on-dark">
           {buildStatus === 'building' && <Loader2 className="h-3 w-3 animate-spin text-accent" />}
           <span
             className={
               buildStatus === 'error'
                 ? 'text-red-300'
                 : buildStatus === 'building'
-                  ? 'text-content-secondary'
+                  ? 'text-content-on-dark-soft'
                   : 'text-emerald-300'
             }
           >
             {STATUS_LABEL[buildStatus]}
           </span>
           {buildStatus === 'error' && buildErrors[0] && (
-            <span className="truncate text-content-muted" title={buildErrors.map(formatBundleError).join('\n')}>
+            <span className="truncate text-content-on-dark-soft" title={buildErrors.map(formatBundleError).join('\n')}>
               {formatBundleError(buildErrors[0])}
             </span>
           )}
           {buildStatus === 'error' && buildErrors.length > 1 && (
-            <span className="shrink-0 text-content-muted">+{buildErrors.length - 1} more</span>
+            <span className="shrink-0 text-content-on-dark-soft">+{buildErrors.length - 1} more</span>
           )}
         </div>
       )}

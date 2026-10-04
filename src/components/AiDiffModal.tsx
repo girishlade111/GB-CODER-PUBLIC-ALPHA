@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDiffViewer, { DiffMethod } from 'react-diff-viewer-continued';
 import { X, Check, Copy, ChevronRight, FileCode, CheckCircle2 } from 'lucide-react';
-import { useTheme } from '../hooks/useTheme';
 import toast from 'react-hot-toast';
 
 export interface DiffFile {
@@ -28,7 +27,6 @@ const AiDiffModal: React.FC<AiDiffModalProps> = ({
   files,
   title = 'Review Changes',
 }) => {
-  const { isDark } = useTheme();
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [appliedFiles, setAppliedFiles] = useState<Set<string>>(new Set());
 
