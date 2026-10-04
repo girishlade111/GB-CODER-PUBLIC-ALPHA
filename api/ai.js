@@ -730,6 +730,9 @@ module.exports = async function handler(req, res) {
   }
 
   const body = req.body || {};
+  const requestedProvider = body.provider;
+  const customApiKey = body.apiKey;
+
   const {
     feature,
     code,
