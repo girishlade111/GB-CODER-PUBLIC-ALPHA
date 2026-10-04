@@ -1213,7 +1213,8 @@ function initSlider() {
     for (var i = 0; i < dots.length; i++) {
       var on = i === index;
       dots[i].classList.toggle('is-on', on);
-      dots[i].setAttribute('aria-selected', on ? 'true' : 'false');
+      if (on) dots[i].setAttribute('aria-current', 'true');
+      else dots[i].removeAttribute('aria-current');
     }
     for (var s = 0; s < slides.length; s++) {
       slides[s].setAttribute('aria-hidden', s === index ? 'false' : 'true');
