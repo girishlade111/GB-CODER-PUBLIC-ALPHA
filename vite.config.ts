@@ -1,10 +1,101 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+
+function localApiPlugin(): Plugin {
+  return {
+    name: 'local-api-handler',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        if (!req.url?.startsWith('/api/')) {
+          return next();
+        }
+
+        const urlPath = req.url.split('?')[0];
+        const route = urlPath.replace(/^\/api\//, '');
+
+        let handlerFile: string | null = null;
+        if (route === 'ai') handlerFile = './api/ai.js';
+        else if (route === 'health') handlerFile = './api/health.js';
+        else if (route === 'preview') handlerFile = './api/preview.js';
+        else if (route === 'share') handlerFile = './api/share.js';
+        else if (route === 'test-redis') handlerFile = './api/test-redis.js';
+
+        if (!handlerFile) {
+          return next();
+        }
+
+        try {
+          const anyRes = res as any;
+          if (!anyRes.status) {
+            anyRes.status = function (code: number) {
+              this.statusCode = code;
+              return this;
+            };
+          }
+          if (!anyRes.json) {
+            anyRes.json = function (data: any) {
+              if (!this.headersSent) {
+                this.setHeader('Content-Type', 'application/json');
+              }
+              this.end(JSON.stringify(data));
+              return this;
+            };
+          }
+          if (!anyRes.send) {
+            anyRes.send = function (data: any) {
+              this.end(data);
+              return this;
+            };
+          }
+
+          const anyReq = req as any;
+
+          if (['POST', 'PUT', 'PATCH'].includes(req.method || '')) {
+            if (!anyReq.body) {
+              const chunks: Buffer[] = [];
+              for await (const chunk of req) {
+                chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+              }
+              const bodyStr = Buffer.concat(chunks).toString('utf-8');
+              try {
+                anyReq.body = bodyStr ? JSON.parse(bodyStr) : {};
+              } catch {
+                anyReq.body = bodyStr;
+              }
+            }
+          }
+
+          if (!anyReq.query && req.url.includes('?')) {
+            const searchParams = new URL(req.url, 'http://localhost').searchParams;
+            const queryObj: Record<string, string> = {};
+            searchParams.forEach((val, key) => { queryObj[key] = val; });
+            anyReq.query = queryObj;
+          }
+
+          const handler = require(handlerFile);
+          const fn = typeof handler === 'function' ? handler : handler.default || handler;
+          await fn(anyReq, anyRes);
+        } catch (err: any) {
+          console.error(`[local-api-handler] error on ${urlPath}:`, err);
+          if (!res.headersSent) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: err.message || 'Internal Server Error' }));
+          }
+        }
+      });
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    localApiPlugin(),
     react({
       // Fast refresh for development
       fastRefresh: true,
