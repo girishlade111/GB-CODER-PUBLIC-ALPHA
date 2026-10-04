@@ -2257,9 +2257,24 @@ function App() {
   const handleLoadTemplate = useCallback((payload: any, meta: any) => {
     // If it's a multi-file template
     if (payload.files) {
+      const projectType = meta.projectType || 'plain';
+      // Template payloads carry only { path, content }. `ProjectFile.language` is
+      // what `detectDependencies` and `projectToTriple` read, so it has to be
+      // filled in here or a loaded template's imports go undetected and its CSS
+      // is skipped on export.
+      const files = (payload.files as Array<Pick<ProjectFile, 'path' | 'content'>>).map(
+        (file) => ({
+          path: file.path,
+          content: file.content,
+          language: languageForPath(file.path),
+        }),
+      );
       const newProject: MultiFileProject = {
-        projectType: meta.projectType || 'plain',
-        files: payload.files as ProjectFile[]
+        projectType,
+        files,
+        // Templates name their entry conventionally; set it explicitly so the
+        // bundler never has to guess from the candidate list.
+        entry: files.find((f) => f.path === (projectType === 'vue' ? 'main.js' : 'main.jsx'))?.path,
       };
       setFileProject(newProject);
     } else {
