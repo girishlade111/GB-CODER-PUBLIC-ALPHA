@@ -177,6 +177,7 @@ export default {
         <p class="head__note">Diagnostic, design, implementation, handover. The first three run in parallel wherever the data allows, and step one is free.</p>
       </header>
       <ol class="process" id="processLine">
+        <span class="process__line" aria-hidden="true"></span>
         <li class="step" data-reveal>
           <span class="step__mark" aria-hidden="true"><span class="step__dot"></span></span>
           <span class="step__no">Step 01 &middot; Weeks 1&ndash;2</span>
