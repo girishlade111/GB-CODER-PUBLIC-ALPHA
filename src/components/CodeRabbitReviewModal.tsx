@@ -340,7 +340,7 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
                         <div className="text-content-on-dark-soft text-[10px] uppercase tracking-wider font-medium">
                           Offending Code:
                         </div>
-                        <div className="text-danger bg-danger p-1.5 rounded border border-danger overflow-x-auto">
+                        <div className="text-red-300 bg-danger/15 p-1.5 rounded border border-danger/40 overflow-x-auto">
                           - {issue.codeSnippet}
                         </div>
 
