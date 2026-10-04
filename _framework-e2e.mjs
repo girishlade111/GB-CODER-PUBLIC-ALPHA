@@ -61,21 +61,34 @@ for (const file of walk(DIR).sort()) {
   const entry = isVue ? 'main.js' : 'main.jsx';
   const problems = [];
 
+  // Import resolution checked against the real filesystem, so a `..` that walks
+  // past the project root cannot silently collapse and hide a bad specifier.
+  const { existsSync } = await import('node:fs');
+  for (const f of t.files) {
+    if (!/\.(jsx|js|ts|tsx|vue)$/.test(f.path)) continue;
+    for (const m of f.content.matchAll(/(?:from|import)\s*['"](\.[^'"]+)['"]/g)) {
+      const base = join(root, f.path, '..', m[1]);
+      const cands = [base, base + '.jsx', base + '.js', base + '.vue', base + '/index.jsx'];
+      if (!cands.some(existsSync)) problems.push('unresolved import "' + m[1] + '" in ' + f.path);
+    }
+  }
+
   let bundle;
   try {
     const r = await build({
       entryPoints: [join(root, entry)],
       bundle: true,
       write: false,
+      outdir: join(root, '_out'),
       format: 'esm',
       target: 'es2020',
       jsx: 'automatic',
       external: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'vue'],
       plugins: isVue ? [vuePlugin] : [],
       logLevel: 'silent',
-      loader: { '.js': 'jsx' }, // playground-authored react files
+      loader: { '.js': 'jsx' },
     });
-    bundle = r.outputFiles[0].text;
+    bundle = r.outputFiles.find((f) => f.path.endsWith('.js'))?.text ?? r.outputFiles[0].text;
   } catch (e) {
     problems.push('BUNDLE FAILED: ' + (e.errors?.[0]?.text || e.message).slice(0, 200));
   }
