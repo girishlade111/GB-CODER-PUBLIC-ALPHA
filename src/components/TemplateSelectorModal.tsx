@@ -37,6 +37,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   }, [searchQuery]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<'name' | 'difficulty'>('name');
   
   const [previewTemplate, setPreviewTemplate] = useState<CodeTemplate | null>(null);
@@ -101,6 +102,12 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
 
     return filtered;
   }, [debouncedSearch, selectedCategory, selectedTags, sortOption, templateMetadata, customTemplates]);
+
+  const toggleTag = useCallback((tag: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  }, []);
 
   const handlePreview = async (template: CodeTemplate) => {
     setPreviewTemplate(template);
