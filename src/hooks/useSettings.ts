@@ -8,6 +8,39 @@ import { useLocalStorage } from './useLocalStorage';
  */
 export type ThemeVariant = 'light';
 export type EditorFontFamily = 'JetBrains Mono' | 'Fira Code' | 'Monaco' | 'Consolas' | 'Default';
+export type AIProviderId = 'inception' | 'atria' | 'nvidia';
+
+export interface AIProviderOption {
+    id: AIProviderId;
+    name: string;
+    model: string;
+    badge: string;
+    description: string;
+}
+
+export const AI_PROVIDERS: AIProviderOption[] = [
+    {
+        id: 'inception',
+        name: 'Inception Labs',
+        model: 'mercury-2.5',
+        badge: 'Fast (~4s)',
+        description: 'Mercury 2.5 — ultra-fast generation with reasoning',
+    },
+    {
+        id: 'atria',
+        name: 'Atria ASI',
+        model: 'Atria-Dawn-Preview',
+        badge: '256k Context',
+        description: 'Atria Dawn Preview — deep reasoning & long context',
+    },
+    {
+        id: 'nvidia',
+        name: 'NVIDIA NIM',
+        model: 'qwen/qwen3.5-397b-a17b',
+        badge: 'Qwen 3.5 397B',
+        description: 'Qwen 3.5 via NVIDIA NIM Foundation',
+    },
+];
 
 export interface AppSettings {
     editorFontFamily: EditorFontFamily;
@@ -23,6 +56,12 @@ export interface AppSettings {
     voiceLanguage: string;
     /** CodeRabbit AI API Key for bug & error detection */
     codeRabbitApiKey: string;
+    /** AI Provider for Build with AI and Editor features */
+    aiProvider: AIProviderId;
+    /** Optional custom API keys */
+    inceptionApiKey?: string;
+    atriaApiKey?: string;
+    nvidiaApiKey?: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -36,6 +75,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
     voiceContinuous: false,
     voiceLanguage: 'en-US',
     codeRabbitApiKey: import.meta.env.VITE_CODERABBIT_API_KEY || '',
+    aiProvider: 'inception',
+    inceptionApiKey: '',
+    atriaApiKey: '',
+    nvidiaApiKey: '',
 };
 
 export const useSettings = () => {
