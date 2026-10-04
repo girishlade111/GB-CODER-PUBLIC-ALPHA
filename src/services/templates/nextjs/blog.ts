@@ -1147,7 +1147,7 @@ export default {
     },
     {
       path: 'app/not-found.jsx',
-      content: `      import { Link } from '../../lib/router.jsx';
+      content: `      import { Link } from '../lib/router.jsx';
 
       /**
        * \`app/not-found.jsx\` — the App Router's 404 boundary.
