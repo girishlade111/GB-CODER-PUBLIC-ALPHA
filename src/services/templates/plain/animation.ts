@@ -1449,6 +1449,25 @@ function initNav() {
 }
 
 /* ------------------------------------------------------------------- boot */
+function initAnchors() {
+  if (reduce) return;
+  var links = document.querySelectorAll('a[href^="#"]');
+  for (var i = 0; i < links.length; i++) {
+    links[i].addEventListener('click', function (e) {
+      var href = this.getAttribute('href') || '';
+      if (href.length < 2) return;
+      var target = document.querySelector(href);
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', href);
+      }
+    });
+  }
+}
+
+initAnchors();
 initReveal();
 initPageProgress();
 initCounters();
