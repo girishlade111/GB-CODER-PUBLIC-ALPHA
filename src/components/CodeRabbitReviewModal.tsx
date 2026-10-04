@@ -296,7 +296,7 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
                           <span
                             className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold rounded-md border ${
                               issue.severity === 'critical'
-                                ? 'bg-danger text-danger border-danger'
+                                ? 'bg-danger/15 text-red-300 border-danger/40'
                                 : issue.severity === 'warning'
                                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                                 : 'bg-product-elevated text-content-on-dark-soft border-stroke-dark'
