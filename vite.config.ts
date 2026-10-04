@@ -294,9 +294,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': {
+      '/terminal': {
         target: 'http://localhost:3001',
-        changeOrigin: true,
+        ws: true,
       },
     },
   },
