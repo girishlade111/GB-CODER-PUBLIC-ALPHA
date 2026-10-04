@@ -717,11 +717,11 @@ textarea { font: inherit; resize: vertical; }
 .quote-row__r { text-align: right; }
 .quote-row__r strong { display: block; font-family: var(--font-display); font-size: 1rem; font-variant-numeric: tabular-nums; }
 .quote-row__r span { font-size: .74rem; font-variant-numeric: tabular-nums; }
-.up { color: #58c79b; }
-.down { color: #e88a90; }
+.up { color: var(--pos-hi); }
+.down { color: var(--neg-hi); }
 .spark { width: 76px; height: 30px; }
 .spark polyline { fill: none; stroke: var(--gold-hi); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.spark--down polyline { stroke: #e88a90; }
+.spark--down polyline { stroke: var(--neg-hi); }
 .desk__foot { font-size: .7rem; color: color-mix(in srgb, var(--surface) 44%, transparent); padding-top: .9rem; border-top: 1px solid var(--navy-3); }
 
 /* ----------------------------------------------------------------- ticker */
