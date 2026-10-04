@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { X, Settings as SettingsIcon, Database, Trash2, Upload } from 'lucide-react';
-import { useSettings, EditorFontFamily, ThemeVariant, AI_PROVIDERS } from '../hooks/useSettings';
+import { useSettings, EditorFontFamily, ThemeVariant, AI_PROVIDERS, type AIProviderId } from '../hooks/useSettings';
 import { useFocusMode } from '../hooks/useFocusMode';
 import { VOICE_LANGUAGES } from '../services/voiceCommandService';
 import { useSnapshots } from '../hooks/useSnapshots';
