@@ -1786,7 +1786,7 @@ kbd {
   function applyFunction(name) {
     pending = false;
     var lit = trailingLiteral();
-    if (lit && !expr.slice(0, lit.start).match(/[a-zA-Z0-9_]\s*$/)) {
+    if (lit && !expr.slice(0, lit.start).match(/[a-zA-Z0-9_]\\s*$/)) {
       var inner = expr.slice(lit.start, lit.end);
       expr = expr.slice(0, lit.start) + name + '(' + inner + ')' + expr.slice(lit.end);
       caret = lit.start + name.length + inner.length + 2;

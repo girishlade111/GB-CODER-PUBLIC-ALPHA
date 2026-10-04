@@ -1660,7 +1660,7 @@ html[data-theme='light'] .icon--moon { display: block; }
       if (input) { input.classList.remove('is-invalid'); }
       if (err) { err.hidden = true; }
     }
-    function validEmail(value) { return /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(value); }
+    function validEmail(value) { return /^[^\\s@]+@[^\\s@]+\\.[a-z]{2,}$/i.test(value); }
 
     if (msgInput && msgCount) {
       msgInput.addEventListener('input', function () {
