@@ -293,7 +293,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                             <span className={`text-[10px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded-sm border ${
                                template.difficulty === 'beginner' ? 'border-teal text-teal bg-teal/08' :
                                template.difficulty === 'intermediate' ? 'border-accent text-accent bg-accent/08' :
-                               'border-danger text-danger bg-danger'
+                               'border-danger/40 text-red-400 bg-danger/10'
                             }`}>{template.difficulty}</span>
                           </div>
                           <p className="text-xs text-content-secondary line-clamp-2 mt-1">{template.description}</p>

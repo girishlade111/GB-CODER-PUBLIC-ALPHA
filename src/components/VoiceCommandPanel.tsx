@@ -185,7 +185,7 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
       case 'confirming':
         return 'bg-accent/10 text-accent';
       case 'error':
-        return 'bg-danger text-danger';
+        return 'bg-danger/15 text-danger';
       default:
         return 'bg-product-elevated text-content-on-dark-soft';
     }
