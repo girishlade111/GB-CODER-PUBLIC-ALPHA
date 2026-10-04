@@ -58,6 +58,10 @@ export interface AiRequest {
    * "Return ONLY valid JSON, nothing else" instruction.
    */
   strictJson?: boolean;
+  /** Chosen AI provider: 'inception' | 'atria' | 'nvidia' */
+  provider?: 'inception' | 'atria' | 'nvidia';
+  /** Optional custom API key */
+  apiKey?: string;
 }
 
 /** Envelope returned by `POST /api/ai`. */
@@ -69,6 +73,8 @@ export interface AiResponseEnvelope {
   /** True when the server already had to retry once for malformed JSON. */
   retried?: boolean;
   error?: string;
+  provider?: string;
+  model?: string;
 }
 
 /**
