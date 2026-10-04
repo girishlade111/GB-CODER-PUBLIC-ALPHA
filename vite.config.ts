@@ -76,7 +76,9 @@ function localApiPlugin(): Plugin {
             anyReq.query = queryObj;
           }
 
-          const handler = require(handlerFile);
+          const resolvedPath = require.resolve(handlerFile);
+          delete require.cache[resolvedPath];
+          const handler = require(resolvedPath);
           const fn = typeof handler === 'function' ? handler : handler.default || handler;
           await fn(anyReq, anyRes);
         } catch (err: any) {
