@@ -437,9 +437,10 @@ export const createProjectOfType = (
 };
 
 /** The DOM node id a framework app mounts into, per project type. */
-export const MOUNT_ELEMENT_ID: Record<Exclude<ProjectType, 'plain'>, string> = {
+export const MOUNT_ELEMENT_ID: Record<string, string> = {
   react: 'root',
   vue: 'app',
+  nextjs: 'root',
 };
 
 export const PROJECT_TYPE_LABEL: Record<ProjectType, string> = {
