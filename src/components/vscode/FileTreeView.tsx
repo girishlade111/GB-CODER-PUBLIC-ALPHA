@@ -155,8 +155,8 @@ const TreeRow: React.FC<RowProps> = ({
         title={node.path}
         className={`relative flex w-full items-center gap-1 py-[3px] pr-2 text-left text-xs transition-colors ${
           isActive
-            ? 'bg-white/10 text-white'
-            : 'text-vsc-text hover:bg-white/[0.06] hover:text-white'
+            ? 'bg-product-active text-content-on-dark'
+            : 'text-vsc-text hover:bg-product-hover hover:text-content-on-dark'
         }`}
         style={{ paddingLeft: `${depth * INDENT_PX + 6}px` }}
       >
@@ -171,7 +171,7 @@ const TreeRow: React.FC<RowProps> = ({
           <span
             key={level}
             aria-hidden
-            className="pointer-events-none absolute top-0 bottom-0 w-px bg-vsc-indent/60"
+            className="pointer-events-none absolute top-0 bottom-0 w-px bg-vsc-indent"
             style={{ left: `${level * INDENT_PX + 11}px` }}
           />
         ))}

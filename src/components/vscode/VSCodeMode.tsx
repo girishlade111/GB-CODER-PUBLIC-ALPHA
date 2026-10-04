@@ -417,7 +417,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               onClick={onOpenProjects}
               data-testid="vscode-all-projects"
               aria-label="All Projects"
-              className="mr-1 flex items-center gap-1.5 rounded px-1 py-0.5 text-[11px] font-semibold tracking-wide text-vsc-textMuted transition-colors hover:bg-white/10 hover:text-white"
+              className="mr-1 flex items-center gap-1.5 rounded px-1 py-0.5 text-[11px] font-semibold tracking-wide text-vsc-textMuted transition-colors hover:bg-product-active hover:text-content-on-dark"
             >
               <LayoutGrid className="h-3.5 w-3.5" />
               GB Coder
@@ -441,9 +441,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 data-testid={`vscode-nav-${action.id}`}
                 className={`rounded p-1.5 transition-colors ${
                   action.isActive
-                    ? 'bg-white/10 text-white'
+                    ? 'bg-product-active text-content-on-dark'
                     : action.onClick
-                      ? 'text-vsc-textMuted hover:bg-white/[0.08] hover:text-white'
+                      ? 'text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark'
                       : 'cursor-not-allowed text-vsc-textMuted/40'
                 }`}
               >
@@ -500,7 +500,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             <span className="text-[10px] font-semibold uppercase tracking-wider text-vsc-textMuted">
               Explorer
             </span>
-            <span className="rounded bg-white/10 px-1 text-[9px] text-vsc-textMuted">
+            <span className="rounded bg-product-active px-1 text-[9px] text-vsc-textMuted">
               {project.files.length}
             </span>
 
@@ -511,7 +511,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   onClick={() => fileInputRef.current?.click()}
                   aria-label="Load File"
                   data-testid="explorer-load-file"
-                  className="rounded p-1 text-vsc-textMuted hover:bg-white/10 hover:text-white"
+                  className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
                 >
                   <FilePlus className="h-3.5 w-3.5" />
                 </button>
@@ -522,7 +522,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   onClick={() => folderInputRef.current?.click()}
                   aria-label="Load Folder"
                   data-testid="explorer-load-folder"
-                  className="rounded p-1 text-vsc-textMuted hover:bg-white/10 hover:text-white"
+                  className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
                 >
                   <FolderPlus className="h-3.5 w-3.5" />
                 </button>
@@ -573,7 +573,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               }
               className={`flex w-full items-center gap-1.5 px-2.5 py-2 text-left text-[11px] ${
                 devServerReady
-                  ? 'text-vsc-text hover:bg-white/[0.06] hover:text-white'
+                  ? 'text-vsc-text hover:bg-product-hover hover:text-content-on-dark'
                   : 'cursor-not-allowed text-vsc-textMuted opacity-50'
               }`}
             >
@@ -582,7 +582,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               {devServerReady && (
                 <span
                   aria-hidden
-                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#3ecf5e]"
+                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal"
                   title="Running"
                 />
               )}
@@ -607,8 +607,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       title={preview.url}
                       className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
                         preview.port === sandbox.activePort
-                          ? 'bg-accent/25 text-white'
-                          : 'text-vsc-textMuted hover:bg-white/10 hover:text-white'
+                          ? 'bg-accent/25 text-content-on-dark'
+                          : 'text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark'
                       }`}
                     >
                       {preview.port}
@@ -623,7 +623,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             onClick={onExit}
             data-testid="exit-vscode-mode"
             title="Return to the standard editor. File contents are kept."
-            className="flex shrink-0 items-center gap-1.5 border-t border-vsc-border px-2.5 py-2 text-[11px] text-vsc-text hover:bg-white/[0.06] hover:text-white"
+            className="flex shrink-0 items-center gap-1.5 border-t border-vsc-border px-2.5 py-2 text-[11px] text-vsc-text hover:bg-product-hover hover:text-content-on-dark"
           >
             <LogOut className="h-3.5 w-3.5" />
             Exit VS Code mode
@@ -656,8 +656,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                    */
                   className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-t-2 border-r-vsc-border px-3 py-1.5 text-xs ${
                     isActive
-                      ? 'border-t-accent bg-vsc-editor text-white'
-                      : 'border-t-transparent text-vsc-textMuted hover:bg-white/[0.04] hover:text-vsc-text'
+                      ? 'border-t-accent bg-vsc-editor text-content-on-dark'
+                      : 'border-t-transparent text-vsc-textMuted hover:bg-product-hover hover:text-vsc-text'
                   }`}
                   title={path}
                 >
@@ -673,7 +673,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     onClick={(event) => closeTab(path, event)}
                     aria-label={`Close ${name}`}
                     data-testid="vscode-tab-close"
-                    className="rounded p-0.5 opacity-0 transition-opacity hover:bg-white/10 group-hover:opacity-100"
+                    className="rounded p-0.5 opacity-0 transition-opacity hover:bg-product-hover group-hover:opacity-100"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -715,7 +715,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               >
                 <div>
                   <FolderPlus className="mx-auto mb-3 h-7 w-7 text-vsc-textMuted" />
-                  <p className="text-sm font-semibold text-white">No project loaded</p>
+                  <p className="text-sm font-semibold text-content-on-dark">No project loaded</p>
                   <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-vsc-textMuted">
                     Import a folder to get started. What you load stays in this workspace, so a
                     refresh brings it back.
@@ -733,7 +733,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       data-testid="empty-load-file"
-                      className="rounded-lg border border-vsc-borderStrong px-3 py-1.5 text-xs font-semibold text-vsc-text hover:bg-white/[0.06] hover:text-white"
+                      className="rounded-lg border border-vsc-borderStrong px-3 py-1.5 text-xs font-semibold text-vsc-text hover:bg-product-hover hover:text-content-on-dark"
                     >
                       Load File
                     </button>
@@ -762,8 +762,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 data-testid={`vscode-right-tab-${tab}`}
                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium ${
                   rightTab === tab
-                    ? 'border-b-2 border-accent text-white'
-                    : 'border-b-2 border-transparent text-vsc-textMuted hover:text-white'
+                    ? 'border-b-2 border-accent text-content-on-dark'
+                    : 'border-b-2 border-transparent text-vsc-textMuted hover:text-content-on-dark'
                 }`}
               >
                 {tab === 'preview' ? (
@@ -792,7 +792,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   </span>
                   <button
                     onClick={() => void sandboxSession.pollLogs()}
-                    className="text-vsc-textMuted hover:text-white"
+                    className="text-vsc-textMuted hover:text-content-on-dark"
                     aria-label="Refresh"
                   >
                     <RefreshCw className="h-3 w-3" />
@@ -813,7 +813,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               >
                 <div>
                   <Plug className="mx-auto mb-3 h-7 w-7 text-vsc-textMuted" />
-                  <p className="text-sm font-semibold text-white">Connect Sandbox to Preview</p>
+                  <p className="text-sm font-semibold text-content-on-dark">Connect Sandbox to Preview</p>
                   <p className="mt-1.5 text-xs leading-relaxed text-vsc-textMuted">
                     This project has a server side, so it cannot run in the browser. Start a sandbox
                     to build and serve it, then the preview appears here.
@@ -853,7 +853,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             {/* Terminal chrome: tab-style header, as VS Code presents its panel. */}
             <div className="flex shrink-0 items-center gap-1 border-b border-vsc-border px-2">
               <div
-                className="flex items-center gap-1.5 border-b-2 border-accent px-1.5 py-1.5 text-[11px] text-white"
+                className="flex items-center gap-1.5 border-b-2 border-accent px-1.5 py-1.5 text-[11px] text-content-on-dark"
                 role="tab"
                 aria-selected
               >
@@ -881,7 +881,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               <button
                 onClick={() => setShowTerminal(false)}
                 aria-label="Close panel"
-                className="ml-auto rounded p-1 text-vsc-textMuted hover:bg-white/10 hover:text-white"
+                className="ml-auto rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -912,7 +912,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           onClick={() => setShowTerminal((value) => !value)}
           data-testid="vscode-terminal-toggle"
           aria-pressed={showTerminal}
-          className="flex items-center gap-1 rounded px-1 hover:bg-white/10 hover:text-white"
+          className="flex items-center gap-1 rounded px-1 hover:bg-product-active hover:text-content-on-dark"
         >
           <TerminalSquare className="h-3 w-3" />
           Terminal
@@ -933,7 +933,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         <span className="ml-auto flex items-center gap-1.5" data-testid="status-sandbox">
           <span
             className={`h-1.5 w-1.5 rounded-full ${
-              sandbox.sandboxId ? 'bg-[#3ecf5e]' : 'bg-vsc-textMuted'
+              sandbox.sandboxId ? 'bg-teal' : 'bg-vsc-textMuted'
             }`}
           />
           {sandbox.sandboxId ? 'Connected: Sandbox' : 'Local Mode'}

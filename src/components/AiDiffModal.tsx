@@ -90,21 +90,23 @@ const AiDiffModal: React.FC<AiDiffModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6">
-      <div className={`w-full max-w-6xl h-full max-h-[90vh] flex flex-col rounded-xl shadow-2xl overflow-hidden border ${isDark ? 'bg-surface-base border-stroke-strong' : 'bg-white border-gray-200'}`}>
+      {/* code-window-card: a diff is product chrome, so the whole modal takes
+          the dark product surface rather than a light card with a dark patch. */}
+      <div className="w-full max-w-6xl h-full max-h-[90vh] flex flex-col rounded-xl shadow-2xl overflow-hidden border bg-product border-stroke-dark">
         
         {/* Header */}
-        <div className={`px-4 py-3 border-b flex items-center justify-between ${isDark ? 'bg-surface-raised border-stroke-subtle' : 'bg-gray-50 border-gray-200'}`}>
+        <div className="px-4 py-3 border-b flex items-center justify-between bg-product-soft border-stroke-dark">
           <div className="flex items-center gap-3">
-            <h2 className={`font-semibold text-lg ${isDark ? 'text-content-primary' : 'text-gray-900'}`}>{title}</h2>
-            <div className={`text-xs px-2 py-1 rounded-md font-medium ${isDark ? 'bg-surface-overlay text-content-secondary' : 'bg-gray-200 text-gray-700'}`}>
+            <h2 className="font-display text-lg text-content-on-dark">{title}</h2>
+            <div className="text-xs px-2 py-1 rounded-md font-medium bg-product-active text-content-on-dark-soft">
               {files.length} file{files.length !== 1 ? 's' : ''} changed
-              <span className="ml-2 text-green-500">+{totalStats.added}</span>
-              <span className="ml-1 text-red-500">-{totalStats.removed}</span>
+              <span className="ml-2 text-success">+{totalStats.added}</span>
+              <span className="ml-1 text-red-300">-{totalStats.removed}</span>
             </div>
           </div>
           <button
             onClick={onClose}
-            className={`p-1.5 rounded-md hover:bg-white/10 transition-colors ${isDark ? 'text-content-muted hover:text-content-primary' : 'text-gray-500 hover:text-gray-900'}`}
+            className="p-1.5 rounded-md hover:bg-product-hover transition-colors text-content-on-dark-soft hover:text-content-on-dark"
             title="Reject All (Esc)"
           >
             <X className="w-5 h-5" />
@@ -115,8 +117,8 @@ const AiDiffModal: React.FC<AiDiffModalProps> = ({
         <div className="flex-1 flex overflow-hidden">
           {/* Sidebar for Multi-File */}
           {isMultiFile && (
-            <div className={`w-64 flex-shrink-0 border-r flex flex-col overflow-y-auto ${isDark ? 'border-stroke-subtle bg-surface-raised/50' : 'border-gray-200 bg-gray-50'}`}>
-              <div className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-content-muted' : 'text-gray-500'}`}>
+            <div className="w-64 flex-shrink-0 border-r flex flex-col overflow-y-auto border-stroke-dark bg-product-soft">
+              <div className="quiet-section-label px-4 py-3">
                 Modified Files
               </div>
               <div className="flex-1">
@@ -129,13 +131,13 @@ const AiDiffModal: React.FC<AiDiffModalProps> = ({
                       onClick={() => setSelectedFilePath(file.path)}
                       className={`w-full px-4 py-2 flex items-center gap-2 text-left transition-colors ${
                         isSelected
-                          ? isDark ? 'bg-accent/20 text-accent-hover' : 'bg-blue-50 text-blue-700'
-                          : isDark ? 'text-content-secondary hover:bg-white/5' : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-accent-subtle text-accent'
+                          : 'text-content-on-dark-soft hover:bg-product-hover hover:text-content-on-dark'
                       }`}
                     >
                       <FileCode className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm truncate flex-1">{file.path}</span>
-                      {isApplied && <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />}
+                      {isApplied && <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" />}
                     </button>
                   );
                 })}
@@ -144,15 +146,15 @@ const AiDiffModal: React.FC<AiDiffModalProps> = ({
           )}
 
           {/* Diff View */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-[#1e1e1e]">
-            <div className={`px-4 py-2 border-b flex items-center justify-between ${isDark ? 'border-stroke-subtle bg-[#1e1e1e]' : 'border-gray-200 bg-gray-50'}`}>
-               <span className={`text-sm font-mono ${isDark ? 'text-content-primary' : 'text-gray-700'}`}>
+          <div className="flex-1 flex flex-col overflow-hidden bg-product">
+            <div className="px-4 py-2 border-b flex items-center justify-between border-stroke-dark bg-product-soft">
+               <span className="text-sm font-mono text-content-on-dark">
                  {currentFile.path}
                </span>
                <div className="flex items-center gap-2">
                  <button
                    onClick={handleCopy}
-                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors ${isDark ? 'hover:bg-white/10 text-content-secondary' : 'hover:bg-gray-200 text-gray-600'}`}
+                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors hover:bg-product-hover text-content-on-dark-soft"
                    title="Copy Suggestion"
                  >
                    <Copy className="w-3.5 h-3.5" />
@@ -161,7 +163,7 @@ const AiDiffModal: React.FC<AiDiffModalProps> = ({
                  {isMultiFile && onApplyFile && !appliedFiles.has(currentFile.path) && (
                    <button
                      onClick={handleApplyCurrentFile}
-                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded transition-colors"
+                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-accent-subtle text-accent hover:bg-accent/20 rounded transition-colors"
                    >
                      <Check className="w-3.5 h-3.5" />
                      Apply This File
@@ -174,33 +176,33 @@ const AiDiffModal: React.FC<AiDiffModalProps> = ({
                 oldValue={currentFile.original}
                 newValue={currentFile.suggested}
                 splitView={true}
-                useDarkTheme={isDark}
+                useDarkTheme
                 compareMethod={DiffMethod.WORDS}
                 leftTitle="Current Code"
                 rightTitle="AI Suggestion"
                 styles={{
                   variables: {
-                    dark: {
-                      diffViewerBackground: '#1e1e1e',
-                      diffViewerColor: '#d4d4d4',
-                      addedBackground: 'rgba(46, 160, 67, 0.2)',
-                      addedColor: '#d4d4d4',
-                      removedBackground: 'rgba(248, 81, 73, 0.2)',
-                      removedColor: '#d4d4d4',
-                      wordAddedBackground: 'rgba(46, 160, 67, 0.4)',
-                      wordRemovedBackground: 'rgba(248, 81, 73, 0.4)',
-                      addedGutterBackground: 'rgba(46, 160, 67, 0.2)',
-                      removedGutterBackground: 'rgba(248, 81, 73, 0.2)',
-                      gutterBackground: '#1e1e1e',
-                      gutterBackgroundDark: '#1e1e1e',
-                      highlightBackground: '#2a2a2a',
-                      highlightGutterBackground: '#2a2a2a',
-                      codeFoldGutterBackground: '#1e1e1e',
-                      codeFoldBackground: '#1e1e1e',
-                      emptyLineBackground: '#1e1e1e',
-                      gutterColor: '#858585',
-                      addedGutterColor: '#858585',
-                      removedGutterColor: '#858585',
+                                        dark: {
+                      diffViewerBackground: '#181715',
+                      diffViewerColor: '#faf9f5',
+                      addedBackground: 'rgba(93, 184, 72, 0.18)',
+                      addedColor: '#faf9f5',
+                      removedBackground: 'rgba(198, 69, 69, 0.18)',
+                      removedColor: '#faf9f5',
+                      wordAddedBackground: 'rgba(93, 184, 72, 0.36)',
+                      wordRemovedBackground: 'rgba(198, 69, 69, 0.36)',
+                      addedGutterBackground: 'rgba(93, 184, 72, 0.18)',
+                      removedGutterBackground: 'rgba(198, 69, 69, 0.18)',
+                      gutterBackground: '#181715',
+                      gutterBackgroundDark: '#181715',
+                      highlightBackground: '#1f1e1b',
+                      highlightGutterBackground: '#1f1e1b',
+                      codeFoldGutterBackground: '#181715',
+                      codeFoldBackground: '#181715',
+                      emptyLineBackground: '#181715',
+                      gutterColor: '#6c6a64',
+                      addedGutterColor: '#6c6a64',
+                      removedGutterColor: '#6c6a64',
                     }
                   },
                   line: {
@@ -214,16 +216,16 @@ const AiDiffModal: React.FC<AiDiffModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className={`px-6 py-4 border-t flex justify-end gap-3 ${isDark ? 'bg-surface-raised border-stroke-subtle' : 'bg-gray-50 border-gray-200'}`}>
+        <div className="px-6 py-4 border-t flex justify-end gap-3 bg-product-soft border-stroke-dark">
           <button
             onClick={onClose}
-            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-colors ${isDark ? 'hover:bg-white/5 text-content-secondary' : 'hover:bg-gray-200 text-gray-700'}`}
+            className="px-5 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-product-hover text-content-on-dark-soft"
           >
             Reject All
           </button>
           <button
             onClick={onApplyAll}
-            className="px-4 py-2 bg-[#e07856] hover:bg-[#e88a6d] text-[#e8e8e8] rounded-md text-[13px] font-medium transition-colors flex items-center gap-2"
+            className="quiet-btn-accent h-9 text-[13px]"
             title="Apply All Changes (Ctrl+Enter)"
           >
             <Check className="w-4 h-4" />

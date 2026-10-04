@@ -162,15 +162,15 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
               return (
                 <div key={index} className="relative group">
                   <div className={`absolute top-2 right-2 flex items-center gap-2 ${
-                    isDark ? 'bg-gray-800' : 'bg-gray-200'
+                    'bg-product-active'
                   } rounded-md px-2 py-1`}>
-                    <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span className={`text-xs ${'text-content-on-dark-soft'}`}>
                       {language}
                     </span>
                     <button
                       onClick={() => handleCopyCode(code, `${message.id}-${index}`)}
                       className={`p-1 rounded hover:bg-opacity-80 transition-colors ${
-                        isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-300'
+                        'hover:bg-product-hover'
                       }`}
                       title="Copy code"
                     >
@@ -182,7 +182,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
                     </button>
                   </div>
                   <pre className={`p-4 rounded-lg overflow-x-auto text-sm ${
-                    isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-800 text-gray-100'
+                    'bg-product-soft text-content-on-dark'
                   }`}>
                     <code>{code}</code>
                   </pre>
@@ -199,7 +199,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
               dangerouslySetInnerHTML={{
                 __html: part
                   .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/`([^`]+)`/g, '<code class="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-sm">$1</code>')
+                  .replace(/`([^`]+)`/g, '<code class="bg-product-active text-content-on-dark px-1 py-0.5 rounded text-sm">$1</code>')
                   .replace(/\n/g, '<br />'),
               }}
             />
@@ -214,37 +214,37 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <div
-        className="w-full max-w-4xl h-[80vh] rounded-lg border border-[#2a2a2a] bg-[#161616] flex flex-col overflow-hidden text-[#e8e8e8]"
+        className="w-full max-w-4xl h-[80vh] rounded-lg border border-stroke-dark bg-product flex flex-col overflow-hidden text-content-on-dark"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a] bg-[#161616]">
+        <div className="flex items-center justify-between p-4 border-b border-stroke-dark bg-product">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#1c1c1c] border border-[#2a2a2a] rounded-md">
-              <Sparkles className="w-5 h-5 text-[#e07856]" />
+            <div className="p-2 bg-product-elevated border border-stroke-dark rounded-md">
+              <Sparkles className="w-5 h-5 text-accent" />
             </div>
             <div>
-              <h2 className="text-[16px] font-semibold text-[#e8e8e8]">
+              <h2 className="text-[16px] font-semibold text-content-on-dark">
                 AI Code Assistant
               </h2>
-              <p className="text-[12px] text-[#8a8a8a]">
+              <p className="text-[12px] text-content-on-dark-soft">
                 Powered by Google Gemini AI
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-xs text-[#8a8a8a] cursor-pointer">
+            <label className="flex items-center gap-2 text-xs text-content-on-dark-soft cursor-pointer">
               <input
                 type="checkbox"
                 checked={includeCodeContext}
                 onChange={(e) => setIncludeCodeContext(e.target.checked)}
-                className="rounded border-[#2a2a2a] bg-[#1c1c1c] text-[#e07856] focus:ring-0"
+                className="rounded border-stroke-dark bg-product-elevated text-accent focus:ring-0"
               />
               Include current code context
             </label>
             {messages.length > 0 && (
               <button
                 onClick={clearChat}
-                className="p-1.5 rounded-md text-[#8a8a8a] hover:text-[#e8e8e8] hover:bg-[#1c1c1c] transition-colors"
+                className="p-1.5 rounded-md text-content-on-dark-soft hover:text-content-on-dark hover:bg-product-elevated transition-colors"
                 title="Clear Chat"
               >
                 <Trash2 className="w-4 h-4" />
@@ -252,7 +252,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
             )}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-md text-[#8a8a8a] hover:text-[#e8e8e8] hover:bg-[#1c1c1c] transition-colors"
+              className="p-1.5 rounded-md text-content-on-dark-soft hover:text-content-on-dark hover:bg-product-elevated transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -261,19 +261,19 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
 
         {/* Messages list */}
         <div 
-          className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0d0d0d]"
+          className="flex-1 overflow-y-auto p-4 space-y-4 bg-product-soft"
           aria-live="polite"
           aria-atomic="false"
         >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
-              <div className="p-4 bg-[#161616] border border-[#2a2a2a] rounded-full mb-3">
-                <MessageSquare className="w-8 h-8 text-[#8a8a8a]" />
+              <div className="p-4 bg-product border border-stroke-dark rounded-full mb-3">
+                <MessageSquare className="w-8 h-8 text-content-on-dark-soft" />
               </div>
-              <h3 className="text-[16px] font-semibold text-[#e8e8e8] mb-1">
+              <h3 className="text-[16px] font-semibold text-content-on-dark mb-1">
                 Start a Conversation
               </h3>
-              <p className="max-w-md text-[12.5px] text-[#8a8a8a]">
+              <p className="max-w-md text-[12.5px] text-content-on-dark-soft">
                 Ask questions about your code, request refactoring, debugging, or new feature implementations.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-6 w-full max-w-2xl">
@@ -286,10 +286,10 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
                   <button
                     key={idx}
                     onClick={() => setInputValue(suggestion.example)}
-                    className="p-3.5 rounded-md border border-[#2a2a2a] bg-[#161616] hover:bg-[#1c1c1c] text-left transition-colors text-[#e8e8e8]"
+                    className="p-3.5 rounded-md border border-stroke-dark bg-product hover:bg-product-elevated text-left transition-colors text-content-on-dark"
                   >
-                    <suggestion.icon className="w-4 h-4 mb-1.5 text-[#e07856]" />
-                    <p className="font-medium text-[13px] text-[#e8e8e8]">{suggestion.text}</p>
+                    <suggestion.icon className="w-4 h-4 mb-1.5 text-accent" />
+                    <p className="font-medium text-[13px] text-content-on-dark">{suggestion.text}</p>
                   </button>
                 ))}
               </div>
@@ -304,12 +304,12 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
                   <div
                     className={`max-w-[85%] rounded-lg p-4 text-[13.5px] ${
                       message.role === 'user'
-                        ? 'bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8]'
-                        : 'bg-[#161616] border border-[#2a2a2a] text-[#e8e8e8]'
+                        ? 'bg-product-elevated border border-stroke-dark text-content-on-dark'
+                        : 'bg-product border border-stroke-dark text-content-on-dark'
                     }`}
                   >
                     {renderMessageContent(message)}
-                    <p className="text-[11px] mt-2 text-[#5c5c5c]">
+                    <p className="text-[11px] mt-2 text-content-on-dark-soft">
                       {new Date(message.timestamp).toLocaleTimeString()}
                     </p>
                   </div>
@@ -317,8 +317,8 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-3.5 flex items-center gap-2 text-[12.5px] text-[#8a8a8a]">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#e07856]" />
+                  <div className="bg-product border border-stroke-dark rounded-lg p-3.5 flex items-center gap-2 text-[12.5px] text-content-on-dark-soft">
+                    <Loader2 className="w-4 h-4 animate-spin text-accent" />
                     Thinking...
                   </div>
                 </div>
@@ -329,7 +329,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-[#2a2a2a] bg-[#161616]">
+        <div className="p-4 border-t border-stroke-dark bg-product">
           <div className="flex items-end gap-2">
             <textarea
               ref={inputRef}
@@ -338,12 +338,12 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
               onKeyDown={handleKeyDown}
               placeholder="Ask anything about your code... (Shift+Enter for new line)"
               rows={2}
-              className="flex-1 resize-none rounded-md px-3.5 py-2.5 bg-[#1c1c1c] border border-[#2a2a2a] text-[#e8e8e8] placeholder-[#5c5c5c] focus:border-[#e07856] outline-none text-[13px] transition-colors"
+              className="flex-1 resize-none rounded-md px-3.5 py-2.5 bg-product-elevated border border-stroke-dark text-content-on-dark placeholder-content-on-dark-soft focus:border-accent outline-none text-[13px] transition-colors"
             />
             <button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading}
-              className="p-2.5 rounded-md bg-[#e07856] hover:bg-[#e88a6d] text-[#e8e8e8] disabled:bg-[#1c1c1c] disabled:border disabled:border-[#2a2a2a] disabled:text-[#5c5c5c] transition-colors"
+              className="p-2.5 rounded-md bg-accent hover:bg-accent-hover text-accent-fg disabled:bg-product-elevated disabled:border disabled:border-stroke-dark disabled:text-content-on-dark-soft transition-colors"
             >
               <Send className="w-4 h-4" />
             </button>
