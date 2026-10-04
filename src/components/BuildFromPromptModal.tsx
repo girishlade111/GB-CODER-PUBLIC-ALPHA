@@ -1,3 +1,4 @@
+import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Loader2, Sparkles, Wand2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSettings, AI_PROVIDERS, type AIProviderId } from '../hooks/useSettings';
