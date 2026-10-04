@@ -1542,7 +1542,8 @@ kbd {
     if (pos < tokens.length) {
       throw calcError('Unexpected "' + label(tokens[pos]) + '" after a complete result');
     }
-    return result.v;
+    /* A percent sign with nothing to its left is just a division by a hundred. */
+    return result.pct ? result.v / 100 : result.v;
   }
 
   /* ---------------------------- formatting ---------------------------- */
