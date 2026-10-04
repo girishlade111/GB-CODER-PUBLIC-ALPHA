@@ -185,19 +185,20 @@ export default {
           error: '#c64545',
         },
 
-        /*
-         * Panel hierarchy for VS Code mode
-         */
+        // VS Code mode is a self-contained IDE surface, so the whole shell takes
+        // the dark product navy rather than only the editor pane — a
+        // half-dark IDE reads as a bug, not a theme. `border` is the on-dark
+        // hairline because every border here sits against navy.
         vsc: {
           editor: 'var(--product)',
-          sidebar: 'var(--surface-base)',
-          tabbar: 'var(--surface-base)',
-          panel: 'var(--product)',
-          border: 'var(--stroke-subtle)',
-          borderStrong: 'var(--stroke-strong)',
-          text: 'var(--text-primary)',
-          textMuted: 'var(--text-secondary)',
-          indent: 'var(--stroke-subtle)',
+          sidebar: 'var(--product-soft)',
+          tabbar: 'var(--product-soft)',
+          panel: 'var(--product-elevated)',
+          border: 'var(--product-border)',
+          borderStrong: 'var(--product-border-strong)',
+          text: 'var(--text-on-dark)',
+          textMuted: 'var(--text-on-dark-soft)',
+          indent: 'var(--product-border)',
         },
 
         // VS Code Theme Colors (theme-aware via vars)
