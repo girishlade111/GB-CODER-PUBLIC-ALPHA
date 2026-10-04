@@ -36,7 +36,7 @@ const ExtensionsMarketplace: React.FC<ExtensionsMarketplaceProps> = ({
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                <h2 className={`font-sans text-lg font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     Extensions Marketplace
                                 </h2>
                                 {/* Coming Soon Badge */}

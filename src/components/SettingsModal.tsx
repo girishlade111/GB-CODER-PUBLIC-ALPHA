@@ -79,7 +79,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 <div className="flex items-center justify-between px-6 py-4 border-b border-stroke-dark bg-product">
                     <div className="flex items-center gap-2.5">
                         <SettingsIcon className="w-4 h-4 text-content-on-dark-soft" />
-                        <h2 className="text-[18px] font-semibold text-content-on-dark">
+                        <h2 className="font-sans text-[18px] font-medium text-content-on-dark">
                             Settings
                         </h2>
                     </div>

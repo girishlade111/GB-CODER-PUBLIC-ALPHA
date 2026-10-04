@@ -119,7 +119,7 @@ const CodeHistoryPage: React.FC<CodeHistoryPageProps> = ({ onLoadCode, selection
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-content-on-dark mb-2">Code History</h1>
+          <h1 className="font-sans text-3xl font-medium text-content-on-dark mb-2">Code History</h1>
           <p className="text-content-on-dark-soft">View and manage your saved code files and AI operations</p>
         </div>
 

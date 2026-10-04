@@ -86,7 +86,7 @@ const SnapshotManagerModal: React.FC<SnapshotManagerModalProps> = ({
               <Database className={`w-5 h-5 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
             </div>
             <div>
-              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <h2 className={`font-sans text-xl font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 Snapshot Manager
               </h2>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>

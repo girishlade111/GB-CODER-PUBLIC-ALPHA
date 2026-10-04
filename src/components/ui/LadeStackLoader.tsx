@@ -19,11 +19,11 @@ const LadeStackLoader: React.FC<LadeStackLoaderProps> = ({
 
                     {/* Main Text */}
                     <div className="flex items-center gap-3">
-                        <h1 className="text-5xl md:text-6xl font-bold text-white tracking-wider animate-fade-in">
+                        <h1 className="font-sans text-5xl md:text-6xl font-medium text-white tracking-wider animate-fade-in">
                             LADE
                         </h1>
                         <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                        <h1 className="text-5xl md:text-6xl font-bold text-white tracking-wider animate-fade-in">
+                        <h1 className="font-sans text-5xl md:text-6xl font-medium text-white tracking-wider animate-fade-in">
                             STACK
                         </h1>
                     </div>

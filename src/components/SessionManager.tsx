@@ -275,7 +275,7 @@ const SessionManager: React.FC<SessionManagerProps> = ({
         <div className="bg-gray-900 px-6 py-4 border-b border-gray-700 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Database className="w-5 h-5 text-blue-400" />
-            <h2 className="text-lg font-semibold text-white">Session Manager</h2>
+            <h2 className="font-sans text-lg font-medium text-white">Session Manager</h2>
             <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs">
               {sessions.length} sessions
             </span>

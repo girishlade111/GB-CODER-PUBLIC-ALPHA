@@ -130,7 +130,7 @@ const PreviewSharePage: React.FC<PreviewSharePageProps> = ({
     return (
       <div className="fixed inset-0 flex h-screen w-screen items-center justify-center overflow-hidden bg-product p-6 text-center text-gray-100">
         <div className="max-w-md">
-          <h1 className="mb-3 text-[22px] font-semibold">Preview unavailable</h1>
+          <h1 className="font-sans mb-3 text-[22px] font-medium">Preview unavailable</h1>
           <p className="mb-6 text-sm text-gray-400">{error}</p>
           <a
             href="https://code.ladestack.in"

@@ -223,7 +223,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({
               <Sparkles className="w-5 h-5 text-accent" />
             </div>
             <div>
-              <h2 className="text-[16px] font-semibold text-content-on-dark">
+              <h2 className="font-sans text-[16px] font-medium text-content-on-dark">
                 AI Code Assistant
               </h2>
               <p className="text-[12px] text-content-on-dark-soft">

@@ -395,7 +395,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
           }`}
         >
           <h2
-            className={`text-lg font-bold ${isDark ? "text-bright-white" : "text-gray-900"}`}
+            className={`font-sans text-lg font-medium ${isDark ? "text-bright-white" : "text-gray-900"}`}
           >
             Color Picker
           </h2>

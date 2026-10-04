@@ -123,7 +123,7 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-[16px] font-semibold text-content-on-dark">
+                <h2 className="font-sans text-[16px] font-medium text-content-on-dark">
                   CodeRabbit AI
                 </h2>
                 <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-product-elevated text-accent border border-stroke-dark">

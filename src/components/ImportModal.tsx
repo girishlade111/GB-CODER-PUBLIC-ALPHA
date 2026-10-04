@@ -118,7 +118,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onFiles, isD
               <Upload className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-content-primary">Import</h2>
+              <h2 className="font-sans text-lg font-medium text-content-primary">Import</h2>
               <p className="mt-0.5 text-xs text-content-muted">
                 Files, folders, .zip archives, or a URL
               </p>

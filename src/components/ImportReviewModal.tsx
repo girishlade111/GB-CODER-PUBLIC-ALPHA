@@ -81,7 +81,7 @@ const ImportReviewModal: React.FC<ImportReviewModalProps> = ({ plan, onCancel, o
               <FileArchive className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-content-primary">Import project</h2>
+              <h2 className="font-sans text-base font-medium text-content-primary">Import project</h2>
               <p className="mt-0.5 text-xs text-content-muted">
                 {plan.sourceName} · {formatBytes(plan.sourceBytes)} · {files.length} file
                 {files.length === 1 ? '' : 's'} ready

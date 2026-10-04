@@ -2984,7 +2984,7 @@ function App() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-canvas p-6 text-center">
         <div className="max-w-md">
-          <h1 className="mb-3 text-display-md text-content-primary">Invalid preview link</h1>
+          <h1 className="font-sans mb-3 text-display-md text-content-primary">Invalid preview link</h1>
           <p className="mb-6 text-sm text-content-muted">The code could not be loaded.</p>
           <a
             href="https://code.ladestack.in"

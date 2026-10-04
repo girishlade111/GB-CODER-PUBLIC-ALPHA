@@ -295,7 +295,7 @@ const CodeStatsDashboard: React.FC<CodeStatsDashboardProps> = ({
               <BarChart3 className="w-6 h-6" />
             </div>
             <div>
-              <h2 className={`text-xl font-bold tracking-tight ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
+              <h2 className={`font-sans text-xl font-medium tracking-tight ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
                 Code Analytics
               </h2>
               <div className="flex items-center gap-2 mt-1">

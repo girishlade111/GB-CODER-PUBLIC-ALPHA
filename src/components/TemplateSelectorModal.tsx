@@ -181,7 +181,7 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
               <Layers className="w-5 h-5" />
             </div>
             <div>
-              <h2 className={`text-lg font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>Code Templates Library</h2>
+              <h2 className={`font-sans text-lg font-medium ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>Code Templates Library</h2>
               <p className={`text-xs ${isDark ? 'text-content-secondary' : 'text-content-secondary'}`}>{filteredTemplates.length} templates available</p>
             </div>
           </div>

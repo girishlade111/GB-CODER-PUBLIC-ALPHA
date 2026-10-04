@@ -33,7 +33,7 @@ const SessionRecoveryModal: React.FC<SessionRecoveryModalProps> = ({
           <div className="p-2 rounded-md bg-accent/10">
             <AlertCircle className="w-6 h-6 text-accent" />
           </div>
-          <h2 className="text-[18px] font-semibold text-content-on-dark">
+          <h2 className="font-sans text-[18px] font-medium text-content-on-dark">
             Session Recovered
           </h2>
         </div>

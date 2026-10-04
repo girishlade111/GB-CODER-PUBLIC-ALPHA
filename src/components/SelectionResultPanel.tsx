@@ -68,7 +68,7 @@ const SelectionResultPanel: React.FC<SelectionResultPanelProps> = ({
                 <div className="flex items-center gap-3">
                     <span className="text-2xl">{getOperationIcon()}</span>
                     <div>
-                        <h2 className="text-lg font-semibold text-bright-white">{getOperationTitle()}</h2>
+                        <h2 className="font-sans text-lg font-medium text-bright-white">{getOperationTitle()}</h2>
                         <p className="text-xs text-content-on-dark-soft uppercase">{language}</p>
                     </div>
                 </div>

@@ -119,7 +119,7 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
       <div className="flex items-center justify-between border-b border-stroke-subtle bg-surface-raised px-3 py-2">
         <div className="flex items-center gap-2">
           <PlugZap className="h-4 w-4 text-accent" />
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-content-secondary">
+          <h2 className="font-sans text-xs font-medium uppercase tracking-wide text-content-secondary">
             Sandbox
           </h2>
           <span

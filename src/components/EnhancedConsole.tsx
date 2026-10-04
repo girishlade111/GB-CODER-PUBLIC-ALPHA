@@ -185,7 +185,7 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
       <div className="bg-product-soft px-3 py-1.5 border-b border-stroke-dark flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-teal" />
-          <h2 className="text-xs uppercase tracking-wide font-semibold text-content-on-dark-soft">
+          <h2 className="font-sans text-xs uppercase tracking-wide font-medium text-content-on-dark-soft">
             GB Console
           </h2>
           <span

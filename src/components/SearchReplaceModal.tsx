@@ -297,7 +297,7 @@ const SearchReplaceModal: React.FC<SearchReplaceModalProps> = ({
               className={`w-5 h-5 ${isDark ? "text-blue-400" : "text-blue-600"}`}
             />
             <h2
-              className={`text-xl font-bold ${isDark ? "text-bright-white" : "text-gray-900"}`}
+              className={`font-sans text-xl font-medium ${isDark ? "text-bright-white" : "text-gray-900"}`}
             >
               Search & Replace
             </h2>

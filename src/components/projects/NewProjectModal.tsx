@@ -83,7 +83,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
         className={`w-full max-w-md rounded-2xl border border-stroke-subtle ${surface} shadow-2xl`}
       >
         <div className="flex items-center justify-between border-b border-stroke-subtle px-5 py-3.5">
-          <h2 className="text-sm font-semibold text-content-primary">New project</h2>
+          <h2 className="font-sans text-sm font-medium text-content-primary">New project</h2>
           <button
             type="button"
             onClick={onCancel}

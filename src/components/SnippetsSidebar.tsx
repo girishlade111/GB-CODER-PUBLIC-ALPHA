@@ -51,7 +51,7 @@ const SnippetsSidebar: React.FC<SnippetsSidebarProps> = ({
                             <Sparkles className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-semibold text-white">Snippets</h2>
+                            <h2 className="font-sans text-lg font-medium text-white">Snippets</h2>
                             <p className="text-xs text-gray-400">Manage your code library</p>
                         </div>
                     </div>

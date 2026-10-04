@@ -323,7 +323,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         {sections.map((section, index) => (
           <div key={section.id} className={index > 0 ? 'mt-3' : undefined}>
             <h2
-              className={`mb-1 px-3 text-[10px] font-semibold uppercase tracking-wide text-content-muted ${
+              className={`font-sans mb-1 px-3 text-[10px] font-medium uppercase tracking-wide text-content-muted ${
                 isExpanded ? '' : 'hidden compact:block'
               }`}
             >

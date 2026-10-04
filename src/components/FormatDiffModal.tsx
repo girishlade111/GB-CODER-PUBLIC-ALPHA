@@ -66,7 +66,7 @@ const FormatDiffModal: React.FC<FormatDiffModalProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-xl font-semibold">
+                        <h2 className="font-sans text-xl font-medium">
                             Format Preview - {getLanguageLabel(formatResult.language)}
                         </h2>
                         {formatResult.isUnsafe && (

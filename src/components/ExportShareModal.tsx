@@ -518,7 +518,7 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
               <Share2 className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-content-primary">Export &amp; Share</h2>
+              <h2 className="font-sans text-lg font-medium text-content-primary">Export &amp; Share</h2>
               <p className="mt-0.5 text-xs text-content-muted">
                 {isFrameworkProject
                   ? `${project.projectType === 'react' ? 'React' : 'Vue'} project · ${project.files.length} files`

@@ -101,7 +101,7 @@ const ExternalLibraryManager: React.FC<ExternalLibraryManagerProps> = ({
       <div className="relative w-full max-w-4xl max-h-[90vh] bg-bright-white dark:bg-dark-gray rounded-xl shadow-xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-bright-white">
+          <h2 className="font-sans text-xl font-medium text-gray-900 dark:text-bright-white">
             External Library Manager
           </h2>
           <button

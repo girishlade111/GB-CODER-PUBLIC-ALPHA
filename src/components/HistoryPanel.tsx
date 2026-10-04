@@ -91,7 +91,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                     <div className="flex items-center gap-3">
                         <Clock className="w-5 h-5 text-content-on-dark-soft" />
                         <div>
-                            <h2 className="text-[16px] font-semibold text-content-on-dark">History Timeline</h2>
+                            <h2 className="font-sans text-[16px] font-medium text-content-on-dark">History Timeline</h2>
                             <p className="text-[12px] text-content-on-dark-soft">{history.length} snapshots</p>
                         </div>
                     </div>

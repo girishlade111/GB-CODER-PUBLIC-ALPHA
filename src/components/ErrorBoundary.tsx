@@ -97,7 +97,7 @@ class ErrorBoundary extends Component<Props, State> {
                             </div>
                         </div>
 
-                        <h1 className="text-xl font-semibold text-content-on-dark mb-2">
+                        <h1 className="font-sans text-xl font-medium text-content-on-dark mb-2">
                             Something went wrong
                         </h1>
 

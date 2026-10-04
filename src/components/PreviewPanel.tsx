@@ -664,7 +664,7 @@ ${importMapHTML}
   const renderPreviewContent = () => (
     <>
       <div className={`${viewMode === 'fullscreen' ? 'bg-surface-overlay' : 'bg-surface-base'} px-4 py-2 border-b border-stroke-subtle flex items-center justify-between`}>
-        <h2 className="text-sm font-medium text-content-secondary">Live Preview</h2>
+        <h2 className="font-sans text-sm font-medium text-content-secondary">Live Preview</h2>
         <div className="flex items-center gap-3">
           {/* View Mode Toggles */}
           {/* Device Simulator Toggles */}

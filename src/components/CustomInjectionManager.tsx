@@ -161,7 +161,7 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
               <Zap className="w-6 h-6" />
             </div>
             <div>
-              <h2 className={`text-xl font-bold ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
+              <h2 className={`font-sans text-xl font-medium ${isDark ? 'text-bright-white' : 'text-gray-900'}`}>
                 Custom Code Injection <span className="text-sm font-normal text-content-muted ml-2">({activeInjections.length} active)</span>
               </h2>
               <p className={`text-sm mt-0.5 ${isDark ? 'text-content-secondary' : 'text-content-secondary'}`}>

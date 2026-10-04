@@ -138,7 +138,7 @@ const DependenciesPanel: React.FC<DependenciesPanelProps> = ({
       <div className="flex items-center justify-between border-b border-stroke-subtle px-3 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <Package className="h-4 w-4 shrink-0 text-content-secondary" />
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-content-secondary">
+          <h2 className="font-sans text-xs font-medium uppercase tracking-wide text-content-secondary">
             Dependencies
           </h2>
         </div>

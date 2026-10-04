@@ -327,7 +327,7 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
               <Wand2 className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-bright-white">Build with AI</h2>
+              <h2 className="font-sans text-lg font-medium text-bright-white">Build with AI</h2>
               <p className="mt-1 text-sm text-gray-400">
                 Describe what you want to build in plain English
               </p>
