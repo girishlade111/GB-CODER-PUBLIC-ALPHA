@@ -130,7 +130,7 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
                   ? 'bg-red-500/15 text-red-300'
                   : isConnected
                     ? 'bg-sky-500/15 text-sky-300'
-                    : 'bg-product-active text-content-muted'
+                    : 'bg-surface-strong text-content-muted'
             }`}
             data-testid="sandbox-status"
           >
@@ -149,7 +149,7 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
         {onClose && (
           <button
             onClick={onClose}
-            className="rounded px-2 py-1 text-xs text-content-muted hover:bg-product-active hover:text-content-primary"
+            className="rounded px-2 py-1 text-xs text-content-muted hover:bg-surface-strong hover:text-content-primary"
           >
             Close
           </button>
@@ -306,7 +306,7 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold ${
                   hasKey && !state.isBusy
                     ? 'bg-accent text-accent-fg hover:bg-accent-hover'
-                    : 'cursor-not-allowed bg-product-hover text-content-muted'
+                    : 'cursor-not-allowed bg-surface-hover text-content-muted'
                 }`}
               >
                 {state.isBusy ? (
@@ -399,7 +399,7 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
                       {candidate.command}
                     </code>
                   </span>
-                  <span className="rounded bg-product-hover px-1.5 py-0.5 text-[9px] uppercase text-content-muted">
+                  <span className="rounded bg-surface-hover px-1.5 py-0.5 text-[9px] uppercase text-content-muted">
                     {candidate.kind}
                   </span>
                 </button>
@@ -417,7 +417,7 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
                 type="button"
                 onClick={() => void sandboxSession.start(customCommand.trim())}
                 disabled={!customCommand.trim() || state.isBusy}
-                className="rounded-lg bg-product-active px-2.5 py-1.5 text-[11px] text-content-primary disabled:opacity-40"
+                className="rounded-lg bg-surface-strong px-2.5 py-1.5 text-[11px] text-content-primary disabled:opacity-40"
               >
                 Run
               </button>
@@ -475,13 +475,15 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
 
         {/* Logs */}
         {state.logs.length > 0 && (
-          <div className="mt-3 rounded-xl border border-stroke-subtle bg-product p-2">
+          {/* Command output is product chrome, so the log well takes the dark
+            product surface even though the panel around it stays cream. */}
+          <div className="mt-3 rounded-xl border border-stroke-dark bg-product p-2">
             <div className="mb-1 flex items-center gap-1.5 px-1">
-              <Terminal className="h-3 w-3 text-content-muted" />
-              <span className="text-[10px] uppercase tracking-wide text-content-muted">Output</span>
+              <Terminal className="h-3 w-3 text-teal" />
+              <span className="text-[10px] uppercase tracking-wide text-content-on-dark-soft">Output</span>
             </div>
             <div
-              className="max-h-48 overflow-y-auto font-mono text-[10px] leading-relaxed"
+              className="max-h-48 overflow-y-auto font-mono text-[10px] leading-relaxed text-content-on-dark"
               data-testid="sandbox-logs"
             >
               {state.logs.map((line, index) => (
@@ -491,8 +493,8 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
                     line.stream === 'stderr'
                       ? 'text-red-300'
                       : line.stream === 'system'
-                        ? 'text-sky-300'
-                        : 'text-content-secondary'
+                        ? 'text-teal'
+                        : 'text-content-on-dark'
                   }
                 >
                   {line.text}
@@ -511,7 +513,7 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
             onClick={() => void sandboxSession.restart()}
             disabled={state.isBusy}
             data-testid="sandbox-restart"
-            className="flex items-center gap-1.5 rounded-lg bg-product-active px-2.5 py-1.5 text-xs text-content-primary hover:bg-product-active disabled:opacity-40"
+            className="flex items-center gap-1.5 rounded-lg bg-surface-strong px-2.5 py-1.5 text-xs text-content-primary hover:bg-surface-strong disabled:opacity-40"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             Restart Sandbox
