@@ -305,11 +305,11 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
                 <div className="flex-1 p-5 overflow-y-auto">
                    <div className="aspect-video bg-white rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm flex flex-col overflow-hidden mb-6 relative group">
                       {previewPayload?.files ? (
-                        <div className="flex-1 p-4 overflow-y-auto text-xs font-mono text-content-primary bg-product">
-                           <div className="text-content-secondary mb-4">// Project structure</div>
+                        <div className="flex-1 p-4 overflow-y-auto text-xs font-mono text-content-on-dark bg-product">
+                           <div className="text-content-on-dark-soft mb-4">// Project structure</div>
                            {previewPayload.files.map((f: any) => (
                              <div key={f.path} className="flex items-center gap-2 py-1.5">
-                                <FileCode className="w-4 h-4 text-blue-400" />
+                                <FileCode className="w-4 h-4 text-accent" />
                                 {f.path}
                              </div>
                            ))}

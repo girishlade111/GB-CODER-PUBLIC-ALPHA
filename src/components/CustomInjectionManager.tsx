@@ -394,14 +394,14 @@ const CustomInjectionManager: React.FC<CustomInjectionManagerProps> = ({
                         </span>
                       </label>
                       <div className={`p-1 rounded-xl border focus-within:ring-2 focus-within:ring-accent focus-within:border-accent transition-all ${
-                        isDark ? 'bg-product border-stroke-subtle' : 'bg-product border-gray-300'
+                        isDark ? 'bg-product border-stroke-dark' : 'bg-product border-stroke-dark'
                       }`}>
                         <textarea
                           value={newInjection.code}
                           onChange={(e) => setNewInjection({ ...newInjection, code: e.target.value })}
                           rows={8}
                           spellCheck={false}
-                          className="w-full p-4 bg-transparent text-content-primary font-mono text-sm leading-relaxed focus:outline-none resize-y"
+                          className="w-full p-4 bg-transparent text-content-on-dark font-mono text-sm leading-relaxed focus:outline-none resize-y"
                           placeholder={
                             newInjection.type === 'css' ? '.my-custom-class {n  color: #7c3aed;n}' : 
                             newInjection.type === 'js' ? 'console.log("Custom injection active");' : 
