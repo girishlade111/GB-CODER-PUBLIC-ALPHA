@@ -176,8 +176,9 @@ export default {
         </div>
         <p class="head__note">Diagnostic, design, implementation, handover. The first three run in parallel wherever the data allows, and step one is free.</p>
       </header>
-      <ol class="process" id="processLine">
+      <div class="process" id="processLine">
         <span class="process__line" aria-hidden="true"></span>
+        <ol class="process__list">
         <li class="step" data-reveal>
           <span class="step__mark" aria-hidden="true"><span class="step__dot"></span></span>
           <span class="step__no">Step 01 &middot; Weeks 1&ndash;2</span>
@@ -202,7 +203,8 @@ export default {
           <h3 class="step__title">Handover</h3>
           <p class="step__copy">Templates, models and a quarterly health check for two years. Roughly a third of clients keep us on a light retainer; the rest take it in-house successfully.</p>
         </li>
-      </ol>
+        </ol>
+      </div>
     </div>
   </section>
 
@@ -758,7 +760,7 @@ textarea { font: inherit; resize: vertical; }
 .svc__pts li { padding: .22rem .55rem; border-radius: 999px; background: var(--gold-soft); color: var(--gold); font-size: .71rem; font-weight: 600; }
 
 /* process */
-.process { position: relative; display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+.process { position: relative; }
 .process::before {
   content: ''; position: absolute; left: 6%; right: 6%; top: 11px; height: 3px;
   background: var(--line); border-radius: 3px;
@@ -767,9 +769,10 @@ textarea { font: inherit; resize: vertical; }
   position: absolute; left: 6%; top: 11px; height: 3px; width: 0;
   background: linear-gradient(90deg, var(--gold), var(--gold-hi));
   border-radius: 3px;
-  transition: width 1.6s var(--ease);
+  transition: width 1.6s var(--ease), height 1.6s var(--ease);
 }
-.process.is-drawn::after { width: 88%; }
+.process.is-drawn .process__line { width: 88%; }
+.process__list { position: relative; display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
 .step { position: relative; display: grid; gap: .45rem; align-content: start; padding-top: 2.6rem; }
 .step__mark { position: absolute; top: 0; left: 0; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--surface); border: 2px solid var(--line); }
 .step__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-2); transition: background .4s var(--ease), box-shadow .4s var(--ease); }
@@ -950,9 +953,9 @@ textarea { font: inherit; resize: vertical; }
   .nav.is-open { opacity: 1; visibility: visible; transform: none; }
   .nav__list { flex-direction: column; align-items: stretch; gap: 0; }
   .nav__link { display: block; padding: .65rem 0; border-bottom: 1px solid var(--navy-3); font-size: 1rem; }
-  .process::before, .process::after { left: 12px; right: auto; top: 0; bottom: 0; width: 3px; height: auto; }
-  .process__line { left: 12px; top: 0; height: 0; width: 3px; transition: height 1.6s var(--ease); }
-  .process.is-drawn::after { width: 3px; height: 92%; }
+  .process::before { left: 12px; right: auto; top: 0; bottom: 0; width: 3px; height: auto; }
+  .process__line { left: 12px; top: 0; height: 0; width: 3px; }
+  .process.is-drawn .process__line { height: 92%; }
   .step { padding-top: 0; padding-left: 2.6rem; }
   .step__mark { left: 0; }
 }
