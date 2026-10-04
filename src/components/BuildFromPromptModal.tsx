@@ -368,52 +368,38 @@ const BuildFromPromptModal: React.FC<BuildFromPromptModalProps> = ({
           </button>
         </div>
 
-        {/* Model Provider Selector */}
+        {/* Model Provider Dropdown Selector */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[12px] font-medium text-content-on-dark-soft">
-              AI Model:
-            </span>
-            <span className="text-[11.5px] font-mono text-content-on-dark-soft">
-              {AI_PROVIDERS.find((p) => p.id === selectedProvider)?.model}
+            <label htmlFor="ai-model-select" className="text-[12px] font-medium text-content-on-dark-soft flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-accent" />
+              <span>AI Model:</span>
+            </label>
+            <span className="text-[11px] font-mono text-content-on-dark-soft bg-product-elevated px-2 py-0.5 rounded border border-stroke-dark">
+              {AI_PROVIDERS.find((p) => p.id === selectedProvider)?.badge}
             </span>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {AI_PROVIDERS.map((p) => {
-              const isSelected = selectedProvider === p.id;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => handleProviderSelect(p.id)}
-                  disabled={isLoading}
-                  className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all ${
-                    isSelected
-                      ? 'border-accent bg-accent/15 text-content-on-dark shadow-sm ring-1 ring-accent/30'
-                      : 'border-stroke-dark bg-product hover:border-stroke-subtle text-content-on-dark-soft hover:text-content-on-dark'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span className="text-[12px] font-medium leading-tight">
-                      {p.name}
-                    </span>
-                    <span
-                      className={`text-[9.5px] px-1.5 py-0.5 rounded font-mono font-medium leading-tight ${
-                        isSelected
-                          ? 'bg-accent text-white'
-                          : 'bg-product-elevated text-content-on-dark-soft'
-                      }`}
-                    >
-                      {p.badge}
-                    </span>
-                  </div>
-                  <span className="text-[10.5px] text-content-on-dark-soft/75 mt-1 font-mono truncate w-full">
-                    {p.model}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="relative">
+            <select
+              id="ai-model-select"
+              value={selectedProvider}
+              onChange={(e) => handleProviderSelect(e.target.value as AIProviderId)}
+              disabled={isLoading}
+              className="w-full bg-product border border-stroke-dark hover:border-stroke-subtle focus:border-accent text-content-on-dark text-[13px] rounded-lg px-3.5 py-2 outline-none transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed appearance-none pr-10 font-sans"
+            >
+              {AI_PROVIDERS.map((p) => (
+                <option key={p.id} value={p.id} className="bg-surface-raised text-content-on-dark py-1">
+                  {p.name} — {p.model} ({p.badge})
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-content-on-dark-soft">
+              <ChevronDown className="h-4 w-4" />
+            </div>
           </div>
+          <p className="mt-1.5 text-[11.5px] text-content-on-dark-soft/80">
+            {AI_PROVIDERS.find((p) => p.id === selectedProvider)?.description}
+          </p>
         </div>
 
         <div className="relative">
