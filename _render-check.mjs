@@ -27,8 +27,10 @@ for (const file of walk(DIR).sort()) {
 const browser = await chromium.launch();
 let failed = 0;
 
+const VIEW_W = 1280;
+
 for (const t of templates) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const page = await browser.newPage({ viewport: { width: VIEW_W, height: 900 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => {
@@ -123,8 +125,8 @@ for (const t of templates) {
   await page.close();
 }
 
-// Narrow-viewport pass to catch layout overflow.
-console.log('\n--- 360px overflow check ---');
+// Narrow-viewport pass: the real question is whether the user can scroll sideways.
+console.log('\n--- 360px sideways-scroll check ---');
 for (const t of templates) {
   const page = await browser.newPage({ viewport: { width: 360, height: 780 } });
   await page.setContent(
@@ -132,20 +134,19 @@ for (const t of templates) {
     '</style></head><body>' + t.html + '<script>' + t.js.replace(/<\/script/gi, '<\\/script') + '</script></body></html>',
     { waitUntil: 'networkidle' },
   );
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(700);
   const over = await page.evaluate(() => {
-    const w = document.documentElement.clientWidth;
-    const wide = [...document.querySelectorAll('body *')].filter((el) => {
-      const r = el.getBoundingClientRect();
-      return r.width > 0 && r.right > w + 2 && getComputedStyle(el).position !== 'fixed';
-    });
-    return { scrollW: document.documentElement.scrollWidth, count: wide.length, first: wide[0] ? wide[0].className || wide[0].tagName : '' };
+    const before = window.scrollX;
+    window.scrollTo(9999, window.scrollY);
+    const max = window.scrollX;
+    window.scrollTo(0, window.scrollY);
+    return { max, can: max > before };
   });
-  if (over.scrollW > 362) {
+  if (over.can) {
     failed++;
-    console.log('[FAIL] ' + t.name.padEnd(26) + ' scrollWidth=' + over.scrollW + ' (' + over.count + ' wide els, first: ' + over.first + ')');
+    console.log('[FAIL] ' + t.name.padEnd(26) + ' scrolls ' + over.max + 'px sideways');
   } else {
-    console.log('[ ok ] ' + t.name.padEnd(26) + ' no overflow');
+    console.log('[ ok ] ' + t.name.padEnd(26) + ' no sideways scroll');
   }
   await page.close();
 }
