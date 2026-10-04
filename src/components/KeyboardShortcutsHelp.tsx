@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Keyboard, Search, Settings } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 

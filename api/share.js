@@ -32,6 +32,10 @@ module.exports = async (req, res) => {
     }
 
     // Redis client — initialized INSIDE handler
+    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+      return res.status(503).json({ error: 'Share storage is not configured (missing Upstash Redis credentials).' })
+    }
+
     const { Redis } = require('@upstash/redis')
     const redis = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL,

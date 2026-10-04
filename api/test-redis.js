@@ -1,10 +1,5 @@
 const { Redis } = require('@upstash/redis');
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
-
 module.exports = async function handler(req, res) {
   try {
     if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
@@ -13,6 +8,11 @@ module.exports = async function handler(req, res) {
         error: 'Missing Upstash Redis environment variables',
       });
     }
+
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
 
     await redis.set('ladestack:test', 'ok', { ex: 60 });
     const value = await redis.get('ladestack:test');

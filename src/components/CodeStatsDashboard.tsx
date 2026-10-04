@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
-  BarChart3, Code2, FileText, Clock, Zap, Layers, X, 
+  BarChart3, Code2, FileText, Zap, Layers, X, 
   RefreshCw, Download, AlertTriangle, CheckCircle2,
   FileCode2, ChevronDown, ChevronRight, Info
 } from 'lucide-react';
@@ -478,8 +478,16 @@ const CodeStatsDashboard: React.FC<CodeStatsDashboardProps> = ({
 
 // --- Subcomponents ---
 
-const MetricCard = ({ icon: Icon, label, value, isDark, color }: any) => {
-  const colorMap: any = {
+interface MetricCardProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string | number;
+  isDark: boolean;
+  color: string;
+}
+
+const MetricCard = ({ icon: Icon, label, value, isDark, color }: MetricCardProps) => {
+  const colorMap: Record<string, string> = {
     blue: isDark ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-600 border-blue-200',
     green: isDark ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-green-50 text-green-600 border-green-200',
     orange: isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-600 border-orange-200',
@@ -490,7 +498,7 @@ const MetricCard = ({ icon: Icon, label, value, isDark, color }: any) => {
 
   return (
     <div className={`p-4 rounded-xl border flex flex-col justify-between ${isDark ? 'bg-surface-overlay border-stroke-subtle' : 'bg-white border-gray-200'} shadow-sm transition-transform hover:-translate-y-1`}>
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 border ${colorMap[color]}`}>
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 border ${colorMap[color] || colorMap.blue}`}>
         <Icon className="w-4 h-4" />
       </div>
       <div>
@@ -505,7 +513,14 @@ const MetricCard = ({ icon: Icon, label, value, isDark, color }: any) => {
   );
 };
 
-const BarSegment = ({ color, value, total, name }: any) => {
+interface BarSegmentProps {
+  color: string;
+  value: number;
+  total: number;
+  name: string;
+}
+
+const BarSegment = ({ color, value, total, name }: BarSegmentProps) => {
   const pct = ((value / total) * 100).toFixed(1);
   return (
     <div 
@@ -519,7 +534,15 @@ const BarSegment = ({ color, value, total, name }: any) => {
   );
 };
 
-const LegendItem = ({ color, name, value, total, isDark }: any) => {
+interface LegendItemProps {
+  color: string;
+  name: string;
+  value: number;
+  total: number;
+  isDark: boolean;
+}
+
+const LegendItem = ({ color, name, value, total, isDark }: LegendItemProps) => {
   const pct = ((value / total) * 100).toFixed(1);
   return (
     <div className="flex items-center gap-2">
@@ -530,7 +553,13 @@ const LegendItem = ({ color, name, value, total, isDark }: any) => {
   );
 };
 
-const ScoreRow = ({ label, score, isDark }: any) => {
+interface ScoreRowProps {
+  label: string;
+  score: number;
+  isDark: boolean;
+}
+
+const ScoreRow = ({ label, score, isDark }: ScoreRowProps) => {
   const getColor = (s: number) => {
     if (s >= 90) return 'text-green-500';
     if (s >= 70) return 'text-yellow-500';
@@ -553,7 +582,14 @@ const ScoreRow = ({ label, score, isDark }: any) => {
   );
 };
 
-const InsightRow = ({ label, value, severity, isDark }: any) => {
+interface InsightRowProps {
+  label: string;
+  value: string;
+  severity: Severity;
+  isDark: boolean;
+}
+
+const InsightRow = ({ label, value, severity, isDark }: InsightRowProps) => {
   const getIcon = () => {
     if (severity === 'good') return <CheckCircle2 className="w-4 h-4 text-green-500" />;
     if (severity === 'warning') return <AlertTriangle className="w-4 h-4 text-yellow-500" />;

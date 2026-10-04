@@ -20,7 +20,7 @@ export async function initLaminar() {
         });
         isInitialized = true;
       }
-    } catch (_) {
+    } catch {
       // Graceful fallback for browser bundler environments
     }
   }
@@ -33,7 +33,7 @@ export function observe<T>(
   if (lmnrModule && typeof lmnrModule.observe === 'function') {
     try {
       return lmnrModule.observe(options, fn);
-    } catch (_) {
+    } catch {
       // Fallback to plain execution if trace wrapper fails
     }
   }

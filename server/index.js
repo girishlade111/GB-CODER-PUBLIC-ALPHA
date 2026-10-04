@@ -9,8 +9,8 @@ const WebSocket = require('ws');
 const pty = require('node-pty');
 const cors = require('cors');
 const os = require('os');
-const aiHandler = require('../api/ai');
-const healthHandler = require('../api/health');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -24,21 +24,61 @@ const ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000'
 ];
 
+function isOriginAllowed(origin) {
+    if (!origin) return true; // allow same-origin, curl, server-to-server
+    if (ALLOWED_ORIGINS.includes(origin)) return true;
+    try {
+        const url = new URL(origin);
+        if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+            return true;
+        }
+        if (url.hostname === 'code.ladestack.in') {
+            return true;
+        }
+    } catch (_) {}
+    return false;
+}
+
 // Enable CORS for allowed origins
 app.use(cors({
-    origin: ALLOWED_ORIGINS,
+    origin: (origin, callback) => {
+        if (isOriginAllowed(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 }));
 
 // Parse JSON bodies (up to 10MB to accommodate multi-file project contexts)
 app.use(express.json({ limit: '10mb' }));
 
-// Health check and AI endpoints
+// Health check root
 app.get('/', (req, res) => {
     res.json({ status: 'ok', service: 'GB Coder Server' });
 });
-app.all('/api/health', (req, res) => healthHandler(req, res));
-app.all('/api/ai', (req, res) => aiHandler(req, res));
+
+// Dynamic API handler routing to all endpoints in api/ (including ai, health, preview, share, sandbox)
+app.all('/api/*', async (req, res) => {
+    const route = req.path.replace(/^\/api\//, '');
+    const candidateFile = path.resolve(__dirname, '../api', `${route}.js`);
+
+    if (fs.existsSync(candidateFile)) {
+        try {
+            const handler = require(candidateFile);
+            const fn = typeof handler === 'function' ? handler : handler.default || handler;
+            await fn(req, res);
+        } catch (err) {
+            console.error(`Error in /api/${route}:`, err);
+            if (!res.headersSent) {
+                res.status(500).json({ error: err.message || 'Internal Server Error' });
+            }
+        }
+    } else {
+        res.status(404).json({ error: `API route not found: /api/${route}` });
+    }
+});
 
 // WebSocket server for terminal connections (unattached to server until origin check)
 const wss = new WebSocket.Server({ noServer: true });
@@ -59,7 +99,7 @@ server.on('upgrade', (request, socket, head) => {
         return;
     }
 
-    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+    if (origin && !isOriginAllowed(origin)) {
         socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
         socket.destroy();
         return;

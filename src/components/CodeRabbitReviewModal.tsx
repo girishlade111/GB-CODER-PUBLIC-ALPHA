@@ -3,17 +3,14 @@ import {
   X,
   Bug,
   ShieldAlert,
-  Zap,
   CheckCircle,
   AlertTriangle,
-  Info,
   Key,
   Eye,
   EyeOff,
   RefreshCw,
   Sparkles,
   FileCode,
-  ArrowRight,
   Wand2,
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
@@ -266,7 +263,7 @@ export const CodeRabbitReviewModal: React.FC<CodeRabbitReviewModalProps> = ({
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
                   className={`px-3 py-1 rounded-md text-[12px] font-medium whitespace-nowrap transition-colors ${
                     activeTab === tab.id
                       ? 'bg-product-active text-content-on-dark border border-stroke-dark'

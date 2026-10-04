@@ -64,7 +64,9 @@ export class SelectionOperationsService {
             if (parsed.aiProvider === 'atria' && parsed.atriaApiKey) apiKey = parsed.atriaApiKey;
             if (parsed.aiProvider === 'nvidia' && parsed.nvidiaApiKey) apiKey = parsed.nvidiaApiKey;
           }
-        } catch {}
+        } catch {
+          // ignore localStorage failure or invalid json
+        }
       }
 
       const response = await fetch('/api/ai', {

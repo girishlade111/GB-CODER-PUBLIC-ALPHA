@@ -657,7 +657,11 @@ ${importMapHTML}
   const handleDeviceChange = (deviceId: DeviceType) => {
     setDevicePreset(deviceId);
     setShowDeviceMenu(false);
-    try { localStorage.setItem('gbcoder_device_preset', deviceId); } catch {}
+    try {
+      localStorage.setItem('gbcoder_device_preset', deviceId);
+    } catch (_e) {
+      // storage quota or disabled
+    }
   };
 
   // Render preview content (used in both normal and fullscreen modes)

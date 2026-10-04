@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDiffViewer, { DiffMethod } from 'react-diff-viewer-continued';
-import { X, Check, Copy, ChevronRight, FileCode, CheckCircle2 } from 'lucide-react';
+import { X, Check, Copy, FileCode, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export interface DiffFile {

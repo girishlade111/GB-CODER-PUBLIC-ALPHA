@@ -2,8 +2,13 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { createRequire } from 'module';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function localApiPlugin(): Plugin {
   return {
@@ -17,16 +22,11 @@ function localApiPlugin(): Plugin {
         const urlPath = req.url.split('?')[0];
         const route = urlPath.replace(/^\/api\//, '');
 
-        let handlerFile: string | null = null;
-        if (route === 'ai') handlerFile = './api/ai.js';
-        else if (route === 'health') handlerFile = './api/health.js';
-        else if (route === 'preview') handlerFile = './api/preview.js';
-        else if (route === 'share') handlerFile = './api/share.js';
-        else if (route === 'test-redis') handlerFile = './api/test-redis.js';
-
-        if (!handlerFile) {
+        const candidateFile = path.resolve(__dirname, 'api', `${route}.js`);
+        if (!fs.existsSync(candidateFile)) {
           return next();
         }
+        const handlerFile = candidateFile;
 
         try {
           const anyRes = res as any;

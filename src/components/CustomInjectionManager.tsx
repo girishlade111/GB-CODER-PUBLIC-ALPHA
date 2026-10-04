@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { X, Plus, Code2, Save, Trash2, Zap, BookOpen, ChevronUp, ChevronDown, Check, Trash, LayoutList, RefreshCcw, AlignLeft } from 'lucide-react';
+import { X, Plus, Code2, Save, Trash2, Zap, BookOpen, ChevronUp, ChevronDown, Check, LayoutList, RefreshCcw } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
-import { customInjectionService, CustomInjection, PresetInjection, InjectionType, InjectionTarget } from '../services/customInjectionService';
+import { customInjectionService, CustomInjection, InjectionType, InjectionTarget } from '../services/customInjectionService';
 import toast from 'react-hot-toast';
 
 interface CustomInjectionManagerProps {

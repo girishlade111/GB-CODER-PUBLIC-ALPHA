@@ -4,6 +4,10 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') { res.status(200).end(); return }
 
   try {
+    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+      return res.status(503).json({ error: 'Share/Preview storage is not configured (missing Upstash Redis credentials).' })
+    }
+
     const { Redis } = require('@upstash/redis')
     const redis = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL,
