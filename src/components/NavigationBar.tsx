@@ -111,12 +111,13 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
 
   /** Shared surface for the dropdown panels: white card, hairline, no shadow. */
   const menuSurface =
-    'absolute right-0 mt-2 z-50 animate-slide-down overflow-hidden rounded-lg border border-stroke bg-surface-base';
+    'absolute right-0 mt-2 z-50 animate-slide-down overflow-hidden rounded-lg border border-stroke bg-surface-raised';
 
   return (
     <>
       {/* top-nav — canvas floor with a single hairline underneath. No shadow,
-          no blur: depth in this system comes from white-on-cream, not overlays. */}
+          no blur: depth in this system comes from cream-on-cream and the dark
+          product surfaces, not from overlays. */}
       <nav className="fixed left-0 right-0 top-0 z-40 border-b border-stroke-subtle bg-surface-canvas">
         <div className="mx-auto w-full max-w-[1200px] px-3 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between sm:h-16">
@@ -169,8 +170,12 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   alt="GB Coder Logo"
                   className="h-6 w-6 rounded-md object-contain sm:h-8 sm:w-8 lg:h-9 lg:w-9"
                 />
-                {/* Wordmark: 500 weight with display tracking — brand mark, not bold. */}
-                <span className="truncate text-base font-medium tracking-tight text-content-primary sm:text-lg">
+                {/*
+                  Wordmark in the display serif — the brand reads as a wordmark,
+                  not a label, so it takes the editorial voice at weight 500
+                  with negative tracking rather than bold sans.
+                */}
+                <span className="font-display truncate text-xl tracking-tight text-content-primary sm:text-2xl">
                   GB Coder
                 </span>
               </div>
@@ -181,7 +186,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               <Tooltip label="Run">
                 <button
                   onClick={onRun}
-                  className={`${iconButton} ${NAV_LINK} compact:min-h-[44px] compact:min-w-[44px] compact:justify-center gap-2 border border-stroke-strong bg-surface-base px-3 py-2`}
+                  className={`${iconButton} ${NAV_LINK} compact:min-h-[44px] compact:min-w-[44px] compact:justify-center gap-2 border border-stroke bg-surface-canvas px-3 py-2`}
                   title="Run"
                   aria-label="Run"
                 >
@@ -223,7 +228,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 </Tooltip>
               )}
 
-              {/* button-primary — the one place Cursor Orange is spent. */}
+              {/* button-primary — the one place coral is spent on a single element. */}
               <Tooltip label="Build with AI">
                 <button
                   onClick={onOpenBuildFromPrompt}
@@ -236,12 +241,12 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 </button>
               </Tooltip>
 
-              {/* button-secondary — white pill, hairline-strong outline. */}
+              {/* button-secondary — cream fill, hairline outline. */}
               {onOpenCodeRabbit && (
                 <Tooltip label="CodeRabbit AI Bug Scanner">
                   <button
                     onClick={onOpenCodeRabbit}
-                    className={`inline-flex items-center justify-center gap-2 rounded-md border border-stroke-strong bg-surface-base px-3 py-2 ${NAV_LINK} text-content-primary transition-colors hover:bg-surface-hover compact:min-h-[44px] compact:min-w-[44px]`}
+                    className={`inline-flex items-center justify-center gap-2 rounded-md border border-stroke bg-surface-canvas px-3 py-2 ${NAV_LINK} text-content-primary transition-colors hover:bg-surface-hover compact:min-h-[44px] compact:min-w-[44px]`}
                     title="CodeRabbit AI Bug Scanner"
                     aria-label="CodeRabbit AI Bug Scanner"
                   >

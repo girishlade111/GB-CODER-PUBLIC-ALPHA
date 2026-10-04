@@ -173,9 +173,9 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
 
     const renderConsole = () => (
                     <Suspense fallback={
-                        <div className="bg-surface-base border border-stroke-subtle rounded-lg p-4 text-center">
+                        <div className="bg-product border border-stroke-dark rounded-lg p-4 text-center">
                             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                            <p className="text-content-secondary text-sm">Loading Console...</p>
+                            <p className="text-content-on-dark-soft text-sm">Loading Console...</p>
                         </div>
                     }>
                         <div className="h-full min-h-0 flex flex-col">
@@ -230,7 +230,7 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                         {tab.badge !== undefined && tab.badge > 0 && (
                             <span
                                 className={`
-                  ${tab.badgeColor} text-white text-xs font-bold
+                  ${tab.badgeColor} text-accent-fg text-xs font-bold
                   px-1.5 py-0.5 rounded-full min-w-[20px] text-center
                   flex items-center justify-center
                 `}
@@ -243,7 +243,7 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                 {customInjections.filter((i: any) => i.enabled).length > 0 && (
                     <button
                         onClick={onOpenInjectionManager}
-                        className="ml-auto mr-2 px-2 py-1 flex items-center gap-1 text-[10px] uppercase font-bold text-accent bg-accent/10 border border-accent/20 rounded-md hover:bg-accent/20 transition-colors"
+                        className="ml-auto mr-2 px-2 py-1 flex items-center gap-1 text-[10px] uppercase font-bold text-accent bg-accent-subtle border border-accent/30 rounded-md hover:bg-accent/20 transition-colors"
                         title="Manage Custom Injections"
                     >
                         <span>⚡ {customInjections.filter((i: any) => i.enabled).length} Injections</span>
@@ -257,7 +257,7 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
                     {renderPreview()}
                 </div>
                 {activeTab === 'console' && (
-                    <div className="absolute inset-0 z-10 bg-surface-base">{renderConsole()}</div>
+                    <div className="absolute inset-0 z-10 bg-product">{renderConsole()}</div>
                 )}
             </div>
         </div>

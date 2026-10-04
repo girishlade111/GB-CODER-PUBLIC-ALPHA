@@ -8,9 +8,9 @@ interface FooterProps {
   onOpenValidator?: () => void;
 }
 
-/** footer-link per DESIGN.md: transparent, body colour, body-sm. */
-const linkClass = 'text-content-secondary transition-colors hover:text-content-primary';
-const socialClass = 'text-content-muted transition-colors hover:text-accent';
+/** footer-link per DESIGN.md: on-dark-soft, warming to on-dark on hover. */
+const linkClass = 'text-content-on-dark-soft transition-colors hover:text-content-on-dark';
+const socialClass = 'text-content-on-dark-soft transition-colors hover:text-accent';
 
 const Footer: React.FC<FooterProps> = ({ focusMode = false, errorCount = 0, warningCount = 0, onOpenValidator }) => {
   const handleNavigation = (view: string) => {
@@ -22,10 +22,14 @@ const Footer: React.FC<FooterProps> = ({ focusMode = false, errorCount = 0, warn
   }
 
   return (
-    /* Sits on the cream canvas rather than a darker band — the hairline alone
-       separates it from the workspace above. */
-    <footer className="mt-auto border-t border-stroke-subtle bg-surface-canvas text-content-secondary">
-      <div className="mx-auto w-full max-w-[1200px] px-4 py-2.5 sm:px-6 lg:px-8">
+    /*
+      footer — DESIGN.md's closing band. The app ends on the dark product
+      surface, not the cream canvas it started on: cream → cream-card →
+      dark product → cream → coral → dark footer is the rhythm the whole
+      system is paced by. The footer never inverts to a light band.
+    */
+    <footer className="mt-auto border-t border-stroke-dark bg-product text-content-on-dark-soft">
+      <div className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4 text-sm">
           {/* Left: Problems & Links */}
           <div className="flex flex-wrap items-center gap-4">
@@ -34,8 +38,8 @@ const Footer: React.FC<FooterProps> = ({ focusMode = false, errorCount = 0, warn
               <>
                 <button
                   onClick={onOpenValidator}
-                  className={`flex items-center gap-2 rounded-xs px-2 py-0.5 transition-colors hover:bg-surface-hover ${
-                    errorCount > 0 ? 'text-danger' : 'text-content-secondary'
+                  className={`flex items-center gap-2 rounded-xs px-2 py-0.5 transition-colors hover:bg-product-hover ${
+                    errorCount > 0 ? 'text-red-300' : 'text-content-on-dark-soft'
                   }`}
                   title="View Problems"
                 >
@@ -43,19 +47,19 @@ const Footer: React.FC<FooterProps> = ({ focusMode = false, errorCount = 0, warn
                     <XCircle className="h-3 w-3" />
                     <span>{errorCount}</span>
                   </span>
-                  <span className="flex items-center gap-1 text-warning">
+                  <span className="flex items-center gap-1 text-yellow-300">
                     <AlertTriangle className="h-3 w-3" />
                     <span>{warningCount}</span>
                   </span>
                 </button>
-                <span aria-hidden className="text-stroke-strong">|</span>
+                <span aria-hidden className="text-stroke-dark-strong">|</span>
               </>
             )}
 
             <button onClick={() => handleNavigation('about')} className={linkClass}>About</button>
             <button onClick={() => handleNavigation('documentation')} className={linkClass}>Documentation</button>
             <button onClick={() => handleNavigation('contact')} className={linkClass}>Contact</button>
-            <span aria-hidden className="text-stroke-strong">|</span>
+            <span aria-hidden className="text-stroke-dark-strong">|</span>
             <button onClick={() => handleNavigation('privacy')} className={linkClass}>Privacy</button>
             <button onClick={() => handleNavigation('terms')} className={linkClass}>Terms</button>
             <button onClick={() => handleNavigation('cookies')} className={linkClass}>Cookies</button>
@@ -63,8 +67,8 @@ const Footer: React.FC<FooterProps> = ({ focusMode = false, errorCount = 0, warn
           </div>
 
           {/* Center: Copyright */}
-          <div className="hidden text-xs text-content-muted lg:block">
-            © 2024 GB Coder. Created by Girish Lade in Mumbai, India.
+          <div className="hidden text-xs text-content-on-dark-soft lg:block">
+            c 2024 GB Coder. Created by Girish Lade in Mumbai, India.
           </div>
 
           {/* Right: Social Icons */}
@@ -98,8 +102,8 @@ const Footer: React.FC<FooterProps> = ({ focusMode = false, errorCount = 0, warn
         </div>
 
         {/* Mobile Copyright */}
-        <div className="mt-2 text-center text-xs text-content-muted lg:hidden">
-          © 2024 GB Coder. Created by Girish Lade in Mumbai, India.
+        <div className="mt-2 text-center text-xs text-content-on-dark-soft lg:hidden">
+          c 2024 GB Coder. Created by Girish Lade in Mumbai, India.
         </div>
       </div>
     </footer>

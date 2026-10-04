@@ -31,15 +31,15 @@ interface PreviewMessage {
 const ICONS: Record<PreviewMessage['type'], React.ReactNode> = {
   error: <AlertCircle className="w-3.5 h-3.5 text-red-400" />,
   warn: <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />,
-  info: <Info className="w-3.5 h-3.5 text-sky-400" />,
-  log: <Terminal className="w-3.5 h-3.5 text-gray-500" />,
+  info: <Info className="w-3.5 h-3.5 text-teal" />,
+  log: <Terminal className="w-3.5 h-3.5 text-content-on-dark-soft" />,
 };
 
 const COLORS: Record<PreviewMessage['type'], string> = {
   error: 'text-red-300',
   warn: 'text-amber-300',
-  info: 'text-sky-300',
-  log: 'text-gray-300',
+  info: 'text-teal-300',
+  log: 'text-content-on-dark',
 };
 
 const PreviewRunTab: React.FC<PreviewRunTabProps> = ({
@@ -146,15 +146,15 @@ ${html}
 
   return (
     <div className="flex h-full min-h-0">
-      <div className={`overflow-y-auto font-mono text-xs bg-matte-black ${showPreview ? 'w-1/2' : 'w-full'}`}>
+      <div className={`overflow-y-auto font-mono text-xs bg-product ${showPreview ? 'w-1/2' : 'w-full'}`}>
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-gray-600 px-4 text-center">
+          <div className="h-full flex flex-col items-center justify-center text-content-on-dark-soft px-4 text-center">
             <Play className="w-5 h-5 mb-2 opacity-50" />
             <p className="text-sm">Press Run to execute this snippet in an isolated frame.</p>
           </div>
         ) : (
           messages.map((message) => (
-            <div key={message.id} className="flex items-start gap-2 px-2 py-1 border-b border-gray-800/40">
+            <div key={message.id} className="flex items-start gap-2 px-2 py-1 border-b border-stroke-dark">
               <span className="mt-0.5 flex-shrink-0">{ICONS[message.type]}</span>
               <pre className={`flex-1 whitespace-pre-wrap ${COLORS[message.type]}`}>{message.message}</pre>
             </div>
@@ -164,7 +164,7 @@ ${html}
 
       {showPreview && (
         <div className="w-1/2 border-l border-stroke-subtle bg-white flex flex-col min-h-0">
-          <div className="bg-surface-raised px-3 py-1.5 border-b border-stroke-subtle text-xs text-content-secondary flex items-center justify-between flex-shrink-0">
+          <div className="bg-product-soft px-3 py-1.5 border-b border-stroke-dark text-xs text-content-on-dark-soft flex items-center justify-between flex-shrink-0">
             <span>Isolated run</span>
             <span className="flex items-center gap-2">
               <Cpu className="w-3 h-3" />
