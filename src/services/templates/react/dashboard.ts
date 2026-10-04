@@ -1860,7 +1860,7 @@ export default {
           format: 'currency',
           delta: 7.2,
           deltaLabel: 'vs last month',
-          series: REVENUE.map((row) => row.revenue),
+          series: REVENUE_SERIES.map((row) => row.revenue),
           tone: 'up',
           note: 'Best month since the series began.',
         },

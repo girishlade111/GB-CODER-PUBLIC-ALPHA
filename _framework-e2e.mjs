@@ -27,8 +27,14 @@ const vuePlugin = {
       const { descriptor, errors } = parse(src, { filename: args.path });
       if (errors.length) return { errors: errors.map((e) => ({ text: String(e.message) })) };
       const id = 'v' + Math.abs(args.path.length * 31 + args.path.charCodeAt(3));
-      let js = descriptor.script || descriptor.scriptSetup ? compileScript(descriptor, { id }).content : '';
-      if (descriptor.template) {
+      let js = descriptor.script || descriptor.scriptSetup
+        ? compileScript(descriptor, { id, inlineTemplate: Boolean(descriptor.template) }).content
+        : 'export default {}';
+      if (descriptor.template && !(descriptor.script || descriptor.scriptSetup)) {
+        const t = compileTemplate({ source: descriptor.template.content, filename: args.path, id });
+        if (t.errors.length) return { errors: t.errors.map((e) => ({ text: String(e.message) })) };
+        js = 'const __c = {};\n' + t.code + '\nexport default __c;';
+      } else if (descriptor.template && !descriptor.scriptSetup && descriptor.script) {
         const t = compileTemplate({ source: descriptor.template.content, filename: args.path, id });
         if (t.errors.length) return { errors: t.errors.map((e) => ({ text: String(e.message) })) };
         js += '\n' + t.code;

@@ -708,8 +708,13 @@ export default {
        *
        * \`scrollHeight - innerHeight\` is the true scroll range, so this is correct even
        * on a short page that cannot scroll at all (where it is 0 rather than NaN).
+       *
+       * \`resetKey\` restarts the bar whenever the route changes, so navigating from a
+       * long post to a short one does not leave the bar stuck at 100%. The setter is
+       * private to this hook, which is why the reset lives here rather than in the
+       * caller.
        */
-      function useReadingProgress() {
+      function useReadingProgress(resetKey) {
         const [progress, setProgress] = useState(0);
 
         useEffect(() => {
@@ -727,12 +732,15 @@ export default {
           };
         }, []);
 
+        // Clear the sticky-header state when the route changes.
+        useEffect(() => setProgress(0), [resetKey]);
+
         return progress;
       }
 
       export default function App() {
         const { path, navigate } = useRouter();
-        const progress = useReadingProgress();
+        const progress = useReadingProgress(path);
         const scrollRef = useRef(null);
 
         const { tag, q } = readQuery(path);
@@ -752,9 +760,6 @@ export default {
 
           return { match, notFound: false };
         }, [path]);
-
-        // Clear the sticky-header state when the route changes.
-        useEffect(() => setProgress(0), [path]);
 
         const renderPage = () => {
           if (page.notFound) return <NotFound />;
