@@ -18,6 +18,7 @@
     "@google/generative-ai": "^0.24.1",
     "@lmnr-ai/lmnr": "^0.8.40",
     "@monaco-editor/react": "^4.6.0",
+    "@typescript/ata": "^0.9.8",
     "@upstash/redis": "^1.38.0",
     "@vercel/analytics": "^1.6.1",
     "@vue/compiler-sfc": "3.5.40",
