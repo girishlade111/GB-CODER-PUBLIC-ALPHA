@@ -134,6 +134,7 @@ interface RowProps {
   expanded: Set<string>;
   onToggle: (path: string) => void;
   onOpen: (path: string) => void;
+  onOpenToSide?: (path: string) => void;
 }
 
 const TreeRow: React.FC<RowProps> = ({
@@ -144,6 +145,7 @@ const TreeRow: React.FC<RowProps> = ({
   expanded,
   onToggle,
   onOpen,
+  onOpenToSide,
 }) => {
   const isOpen = expanded.has(node.path);
   const isActive = activePath === node.path;
@@ -156,7 +158,7 @@ const TreeRow: React.FC<RowProps> = ({
         data-testid={node.isDirectory ? 'tree-folder' : 'tree-file'}
         data-path={node.path}
         title={node.path}
-        className={`relative flex w-full items-center gap-1 py-[3px] pr-2 text-left text-xs transition-colors ${
+        className={`group relative flex w-full items-center gap-1 py-[3px] pr-2 text-left text-xs transition-colors ${
           isActive
             ? 'bg-product-active text-content-on-dark'
             : 'text-vsc-text hover:bg-product-hover hover:text-content-on-dark'
@@ -198,12 +200,30 @@ const TreeRow: React.FC<RowProps> = ({
             {iconFor(node.name)}
           </>
         )}
-        <span className="truncate">{node.name}</span>
-        {!node.isDirectory && dirty.has(node.path) && (
-          <span
-            className="ml-auto h-1.5 w-1.5 flex-shrink-0 rounded-full bg-vsc-text"
-            title="Unsaved changes"
-          />
+        <span className="truncate flex-1">{node.name}</span>
+        {!node.isDirectory && (
+          <span className="ml-auto flex items-center gap-1">
+            {onOpenToSide && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenToSide(node.path);
+                }}
+                className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-product-active text-vsc-textMuted hover:text-content-on-dark transition-opacity"
+                title="Open to the Side (Split Editor)"
+              >
+                <Columns className="h-3 w-3" />
+              </span>
+            )}
+            {dirty.has(node.path) && (
+              <span
+                className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-vsc-text"
+                title="Unsaved changes"
+              />
+            )}
+          </span>
         )}
       </button>
 
@@ -219,13 +239,20 @@ const TreeRow: React.FC<RowProps> = ({
             expanded={expanded}
             onToggle={onToggle}
             onOpen={onOpen}
+            onOpenToSide={onOpenToSide}
           />
         ))}
     </>
   );
 };
 
-const FileTreeView: React.FC<FileTreeViewProps> = ({ files, activePath, dirtyPaths, onOpen }) => {
+const FileTreeView: React.FC<FileTreeViewProps> = ({
+  files,
+  activePath,
+  dirtyPaths,
+  onOpen,
+  onOpenToSide,
+}) => {
   const tree = useMemo(() => buildTree(files), [files]);
   const dirty = useMemo(
     () => (dirtyPaths instanceof Set ? dirtyPaths : new Set(dirtyPaths)),
@@ -270,6 +297,7 @@ const FileTreeView: React.FC<FileTreeViewProps> = ({ files, activePath, dirtyPat
           expanded={expanded}
           onToggle={toggle}
           onOpen={onOpen}
+          onOpenToSide={onOpenToSide}
         />
       ))}
     </div>
