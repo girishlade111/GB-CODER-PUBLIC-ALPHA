@@ -38,7 +38,7 @@ const doc = (marker, runId) =>
   `<script>console.log('user-log-1');console.warn('user-warn-1');console.error('user-error-1');</` +
   `script></body></html>`;
 
-const state = await publish(doc('FIRST'));
+const state = await publish(doc('FIRST', 'run-1'));
 check('publish returns a 32-char session id', /^[A-Za-z0-9_-]{32}$/.test(state.id));
 
 const browser = await chromium.launch();
