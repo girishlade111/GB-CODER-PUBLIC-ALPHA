@@ -158,8 +158,12 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       );
       setWebcontainerStatus('booting');
 
-      // Mount project files into virtual filesystem
-      await webcontainerService.mountProject(project.files);
+      // Mount project files into virtual filesystem with guaranteed package.json
+      await webcontainerService.mountProject(
+        project.files,
+        project.dependencies,
+        project.projectType,
+      );
 
       term.write(
         `${ANSI.gray}Files mounted into virtual filesystem. Starting interactive shell...${ANSI.reset}\r\n`,
