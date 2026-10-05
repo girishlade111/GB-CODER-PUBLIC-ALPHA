@@ -8,7 +8,7 @@
  */
 
 import { WebContainer, FileSystemTree } from '@webcontainer/api';
-import { ProjectFile } from '../../types/files';
+import { ProjectFile, ProjectType } from '../../types/files';
 
 export type WebContainerStatus =
   | 'unsupported'
@@ -33,13 +33,20 @@ export interface WebContainerState {
 }
 
 /** Converts a flat array of ProjectFile objects into a nested WebContainer FileSystemTree */
-export function filesToFileSystemTree(files: ProjectFile[]): FileSystemTree {
+export function filesToFileSystemTree(
+  files: ProjectFile[],
+  extraDependencies?: Record<string, string>,
+  projectType?: ProjectType,
+): FileSystemTree {
   const root: FileSystemTree = {};
+  let hasPackageJson = false;
 
   for (const file of files) {
     if (!file.path) continue;
-    // Clean path and break into directory/file segments
     const cleanPath = file.path.replace(/^\/+/, '');
+    if (/(^|\/)package\.json$/i.test(cleanPath)) {
+      hasPackageJson = true;
+    }
     const segments = cleanPath.split('/').filter(Boolean);
     if (segments.length === 0) continue;
 
@@ -64,6 +71,56 @@ export function filesToFileSystemTree(files: ProjectFile[]): FileSystemTree {
         current = (current[segment] as { directory: FileSystemTree }).directory;
       }
     }
+  }
+
+  // Ensure root package.json is present so `npm install` and Node commands always succeed
+  if (!hasPackageJson) {
+    const isReact =
+      projectType === 'react' ||
+      files.some((f) => /\.(jsx|tsx)$/i.test(f.path) || f.content.includes('react'));
+    const isVue =
+      projectType === 'vue' ||
+      files.some((f) => /\.vue$/i.test(f.path) || f.content.includes('vue'));
+
+    const baseDeps: Record<string, string> = {};
+    const baseDevDeps: Record<string, string> = {
+      vite: '^5.4.11',
+    };
+
+    if (isReact) {
+      baseDeps['react'] = '^18.3.1';
+      baseDeps['react-dom'] = '^18.3.1';
+      baseDevDeps['@vitejs/plugin-react'] = '^4.3.4';
+    } else if (isVue) {
+      baseDeps['vue'] = '^3.5.13';
+      baseDevDeps['@vitejs/plugin-vue'] = '^5.2.1';
+    }
+
+    if (extraDependencies) {
+      Object.assign(baseDeps, extraDependencies);
+    }
+
+    root['package.json'] = {
+      file: {
+        contents: JSON.stringify(
+          {
+            name: 'gb-coder-app',
+            private: true,
+            version: '0.0.0',
+            type: 'module',
+            scripts: {
+              dev: 'vite',
+              build: 'vite build',
+              preview: 'vite preview',
+            },
+            dependencies: baseDeps,
+            devDependencies: baseDevDeps,
+          },
+          null,
+          2,
+        ),
+      },
+    };
   }
 
   return root;
