@@ -441,6 +441,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     [fontFamily, fontSize],
   );
 
+  const activeLanguage = activeFile ? monacoLanguageForPath(activeFile.path) : null;
+
   /*
    * The mode is reachable by URL, so it can legitimately be open with nothing in
    * it. That is a state to show rather than a case to redirect out of: sending the
