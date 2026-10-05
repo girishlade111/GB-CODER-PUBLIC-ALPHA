@@ -225,7 +225,7 @@ export class MobilePreviewSessionController {
   private keepaliveTimer: ReturnType<typeof setInterval> | null = null;
   private lastPublishedDocument: string | null = null;
   private disposed = false;
-  private inFlight: Promise<MobilePreviewSession> | null = null;
+  private inFlight: Promise<MobilePreviewSession | null> | null = null;
 
   constructor(
     private readonly publish: typeof publishPreview,
