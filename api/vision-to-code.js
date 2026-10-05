@@ -89,13 +89,14 @@ OUTPUT RULES:
 const FRAMEWORK_PROMPTS = {
   'html-tailwind': `You are an expert Frontend Architect. Convert the provided UI screenshot into pixel-perfect, modern, responsive code.
 
-TARGET: a single HTML document that uses Tailwind CSS via the Play CDN, plus one vanilla JS block.
+TARGET: a self-contained HTML fragment using Tailwind CSS via the Play CDN, plus one vanilla JS block.
 
 - Return exactly one \`\`\`html fence.
-- Start with \`<div class="min-h-screen">\` and a Tailwind config script block that registers any custom colour, font, or spacing tokens you rely on, e.g.
-  \`<script src="https://cdn.tailwindcss.com"></script>\` followed by \`<script>tailwind.config = { theme: { extend: { ... } } }</script>\`.
-- Wrap the markup in \`<body>\` only if you need it — prefer a top-level \`<div>\` so the snippet can be injected.
-- Put behaviour in one trailing \`<script>\` block at the end. No \`import\`/\`export\`, no modules.
+- Start at a single top-level \`<div>\`. Do NOT emit \`<!DOCTYPE html>\`, \`<html>\`, \`<head>\`, or \`<body>\` — the fragment is injected into an existing page.
+- First two elements inside that fragment:
+  1. \`<script src="https://cdn.tailwindcss.com"></script>\`
+  2. \`<script>tailwind.config = { theme: { extend: { ... } } }</script>\` — include it only when the screenshot needs tokens the default scale does not cover (a specific hex colour, a font stack, a breakpoint). Use real values from the screenshot, never placeholders.
+- All behaviour goes in one \`<script>\` block AFTER the markup. No \`import\`/\`export\`, no modules.
 - Use arbitrary values (\`w-[137px]\`) when the screenshot needs a non-scale measurement; prefer the scale everywhere else.
 ${SHARED_TASK_RULES}`,
 
