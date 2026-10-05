@@ -414,6 +414,31 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     }
   }, [project.files]);
 
+  const handleSplitEditorMount = useCallback<OnMount>((editor) => {
+    editor.onDidChangeCursorPosition((event) => {
+      setCursor({ line: event.position.lineNumber, column: event.position.column });
+    });
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === '\\') {
+        e.preventDefault();
+        if (isSplitActive) {
+          closeSplitPane();
+        } else {
+          const other =
+            openPaths.find((p) => p !== activePath) ||
+            project.files.find((f) => f.path !== activePath)?.path ||
+            activePath;
+          if (other) openToSide(other);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSplitActive, openPaths, activePath, project.files, openToSide, closeSplitPane]);
+
   /* ── Terminal resize ──────────────────────────────────────────────────────
    *
    * Pointer events with capture rather than window listeners: capture keeps the
@@ -729,6 +754,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               activePath={activePath}
               dirtyPaths={dirtyPaths}
               onOpen={openFile}
+              onOpenToSide={openToSide}
             />
             {isExplorerDropTarget && (
               <p className="px-3 py-2 text-[11px] text-accent">Drop to add to this project…</p>
