@@ -3591,7 +3591,7 @@ function App() {
         */}
         {showDependencies && (
           <Suspense fallback={null}>
-            <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col overflow-hidden border-l border-vsc-border bg-vsc-sidebar shadow-elevated">
+            <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md sm:max-w-lg flex-col overflow-hidden border-l border-vsc-border bg-vsc-sidebar shadow-elevated">
               <DependenciesPanel
                 project={fullStackProject ?? EMPTY_VSCODE_PROJECT}
                 resolvedPackages={projectBundle.resolvedPackages}
@@ -3600,6 +3600,7 @@ function App() {
                 onPin={handlePinDependency}
                 onUnpin={handleUnpinDependency}
                 onClose={() => setShowDependencies(false)}
+                onChangeFile={handleUpdatePackageFile}
               />
             </div>
           </Suspense>
@@ -3830,15 +3831,18 @@ function App() {
 
         {showDependencies && !isMobile && (
           <Suspense fallback={<LazyFallback label="Dependencies" variant="panel" />}>
-  <DependenciesPanel
-              project={fileProject}
-              resolvedPackages={projectBundle.resolvedPackages}
-              unresolvedPackages={projectBundle.unresolvedPackages}
-              isResolving={projectBundle.isResolvingPackages}
-              onPin={handlePinDependency}
-              onUnpin={handleUnpinDependency}
-              onClose={() => setShowDependencies(false)}
-            />
+            <div className="flex h-full w-80 sm:w-96 shrink-0 flex-col overflow-hidden border-r border-stroke-subtle">
+              <DependenciesPanel
+                project={fileProject}
+                resolvedPackages={projectBundle.resolvedPackages}
+                unresolvedPackages={projectBundle.unresolvedPackages}
+                isResolving={projectBundle.isResolvingPackages}
+                onPin={handlePinDependency}
+                onUnpin={handleUnpinDependency}
+                onClose={() => setShowDependencies(false)}
+                onChangeFile={handleUpdatePackageFile}
+              />
+            </div>
           </Suspense>
         )}
 
@@ -4409,20 +4413,4 @@ function App() {
             workspace.openFile(sessionRecoveryData.activePath || '');
             setSessionRecoveryData(null);
             toast.success('Session restored');
-          }}
-          onStartFresh={() => {
-            snapshotService.backupAutoSave();
-            setSessionRecoveryData(null);
-          }}
-        />
-      )}
-
-    </div>
-  );
-}
-
-export default App;
-
-
-
-
+   
