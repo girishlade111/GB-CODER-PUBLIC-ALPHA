@@ -2,7 +2,6 @@ import React, { useRef, useEffect } from 'react';
 import Editor, { type Monaco } from '@monaco-editor/react';
 import { monacoThemeFor, defineGbCoderTheme } from '../utils/monacoTheme';
 import { useTheme } from '../hooks/useTheme';
-import { useSettings } from '../hooks/useSettings';
 import { inlineCopilotService } from '../services/inlineCopilotService';
 import { EditorLanguage, JSEditorMode } from '../types';
 
@@ -57,8 +56,16 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 
   // Theme registration is shared with the multi-file editor pane so whichever
   // surface mounts first, the theme is defined.
+  //
+  // The inline AI provider is registered here for the same reason, and because
+  // `beforeMount` runs before the editor instance exists — registering on
+  // `onMount` would leave a window where the editor accepts keystrokes with no
+  // provider behind it. Registration is global to `monaco.languages` and
+  // idempotent, so this one call covers every editor surface in the app,
+  // including the multi-file and VS Code panes.
   const handleEditorWillMount = (monaco: Monaco) => {
     defineGbCoderTheme(monaco);
+    inlineCopilotService.register(monaco);
   };
 
   const handleEditorDidMount = (editor: any, monaco: any) => {

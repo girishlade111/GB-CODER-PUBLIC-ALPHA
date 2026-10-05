@@ -60,6 +60,12 @@ export const defineGbCoderTheme = (monaco: Monaco): void => {
       'editorSuggestWidget.selectedBackground': '#1f1e1b',
       'editorHoverWidget.background': '#252320',
       'editorHoverWidget.border': '#3a3631',
+      // Inline AI ghost text. Monaco inherits its own (too bright to read as
+      // provisional); these pull it back to the muted comment tone so a
+      // suggestion is clearly not-yet-code without disappearing into the gutter.
+      'editorGhostText.foreground': '#6f6b63',
+      'editorInlineSuggest.background': '#181715',
+      'editorGhostText.beforeBackground': '#2a2825',
       'editorGutter.background': '#181715',
       'editorGutter.modifiedBackground': '#cc785c66',
       'minimap.background': '#181715',

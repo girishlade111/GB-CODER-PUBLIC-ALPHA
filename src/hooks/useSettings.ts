@@ -90,9 +90,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
     nvidiaApiKey: '',
 };
 
+/** localStorage key holding the persisted {@link AppSettings} blob. */
+export const SETTINGS_STORAGE_KEY = 'gb-coder-settings';
+
 export const useSettings = () => {
     const [storedSettings, setSettings] = useLocalStorage<AppSettings>(
-        'gb-coder-settings',
+        SETTINGS_STORAGE_KEY,
         DEFAULT_SETTINGS
     );
 
