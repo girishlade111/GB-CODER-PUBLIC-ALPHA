@@ -2,6 +2,8 @@ import React, { useRef, useEffect } from 'react';
 import Editor, { type Monaco } from '@monaco-editor/react';
 import { monacoThemeFor, defineGbCoderTheme } from '../utils/monacoTheme';
 import { useTheme } from '../hooks/useTheme';
+import { useSettings } from '../hooks/useSettings';
+import { inlineCopilotService } from '../services/inlineCopilotService';
 import { EditorLanguage, JSEditorMode } from '../types';
 
 interface CodeEditorProps {

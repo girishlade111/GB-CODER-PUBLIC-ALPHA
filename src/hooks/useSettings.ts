@@ -54,6 +54,14 @@ export interface AppSettings {
     voiceContinuous: boolean;
     /** BCP-47 tag passed to SpeechRecognition. */
     voiceLanguage: string;
+    /**
+     * Show AI ghost-text suggestions in the editor, accepted with Tab.
+     *
+     * Off by default: this sends the surrounding code to a paid model on every
+     * typing pause, so it should be a deliberate choice rather than a default
+     * that quietly spends the user's quota.
+     */
+    inlineCopilotEnabled: boolean;
     /** CodeRabbit AI API Key for bug & error detection */
     codeRabbitApiKey: string;
     /** AI Provider for Build with AI and Editor features */
@@ -74,6 +82,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     voiceFeedback: false,
     voiceContinuous: false,
     voiceLanguage: 'en-US',
+    inlineCopilotEnabled: false,
     codeRabbitApiKey: import.meta.env.VITE_CODERABBIT_API_KEY || '',
     aiProvider: 'inception',
     inceptionApiKey: '',
