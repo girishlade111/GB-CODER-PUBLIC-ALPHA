@@ -619,13 +619,16 @@ ${importMapHTML}
     return () => window.removeEventListener('keydown', handleEscape);
   }, [viewMode]);
 
+  useEffect(() => {
+    if (previewContent) {
+      livePreviewChannel.broadcastCode(previewContent, '', '');
+    }
+  }, [previewContent]);
+
   const openInNewTab = () => {
-    // A detached tab has no parent to post to; the bridge no-ops there.
     const content = generatePreviewContent('external');
-    const blob = new Blob([content], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    livePreviewChannel.broadcastCode(content, '', '');
+    window.open('/preview-popout', '_blank');
   };
 
   const handleViewModeChange = (mode: 'fullscreen' | 'normal') => {

@@ -21,6 +21,9 @@ import {
   ArrowRightLeft,
   TerminalSquare,
   X,
+  ExternalLink,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import FileTreeView from './FileTreeView';
 import TerminalTab from '../Console/TerminalTab';
@@ -38,6 +41,7 @@ import {
 } from '../../services/vscodeWorkspaceStore';
 import { webcontainerService } from '../../services/webcontainer/webcontainerService';
 import { ataService } from '../../services/ata/ataService';
+import { livePreviewChannel } from '../../services/preview/livePreviewChannel';
 
 /**
  * VS Code style editor shell.
@@ -536,6 +540,95 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       setRightTab('preview');
     }
   }, [webcontainer.serverUrl]);
+
+  /* ── Right panel horizontal resize & live preview fullscreen ───────────── */
+  const rightPanelDragRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const [rightPanelWidth, setRightPanelWidth] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('gbcoder_vscode_right_panel_width');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!Number.isNaN(parsed) && parsed >= 300 && parsed <= 1800) {
+          return parsed;
+        }
+      }
+    }
+    return 480;
+  });
+  const [isDraggingRightPanel, setIsDraggingRightPanel] = useState(false);
+  const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
+
+  const handleRightPanelResizeDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      rightPanelDragRef.current = { startX: event.clientX, startWidth: rightPanelWidth };
+      setIsDraggingRightPanel(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [rightPanelWidth],
+  );
+
+  const handleRightPanelResizeMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = rightPanelDragRef.current;
+    if (!drag) return;
+    // Dragging left grows the right panel: delta is inverted (startX - clientX)
+    const delta = drag.startX - event.clientX;
+    const maxWidth = Math.max(400, window.innerWidth * 0.85);
+    const next = Math.max(300, Math.min(maxWidth, drag.startWidth + delta));
+    setRightPanelWidth(Math.round(next));
+  }, []);
+
+  const handleRightPanelResizeUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = rightPanelDragRef.current;
+    if (drag) {
+      try {
+        localStorage.setItem('gbcoder_vscode_right_panel_width', String(rightPanelWidth));
+      } catch {
+        // Ignored
+      }
+    }
+    rightPanelDragRef.current = null;
+    setIsDraggingRightPanel(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, [rightPanelWidth]);
+
+  // Sync active dev server preview to detached popout tabs
+  useEffect(() => {
+    if (activePreview?.url) {
+      livePreviewChannel.broadcastDevServer(
+        activePreview.url,
+        activePreview.port,
+        activePreview.label,
+      );
+    }
+  }, [activePreview?.url, activePreview?.port, activePreview?.label]);
+
+  const handleOpenInNewTab = useCallback(() => {
+    if (activePreview) {
+      livePreviewChannel.broadcastDevServer(
+        activePreview.url,
+        activePreview.port,
+        activePreview.label,
+      );
+      const urlParam = encodeURIComponent(activePreview.url);
+      const portParam = encodeURIComponent(String(activePreview.port));
+      window.open(`/preview-popout?url=${urlParam}&port=${portParam}`, '_blank');
+    }
+  }, [activePreview]);
+
+  // Escape key exits fullscreen preview
+  useEffect(() => {
+    if (!isPreviewFullscreen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsPreviewFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPreviewFullscreen]);
 
   const monacoOptions = useMemo(
     () => ({
@@ -1244,36 +1337,92 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           )}
         </main>
 
+        {/* Right panel resize handle */}
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize right panel"
+          onPointerDown={handleRightPanelResizeDown}
+          onPointerMove={handleRightPanelResizeMove}
+          onPointerUp={handleRightPanelResizeUp}
+          onDoubleClick={() => {
+            setRightPanelWidth(480);
+            try {
+              localStorage.setItem('gbcoder_vscode_right_panel_width', '480');
+            } catch {
+              // Ignored
+            }
+          }}
+          className={`group relative flex w-1.5 shrink-0 cursor-col-resize items-center justify-center transition-colors select-none ${
+            isDraggingRightPanel ? 'bg-accent' : 'bg-transparent hover:bg-accent/40'
+          }`}
+          title="Drag to resize right panel (Double click to reset to 480px)"
+        >
+          <div className="h-8 w-0.5 rounded-full bg-vsc-border group-hover:bg-accent transition-colors" />
+        </div>
+
         {/* Right panel */}
         <aside
-          className="flex w-[26rem] min-w-[18rem] shrink-0 flex-col overflow-hidden border-l border-vsc-border bg-vsc-sidebar"
+          style={{ width: `${rightPanelWidth}px` }}
+          className="flex min-w-[18rem] shrink-0 flex-col overflow-hidden border-l border-vsc-border bg-vsc-sidebar"
           data-testid="vscode-right-panel"
         >
           <div
-            className="flex shrink-0 border-b border-vsc-border bg-vsc-tabbar"
+            className="flex shrink-0 items-center justify-between border-b border-vsc-border bg-vsc-tabbar"
             role="tablist"
           >
-            {(['preview', 'sandbox'] as const).map((tab) => (
-              <button
-                key={tab}
-                role="tab"
-                aria-selected={rightTab === tab}
-                onClick={() => setRightTab(tab)}
-                data-testid={`vscode-right-tab-${tab}`}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium ${
-                  rightTab === tab
-                    ? 'border-b-2 border-accent text-content-on-dark'
-                    : 'border-b-2 border-transparent text-vsc-textMuted hover:text-content-on-dark'
-                }`}
-              >
-                {tab === 'preview' ? (
-                  <MonitorPlay className="h-3.5 w-3.5" />
-                ) : (
-                  <Box className="h-3.5 w-3.5" />
-                )}
-                {tab === 'preview' ? 'Live Preview' : 'Sandbox'}
-              </button>
-            ))}
+            <div className="flex">
+              {(['preview', 'sandbox'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  role="tab"
+                  aria-selected={rightTab === tab}
+                  onClick={() => setRightTab(tab)}
+                  data-testid={`vscode-right-tab-${tab}`}
+                  className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium ${
+                    rightTab === tab
+                      ? 'border-b-2 border-accent text-content-on-dark'
+                      : 'border-b-2 border-transparent text-vsc-textMuted hover:text-content-on-dark'
+                  }`}
+                >
+                  {tab === 'preview' ? (
+                    <MonitorPlay className="h-3.5 w-3.5" />
+                  ) : (
+                    <Box className="h-3.5 w-3.5" />
+                  )}
+                  {tab === 'preview' ? 'Live Preview' : 'Sandbox'}
+                </button>
+              ))}
+            </div>
+
+            {rightTab === 'preview' && (
+              <div className="flex items-center gap-1 pr-2">
+                <button
+                  type="button"
+                  onClick={() => setRightPanelWidth(Math.round(window.innerWidth * 0.5))}
+                  title="50% screen width"
+                  className="rounded px-1.5 py-0.5 text-[10px] font-mono text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
+                >
+                  50%
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRightPanelWidth(Math.round(window.innerWidth * 0.7))}
+                  title="70% screen width"
+                  className="rounded px-1.5 py-0.5 text-[10px] font-mono text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
+                >
+                  70%
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRightPanelWidth(480)}
+                  title="Default width (480px)"
+                  className="rounded px-1.5 py-0.5 text-[10px] font-mono text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
+                >
+                  Def
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Own scroll container. */}
@@ -1285,32 +1434,53 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               <SandboxPanel files={project.files} />
             ) : activePreview ? (
               <div className="flex h-full min-h-0 flex-col">
-                <div className="flex shrink-0 items-center justify-between border-b border-vsc-border px-2.5 py-1.5">
-                  <span className="flex items-center gap-1.5 text-[11px] text-vsc-text">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    {activePreview.label}
+                <div className="flex shrink-0 items-center justify-between border-b border-vsc-border px-2.5 py-1.5 bg-vsc-tabbar/30">
+                  <span className="flex items-center gap-1.5 text-[11px] text-vsc-text truncate mr-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <span className="truncate">{activePreview.label}</span>
                   </span>
-                  <button
-                    onClick={() => {
-                      setPreviewKey((k) => k + 1);
-                      if (!('isWebContainer' in activePreview)) {
-                        void sandboxSession.pollLogs();
-                      }
-                    }}
-                    className="text-vsc-textMuted hover:text-content-on-dark"
-                    aria-label="Refresh"
-                    title="Reload Live Preview"
-                  >
-                    <RefreshCw className="h-3 w-3" />
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        setPreviewKey((k) => k + 1);
+                        livePreviewChannel.broadcastReload();
+                        if (!('isWebContainer' in activePreview)) {
+                          void sandboxSession.pollLogs();
+                        }
+                      }}
+                      className="rounded p-1 text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
+                      aria-label="Refresh"
+                      title="Reload Live Preview"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={handleOpenInNewTab}
+                      className="rounded p-1 text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
+                      aria-label="Open in new tab"
+                      title="Open in New Tab (Live Updating Popout)"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => setIsPreviewFullscreen(true)}
+                      className="rounded p-1 text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
+                      aria-label="Maximize preview"
+                      title="Full Screen / Maximize Preview"
+                    >
+                      <Maximize2 className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
                 {/* Live dev server preview: in-browser WebContainer or remote Sandbox */}
                 <iframe
                   key={previewKey}
                   src={activePreview.url}
                   title="Live preview"
-                  className="min-h-0 flex-1 border-0 bg-white"
-                  sandbox="allow-scripts allow-same-origin allow-forms"
+                  className={`min-h-0 flex-1 border-0 bg-white ${
+                    isDraggingRightPanel ? 'pointer-events-none' : ''
+                  }`}
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
                 />
               </div>
             ) : (
@@ -1503,6 +1673,75 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           {sandbox.sandboxId ? 'Connected: Sandbox' : 'Local Mode'}
         </span>
       </footer>
+
+      {/* ── Fullscreen Live Preview Modal / Overlay ── */}
+      {isPreviewFullscreen && activePreview && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col bg-[#1e1e1e] text-white shadow-2xl"
+          role="dialog"
+          aria-label="Fullscreen Live Preview"
+        >
+          {/* Header */}
+          <header className="flex h-11 shrink-0 items-center justify-between border-b border-[#333333] bg-[#252526] px-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="font-semibold text-xs text-white truncate">
+                {activePreview.label}
+              </span>
+              <span className="hidden sm:inline-flex items-center rounded bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400 border border-emerald-500/20">
+                Live Fullscreen Preview
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setPreviewKey((k) => k + 1);
+                  livePreviewChannel.broadcastReload();
+                  if (!('isWebContainer' in activePreview)) {
+                    void sandboxSession.pollLogs();
+                  }
+                }}
+                className="flex items-center gap-1.5 rounded bg-[#333] hover:bg-[#444] px-2.5 py-1 text-xs text-gray-200 transition-colors"
+                title="Reload preview"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline text-[11px]">Reload</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleOpenInNewTab}
+                className="flex items-center gap-1.5 rounded bg-[#333] hover:bg-[#444] px-2.5 py-1 text-xs text-gray-200 transition-colors"
+                title="Open in new tab"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline text-[11px]">New Tab</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsPreviewFullscreen(false)}
+                className="flex items-center gap-1.5 rounded bg-accent hover:bg-accent-hover px-3 py-1 text-xs font-semibold text-white transition-colors"
+                title="Exit Fullscreen (Esc)"
+              >
+                <Minimize2 className="h-3.5 w-3.5" />
+                <span>Exit Fullscreen</span>
+              </button>
+            </div>
+          </header>
+
+          {/* Iframe */}
+          <iframe
+            key={`fs-${previewKey}`}
+            src={activePreview.url}
+            title="Fullscreen live preview"
+            className="h-full w-full border-0 bg-white"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
+          />
+        </div>
+      )}
 
       {/* Hidden inputs backing the Explorer's Load File / Load Folder buttons. */}
       <input
