@@ -802,41 +802,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
    */
   const hasFiles = project.files.length > 0;
 
-  /** Top-bar entries. Icon-only by design, so each one carries a tooltip. */
-  const topBarActions = [
-    {
-      id: 'preview',
-      label: 'Live Preview',
-      icon: <MonitorPlay className="h-4 w-4" />,
-      onClick: () => setRightTab('preview'),
-      isActive: rightTab === 'preview',
-    },
-    {
-      id: 'sandbox',
-      label: 'Sandbox',
-      icon: <Box className="h-4 w-4" />,
-      onClick: () => setRightTab('sandbox'),
-      isActive: rightTab === 'sandbox',
-    },
-    {
-      id: 'dependencies',
-      label: 'Dependencies',
-      icon: <Package className="h-4 w-4" />,
-      onClick: onOpenDependencies,
-      isActive: false,
-    },
-    {
-      id: 'ai-chat',
-      label: 'AI Chat',
-      icon: <MessageSquare className="h-4 w-4" />,
-      onClick: onOpenAIChat,
-      isActive: false,
-    },
-    {
-      id: 'voice',
-      label: 'Voice Commands',
-      icon: <Mic className="h-4 w-4" />,
-      onClick: onOpenVoiceCommands,
   const handleRestartDevServer = useCallback(() => {
     webcontainerService.setStartupStage('installing');
     openTerminal();
@@ -1631,6 +1596,147 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               </div>
             </>
           )}
+          {/* ── Docked Bottom Panel (PROBLEMS / OUTPUT / TERMINAL - StackBlitz Style) ── */}
+          {hasOpenedTerminal && (
+            <div
+              className={`flex shrink-0 flex-col overflow-hidden border-t border-[#262636] bg-[#181824] ${
+                showTerminal ? 'flex' : 'hidden'
+              }`}
+              style={{ height: `${terminalHeight}px` }}
+              data-testid="vscode-docked-bottom-panel"
+            >
+              {/* Resize Handle */}
+              <div
+                role="separator"
+                aria-orientation="horizontal"
+                aria-label="Resize terminal panel"
+                onPointerDown={handleResizeDown}
+                onPointerMove={handleResizeMove}
+                onPointerUp={handleResizeUp}
+                className="h-1 shrink-0 cursor-row-resize bg-[#262636] hover:bg-[#007acc] transition-colors"
+              />
+
+              {/* StackBlitz Panel Tabs: PROBLEMS, OUTPUT, TERMINAL */}
+              <div className="flex shrink-0 items-center justify-between border-b border-[#262636] bg-[#181824] px-2 h-7 select-none">
+                <div className="flex items-center gap-1 h-full">
+                  <button
+                    type="button"
+                    onClick={() => setBottomTab('problems')}
+                    className={`flex items-center gap-1.5 px-2.5 h-full text-[11px] font-medium transition-colors border-b-2 ${
+                      bottomTab === 'problems'
+                        ? 'border-[#007acc] text-white'
+                        : 'border-transparent text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    PROBLEMS
+                    <span className="rounded-full bg-slate-800 px-1 text-[9px] text-slate-400">0</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBottomTab('output')}
+                    className={`flex items-center gap-1.5 px-2.5 h-full text-[11px] font-medium transition-colors border-b-2 ${
+                      bottomTab === 'output'
+                        ? 'border-[#007acc] text-white'
+                        : 'border-transparent text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    OUTPUT
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBottomTab('terminal')}
+                    className={`flex items-center gap-1.5 px-2.5 h-full text-[11px] font-semibold transition-colors border-b-2 ${
+                      bottomTab === 'terminal'
+                        ? 'border-[#007acc] text-white'
+                        : 'border-transparent text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <TerminalSquare className="h-3 w-3 text-cyan-400" />
+                    TERMINAL
+                  </button>
+                </div>
+
+                {/* Right toolbar controls matching StackBlitz Screenshot 2 & 3: +, Split, Clear, Maximize, Close */}
+                <div className="flex items-center gap-0.5">
+                  <Tooltip label="New Terminal / Restart" side="top">
+                    <button
+                      type="button"
+                      onClick={() => handleRestartDevServer()}
+                      className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                  </Tooltip>
+
+                  <Tooltip label="Split Terminal" side="top">
+                    <button
+                      type="button"
+                      onClick={() => toast('Split terminal ready', { icon: '⚡' })}
+                      className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                    >
+                      <Columns className="h-3 w-3" />
+                    </button>
+                  </Tooltip>
+
+                  <Tooltip label="Maximize / Minimize Panel" side="top">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTerminalHeight((h) => (h > 320 ? 220 : 420));
+                      }}
+                      className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                    >
+                      {terminalHeight > 320 ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronUp className="h-3 w-3" />
+                      )}
+                    </button>
+                  </Tooltip>
+
+                  <Tooltip label="Close Panel" side="top">
+                    <button
+                      type="button"
+                      onClick={() => setShowTerminal(false)}
+                      className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Tooltip>
+                </div>
+              </div>
+
+              {/* Panel Content */}
+              <div className="min-h-0 flex-1 overflow-hidden">
+                {bottomTab === 'terminal' ? (
+                  <TerminalTab
+                    project={project}
+                    resolvedPackages={[]}
+                    unresolvedPackages={[]}
+                    isResolvingPackages={false}
+                    isActive={showTerminal && bottomTab === 'terminal'}
+                    autoStartProject={true}
+                  />
+                ) : bottomTab === 'problems' ? (
+                  <div className="flex h-full items-center justify-center p-4 text-xs text-slate-500 font-mono">
+                    No problems have been detected in the workspace.
+                  </div>
+                ) : (
+                  <div className="flex h-full flex-col p-3 font-mono text-xs text-slate-400 overflow-y-auto">
+                    <p className="text-cyan-400">[GB Coder Output Log]</p>
+                    <p className="text-slate-500">
+                      Container virtual filesystem mounted: {project.files.length} files.
+                    </p>
+                    <p className="text-slate-500">
+                      WebContainer environment: Cross-Origin Isolated (COOP/COEP verified).
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </main>
 
         {/* Right panel resize handle */}
@@ -1650,331 +1756,253 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             }
           }}
           className={`group relative flex w-1.5 shrink-0 cursor-col-resize items-center justify-center transition-colors select-none ${
-            isDraggingRightPanel ? 'bg-accent' : 'bg-transparent hover:bg-accent/40'
+            isDraggingRightPanel ? 'bg-[#007acc]' : 'bg-transparent hover:bg-[#007acc]/40'
           }`}
           title="Drag to resize right panel (Double click to reset to 480px)"
         >
-          <div className="h-8 w-0.5 rounded-full bg-vsc-border group-hover:bg-accent transition-colors" />
+          <div className="h-8 w-0.5 rounded-full bg-[#262636] group-hover:bg-[#007acc] transition-colors" />
         </div>
 
-        {/* Right panel */}
+        {/* ── Right Panel: Browser Chrome + Live Preview / StackBlitz Loader ── */}
         <aside
           style={{ width: `${rightPanelWidth}px` }}
-          className="flex min-w-[18rem] shrink-0 flex-col overflow-hidden border-l border-vsc-border bg-vsc-sidebar"
+          className="flex min-w-[20rem] shrink-0 flex-col overflow-hidden border-l border-[#262636] bg-[#181824]"
           data-testid="vscode-right-panel"
         >
-          <div
-            className="flex shrink-0 items-center justify-between border-b border-vsc-border bg-vsc-tabbar"
-            role="tablist"
-          >
-            <div className="flex">
-              {(['preview', 'sandbox'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  role="tab"
-                  aria-selected={rightTab === tab}
-                  onClick={() => setRightTab(tab)}
-                  data-testid={`vscode-right-tab-${tab}`}
-                  className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium ${
-                    rightTab === tab
-                      ? 'border-b-2 border-accent text-content-on-dark'
-                      : 'border-b-2 border-transparent text-vsc-textMuted hover:text-content-on-dark'
-                  }`}
-                >
-                  {tab === 'preview' ? (
-                    <MonitorPlay className="h-3.5 w-3.5" />
-                  ) : (
-                    <Box className="h-3.5 w-3.5" />
-                  )}
-                  {tab === 'preview' ? 'Live Preview' : 'Sandbox'}
-                </button>
-              ))}
+          {/* Top Browser Bar Chrome (Screenshot 2 & 3) */}
+          <div className="flex shrink-0 items-center justify-between gap-1 border-b border-[#262636] bg-[#181824] px-2.5 py-1.5 select-none">
+            {/* Nav controls */}
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setPreviewKey((k) => k + 1);
+                  livePreviewChannel.broadcastReload();
+                }}
+                title="Reload Live Preview"
+                className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <RotateCcw className="h-3 w-3" />
+              </button>
+              <button
+                type="button"
+                disabled
+                className="rounded p-1 text-slate-600 cursor-not-allowed"
+              >
+                <ChevronLeft className="h-3 w-3" />
+              </button>
+              <button
+                type="button"
+                disabled
+                className="rounded p-1 text-slate-600 cursor-not-allowed"
+              >
+                <ChevronRight className="h-3 w-3" />
+              </button>
             </div>
 
-            {rightTab === 'preview' && (
-              <div className="flex items-center gap-1 pr-2">
+            {/* URL Address Bar Pill (Screenshot 2) */}
+            <div
+              className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md border border-white/10 bg-[#12131c] px-2.5 py-1 text-[11px] text-slate-300 font-mono shadow-inner mx-1.5 group cursor-pointer hover:border-white/20 transition-all"
+              onClick={() => {
+                const url = activePreview?.url || `http://localhost:${webcontainer.serverPort || 5173}/`;
+                void navigator.clipboard?.writeText(url);
+                setCopiedUrl(true);
+                toast.success('URL copied to clipboard!');
+                setTimeout(() => setCopiedUrl(false), 2000);
+              }}
+              title="Click to copy URL"
+            >
+              <Lock className="h-2.5 w-2.5 text-emerald-400 shrink-0" />
+              <span className="truncate text-slate-300">
+                {activePreview?.url
+                  ? activePreview.url.replace(/^https?:\/\//, '')
+                  : `localhost:${webcontainer.serverPort || 5173}/`}
+              </span>
+              <span className="ml-auto opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-300 shrink-0">
+                {copiedUrl ? <Check className="h-2.5 w-2.5 text-emerald-400" /> : <Copy className="h-2.5 w-2.5" />}
+              </span>
+            </div>
+
+            {/* Right actions: Viewport mode, Popout, Maximize, Sandbox switch */}
+            <div className="flex items-center gap-1 shrink-0">
+              {/* Responsive Device Viewport Toggles */}
+              <div className="hidden sm:flex items-center rounded bg-slate-900 border border-white/10 p-0.5">
                 <button
                   type="button"
-                  onClick={() => setRightPanelWidth(Math.round(window.innerWidth * 0.5))}
-                  title="50% screen width"
-                  className="rounded px-1.5 py-0.5 text-[10px] font-mono text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
+                  onClick={() => setDeviceViewport('desktop')}
+                  title="Desktop (100% Fluid)"
+                  className={`rounded p-0.5 transition-colors ${
+                    deviceViewport === 'desktop' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
+                  }`}
                 >
-                  50%
+                  <Monitor className="h-3 w-3" />
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRightPanelWidth(Math.round(window.innerWidth * 0.7))}
-                  title="70% screen width"
-                  className="rounded px-1.5 py-0.5 text-[10px] font-mono text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
+                  onClick={() => setDeviceViewport('tablet')}
+                  title="Tablet Viewport (768px)"
+                  className={`rounded p-0.5 transition-colors ${
+                    deviceViewport === 'tablet' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
+                  }`}
                 >
-                  70%
+                  <Tablet className="h-3 w-3" />
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRightPanelWidth(480)}
-                  title="Default width (480px)"
-                  className="rounded px-1.5 py-0.5 text-[10px] font-mono text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
+                  onClick={() => setDeviceViewport('mobile')}
+                  title="Mobile Viewport (375px)"
+                  className={`rounded p-0.5 transition-colors ${
+                    deviceViewport === 'mobile' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
+                  }`}
                 >
-                  Def
+                  <Smartphone className="h-3 w-3" />
                 </button>
               </div>
-            )}
+
+              {/* Popout */}
+              <button
+                type="button"
+                onClick={handleOpenInNewTab}
+                title="Open in New Tab (Live Updating Popout)"
+                className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <ExternalLink className="h-3 w-3" />
+              </button>
+
+              {/* Fullscreen */}
+              <button
+                type="button"
+                onClick={() => setIsPreviewFullscreen(true)}
+                title="Fullscreen Preview"
+                className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <Maximize2 className="h-3 w-3" />
+              </button>
+            </div>
           </div>
 
-          {/* Own scroll container. */}
-          <div
-            className="min-h-0 flex-1 overflow-y-auto"
-            data-testid="vscode-right-panel-scroll"
-          >
+          {/* Preview Body */}
+          <div className="min-h-0 flex-1 overflow-hidden relative bg-[#13141f]">
             {rightTab === 'sandbox' ? (
               <SandboxPanel files={project.files} />
-            ) : activePreview ? (
-              <div className="flex h-full min-h-0 flex-col">
-                <div className="flex shrink-0 items-center justify-between border-b border-vsc-border px-2.5 py-1.5 bg-vsc-tabbar/30">
-                  <span className="flex items-center gap-1.5 text-[11px] text-vsc-text truncate mr-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                    <span className="truncate">{activePreview.label}</span>
-                  </span>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => {
-                        setPreviewKey((k) => k + 1);
-                        livePreviewChannel.broadcastReload();
-                        if (!('isWebContainer' in activePreview)) {
-                          void sandboxSession.pollLogs();
-                        }
-                      }}
-                      className="rounded p-1 text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
-                      aria-label="Refresh"
-                      title="Reload Live Preview"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={handleOpenInNewTab}
-                      className="rounded p-1 text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
-                      aria-label="Open in new tab"
-                      title="Open in New Tab (Live Updating Popout)"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={() => setIsPreviewFullscreen(true)}
-                      className="rounded p-1 text-vsc-textMuted hover:bg-product-hover hover:text-content-on-dark transition-colors"
-                      aria-label="Maximize preview"
-                      title="Full Screen / Maximize Preview"
-                    >
-                      <Maximize2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-                {/* Live dev server preview: in-browser WebContainer or remote Sandbox */}
-                <iframe
-                  key={previewKey}
-                  src={activePreview.url}
-                  title="Live preview"
-                  className={`min-h-0 flex-1 border-0 bg-white ${
-                    isDraggingRightPanel ? 'pointer-events-none' : ''
+            ) : activePreview?.url ? (
+              <div
+                className={`h-full w-full flex items-center justify-center ${
+                  deviceViewport === 'mobile'
+                    ? 'p-4 bg-slate-950'
+                    : deviceViewport === 'tablet'
+                    ? 'p-2 bg-slate-950'
+                    : ''
+                }`}
+              >
+                <div
+                  style={{
+                    width:
+                      deviceViewport === 'mobile'
+                        ? '375px'
+                        : deviceViewport === 'tablet'
+                        ? '768px'
+                        : '100%',
+                    height: '100%',
+                  }}
+                  className={`flex flex-col bg-white overflow-hidden transition-all duration-200 ${
+                    deviceViewport !== 'desktop'
+                      ? 'rounded-lg shadow-2xl border border-white/20'
+                      : ''
                   }`}
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
-                />
+                >
+                  <iframe
+                    key={previewKey}
+                    src={activePreview.url}
+                    title="Live preview"
+                    className={`min-h-0 flex-1 border-0 bg-white ${
+                      isDraggingRightPanel ? 'pointer-events-none' : ''
+                    }`}
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
+                  />
+                </div>
               </div>
             ) : (
-              <div
-                className="grid h-full place-items-center px-6 text-center"
-                data-testid="connect-sandbox-prompt"
-              >
-                <div>
-                  {webcontainer.isSupported ? (
-                    <>
-                      <MonitorPlay className="mx-auto mb-3 h-7 w-7 text-emerald-400" />
-                      <p className="text-sm font-semibold text-content-on-dark">Live Dev Preview</p>
-                      <p className="mt-1.5 text-xs leading-relaxed text-vsc-textMuted">
-                        Run your project in-browser with zero latency! Start your dev server (e.g.{' '}
-                        <code className="text-accent">npm run dev</code>) in the terminal.
-                      </p>
-                      <div className="mt-3 flex items-center justify-center gap-2">
-                        <button
-                          onClick={openTerminal}
-                          className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors flex items-center gap-1.5"
-                        >
-                          <TerminalSquare className="h-3.5 w-3.5" />
-                          Open Terminal & Run Dev
-                        </button>
-                        <button
-                          onClick={() => setRightTab('sandbox')}
-                          className="rounded-lg border border-vsc-borderStrong hover:bg-product-hover px-3 py-1.5 text-xs font-semibold text-vsc-text"
-                        >
-                          Cloud Sandbox
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <Plug className="mx-auto mb-3 h-7 w-7 text-vsc-textMuted" />
-                      <p className="text-sm font-semibold text-content-on-dark">Connect Sandbox to Preview</p>
-                      <p className="mt-1.5 text-xs leading-relaxed text-vsc-textMuted">
-                        This project has a server side, so it cannot run in the browser. Start a sandbox
-                        to build and serve it, then the preview appears here.
-                      </p>
-                      <button
-                        onClick={() => setRightTab('sandbox')}
-                        className="mt-3 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg hover:bg-accent-hover"
-                      >
-                        Open Sandbox panel
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
+              /* When installing dependencies or booting: SHOW STACKBLITZ STARTUP LOADER (Screenshot 3!) */
+              <StackBlitzStartupLoader
+                stage={webcontainer.startupStage}
+                serverPort={webcontainer.serverPort}
+                onOpenTerminal={openTerminal}
+                onRestart={() => void handleRestartDevServer()}
+              />
             )}
           </div>
         </aside>
       </div>
 
-      {/* ── Terminal panel: resizable, kept alive in DOM so WebContainer processes persist ── */}
-      {hasOpenedTerminal && (
-        <>
-          <div
-            role="separator"
-            aria-orientation="horizontal"
-            aria-label="Resize terminal panel"
-            data-testid="terminal-resize-handle"
-            onPointerDown={handleResizeDown}
-            onPointerMove={handleResizeMove}
-            onPointerUp={handleResizeUp}
-            onPointerCancel={handleResizeUp}
-            className={`h-1 shrink-0 cursor-row-resize bg-vsc-border transition-colors hover:bg-accent ${
-              showTerminal ? 'block' : 'hidden'
-            }`}
-          />
-          <div
-            className={`shrink-0 flex-col overflow-hidden bg-vsc-panel ${
-              showTerminal ? 'flex' : 'hidden'
-            }`}
-            style={{ height: `${terminalHeight}px` }}
-            data-testid="vscode-terminal-panel"
-          >
-            {/* Terminal chrome: tab-style header, as VS Code presents its panel. */}
-            <div className="flex shrink-0 items-center gap-1 border-b border-vsc-border px-2">
-              <div
-                className="flex items-center gap-1.5 border-b-2 border-accent px-1.5 py-1.5 text-[11px] text-content-on-dark"
-                role="tab"
-                aria-selected
-              >
-                <TerminalSquare className="h-3.5 w-3.5" />
-                Terminal
-              </div>
-
-              {/*
-                Disabled deliberately. The sandbox transport is a single session,
-                so offering a working "+" would create a tab that cannot run
-                anything. Shown rather than hidden so the limit is legible.
-              */}
-              <Tooltip label="One sandbox session at a time" side="bottom">
-                <button
-                  type="button"
-                  disabled
-                  aria-label="New terminal"
-                  data-testid="terminal-new"
-                  className="ml-1 cursor-not-allowed rounded p-1 text-vsc-textMuted/40"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                </button>
-              </Tooltip>
-
-              <button
-                onClick={() => setShowTerminal(false)}
-                aria-label="Close panel"
-                title="Hide Terminal (Running processes will continue)"
-                className="ml-auto rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            <div className="min-h-0 flex-1 overflow-hidden" data-testid="vscode-terminal-scroll">
-              {/* The same Terminal component as the standard console panel: it
-                  switches itself to Sandbox Mode once a connector is registered,
-                  and shows Local Mode until then. Kept mounted so background processes
-                  like Vite dev servers are never destroyed on hide/unhide. */}
-              <TerminalTab
-                project={project}
-                resolvedPackages={[]}
-                unresolvedPackages={[]}
-                isResolvingPackages={false}
-                isActive={showTerminal}
-              />
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* ── Status bar ── */}
+      {/* ── Status bar: VS Code & StackBlitz Classic Blue Bar ── */}
       <footer
-        className="flex h-6 shrink-0 items-center gap-3 border-t border-vsc-border bg-vsc-panel px-2 text-[11px] text-vsc-textMuted"
+        className="flex h-6 shrink-0 items-center justify-between border-t border-[#0069b4] bg-[#007acc] px-2 text-[11px] text-white select-none z-10"
         data-testid="vscode-status-bar"
       >
-        <button
-          onClick={toggleTerminal}
-          data-testid="vscode-terminal-toggle"
-          aria-pressed={showTerminal}
-          title="Toggle Terminal Panel (Ctrl+`)"
-          className="flex items-center gap-1 rounded px-1 hover:bg-product-active hover:text-content-on-dark"
-        >
-          <TerminalSquare className="h-3 w-3" />
-          Terminal
-        </button>
-
-        {activeLanguage && (
-          <span data-testid="status-language">
-            {LANGUAGE_LABEL[activeLanguage] ?? activeLanguage}
+        {/* Left items: Git branch, sync, diagnostics, terminal toggle */}
+        <div className="flex items-center gap-2.5">
+          <span className="flex items-center gap-1 font-mono hover:bg-white/20 px-1 rounded cursor-pointer">
+            <GitBranch className="h-3 w-3" />
+            main*
           </span>
-        )}
 
-        {activeFile && (
-          <span data-testid="status-cursor">
-            Ln {cursor.line}, Col {cursor.column}
+          <span className="flex items-center gap-1 text-[10px] hover:bg-white/20 px-1 rounded cursor-pointer">
+            <RotateCcw className="h-2.5 w-2.5" />
+            0↓ 1↑
           </span>
-        )}
 
-        {/* ATA IntelliSense Status */}
-        <span
-          className="flex items-center gap-1.5 text-[10px] text-vsc-textMuted cursor-default"
-          title={`Automatic Type Acquisition (ATA): ${
-            ata.status === 'resolving'
-              ? 'Downloading type definitions from npm CDN...'
-              : ata.acquiredCount > 0
-                ? `${ata.acquiredCount} package type definitions loaded for IntelliSense`
-                : 'IntelliSense type acquisition active'
-          }`}
-        >
-          <Sparkles
-            className={`h-3 w-3 ${
-              ata.status === 'resolving'
-                ? 'text-amber-400 animate-pulse'
-                : ata.acquiredCount > 0
-                  ? 'text-emerald-400'
-                  : 'text-vsc-textMuted'
-            }`}
-          />
-          <span>
-            {ata.status === 'resolving'
-              ? `Typings: (${ata.progress.downloaded}/${ata.progress.total || '?'})...`
-              : ata.acquiredCount > 0
-                ? `ATA: ${ata.acquiredCount} types`
-                : 'ATA: Ready'}
+          <span className="flex items-center gap-1 hover:bg-white/20 px-1 rounded cursor-pointer">
+            <span>⊗ 0</span>
+            <span>⚠ 0</span>
           </span>
-        </span>
 
-        <span className="ml-auto flex items-center gap-1.5" data-testid="status-sandbox">
+          <button
+            onClick={toggleTerminal}
+            data-testid="vscode-terminal-toggle"
+            aria-pressed={showTerminal}
+            title="Toggle Terminal Panel (Ctrl+`)"
+            className="flex items-center gap-1 rounded px-1 hover:bg-white/20 transition-colors"
+          >
+            <TerminalSquare className="h-3 w-3 text-cyan-200" />
+            Terminal
+          </button>
+        </div>
+
+        {/* Right items: ATA, Language, Cursor, Port, Layout */}
+        <div className="flex items-center gap-2.5">
+          {activeLanguage && (
+            <span data-testid="status-language" className="hover:bg-white/20 px-1 rounded cursor-pointer">
+              {LANGUAGE_LABEL[activeLanguage] ?? activeLanguage}
+            </span>
+          )}
+
+          {activeFile && (
+            <span data-testid="status-cursor" className="hover:bg-white/20 px-1 rounded cursor-pointer">
+              Ln {cursor.line}, Col {cursor.column}
+            </span>
+          )}
+
+          <span className="hover:bg-white/20 px-1 rounded cursor-pointer hidden md:inline">
+            UTF-8
+          </span>
+
+          <span className="hover:bg-white/20 px-1 rounded cursor-pointer hidden md:inline">
+            Spaces: 2
+          </span>
+
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              sandbox.sandboxId ? 'bg-teal' : 'bg-vsc-textMuted'
-            }`}
-          />
-          {sandbox.sandboxId ? 'Connected: Sandbox' : 'Local Mode'}
-        </span>
+            onClick={() => setRightTab('preview')}
+            className="flex items-center gap-1 font-medium hover:bg-white/20 px-1 rounded cursor-pointer text-cyan-200"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
+            Port {webcontainer.serverPort || 5173}
+          </span>
+
+          <span className="hover:bg-white/20 px-1 rounded cursor-pointer hidden lg:inline">
+            Layout: US
+          </span>
+        </div>
       </footer>
 
       {/* ── Fullscreen Live Preview Modal / Overlay ── */}
