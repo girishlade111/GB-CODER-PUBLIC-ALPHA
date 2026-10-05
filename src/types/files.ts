@@ -400,6 +400,53 @@ const count = ref(0);
 </template>
 `;
 
+const REACT_PACKAGE_JSON = JSON.stringify(
+  {
+    name: 'react-starter',
+    private: true,
+    version: '0.0.0',
+    type: 'module',
+    scripts: {
+      dev: 'vite',
+      build: 'vite build',
+      preview: 'vite preview',
+    },
+    dependencies: {
+      react: '^18.3.1',
+      'react-dom': '^18.3.1',
+    },
+    devDependencies: {
+      '@vitejs/plugin-react': '^4.3.4',
+      vite: '^5.4.11',
+    },
+  },
+  null,
+  2,
+);
+
+const VUE_PACKAGE_JSON = JSON.stringify(
+  {
+    name: 'vue-starter',
+    private: true,
+    version: '0.0.0',
+    type: 'module',
+    scripts: {
+      dev: 'vite',
+      build: 'vite build',
+      preview: 'vite preview',
+    },
+    dependencies: {
+      vue: '^3.5.13',
+    },
+    devDependencies: {
+      '@vitejs/plugin-vue': '^5.2.1',
+      vite: '^5.4.11',
+    },
+  },
+  null,
+  2,
+);
+
 /** Creates a starter project for the given type. */
 export const createProjectOfType = (
   projectType: ProjectType,
@@ -413,6 +460,7 @@ export const createProjectOfType = (
         { path: 'main.jsx', content: REACT_MAIN, language: 'jsx' },
         { path: 'App.jsx', content: REACT_APP, language: 'jsx' },
         { path: 'index.css', content: SHARED_CSS, language: 'css' },
+        { path: 'package.json', content: REACT_PACKAGE_JSON, language: 'json' },
       ],
     };
   }
@@ -425,6 +473,7 @@ export const createProjectOfType = (
         { path: 'main.js', content: VUE_MAIN, language: 'javascript' },
         { path: 'App.vue', content: VUE_APP, language: 'vue' },
         { path: 'style.css', content: SHARED_CSS, language: 'css' },
+        { path: 'package.json', content: VUE_PACKAGE_JSON, language: 'json' },
       ],
     };
   }
