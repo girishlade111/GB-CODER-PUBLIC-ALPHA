@@ -235,7 +235,15 @@ const MobilePreviewModal: React.FC<MobilePreviewModalProps> = ({ isOpen, onClose
               </div>
             ) : activeUrl ? (
               <div className="rounded-lg border border-stroke-subtle bg-white p-3">
-                <QRCodeCanvas value={activeUrl} />
+                <React.Suspense
+                  fallback={
+                    <div className="flex h-48 w-48 items-center justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-content-muted" />
+                    </div>
+                  }
+                >
+                  <QRCodeCanvas value={activeUrl} />
+                </React.Suspense>
               </div>
             ) : (
               <div className="flex h-48 w-48 items-center justify-center rounded-lg border border-stroke-subtle bg-surface-overlay">

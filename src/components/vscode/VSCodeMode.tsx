@@ -416,7 +416,30 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     }
   }, [webcontainer.serverUrl]);
 
-  const activeLanguage = activeFile ? monacoLanguageForPath(activeFile.path) : null;
+  const monacoOptions = useMemo(
+    () => ({
+      fontFamily,
+      fontSize,
+      minimap: { enabled: true },
+      automaticLayout: true,
+      scrollBeyondLastLine: false,
+      tabSize: 2,
+      bracketPairColorization: { enabled: true },
+      guides: {
+        bracketPairs: true,
+        indentation: true,
+      },
+      formatOnPaste: true,
+      formatOnType: true,
+      parameterHints: { enabled: true },
+      quickSuggestions: { other: true, comments: false, strings: true },
+      suggestOnTriggerCharacters: true,
+      acceptSuggestionOnEnter: 'on' as const,
+      tabCompletion: 'on' as const,
+      wordWrap: 'on' as const,
+    }),
+    [fontFamily, fontSize],
+  );
 
   /*
    * The mode is reachable by URL, so it can legitimately be open with nothing in
@@ -700,77 +723,152 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         {/* Editor column: one file at a time, with tabs */}
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-vsc-editor">
           <div
-            className="flex shrink-0 items-stretch overflow-x-auto border-b border-vsc-border bg-vsc-tabbar"
-            role="tablist"
-            data-testid="vscode-tabs"
+            className="flex shrink-0 items-stretch justify-between border-b border-vsc-border bg-vsc-tabbar"
+            data-testid="vscode-tabbar-container"
           >
-            {openPaths.map((path) => {
-              const name = path.split('/').pop() ?? path;
-              const isActive = path === activePath;
-              return (
-                <div
-                  key={path}
-                  role="tab"
-                  aria-selected={isActive}
-                  data-testid="vscode-tab"
-                  data-path={path}
-                  onClick={() => setActivePath(path)}
-                  /*
-                   * Active tabs carry a coloured top border and the editor's own
-                   * background, so the tab reads as physically continuous with the
-                   * surface below it. Inactive tabs keep a transparent top border
-                   * so switching does not shift anything by a pixel.
-                   */
-                  className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-t-2 border-r-vsc-border px-3 py-1.5 text-xs ${
-                    isActive
-                      ? 'border-t-accent bg-vsc-editor text-content-on-dark'
-                      : 'border-t-transparent text-vsc-textMuted hover:bg-product-hover hover:text-vsc-text'
-                  }`}
-                  title={path}
-                >
-                  <span className="max-w-[12rem] truncate">{name}</span>
-                  {dirtyPaths.has(path) && (
-                    <span
-                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-vsc-text"
-                      data-testid="tab-dirty-dot"
-                      title="Unsaved changes"
-                    />
-                  )}
-                  <button
-                    onClick={(event) => closeTab(path, event)}
-                    aria-label={`Close ${name}`}
-                    data-testid="vscode-tab-close"
-                    className="rounded p-0.5 opacity-0 transition-opacity hover:bg-product-hover group-hover:opacity-100"
+            <div
+              className="flex min-w-0 flex-1 items-stretch overflow-x-auto"
+              role="tablist"
+              data-testid="vscode-tabs"
+            >
+              {openPaths.map((path) => {
+                const name = path.split('/').pop() ?? path;
+                const isActive = path === activePath;
+                return (
+                  <div
+                    key={path}
+                    role="tab"
+                    aria-selected={isActive}
+                    data-testid="vscode-tab"
+                    data-path={path}
+                    onClick={() => setActivePath(path)}
+                    className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-t-2 border-r-vsc-border px-3 py-1.5 text-xs ${
+                      isActive
+                        ? 'border-t-accent bg-vsc-editor text-content-on-dark'
+                        : 'border-t-transparent text-vsc-textMuted hover:bg-product-hover hover:text-vsc-text'
+                    }`}
+                    title={path}
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              );
-            })}
+                    <span className="max-w-[12rem] truncate">{name}</span>
+                    {dirtyPaths.has(path) && (
+                      <span
+                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-vsc-text"
+                        data-testid="tab-dirty-dot"
+                        title="Unsaved changes"
+                      />
+                    )}
+                    <button
+                      onClick={(event) => closeTab(path, event)}
+                      aria-label={`Close ${name}`}
+                      data-testid="vscode-tab-close"
+                      className="rounded p-0.5 opacity-0 transition-opacity hover:bg-product-hover group-hover:opacity-100"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Split Editor Toggle */}
+            {hasFiles && (
+              <div className="flex shrink-0 items-center px-1 border-l border-vsc-border bg-vsc-tabbar">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (splitPath) {
+                      setSplitPath(null);
+                    } else {
+                      const other =
+                        openPaths.find((p) => p !== activePath) ||
+                        project.files.find((f) => f.path !== activePath)?.path;
+                      setSplitPath(other || activePath);
+                    }
+                  }}
+                  className={`p-1 rounded text-xs transition-colors flex items-center gap-1 ${
+                    splitPath
+                      ? 'bg-accent/25 text-white'
+                      : 'text-vsc-textMuted hover:bg-product-hover hover:text-white'
+                  }`}
+                  title={splitPath ? 'Close Split Editor' : 'Split Editor Right (Side-by-Side)'}
+                >
+                  <Columns className="h-3.5 w-3.5" />
+                  <span className="text-[10px] hidden sm:inline">
+                    {splitPath ? 'Unsplit' : 'Split'}
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Monaco scrolls internally; this box only bounds it. */}
           <div className="min-h-0 flex-1 overflow-hidden" data-testid="vscode-editor-scroll">
             {activeFile ? (
-              <Editor
-                /* Keyed by path: one Monaco model per file, so undo history and
-                   cursor position survive tab switching. */
-                path={activeFile.path}
-                language={monacoLanguageForPath(activeFile.path)}
-                value={activeFile.content}
-                onChange={handleChange}
-                beforeMount={defineGbCoderTheme}
-                onMount={handleEditorMount}
-                theme={monacoThemeFor(isDark)}
-                options={{
-                  fontFamily,
-                  fontSize,
-                  minimap: { enabled: true },
-                  automaticLayout: true,
-                  scrollBeyondLastLine: false,
-                  tabSize: 2,
-                }}
-              />
+              splitPath && project.files.find((f) => f.path === splitPath) ? (
+                /* Split View: 2 side-by-side editors */
+                <div className="flex h-full min-h-0 w-full divide-x divide-vsc-border">
+                  {/* Left Editor */}
+                  <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+                    <div className="px-3 py-1 text-[11px] font-medium bg-product-soft text-vsc-text border-b border-vsc-border truncate">
+                      {activeFile.path}
+                    </div>
+                    <div className="flex-1 min-h-0">
+                      <Editor
+                        path={activeFile.path}
+                        language={monacoLanguageForPath(activeFile.path)}
+                        value={activeFile.content}
+                        onChange={handleChange}
+                        beforeMount={defineGbCoderTheme}
+                        onMount={handleEditorMount}
+                        theme={monacoThemeFor(isDark)}
+                        options={monacoOptions}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right Editor */}
+                  <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+                    <div className="px-3 py-1 text-[11px] font-medium bg-product-soft text-vsc-text border-b border-vsc-border flex items-center justify-between">
+                      <span className="truncate">{splitPath}</span>
+                      <button
+                        onClick={() => setSplitPath(null)}
+                        className="p-0.5 rounded hover:bg-product-hover text-vsc-textMuted hover:text-white"
+                        title="Close split editor"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <div className="flex-1 min-h-0">
+                      {(() => {
+                        const sf = project.files.find((f) => f.path === splitPath);
+                        return sf ? (
+                          <Editor
+                            path={sf.path}
+                            language={monacoLanguageForPath(sf.path)}
+                            value={sf.content}
+                            onChange={handleSplitChange}
+                            beforeMount={defineGbCoderTheme}
+                            theme={monacoThemeFor(isDark)}
+                            options={monacoOptions}
+                          />
+                        ) : null;
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Single Editor */
+                <Editor
+                  path={activeFile.path}
+                  language={monacoLanguageForPath(activeFile.path)}
+                  value={activeFile.content}
+                  onChange={handleChange}
+                  beforeMount={defineGbCoderTheme}
+                  onMount={handleEditorMount}
+                  theme={monacoThemeFor(isDark)}
+                  options={monacoOptions}
+                />
+              )
             ) : hasFiles ? (
               <div className="grid h-full place-items-center text-xs text-vsc-textMuted">
                 Select a file from the explorer.
