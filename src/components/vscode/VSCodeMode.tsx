@@ -203,7 +203,12 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const [openPaths, setOpenPaths] = useState<string[]>(restoredView.openPaths);
   const [activePath, setActivePath] = useState<string | null>(restoredView.activePath);
   const [dirtyPaths, setDirtyPaths] = useState<Set<string>>(new Set());
-  const [rightTab, setRightTab] = useState<RightTab>('sandbox');
+  const [rightTab, setRightTab] = useState<RightTab>(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('gbcoder_e2b_key')) {
+      return 'sandbox';
+    }
+    return 'preview';
+  });
   const [showBanner, setShowBanner] = useState(true);
   /*
    * VS Code mode replaces the standard console panel, so the Terminal has to be
@@ -673,18 +678,29 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           className="flex shrink-0 items-start gap-2.5 border-b border-stroke-dark bg-product-elevated px-3 py-2"
           data-testid="vscode-banner"
         >
-          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-content-on-dark-soft" />
+          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent" />
           <p className="flex-1 text-xs text-content-on-dark-soft">
-            {entryReason === 'manual'
+            {webcontainer.isSupported
+              ? '⚡ In-Browser WebContainer active — No Cloud Sandbox required! Run npm install, build, and dev servers with zero cloud cost.'
+              : entryReason === 'manual'
               ? 'VS Code mode — connect a Sandbox to run this project.'
               : 'Full-stack project detected — connect a Sandbox to run this project.'}
           </p>
-          <button
-            onClick={() => setRightTab('sandbox')}
-            className="rounded-md bg-product-active px-2 py-0.5 text-[11px] font-medium text-content-on-dark hover:bg-product-active"
-          >
-            Open Sandbox
-          </button>
+          {webcontainer.isSupported ? (
+            <button
+              onClick={() => setShowTerminal(true)}
+              className="rounded-md bg-accent px-2.5 py-0.5 text-[11px] font-medium text-white hover:bg-accent-light"
+            >
+              Open Terminal (⚡)
+            </button>
+          ) : (
+            <button
+              onClick={() => setRightTab('sandbox')}
+              className="rounded-md bg-product-active px-2 py-0.5 text-[11px] font-medium text-content-on-dark hover:bg-product-active"
+            >
+              Open Sandbox
+            </button>
+          )}
           <button
             onClick={() => setShowBanner(false)}
             className="text-content-on-dark-soft hover:text-content-on-dark-soft"

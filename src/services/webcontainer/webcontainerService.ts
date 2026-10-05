@@ -121,6 +121,17 @@ export function filesToFileSystemTree(
         ),
       },
     };
+  } else if (extraDependencies && Object.keys(extraDependencies).length > 0) {
+    const pkgNode = root['package.json'] as { file?: { contents: string } } | undefined;
+    if (pkgNode?.file) {
+      try {
+        const parsed = JSON.parse(pkgNode.file.contents);
+        parsed.dependencies = { ...(parsed.dependencies || {}), ...extraDependencies };
+        pkgNode.file.contents = JSON.stringify(parsed, null, 2);
+      } catch {
+        // ignore
+      }
+    }
   }
 
   return root;
