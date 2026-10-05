@@ -219,7 +219,7 @@ import { customInjectionService } from './services/customInjectionService';
  */
 
 
-type AppView = 'editor' | 'history' | 'about' | 'documentation' | 'privacy' | 'terms' | 'cookies' | 'disclaimer' | 'contact' | 'preview-share' | 'preview-share-error';
+type AppView = 'editor' | 'history' | 'about' | 'documentation' | 'privacy' | 'terms' | 'cookies' | 'disclaimer' | 'contact' | 'preview-share' | 'preview-share-error' | 'mobile-preview';
 
 /*
  * Start of the desktop range. Mirrors the `desktop` / `compact` screens in
