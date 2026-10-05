@@ -32,6 +32,10 @@ import {
   reconcileViewState,
   writeViewState,
 } from '../../services/vscodeWorkspaceStore';
+import {
+  webcontainerService,
+  WebContainerState,
+} from '../../services/webcontainer/webcontainerService';
 
 /**
  * VS Code style editor shell.
@@ -98,6 +102,8 @@ interface VSCodeModeProps {
 
 const subscribeSandbox = (onChange: () => void) => sandboxSession.subscribe(onChange);
 const getSandboxSnapshot = () => sandboxSession.getState();
+const subscribeWebContainer = (onChange: () => void) => webcontainerService.subscribe(onChange);
+const getWebContainerSnapshot = () => webcontainerService.getState();
 
 /** Most recently opened files, newest last, as VS Code orders its tabs. */
 const MAX_TABS = 12;
@@ -167,7 +173,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   onOpenProjects,
 }) => {
   const sandbox = useSyncExternalStore(subscribeSandbox, getSandboxSnapshot, getSandboxSnapshot);
+  const webcontainer = useSyncExternalStore(
+    subscribeWebContainer,
+    getWebContainerSnapshot,
+    getWebContainerSnapshot,
+  );
   const { isDark } = useTheme();
+  const [previewKey, setPreviewKey] = useState(0);
 
   /*
    * Tabs come back from the previous visit, reconciled against the files that
@@ -246,7 +258,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const handleChange = useCallback(
     (value: string | undefined) => {
       if (!activePath) return;
-      onChangeFile(activePath, value ?? '');
+      const text = value ?? '';
+      onChangeFile(activePath, text);
+      void webcontainerService.syncFile(activePath, text);
       setDirtyPaths((current) => {
         if (current.has(activePath)) return current;
         const next = new Set(current);
@@ -342,12 +356,24 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     [onAddImport],
   );
 
-  const activePreview = sandbox.previews.find((preview) => preview.port === sandbox.activePort);
-  /*
-   * Both halves matter: a confirmed-live process with no exposed port has nothing
-   * to show, and an exposed port whose process has since died would load an error.
-   */
-  const devServerReady = sandbox.devServerRunning && sandbox.previews.length > 0;
+  const activePreview = webcontainer.serverUrl
+    ? {
+        port: webcontainer.serverPort ?? 5173,
+        label: `⚡ WebContainer (Port ${webcontainer.serverPort ?? 5173})`,
+        url: webcontainer.serverUrl,
+        isWebContainer: true,
+      }
+    : sandbox.previews.find((preview) => preview.port === sandbox.activePort);
+
+  const devServerReady = Boolean(
+    webcontainer.serverUrl || (sandbox.devServerRunning && sandbox.previews.length > 0),
+  );
+
+  useEffect(() => {
+    if (webcontainer.serverUrl) {
+      setRightTab('preview');
+    }
+  }, [webcontainer.serverUrl]);
 
   const activeLanguage = activeFile ? monacoLanguageForPath(activeFile.path) : null;
 
@@ -791,17 +817,24 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     {activePreview.label}
                   </span>
                   <button
-                    onClick={() => void sandboxSession.pollLogs()}
+                    onClick={() => {
+                      setPreviewKey((k) => k + 1);
+                      if (!('isWebContainer' in activePreview)) {
+                        void sandboxSession.pollLogs();
+                      }
+                    }}
                     className="text-vsc-textMuted hover:text-content-on-dark"
                     aria-label="Refresh"
+                    title="Reload Live Preview"
                   >
                     <RefreshCw className="h-3 w-3" />
                   </button>
                 </div>
-                {/* Sandbox-served preview: a real URL, not a local execution. */}
+                {/* Live dev server preview: in-browser WebContainer or remote Sandbox */}
                 <iframe
+                  key={previewKey}
                   src={activePreview.url}
-                  title="Sandbox preview"
+                  title="Live preview"
                   className="min-h-0 flex-1 border-0 bg-white"
                   sandbox="allow-scripts allow-same-origin allow-forms"
                 />
@@ -812,18 +845,46 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 data-testid="connect-sandbox-prompt"
               >
                 <div>
-                  <Plug className="mx-auto mb-3 h-7 w-7 text-vsc-textMuted" />
-                  <p className="text-sm font-semibold text-content-on-dark">Connect Sandbox to Preview</p>
-                  <p className="mt-1.5 text-xs leading-relaxed text-vsc-textMuted">
-                    This project has a server side, so it cannot run in the browser. Start a sandbox
-                    to build and serve it, then the preview appears here.
-                  </p>
-                  <button
-                    onClick={() => setRightTab('sandbox')}
-                    className="mt-3 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg hover:bg-accent-hover"
-                  >
-                    Open Sandbox panel
-                  </button>
+                  {webcontainer.isSupported ? (
+                    <>
+                      <MonitorPlay className="mx-auto mb-3 h-7 w-7 text-emerald-400" />
+                      <p className="text-sm font-semibold text-content-on-dark">Live Dev Preview</p>
+                      <p className="mt-1.5 text-xs leading-relaxed text-vsc-textMuted">
+                        Run your project in-browser with zero latency! Start your dev server (e.g.{' '}
+                        <code className="text-accent">npm run dev</code>) in the terminal.
+                      </p>
+                      <div className="mt-3 flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => setShowTerminal(true)}
+                          className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors flex items-center gap-1.5"
+                        >
+                          <TerminalSquare className="h-3.5 w-3.5" />
+                          Open Terminal & Run Dev
+                        </button>
+                        <button
+                          onClick={() => setRightTab('sandbox')}
+                          className="rounded-lg border border-vsc-borderStrong hover:bg-product-hover px-3 py-1.5 text-xs font-semibold text-vsc-text"
+                        >
+                          Cloud Sandbox
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Plug className="mx-auto mb-3 h-7 w-7 text-vsc-textMuted" />
+                      <p className="text-sm font-semibold text-content-on-dark">Connect Sandbox to Preview</p>
+                      <p className="mt-1.5 text-xs leading-relaxed text-vsc-textMuted">
+                        This project has a server side, so it cannot run in the browser. Start a sandbox
+                        to build and serve it, then the preview appears here.
+                      </p>
+                      <button
+                        onClick={() => setRightTab('sandbox')}
+                        className="mt-3 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg hover:bg-accent-hover"
+                      >
+                        Open Sandbox panel
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             )}
