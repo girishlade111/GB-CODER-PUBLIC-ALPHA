@@ -839,193 +839,393 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           </button>
         </aside>
 
-        {/* Editor column: one file at a time, with tabs */}
+        {/* Editor column: one file at a time, or split dual panes */}
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-vsc-editor">
-          <div
-            className="flex shrink-0 items-stretch justify-between border-b border-vsc-border bg-vsc-tabbar"
-            data-testid="vscode-tabbar-container"
-          >
+          {isSplitActive ? (
+            /* Split View: Dual Panes with Resizer */
             <div
-              className="flex min-w-0 flex-1 items-stretch overflow-x-auto"
-              role="tablist"
-              data-testid="vscode-tabs"
+              className={`flex min-h-0 flex-1 overflow-hidden ${
+                splitDirection === 'vertical' ? 'flex-row' : 'flex-col'
+              }`}
+              data-testid="vscode-editor-panes"
             >
-              {openPaths.map((path) => {
-                const name = path.split('/').pop() ?? path;
-                const isActive = path === activePath;
-                return (
-                  <div
-                    key={path}
-                    role="tab"
-                    aria-selected={isActive}
-                    data-testid="vscode-tab"
-                    data-path={path}
-                    onClick={() => setActivePath(path)}
-                    className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-t-2 border-r-vsc-border px-3 py-1.5 text-xs ${
-                      isActive
-                        ? 'border-t-accent bg-vsc-editor text-content-on-dark'
-                        : 'border-t-transparent text-vsc-textMuted hover:bg-product-hover hover:text-vsc-text'
-                    }`}
-                    title={path}
-                  >
-                    <span className="max-w-[12rem] truncate">{name}</span>
-                    {dirtyPaths.has(path) && (
-                      <span
-                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-vsc-text"
-                        data-testid="tab-dirty-dot"
-                        title="Unsaved changes"
-                      />
-                    )}
-                    <button
-                      onClick={(event) => closeTab(path, event)}
-                      aria-label={`Close ${name}`}
-                      data-testid="vscode-tab-close"
-                      className="rounded p-0.5 opacity-0 transition-opacity hover:bg-product-hover group-hover:opacity-100"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Split Editor Toggle */}
-            {hasFiles && (
-              <div className="flex shrink-0 items-center px-1 border-l border-vsc-border bg-vsc-tabbar">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (splitPath) {
-                      setSplitPath(null);
-                    } else {
-                      const other =
-                        openPaths.find((p) => p !== activePath) ||
-                        project.files.find((f) => f.path !== activePath)?.path;
-                      setSplitPath(other || activePath);
-                    }
-                  }}
-                  className={`p-1 rounded text-xs transition-colors flex items-center gap-1 ${
-                    splitPath
-                      ? 'bg-accent/25 text-white'
-                      : 'text-vsc-textMuted hover:bg-product-hover hover:text-white'
-                  }`}
-                  title={splitPath ? 'Close Split Editor' : 'Split Editor Right (Side-by-Side)'}
-                >
-                  <Columns className="h-3.5 w-3.5" />
-                  <span className="text-[10px] hidden sm:inline">
-                    {splitPath ? 'Unsplit' : 'Split'}
-                  </span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Monaco scrolls internally; this box only bounds it. */}
-          <div className="min-h-0 flex-1 overflow-hidden" data-testid="vscode-editor-scroll">
-            {activeFile ? (
-              splitPath && project.files.find((f) => f.path === splitPath) ? (
-                /* Split View: 2 side-by-side editors */
-                <div className="flex h-full min-h-0 w-full divide-x divide-vsc-border">
-                  {/* Left Editor */}
-                  <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
-                    <div className="px-3 py-1 text-[11px] font-medium bg-product-soft text-vsc-text border-b border-vsc-border truncate">
-                      {activeFile.path}
-                    </div>
-                    <div className="flex-1 min-h-0">
-                      <Editor
-                        path={activeFile.path}
-                        language={monacoLanguageForPath(activeFile.path)}
-                        value={activeFile.content}
-                        onChange={handleChange}
-                        beforeMount={defineGbCoderTheme}
-                        onMount={handleEditorMount}
-                        theme={monacoThemeFor(isDark)}
-                        options={monacoOptions}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Right Editor */}
-                  <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
-                    <div className="px-3 py-1 text-[11px] font-medium bg-product-soft text-vsc-text border-b border-vsc-border flex items-center justify-between">
-                      <span className="truncate">{splitPath}</span>
-                      <button
-                        onClick={() => setSplitPath(null)}
-                        className="p-0.5 rounded hover:bg-product-hover text-vsc-textMuted hover:text-white"
-                        title="Close split editor"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                    <div className="flex-1 min-h-0">
-                      {(() => {
-                        const sf = project.files.find((f) => f.path === splitPath);
-                        return sf ? (
-                          <Editor
-                            path={sf.path}
-                            language={monacoLanguageForPath(sf.path)}
-                            value={sf.content}
-                            onChange={handleSplitChange}
-                            beforeMount={defineGbCoderTheme}
-                            theme={monacoThemeFor(isDark)}
-                            options={monacoOptions}
-                          />
-                        ) : null;
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* Single Editor */
-                <Editor
-                  path={activeFile.path}
-                  language={monacoLanguageForPath(activeFile.path)}
-                  value={activeFile.content}
-                  onChange={handleChange}
-                  beforeMount={defineGbCoderTheme}
-                  onMount={handleEditorMount}
-                  theme={monacoThemeFor(isDark)}
-                  options={monacoOptions}
-                />
-              )
-            ) : hasFiles ? (
-              <div className="grid h-full place-items-center text-xs text-vsc-textMuted">
-                Select a file from the explorer.
-              </div>
-            ) : (
+              {/* Primary Pane */}
               <div
-                className="grid h-full place-items-center px-6 text-center"
-                data-testid="vscode-empty-state"
+                style={{
+                  [splitDirection === 'vertical' ? 'width' : 'height']: `${splitRatio}%`,
+                }}
+                className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+                data-testid="vscode-pane-primary"
               >
-                <div>
-                  <FolderPlus className="mx-auto mb-3 h-7 w-7 text-vsc-textMuted" />
-                  <p className="text-sm font-semibold text-content-on-dark">No project loaded</p>
-                  <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-vsc-textMuted">
-                    Import a folder to get started. What you load stays in this workspace, so a
-                    refresh brings it back.
-                  </p>
-                  <div className="mt-3 flex items-center justify-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => folderInputRef.current?.click()}
-                      data-testid="empty-load-folder"
-                      className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg hover:bg-accent-hover"
-                    >
-                      Load Folder
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      data-testid="empty-load-file"
-                      className="rounded-lg border border-vsc-borderStrong px-3 py-1.5 text-xs font-semibold text-vsc-text hover:bg-product-hover hover:text-content-on-dark"
-                    >
-                      Load File
-                    </button>
+                {/* Tabbar Primary */}
+                <div
+                  className="flex shrink-0 items-stretch justify-between border-b border-vsc-border bg-vsc-tabbar"
+                  data-testid="vscode-tabbar-container"
+                >
+                  <div
+                    className="flex min-w-0 flex-1 items-stretch overflow-x-auto"
+                    role="tablist"
+                    data-testid="vscode-tabs"
+                  >
+                    {openPaths.map((path) => {
+                      const name = path.split('/').pop() ?? path;
+                      const isActive = path === activePath;
+                      return (
+                        <div
+                          key={path}
+                          role="tab"
+                          aria-selected={isActive}
+                          data-testid="vscode-tab"
+                          data-path={path}
+                          onClick={() => setActivePath(path)}
+                          className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-t-2 border-r-vsc-border px-3 py-1.5 text-xs ${
+                            isActive
+                              ? 'border-t-accent bg-vsc-editor text-content-on-dark'
+                              : 'border-t-transparent text-vsc-textMuted hover:bg-product-hover hover:text-vsc-text'
+                          }`}
+                          title={path}
+                        >
+                          <span className="max-w-[10rem] truncate">{name}</span>
+                          {dirtyPaths.has(path) && (
+                            <span
+                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-vsc-text"
+                              data-testid="tab-dirty-dot"
+                              title="Unsaved changes"
+                            />
+                          )}
+                          <button
+                            onClick={(event) => closeTab(path, event)}
+                            aria-label={`Close ${name}`}
+                            data-testid="vscode-tab-close"
+                            className="rounded p-0.5 opacity-0 transition-opacity hover:bg-product-hover group-hover:opacity-100"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex shrink-0 items-center px-1 border-l border-vsc-border bg-vsc-tabbar gap-0.5">
+                    {activePath && (
+                      <Tooltip label="Move Tab to Other Pane" side="bottom">
+                        <button
+                          type="button"
+                          onClick={() => moveTabToOtherPane(activePath, 'left')}
+                          className="p-1 rounded text-vsc-textMuted hover:bg-product-hover hover:text-white"
+                          title="Move tab to side pane"
+                        >
+                          <ArrowRightLeft className="h-3.5 w-3.5" />
+                        </button>
+                      </Tooltip>
+                    )}
                   </div>
                 </div>
+
+                {/* Primary Monaco Editor */}
+                <div className="min-h-0 flex-1 overflow-hidden" data-testid="vscode-editor-scroll">
+                  {activeFile ? (
+                    <Editor
+                      path={activeFile.path}
+                      language={monacoLanguageForPath(activeFile.path)}
+                      value={activeFile.content}
+                      onChange={handleChange}
+                      beforeMount={defineGbCoderTheme}
+                      onMount={handleEditorMount}
+                      theme={monacoThemeFor(isDark)}
+                      options={monacoOptions}
+                    />
+                  ) : (
+                    <div className="grid h-full place-items-center text-xs text-vsc-textMuted">
+                      Select a file from the explorer.
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
+
+              {/* Resizer Divider */}
+              <div
+                role="separator"
+                aria-orientation={splitDirection}
+                onPointerDown={handleSplitResizeDown}
+                onPointerMove={handleSplitResizeMove}
+                onPointerUp={handleSplitResizeUp}
+                className={`shrink-0 bg-vsc-border hover:bg-accent active:bg-accent transition-colors z-10 flex items-center justify-center select-none ${
+                  splitDirection === 'vertical'
+                    ? 'w-1.5 cursor-col-resize h-full'
+                    : 'h-1.5 cursor-row-resize w-full'
+                }`}
+                title="Drag to resize panes"
+              >
+                <div
+                  className={`bg-vsc-textMuted rounded-full pointer-events-none ${
+                    splitDirection === 'vertical' ? 'w-0.5 h-6' : 'h-0.5 w-6'
+                  }`}
+                />
+              </div>
+
+              {/* Secondary Split Pane */}
+              <div
+                style={{
+                  [splitDirection === 'vertical' ? 'width' : 'height']: `${100 - splitRatio}%`,
+                }}
+                className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-vsc-editor"
+                data-testid="vscode-pane-secondary"
+              >
+                {/* Secondary Tabbar */}
+                <div
+                  className="flex shrink-0 items-stretch justify-between border-b border-vsc-border bg-vsc-tabbar"
+                  data-testid="vscode-split-tabbar-container"
+                >
+                  <div
+                    className="flex min-w-0 flex-1 items-stretch overflow-x-auto"
+                    role="tablist"
+                    data-testid="vscode-split-tabs"
+                  >
+                    {splitOpenPaths.map((path) => {
+                      const name = path.split('/').pop() ?? path;
+                      const isActive = path === splitActivePath;
+                      return (
+                        <div
+                          key={path}
+                          role="tab"
+                          aria-selected={isActive}
+                          data-testid="vscode-split-tab"
+                          data-path={path}
+                          onClick={() => setSplitActivePath(path)}
+                          className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-t-2 border-r-vsc-border px-3 py-1.5 text-xs ${
+                            isActive
+                              ? 'border-t-accent bg-vsc-editor text-content-on-dark'
+                              : 'border-t-transparent text-vsc-textMuted hover:bg-product-hover hover:text-vsc-text'
+                          }`}
+                          title={path}
+                        >
+                          <span className="max-w-[10rem] truncate">{name}</span>
+                          {dirtyPaths.has(path) && (
+                            <span
+                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-vsc-text"
+                              data-testid="tab-dirty-dot"
+                              title="Unsaved changes"
+                            />
+                          )}
+                          <button
+                            onClick={(event) => closeSplitTab(path, event)}
+                            aria-label={`Close ${name}`}
+                            data-testid="vscode-split-tab-close"
+                            className="rounded p-0.5 opacity-0 transition-opacity hover:bg-product-hover group-hover:opacity-100"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Secondary Pane Controls */}
+                  <div className="flex shrink-0 items-center px-1 border-l border-vsc-border bg-vsc-tabbar gap-1">
+                    {splitActivePath && (
+                      <Tooltip label="Move Tab to Main Pane" side="bottom">
+                        <button
+                          type="button"
+                          onClick={() => moveTabToOtherPane(splitActivePath, 'right')}
+                          className="p-1 rounded text-vsc-textMuted hover:bg-product-hover hover:text-white"
+                          title="Move tab to main pane"
+                        >
+                          <ArrowRightLeft className="h-3.5 w-3.5" />
+                        </button>
+                      </Tooltip>
+                    )}
+                    <Tooltip
+                      label={
+                        splitDirection === 'vertical'
+                          ? 'Switch to Horizontal Split'
+                          : 'Switch to Vertical Split'
+                      }
+                      side="bottom"
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSplitDirection((prev) => (prev === 'vertical' ? 'horizontal' : 'vertical'))
+                        }
+                        className="p-1 rounded text-vsc-textMuted hover:bg-product-hover hover:text-white"
+                        title={
+                          splitDirection === 'vertical'
+                            ? 'Switch to Horizontal Split'
+                            : 'Switch to Vertical Split'
+                        }
+                      >
+                        {splitDirection === 'vertical' ? (
+                          <Rows className="h-3.5 w-3.5" />
+                        ) : (
+                          <Columns className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </Tooltip>
+                    <Tooltip label="Close Split Pane" side="bottom">
+                      <button
+                        type="button"
+                        onClick={closeSplitPane}
+                        className="p-1 rounded text-vsc-textMuted hover:bg-product-hover hover:text-white"
+                        title="Close split pane"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </Tooltip>
+                  </div>
+                </div>
+
+                {/* Secondary Editor Content */}
+                <div
+                  className="min-h-0 flex-1 overflow-hidden"
+                  data-testid="vscode-editor-scroll-secondary"
+                >
+                  {splitActiveFile ? (
+                    <Editor
+                      path={splitActiveFile.path}
+                      language={monacoLanguageForPath(splitActiveFile.path)}
+                      value={splitActiveFile.content}
+                      onChange={handleSplitChange}
+                      beforeMount={defineGbCoderTheme}
+                      onMount={handleSplitEditorMount}
+                      theme={monacoThemeFor(isDark)}
+                      options={monacoOptions}
+                    />
+                  ) : (
+                    <div className="grid h-full place-items-center text-xs text-vsc-textMuted">
+                      Select a file from the explorer to view side-by-side.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Single Pane Mode */
+            <>
+              <div
+                className="flex shrink-0 items-stretch justify-between border-b border-vsc-border bg-vsc-tabbar"
+                data-testid="vscode-tabbar-container"
+              >
+                <div
+                  className="flex min-w-0 flex-1 items-stretch overflow-x-auto"
+                  role="tablist"
+                  data-testid="vscode-tabs"
+                >
+                  {openPaths.map((path) => {
+                    const name = path.split('/').pop() ?? path;
+                    const isActive = path === activePath;
+                    return (
+                      <div
+                        key={path}
+                        role="tab"
+                        aria-selected={isActive}
+                        data-testid="vscode-tab"
+                        data-path={path}
+                        onClick={() => setActivePath(path)}
+                        className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-t-2 border-r-vsc-border px-3 py-1.5 text-xs ${
+                          isActive
+                            ? 'border-t-accent bg-vsc-editor text-content-on-dark'
+                            : 'border-t-transparent text-vsc-textMuted hover:bg-product-hover hover:text-vsc-text'
+                        }`}
+                        title={path}
+                      >
+                        <span className="max-w-[12rem] truncate">{name}</span>
+                        {dirtyPaths.has(path) && (
+                          <span
+                            className="h-1.5 w-1.5 shrink-0 rounded-full bg-vsc-text"
+                            data-testid="tab-dirty-dot"
+                            title="Unsaved changes"
+                          />
+                        )}
+                        <button
+                          onClick={(event) => closeTab(path, event)}
+                          aria-label={`Close ${name}`}
+                          data-testid="vscode-tab-close"
+                          className="rounded p-0.5 opacity-0 transition-opacity hover:bg-product-hover group-hover:opacity-100"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Split Editor Toggle */}
+                {hasFiles && (
+                  <div className="flex shrink-0 items-center px-1 border-l border-vsc-border bg-vsc-tabbar">
+                    <Tooltip label="Split Editor Right (Side-by-Side)" side="bottom">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const other =
+                            openPaths.find((p) => p !== activePath) ||
+                            project.files.find((f) => f.path !== activePath)?.path;
+                          openToSide(other || activePath || project.files[0]?.path);
+                        }}
+                        className="p-1 rounded text-xs transition-colors flex items-center gap-1 text-vsc-textMuted hover:bg-product-hover hover:text-white"
+                        title="Split Editor Right (Side-by-Side)"
+                      >
+                        <Columns className="h-3.5 w-3.5" />
+                        <span className="text-[10px] hidden sm:inline">Split</span>
+                      </button>
+                    </Tooltip>
+                  </div>
+                )}
+              </div>
+
+              {/* Monaco scrolls internally; this box only bounds it. */}
+              <div className="min-h-0 flex-1 overflow-hidden" data-testid="vscode-editor-scroll">
+                {activeFile ? (
+                  <Editor
+                    path={activeFile.path}
+                    language={monacoLanguageForPath(activeFile.path)}
+                    value={activeFile.content}
+                    onChange={handleChange}
+                    beforeMount={defineGbCoderTheme}
+                    onMount={handleEditorMount}
+                    theme={monacoThemeFor(isDark)}
+                    options={monacoOptions}
+                  />
+                ) : hasFiles ? (
+                  <div className="grid h-full place-items-center text-xs text-vsc-textMuted">
+                    Select a file from the explorer.
+                  </div>
+                ) : (
+                  <div
+                    className="grid h-full place-items-center px-6 text-center"
+                    data-testid="vscode-empty-state"
+                  >
+                    <div>
+                      <FolderPlus className="mx-auto mb-3 h-7 w-7 text-vsc-textMuted" />
+                      <p className="text-sm font-semibold text-content-on-dark">No project loaded</p>
+                      <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-vsc-textMuted">
+                        Import a folder to get started. What you load stays in this workspace, so a
+                        refresh brings it back.
+                      </p>
+                      <div className="mt-3 flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => folderInputRef.current?.click()}
+                          data-testid="empty-load-folder"
+                          className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg hover:bg-accent-hover"
+                        >
+                          Load Folder
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          data-testid="empty-load-file"
+                          className="rounded-lg border border-vsc-borderStrong px-3 py-1.5 text-xs font-semibold text-vsc-text hover:bg-product-hover hover:text-content-on-dark"
+                        >
+                          Load File
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </main>
 
         {/* Right panel */}
