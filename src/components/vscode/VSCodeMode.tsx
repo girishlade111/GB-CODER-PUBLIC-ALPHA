@@ -24,8 +24,11 @@ import {
   ExternalLink,
   Maximize2,
   Minimize2,
+  FolderArchive,
+  Upload,
+  FolderDown,
 } from 'lucide-react';
-import FileTreeView from './FileTreeView';
+import FileTreeView, { FileTreeViewHandle } from './FileTreeView';
 import TerminalTab from '../Console/TerminalTab';
 import SandboxPanel from '../sandbox/SandboxPanel';
 import Tooltip from '../ui/Tooltip';
@@ -69,6 +72,10 @@ import { livePreviewChannel } from '../../services/preview/livePreviewChannel';
 interface VSCodeModeProps {
   project: MultiFileProject;
   onChangeFile: (path: string, content: string) => void;
+  onCreateFile?: (path: string, content?: string) => void;
+  onRenameFile?: (oldPath: string, newPath: string) => void;
+  onDeleteFile?: (path: string) => void;
+  onDuplicateFile?: (path: string) => void;
   onExit: () => void;
   fontFamily: string;
   fontSize: number;
@@ -170,6 +177,10 @@ type RightTab = 'preview' | 'sandbox';
 const VSCodeMode: React.FC<VSCodeModeProps> = ({
   project,
   onChangeFile,
+  onCreateFile,
+  onRenameFile,
+  onDeleteFile,
+  onDuplicateFile,
   onExit,
   fontFamily,
   fontSize,
@@ -287,6 +298,86 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   );
 
   const activeFile = project.files.find((file) => file.path === activePath) ?? null;
+
+  /* ── File Explorer Operations ───────────────────────────────────────────── */
+  const treeRef = useRef<FileTreeViewHandle>(null);
+
+  const handleCreateFile = useCallback(
+    (path: string, content = '') => {
+      onCreateFile?.(path, content);
+      openFile(path);
+    },
+    [onCreateFile, openFile],
+  );
+
+  const handleCreateFolder = useCallback(
+    (folderPath: string) => {
+      const keepPath = `${folderPath.replace(/\/+$/, '')}/.gitkeep`;
+      onCreateFile?.(keepPath, '');
+    },
+    [onCreateFile],
+  );
+
+  const handleRenameFile = useCallback(
+    (oldPath: string, newPath: string) => {
+      onRenameFile?.(oldPath, newPath);
+
+      const updateList = (paths: string[]) =>
+        paths.map((p) =>
+          p === oldPath
+            ? newPath
+            : p.startsWith(oldPath + '/')
+            ? newPath + p.slice(oldPath.length)
+            : p,
+        );
+
+      setOpenPaths(updateList);
+      setSplitOpenPaths(updateList);
+
+      if (activePath === oldPath || (activePath && activePath.startsWith(oldPath + '/'))) {
+        setActivePath(newPath);
+      }
+      if (
+        splitActivePath === oldPath ||
+        (splitActivePath && splitActivePath.startsWith(oldPath + '/'))
+      ) {
+        setSplitActivePath(newPath);
+      }
+    },
+    [onRenameFile, activePath, splitActivePath],
+  );
+
+  const handleDeleteFile = useCallback(
+    (path: string) => {
+      onDeleteFile?.(path);
+
+      const isTarget = (p: string) => p === path || p.startsWith(path + '/');
+
+      setOpenPaths((paths) => {
+        const remaining = paths.filter((p) => !isTarget(p));
+        if (activePath && isTarget(activePath)) {
+          setActivePath(remaining[0] || null);
+        }
+        return remaining;
+      });
+
+      setSplitOpenPaths((paths) => {
+        const remaining = paths.filter((p) => !isTarget(p));
+        if (splitActivePath && isTarget(splitActivePath)) {
+          setSplitActivePath(remaining[0] || null);
+        }
+        return remaining;
+      });
+    },
+    [onDeleteFile, activePath, splitActivePath],
+  );
+
+  const handleDuplicateFile = useCallback(
+    (path: string) => {
+      onDuplicateFile?.(path);
+    },
+    [onDuplicateFile],
+  );
 
   const handleChange = useCallback(
     (value: string | undefined) => {
@@ -842,7 +933,40 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             </span>
 
             <div className="ml-auto flex items-center gap-0.5">
-              <Tooltip label="Load File" side="bottom">
+              <Tooltip label="New File" side="bottom">
+                <button
+                  type="button"
+                  onClick={() => treeRef.current?.startNewFile()}
+                  aria-label="New File"
+                  data-testid="explorer-new-file"
+                  className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
+                >
+                  <FilePlus className="h-3.5 w-3.5" />
+                </button>
+              </Tooltip>
+              <Tooltip label="New Folder" side="bottom">
+                <button
+                  type="button"
+                  onClick={() => treeRef.current?.startNewFolder()}
+                  aria-label="New Folder"
+                  data-testid="explorer-new-folder"
+                  className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
+                >
+                  <FolderPlus className="h-3.5 w-3.5" />
+                </button>
+              </Tooltip>
+              <Tooltip label="Collapse All Folders" side="bottom">
+                <button
+                  type="button"
+                  onClick={() => treeRef.current?.collapseAll()}
+                  aria-label="Collapse All Folders"
+                  data-testid="explorer-collapse-all"
+                  className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
+                >
+                  <FolderArchive className="h-3.5 w-3.5" />
+                </button>
+              </Tooltip>
+              <Tooltip label="Load File from Disk" side="bottom">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -850,10 +974,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   data-testid="explorer-load-file"
                   className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
                 >
-                  <FilePlus className="h-3.5 w-3.5" />
+                  <Upload className="h-3.5 w-3.5" />
                 </button>
               </Tooltip>
-              <Tooltip label="Load Folder" side="bottom">
+              <Tooltip label="Load Folder from Disk" side="bottom">
                 <button
                   type="button"
                   onClick={() => folderInputRef.current?.click()}
@@ -861,7 +985,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   data-testid="explorer-load-folder"
                   className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
                 >
-                  <FolderPlus className="h-3.5 w-3.5" />
+                  <FolderDown className="h-3.5 w-3.5" />
                 </button>
               </Tooltip>
             </div>
@@ -879,11 +1003,17 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             onDrop={handleExplorerDrop}
           >
             <FileTreeView
+              ref={treeRef}
               files={project.files}
               activePath={activePath}
               dirtyPaths={dirtyPaths}
               onOpen={openFile}
               onOpenToSide={openToSide}
+              onCreateFile={handleCreateFile}
+              onCreateFolder={handleCreateFolder}
+              onRename={handleRenameFile}
+              onDelete={handleDeleteFile}
+              onDuplicate={handleDuplicateFile}
             />
             {isExplorerDropTarget && (
               <p className="px-3 py-2 text-[11px] text-accent">Drop to add to this project…</p>

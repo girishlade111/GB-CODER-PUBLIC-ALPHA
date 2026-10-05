@@ -1507,6 +1507,101 @@ function App() {
     });
   }, []);
 
+  /** Creates a new file in VS Code mode and syncs to WebContainer VFS. */
+  const handleFullStackCreateFile = useCallback((path: string, content = '') => {
+    setFullStackProject((current) => {
+      if (!current) return current;
+      if (current.files.some((f) => f.path === path)) return current;
+      return {
+        ...current,
+        files: [...current.files, { path, content }],
+      };
+    });
+    void webcontainerService.syncFile(path, content);
+  }, []);
+
+  /** Renames a file or folder in VS Code mode and syncs to WebContainer VFS. */
+  const handleFullStackRenameFile = useCallback((oldPath: string, newPath: string) => {
+    setFullStackProject((current) => {
+      if (!current) return current;
+      const fileToRename = current.files.find((f) => f.path === oldPath);
+      if (fileToRename) {
+        void webcontainerService.syncFile(newPath, fileToRename.content);
+        void webcontainerService.deleteFile(oldPath);
+        return {
+          ...current,
+          files: current.files.map((f) => (f.path === oldPath ? { ...f, path: newPath } : f)),
+        };
+      }
+      // Folder rename: prefix match
+      const oldPrefix = oldPath.endsWith('/') ? oldPath : `${oldPath}/`;
+      const newPrefix = newPath.endsWith('/') ? newPath : `${newPath}/`;
+      return {
+        ...current,
+        files: current.files.map((f) => {
+          if (f.path.startsWith(oldPrefix)) {
+            const renamed = newPrefix + f.path.slice(oldPrefix.length);
+            void webcontainerService.syncFile(renamed, f.content);
+            void webcontainerService.deleteFile(f.path);
+            return { ...f, path: renamed };
+          }
+          return f;
+        }),
+      };
+    });
+  }, []);
+
+  /** Deletes a file or directory in VS Code mode and removes from WebContainer VFS. */
+  const handleFullStackDeleteFile = useCallback((path: string) => {
+    setFullStackProject((current) => {
+      if (!current) return current;
+      const isExactFile = current.files.some((f) => f.path === path);
+      void webcontainerService.deleteFile(path);
+      if (isExactFile) {
+        return {
+          ...current,
+          files: current.files.filter((f) => f.path !== path),
+        };
+      }
+      // Folder delete: remove all files starting with folder prefix
+      const folderPrefix = path.endsWith('/') ? path : `${path}/`;
+      return {
+        ...current,
+        files: current.files.filter((f) => !f.path.startsWith(folderPrefix)),
+      };
+    });
+  }, []);
+
+  /** Duplicates a file in VS Code mode and syncs to WebContainer VFS. */
+  const handleFullStackDuplicateFile = useCallback((path: string) => {
+    setFullStackProject((current) => {
+      if (!current) return current;
+      const original = current.files.find((f) => f.path === path);
+      if (!original) return current;
+
+      const lastDot = path.lastIndexOf('.');
+      let newPath: string;
+      if (lastDot !== -1) {
+        const base = path.slice(0, lastDot);
+        const ext = path.slice(lastDot);
+        newPath = `${base}.copy${ext}`;
+        let counter = 1;
+        while (current.files.some((f) => f.path === newPath)) {
+          counter += 1;
+          newPath = `${base}.copy-${counter}${ext}`;
+        }
+      } else {
+        newPath = `${path}.copy`;
+      }
+
+      void webcontainerService.syncFile(newPath, original.content);
+      return {
+        ...current,
+        files: [...current.files, { path: newPath, content: original.content }],
+      };
+    });
+  }, []);
+
   /**
    * Leaves VS Code mode without losing work: the edited files are handed to the
    * normal import path, so they land in the standard editor rather than being
@@ -3591,6 +3686,10 @@ function App() {
                 project={fullStackProject ?? EMPTY_VSCODE_PROJECT}
                 entryReason={vsCodeReturn ? 'manual' : 'detected'}
                 onChangeFile={handleFullStackFileChange}
+                onCreateFile={handleFullStackCreateFile}
+                onRenameFile={handleFullStackRenameFile}
+                onDeleteFile={handleFullStackDeleteFile}
+                onDuplicateFile={handleFullStackDuplicateFile}
                 onExit={handleExitFullStack}
                 onAddImport={handleAddToFullStackProject}
                 onOpenDependencies={() => setShowDependencies(true)}
