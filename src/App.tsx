@@ -3709,22 +3709,7 @@ function App() {
           Overlays rather than embedded tabs: these are built as full-screen
           dialogs owned by App, and re-housing them would mean rebuilding them.
         */}
-        {showDependencies && (
-          <Suspense fallback={null}>
-            <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md sm:max-w-lg flex-col overflow-hidden border-l border-vsc-border bg-vsc-sidebar shadow-elevated">
-              <DependenciesPanel
-                project={fullStackProject ?? EMPTY_VSCODE_PROJECT}
-                resolvedPackages={projectBundle.resolvedPackages}
-                unresolvedPackages={projectBundle.unresolvedPackages}
-                isResolving={projectBundle.isResolvingPackages}
-                onPin={handlePinDependency}
-                onUnpin={handleUnpinDependency}
-                onClose={() => setShowDependencies(false)}
-                onChangeFile={handleUpdatePackageFile}
-              />
-            </div>
-          </Suspense>
-        )}
+
 
         {showAIChat && (
           <Suspense fallback={null}>

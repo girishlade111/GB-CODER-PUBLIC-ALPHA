@@ -1,21 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import {
-  Box,
   FilePlus,
   FolderPlus,
-  Info,
-  LayoutGrid,
   LogOut,
-  MessageSquare,
-  Mic,
-  MonitorPlay,
-  Package,
-  Plug,
   Plus,
   RefreshCw,
-  Server,
-  Sparkles,
   Columns,
   Rows,
   ArrowRightLeft,
@@ -25,12 +15,10 @@ import {
   Maximize2,
   Minimize2,
   FolderArchive,
-  Upload,
   FolderDown,
   Zap,
   Share2,
   Search,
-  GitBranch,
   ChevronDown,
   ChevronRight,
   ChevronLeft,
@@ -43,11 +31,18 @@ import {
   Lock,
   Loader2,
   ChevronUp,
+  Minus,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import FileTreeView, { FileTreeViewHandle } from './FileTreeView';
 import ActivityBar, { ActivityTab } from './ActivityBar';
 import StackBlitzStartupLoader from './StackBlitzStartupLoader';
+import CodeAssistPanel from './CodeAssistPanel';
+import IDESettingsModal from './IDESettingsModal';
+import DependenciesPanel from '../DependenciesPanel';
+import CodeRabbitReviewModal from '../CodeRabbitReviewModal';
+import VoiceCommandPanel from '../VoiceCommandPanel';
+import SnapshotManagerModal from '../SnapshotManagerModal';
 import TerminalTab from '../Console/TerminalTab';
 import SandboxPanel from '../sandbox/SandboxPanel';
 import Tooltip from '../ui/Tooltip';
@@ -64,6 +59,8 @@ import {
 import { webcontainerService } from '../../services/webcontainer/webcontainerService';
 import { ataService } from '../../services/ata/ataService';
 import { livePreviewChannel } from '../../services/preview/livePreviewChannel';
+import { codeAssistService } from '../../services/ai/codeAssistService';
+import { Snapshot } from '../../services/snapshotService';
 
 /**
  * VS Code style editor shell.
@@ -255,6 +252,56 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
   const [quickSearchTerm, setQuickSearchTerm] = useState('');
   const [copiedUrl, setCopiedUrl] = useState(false);
+
+  // Modals state
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isCodeRabbitOpen, setIsCodeRabbitOpen] = useState(false);
+  const [isVoiceCommandsOpen, setIsVoiceCommandsOpen] = useState(false);
+  const [isSnapshotsOpen, setIsSnapshotsOpen] = useState(false);
+
+  // Live preview minimize/maximize state
+  const [isPreviewMinimized, setIsPreviewMinimized] = useState(false);
+  const [isPreviewMaximized, setIsPreviewMaximized] = useState(false);
+
+  // Code Assist service listener
+  const codeAssistState = useSyncExternalStore(
+    (cb) => codeAssistService.subscribe(cb),
+    () => codeAssistService.getState(),
+    () => codeAssistService.getState()
+  );
+
+  const handleApplyCodeAssistFiles = useCallback(
+    (files: Array<{ path: string; content: string }>) => {
+      for (const file of files) {
+        if (project.files.some((f) => f.path === file.path)) {
+          onChangeFile(file.path, file.content);
+        } else {
+          onCreateFile?.(file.path, file.content);
+        }
+        void webcontainerService.syncFile(file.path, file.content);
+      }
+      toast.success(`${files.length} file(s) updated in workspace`);
+    },
+    [project.files, onChangeFile, onCreateFile]
+  );
+
+  const handleRestoreSnapshot = useCallback(
+    (snapshot: Snapshot) => {
+      const snapFiles = snapshot.projectState?.project?.files;
+      if (snapFiles && snapFiles.length > 0) {
+        for (const sf of snapFiles) {
+          if (project.files.some((f) => f.path === sf.path)) {
+            onChangeFile(sf.path, sf.content);
+          } else {
+            onCreateFile?.(sf.path, sf.content);
+          }
+          void webcontainerService.syncFile(sf.path, sf.content);
+        }
+        toast.success(`Restored snapshot: ${snapshot.name}`);
+      }
+    },
+    [project.files, onChangeFile, onCreateFile]
+  );
 
   const openTerminal = useCallback(() => {
     setHasOpenedTerminal(true);
@@ -669,9 +716,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       }
     : sandbox.previews.find((preview) => preview.port === sandbox.activePort);
 
-  const devServerReady = Boolean(
-    webcontainer.serverUrl || (sandbox.devServerRunning && sandbox.previews.length > 0),
-  );
 
   useEffect(() => {
     if (webcontainer.serverUrl) {
@@ -820,31 +864,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         className="flex h-10 shrink-0 items-center justify-between border-b border-[#262636] bg-[#181824] px-3 select-none z-20"
         data-testid="vscode-topbar"
       >
-        {/* Left Section: Lightning Logo, Project/Commit button, Nav arrows */}
+        {/* Left Section: Lightning Logo & Brand */}
         <div className="flex items-center gap-2">
           {/* StackBlitz Glowing Lightning Bolt & Brand */}
           <div className="flex items-center gap-1.5 cursor-pointer" onClick={onOpenProjects}>
             <Zap className="h-4 w-4 text-cyan-400 fill-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]" />
             <span className="font-semibold text-xs text-white tracking-wide">GB Coder</span>
           </div>
-
-          {/* Blue Commit / Pull Request Button matching StackBlitz Screenshot 2 & 3 */}
-          <button
-            type="button"
-            onClick={() => {
-              toast.success('Workspace synchronized with in-browser WebContainer');
-            }}
-            className="flex items-center gap-1 rounded bg-[#007acc] hover:bg-[#0069b4] px-2.5 py-1 text-[11px] font-medium text-white shadow-sm transition-colors"
-          >
-            <span>Commit</span>
-            <ChevronDown className="h-3 w-3 opacity-80" />
-          </button>
-
-          {/* Git Branch Pill */}
-          <span className="hidden sm:flex items-center gap-1 rounded bg-white/5 px-2 py-0.5 text-[10px] font-mono text-slate-300 border border-white/10">
-            <GitBranch className="h-3 w-3 text-cyan-400" />
-            main^
-          </span>
 
           {/* Nav Arrows */}
           <div className="hidden md:flex items-center gap-0.5 ml-1">
@@ -887,7 +913,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           </kbd>
         </div>
 
-        {/* Right Section: WebContainer Live Status, NPM Packages, Share, Exit */}
+        {/* Right Section: WebContainer Live Status, Share, Exit */}
         <div className="flex items-center gap-1.5">
           {/* Status Badge */}
           {webcontainer.isSupported && (
@@ -909,20 +935,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 </>
               )}
             </div>
-          )}
-
-          {/* Package Manager Button */}
-          {onOpenDependencies && (
-            <Tooltip label="Visual NPM Package Manager GUI" side="bottom">
-              <button
-                type="button"
-                onClick={onOpenDependencies}
-                className="flex items-center gap-1 rounded bg-white/5 hover:bg-white/10 px-2.5 py-1 text-xs text-slate-200 border border-white/10 transition-colors"
-              >
-                <Package className="h-3.5 w-3.5 text-amber-400" />
-                <span className="hidden sm:inline text-[11px]">Packages</span>
-              </button>
-            </Tooltip>
           )}
 
           {/* Share Button (Screenshot 2 & 3) */}
@@ -961,18 +973,24 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           onChangeTab={setActiveTab}
           isTerminalOpen={showTerminal}
           onToggleTerminal={toggleTerminal}
-          dirtyCount={dirtyPaths.size}
           serverRunning={Boolean(webcontainer.serverUrl || sandbox.activePort)}
-          onOpenSettings={onOpenVoiceCommands}
+          isCodeAssistGenerating={codeAssistState.isGenerating}
+          onOpenCodeRabbit={() => setIsCodeRabbitOpen(true)}
+          onOpenVoiceCommands={() => setIsVoiceCommandsOpen(true)}
+          onOpenSnapshots={() => setIsSnapshotsOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onExit={onExit}
           onResetContainer={() => {
             void webcontainerService.mountProject(project.files, project.dependencies, project.projectType);
             toast.success('WebContainer virtual filesystem remounted');
           }}
         />
 
-        {/* Left Sidebar: Explorer / Search / Git / Ports */}
+        {/* Left Sidebar: Explorer / Search / Code Assist / Packages / Ports */}
         <aside
-          className={`flex w-60 shrink-0 flex-col overflow-hidden border-r bg-[#181824] ${
+          className={`flex ${
+            activityTab === 'code-assist' || activityTab === 'packages' ? 'w-96' : 'w-60'
+          } shrink-0 flex-col overflow-hidden border-r bg-[#181824] transition-[width] duration-150 ${
             isExplorerDropTarget ? 'border-accent' : 'border-[#262636]'
           }`}
           data-testid="vscode-explorer"
@@ -1152,45 +1170,35 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   ))}
               </div>
             </div>
-          ) : activityTab === 'git' ? (
-            <div className="flex h-full flex-col p-3 text-xs">
-              <span className="font-bold tracking-wider uppercase text-slate-400 mb-2">Source Control</span>
-              <p className="text-slate-400 mb-3">{dirtyPaths.size} modified file(s)</p>
-              <div className="flex-1 overflow-y-auto space-y-1">
-                {Array.from(dirtyPaths).map((p) => (
-                  <div
-                    key={p}
-                    onClick={() => openFile(p)}
-                    className="flex items-center justify-between rounded px-2 py-1 hover:bg-white/10 cursor-pointer text-amber-300"
-                  >
-                    <span className="truncate">{p}</span>
-                    <span className="text-[10px] text-amber-400 font-bold">M</span>
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setDirtyPaths(new Set());
-                  toast.success('Changes committed to in-browser branch');
-                }}
-                className="w-full rounded bg-[#007acc] py-1.5 text-xs font-semibold text-white hover:bg-[#0069b4] mt-2"
-              >
-                Commit Changes
-              </button>
-            </div>
+          ) : activityTab === 'code-assist' ? (
+            <CodeAssistPanel
+              project={project}
+              onApplyFiles={handleApplyCodeAssistFiles}
+              onClose={() => setActiveTab('explorer')}
+            />
           ) : activityTab === 'packages' ? (
-            <div className="flex h-full flex-col p-3 text-xs">
-              <span className="font-bold tracking-wider uppercase text-slate-400 mb-2">Packages</span>
-              <p className="text-slate-400 mb-3">Dependencies from package.json</p>
-              <button
-                type="button"
-                onClick={onOpenDependencies}
-                className="w-full rounded bg-cyan-600 py-1.5 text-xs font-semibold text-white hover:bg-cyan-500 mb-3 flex items-center justify-center gap-1.5"
-              >
-                <Package className="h-3.5 w-3.5" />
-                Open Package Manager GUI
-              </button>
+            <div className="flex h-full w-full flex-col overflow-hidden bg-[#181824]">
+              <DependenciesPanel
+                project={project}
+                resolvedPackages={[]}
+                unresolvedPackages={[]}
+                isResolving={false}
+                onPin={(name, ver) => {
+                  if (project.dependencies) {
+                    project.dependencies[name] = ver;
+                  }
+                }}
+                onUnpin={(name) => {
+                  if (project.dependencies) {
+                    delete project.dependencies[name];
+                  }
+                }}
+                onClose={() => setActiveTab('explorer')}
+                onChangeFile={(path, content) => {
+                  onChangeFile(path, content);
+                  void webcontainerService.syncFile(path, content);
+                }}
+              />
             </div>
           ) : (
             <div className="flex h-full flex-col p-3 text-xs">
@@ -1541,6 +1549,23 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     </Tooltip>
                   </div>
                 )}
+
+                {/* Restore Minimized Live Preview button */}
+                {isPreviewMinimized && (
+                  <div className="flex shrink-0 items-center px-1 border-l border-vsc-border bg-vsc-tabbar">
+                    <Tooltip label="Restore Live Preview" side="bottom">
+                      <button
+                        type="button"
+                        onClick={() => setIsPreviewMinimized(false)}
+                        className="flex items-center gap-1.5 rounded bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-1 text-xs text-cyan-300 border border-cyan-500/30 transition-colors"
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[10px] font-semibold hidden sm:inline">Preview</span>
+                        <Maximize2 className="h-3 w-3" />
+                      </button>
+                    </Tooltip>
+                  </div>
+                )}
               </div>
 
               {/* Monaco scrolls internally; this box only bounds it. */}
@@ -1740,146 +1765,183 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         </main>
 
         {/* Right panel resize handle */}
-        <div
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Resize right panel"
-          onPointerDown={handleRightPanelResizeDown}
-          onPointerMove={handleRightPanelResizeMove}
-          onPointerUp={handleRightPanelResizeUp}
-          onDoubleClick={() => {
-            setRightPanelWidth(480);
-            try {
-              localStorage.setItem('gbcoder_vscode_right_panel_width', '480');
-            } catch {
-              // Ignored
-            }
-          }}
-          className={`group relative flex w-1.5 shrink-0 cursor-col-resize items-center justify-center transition-colors select-none ${
-            isDraggingRightPanel ? 'bg-[#007acc]' : 'bg-transparent hover:bg-[#007acc]/40'
-          }`}
-          title="Drag to resize right panel (Double click to reset to 480px)"
-        >
-          <div className="h-8 w-0.5 rounded-full bg-[#262636] group-hover:bg-[#007acc] transition-colors" />
-        </div>
+        {!isPreviewMinimized && (
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize right panel"
+            onPointerDown={handleRightPanelResizeDown}
+            onPointerMove={handleRightPanelResizeMove}
+            onPointerUp={handleRightPanelResizeUp}
+            onDoubleClick={() => {
+              setRightPanelWidth(480);
+              try {
+                localStorage.setItem('gbcoder_vscode_right_panel_width', '480');
+              } catch {
+                // Ignored
+              }
+            }}
+            className={`group relative flex w-1.5 shrink-0 cursor-col-resize items-center justify-center transition-colors select-none ${
+              isDraggingRightPanel ? 'bg-[#007acc]' : 'bg-transparent hover:bg-[#007acc]/40'
+            }`}
+            title="Drag to resize right panel (Double click to reset to 480px)"
+          >
+            <div className="h-8 w-0.5 rounded-full bg-[#262636] group-hover:bg-[#007acc] transition-colors" />
+          </div>
+        )}
 
         {/* ── Right Panel: Browser Chrome + Live Preview / StackBlitz Loader ── */}
-        <aside
-          style={{ width: `${rightPanelWidth}px` }}
-          className="flex min-w-[20rem] shrink-0 flex-col overflow-hidden border-l border-[#262636] bg-[#181824]"
-          data-testid="vscode-right-panel"
-        >
-          {/* Top Browser Bar Chrome (Screenshot 2 & 3) */}
-          <div className="flex shrink-0 items-center justify-between gap-1 border-b border-[#262636] bg-[#181824] px-2.5 py-1.5 select-none">
-            {/* Nav controls */}
-            <div className="flex items-center gap-0.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setPreviewKey((k) => k + 1);
-                  livePreviewChannel.broadcastReload();
-                }}
-                title="Reload Live Preview"
-                className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                <RotateCcw className="h-3 w-3" />
-              </button>
-              <button
-                type="button"
-                disabled
-                className="rounded p-1 text-slate-600 cursor-not-allowed"
-              >
-                <ChevronLeft className="h-3 w-3" />
-              </button>
-              <button
-                type="button"
-                disabled
-                className="rounded p-1 text-slate-600 cursor-not-allowed"
-              >
-                <ChevronRight className="h-3 w-3" />
-              </button>
-            </div>
-
-            {/* URL Address Bar Pill (Screenshot 2) */}
-            <div
-              className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md border border-white/10 bg-[#12131c] px-2.5 py-1 text-[11px] text-slate-300 font-mono shadow-inner mx-1.5 group cursor-pointer hover:border-white/20 transition-all"
-              onClick={() => {
-                const url = activePreview?.url || `http://localhost:${webcontainer.serverPort || 5173}/`;
-                void navigator.clipboard?.writeText(url);
-                setCopiedUrl(true);
-                toast.success('URL copied to clipboard!');
-                setTimeout(() => setCopiedUrl(false), 2000);
-              }}
-              title="Click to copy URL"
-            >
-              <Lock className="h-2.5 w-2.5 text-emerald-400 shrink-0" />
-              <span className="truncate text-slate-300">
-                {activePreview?.url
-                  ? activePreview.url.replace(/^https?:\/\//, '')
-                  : `localhost:${webcontainer.serverPort || 5173}/`}
-              </span>
-              <span className="ml-auto opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-300 shrink-0">
-                {copiedUrl ? <Check className="h-2.5 w-2.5 text-emerald-400" /> : <Copy className="h-2.5 w-2.5" />}
-              </span>
-            </div>
-
-            {/* Right actions: Viewport mode, Popout, Maximize, Sandbox switch */}
-            <div className="flex items-center gap-1 shrink-0">
-              {/* Responsive Device Viewport Toggles */}
-              <div className="hidden sm:flex items-center rounded bg-slate-900 border border-white/10 p-0.5">
+        {!isPreviewMinimized && (
+          <aside
+            style={{
+              width: isPreviewMaximized
+                ? `${Math.max(rightPanelWidth, Math.floor(window.innerWidth * 0.62))}px`
+                : `${rightPanelWidth}px`,
+            }}
+            className="flex min-w-[20rem] shrink-0 flex-col overflow-hidden border-l border-[#262636] bg-[#181824] transition-[width] duration-150"
+            data-testid="vscode-right-panel"
+          >
+            {/* Top Browser Bar Chrome (Screenshot 2 & 3) */}
+            <div className="flex shrink-0 items-center justify-between gap-1 border-b border-[#262636] bg-[#181824] px-2.5 py-1.5 select-none">
+              {/* Nav controls */}
+              <div className="flex items-center gap-0.5">
                 <button
                   type="button"
-                  onClick={() => setDeviceViewport('desktop')}
-                  title="Desktop (100% Fluid)"
-                  className={`rounded p-0.5 transition-colors ${
-                    deviceViewport === 'desktop' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
-                  }`}
+                  onClick={() => {
+                    setPreviewKey((k) => k + 1);
+                    livePreviewChannel.broadcastReload();
+                  }}
+                  title="Reload Live Preview"
+                  className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
                 >
-                  <Monitor className="h-3 w-3" />
+                  <RotateCcw className="h-3 w-3" />
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDeviceViewport('tablet')}
-                  title="Tablet Viewport (768px)"
-                  className={`rounded p-0.5 transition-colors ${
-                    deviceViewport === 'tablet' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
-                  }`}
+                  disabled
+                  className="rounded p-1 text-slate-600 cursor-not-allowed"
                 >
-                  <Tablet className="h-3 w-3" />
+                  <ChevronLeft className="h-3 w-3" />
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDeviceViewport('mobile')}
-                  title="Mobile Viewport (375px)"
-                  className={`rounded p-0.5 transition-colors ${
-                    deviceViewport === 'mobile' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
-                  }`}
+                  disabled
+                  className="rounded p-1 text-slate-600 cursor-not-allowed"
                 >
-                  <Smartphone className="h-3 w-3" />
+                  <ChevronRight className="h-3 w-3" />
                 </button>
               </div>
 
-              {/* Popout */}
-              <button
-                type="button"
-                onClick={handleOpenInNewTab}
-                title="Open in New Tab (Live Updating Popout)"
-                className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+              {/* URL Address Bar Pill (Screenshot 2) */}
+              <div
+                className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md border border-white/10 bg-[#12131c] px-2.5 py-1 text-[11px] text-slate-300 font-mono shadow-inner mx-1.5 group cursor-pointer hover:border-white/20 transition-all"
+                onClick={() => {
+                  const url = activePreview?.url || `http://localhost:${webcontainer.serverPort || 5173}/`;
+                  void navigator.clipboard?.writeText(url);
+                  setCopiedUrl(true);
+                  toast.success('URL copied to clipboard!');
+                  setTimeout(() => setCopiedUrl(false), 2000);
+                }}
+                title="Click to copy URL"
               >
-                <ExternalLink className="h-3 w-3" />
-              </button>
+                <Lock className="h-2.5 w-2.5 text-emerald-400 shrink-0" />
+                <span className="truncate text-slate-300">
+                  {activePreview?.url
+                    ? activePreview.url.replace(/^https?:\/\//, '')
+                    : `localhost:${webcontainer.serverPort || 5173}/`}
+                </span>
+                <span className="ml-auto opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-300 shrink-0">
+                  {copiedUrl ? <Check className="h-2.5 w-2.5 text-emerald-400" /> : <Copy className="h-2.5 w-2.5" />}
+                </span>
+              </div>
 
-              {/* Fullscreen */}
-              <button
-                type="button"
-                onClick={() => setIsPreviewFullscreen(true)}
-                title="Fullscreen Preview"
-                className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                <Maximize2 className="h-3 w-3" />
-              </button>
+              {/* Right actions: Viewport mode, Popout, Minimize, Maximize Width, Fullscreen */}
+              <div className="flex items-center gap-1 shrink-0">
+                {/* Responsive Device Viewport Toggles */}
+                <div className="hidden sm:flex items-center rounded bg-slate-900 border border-white/10 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setDeviceViewport('desktop')}
+                    title="Desktop (100% Fluid)"
+                    className={`rounded p-0.5 transition-colors ${
+                      deviceViewport === 'desktop' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Monitor className="h-3 w-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeviceViewport('tablet')}
+                    title="Tablet Viewport (768px)"
+                    className={`rounded p-0.5 transition-colors ${
+                      deviceViewport === 'tablet' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Tablet className="h-3 w-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeviceViewport('mobile')}
+                    title="Mobile Viewport (375px)"
+                    className={`rounded p-0.5 transition-colors ${
+                      deviceViewport === 'mobile' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Smartphone className="h-3 w-3" />
+                  </button>
+                </div>
+
+                {/* Popout */}
+                <Tooltip label="Open in New Tab" side="bottom">
+                  <button
+                    type="button"
+                    onClick={handleOpenInNewTab}
+                    title="Open in New Tab (Live Updating Popout)"
+                    className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </button>
+                </Tooltip>
+
+                {/* Maximize Panel Width Toggle */}
+                <Tooltip label={isPreviewMaximized ? "Restore Panel Width" : "Maximize Panel"} side="bottom">
+                  <button
+                    type="button"
+                    onClick={() => setIsPreviewMaximized(!isPreviewMaximized)}
+                    title={isPreviewMaximized ? "Restore Width" : "Maximize Width"}
+                    className={`rounded p-1 transition-colors ${
+                      isPreviewMaximized ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <Columns className="h-3 w-3" />
+                  </button>
+                </Tooltip>
+
+                {/* Fullscreen */}
+                <Tooltip label="Fullscreen Preview" side="bottom">
+                  <button
+                    type="button"
+                    onClick={() => setIsPreviewFullscreen(true)}
+                    title="Fullscreen Preview"
+                    className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <Maximize2 className="h-3 w-3" />
+                  </button>
+                </Tooltip>
+
+                {/* Minimize Preview Panel */}
+                <Tooltip label="Minimize Preview Panel" side="bottom">
+                  <button
+                    type="button"
+                    onClick={() => setIsPreviewMinimized(true)}
+                    title="Minimize Preview Panel"
+                    className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </button>
+                </Tooltip>
+              </div>
             </div>
-          </div>
 
           {/* Preview Body */}
           <div className="min-h-0 flex-1 overflow-hidden relative bg-[#13141f]">
@@ -1933,6 +1995,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             )}
           </div>
         </aside>
+      )}
       </div>
 
       {/* ── Status bar: VS Code & StackBlitz Classic Blue Bar ── */}
@@ -1940,18 +2003,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         className="flex h-6 shrink-0 items-center justify-between border-t border-[#0069b4] bg-[#007acc] px-2 text-[11px] text-white select-none z-10"
         data-testid="vscode-status-bar"
       >
-        {/* Left items: Git branch, sync, diagnostics, terminal toggle */}
+        {/* Left items: diagnostics, terminal toggle */}
         <div className="flex items-center gap-2.5">
-          <span className="flex items-center gap-1 font-mono hover:bg-white/20 px-1 rounded cursor-pointer">
-            <GitBranch className="h-3 w-3" />
-            main*
-          </span>
-
-          <span className="flex items-center gap-1 text-[10px] hover:bg-white/20 px-1 rounded cursor-pointer">
-            <RotateCcw className="h-2.5 w-2.5" />
-            0↓ 1↑
-          </span>
-
           <span className="flex items-center gap-1 hover:bg-white/20 px-1 rounded cursor-pointer">
             <span>⊗ 0</span>
             <span>⚠ 0</span>
@@ -1992,8 +2045,12 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           </span>
 
           <span
-            onClick={() => setRightTab('preview')}
+            onClick={() => {
+              setIsPreviewMinimized(false);
+              setRightTab('preview');
+            }}
             className="flex items-center gap-1 font-medium hover:bg-white/20 px-1 rounded cursor-pointer text-cyan-200"
+            title="Live Preview Port"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
             Port {webcontainer.serverPort || 5173}
@@ -2100,6 +2157,42 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           void submitFiles(Array.from(event.target.files ?? []));
           event.target.value = '';
         }}
+      />
+
+      {/* ── Settings Modal (StackBlitz/IDE styled) ── */}
+      <IDESettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
+
+      {/* ── CodeRabbit AI Bug Scanner Modal ── */}
+      <CodeRabbitReviewModal
+        isOpen={isCodeRabbitOpen}
+        onClose={() => setIsCodeRabbitOpen(false)}
+        files={project.files.map((f) => ({
+          name: f.path,
+          content: f.content,
+          language: f.language,
+        }))}
+        onApplyFixToFile={(filePath, newContent) => {
+          onChangeFile(filePath, newContent);
+          void webcontainerService.syncFile(filePath, newContent);
+          toast.success(`Applied fix to ${filePath}`);
+        }}
+      />
+
+      {/* ── Voice Commands Overlay ── */}
+      <VoiceCommandPanel
+        isOpen={isVoiceCommandsOpen}
+        onClose={() => setIsVoiceCommandsOpen(false)}
+      />
+
+      {/* ── Snapshots Manager Modal ── */}
+      <SnapshotManagerModal
+        isOpen={isSnapshotsOpen}
+        onClose={() => setIsSnapshotsOpen(false)}
+        onRestore={handleRestoreSnapshot}
+        onPreview={() => {}}
       />
     </div>
   );
