@@ -4413,4 +4413,20 @@ function App() {
             workspace.openFile(sessionRecoveryData.activePath || '');
             setSessionRecoveryData(null);
             toast.success('Session restored');
-   
+          }}
+          onStartFresh={() => {
+            snapshotService.backupAutoSave();
+            setSessionRecoveryData(null);
+          }}
+        />
+      )}
+
+    </div>
+  );
+}
+
+export default App;
+
+
+
+
