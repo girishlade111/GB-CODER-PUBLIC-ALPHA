@@ -240,10 +240,26 @@ class WebContainerManager {
   /**
    * Mounts all project files into the WebContainer virtual file system.
    */
-  public async mountProject(files: ProjectFile[]): Promise<void> {
+  public async mountProject(
+    files: ProjectFile[],
+    dependencies?: Record<string, string>,
+    projectType?: ProjectType,
+  ): Promise<void> {
     const container = await this.boot();
-    const tree = filesToFileSystemTree(files);
+    const tree = filesToFileSystemTree(files, dependencies, projectType);
     await container.mount(tree);
+  }
+
+  /**
+   * Reads package.json content directly from the WebContainer virtual filesystem.
+   */
+  public async readPackageJson(): Promise<string | null> {
+    if (!this.instance) return null;
+    try {
+      return await this.instance.fs.readFile('package.json', 'utf-8');
+    } catch {
+      return null;
+    }
   }
 
   /**
