@@ -18,6 +18,14 @@ export type WebContainerStatus =
   | 'running'
   | 'error';
 
+export type ProjectStartupStage =
+  | 'idle'
+  | 'booting'
+  | 'installing'
+  | 'starting_server'
+  | 'ready'
+  | 'error';
+
 export interface WebContainerServerInfo {
   port: number;
   url: string;
@@ -30,6 +38,7 @@ export interface WebContainerState {
   serverPort: number | null;
   activeServers: WebContainerServerInfo[];
   error: string | null;
+  startupStage: ProjectStartupStage;
 }
 
 /** Converts a flat array of ProjectFile objects into a nested WebContainer FileSystemTree */
@@ -218,6 +227,7 @@ class WebContainerManager {
     serverPort: null,
     activeServers: [],
     error: null,
+    startupStage: 'idle',
   };
 
   private listeners = new Set<() => void>();
@@ -235,6 +245,10 @@ class WebContainerManager {
 
   public getState(): WebContainerState {
     return this.state;
+  }
+
+  public setStartupStage(stage: ProjectStartupStage) {
+    this.updateState({ startupStage: stage });
   }
 
   public subscribe(listener: () => void): () => void {
@@ -277,6 +291,7 @@ class WebContainerManager {
         serverUrl: url,
         serverPort: port,
         activeServers: updatedServers,
+        startupStage: 'ready',
       });
     });
 

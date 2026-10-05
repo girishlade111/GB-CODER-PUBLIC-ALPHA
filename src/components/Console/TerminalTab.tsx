@@ -30,6 +30,7 @@ interface TerminalTabProps {
   isResolvingPackages: boolean;
   /** Terminal is only mounted/fitted while its tab is visible. */
   isActive: boolean;
+  autoStartProject?: boolean;
 }
 
 const PROMPT = `${ANSI.brightGreen}gb${ANSI.reset}${ANSI.gray}:${ANSI.reset}${ANSI.brightCyan}~${ANSI.reset}${ANSI.gray}$${ANSI.reset} `;
@@ -43,10 +44,12 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   unresolvedPackages,
   isResolvingPackages,
   isActive,
+  autoStartProject = true,
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const hasAutoStartedRef = useRef(false);
 
   /** Active execution mode */
   const [mode, setMode] = useState<TerminalExecutionMode>(() => {
@@ -167,6 +170,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         `\r\n${ANSI.brightGreen}⚡ Booting WebContainer (In-Browser Node.js runtime)...${ANSI.reset}\r\n`,
       );
       setWebcontainerStatus('booting');
+      webcontainerService.setStartupStage('booting');
 
       const currentProj = projectRef.current;
 
@@ -187,19 +191,40 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         rows: term.rows || 24,
         onData: (chunk) => {
           term.write(chunk);
+          if (
+            chunk.includes('VITE') ||
+            chunk.includes('ready in') ||
+            chunk.includes('Local:   http://') ||
+            chunk.includes('Network: http://')
+          ) {
+            webcontainerService.setStartupStage('ready');
+          }
         },
       });
 
       webcontainerShellRef.current = shell;
       setWebcontainerStatus('running');
+
+      // StackBlitz auto-start: install dependencies and boot dev server
+      if (autoStartProject !== false && !hasAutoStartedRef.current) {
+        hasAutoStartedRef.current = true;
+        webcontainerService.setStartupStage('installing');
+        setTimeout(() => {
+          term.write(
+            `\r\n${ANSI.brightCyan}⚡ StackBlitz Auto-Start: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
+          );
+          shell.write('npm install && npm run dev\r');
+        }, 500);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       term.write(`\r\n${ANSI.red}✖ Failed to start WebContainer: ${msg}${ANSI.reset}\r\n`);
       setWebcontainerStatus('error');
+      webcontainerService.setStartupStage('error');
     } finally {
       isStartingShellRef.current = false;
     }
-  }, []);
+  }, [autoStartProject]);
 
   /** Creates the terminal once, then wires input handling. */
   useEffect(() => {

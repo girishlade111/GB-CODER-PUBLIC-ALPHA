@@ -27,8 +27,27 @@ import {
   FolderArchive,
   Upload,
   FolderDown,
+  Zap,
+  Share2,
+  Search,
+  GitBranch,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  Smartphone,
+  Tablet,
+  Monitor,
+  Copy,
+  Check,
+  RotateCcw,
+  Lock,
+  Loader2,
+  ChevronUp,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import FileTreeView, { FileTreeViewHandle } from './FileTreeView';
+import ActivityBar, { ActivityTab } from './ActivityBar';
+import StackBlitzStartupLoader from './StackBlitzStartupLoader';
 import TerminalTab from '../Console/TerminalTab';
 import SandboxPanel from '../sandbox/SandboxPanel';
 import Tooltip from '../ui/Tooltip';
@@ -224,29 +243,37 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     }
     return 'preview';
   });
-  const [showBanner, setShowBanner] = useState(true);
-  /*
-   * VS Code mode replaces the standard console panel, so the Terminal has to be
-   * reachable from here — otherwise the sandbox shell built for this feature
-   * would have no entry point in the only mode that can use it.
-   */
-  const [showTerminal, setShowTerminal] = useState(false);
-  const [hasOpenedTerminal, setHasOpenedTerminal] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
+  const [showTerminal, setShowTerminal] = useState(true);
+  const [hasOpenedTerminal, setHasOpenedTerminal] = useState(true);
+  const [activityTab, setActiveTab] = useState<ActivityTab>('explorer');
+  const [bottomTab, setBottomTab] = useState<'terminal' | 'problems' | 'output'>('terminal');
+  const [deviceViewport, setDeviceViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isProjectRootOpen, setIsProjectRootOpen] = useState(true);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isOutlineOpen, setIsOutlineOpen] = useState(false);
+  const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+  const [quickSearchTerm, setQuickSearchTerm] = useState('');
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
   const openTerminal = useCallback(() => {
     setHasOpenedTerminal(true);
     setShowTerminal(true);
+    setBottomTab('terminal');
   }, []);
 
   const toggleTerminal = useCallback(() => {
     setShowTerminal((prev) => {
       const next = !prev;
-      if (next) setHasOpenedTerminal(true);
+      if (next) {
+        setHasOpenedTerminal(true);
+        setBottomTab('terminal');
+      }
       return next;
     });
   }, []);
 
-  const [terminalHeight, setTerminalHeight] = useState(TERMINAL_DEFAULT_H);
+  const [terminalHeight, setTerminalHeight] = useState(240);
   /** Cursor position, mirrored into the status bar. */
   const [cursor, setCursor] = useState({ line: 1, column: 1 });
   const [isExplorerDropTarget, setIsExplorerDropTarget] = useState(false);
