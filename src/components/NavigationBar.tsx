@@ -260,6 +260,23 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 </Tooltip>
               )}
 
+              {/* button-secondary — icon-only: Screenshot to Code is a peer of
+                  Build with AI, and a second labelled coral CTA would compete
+                  with it for width. The label lives in the tooltip. */}
+              {onOpenScreenshotToCode && (
+                <Tooltip label="Screenshot to Code">
+                  <button
+                    onClick={onOpenScreenshotToCode}
+                    className={`inline-flex items-center justify-center gap-2 rounded-md border border-stroke bg-surface-canvas px-3 py-2 ${NAV_LINK} text-content-primary transition-colors hover:bg-surface-hover compact:min-h-[44px] compact:min-w-[44px]`}
+                    title="Screenshot to Code"
+                    aria-label="Screenshot to Code"
+                  >
+                    <Scan className="h-4 w-4 text-accent sm:h-5 sm:w-5" />
+                    <span className="hidden xl:inline">Screenshot to Code</span>
+                  </button>
+                </Tooltip>
+              )}
+
               {/* Custom Actions */}
               {customActions}
 
