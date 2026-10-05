@@ -312,6 +312,18 @@ export default defineConfig({
     legalComments: 'none',
   },
   server: {
+    /*
+     * Bind every interface, not just loopback.
+     *
+     * Required by the QR mobile preview: a phone on the same Wi-Fi reaches the
+     * dev server through this machine's LAN address, and Vite's default
+     * `localhost` bind makes that impossible. `/api/preview/lan-info` reports
+     * the address so the QR code can encode it.
+     *
+     * Only affects `npm run dev`. `server/index.js` stays on 127.0.0.1 because
+     * it hands out PTY shells, which must not be reachable from the network.
+     */
+    host: true,
     headers: {
       'Cross-Origin-Embedder-Policy': 'require-corp',
       'Cross-Origin-Opener-Policy': 'same-origin',

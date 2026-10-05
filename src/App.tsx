@@ -105,6 +105,15 @@ const MultiFileEditor = lazyWithRecovery(() => import('./components/MultiFileEdi
 const ExportShareModal = lazyWithRecovery(() => import('./components/ExportShareModal'));
 const ImportModal = lazyWithRecovery(() => import('./components/ImportModal'));
 const PreviewSharePage = lazyWithRecovery(() => import('./components/PreviewSharePage'));
+/*
+ * `/mpreview/:id` — the page a phone reaches by scanning the QR code in the
+ * preview toolbar. Also a distinct chunk from `PreviewSharePage`: a phone on the
+ * LAN should not download the desktop app to render a preview, and vice versa.
+ */
+const MobileStandalonePreview = lazyWithRecovery(
+  () => import('./pages/MobileStandalonePreview'),
+  'Mobile preview',
+);
 const ImportReviewModal = lazyWithRecovery(() => import('./components/ImportReviewModal'));
 const NewProjectModal = lazyWithRecovery(() => import('./components/projects/NewProjectModal'));
 
@@ -638,6 +647,8 @@ function App() {
   const [currentView, setCurrentView] = useState<AppView>('editor');
   const [previewShareCode, setPreviewShareCode] = useState<{ html: string; css: string; javascript: string } | null>(null);
   const [previewShortId, setPreviewShortId] = useState('');
+  /** Session id from `/mpreview/:id`. The page fetches the document itself. */
+  const [mobilePreviewId, setMobilePreviewId] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [showExternalLibraryManager, setShowExternalLibraryManager] = useState<boolean>(false);
@@ -952,6 +963,25 @@ function App() {
         );
       }
     };
+
+    /*
+     * QR mobile preview (`/mpreview/:id`), matched before `/preview/` because a
+     * naive prefix test on the shorter path would also match `/mpreview/`.
+     *
+     * Unlike the share page this fetches nothing here: the page owns its own
+     * polling loop, and doing it in App would mount the editor's state machine
+     * on a phone just to hand over one string.
+     */
+    if (window.location.pathname.startsWith('/mpreview/')) {
+      const sessionId = window.location.pathname.split('/mpreview/')[1]?.split('/')[0] || '';
+      if (!/^[A-Za-z0-9_-]{32}$/.test(sessionId)) {
+        setCurrentView('preview-share-error');
+        return;
+      }
+      setMobilePreviewId(sessionId);
+      setCurrentView('mobile-preview');
+      return;
+    }
 
     if (window.location.pathname.startsWith('/preview/')) {
       const shortId = window.location.pathname.split('/preview/')[1]?.split('/')[0] || '';
@@ -3091,6 +3121,18 @@ function App() {
     setShowVoiceCommands(true);
   }, [voiceState.isListening, showVoiceCommands]);
 
+
+  /*
+   * QR mobile preview (/mpreview/:id). Checked before the share page because
+   * this view is what a phone loads and it must not pay for any editor chrome.
+   */
+  if (currentView === 'mobile-preview') {
+    return (
+      <Suspense fallback={<LazyFallback label="mobile preview" variant="overlay" />}>
+        <MobileStandalonePreview sessionId={mobilePreviewId} />
+      </Suspense>
+    );
+  }
 
   // Render standalone live-preview share page (/preview/:id) - must come
   // first so it bypasses all editor chrome.
