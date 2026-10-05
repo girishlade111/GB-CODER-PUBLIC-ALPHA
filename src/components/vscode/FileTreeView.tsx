@@ -4,6 +4,7 @@ import {
   Braces,
   ChevronDown,
   ChevronRight,
+  Columns,
   File,
   FileCode,
   FileText,
@@ -29,6 +30,8 @@ interface FileTreeViewProps {
   activePath: string | null;
   dirtyPaths: Set<string> | string[];
   onOpen: (path: string) => void;
+  /** Opens the target file directly into the secondary split editor pane */
+  onOpenToSide?: (path: string) => void;
 }
 
 interface TreeNode {
