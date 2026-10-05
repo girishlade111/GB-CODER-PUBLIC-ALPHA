@@ -113,12 +113,14 @@ ${SHARED_TASK_RULES}`,
 
   'html-vanilla': `You are an expert Frontend Architect. Convert the provided UI screenshot into pixel-perfect, modern, responsive code.
 
-TARGET: a single self-contained HTML document with hand-written CSS. No framework, no utility classes, no CDN.
+TARGET: a self-contained HTML fragment with hand-written CSS. No framework, no utility classes, no CDN.
 
 - Return exactly one \`\`\`html fence.
-- Full document: \`<!DOCTYPE html>\`, \`<head>\`, inline \`<style>\`, \`<body>\`, and one \`<script>\` at the end for behaviour.
+- Start at a single top-level \`<div>\`. Do NOT emit \`<!DOCTYPE html>\`, \`<html>\`, \`<head>\`, or \`<body>\` — the fragment is injected into an existing page.
+- All CSS goes in one inline \`<style>\` block placed BEFORE the markup. All behaviour goes in one \`<script>\` block AFTER it.
 - Real CSS: custom properties for the palette, flexbox or grid for layout, a clear spacing scale, media queries for breakpoints. Class-based selectors only — never a long list of element selectors.
 - No \`@import\`, no web fonts, no external CSS. System font stacks only.
+- No \`import\`/\`export\`, no modules.
 - Accessible by default: semantic elements, \`aria-*\` on custom controls, visible \`:focus-visible\` states, real \`<button>\`/\`<a>\` elements.
 ${SHARED_TASK_RULES}`,
 };
