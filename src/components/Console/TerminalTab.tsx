@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Terminal as XTerm } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
+import { Play, RotateCcw, Trash2, Cpu, Cloud, TerminalSquare } from 'lucide-react';
 import { MultiFileProject } from '../../types/files';
 import {
   ANSI,
@@ -14,6 +16,12 @@ import {
   SandboxTerminalStatus,
   sandboxTerminal,
 } from '../../services/sandboxTerminal';
+import {
+  webcontainerService,
+  WebContainerStatus,
+} from '../../services/webcontainer/webcontainerService';
+
+export type TerminalExecutionMode = 'webcontainer' | 'sandbox' | 'local';
 
 interface TerminalTabProps {
   project: MultiFileProject;
@@ -25,19 +33,6 @@ interface TerminalTabProps {
 }
 
 const PROMPT = `${ANSI.brightGreen}gb${ANSI.reset}${ANSI.gray}:${ANSI.reset}${ANSI.brightCyan}~${ANSI.reset}${ANSI.gray}$${ANSI.reset} `;
-
-/** Character cell measurement, used to fit the grid to the container. */
-const measureCell = (element: HTMLElement, fontSize: number, fontFamily: string) => {
-  const probe = document.createElement('span');
-  probe.style.cssText = `position:absolute;visibility:hidden;white-space:pre;font-size:${fontSize}px;font-family:${fontFamily}`;
-  probe.textContent = 'W'.repeat(100);
-  element.appendChild(probe);
-  const width = probe.getBoundingClientRect().width / 100;
-  probe.textContent = 'W';
-  const height = probe.getBoundingClientRect().height;
-  element.removeChild(probe);
-  return { width: width || 8, height: (height || 16) * 1.2 };
-};
 
 const FONT_SIZE = 13;
 const FONT_FAMILY = 'JetBrains Mono, Menlo, Consolas, "Courier New", monospace';
@@ -51,25 +46,35 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
+  const fitAddonRef = useRef<FitAddon | null>(null);
 
-  /** Current input line and cursor offset within it. */
+  /** Active execution mode */
+  const [mode, setMode] = useState<TerminalExecutionMode>(() => {
+    if (webcontainerService.isSupported()) return 'webcontainer';
+    if (sandboxTerminal.isAvailable()) return 'sandbox';
+    return 'local';
+  });
+
+  const [webcontainerStatus, setWebcontainerStatus] = useState<WebContainerStatus>(
+    () => webcontainerService.getState().status,
+  );
+  const webcontainerShellRef = useRef<{
+    write: (data: string) => void;
+    resize: (cols: number, rows: number) => void;
+    kill: () => void;
+  } | null>(null);
+
+  /** Current input line and cursor offset within it (Local mode only). */
   const lineRef = useRef('');
   const cursorRef = useRef(0);
   const historyRef = useRef<string[]>([]);
-  /** -1 means "editing a fresh line", otherwise an index into history. */
   const historyIndexRef = useRef(-1);
 
   const sessionRef = useRef<SandboxTerminalSession | null>(null);
   const [sandboxAvailable, setSandboxAvailable] = useState(sandboxTerminal.isAvailable());
-  /** Flipped once xterm has mounted, so the sandbox attach effect can re-run. */
   const [termReady, setTermReady] = useState(false);
   const [sandboxStatus, setSandboxStatus] = useState<SandboxTerminalStatus>('idle');
 
-  /*
-   * Shell inputs are read through a ref so the xterm key handler is installed
-   * once. Re-attaching it whenever the project changed would drop keystrokes
-   * mid-command.
-   */
   const contextRef = useRef<LocalShellContext>({
     project,
     resolvedPackages,
@@ -85,15 +90,13 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     history: historyRef.current,
   };
 
-  const isSandboxMode = sandboxAvailable && sandboxStatus === 'connected';
+  const isWebContainerSupported = webcontainerService.isSupported();
 
   const writePrompt = useCallback((term: XTerm) => {
     term.write(`\r\n${PROMPT}`);
   }, []);
 
-  /** Redraws the current input line in place, honouring the cursor position. */
   const redrawLine = useCallback((term: XTerm) => {
-    // \x1b[2K clears the row; \r returns to column 0.
     term.write(`\r\x1b[2K${PROMPT}${lineRef.current}`);
     const back = lineRef.current.length - cursorRef.current;
     if (back > 0) term.write(`\x1b[${back}D`);
@@ -105,7 +108,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       term.write('\r\n');
 
       if (trimmed.length > 0) {
-        // Avoid consecutive duplicates, as bash does with ignoredups.
         if (historyRef.current[historyRef.current.length - 1] !== trimmed) {
           historyRef.current = [...historyRef.current, trimmed].slice(-200);
         }
@@ -120,7 +122,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
       if (result.clear) {
         term.clear();
-        // `clear()` leaves the cursor on a fresh row; no leading newline.
         term.write(`\x1b[2K\r${PROMPT}`);
         return;
       }
@@ -130,6 +131,57 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     },
     [],
   );
+
+  /** Fits the grid to the container, and mirrors the size to live PTY sessions. */
+  const fit = useCallback(() => {
+    const term = termRef.current;
+    const fitAddon = fitAddonRef.current;
+    if (!term || !fitAddon || !hostRef.current) return;
+
+    try {
+      fitAddon.fit();
+      sessionRef.current?.resize(term.cols, term.rows);
+      webcontainerShellRef.current?.resize(term.cols, term.rows);
+    } catch {
+      // Fit error on zero dimension container is safe to ignore
+    }
+  }, []);
+
+  /** Spawns or reconnects WebContainer interactive PTY shell */
+  const startWebContainerShell = useCallback(async () => {
+    const term = termRef.current;
+    if (!term) return;
+
+    try {
+      term.write(
+        `\r\n${ANSI.brightGreen}⚡ Booting WebContainer (In-Browser Node.js runtime)...${ANSI.reset}\r\n`,
+      );
+      setWebcontainerStatus('booting');
+
+      // Mount project files into virtual filesystem
+      await webcontainerService.mountProject(project.files);
+
+      term.write(
+        `${ANSI.gray}Files mounted into virtual filesystem. Starting interactive shell...${ANSI.reset}\r\n`,
+      );
+
+      // Spawn interactive shell
+      const shell = await webcontainerService.spawnInteractiveShell({
+        cols: term.cols || 80,
+        rows: term.rows || 24,
+        onData: (chunk) => {
+          term.write(chunk);
+        },
+      });
+
+      webcontainerShellRef.current = shell;
+      setWebcontainerStatus('running');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      term.write(`\r\n${ANSI.red}✖ Failed to start WebContainer: ${msg}${ANSI.reset}\r\n`);
+      setWebcontainerStatus('error');
+    }
+  }, [project.files]);
 
   /** Creates the terminal once, then wires input handling. */
   useEffect(() => {
@@ -141,12 +193,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       fontSize: FONT_SIZE,
       fontFamily: FONT_FAMILY,
       convertEol: false,
-      scrollback: 2000,
-      // Drawn from the DESIGN.md product surface: the same warm navy as the
-      // editor, with coral as the cursor and accent. The ANSI ramp keeps its
-      // full separation — shell output needs it — but each hue is a warm or
-      // desaturated relative of the documented palette rather than a cool
-      // stock terminal palette.
+      scrollback: 3000,
       theme: {
         background: '#181715',
         foreground: '#faf9f5',
@@ -171,32 +218,29 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       },
     });
 
+    const fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+    fitAddonRef.current = fitAddon;
+
     term.open(host);
     termRef.current = term;
-    /*
-     * State, not just the ref: the sandbox attach effect below needs to re-run
-     * once the terminal exists, and assigning to a ref does not re-render.
-     */
     setTermReady(true);
 
-    term.write(
-      [
-        `${ANSI.bold}GB Coder Terminal${ANSI.reset} ${ANSI.gray}— Local Mode${ANSI.reset}`,
-        `${ANSI.gray}Type ${ANSI.brightCyan}help${ANSI.reset}${ANSI.gray} to see what this mode can do.${ANSI.reset}`,
-        '',
-      ].join('\r\n'),
-    );
-    term.write(PROMPT);
-
     const disposable = term.onData((data: string) => {
-      // Sandbox mode is a pass-through: the remote PTY owns line editing.
+      // 1. WebContainer Mode: pass raw data to in-browser PTY
+      if (mode === 'webcontainer' && webcontainerShellRef.current) {
+        webcontainerShellRef.current.write(data);
+        return;
+      }
+
+      // 2. Sandbox Mode: pass raw data to remote sandbox PTY
       const session = sessionRef.current;
-      if (session && session.getStatus() === 'connected') {
+      if (mode === 'sandbox' && session && session.getStatus() === 'connected') {
         session.write(data);
         return;
       }
 
-      // Ctrl+C — abandon the current line.
+      // 3. Local Mode: simulated line editor
       if (data === '\u0003') {
         term.write('^C');
         lineRef.current = '';
@@ -206,7 +250,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         return;
       }
 
-      // Ctrl+L — clear, matching shell convention.
       if (data === '\u000c') {
         term.clear();
         term.write(`\x1b[2K\r${PROMPT}${lineRef.current}`);
@@ -223,7 +266,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           return;
         }
         case '\u007f': {
-          // Backspace, respecting cursor position.
           if (cursorRef.current === 0) return;
           lineRef.current =
             lineRef.current.slice(0, cursorRef.current - 1) +
@@ -233,7 +275,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           return;
         }
         case '\u001b[A': {
-          // Up: walk backwards through history.
           if (historyRef.current.length === 0) return;
           historyIndexRef.current =
             historyIndexRef.current === -1
@@ -245,7 +286,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           return;
         }
         case '\u001b[B': {
-          // Down: forwards, ending on an empty fresh line.
           if (historyIndexRef.current === -1) return;
           historyIndexRef.current += 1;
           if (historyIndexRef.current >= historyRef.current.length) {
@@ -274,11 +314,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           break;
       }
 
-      /*
-       * Printable input, including multi-character chunks from a paste. Control
-       * sequences are filtered out so a stray escape cannot corrupt the line.
-       */
-      // Filtered by code point rather than a control-character regex.
       let printable = '';
       for (const character of data) {
         const code = character.codePointAt(0) ?? 0;
@@ -292,7 +327,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         lineRef.current.slice(cursorRef.current);
       cursorRef.current += printable.length;
 
-      // Appending at the end is the common case and avoids a full redraw.
       if (cursorRef.current === lineRef.current.length) term.write(printable);
       else redrawLine(term);
     });
@@ -301,26 +335,48 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       disposable.dispose();
       term.dispose();
       termRef.current = null;
+      fitAddonRef.current = null;
       setTermReady(false);
     };
-  }, [redrawLine, submitLocal, writePrompt]);
+  }, [mode, redrawLine, submitLocal, writePrompt]);
 
-  /** Fits the grid to the container, and mirrors the size to a live PTY. */
-  const fit = useCallback(() => {
-    const host = hostRef.current;
-    const term = termRef.current;
-    if (!host || !term) return;
-
-    const { width: cellWidth, height: cellHeight } = measureCell(host, FONT_SIZE, FONT_FAMILY);
-    // Leave room for the scrollbar so the last column is never clipped.
-    const cols = Math.max(20, Math.floor((host.clientWidth - 18) / cellWidth));
-    const rows = Math.max(4, Math.floor(host.clientHeight / cellHeight));
-
-    if (cols === term.cols && rows === term.rows) return;
-    term.resize(cols, rows);
-    sessionRef.current?.resize(cols, rows);
+  // Setup WebContainer subscription
+  useEffect(() => {
+    return webcontainerService.subscribe(() => {
+      setWebcontainerStatus(webcontainerService.getState().status);
+    });
   }, []);
 
+  // Mode change effect: boot WebContainer or local prompt
+  useEffect(() => {
+    const term = termRef.current;
+    if (!term || !termReady) return;
+
+    if (mode === 'webcontainer') {
+      if (webcontainerService.isSupported()) {
+        void startWebContainerShell();
+      } else {
+        term.write(
+          `\r\n${ANSI.yellow}⚠ WebContainers require Cross-Origin Isolation headers. Falling back to Local mode.${ANSI.reset}\r\n`,
+        );
+        setMode('local');
+      }
+    } else if (mode === 'local') {
+      webcontainerShellRef.current?.kill();
+      webcontainerShellRef.current = null;
+      term.write(
+        [
+          '',
+          `${ANSI.bold}GB Coder Terminal${ANSI.reset} ${ANSI.gray}— Local Simulated Shell${ANSI.reset}`,
+          `${ANSI.gray}Type ${ANSI.brightCyan}help${ANSI.reset}${ANSI.gray} for available commands or switch to WebContainer.${ANSI.reset}`,
+          '',
+        ].join('\r\n'),
+      );
+      term.write(PROMPT);
+    }
+  }, [mode, termReady, startWebContainerShell]);
+
+  // ResizeObserver for terminal fitting
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
@@ -329,7 +385,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     return () => observer.disconnect();
   }, [fit]);
 
-  // A hidden container reports zero size, so refit when the tab becomes visible.
+  // Refit when tab becomes active
   useEffect(() => {
     if (!isActive) return;
     const frame = requestAnimationFrame(() => {
@@ -339,20 +395,13 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     return () => cancelAnimationFrame(frame);
   }, [isActive, fit]);
 
-  // Track sandbox availability so the header reflects reality.
+  // Track sandbox availability
   useEffect(() => sandboxTerminal.subscribe(setSandboxAvailable), []);
 
-  /**
-   * Attaches to the sandbox command runner once both halves exist.
-   *
-   * Depends on `termReady` as well as `sandboxAvailable`, because either can
-   * become true second. Previously this only re-ran on `sandboxAvailable`, so
-   * opening the Terminal *after* a sandbox was already connected left it stuck in
-   * Local mode: the effect ran once with no terminal yet and never ran again.
-   */
+  // Sandbox connection effect
   useEffect(() => {
     const term = termRef.current;
-    if (!sandboxAvailable || !termReady || !term) return;
+    if (mode !== 'sandbox' || !sandboxAvailable || !termReady || !term) return;
 
     const session = sandboxTerminal.connect({ cols: term.cols, rows: term.rows });
     if (!session) return;
@@ -364,10 +413,10 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     const offStatus = session.onStatusChange((status, detail) => {
       setSandboxStatus(status);
       if (status === 'connected') {
-        term.write(`\r\n${ANSI.brightGreen}● Connected to sandbox${ANSI.reset}\r\n`);
+        term.write(`\r\n${ANSI.brightGreen}● Connected to Sandbox${ANSI.reset}\r\n`);
       } else if (status === 'error' || status === 'closed') {
         term.write(
-          `\r\n${ANSI.yellow}● Sandbox session ${status}${detail ? `: ${detail}` : ''}. Back to Local Mode.${ANSI.reset}\r\n${PROMPT}`,
+          `\r\n${ANSI.yellow}● Sandbox session ${status}${detail ? `: ${detail}` : ''}.${ANSI.reset}\r\n`,
         );
       }
     });
@@ -379,46 +428,138 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       sessionRef.current = null;
       setSandboxStatus('idle');
     };
-  }, [sandboxAvailable, termReady]);
+  }, [mode, sandboxAvailable, termReady]);
+
+  // Helper to send shortcut commands
+  const sendCommand = (cmd: string) => {
+    const term = termRef.current;
+    if (!term) return;
+
+    if (mode === 'webcontainer' && webcontainerShellRef.current) {
+      webcontainerShellRef.current.write(`${cmd}\n`);
+    } else if (mode === 'sandbox' && sessionRef.current) {
+      sessionRef.current.write(`${cmd}\n`);
+    } else {
+      submitLocal(term, cmd);
+    }
+  };
+
+  const clearTerminal = () => {
+    termRef.current?.clear();
+    if (mode === 'local' && termRef.current) {
+      termRef.current.write(`\x1b[2K\r${PROMPT}`);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-product">
-      {/* Mode header with a status dot: teal when a sandbox is live, muted otherwise. */}
+      {/* Enhanced StackBlitz Header Bar */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-stroke-dark bg-product-soft flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <span
-            className={`w-2 h-2 rounded-full ${
-              isSandboxMode
-                ? 'bg-teal'
-                : sandboxStatus === 'connecting'
-                  ? 'bg-amber animate-pulse'
-                  : 'bg-content-on-dark-soft'
-            }`}
-            aria-hidden="true"
-          />
-          <span
-            className="text-xs font-medium text-content-on-dark"
-            data-testid="terminal-mode"
-          >
-            {isSandboxMode
-              ? 'Connected: Sandbox'
-              : sandboxStatus === 'connecting'
-                ? 'Connecting to sandbox…'
-                : 'Local'}
-          </span>
+        <div className="flex items-center gap-3">
+          {/* Status Indicator */}
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                mode === 'webcontainer'
+                  ? webcontainerStatus === 'running'
+                    ? 'bg-emerald-400 animate-pulse'
+                    : 'bg-amber-400 animate-pulse'
+                  : mode === 'sandbox' && sandboxStatus === 'connected'
+                    ? 'bg-teal-400'
+                    : 'bg-gray-400'
+              }`}
+              aria-hidden="true"
+            />
+            <span className="text-xs font-semibold text-content-on-dark flex items-center gap-1">
+              {mode === 'webcontainer' && '⚡ WebContainer (In-Browser)'}
+              {mode === 'sandbox' && '☁️ Cloud Sandbox (E2B)'}
+              {mode === 'local' && '💻 Local Simulated Shell'}
+            </span>
+          </div>
+
+          {/* Mode Switcher Pill */}
+          <div className="flex items-center bg-product border border-stroke-dark rounded-md p-0.5 text-[10px]">
+            {isWebContainerSupported && (
+              <button
+                onClick={() => setMode('webcontainer')}
+                className={`px-2 py-0.5 rounded font-medium transition-colors ${
+                  mode === 'webcontainer'
+                    ? 'bg-accent text-white shadow-sm'
+                    : 'text-content-on-dark-soft hover:text-white'
+                }`}
+                title="Zero-cost in-browser Node.js runtime powered by WebAssembly"
+              >
+                WebContainer
+              </button>
+            )}
+            {sandboxAvailable && (
+              <button
+                onClick={() => setMode('sandbox')}
+                className={`px-2 py-0.5 rounded font-medium transition-colors ${
+                  mode === 'sandbox'
+                    ? 'bg-teal-600 text-white shadow-sm'
+                    : 'text-content-on-dark-soft hover:text-white'
+                }`}
+                title="E2B Cloud Sandbox for Python and containerized backends"
+              >
+                Cloud E2B
+              </button>
+            )}
+            <button
+              onClick={() => setMode('local')}
+              className={`px-2 py-0.5 rounded font-medium transition-colors ${
+                mode === 'local'
+                  ? 'bg-neutral-700 text-white shadow-sm'
+                  : 'text-content-on-dark-soft hover:text-white'
+              }`}
+              title="Built-in simulated lightweight shell"
+            >
+              Local
+            </button>
+          </div>
         </div>
-        <span className="text-[10px] uppercase tracking-wide text-content-on-dark-soft">
-          {/*
-            Not "Real shell": commands run one-per-HTTP-request against the
-            sandbox, so there is no persistent TTY. Interactive programs and
-            long-lived foreground processes will not behave as they would in a
-            terminal, and the label should not imply otherwise.
-          */}
-          {isSandboxMode ? 'Sandbox · command runner' : 'Simulated shell'}
-        </span>
+
+        {/* Quick Dev Action Buttons */}
+        <div className="flex items-center gap-1.5">
+          {mode === 'webcontainer' && (
+            <>
+              <button
+                onClick={() => sendCommand('npm install')}
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-product hover:bg-product-active text-content-on-dark border border-stroke-dark transition-colors"
+                title="Run 'npm install' in WebContainer"
+              >
+                <Play className="h-2.5 w-2.5 text-emerald-400" />
+                npm i
+              </button>
+              <button
+                onClick={() => sendCommand('npm run dev')}
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-accent/20 hover:bg-accent/30 text-accent-light border border-accent/30 transition-colors"
+                title="Run 'npm run dev' to start live server"
+              >
+                <Play className="h-2.5 w-2.5 text-accent" />
+                npm run dev
+              </button>
+              <button
+                onClick={() => void startWebContainerShell()}
+                className="p-1 rounded text-content-on-dark-soft hover:text-content-on-dark hover:bg-product"
+                title="Restart WebContainer Shell"
+              >
+                <RotateCcw className="h-3 w-3" />
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={clearTerminal}
+            className="p-1 rounded text-content-on-dark-soft hover:text-content-on-dark hover:bg-product"
+            title="Clear Terminal (Ctrl+L)"
+          >
+            <Trash2 className="h-3 w-3" />
+          </button>
+        </div>
       </div>
 
-      {/* xterm needs a concretely sized parent to measure against. */}
+      {/* xterm Container */}
       <div ref={hostRef} className="flex-1 min-h-0 overflow-hidden px-2 py-1" />
     </div>
   );
