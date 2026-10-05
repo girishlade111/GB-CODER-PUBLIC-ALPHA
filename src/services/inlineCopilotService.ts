@@ -430,7 +430,15 @@ class InlineCopilotService {
 
     const context = extractContext(model, position);
     if (!context) return empty;
+
+    /*
+     * Two cheap rejections before any network work. The length floor stops an
+     * empty file from spending a request per keystroke; the non-whitespace check
+     * stops a blank indented line — which is what every Enter press produces —
+     * from spending one either, since there is no file style to infer yet.
+     */
     if (context.prefix.length < MIN_PREFIX_CHARS) return empty;
+    if (!context.prefix.trim()) return empty;
 
     const key = hashContext(context);
     const cached = this.readCache(key);
