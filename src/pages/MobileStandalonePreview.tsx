@@ -258,7 +258,7 @@ const MobileStandalonePreview: React.FC<MobileStandalonePreviewProps> = ({ sessi
       <iframe
         ref={iframeRef}
         title="Mobile Live Preview"
-        srcDoc={document}
+        srcDoc={previewDocument}
         /*
          * Same trust model as the desktop preview: user-authored code is
          * expected to run, so scripts and same-origin are both granted and the
