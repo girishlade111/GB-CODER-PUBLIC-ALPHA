@@ -80,6 +80,7 @@ import type { DetectedProjectKind as DetectedKind } from './services/import/proj
 // ===== NEW FEATURES IMPORTS =====
 import { Toaster, toast } from 'react-hot-toast';
 import type { DiffFile } from './components/AiDiffModal';
+import type { VisionFramework } from './services/visionCodeService';
 
 // Lazy-loaded modal components (only shown when their show* state is true)
 const AiDiffModal = lazyWithRecovery(() => import('./components/AiDiffModal'));
@@ -89,6 +90,7 @@ const TemplateSelectorModal = lazyWithRecovery(() => import('./components/Templa
 const CodeStatsDashboard = lazyWithRecovery(() => import('./components/CodeStatsDashboard'));
 const CustomInjectionManager = lazyWithRecovery(() => import('./components/CustomInjectionManager'));
 const BuildFromPromptModal = lazyWithRecovery(() => import('./components/BuildFromPromptModal'));
+const ScreenshotToCodeModal = lazyWithRecovery(() => import('./components/ScreenshotToCodeModal'));
 const WelcomeTourModal = lazyWithRecovery(() => import('./components/WelcomeTourModal'));
 
 /*
@@ -652,6 +654,7 @@ function App() {
   // ===== NEW FEATURES STATE =====
   const [showAIChat, setShowAIChat] = useState(false);
   const [showBuildFromPrompt, setShowBuildFromPrompt] = useState(false);
+  const [showScreenshotToCode, setShowScreenshotToCode] = useState(false);
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
   /** Transcript routed into Build with AI, awaiting the user's confirmation. */
   const [voiceBuildPrompt, setVoiceBuildPrompt] = useState('');
@@ -1975,6 +1978,7 @@ function App() {
       }
     },
     { id: 'build-ai', title: 'Build with AI', section: 'AI', perform: () => setShowBuildFromPrompt(true) },
+    { id: 'screenshot-to-code', title: 'Screenshot to Code', section: 'AI', perform: () => setShowScreenshotToCode(true) },
     { id: 'explain-code', title: 'Explain Selected Code', section: 'AI', perform: () => handleSelectionOperation('explain') },
     { id: 'find-fix', title: 'Find and Fix', section: 'AI', perform: () => handleSelectionOperation('debug') },
     { id: 'optimize-code', title: 'Optimize Performance', section: 'AI', perform: () => handleSelectionOperation('optimize') },
@@ -2313,6 +2317,91 @@ function App() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [html, css, javascript, codeHistory, clearConsole]);
+
+  /**
+   * Where screenshot-generated code should land.
+   *
+   * The three targets differ because the editor's destinations differ: plain mode
+   * has a fixed index.html and script.js, React mode has a component tree. The
+   * active file wins when its language already matches the generated code, so a
+   * screenshot never overwrites a file the user is looking at.
+   */
+  const resolveVisionTarget = useCallback(
+    (framework: VisionFramework): { path: string; language: string } => {
+      const wantsJsx = framework === 'react-tailwind';
+      const active = workspace.activeFile;
+
+      if (wantsJsx) {
+        // React or Vue mode: write into the component file, not the entry.
+        const componentPath =
+          active?.language === 'jsx' || active?.language === 'tsx'
+            ? workspace.activePath
+            : fileProject.files.find((f) => f.path.endsWith('.jsx'))?.path ?? 'App.jsx';
+        return { path: componentPath ?? 'App.jsx', language: 'jsx' };
+      }
+
+      if (fileProject.projectType === 'plain') {
+        return { path: PLAIN_HTML_PATH, language: 'html' };
+      }
+
+      if (active?.language === 'html') {
+        return { path: workspace.activePath ?? 'index.html', language: 'html' };
+      }
+
+      return { path: 'index.html', language: 'html' };
+    },
+    [workspace.activeFile, workspace.activePath, fileProject],
+  );
+
+  /** Writes generated code straight to the resolved target, no diff step. */
+  const handleVisionInsert = useCallback(
+    (code: string, framework: VisionFramework) => {
+      const target = resolveVisionTarget(framework);
+
+      // A JSX payload into a plain project's script.js only renders if the JS
+      // editor is in JSX mode, so the mode follows the code.
+      if (framework === 'react-tailwind' && fileProject.projectType === 'plain') {
+        setJsEditorMode('jsx');
+      }
+
+      codeHistory.saveState({ html, css, javascript }, 'Generated from screenshot');
+      clearConsole();
+      workspace.updateFileContent(target.path, code);
+      workspace.openFile(target.path);
+      setShowScreenshotToCode(false);
+      toast.success(`Code generated from screenshot into ${target.path}`);
+    },
+    [
+      resolveVisionTarget,
+      fileProject.projectType,
+      setJsEditorMode,
+      codeHistory,
+      html,
+      css,
+      javascript,
+      clearConsole,
+      workspace,
+    ],
+  );
+
+  /** Same code, but reviewed through the existing AiDiffModal first. */
+  const handleVisionCompare = useCallback(
+    (code: string, framework: VisionFramework) => {
+      const target = resolveVisionTarget(framework);
+      const current = getFileContent(fileProject, target.path);
+      setShowScreenshotToCode(false);
+      setDiffData({
+        isOpen: true,
+        title: 'Review Screenshot Conversion',
+        files: [
+          { path: target.path, original: current, suggested: code, language: target.language },
+        ],
+        onApplyFile: () => handleVisionInsert(code, framework),
+        onApplyAll: () => handleVisionInsert(code, framework),
+      });
+    },
+    [resolveVisionTarget, fileProject, handleVisionInsert],
+  );
 
   const loadInjections = useCallback(() => {
     setCustomInjections(customInjectionService.getCustomInjections(project.currentProject?.id));
@@ -3567,6 +3656,7 @@ function App() {
         onRun={() => handleCommand('run')}
         onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
         onOpenCodeRabbit={() => setShowCodeRabbitModal(true)}
+        onOpenScreenshotToCode={() => setShowScreenshotToCode(true)}
         onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
         onClear={handleClearAll}
         onNewProject={handleNewProject}
@@ -4016,6 +4106,18 @@ function App() {
             onGenerate={handleBuildFromPrompt}
             projectContext={{ html, css, javascript }}
             initialPrompt={voiceBuildPrompt}
+          />
+        </Suspense>
+      )}
+
+      {/* Screenshot to Code */}
+      {showScreenshotToCode && (
+        <Suspense fallback={null}>
+          <ScreenshotToCodeModal
+            isOpen={showScreenshotToCode}
+            onClose={() => setShowScreenshotToCode(false)}
+            onInsert={handleVisionInsert}
+            onCompare={handleVisionCompare}
           />
         </Suspense>
       )}
