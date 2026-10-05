@@ -1130,6 +1130,35 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           </span>
         )}
 
+        {/* ATA IntelliSense Status */}
+        <span
+          className="flex items-center gap-1.5 text-[10px] text-vsc-textMuted cursor-default"
+          title={`Automatic Type Acquisition (ATA): ${
+            ata.status === 'resolving'
+              ? 'Downloading type definitions from npm CDN...'
+              : ata.acquiredCount > 0
+                ? `${ata.acquiredCount} package type definitions loaded for IntelliSense`
+                : 'IntelliSense type acquisition active'
+          }`}
+        >
+          <Sparkles
+            className={`h-3 w-3 ${
+              ata.status === 'resolving'
+                ? 'text-amber-400 animate-pulse'
+                : ata.acquiredCount > 0
+                  ? 'text-emerald-400'
+                  : 'text-vsc-textMuted'
+            }`}
+          />
+          <span>
+            {ata.status === 'resolving'
+              ? `Typings: (${ata.progress.downloaded}/${ata.progress.total || '?'})...`
+              : ata.acquiredCount > 0
+                ? `ATA: ${ata.acquiredCount} types`
+                : 'ATA: Ready'}
+          </span>
+        </span>
+
         <span className="ml-auto flex items-center gap-1.5" data-testid="status-sandbox">
           <span
             className={`h-1.5 w-1.5 rounded-full ${
