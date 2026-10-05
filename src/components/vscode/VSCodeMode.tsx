@@ -15,6 +15,8 @@ import {
   Plus,
   RefreshCw,
   Server,
+  Sparkles,
+  Columns,
   TerminalSquare,
   X,
 } from 'lucide-react';
@@ -36,6 +38,7 @@ import {
   webcontainerService,
   WebContainerState,
 } from '../../services/webcontainer/webcontainerService';
+import { ataService } from '../../services/ata/ataService';
 
 /**
  * VS Code style editor shell.
@@ -104,6 +107,8 @@ const subscribeSandbox = (onChange: () => void) => sandboxSession.subscribe(onCh
 const getSandboxSnapshot = () => sandboxSession.getState();
 const subscribeWebContainer = (onChange: () => void) => webcontainerService.subscribe(onChange);
 const getWebContainerSnapshot = () => webcontainerService.getState();
+const subscribeAta = (onChange: () => void) => ataService.subscribe(onChange);
+const getAtaSnapshot = () => ataService.getState();
 
 /** Most recently opened files, newest last, as VS Code orders its tabs. */
 const MAX_TABS = 12;
@@ -180,6 +185,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   );
   const { isDark } = useTheme();
   const [previewKey, setPreviewKey] = useState(0);
+  const ata = useSyncExternalStore(subscribeAta, getAtaSnapshot, getAtaSnapshot);
+  const [splitPath, setSplitPath] = useState<string | null>(null);
 
   /*
    * Tabs come back from the previous visit, reconciled against the files that
@@ -261,6 +268,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       const text = value ?? '';
       onChangeFile(activePath, text);
       void webcontainerService.syncFile(activePath, text);
+      ataService.acquireTypes(text);
       setDirtyPaths((current) => {
         if (current.has(activePath)) return current;
         const next = new Set(current);
@@ -271,16 +279,49 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     [activePath, onChangeFile],
   );
 
+  const handleSplitChange = useCallback(
+    (value: string | undefined) => {
+      if (!splitPath) return;
+      const text = value ?? '';
+      onChangeFile(splitPath, text);
+      void webcontainerService.syncFile(splitPath, text);
+      ataService.acquireTypes(text);
+      setDirtyPaths((current) => {
+        if (current.has(splitPath)) return current;
+        const next = new Set(current);
+        next.add(splitPath);
+        return next;
+      });
+    },
+    [splitPath, onChangeFile],
+  );
+
   /** Mirrors the caret into the status bar, the way VS Code reports Ln/Col. */
-  const handleEditorMount = useCallback<OnMount>((editor) => {
-    setCursor({
-      line: editor.getPosition()?.lineNumber ?? 1,
-      column: editor.getPosition()?.column ?? 1,
-    });
-    editor.onDidChangeCursorPosition((event) => {
-      setCursor({ line: event.position.lineNumber, column: event.position.column });
-    });
-  }, []);
+  const handleEditorMount = useCallback<OnMount>(
+    (editor, monaco) => {
+      setCursor({
+        line: editor.getPosition()?.lineNumber ?? 1,
+        column: editor.getPosition()?.column ?? 1,
+      });
+      editor.onDidChangeCursorPosition((event) => {
+        setCursor({ line: event.position.lineNumber, column: event.position.column });
+      });
+
+      // Initialize Automatic Type Acquisition
+      void ataService.init(monaco).then(() => {
+        if (activeFile?.content) {
+          ataService.acquireTypes(activeFile.content, 0);
+        }
+      });
+    },
+    [activeFile?.content],
+  );
+
+  useEffect(() => {
+    if (project.files.length > 0) {
+      ataService.acquireTypesForProject(project.files);
+    }
+  }, [project.files]);
 
   /* ── Terminal resize ──────────────────────────────────────────────────────
    *
