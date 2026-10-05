@@ -68,6 +68,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   onRun,
   onOpenBuildFromPrompt,
   onOpenCodeRabbit,
+  onOpenScreenshotToCode,
   onClear,
   onNewProject,
   onNavigateHome,
