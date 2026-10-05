@@ -3167,6 +3167,18 @@ function App() {
     );
   }
 
+  /*
+   * Detached live preview (/preview-popout). Renders standalone live preview
+   * page with responsive controls, refresh, and live HMR sync.
+   */
+  if (currentView === 'preview-popout') {
+    return (
+      <Suspense fallback={<LazyFallback label="live preview" variant="overlay" />}>
+        <LivePreviewPopoutPage />
+      </Suspense>
+    );
+  }
+
   // Render standalone live-preview share page (/preview/:id) - must come
   // first so it bypasses all editor chrome.
   if (currentView === 'preview-share') {
