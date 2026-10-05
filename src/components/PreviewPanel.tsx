@@ -146,6 +146,8 @@ const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(({
   const [manualRunTrigger, setManualRunTrigger] = useState(0);
   // Holds the transpiled JS when using TS/TSX mode
   const [transpiledJs, setTranspiledJs] = useState<string>(javascript);
+  // Drives the QR mobile-preview dialog, which publishes `previewContent` to a phone.
+  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
   const [compilationError, setCompilationError] = useState<string | null>(null);
   // Holds the generated preview content to avoid recalculating on every render
   const [previewContent, setPreviewContent] = useState<string>('');
