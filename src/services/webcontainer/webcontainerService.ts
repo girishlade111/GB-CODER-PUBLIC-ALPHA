@@ -132,6 +132,13 @@ export function filesToFileSystemTree(
         // ignore
       }
     }
+  // Always ensure .npmrc exists with legacy-peer-deps=true to prevent ERESOLVE failures
+  if (!root['.npmrc']) {
+    root['.npmrc'] = {
+      file: {
+        contents: 'legacy-peer-deps=true\n',
+      },
+    };
   }
 
   return root;
@@ -316,6 +323,11 @@ class WebContainerManager {
     const container = await this.boot();
     const tree = filesToFileSystemTree(files, dependencies, projectType);
     await container.mount(tree);
+    try {
+      await container.fs.writeFile('.npmrc', 'legacy-peer-deps=true\n');
+    } catch {
+      // ignore
+    }
   }
 
   /**

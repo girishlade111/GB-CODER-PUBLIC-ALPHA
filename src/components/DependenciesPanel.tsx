@@ -307,7 +307,10 @@ const DependenciesPanel: React.FC<DependenciesPanelProps> = ({
     setIsRunningNpmInstall(true);
     const toastId = toast.loading('Running npm install in browser WebContainer...');
     try {
-      const { exitCode } = await webcontainerService.runCommand('npm', ['install']);
+      const { exitCode } = await webcontainerService.runCommand('npm', [
+        'install',
+        '--legacy-peer-deps',
+      ]);
       if (exitCode === 0) {
         toast.success('npm install completed successfully!', { id: toastId });
       } else {
