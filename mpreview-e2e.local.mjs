@@ -75,7 +75,7 @@ check(
 );
 
 // Republish with no reload: the poll loop must pick it up on its own.
-await publish(doc('SECOND'), state.id);
+await publish(doc('SECOND', 'run-2'), state.id);
 let pickedUp = false;
 try {
   await frame().locator('text=SECOND').waitFor({ timeout: 15000 });
