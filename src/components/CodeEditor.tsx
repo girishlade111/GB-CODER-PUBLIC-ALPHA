@@ -74,6 +74,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       editorRef.current = editor;
     }
 
+    // Lets the copilot provider read selection state, which lives on the editor
+    // rather than the text model.
+    inlineCopilotService.attachEditor(editor);
+
     if (onSelectionChange) {
       editor.onDidChangeCursorSelection(() => {
         onSelectionChange(editor);

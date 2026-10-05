@@ -239,6 +239,38 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                     <span className="text-[11px] text-content-on-dark-soft">1.5s</span>
                                 </div>
                             </div>
+
+                            {/* Inline AI Copilot */}
+                            <div className="flex items-center justify-between p-4">
+                                <div>
+                                    <div className="text-[13.5px] font-medium text-content-on-dark">
+                                        Enable Inline AI Copilot (Tab to complete)
+                                    </div>
+                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-md mt-0.5">
+                                        Suggests the rest of the line as grey ghost text while you type. Press Tab to
+                                        accept, Escape to dismiss. Sends a small window of surrounding code to the AI
+                                        model on each pause.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={settings.inlineCopilotEnabled}
+                                    aria-label="Enable Inline AI Copilot"
+                                    onClick={() =>
+                                        updateSettings({ inlineCopilotEnabled: !settings.inlineCopilotEnabled })
+                                    }
+                                    className={`relative ml-4 w-9 h-5 rounded-full transition-colors ${
+                                        settings.inlineCopilotEnabled ? 'bg-teal' : 'bg-product-active'
+                                    }`}
+                                >
+                                    <div
+                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-content-on-dark rounded-full transition-transform ${
+                                            settings.inlineCopilotEnabled ? 'translate-x-4' : 'translate-x-0'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
                         </div>
                     </div>
 
