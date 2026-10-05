@@ -28,6 +28,16 @@ await page.locator('input').first().fill('qr-e2e-project');
 await page.locator('button:has-text("Create project")').click();
 await page.waitForTimeout(4000);
 
+// A first-run welcome tour overlays the editor; dismiss it before driving the
+// toolbar, or every click is intercepted.
+const tourSkip = page.locator('div[role="dialog"][aria-labelledby="tour-modal-title"]');
+if (await tourSkip.count()) {
+  await page.waitForTimeout(800);
+  const skip = tourSkip.locator('button').last();
+  if (await skip.count()) await skip.click().catch(() => {});
+  await page.waitForTimeout(600);
+}
+
 const qrButton = page.locator('button[aria-label="Test on Mobile via QR Code"]');
 await qrButton.waitFor({ timeout: 30000 });
 check('QR toolbar button exists in the preview header', true);
@@ -36,15 +46,16 @@ await qrButton.click();
 await page.locator('text=Test on Mobile').first().waitFor({ timeout: 20000 });
 check('modal opens', true);
 
-await page.waitForSelector('svg[shape-rendering="crispEdges"]', { timeout: 20000 });
-check('QR code renders as SVG', true);
-
 await page.locator('text=Sync Active').waitFor({ timeout: 20000 });
 check('status pill reports Sync Active', true);
 
 const url = (await page.locator('code').first().textContent())?.trim() ?? '';
 check('modal shows an active URL', url.length > 0, url);
 check('URL points at /mpreview/<id>', /\/mpreview\/[A-Za-z0-9_-]{32}$/.test(url));
+
+// The encoder is lazily imported, so the QR can take a moment to arrive.
+await page.waitForSelector('div.rounded-lg.border.border-stroke-subtle.bg-white svg', { timeout: 25000 });
+check('QR code renders as SVG', true);
 
 check(
   'Local Wi-Fi mode is offered on a LAN dev server',
