@@ -3198,14 +3198,10 @@ function App() {
   }, [settings.voiceFeedback, settings.voiceContinuous, settings.voiceLanguage, updateSettings]);
 
   /*
-   * Gated voice actions. The sandbox layer does not exist yet, so those commands
-   * stay out of the advertised list until a connector registers.
+   * Gated voice actions. Cloud Sandbox is disabled; WebContainer handles execution.
    */
   useEffect(() => {
-    voiceCommandService.setCapabilities({ sandbox: sandboxTerminal.isAvailable() });
-    return sandboxTerminal.subscribe((available) => {
-      voiceCommandService.setCapabilities({ sandbox: available });
-    });
+    voiceCommandService.setCapabilities({ sandbox: false });
   }, []);
 
   /** Toolbar mic: opens the overlay and starts listening, or stops it. */
