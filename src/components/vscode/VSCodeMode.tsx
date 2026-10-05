@@ -801,7 +801,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           </p>
           {webcontainer.isSupported ? (
             <button
-              onClick={() => setShowTerminal(true)}
+              onClick={openTerminal}
               className="rounded-md bg-accent px-2.5 py-0.5 text-[11px] font-medium text-white hover:bg-accent-light"
             >
               Open Terminal (⚡)
@@ -1519,7 +1519,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       </p>
                       <div className="mt-3 flex items-center justify-center gap-2">
                         <button
-                          onClick={() => setShowTerminal(true)}
+                          onClick={openTerminal}
                           className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors flex items-center gap-1.5"
                         >
                           <TerminalSquare className="h-3.5 w-3.5" />
@@ -1556,8 +1556,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         </aside>
       </div>
 
-      {/* ── Terminal panel: resizable, own scroll ── */}
-      {showTerminal && (
+      {/* ── Terminal panel: resizable, kept alive in DOM so WebContainer processes persist ── */}
+      {hasOpenedTerminal && (
         <>
           <div
             role="separator"
@@ -1568,10 +1568,14 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             onPointerMove={handleResizeMove}
             onPointerUp={handleResizeUp}
             onPointerCancel={handleResizeUp}
-            className="h-1 shrink-0 cursor-row-resize bg-vsc-border transition-colors hover:bg-accent"
+            className={`h-1 shrink-0 cursor-row-resize bg-vsc-border transition-colors hover:bg-accent ${
+              showTerminal ? 'block' : 'hidden'
+            }`}
           />
           <div
-            className="flex shrink-0 flex-col overflow-hidden bg-vsc-panel"
+            className={`shrink-0 flex-col overflow-hidden bg-vsc-panel ${
+              showTerminal ? 'flex' : 'hidden'
+            }`}
             style={{ height: `${terminalHeight}px` }}
             data-testid="vscode-terminal-panel"
           >
@@ -1606,6 +1610,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               <button
                 onClick={() => setShowTerminal(false)}
                 aria-label="Close panel"
+                title="Hide Terminal (Running processes will continue)"
                 className="ml-auto rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
               >
                 <X className="h-3.5 w-3.5" />
@@ -1615,7 +1620,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             <div className="min-h-0 flex-1 overflow-hidden" data-testid="vscode-terminal-scroll">
               {/* The same Terminal component as the standard console panel: it
                   switches itself to Sandbox Mode once a connector is registered,
-                  and shows Local Mode until then. */}
+                  and shows Local Mode until then. Kept mounted so background processes
+                  like Vite dev servers are never destroyed on hide/unhide. */}
               <TerminalTab
                 project={project}
                 resolvedPackages={[]}
@@ -1634,9 +1640,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         data-testid="vscode-status-bar"
       >
         <button
-          onClick={() => setShowTerminal((value) => !value)}
+          onClick={toggleTerminal}
           data-testid="vscode-terminal-toggle"
           aria-pressed={showTerminal}
+          title="Toggle Terminal Panel (Ctrl+`)"
           className="flex items-center gap-1 rounded px-1 hover:bg-product-active hover:text-content-on-dark"
         >
           <TerminalSquare className="h-3 w-3" />

@@ -112,6 +112,7 @@ export function filesToFileSystemTree(
               dev: 'vite',
               build: 'vite build',
               preview: 'vite preview',
+              help: 'node .help.js',
             },
             dependencies: baseDeps,
             devDependencies: baseDevDeps,
@@ -133,6 +134,63 @@ export function filesToFileSystemTree(
       }
     }
   }
+
+  // Built-in help command script for WebContainer
+  const helpScriptContent = `#!/usr/bin/env node
+console.log(\`
+\\x1b[1m\\x1b[32m⚡ WebContainer & Node.js Commands Guide (GB Coder IDE)\\x1b[0m
+
+\\x1b[1m📦 Package Management:\\x1b[0m
+  \\x1b[36mnpm install\\x1b[0m (or \\x1b[36mnpm i\\x1b[0m)            Install all dependencies from package.json
+  \\x1b[36mnpm i <pkg>\\x1b[0m                   Install a package (e.g. npm i axios)
+  \\x1b[36mnpm i -D <pkg>\\x1b[0m                Install as devDependency
+  \\x1b[36mnpm uninstall <pkg>\\x1b[0m           Remove a package from project
+  \\x1b[36mnpm ls --depth=0\\x1b[0m              List installed top-level packages
+
+\\x1b[1m🚀 Development & Live Preview:\\x1b[0m
+  \\x1b[36mnpm run dev\\x1b[0m                   Start Vite / Next dev server (Live Preview)
+  \\x1b[36mnpm run build\\x1b[0m                 Build production bundle
+  \\x1b[36mnpm run preview\\x1b[0m               Preview production build
+
+\\x1b[1m📁 Filesystem & Navigation:\\x1b[0m
+  \\x1b[36mls\\x1b[0m (or \\x1b[36mls -la\\x1b[0m)                List files and directories
+  \\x1b[36mpwd\\x1b[0m                          Print current working directory
+  \\x1b[36mcd <dir>\\x1b[0m                     Change directory (e.g. cd src)
+  \\x1b[36mcat <file>\\x1b[0m                   View file contents (e.g. cat package.json)
+  \\x1b[36mmkdir <dir>\\x1b[0m                  Create a directory
+  \\x1b[36mrm -rf <path>\\x1b[0m               Delete file or directory (e.g. rm -rf node_modules)
+
+\\x1b[1m⚙️ Node.js Execution:\\x1b[0m
+  \\x1b[36mnode <file.js>\\x1b[0m               Execute a JavaScript file with Node.js
+  \\x1b[36mnpx <cmd>\\x1b[0m                     Run a package executable directly
+
+\\x1b[1m⌨️ IDE Shortcuts:\\x1b[0m
+  \\x1b[33mCtrl + C\\x1b[0m                     Stop currently running server / process
+  \\x1b[33mCtrl + L\\x1b[0m (or \\x1b[36mclear\\x1b[0m)           Clear terminal screen
+  \\x1b[33mCtrl + \\\`\\x1b[0m                     Toggle / hide terminal panel
+  \\x1b[33mCtrl + \\\\\\x1b[0m                     Split Editor (Side-by-side)
+\`);
+`;
+
+  if (!root['node_modules']) {
+    root['node_modules'] = { directory: {} };
+  }
+  const nmDir = root['node_modules'] as { directory: Record<string, unknown> };
+  if (!nmDir.directory['.bin']) {
+    nmDir.directory['.bin'] = { directory: {} };
+  }
+  const binDir = nmDir.directory['.bin'] as { directory: Record<string, unknown> };
+  binDir.directory['help'] = {
+    file: {
+      contents: helpScriptContent,
+    },
+  };
+
+  root['.help.js'] = {
+    file: {
+      contents: helpScriptContent,
+    },
+  };
 
   // Always ensure .npmrc exists with legacy-peer-deps=true to prevent ERESOLVE failures
   if (!root['.npmrc']) {

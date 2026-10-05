@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
-import { Play, RotateCcw, Trash2 } from 'lucide-react';
+import { Play, RotateCcw, Trash2, HelpCircle } from 'lucide-react';
 import { MultiFileProject } from '../../types/files';
 import {
   ANSI,
@@ -586,6 +586,15 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
               </button>
             </>
           )}
+
+          <button
+            onClick={() => sendCommand('help')}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-product hover:bg-product-active text-content-on-dark border border-stroke-dark transition-colors"
+            title="Display commands help cheat sheet (Runs 'help' command)"
+          >
+            <HelpCircle className="h-2.5 w-2.5 text-cyan-400" />
+            help
+          </button>
 
           <button
             onClick={clearTerminal}
