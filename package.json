@@ -21,6 +21,7 @@
     "@upstash/redis": "^1.38.0",
     "@vercel/analytics": "^1.6.1",
     "@vue/compiler-sfc": "3.5.40",
+    "@webcontainer/api": "^1.6.4",
     "axios": "^1.13.6",
     "diff": "^5.2.0",
     "e2b": "^2.37.0",
@@ -38,7 +39,8 @@
     "uuid": "^13.0.0",
     "vite-plugin-pwa": "^1.1.0",
     "web-vitals": "^5.1.0",
-    "xterm": "^5.3.0"
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

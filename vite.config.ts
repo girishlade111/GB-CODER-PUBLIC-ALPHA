@@ -312,6 +312,10 @@ export default defineConfig({
     legalComments: 'none',
   },
   server: {
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+    },
     proxy: {
       '/terminal': {
         target: 'http://localhost:3001',
@@ -320,6 +324,10 @@ export default defineConfig({
     },
   },
   preview: {
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+    },
     port: 4173,
   },
 });
