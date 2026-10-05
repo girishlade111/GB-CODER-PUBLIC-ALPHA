@@ -132,6 +132,8 @@ export function filesToFileSystemTree(
         // ignore
       }
     }
+  }
+
   // Always ensure .npmrc exists with legacy-peer-deps=true to prevent ERESOLVE failures
   if (!root['.npmrc']) {
     root['.npmrc'] = {

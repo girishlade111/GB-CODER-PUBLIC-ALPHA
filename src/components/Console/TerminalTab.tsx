@@ -476,9 +476,9 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       if (!webcontainerShellRef.current) {
         await startWebContainerShell();
       }
-      sendCommand('npm install');
+      sendCommand('npm install --legacy-peer-deps');
     } else {
-      sendCommand('npm install');
+      sendCommand('npm install --legacy-peer-deps');
     }
   }, [mode, startWebContainerShell, sendCommand]);
 

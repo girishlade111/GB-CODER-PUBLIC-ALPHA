@@ -292,7 +292,7 @@ const COMMANDS: CommandDefinition[] = [
       }
 
       if (verb === 'install' || verb === 'i' || verb === 'add') {
-        const pkgArg = args[1];
+        const pkgArg = args.slice(1).find((a) => !a.startsWith('-'));
         if (pkgArg) {
           // e.g. npm install axios or npm i axios@1.7.0
           const atIndex = pkgArg.lastIndexOf('@');
