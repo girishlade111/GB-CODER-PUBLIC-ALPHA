@@ -2056,6 +2056,13 @@ function App() {
       ...current,
       dependencies: { ...(current.dependencies ?? {}), [name]: version },
     }));
+    setFullStackProject((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        dependencies: { ...(current.dependencies ?? {}), [name]: version },
+      };
+    });
   }, []);
 
   const handleUnpinDependency = useCallback((name: string) => {
@@ -2064,7 +2071,24 @@ function App() {
       void removed;
       return { ...current, dependencies: rest };
     });
+    setFullStackProject((current) => {
+      if (!current) return current;
+      const { [name]: removed, ...rest } = current.dependencies ?? {};
+      void removed;
+      return { ...current, dependencies: rest };
+    });
   }, []);
+
+  const handleUpdatePackageFile = useCallback(
+    (path: string, content: string) => {
+      if (isVSCodeRoute || fullStackProject) {
+        handleFullStackFileChange(path, content);
+      } else {
+        handleFileChange(path, content);
+      }
+    },
+    [isVSCodeRoute, fullStackProject, handleFullStackFileChange, handleFileChange],
+  );
 
   const handleNewProject = useCallback((projectType: ProjectType) => {
     setFileProject((current) => {
