@@ -2328,24 +2328,31 @@ function App() {
    */
   const resolveVisionTarget = useCallback(
     (framework: VisionFramework): { path: string; language: string } => {
-      const wantsJsx = framework === 'react-tailwind';
       const active = workspace.activeFile;
+      const isPlain = fileProject.projectType === 'plain';
 
-      if (wantsJsx) {
-        // React or Vue mode: write into the component file, not the entry.
-        const componentPath =
-          active?.language === 'jsx' || active?.language === 'tsx'
-            ? workspace.activePath
-            : fileProject.files.find((f) => f.path.endsWith('.jsx'))?.path ?? 'App.jsx';
-        return { path: componentPath ?? 'App.jsx', language: 'jsx' };
+      if (framework === 'react-tailwind') {
+        /*
+         * Plain mode has a fixed html/css/js triple and no .jsx file, so a React
+         * payload has to land in script.js. Writing App.jsx there would create a
+         * file the plain project cannot render or export.
+         */
+        if (isPlain) return { path: PLAIN_JS_PATH, language: 'javascript' };
+
+        // React or Vue mode: the component file, never the entry.
+        if (active?.language === 'jsx' || active?.language === 'tsx') {
+          return { path: workspace.activePath!, language: 'jsx' };
+        }
+        return {
+          path: fileProject.files.find((f) => f.path.endsWith('.jsx'))?.path ?? 'App.jsx',
+          language: 'jsx',
+        };
       }
 
-      if (fileProject.projectType === 'plain') {
-        return { path: PLAIN_HTML_PATH, language: 'html' };
-      }
+      if (isPlain) return { path: PLAIN_HTML_PATH, language: 'html' };
 
       if (active?.language === 'html') {
-        return { path: workspace.activePath ?? 'index.html', language: 'html' };
+        return { path: workspace.activePath!, language: 'html' };
       }
 
       return { path: 'index.html', language: 'html' };
@@ -2369,6 +2376,23 @@ function App() {
       workspace.updateFileContent(target.path, code);
       workspace.openFile(target.path);
       setShowScreenshotToCode(false);
+
+      /*
+       * A framework project previews its component tree, so an HTML fragment
+       * written into a sibling file is never rendered. Saying so is better than
+       * letting the user wonder why the preview did not change.
+       */
+      const isHtmlIntoFrameworkProject =
+        framework !== 'react-tailwind' && fileProject.projectType !== 'plain';
+
+      if (isHtmlIntoFrameworkProject) {
+        toast(`Written to ${target.path}. Switch to a plain project to preview it.`, {
+          icon: '⚠️',
+          duration: 5000,
+        });
+        return;
+      }
+
       toast.success(`Code generated from screenshot into ${target.path}`);
     },
     [
