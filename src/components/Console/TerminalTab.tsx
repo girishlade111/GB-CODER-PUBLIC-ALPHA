@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
-import { Play, RotateCcw, Trash2, Cpu, Cloud, TerminalSquare } from 'lucide-react';
+import { Play, RotateCcw, Trash2 } from 'lucide-react';
 import { MultiFileProject } from '../../types/files';
 import {
   ANSI,
