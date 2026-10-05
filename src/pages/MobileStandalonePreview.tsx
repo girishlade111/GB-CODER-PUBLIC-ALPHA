@@ -204,16 +204,17 @@ const MobileStandalonePreview: React.FC<MobileStandalonePreviewProps> = ({ sessi
     if (consoleOpen) logEndRef.current?.scrollIntoView({ block: 'end' });
   }, [logs, consoleOpen]);
 
+  /**
+   * Forces a fresh document.
+   *
+   * Re-assigning an identical `srcDoc` does not reload a frame, so a `null` gap
+   * is put in between. The commit that writes `null` and the one that writes the
+   * string back are separate, which is what the browser needs to see.
+   */
   const reload = useCallback(() => {
-    const current = renderedDocument.current;
-    if (!current) return;
     setLogs([]);
-    // Clearing then reassigning forces a fresh document; assigning an identical
-    // srcdoc does not reload the frame.
-    renderedDocument.current = null;
-    requestAnimationFrame(() => {
-      renderedDocument.current = current;
-    });
+    setPreviewDocument(null);
+    requestAnimationFrame(() => setPreviewDocument(renderedDocument.current));
   }, []);
 
   useEffect(() => {
@@ -225,7 +226,7 @@ const MobileStandalonePreview: React.FC<MobileStandalonePreviewProps> = ({ sessi
     };
   }, []);
 
-  if (error && !document) {
+  if (error && previewDocument === null) {
     return (
       <div className="fixed inset-0 flex h-screen w-screen flex-col items-center justify-center gap-4 bg-product px-6 text-center">
         <AlertTriangle className="h-8 w-8 text-danger" />
