@@ -35,7 +35,14 @@ export interface VisionRequest extends VisionImageData {
   model?: VisionModel;
   /** Free-text refinement, e.g. "add a dark mode toggle". */
   userPrompt?: string;
-  /** Optional user-supplied Gemini key; falls back to GEMINI_API_KEY server-side. */
+  /**
+   * Gemini key to use instead of the server's GEMINI_API_KEY.
+   *
+   * The server prefers a body-supplied key over its own, so this is a fallback
+   * for deployments that have no server-side key configured. It is the same
+   * `VITE_GEMINI_API_KEY` the AI chat assistant already uses, so no new secret
+   * is introduced.
+   */
   apiKey?: string;
 }
 
@@ -169,7 +176,15 @@ export const generateCodeFromImage = async (request: VisionRequest): Promise<Vis
     const response = await fetch('/api/vision-to-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
+      body: JSON.stringify({
+        ...request,
+        /*
+         * A local install often has only the public VITE_ key, so fall back to
+         * it rather than failing on a missing server-side GEMINI_API_KEY. An
+         * empty string is sent as absent and the server then requires its own.
+         */
+        apiKey: request.apiKey || import.meta.env.VITE_GEMINI_API_KEY || undefined,
+      }),
       signal: controller.signal,
     });
 
