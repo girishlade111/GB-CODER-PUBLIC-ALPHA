@@ -24,6 +24,8 @@ interface NavigationBarProps {
   onRun: () => void;
   onOpenBuildFromPrompt: () => void;
   onOpenCodeRabbit?: () => void;
+  /** Screenshot → Code. Optional so legal/doc pages can omit the trigger. */
+  onOpenScreenshotToCode?: () => void;
   onExternalLibraryManagerToggle: () => void;
   onClear?: () => void;
   /** Starts a new project of the given type. Plain is the default mode. */
