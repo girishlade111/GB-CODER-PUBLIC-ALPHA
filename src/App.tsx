@@ -222,7 +222,6 @@ import {
   VoicePanelTarget,
   voiceCommandService,
 } from './services/voiceCommandService';
-import { sandboxTerminal } from './services/sandboxTerminal';
 import { customInjectionService } from './services/customInjectionService';
 /*
  * PreviewSharePage is intentionally NOT imported here. It is declared with
@@ -1737,7 +1736,7 @@ function App() {
     // A navigation, not just a state change — see the detected-import path above.
     setIsVSCodeRoute(true);
     navigateTo(VSCODE_ROUTE);
-    toast.success('VS Code mode — connect a sandbox in the right-hand panel.');
+    toast.success('VS Code mode — WebContainer environment ready.');
   }, [fullStackProject, fileProject]);
 
   /*
@@ -3106,30 +3105,9 @@ function App() {
         return;
 
       case 'sandbox_connect':
-        /*
-         * Route to the Sandbox panel so the user can connect their API key.
-         * The voice capability flag is set correctly so this only fires when
-         * the sandbox panel is available.
-         */
-        if (sandboxTerminal.isAvailable()) {
-          toast.success('Sandbox is already connected.');
-          voiceCommandService.speak('Sandbox already connected');
-        } else {
-          setRightPanelRequest({ tab: 'terminal', nonce: Date.now() });
-          toast.success('Open the Terminal panel to connect a Sandbox.');
-          voiceCommandService.speak('Open the Terminal panel to connect');
-        }
-        return;
-
       case 'sandbox_stop':
-        if (sandboxTerminal.isAvailable()) {
-          setRightPanelRequest({ tab: 'terminal', nonce: Date.now() });
-          toast.success('Use the Terminal panel to disconnect the Sandbox.');
-          voiceCommandService.speak('Use the Terminal panel to disconnect');
-        } else {
-          toast.error('No Sandbox is currently connected.');
-          voiceCommandService.speak('No sandbox is connected');
-        }
+        toast('In-browser WebContainer is active.', { icon: '⚡' });
+        voiceCommandService.speak('WebContainer is active');
         return;
 
       case 'help':

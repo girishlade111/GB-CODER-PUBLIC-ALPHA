@@ -701,14 +701,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         url: webcontainer.serverUrl,
         isWebContainer: true,
       }
-    : sandbox.previews.find((preview) => preview.port === sandbox.activePort);
-
-
-  useEffect(() => {
-    if (webcontainer.serverUrl) {
-      setRightTab('preview');
-    }
-  }, [webcontainer.serverUrl]);
+    : null;
 
   /* ── Right panel horizontal resize & live preview fullscreen ───────────── */
   const rightPanelDragRef = useRef<{ startX: number; startWidth: number } | null>(null);
@@ -960,7 +953,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           onChangeTab={setActiveTab}
           isTerminalOpen={showTerminal}
           onToggleTerminal={toggleTerminal}
-          serverRunning={Boolean(webcontainer.serverUrl || sandbox.activePort)}
+          serverRunning={Boolean(webcontainer.serverUrl)}
           isCodeAssistGenerating={codeAssistState.isGenerating}
           onOpenCodeRabbit={() => setIsCodeRabbitOpen(true)}
           onOpenVoiceCommands={() => setIsVoiceCommandsOpen(true)}
@@ -1932,9 +1925,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
           {/* Preview Body */}
           <div className="min-h-0 flex-1 overflow-hidden relative bg-[#13141f]">
-            {rightTab === 'sandbox' ? (
-              <SandboxPanel files={project.files} />
-            ) : activePreview?.url ? (
+            {activePreview?.url ? (
               <div
                 className={`h-full w-full flex items-center justify-center ${
                   deviceViewport === 'mobile'
@@ -2074,9 +2065,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 onClick={() => {
                   setPreviewKey((k) => k + 1);
                   livePreviewChannel.broadcastReload();
-                  if (!('isWebContainer' in activePreview)) {
-                    void sandboxSession.pollLogs();
-                  }
                 }}
                 className="flex items-center gap-1.5 rounded bg-[#333] hover:bg-[#444] px-2.5 py-1 text-xs text-gray-200 transition-colors"
                 title="Reload preview"
