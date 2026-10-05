@@ -1460,7 +1460,7 @@ function App() {
         // has to move with it or a refresh would land back in the editor.
         setIsVSCodeRoute(true);
         navigateTo(VSCODE_ROUTE);
-        toast.success('Full-stack project detected — connect a Sandbox to run it.');
+        toast.success('Full-stack project detected — WebContainer environment ready.');
         return;
       }
 
@@ -1702,6 +1702,14 @@ function App() {
         const existingPaths = new Set(fullStackProject?.files.map((file) => file.path) ?? []);
         const added = incoming.filter((file) => !existingPaths.has(file.path)).length;
         const replaced = incoming.length - added;
+        // Automatically mount clean source files into WebContainer virtual filesystem
+        void loadChunk(
+          () => import('./services/webcontainer/webcontainerService'),
+          'WebContainer service',
+        ).then(({ webcontainerService }) => {
+          void webcontainerService.mountProject(incoming, undefined, plan.result.projectType);
+        });
+
         toast.success(
           replaced > 0
             ? `Added ${added} file${added === 1 ? '' : 's'}, updated ${replaced}.`

@@ -218,7 +218,16 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onFiles, isD
             directory=""
             className="hidden"
             onChange={(event) => {
-              void handleFiles(Array.from(event.target.files ?? []));
+              const raw = Array.from(event.target.files ?? []);
+              const clean = raw.filter((file) => {
+                const relPath =
+                  (file as File & { webkitRelativePath?: string }).webkitRelativePath ||
+                  file.name;
+                return !/(^|[/\\])(node_modules|\.git|dist|build|\.next|\.nuxt|\.cache|coverage|\.turbo|vendor|__pycache__|\.venv|venv)([/\\]|$)/i.test(
+                  relPath,
+                );
+              });
+              void handleFiles(clean);
               event.target.value = '';
             }}
           />

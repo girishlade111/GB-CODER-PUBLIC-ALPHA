@@ -28,12 +28,12 @@ export const MAX_ARCHIVE_BYTES = 20 * 1024 * 1024;
 export const MAX_ARCHIVE_ENTRIES = 300;
 
 const IMPORTABLE_EXTENSIONS = new Set([
-  'html', 'htm', 'css', 'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'vue', 'json', 'md', 'txt',
+  'html', 'htm', 'css', 'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'vue', 'json', 'md', 'txt', 'env',
 ]);
 
 /** Paths that are noise in an exported project and should never be imported. */
 const IGNORED_PATH_PATTERN =
-  /(^|\/)(node_modules|\.git|dist|build|\.next|coverage|__MACOSX)(\/|$)|(^|\/)\.DS_Store$/i;
+  /(^|[/\\])(node_modules|\.git|dist|build|\.next|\.nuxt|\.cache|coverage|\.turbo|vendor|__pycache__|\.venv|venv|__MACOSX)([/\\]|$)|(^|[/\\])\.DS_Store$/i;
 
 export interface ImportWarning {
   file: string;
@@ -132,7 +132,12 @@ const unwrapSrcDirectory = (files: ProjectFile[]): ProjectFile[] => {
 // ─── Loose file import ────────────────────────────────────────────────────────
 
 const validateEntry = (path: string, size: number): string | null => {
-  if (IGNORED_PATH_PATTERN.test(path)) return 'Skipped build or metadata file';
+  if (IGNORED_PATH_PATTERN.test(path) || /(^|[/\\])node_modules([/\\]|$)/i.test(path)) return 'Skipped build or metadata file';
+  const base = path.split(/[/\\]/).pop()?.toLowerCase() ?? '';
+  if (base === '.env' || base.startsWith('.env.') || base.endsWith('.env')) {
+    if (size > MAX_FILE_BYTES) return `Too large (max ${Math.round(MAX_FILE_BYTES / 1024 / 1024)} MB)`;
+    return null;
+  }
   const extension = getExtension(path);
   if (!extension) return 'No file extension';
   if (!IMPORTABLE_EXTENSIONS.has(extension)) return `Unsupported file type (.${extension})`;

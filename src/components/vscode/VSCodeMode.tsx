@@ -165,9 +165,10 @@ const MONACO_LANGUAGE_BY_EXTENSION: Record<string, string> = {
 };
 
 const monacoLanguageForPath = (path: string): string => {
-  const base = path.split('/').pop() ?? '';
+  const base = path.split(/[/\\]/).pop() ?? '';
   if (/^dockerfile$/i.test(base)) return 'dockerfile';
   if (/^makefile$/i.test(base)) return 'makefile';
+  if (/^\.env(\..+)?$/i.test(base)) return 'shell';
   const dot = base.lastIndexOf('.');
   if (dot === -1) return 'plaintext';
   return MONACO_LANGUAGE_BY_EXTENSION[base.slice(dot + 1).toLowerCase()] ?? 'plaintext';
@@ -2111,11 +2112,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         ref={fileInputRef}
         type="file"
         multiple
-        accept=".html,.htm,.css,.js,.mjs,.cjs,.jsx,.ts,.tsx,.vue,.json,.md,.txt,.zip"
+        accept=".html,.htm,.css,.js,.mjs,.cjs,.jsx,.ts,.tsx,.vue,.json,.md,.txt,.zip,.env,.yml,.yaml,.toml"
         className="hidden"
         data-testid="explorer-file-input"
         onChange={(event) => {
-          void submitFiles(Array.from(event.target.files ?? []));
+          const raw = Array.from(event.target.files ?? []);
+          const clean = raw.filter((f) => !/(^|[/\\])node_modules([/\\]|$)/i.test(f.name));
+          void submitFiles(clean);
           event.target.value = '';
         }}
       />
@@ -2129,7 +2132,17 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         className="hidden"
         data-testid="explorer-folder-input"
         onChange={(event) => {
-          void submitFiles(Array.from(event.target.files ?? []));
+          const raw = Array.from(event.target.files ?? []);
+          // Strictly exclude node_modules and dependency caches from being loaded into the IDE
+          const clean = raw.filter((file) => {
+            const relPath =
+              (file as File & { webkitRelativePath?: string }).webkitRelativePath ||
+              file.name;
+            return !/(^|[/\\])(node_modules|\.git|dist|build|\.next|\.nuxt|\.cache|coverage|\.turbo|vendor|__pycache__|\.venv|venv)([/\\]|$)/i.test(
+              relPath,
+            );
+          });
+          void submitFiles(clean);
           event.target.value = '';
         }}
       />

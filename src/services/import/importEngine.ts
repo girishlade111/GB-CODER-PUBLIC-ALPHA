@@ -66,15 +66,23 @@ const SKIPPED_DIRECTORIES = [
   '.venv',
   'venv',
   '__MACOSX',
+  '.pnpm-store',
+  '.yarn',
 ];
 
 const SKIP_PATTERN = new RegExp(
-  `(^|/)(${SKIPPED_DIRECTORIES.map((name) => name.replace('.', '\\.')).join('|')})(/|$)`,
+  `(^|[\\/\\\\])(${SKIPPED_DIRECTORIES.map((name) => name.replace('.', '\\.')).join('|')})([\\/\\\\]|$)`,
   'i',
 );
 
 /** Junk files that carry no meaning. */
-const JUNK_FILE_PATTERN = /(^|\/)(\.DS_Store|Thumbs\.db|npm-debug\.log|yarn-error\.log)$/i;
+const JUNK_FILE_PATTERN = /(^|[/\\])(\.DS_Store|Thumbs\.db|npm-debug\.log|yarn-error\.log)$/i;
+
+/** True when a path is an environment variable configuration file. */
+export const isEnvFile = (path: string): boolean => {
+  const base = path.split(/[/\\]/).pop()?.toLowerCase() ?? '';
+  return base === '.env' || base.startsWith('.env.') || base.endsWith('.env');
+};
 
 /** Extensions we can actually open in an editor panel. */
 const EDITABLE_EXTENSIONS = new Set([
@@ -165,21 +173,32 @@ export class ImportTooLargeError extends Error {
 }
 
 /** True when a path lies inside a skipped directory or is junk. */
-export const shouldSkipPath = (path: string): boolean =>
-  SKIP_PATTERN.test(path) || JUNK_FILE_PATTERN.test(path);
+export const shouldSkipPath = (path: string): boolean => {
+  if (!path) return true;
+  const normalized = normalizePath(path);
+  // Specifically ensure node_modules and dependency caches are NEVER imported into the IDE
+  if (/(^|[/\\])node_modules([/\\]|$)/i.test(path) || /(^|\/)node_modules(\/|$)/i.test(normalized)) {
+    return true;
+  }
+  return SKIP_PATTERN.test(normalized) || JUNK_FILE_PATTERN.test(normalized);
+};
 
 /** Which skipped directory a path belongs to, for the summary. */
 const skipReasonFor = (path: string): string => {
+  if (/(^|[/\\])node_modules([/\\]|$)/i.test(path)) return 'node_modules';
   const match = SKIP_PATTERN.exec(path);
   if (match) return match[2].toLowerCase();
   return 'junk files';
 };
 
-const isEditable = (path: string): boolean => {
-  const extension = getExtension(path).toLowerCase();
+export const isEditable = (path: string): boolean => {
+  const normalized = normalizePath(path);
+  const base = normalized.split('/').pop()?.toLowerCase() ?? '';
+  // Environment variables files (.env, .env.local, .env.development, etc.) are always editable
+  if (isEnvFile(base)) return true;
+  const extension = getExtension(normalized).toLowerCase();
   if (extension && EDITABLE_EXTENSIONS.has(extension)) return true;
   // Extensionless files like `Dockerfile` are worth keeping and are text.
-  const base = path.split('/').pop()?.toLowerCase() ?? '';
   return SIGNIFICANT_EXTENSIONLESS.has(base);
 };
 
@@ -309,9 +328,6 @@ const planFromFiles = async (
   sourceName: string,
   source: ImportSourceKind,
 ): Promise<ImportPlan> => {
-  const sourceBytes = input.reduce((total, item) => total + item.file.size, 0);
-  if (sourceBytes > MAX_ARCHIVE_BYTES) throw new ImportTooLargeError(sourceBytes);
-
   const warnings: ImportWarning[] = [];
   const skippedGroups = new Map<string, number>();
   const kept: DroppedFile[] = [];
@@ -323,6 +339,9 @@ const planFromFiles = async (
     }
     kept.push(item);
   }
+
+  const sourceBytes = kept.reduce((total, item) => total + item.file.size, 0);
+  if (sourceBytes > MAX_ARCHIVE_BYTES) throw new ImportTooLargeError(sourceBytes);
 
   const stripped = stripCommonPrefix(kept.map((item) => item.path));
 
@@ -414,10 +433,12 @@ export const buildImportPlan = async (input: DropInput): Promise<ImportPlan> => 
     .map((r) => r.value);
   const fromHandles = await flattenHandles(resolvedHandles);
 
-  const fromFiles: DroppedFile[] = (input.files ?? []).map((file) => ({
-    path: (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name,
-    file,
-  }));
+  const fromFiles: DroppedFile[] = (input.files ?? [])
+    .map((file) => ({
+      path: (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name,
+      file,
+    }))
+    .filter((item) => !shouldSkipPath(item.path));
 
   /*
    * Deduplicated by path. `collectTransfer` is careful to put a given file in
