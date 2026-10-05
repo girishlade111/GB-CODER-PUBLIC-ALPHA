@@ -152,21 +152,29 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   }, []);
 
   /** Spawns or reconnects WebContainer interactive PTY shell */
-  const startWebContainerShell = useCallback(async () => {
+  const startWebContainerShell = useCallback(async (forceRestart = false) => {
     const term = termRef.current;
     if (!term) return;
 
+    if (isStartingShellRef.current) return;
+    if (!forceRestart && webcontainerShellRef.current) {
+      return;
+    }
+
+    isStartingShellRef.current = true;
     try {
       term.write(
         `\r\n${ANSI.brightGreen}⚡ Booting WebContainer (In-Browser Node.js runtime)...${ANSI.reset}\r\n`,
       );
       setWebcontainerStatus('booting');
 
+      const currentProj = projectRef.current;
+
       // Mount project files into virtual filesystem with guaranteed package.json
       await webcontainerService.mountProject(
-        project.files,
-        project.dependencies,
-        project.projectType,
+        currentProj.files,
+        currentProj.dependencies,
+        currentProj.projectType,
       );
 
       term.write(
@@ -188,8 +196,10 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       const msg = err instanceof Error ? err.message : String(err);
       term.write(`\r\n${ANSI.red}✖ Failed to start WebContainer: ${msg}${ANSI.reset}\r\n`);
       setWebcontainerStatus('error');
+    } finally {
+      isStartingShellRef.current = false;
     }
-  }, [project.files]);
+  }, []);
 
   /** Creates the terminal once, then wires input handling. */
   useEffect(() => {
