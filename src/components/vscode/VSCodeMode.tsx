@@ -188,7 +188,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const { isDark } = useTheme();
   const [previewKey, setPreviewKey] = useState(0);
   const ata = useSyncExternalStore(subscribeAta, getAtaSnapshot, getAtaSnapshot);
-  const [splitPath, setSplitPath] = useState<string | null>(null);
+  const [splitOpenPaths, setSplitOpenPaths] = useState<string[]>([]);
+  const [splitActivePath, setSplitActivePath] = useState<string | null>(null);
+  const [splitRatio, setSplitRatio] = useState<number>(50);
+  const [splitDirection, setSplitDirection] = useState<'vertical' | 'horizontal'>('vertical');
 
   /*
    * Tabs come back from the previous visit, reconciled against the files that
@@ -281,21 +284,110 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     [activePath, onChangeFile],
   );
 
+  const isSplitActive = Boolean(splitActivePath && splitOpenPaths.length > 0);
+  const splitActiveFile = splitActivePath
+    ? project.files.find((file) => file.path === splitActivePath) ?? null
+    : null;
+
+  const openToSide = useCallback((path: string) => {
+    setSplitOpenPaths((current) => {
+      if (current.includes(path)) return current;
+      const next = [...current, path];
+      return next.length > MAX_TABS ? next.slice(next.length - MAX_TABS) : next;
+    });
+    setSplitActivePath(path);
+  }, []);
+
+  const closeSplitTab = useCallback((path: string, event?: React.MouseEvent) => {
+    event?.stopPropagation();
+    setSplitOpenPaths((current) => {
+      const remaining = current.filter((item) => item !== path);
+      if (splitActivePath === path) {
+        const index = current.indexOf(path);
+        const fallback = remaining[Math.min(index, remaining.length - 1)] ?? null;
+        setSplitActivePath(fallback);
+      }
+      return remaining;
+    });
+  }, [splitActivePath]);
+
+  const closeSplitPane = useCallback(() => {
+    setSplitOpenPaths([]);
+    setSplitActivePath(null);
+  }, []);
+
+  const moveTabToOtherPane = useCallback(
+    (path: string, from: 'left' | 'right') => {
+      if (from === 'left') {
+        closeTab(path);
+        openToSide(path);
+      } else {
+        closeSplitTab(path);
+        openFile(path);
+      }
+    },
+    [closeTab, openToSide, closeSplitTab, openFile],
+  );
+
+  const splitDragRef = useRef<{ startPos: number; startRatio: number; containerSize: number } | null>(
+    null,
+  );
+
+  const handleSplitResizeDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const isVert = splitDirection === 'vertical';
+      const container = event.currentTarget.parentElement;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const containerSize = isVert ? rect.width : rect.height;
+      const startPos = isVert ? event.clientX : event.clientY;
+      splitDragRef.current = { startPos, startRatio: splitRatio, containerSize };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [splitDirection, splitRatio],
+  );
+
+  const handleSplitResizeMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!splitDragRef.current) return;
+      const { startPos, startRatio, containerSize } = splitDragRef.current;
+      if (containerSize <= 0) return;
+      const isVert = splitDirection === 'vertical';
+      const currentPos = isVert ? event.clientX : event.clientY;
+      const deltaPx = currentPos - startPos;
+      const deltaPercent = (deltaPx / containerSize) * 100;
+      const nextRatio = Math.min(80, Math.max(20, startRatio + deltaPercent));
+      setSplitRatio(nextRatio);
+    },
+    [splitDirection],
+  );
+
+  const handleSplitResizeUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (splitDragRef.current) {
+      try {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      } catch {
+        // Ignored
+      }
+      splitDragRef.current = null;
+    }
+  }, []);
+
   const handleSplitChange = useCallback(
     (value: string | undefined) => {
-      if (!splitPath) return;
+      if (!splitActivePath) return;
       const text = value ?? '';
-      onChangeFile(splitPath, text);
-      void webcontainerService.syncFile(splitPath, text);
+      onChangeFile(splitActivePath, text);
+      void webcontainerService.syncFile(splitActivePath, text);
       ataService.acquireTypes(text);
       setDirtyPaths((current) => {
-        if (current.has(splitPath)) return current;
+        if (current.has(splitActivePath)) return current;
         const next = new Set(current);
-        next.add(splitPath);
+        next.add(splitActivePath);
         return next;
       });
     },
-    [splitPath, onChangeFile],
+    [splitActivePath, onChangeFile],
   );
 
   /** Mirrors the caret into the status bar, the way VS Code reports Ln/Col. */
