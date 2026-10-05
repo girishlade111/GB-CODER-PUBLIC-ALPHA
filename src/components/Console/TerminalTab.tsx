@@ -435,18 +435,37 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   }, [mode, sandboxAvailable, termReady]);
 
   // Helper to send shortcut commands
-  const sendCommand = (cmd: string) => {
-    const term = termRef.current;
-    if (!term) return;
+  const sendCommand = useCallback(
+    (cmd: string) => {
+      const term = termRef.current;
+      if (!term) return;
 
-    if (mode === 'webcontainer' && webcontainerShellRef.current) {
-      webcontainerShellRef.current.write(`${cmd}\n`);
-    } else if (mode === 'sandbox' && sessionRef.current) {
-      sessionRef.current.write(`${cmd}\n`);
+      if (mode === 'webcontainer' && webcontainerShellRef.current) {
+        webcontainerShellRef.current.write(`${cmd}\n`);
+      } else if (mode === 'sandbox' && sessionRef.current) {
+        sessionRef.current.write(`${cmd}\n`);
+      } else {
+        submitLocal(term, cmd);
+      }
+    },
+    [mode, submitLocal],
+  );
+
+  const handleQuickNpmInstall = useCallback(async () => {
+    if (mode === 'webcontainer') {
+      await webcontainerService.mountProject(
+        project.files,
+        project.dependencies,
+        project.projectType,
+      );
+      if (!webcontainerShellRef.current) {
+        await startWebContainerShell();
+      }
+      sendCommand('npm install');
     } else {
-      submitLocal(term, cmd);
+      sendCommand('npm install');
     }
-  };
+  }, [mode, project.files, project.dependencies, project.projectType, startWebContainerShell, sendCommand]);
 
   const clearTerminal = () => {
     termRef.current?.clear();
@@ -528,7 +547,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           {mode === 'webcontainer' && (
             <>
               <button
-                onClick={() => sendCommand('npm install')}
+                onClick={() => void handleQuickNpmInstall()}
                 className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-product hover:bg-product-active text-content-on-dark border border-stroke-dark transition-colors"
                 title="Run 'npm install' in WebContainer"
               >
