@@ -131,6 +131,7 @@ class WebContainerManager {
   private bootPromise: Promise<WebContainer> | null = null;
   private shellProcess: Awaited<ReturnType<WebContainer['spawn']>> | null = null;
   private shellWriter: WritableStreamDefaultWriter<string> | null = null;
+  private serverListenersAttached = new WeakSet<WebContainer>();
 
   private state: WebContainerState = {
     status: typeof window !== 'undefined' && window.crossOriginIsolated ? 'idle' : 'unsupported',
@@ -182,13 +183,63 @@ class WebContainerManager {
     return typeof window !== 'undefined' && Boolean(window.crossOriginIsolated);
   }
 
+  private setupServerListeners(container: WebContainer) {
+    if (this.serverListenersAttached.has(container)) return;
+    this.serverListenersAttached.add(container);
+
+    // Listen for internal web server bindings (e.g. Vite, Next, Express)
+    container.on('server-ready', (port, url) => {
+      console.log(`[WebContainer] Server ready at port ${port}: ${url}`);
+      const newServer: WebContainerServerInfo = { port, url };
+      const updatedServers = [
+        ...this.state.activeServers.filter((s) => s.port !== port),
+        newServer,
+      ];
+      this.updateState({
+        serverUrl: url,
+        serverPort: port,
+        activeServers: updatedServers,
+      });
+    });
+
+    container.on('error', (err) => {
+      console.error('[WebContainer] Runtime error:', err);
+      this.updateState({ error: err.message });
+    });
+  }
+
   /**
-   * Boots the singleton WebContainer instance.
-   * Safe to call multiple times concurrently; will reuse the existing boot promise.
+   * Boots or recovers the singleton WebContainer instance.
+   * Safe to call multiple times concurrently or across Vite HMR cycles.
    */
   public async boot(): Promise<WebContainer> {
+    // 1. Check local instance
     if (this.instance) return this.instance;
+
+    // 2. Check globally shared or static WebContainer._instance (e.g. across HMR)
+    const existing =
+      (WebContainer as unknown as { _instance?: WebContainer })._instance ??
+      (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
+        .__GBCODER_WEBCONTAINER_INSTANCE__;
+
+    if (existing) {
+      this.instance = existing;
+      (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
+        .__GBCODER_WEBCONTAINER_INSTANCE__ = existing;
+      this.setupServerListeners(existing);
+      this.updateState({ status: 'ready', error: null });
+      return existing;
+    }
+
+    // 3. Check ongoing boot promise locally or on globalThis
     if (this.bootPromise) return this.bootPromise;
+    const globalPromise = (globalThis as unknown as {
+      __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<WebContainer> | null;
+    }).__GBCODER_WEBCONTAINER_BOOT_PROMISE__;
+    if (globalPromise) {
+      this.bootPromise = globalPromise;
+      return globalPromise;
+    }
 
     if (!this.isSupported()) {
       const msg = 'Cross-Origin Isolation is not active. WebContainer requires COOP/COEP headers.';
@@ -198,41 +249,47 @@ class WebContainerManager {
 
     this.updateState({ status: 'booting', error: null });
 
-    this.bootPromise = (async () => {
+    const doBoot = async () => {
       try {
         const container = await WebContainer.boot();
         this.instance = container;
-
-        // Listen for internal web server bindings (e.g. Vite, Next, Express)
-        container.on('server-ready', (port, url) => {
-          console.log(`[WebContainer] Server ready at port ${port}: ${url}`);
-          const newServer: WebContainerServerInfo = { port, url };
-          const updatedServers = [
-            ...this.state.activeServers.filter((s) => s.port !== port),
-            newServer,
-          ];
-          this.updateState({
-            serverUrl: url,
-            serverPort: port,
-            activeServers: updatedServers,
-          });
-        });
-
-        container.on('error', (err) => {
-          console.error('[WebContainer] Runtime error:', err);
-          this.updateState({ error: err.message });
-        });
-
+        (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
+          .__GBCODER_WEBCONTAINER_INSTANCE__ = container;
+        this.setupServerListeners(container);
         this.updateState({ status: 'ready', error: null });
         return container;
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
+        // Seamlessly recover if another caller or hot-reload already booted WebContainer
+        if (message.includes('Only a single WebContainer instance can be booted')) {
+          const recovered =
+            (WebContainer as unknown as { _instance?: WebContainer })._instance ??
+            (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
+              .__GBCODER_WEBCONTAINER_INSTANCE__;
+          if (recovered) {
+            this.instance = recovered;
+            (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
+              .__GBCODER_WEBCONTAINER_INSTANCE__ = recovered;
+            this.setupServerListeners(recovered);
+            this.updateState({ status: 'ready', error: null });
+            return recovered;
+          }
+        }
+
         console.error('[WebContainer] Failed to boot:', err);
         this.updateState({ status: 'error', error: message });
         this.bootPromise = null;
+        (globalThis as unknown as {
+          __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<WebContainer> | null;
+        }).__GBCODER_WEBCONTAINER_BOOT_PROMISE__ = null;
         throw err;
       }
-    })();
+    };
+
+    this.bootPromise = doBoot();
+    (globalThis as unknown as {
+      __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<WebContainer> | null;
+    }).__GBCODER_WEBCONTAINER_BOOT_PROMISE__ = this.bootPromise;
 
     return this.bootPromise;
   }

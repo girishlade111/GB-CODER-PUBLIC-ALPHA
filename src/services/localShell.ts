@@ -308,18 +308,44 @@ const COMMANDS: CommandDefinition[] = [
           }
           context.project.dependencies[pkgName] = pkgVer;
 
+          // Sync into package.json in project files
+          const pkgFile = context.project.files.find((f) => /(^|\/)package\.json$/i.test(f.path));
+          if (pkgFile) {
+            pkgFile.content = addDependencyToPackageJson(pkgFile.content, pkgName, pkgVer, false);
+          }
+
           return {
             output: [
               `${green('+')} ${pkgName}@${pkgVer}`,
               dim('added 1 package, and audited 1 package in 0.42s'),
-              gray('✨ Types & CDN imports resolved automatically.'),
+              gray('✨ Types & dependencies synced to package.json.'),
             ],
           };
         }
 
         // npm install with no package: install all
-        const deps = Object.keys(context.project.dependencies ?? {});
-        const count = deps.length + context.resolvedPackages.length;
+        let deps = Object.keys(context.project.dependencies ?? {});
+        if (deps.length === 0) {
+          const pkgFile = context.project.files.find((f) => /(^|\/)package\.json$/i.test(f.path));
+          if (pkgFile) {
+            const parsed = parsePackageJson(pkgFile.content);
+            const combined = { ...parsed.dependencies, ...parsed.devDependencies };
+            deps = Object.keys(combined);
+            if (!context.project.dependencies) context.project.dependencies = {};
+            Object.assign(context.project.dependencies, combined);
+          } else if (context.project.projectType === 'react') {
+            if (!context.project.dependencies) context.project.dependencies = {};
+            context.project.dependencies['react'] = '^18.3.1';
+            context.project.dependencies['react-dom'] = '^18.3.1';
+            deps = ['react', 'react-dom'];
+          } else if (context.project.projectType === 'vue') {
+            if (!context.project.dependencies) context.project.dependencies = {};
+            context.project.dependencies['vue'] = '^3.5.13';
+            deps = ['vue'];
+          }
+        }
+
+        const count = Math.max(deps.length, context.resolvedPackages.length);
         if (count === 0) {
           return {
             output: [

@@ -75,6 +75,10 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   const [termReady, setTermReady] = useState(false);
   const [sandboxStatus, setSandboxStatus] = useState<SandboxTerminalStatus>('idle');
 
+  const projectRef = useRef(project);
+  projectRef.current = project;
+  const isStartingShellRef = useRef(false);
+
   const contextRef = useRef<LocalShellContext>({
     project,
     resolvedPackages,
