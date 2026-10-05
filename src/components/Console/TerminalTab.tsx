@@ -578,7 +578,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
                 npm run dev
               </button>
               <button
-                onClick={() => void startWebContainerShell()}
+                onClick={() => void startWebContainerShell(true)}
                 className="p-1 rounded text-content-on-dark-soft hover:text-content-on-dark hover:bg-product"
                 title="Restart WebContainer Shell"
               >
