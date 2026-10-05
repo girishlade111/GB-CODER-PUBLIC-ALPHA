@@ -3,6 +3,7 @@ import Editor, { type Monaco } from '@monaco-editor/react';
 import { monacoThemeFor, defineGbCoderTheme } from '../utils/monacoTheme';
 import { useTheme } from '../hooks/useTheme';
 import { inlineCopilotService } from '../services/inlineCopilotService';
+import { ataService } from '../services/ata/ataService';
 import { EditorLanguage, JSEditorMode } from '../types';
 
 interface CodeEditorProps {
@@ -36,7 +37,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   const { isDark } = useTheme();
 
   const handleEditorChange = (value: string | undefined) => {
-    onChange(value || '');
+    const text = value || '';
+    onChange(text);
+    if (language === 'javascript' || jsEditorMode === 'typescript' || jsEditorMode === 'tsx') {
+      ataService.acquireTypes(text);
+    }
   };
 
   const getLanguageForMonaco = (lang: EditorLanguage): string => {
@@ -87,6 +92,12 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     // Call parent onMount if provided
     if (onMount) {
       onMount(editor, monaco);
+    }
+
+    if (language === 'javascript' || jsEditorMode === 'typescript' || jsEditorMode === 'tsx') {
+      void ataService.init(monaco).then(() => {
+        if (value) ataService.acquireTypes(value, 0);
+      });
     }
   };
 

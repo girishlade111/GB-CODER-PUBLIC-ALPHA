@@ -244,6 +244,21 @@ export default defineConfig({
           
           // React ecosystem - core chunk
           if (id.includes('node_modules')) {
+            /*
+             * `qrcode.react` is excluded before this bucket, not after it. Its
+             * package name contains the substring `react`, so the generic test
+             * below matched it and parked ~20 KB of QR encoder inside
+             * `react-core` — a chunk the browser preloads for first paint. The
+             * library is only reachable from the lazily-loaded mobile-preview
+             * dialog, so it belongs behind that dynamic import.
+             *
+             * Matched on the path segment after `node_modules/` so a file merely
+             * being *used by* React (or any unrelated `react-` prefixed package)
+             * cannot trip this.
+             */
+            if (/node_modules[\\/]qrcode\.react[\\/]/.test(id)) {
+              return undefined;
+            }
             if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
               return 'react-core';
             }

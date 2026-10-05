@@ -8,6 +8,7 @@ import { monacoThemeFor, defineGbCoderTheme } from '../utils/monacoTheme';
 import { useTheme } from '../hooks/useTheme';
 import { BundleError, formatBundleError } from '../services/bundlerService';
 import { ValidationSummary } from '../services/validationService';
+import { ataService } from '../services/ata/ataService';
 
 interface MultiFileEditorProps {
   projectType: ProjectType;
@@ -62,6 +63,14 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
      */
     if (activeFile) onEditorReady?.(activeFile.path, editor, monaco);
 
+    if (monaco) {
+      void ataService.init(monaco as Monaco).then(() => {
+        if (workspace.files) {
+          ataService.acquireTypesForProject(workspace.files);
+        }
+      });
+    }
+
     if (!onSelectionChange || !activeFile) return;
     const instance = editor as { onDidChangeCursorSelection: (cb: () => void) => void };
     instance.onDidChangeCursorSelection(() => onSelectionChange(editor, activeFile.path));
@@ -92,7 +101,11 @@ const MultiFileEditor: React.FC<MultiFileEditorProps> = ({
               path={activeFile.path}
               language={monacoLanguageFor(activeFile.language)}
               value={activeFile.content}
-              onChange={(value) => workspace.updateFileContent(activeFile.path, value ?? '')}
+              onChange={(value) => {
+                const text = value ?? '';
+                workspace.updateFileContent(activeFile.path, text);
+                ataService.acquireTypes(text);
+              }}
               beforeMount={handleWillMount}
               onMount={handleMount}
               theme={monacoThemeFor(isDark)}

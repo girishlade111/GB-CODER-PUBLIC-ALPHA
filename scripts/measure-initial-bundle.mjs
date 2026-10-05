@@ -126,6 +126,13 @@ if (process.argv.includes('--assert-absent')) {
     ['prettier formatter', 'prettier/standalone'],
     ['esbuild-wasm', 'esbuild-wasm'],
     ['TypeScript compiler', 'createSourceFile'],
+    /*
+     * QR generator for the mobile-preview dialog. Its package name contains
+     * `react`, so the `react-core` bucket in vite.config.ts matches it unless
+     * excluded first — and `react-core` is preloaded, which would silently pull
+     * the whole encoder into first paint.
+     */
+    ['qrcode.react', 'QRCodeSVG'],
     // Full-stack feature: VS Code mode, sandbox client, E2B proxy calls.
     ['E2B sandbox client', 'gbcoder_e2b_key'],
     ['sandbox proxy calls', '/api/sandbox/'],
