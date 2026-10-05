@@ -17,6 +17,8 @@ import {
   Server,
   Sparkles,
   Columns,
+  Rows,
+  ArrowRightLeft,
   TerminalSquare,
   X,
 } from 'lucide-react';
