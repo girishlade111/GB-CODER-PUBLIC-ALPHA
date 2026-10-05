@@ -2084,10 +2084,10 @@ function App() {
       if (isVSCodeRoute || fullStackProject) {
         handleFullStackFileChange(path, content);
       } else {
-        handleFileChange(path, content);
+        setFileProject((current) => setFileContent(current, path, content));
       }
     },
-    [isVSCodeRoute, fullStackProject, handleFullStackFileChange, handleFileChange],
+    [isVSCodeRoute, fullStackProject, handleFullStackFileChange],
   );
 
   const handleNewProject = useCallback((projectType: ProjectType) => {

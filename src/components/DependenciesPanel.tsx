@@ -8,7 +8,6 @@ import {
   Loader2,
   Package,
   Plus,
-  RefreshCw,
   Search,
   Sparkles,
   Terminal,
@@ -29,12 +28,10 @@ import {
   CURATED_CATEGORIES,
   addDependencyToPackageJson,
   findPackageJson,
-  formatDownloadCount,
   parsePackageJson,
   removeDependencyFromPackageJson,
   searchNpmRegistry,
   NpmPackageSummary,
-  fetchPackageWeeklyDownloads,
 } from '../services/npm/npmRegistryService';
 import {
   webcontainerService,
