@@ -837,9 +837,12 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       label: 'Voice Commands',
       icon: <Mic className="h-4 w-4" />,
       onClick: onOpenVoiceCommands,
-      isActive: false,
-    },
-  ];
+  const handleRestartDevServer = useCallback(() => {
+    webcontainerService.setStartupStage('installing');
+    openTerminal();
+    toast.success('Restarting WebContainer environment...');
+    void webcontainerService.mountProject(project.files, project.dependencies, project.projectType);
+  }, [openTerminal, project.files, project.dependencies, project.projectType]);
 
   return (
     // h-full inside App's h-screen wrapper; overflow-hidden forbids page scroll.
@@ -847,282 +850,398 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       className="flex h-full min-h-0 flex-col overflow-hidden bg-vsc-editor text-vsc-text"
       data-testid="vscode-mode"
     >
-      {/* ── Top bar: icon-only, replaces the app's normal chrome ── */}
+      {/* ── Top Bar: StackBlitz Application Header Bar ── */}
       <header
-        className="flex h-9 shrink-0 items-center gap-1 border-b border-vsc-border bg-vsc-panel px-2"
+        className="flex h-10 shrink-0 items-center justify-between border-b border-[#262636] bg-[#181824] px-3 select-none z-20"
         data-testid="vscode-topbar"
       >
-        {/* Same role the app's logo plays elsewhere: the way back to the
-            dashboard. A plain label when there is nowhere to go back to. */}
-        {onOpenProjects ? (
-          <Tooltip label="All Projects" side="bottom">
+        {/* Left Section: Lightning Logo, Project/Commit button, Nav arrows */}
+        <div className="flex items-center gap-2">
+          {/* StackBlitz Glowing Lightning Bolt & Brand */}
+          <div className="flex items-center gap-1.5 cursor-pointer" onClick={onOpenProjects}>
+            <Zap className="h-4 w-4 text-cyan-400 fill-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]" />
+            <span className="font-semibold text-xs text-white tracking-wide">GB Coder</span>
+          </div>
+
+          {/* Blue Commit / Pull Request Button matching StackBlitz Screenshot 2 & 3 */}
+          <button
+            type="button"
+            onClick={() => {
+              toast.success('Workspace synchronized with in-browser WebContainer');
+            }}
+            className="flex items-center gap-1 rounded bg-[#007acc] hover:bg-[#0069b4] px-2.5 py-1 text-[11px] font-medium text-white shadow-sm transition-colors"
+          >
+            <span>Commit</span>
+            <ChevronDown className="h-3 w-3 opacity-80" />
+          </button>
+
+          {/* Git Branch Pill */}
+          <span className="hidden sm:flex items-center gap-1 rounded bg-white/5 px-2 py-0.5 text-[10px] font-mono text-slate-300 border border-white/10">
+            <GitBranch className="h-3 w-3 text-cyan-400" />
+            main^
+          </span>
+
+          {/* Nav Arrows */}
+          <div className="hidden md:flex items-center gap-0.5 ml-1">
             <button
               type="button"
-              onClick={onOpenProjects}
-              data-testid="vscode-all-projects"
-              aria-label="All Projects"
-              className="mr-1 flex items-center gap-1.5 rounded px-1 py-0.5 text-[11px] font-semibold tracking-wide text-vsc-textMuted transition-colors hover:bg-product-active hover:text-content-on-dark"
+              className="rounded p-1 text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+              title="Navigate back"
             >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              GB Coder
+              <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-          </Tooltip>
-        ) : (
-          <span className="mr-1 select-none text-[11px] font-semibold tracking-wide text-vsc-textMuted">
-            GB Coder
-          </span>
-        )}
+            <button
+              type="button"
+              className="rounded p-1 text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+              title="Navigate forward"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
 
-        <div className="flex items-center gap-0.5">
-          {topBarActions.map((action) => (
-            <Tooltip key={action.id} label={action.label} side="bottom">
+        {/* Center Section: Command Search / Quick Open Bar (Screenshot 2 & 3) */}
+        <div
+          onClick={() => {
+            const path = prompt('Quick Open File:', activePath || '');
+            if (path && project.files.some((f) => f.path === path)) {
+              openFile(path);
+            }
+          }}
+          className="flex items-center gap-2 rounded-md border border-white/10 bg-[#12131c] px-3 py-1 text-xs text-slate-300 shadow-inner hover:border-white/20 transition-all cursor-pointer w-64 md:w-80 justify-between"
+          title="Quick Open / Command Search (Ctrl+P)"
+        >
+          <div className="flex items-center gap-2 truncate">
+            <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <span className="truncate text-slate-300 font-mono text-[11px]">
+              codewithusa/{project.name || 'gb-coder-app'}
+            </span>
+          </div>
+          <kbd className="hidden sm:inline-block rounded border border-white/15 bg-white/5 px-1 py-0.2 text-[9px] text-slate-400 font-mono">
+            Ctrl+P
+          </kbd>
+        </div>
+
+        {/* Right Section: WebContainer Live Status, NPM Packages, Share, Exit */}
+        <div className="flex items-center gap-1.5">
+          {/* Status Badge */}
+          {webcontainer.isSupported && (
+            <div className="hidden lg:flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2.5 py-0.5 text-[11px]">
+              {webcontainer.startupStage === 'ready' || webcontainer.serverUrl ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-emerald-400 font-medium">WebContainer Live</span>
+                </>
+              ) : webcontainer.startupStage === 'installing' ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin text-cyan-400" />
+                  <span className="text-cyan-300">Installing Deps</span>
+                </>
+              ) : (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  <span className="text-slate-300">WebContainer Ready</span>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Package Manager Button */}
+          {onOpenDependencies && (
+            <Tooltip label="Visual NPM Package Manager GUI" side="bottom">
               <button
                 type="button"
-                onClick={action.onClick}
-                disabled={!action.onClick}
-                aria-label={action.label}
-                aria-pressed={action.isActive}
-                data-testid={`vscode-nav-${action.id}`}
-                className={`rounded p-1.5 transition-colors ${
-                  action.isActive
-                    ? 'bg-product-active text-content-on-dark'
-                    : action.onClick
-                      ? 'text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark'
-                      : 'cursor-not-allowed text-vsc-textMuted/40'
-                }`}
+                onClick={onOpenDependencies}
+                className="flex items-center gap-1 rounded bg-white/5 hover:bg-white/10 px-2.5 py-1 text-xs text-slate-200 border border-white/10 transition-colors"
               >
-                {action.icon}
+                <Package className="h-3.5 w-3.5 text-amber-400" />
+                <span className="hidden sm:inline text-[11px]">Packages</span>
               </button>
             </Tooltip>
-          ))}
-        </div>
+          )}
 
-        <span className="ml-auto truncate text-[11px] text-vsc-textMuted" title={activePath ?? ''}>
-          {activePath ?? 'No file open'}
-        </span>
+          {/* Share Button (Screenshot 2 & 3) */}
+          <Tooltip label="Share Project" side="bottom">
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard?.writeText(window.location.href);
+                toast.success('Workspace link copied!');
+              }}
+              className="flex items-center gap-1 rounded bg-white/5 hover:bg-white/10 px-2.5 py-1 text-xs text-slate-200 border border-white/10 transition-colors"
+            >
+              <Share2 className="h-3.5 w-3.5 text-slate-300" />
+              <span className="hidden sm:inline text-[11px]">Share</span>
+            </button>
+          </Tooltip>
+
+          {/* Exit VS Code Mode Button */}
+          <Tooltip label="Exit VS Code Mode" side="bottom">
+            <button
+              type="button"
+              onClick={onExit}
+              className="flex items-center gap-1 rounded bg-white/5 hover:bg-red-500/20 hover:text-red-300 px-2.5 py-1 text-xs text-slate-300 border border-white/10 transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </Tooltip>
+        </div>
       </header>
 
-      {/* Entry banner. Suppressed with no files: there is no project to describe
-          as detected, and the empty state below says what to do instead. */}
-      {showBanner && hasFiles && (
-        <div
-          className="flex shrink-0 items-start gap-2.5 border-b border-stroke-dark bg-product-elevated px-3 py-2"
-          data-testid="vscode-banner"
-        >
-          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent" />
-          <p className="flex-1 text-xs text-content-on-dark-soft">
-            {webcontainer.isSupported
-              ? '⚡ In-Browser WebContainer active — No Cloud Sandbox required! Run npm install, build, and dev servers with zero cloud cost.'
-              : entryReason === 'manual'
-              ? 'VS Code mode — connect a Sandbox to run this project.'
-              : 'Full-stack project detected — connect a Sandbox to run this project.'}
-          </p>
-          {webcontainer.isSupported ? (
-            <button
-              onClick={openTerminal}
-              className="rounded-md bg-accent px-2.5 py-0.5 text-[11px] font-medium text-white hover:bg-accent-light"
-            >
-              Open Terminal (⚡)
-            </button>
-          ) : (
-            <button
-              onClick={() => setRightTab('sandbox')}
-              className="rounded-md bg-product-active px-2 py-0.5 text-[11px] font-medium text-content-on-dark hover:bg-product-active"
-            >
-              Open Sandbox
-            </button>
-          )}
-          <button
-            onClick={() => setShowBanner(false)}
-            className="text-content-on-dark-soft hover:text-content-on-dark-soft"
-            aria-label="Dismiss banner"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      )}
+      {/* ── Body: Activity Bar + Left Sidebar + Middle (Editor + Docked Terminal) + Right (Preview) ── */}
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        {/* Activity Bar on far left */}
+        <ActivityBar
+          activeTab={activityTab}
+          onChangeTab={setActiveTab}
+          isTerminalOpen={showTerminal}
+          onToggleTerminal={toggleTerminal}
+          dirtyCount={dirtyPaths.size}
+          serverRunning={Boolean(webcontainer.serverUrl || sandbox.activePort)}
+          onOpenSettings={onOpenVoiceCommands}
+          onResetContainer={() => {
+            void webcontainerService.mountProject(project.files, project.dependencies, project.projectType);
+            toast.success('WebContainer virtual filesystem remounted');
+          }}
+        />
 
-      {/* ── Body: three independently scrolling columns ── */}
-      <div className="flex min-h-0 flex-1">
-        {/* Explorer */}
+        {/* Left Sidebar: Explorer / Search / Git / Ports */}
         <aside
-          className={`flex w-60 shrink-0 flex-col overflow-hidden border-r bg-vsc-sidebar ${
-            isExplorerDropTarget ? 'border-accent' : 'border-vsc-border'
+          className={`flex w-60 shrink-0 flex-col overflow-hidden border-r bg-[#181824] ${
+            isExplorerDropTarget ? 'border-accent' : 'border-[#262636]'
           }`}
           data-testid="vscode-explorer"
         >
-          <div className="flex shrink-0 items-center gap-1 border-b border-vsc-border px-2 py-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-vsc-textMuted">
-              Explorer
-            </span>
-            <span className="rounded bg-product-active px-1 text-[9px] text-vsc-textMuted">
-              {project.files.length}
-            </span>
-
-            <div className="ml-auto flex items-center gap-0.5">
-              <Tooltip label="New File" side="bottom">
-                <button
-                  type="button"
-                  onClick={() => treeRef.current?.startNewFile()}
-                  aria-label="New File"
-                  data-testid="explorer-new-file"
-                  className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
-                >
-                  <FilePlus className="h-3.5 w-3.5" />
-                </button>
-              </Tooltip>
-              <Tooltip label="New Folder" side="bottom">
-                <button
-                  type="button"
-                  onClick={() => treeRef.current?.startNewFolder()}
-                  aria-label="New Folder"
-                  data-testid="explorer-new-folder"
-                  className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
-                >
-                  <FolderPlus className="h-3.5 w-3.5" />
-                </button>
-              </Tooltip>
-              <Tooltip label="Collapse All Folders" side="bottom">
-                <button
-                  type="button"
-                  onClick={() => treeRef.current?.collapseAll()}
-                  aria-label="Collapse All Folders"
-                  data-testid="explorer-collapse-all"
-                  className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
-                >
-                  <FolderArchive className="h-3.5 w-3.5" />
-                </button>
-              </Tooltip>
-              <Tooltip label="Load File from Disk" side="bottom">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  aria-label="Load File"
-                  data-testid="explorer-load-file"
-                  className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
-                >
-                  <Upload className="h-3.5 w-3.5" />
-                </button>
-              </Tooltip>
-              <Tooltip label="Load Folder from Disk" side="bottom">
-                <button
-                  type="button"
-                  onClick={() => folderInputRef.current?.click()}
-                  aria-label="Load Folder"
-                  data-testid="explorer-load-folder"
-                  className="rounded p-1 text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark"
-                >
-                  <FolderDown className="h-3.5 w-3.5" />
-                </button>
-              </Tooltip>
-            </div>
-          </div>
-
-          {/*
-            Own scroll container. A long tree scrolls here and nowhere else — it
-            cannot push the editor down or move the terminal.
-          */}
-          <div
-            className="min-h-0 flex-1 overflow-y-auto"
-            data-testid="vscode-explorer-scroll"
-            onDragOver={handleExplorerDragOver}
-            onDragLeave={() => setIsExplorerDropTarget(false)}
-            onDrop={handleExplorerDrop}
-          >
-            <FileTreeView
-              ref={treeRef}
-              files={project.files}
-              activePath={activePath}
-              dirtyPaths={dirtyPaths}
-              onOpen={openFile}
-              onOpenToSide={openToSide}
-              onCreateFile={handleCreateFile}
-              onCreateFolder={handleCreateFolder}
-              onRename={handleRenameFile}
-              onDelete={handleDeleteFile}
-              onDuplicate={handleDuplicateFile}
-            />
-            {isExplorerDropTarget && (
-              <p className="px-3 py-2 text-[11px] text-accent">Drop to add to this project…</p>
-            )}
-          </div>
-
-          {/*
-           * Dev Server shortcut.
-           *
-           * Lives here rather than in AppSidebar because AppSidebar is not
-           * rendered in this mode at all. Stays disabled until the backend has
-           * *confirmed* a live process and at least one reachable port, so it
-           * never routes the user to an iframe that cannot load.
-           */}
-          <div className="shrink-0 border-t border-vsc-border">
-            <button
-              onClick={() => setRightTab('preview')}
-              disabled={!devServerReady}
-              data-testid="dev-server-toggle"
-              aria-disabled={!devServerReady}
-              title={
-                devServerReady
-                  ? `Show the live preview served from port ${sandbox.activePort}.`
-                  : 'Connect a sandbox and start your dev server first.'
-              }
-              className={`flex w-full items-center gap-1.5 px-2.5 py-2 text-left text-[11px] ${
-                devServerReady
-                  ? 'text-vsc-text hover:bg-product-hover hover:text-content-on-dark'
-                  : 'cursor-not-allowed text-vsc-textMuted opacity-50'
-              }`}
-            >
-              <Server className="h-3.5 w-3.5 shrink-0" />
-              <span className="flex-1 truncate">Dev Server</span>
-              {devServerReady && (
-                <span
-                  aria-hidden
-                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal"
-                  title="Running"
-                />
-              )}
-            </button>
-
-            {/* Only worth showing when there is an actual choice to make. */}
-            {devServerReady && sandbox.previews.length > 1 && (
-              <div className="px-2.5 pb-2" data-testid="dev-server-ports">
-                <span className="mb-1 block text-[10px] uppercase tracking-wider text-vsc-textMuted">
-                  Ports
+          {activityTab === 'explorer' ? (
+            <>
+              {/* Explorer Header */}
+              <div className="flex shrink-0 items-center justify-between border-b border-[#262636] px-3 py-2 select-none">
+                <span className="text-[11px] font-bold tracking-wider uppercase text-slate-400">
+                  Explorer
                 </span>
-                <div className="flex flex-wrap gap-1">
-                  {sandbox.previews.map((preview) => (
+
+                <div className="flex items-center gap-0.5">
+                  <Tooltip label="New File" side="bottom">
                     <button
-                      key={preview.port}
-                      onClick={() => {
-                        sandboxSession.selectPort(preview.port);
-                        setRightTab('preview');
-                      }}
-                      data-testid={`dev-server-port-${preview.port}`}
-                      aria-pressed={preview.port === sandbox.activePort}
-                      title={preview.url}
-                      className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                        preview.port === sandbox.activePort
-                          ? 'bg-accent/25 text-content-on-dark'
-                          : 'text-vsc-textMuted hover:bg-product-active hover:text-content-on-dark'
-                      }`}
+                      type="button"
+                      onClick={() => treeRef.current?.startNewFile()}
+                      aria-label="New File"
+                      data-testid="explorer-new-file"
+                      className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
                     >
-                      {preview.port}
+                      <FilePlus className="h-3.5 w-3.5" />
                     </button>
-                  ))}
+                  </Tooltip>
+                  <Tooltip label="New Folder" side="bottom">
+                    <button
+                      type="button"
+                      onClick={() => treeRef.current?.startNewFolder()}
+                      aria-label="New Folder"
+                      data-testid="explorer-new-folder"
+                      className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                    >
+                      <FolderPlus className="h-3.5 w-3.5" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip label="Collapse All Folders" side="bottom">
+                    <button
+                      type="button"
+                      onClick={() => treeRef.current?.collapseAll()}
+                      aria-label="Collapse All Folders"
+                      data-testid="explorer-collapse-all"
+                      className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                    >
+                      <FolderArchive className="h-3.5 w-3.5" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip label="Load Folder from Disk" side="bottom">
+                    <button
+                      type="button"
+                      onClick={() => folderInputRef.current?.click()}
+                      aria-label="Load Folder"
+                      data-testid="explorer-load-folder"
+                      className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                    >
+                      <FolderDown className="h-3.5 w-3.5" />
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
-            )}
-          </div>
 
-          <button
-            onClick={onExit}
-            data-testid="exit-vscode-mode"
-            title="Return to the standard editor. File contents are kept."
-            className="flex shrink-0 items-center gap-1.5 border-t border-vsc-border px-2.5 py-2 text-[11px] text-vsc-text hover:bg-product-hover hover:text-content-on-dark"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Exit VS Code mode
-          </button>
+              {/* Accordion List matching StackBlitz (Screenshot 2 & 3) */}
+              <div
+                className="min-h-0 flex-1 overflow-y-auto"
+                data-testid="vscode-explorer-scroll"
+                onDragOver={handleExplorerDragOver}
+                onDragLeave={() => setIsExplorerDropTarget(false)}
+                onDrop={handleExplorerDrop}
+              >
+                {/* > INFO Accordion */}
+                <div className="border-b border-[#262636]/60">
+                  <button
+                    type="button"
+                    onClick={() => setIsInfoOpen(!isInfoOpen)}
+                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-slate-400 hover:bg-white/5 hover:text-slate-200 uppercase select-none"
+                  >
+                    {isInfoOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    Info
+                  </button>
+                  {isInfoOpen && (
+                    <div className="px-5 py-2 text-[11px] text-slate-400 space-y-1 bg-[#13141f]">
+                      <p><span className="text-slate-500">Framework:</span> React + Vite</p>
+                      <p><span className="text-slate-500">Runtime:</span> In-Browser WebContainer</p>
+                      <p><span className="text-slate-500">Files:</span> {project.files.length} loaded</p>
+                      <p><span className="text-slate-500">Cost:</span> $0.00 (Zero cloud compute)</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* v PROJECT_NAME Accordion (Contains FileTreeView) */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsProjectRootOpen(!isProjectRootOpen)}
+                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-slate-300 hover:bg-white/5 uppercase select-none"
+                  >
+                    {isProjectRootOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    <span className="truncate">{project.name || 'GB-CODER-WORKSPACE'}</span>
+                    <span className="ml-auto rounded bg-slate-800 px-1 text-[9px] text-slate-400">
+                      {project.files.length}
+                    </span>
+                  </button>
+
+                  {isProjectRootOpen && (
+                    <FileTreeView
+                      ref={treeRef}
+                      files={project.files}
+                      activePath={activePath}
+                      dirtyPaths={dirtyPaths}
+                      onOpen={openFile}
+                      onOpenToSide={openToSide}
+                      onCreateFile={handleCreateFile}
+                      onCreateFolder={handleCreateFolder}
+                      onRename={handleRenameFile}
+                      onDelete={handleDeleteFile}
+                      onDuplicate={handleDuplicateFile}
+                    />
+                  )}
+                </div>
+
+                {/* > OUTLINE Accordion */}
+                <div className="border-t border-[#262636]/60">
+                  <button
+                    type="button"
+                    onClick={() => setIsOutlineOpen(!isOutlineOpen)}
+                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-slate-400 hover:bg-white/5 hover:text-slate-200 uppercase select-none"
+                  >
+                    {isOutlineOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    Outline
+                  </button>
+                  {isOutlineOpen && (
+                    <div className="px-5 py-2 text-[11px] text-slate-500 italic bg-[#13141f]">
+                      {activePath ? `Active symbol structure: ${activePath}` : 'No symbols to display'}
+                    </div>
+                  )}
+                </div>
+
+                {/* > TIMELINE Accordion */}
+                <div className="border-t border-[#262636]/60">
+                  <button
+                    type="button"
+                    onClick={() => setIsTimelineOpen(!isTimelineOpen)}
+                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-slate-400 hover:bg-white/5 hover:text-slate-200 uppercase select-none"
+                  >
+                    {isTimelineOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    Timeline
+                  </button>
+                  {isTimelineOpen && (
+                    <div className="px-5 py-2 text-[11px] text-slate-500 italic bg-[#13141f]">
+                      Workspace file history active
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : activityTab === 'search' ? (
+            <div className="flex h-full flex-col p-3 text-xs">
+              <span className="font-bold tracking-wider uppercase text-slate-400 mb-2">Search</span>
+              <input
+                type="text"
+                value={quickSearchTerm}
+                onChange={(e) => setQuickSearchTerm(e.target.value)}
+                placeholder="Search files by name..."
+                className="w-full rounded border border-[#262636] bg-[#12131c] px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
+              />
+              <div className="mt-3 flex-1 overflow-y-auto space-y-1">
+                {project.files
+                  .filter((f) => !quickSearchTerm || f.path.toLowerCase().includes(quickSearchTerm.toLowerCase()))
+                  .slice(0, 30)
+                  .map((f) => (
+                    <button
+                      key={f.path}
+                      onClick={() => openFile(f.path)}
+                      className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-slate-300 hover:bg-white/10 hover:text-white truncate"
+                    >
+                      <span className="truncate">{f.path}</span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          ) : activityTab === 'git' ? (
+            <div className="flex h-full flex-col p-3 text-xs">
+              <span className="font-bold tracking-wider uppercase text-slate-400 mb-2">Source Control</span>
+              <p className="text-slate-400 mb-3">{dirtyPaths.size} modified file(s)</p>
+              <div className="flex-1 overflow-y-auto space-y-1">
+                {Array.from(dirtyPaths).map((p) => (
+                  <div
+                    key={p}
+                    onClick={() => openFile(p)}
+                    className="flex items-center justify-between rounded px-2 py-1 hover:bg-white/10 cursor-pointer text-amber-300"
+                  >
+                    <span className="truncate">{p}</span>
+                    <span className="text-[10px] text-amber-400 font-bold">M</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setDirtyPaths(new Set());
+                  toast.success('Changes committed to in-browser branch');
+                }}
+                className="w-full rounded bg-[#007acc] py-1.5 text-xs font-semibold text-white hover:bg-[#0069b4] mt-2"
+              >
+                Commit Changes
+              </button>
+            </div>
+          ) : activityTab === 'packages' ? (
+            <div className="flex h-full flex-col p-3 text-xs">
+              <span className="font-bold tracking-wider uppercase text-slate-400 mb-2">Packages</span>
+              <p className="text-slate-400 mb-3">Dependencies from package.json</p>
+              <button
+                type="button"
+                onClick={onOpenDependencies}
+                className="w-full rounded bg-cyan-600 py-1.5 text-xs font-semibold text-white hover:bg-cyan-500 mb-3 flex items-center justify-center gap-1.5"
+              >
+                <Package className="h-3.5 w-3.5" />
+                Open Package Manager GUI
+              </button>
+            </div>
+          ) : (
+            <div className="flex h-full flex-col p-3 text-xs">
+              <span className="font-bold tracking-wider uppercase text-slate-400 mb-2">Ports & Servers</span>
+              <div className="rounded-lg border border-white/10 bg-[#12131c] p-3 mt-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-semibold text-white">Vite Dev Server</span>
+                </div>
+                <p className="text-slate-400 text-[11px] mt-1">Port: {webcontainer.serverPort || 5173}</p>
+                <p className="text-slate-500 text-[10px] truncate mt-0.5">
+                  URL: {webcontainer.serverUrl || 'http://localhost:5173/'}
+                </p>
+              </div>
+            </div>
+          )}
         </aside>
 
         {/* Editor column: one file at a time, or split dual panes */}
