@@ -220,6 +220,21 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
    * would have no entry point in the only mode that can use it.
    */
   const [showTerminal, setShowTerminal] = useState(false);
+  const [hasOpenedTerminal, setHasOpenedTerminal] = useState(false);
+
+  const openTerminal = useCallback(() => {
+    setHasOpenedTerminal(true);
+    setShowTerminal(true);
+  }, []);
+
+  const toggleTerminal = useCallback(() => {
+    setShowTerminal((prev) => {
+      const next = !prev;
+      if (next) setHasOpenedTerminal(true);
+      return next;
+    });
+  }, []);
+
   const [terminalHeight, setTerminalHeight] = useState(TERMINAL_DEFAULT_H);
   /** Cursor position, mirrored into the status bar. */
   const [cursor, setCursor] = useState({ line: 1, column: 1 });
@@ -431,6 +446,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === '`') {
+        e.preventDefault();
+        toggleTerminal();
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === '\\') {
         e.preventDefault();
         if (isSplitActive) {
@@ -446,7 +466,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSplitActive, openPaths, activePath, project.files, openToSide, closeSplitPane]);
+  }, [toggleTerminal, isSplitActive, openPaths, activePath, project.files, openToSide, closeSplitPane]);
 
   /* ── Terminal resize ──────────────────────────────────────────────────────
    *
