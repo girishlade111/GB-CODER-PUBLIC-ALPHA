@@ -7,6 +7,7 @@
  * arguments.
  */
 import { chromium } from 'playwright';
+import { buildConsoleBridgeScript } from './bridge.local.mjs';
 
 const BASE = 'http://127.0.0.1:5199';
 
@@ -23,9 +24,17 @@ const publish = (document, id) =>
     body: JSON.stringify(id ? { id, document } : { document }),
   }).then((r) => r.json());
 
-const doc = (marker) =>
+/**
+ * Builds a document shaped like the one PreviewPanel publishes: user markup,
+ * the real console bridge (so the mobile console has something to listen to),
+ * then the user's own script. Approximating the bridge here would test the
+ * approximation rather than the integration.
+ */
+const doc = (marker, runId) =>
   `<!DOCTYPE html><html><head><style>body{font-family:sans-serif}</style></head>` +
   `<body><h1 id="marker">${marker}</h1>` +
+  `<script>${buildConsoleBridgeScript(runId)}</` +
+  `script>` +
   `<script>console.log('user-log-1');console.warn('user-warn-1');console.error('user-error-1');</` +
   `script></body></html>`;
 
