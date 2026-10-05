@@ -971,6 +971,22 @@ ${importMapHTML}
 
   return (
     <>
+      {/*
+        The phone is sent `previewContent`, the same srcdoc string mounted below.
+        Reused rather than reassembled from html/css/js so the two views cannot
+        drift apart — the modal has no knowledge of external libraries, JSX
+        runtime, import maps or custom injections, and must not need it.
+      */}
+      {isMobilePreviewOpen && (
+        <React.Suspense fallback={null}>
+          <MobilePreviewModal
+            isOpen={isMobilePreviewOpen}
+            onClose={() => setIsMobilePreviewOpen(false)}
+            document={previewContent}
+          />
+        </React.Suspense>
+      )}
+
       {/* Normal Preview Panel */}
       {viewMode !== 'fullscreen' && (
         <div className="w-full h-full bg-surface-base rounded-lg overflow-hidden border border-stroke-subtle flex flex-col">
