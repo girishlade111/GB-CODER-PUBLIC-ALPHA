@@ -467,10 +467,11 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
   const handleQuickNpmInstall = useCallback(async () => {
     if (mode === 'webcontainer') {
+      const currentProj = projectRef.current;
       await webcontainerService.mountProject(
-        project.files,
-        project.dependencies,
-        project.projectType,
+        currentProj.files,
+        currentProj.dependencies,
+        currentProj.projectType,
       );
       if (!webcontainerShellRef.current) {
         await startWebContainerShell();
@@ -479,7 +480,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     } else {
       sendCommand('npm install');
     }
-  }, [mode, project.files, project.dependencies, project.projectType, startWebContainerShell, sendCommand]);
+  }, [mode, startWebContainerShell, sendCommand]);
 
   const clearTerminal = () => {
     termRef.current?.clear();
