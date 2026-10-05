@@ -12,6 +12,7 @@
  * Pure and synchronous so it can be unit tested without a terminal attached.
  */
 import { MultiFileProject, PROJECT_TYPE_LABEL, sortedFiles } from '../types/files';
+import { addDependencyToPackageJson, parsePackageJson } from './npm/npmRegistryService';
 
 /** ANSI escapes, matching xterm's 16-colour palette. */
 export const ANSI = {

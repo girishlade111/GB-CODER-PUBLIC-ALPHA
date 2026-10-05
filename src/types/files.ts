@@ -456,6 +456,10 @@ export const createProjectOfType = (
     return {
       projectType: 'react',
       entry: 'main.jsx',
+      dependencies: {
+        react: '^18.3.1',
+        'react-dom': '^18.3.1',
+      },
       files: [
         { path: 'main.jsx', content: REACT_MAIN, language: 'jsx' },
         { path: 'App.jsx', content: REACT_APP, language: 'jsx' },
@@ -469,6 +473,9 @@ export const createProjectOfType = (
     return {
       projectType: 'vue',
       entry: 'main.js',
+      dependencies: {
+        vue: '^3.5.13',
+      },
       files: [
         { path: 'main.js', content: VUE_MAIN, language: 'javascript' },
         { path: 'App.vue', content: VUE_APP, language: 'vue' },
