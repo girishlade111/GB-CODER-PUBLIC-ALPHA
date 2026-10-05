@@ -13,6 +13,7 @@ import {
   Mic,
   MicOff,
   Bug,
+  Scan,
 } from 'lucide-react';
 import { PROJECT_TYPE_LABEL, ProjectType } from '../types/files';
 
