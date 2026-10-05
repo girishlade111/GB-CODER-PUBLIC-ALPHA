@@ -249,6 +249,11 @@ export class MobilePreviewSessionController {
     this.onIdle?.(false);
     if (this.inFlight) return this.inFlight;
 
+    /*
+     * `Promise<MobilePreviewSession | null>` throughout: the `.then` returns
+     * `null` when the controller was disposed mid-flight, which is a normal
+     * outcome (the user closed the dialog) rather than an error.
+     */
     this.inFlight = this.publish(document, this.session?.id ?? null)
       .then((session) => {
         if (this.disposed) return null;

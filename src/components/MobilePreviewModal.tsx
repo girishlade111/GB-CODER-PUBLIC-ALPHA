@@ -10,7 +10,6 @@ import {
   buildCloudUrl,
   buildLanUrl,
   fetchLanInfo,
-  isLocalOrigin,
   publishPreview,
 } from '../services/mobilePreviewService';
 
