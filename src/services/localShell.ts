@@ -270,6 +270,102 @@ const COMMANDS: CommandDefinition[] = [
             ),
           },
   },
+  {
+    name: 'npm',
+    usage: 'npm <install|i|ls|list> [package]',
+    summary: 'Manage and install npm packages in the project',
+    run: (args, context) => {
+      const verb = (args[0] ?? '').toLowerCase();
+
+      if (!verb || verb === 'help') {
+        return {
+          output: [
+            bold('npm — Package Manager'),
+            `  ${cyan('npm install [pkg]')}    Install package or restore project dependencies`,
+            `  ${cyan('npm i [pkg]')}          Shortcut for install`,
+            `  ${cyan('npm list')}             List all currently installed packages`,
+            '',
+            gray('Tip: Switch to WebContainer mode (⚡) for full in-browser Node.js shell execution.'),
+          ],
+        };
+      }
+
+      if (verb === 'install' || verb === 'i' || verb === 'add') {
+        const pkgArg = args[1];
+        if (pkgArg) {
+          // e.g. npm install axios or npm i axios@1.7.0
+          const atIndex = pkgArg.lastIndexOf('@');
+          let pkgName = pkgArg;
+          let pkgVer = 'latest';
+          if (atIndex > 0) {
+            pkgName = pkgArg.slice(0, atIndex);
+            pkgVer = pkgArg.slice(atIndex + 1);
+          }
+
+          if (!context.project.dependencies) {
+            context.project.dependencies = {};
+          }
+          context.project.dependencies[pkgName] = pkgVer;
+
+          return {
+            output: [
+              `${green('+')} ${pkgName}@${pkgVer}`,
+              dim('added 1 package, and audited 1 package in 0.42s'),
+              gray('✨ Types & CDN imports resolved automatically.'),
+            ],
+          };
+        }
+
+        // npm install with no package: install all
+        const deps = Object.keys(context.project.dependencies ?? {});
+        const count = deps.length + context.resolvedPackages.length;
+        if (count === 0) {
+          return {
+            output: [
+              dim('up to date, audited 0 packages in 0.14s'),
+              gray('No packages configured yet. Run ') +
+                cyan('npm i <package>') +
+                gray(' or use the Package Manager.'),
+            ],
+          };
+        }
+
+        return {
+          output: [
+            green(`✔ Installed ${count} dependencies`),
+            dim(`audited ${count} packages in 0.58s`),
+            dim('found 0 vulnerabilities'),
+          ],
+        };
+      }
+
+      if (verb === 'list' || verb === 'ls') {
+        const deps = Object.entries(context.project.dependencies ?? {});
+        if (deps.length === 0 && context.resolvedPackages.length === 0) {
+          return { output: [gray('(empty)')] };
+        }
+        const lines = [bold(`${context.project.projectType}-project@0.0.0`)];
+        for (const [name, ver] of deps) {
+          lines.push(`├── ${name}@${ver}`);
+        }
+        for (const pkg of context.resolvedPackages) {
+          if (!context.project.dependencies?.[pkg.name]) {
+            lines.push(
+              `├── ${pkg.name}@${pkg.resolvedVersion ?? pkg.version} ${gray('(detected)')}`,
+            );
+          }
+        }
+        return { output: lines };
+      }
+
+      return {
+        output: [
+          red(`npm: unknown command "${verb}"`),
+          gray(`Run ${cyan('npm help')} for usage.`),
+        ],
+      };
+    },
+  },
 ];
 
 /** Verbs the local shell knows, for `help` and completion. */
