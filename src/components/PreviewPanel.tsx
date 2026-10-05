@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package, RotateCcw, Laptop, ChevronDown, ZoomIn, Smartphone as MobileIcon, Sparkles, ShieldAlert } from 'lucide-react';
+import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package, RotateCcw, Laptop, ChevronDown, ZoomIn, Smartphone as MobileIcon, Sparkles, ShieldAlert, QrCode } from 'lucide-react';
 import { JSEditorMode } from '../types';
 import { MOUNT_ELEMENT_ID, ProjectType } from '../types/files';
 import { externalLibraryService } from '../services/externalLibraryService';
@@ -11,6 +11,14 @@ import {
 } from '../services/consoleBridge';
 import type { ConsoleMessage, ResolvedStackFrame } from '../types/consoleFeed';
 import type { CustomInjection } from '../services/customInjectionService';
+import { lazyWithRecovery } from '../utils/loadChunk';
+
+/*
+ * Loaded on demand. The QR generator and the whole LAN/Cloud modal are only
+ * reachable from one toolbar button, so neither belongs in first paint -- the
+ * same reasoning that keeps `PreviewSharePage` out of the entry chunk.
+ */
+const MobilePreviewModal = lazyWithRecovery(() => import('./MobilePreviewModal'), 'Mobile preview');
 
 export type DeviceType = 'mobile' | 'tablet' | 'laptop' | 'desktop' | 'full';
 
@@ -777,6 +785,14 @@ ${importMapHTML}
               title="Open in New Tab"
             >
               <ExternalLink className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setIsMobilePreviewOpen(true)}
+              className="p-1.5 hover:bg-surface-hover rounded text-content-muted hover:text-content-primary transition-colors"
+              title="Test on Mobile via QR Code — scan with your phone camera to test responsive design live"
+              aria-label="Test on Mobile via QR Code"
+            >
+              <QrCode className="w-4 h-4" />
             </button>
           </div>
         </div>

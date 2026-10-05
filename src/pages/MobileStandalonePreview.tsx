@@ -142,6 +142,7 @@ const MobileStandalonePreview: React.FC<MobileStandalonePreviewProps> = ({ sessi
            * open a panel on the desktop.
            */
           if (state.document !== renderedDocument.current) {
+            renderedDocument.current = state.document;
             setPreviewDocument(state.document);
             // A fresh document resets output the way a browser navigation does.
             setLogs([]);
@@ -240,7 +241,7 @@ const MobileStandalonePreview: React.FC<MobileStandalonePreviewProps> = ({ sessi
     );
   }
 
-  if (document === null) {
+  if (previewDocument === null) {
     return (
       <div className="fixed inset-0 flex h-screen w-screen flex-col items-center justify-center gap-3 bg-product">
         <Loader2 className="h-6 w-6 animate-spin text-content-on-dark-soft" />
