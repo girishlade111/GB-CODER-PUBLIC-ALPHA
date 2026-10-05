@@ -12,16 +12,11 @@ import {
   runLocalCommand,
 } from '../../services/localShell';
 import {
-  SandboxTerminalSession,
-  SandboxTerminalStatus,
-  sandboxTerminal,
-} from '../../services/sandboxTerminal';
-import {
   webcontainerService,
   WebContainerStatus,
 } from '../../services/webcontainer/webcontainerService';
 
-export type TerminalExecutionMode = 'webcontainer' | 'sandbox' | 'local';
+export type TerminalExecutionMode = 'webcontainer' | 'local';
 
 interface TerminalTabProps {
   project: MultiFileProject;
@@ -54,7 +49,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   /** Active execution mode */
   const [mode, setMode] = useState<TerminalExecutionMode>(() => {
     if (webcontainerService.isSupported()) return 'webcontainer';
-    if (sandboxTerminal.isAvailable()) return 'sandbox';
     return 'local';
   });
 
@@ -73,10 +67,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   const historyRef = useRef<string[]>([]);
   const historyIndexRef = useRef(-1);
 
-  const sessionRef = useRef<SandboxTerminalSession | null>(null);
-  const [sandboxAvailable, setSandboxAvailable] = useState(sandboxTerminal.isAvailable());
   const [termReady, setTermReady] = useState(false);
-  const [sandboxStatus, setSandboxStatus] = useState<SandboxTerminalStatus>('idle');
 
   const projectRef = useRef(project);
   projectRef.current = project;
@@ -276,14 +267,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         return;
       }
 
-      // 2. Sandbox Mode: pass raw data to remote sandbox PTY
-      const session = sessionRef.current;
-      if (mode === 'sandbox' && session && session.getStatus() === 'connected') {
-        session.write(data);
-        return;
-      }
-
-      // 3. Local Mode: simulated line editor
+      // 2. Local Mode: simulated line editor
       if (data === '\u0003') {
         term.write('^C');
         lineRef.current = '';
@@ -438,41 +422,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     return () => cancelAnimationFrame(frame);
   }, [isActive, fit]);
 
-  // Track sandbox availability
-  useEffect(() => sandboxTerminal.subscribe(setSandboxAvailable), []);
-
-  // Sandbox connection effect
-  useEffect(() => {
-    const term = termRef.current;
-    if (mode !== 'sandbox' || !sandboxAvailable || !termReady || !term) return;
-
-    const session = sandboxTerminal.connect({ cols: term.cols, rows: term.rows });
-    if (!session) return;
-
-    sessionRef.current = session;
-    setSandboxStatus(session.getStatus());
-
-    const offData = session.onData((chunk) => term.write(chunk));
-    const offStatus = session.onStatusChange((status, detail) => {
-      setSandboxStatus(status);
-      if (status === 'connected') {
-        term.write(`\r\n${ANSI.brightGreen}● Connected to Sandbox${ANSI.reset}\r\n`);
-      } else if (status === 'error' || status === 'closed') {
-        term.write(
-          `\r\n${ANSI.yellow}● Sandbox session ${status}${detail ? `: ${detail}` : ''}.${ANSI.reset}\r\n`,
-        );
-      }
-    });
-
-    return () => {
-      offData();
-      offStatus();
-      session.dispose();
-      sessionRef.current = null;
-      setSandboxStatus('idle');
-    };
-  }, [mode, sandboxAvailable, termReady]);
-
   // Helper to send shortcut commands
   const sendCommand = useCallback(
     (cmd: string) => {
@@ -481,8 +430,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
       if (mode === 'webcontainer' && webcontainerShellRef.current) {
         webcontainerShellRef.current.write(`${cmd}\n`);
-      } else if (mode === 'sandbox' && sessionRef.current) {
-        sessionRef.current.write(`${cmd}\n`);
       } else {
         submitLocal(term, cmd);
       }
@@ -527,15 +474,12 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
                   ? webcontainerStatus === 'running'
                     ? 'bg-emerald-400 animate-pulse'
                     : 'bg-amber-400 animate-pulse'
-                  : mode === 'sandbox' && sandboxStatus === 'connected'
-                    ? 'bg-teal-400'
-                    : 'bg-gray-400'
+                  : 'bg-gray-400'
               }`}
               aria-hidden="true"
             />
             <span className="text-xs font-semibold text-content-on-dark flex items-center gap-1">
               {mode === 'webcontainer' && '⚡ WebContainer (In-Browser)'}
-              {mode === 'sandbox' && '☁️ Cloud Sandbox (E2B)'}
               {mode === 'local' && '💻 Local Simulated Shell'}
             </span>
           </div>
@@ -553,19 +497,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
                 title="Zero-cost in-browser Node.js runtime powered by WebAssembly"
               >
                 WebContainer
-              </button>
-            )}
-            {sandboxAvailable && (
-              <button
-                onClick={() => setMode('sandbox')}
-                className={`px-2 py-0.5 rounded font-medium transition-colors ${
-                  mode === 'sandbox'
-                    ? 'bg-teal-600 text-white shadow-sm'
-                    : 'text-content-on-dark-soft hover:text-white'
-                }`}
-                title="E2B Cloud Sandbox for Python and containerized backends"
-              >
-                Cloud E2B
               </button>
             )}
             <button

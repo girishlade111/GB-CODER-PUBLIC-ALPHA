@@ -44,12 +44,10 @@ import CodeRabbitReviewModal from '../CodeRabbitReviewModal';
 import VoiceCommandPanel from '../VoiceCommandPanel';
 import SnapshotManagerModal from '../SnapshotManagerModal';
 import TerminalTab from '../Console/TerminalTab';
-import SandboxPanel from '../sandbox/SandboxPanel';
 import Tooltip from '../ui/Tooltip';
 import { monacoThemeFor, defineGbCoderTheme } from '../../utils/monacoTheme';
 import { useTheme } from '../../hooks/useTheme';
 import { MultiFileProject } from '../../types/files';
-import { sandboxSession } from '../../services/sandbox/sandboxSession';
 import { carriesFiles, collectTransfer } from '../../utils/dropTransfer';
 import {
   readViewState,
@@ -129,8 +127,6 @@ interface VSCodeModeProps {
   onOpenProjects?: () => void;
 }
 
-const subscribeSandbox = (onChange: () => void) => sandboxSession.subscribe(onChange);
-const getSandboxSnapshot = () => sandboxSession.getState();
 const subscribeWebContainer = (onChange: () => void) => webcontainerService.subscribe(onChange);
 const getWebContainerSnapshot = () => webcontainerService.getState();
 const subscribeAta = (onChange: () => void) => ataService.subscribe(onChange);
@@ -188,8 +184,6 @@ const LANGUAGE_LABEL: Record<string, string> = {
   plaintext: 'Plain Text',
 };
 
-type RightTab = 'preview' | 'sandbox';
-
 const VSCodeMode: React.FC<VSCodeModeProps> = ({
   project,
   onChangeFile,
@@ -207,7 +201,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   onOpenVoiceCommands,
   onOpenProjects,
 }) => {
-  const sandbox = useSyncExternalStore(subscribeSandbox, getSandboxSnapshot, getSandboxSnapshot);
   const webcontainer = useSyncExternalStore(
     subscribeWebContainer,
     getWebContainerSnapshot,
@@ -234,12 +227,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const [openPaths, setOpenPaths] = useState<string[]>(restoredView.openPaths);
   const [activePath, setActivePath] = useState<string | null>(restoredView.activePath);
   const [dirtyPaths, setDirtyPaths] = useState<Set<string>>(new Set());
-  const [rightTab, setRightTab] = useState<RightTab>(() => {
-    if (typeof window !== 'undefined' && localStorage.getItem('gbcoder_e2b_key')) {
-      return 'sandbox';
-    }
-    return 'preview';
-  });
   const [showBanner, setShowBanner] = useState(false);
   const [showTerminal, setShowTerminal] = useState(true);
   const [hasOpenedTerminal, setHasOpenedTerminal] = useState(true);
