@@ -86,6 +86,10 @@ export const LivePreviewPopoutPage: React.FC = () => {
   const srcDoc = useMemo(() => {
     if (!payload || payload.type !== 'standalone_code') return null;
     const { html, css, javascript } = payload;
+    const trimmed = (html || '').trim();
+    if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.startsWith('<!doctype')) {
+      return trimmed;
+    }
     return `
 <!DOCTYPE html>
 <html lang="en">

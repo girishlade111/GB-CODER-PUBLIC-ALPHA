@@ -11,6 +11,7 @@ import {
 } from '../services/consoleBridge';
 import type { ConsoleMessage, ResolvedStackFrame } from '../types/consoleFeed';
 import type { CustomInjection } from '../services/customInjectionService';
+import { livePreviewChannel } from '../services/preview/livePreviewChannel';
 import { lazyWithRecovery } from '../utils/loadChunk';
 
 /*
