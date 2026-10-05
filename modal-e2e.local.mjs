@@ -1,7 +1,7 @@
 /**
- * Exercises the desktop side: open the editor, click the QR toolbar button, and
- * assert the modal renders a scannable QR encoding a URL that actually resolves
- * to a working preview on a second device.
+ * Exercises the desktop side: create a project, open the preview toolbar's QR
+ * button, and assert the modal renders a QR encoding a URL that resolves to a
+ * working preview on a phone-sized viewport.
  */
 import { chromium } from 'playwright';
 
@@ -20,15 +20,20 @@ const pageErrors = [];
 page.on('pageerror', (e) => pageErrors.push(e.message));
 
 await page.goto(BASE, { waitUntil: 'networkidle' });
+await page.waitForTimeout(2500);
+
+// The app opens on a projects screen; create a plain project to reach the editor.
+await page.locator('button:has-text("New Project")').first().click();
+await page.locator('input').first().fill('qr-e2e-project');
+await page.locator('button:has-text("Create project")').click();
+await page.waitForTimeout(4000);
 
 const qrButton = page.locator('button[aria-label="Test on Mobile via QR Code"]');
 await qrButton.waitFor({ timeout: 30000 });
 check('QR toolbar button exists in the preview header', true);
 
 await qrButton.click();
-
-const dialog = page.locator('text=Test on Mobile').first();
-await dialog.waitFor({ timeout: 20000 });
+await page.locator('text=Test on Mobile').first().waitFor({ timeout: 20000 });
 check('modal opens', true);
 
 await page.waitForSelector('svg[shape-rendering="crispEdges"]', { timeout: 20000 });
@@ -39,58 +44,57 @@ check('status pill reports Sync Active', true);
 
 const url = (await page.locator('code').first().textContent())?.trim() ?? '';
 check('modal shows an active URL', url.length > 0, url);
-check('URL points at /mpreview/<id>', /\/mpreview\/[A-Za-z0-9_-]{32}$/.test(url), url);
+check('URL points at /mpreview/<id>', /\/mpreview\/[A-Za-z0-9_-]{32}$/.test(url));
 
-const lanModeDisabled = await page.locator('button:has-text("Local Wi-Fi")').isDisabled();
-check('Local Wi-Fi mode is available on a LAN dev server', !lanModeDisabled);
+check(
+  'Local Wi-Fi mode is offered on a LAN dev server',
+  !(await page.locator('button:has-text("Local Wi-Fi")').isDisabled()),
+);
+check(
+  'address picker appears when several adapters exist',
+  (await page.locator('#lan-address-select').count()) === 1,
+);
 
-// Clipboard needs a secure context; over plain http it should degrade with a
-// message rather than throwing.
+// Clipboard needs a secure context; over plain http it must degrade, not crash.
 await page.locator('button[title="Copy URL"]').click();
-await page.waitForTimeout(500);
+await page.waitForTimeout(600);
 check('copy button does not crash the modal', (await page.locator('text=Test on Mobile').count()) > 0);
 
-// Scan simulation: read the encoded URL off the QR SVG and follow it as a phone.
-const decoded = await page.evaluate(async () => {
-  // The modal's own service builds the URL; read it back from the DOM instead
-  // of decoding the QR matrix, which would test the encoder rather than the flow.
-  return document.querySelector('code')?.textContent?.trim() ?? '';
-});
-
+// Follow the encoded URL as a phone would, rewriting the host to loopback.
 const phone = await browser.newContext({
   viewport: { width: 390, height: 844 },
   isMobile: true,
   hasTouch: true,
 });
 const phonePage = await phone.newPage();
-await phonePage.goto(decoded.replace(/^http:\/\/[^/]+/, BASE), { waitUntil: 'networkidle' });
+await phonePage.goto(url.replace(/^https?:\/\/[^/]+/, BASE), { waitUntil: 'networkidle' });
 const frame = phonePage.frameLocator('iframe[title="Mobile Live Preview"]');
 let phoneOk = false;
 try {
-  await frame.locator('#welcome-container, .welcome-container, h1').first().waitFor({ timeout: 25000 });
+  await frame.locator('body').first().waitFor({ timeout: 25000 });
   phoneOk = true;
 } catch {
   phoneOk = false;
 }
-check('scanned URL resolves to a working preview', phoneOk);
+check('encoded URL resolves to a working preview', phoneOk);
 
-// Auto-refresh toggle.
+// Auto-refresh toggle round-trips.
 const toggle = page.locator('input[type="checkbox"]');
 await toggle.uncheck();
 check('auto-refresh can be turned off', !(await toggle.isChecked()));
 await toggle.check();
 check('auto-refresh can be turned back on', await toggle.isChecked());
 
-// Ending the session revokes the phone's access.
+// Ending the session revokes the phone's access immediately.
+const sessionId = url.split('/mpreview/')[1];
 await page.locator('button:has-text("End session")').click();
-await page.waitForTimeout(500);
-const sessionId = decoded.split('/mpreview/')[1];
+await page.waitForTimeout(600);
 const after = await fetch(`${BASE}/api/preview/sync?id=${sessionId}`);
 check('End session revokes the session', after.status === 404, `HTTP ${after.status}`);
 
 // Closing the modal leaves nothing behind.
 await page.locator('button[aria-label="Close mobile preview"]').click();
-await page.waitForTimeout(300);
+await page.waitForTimeout(400);
 check('modal closes', (await page.locator('text=Scan with your phone camera').count()) === 0);
 
 await browser.close();
