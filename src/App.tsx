@@ -114,6 +114,10 @@ const MobileStandalonePreview = lazyWithRecovery(
   () => import('./pages/MobileStandalonePreview'),
   'Mobile preview',
 );
+const LivePreviewPopoutPage = lazyWithRecovery(
+  () => import('./components/preview/LivePreviewPopoutPage'),
+  'Live preview popout',
+);
 const ImportReviewModal = lazyWithRecovery(() => import('./components/ImportReviewModal'));
 const NewProjectModal = lazyWithRecovery(() => import('./components/projects/NewProjectModal'));
 
@@ -228,7 +232,7 @@ import { customInjectionService } from './services/customInjectionService';
  */
 
 
-type AppView = 'editor' | 'history' | 'about' | 'documentation' | 'privacy' | 'terms' | 'cookies' | 'disclaimer' | 'contact' | 'preview-share' | 'preview-share-error' | 'mobile-preview';
+type AppView = 'editor' | 'history' | 'about' | 'documentation' | 'privacy' | 'terms' | 'cookies' | 'disclaimer' | 'contact' | 'preview-share' | 'preview-share-error' | 'mobile-preview' | 'preview-popout';
 
 /*
  * Start of the desktop range. Mirrors the `desktop` / `compact` screens in
@@ -972,6 +976,11 @@ function App() {
      * polling loop, and doing it in App would mount the editor's state machine
      * on a phone just to hand over one string.
      */
+    if (window.location.pathname.startsWith('/preview-popout')) {
+      setCurrentView('preview-popout');
+      return;
+    }
+
     if (window.location.pathname.startsWith('/mpreview/')) {
       const sessionId = window.location.pathname.split('/mpreview/')[1]?.split('/')[0] || '';
       if (!/^[A-Za-z0-9_-]{32}$/.test(sessionId)) {

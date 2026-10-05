@@ -24,6 +24,11 @@ export const EDITOR_ROUTE = '/';
 export const VSCODE_ROUTE = '/ide';
 
 /**
+ * Detached Live Preview popout tab.
+ */
+export const PREVIEW_POPOUT_ROUTE = '/preview-popout';
+
+/**
  * True when `pathname` addresses VS Code mode.
  *
  * The trailing-slash form counts too: a hand-typed or copied URL may carry one,
@@ -33,6 +38,15 @@ export const isVSCodeModePath = (pathname?: string): boolean => {
   if (typeof window === 'undefined') return false;
   const path = pathname ?? window.location.pathname;
   return path === VSCODE_ROUTE || path === `${VSCODE_ROUTE}/`;
+};
+
+/**
+ * True when `pathname` addresses the detached live preview window.
+ */
+export const isPreviewPopoutPath = (pathname?: string): boolean => {
+  if (typeof window === 'undefined') return false;
+  const path = pathname ?? window.location.pathname;
+  return path === PREVIEW_POPOUT_ROUTE || path === `${PREVIEW_POPOUT_ROUTE}/` || path.startsWith('/preview-popout');
 };
 
 /**
