@@ -324,3 +324,8 @@ class WebContainerManager {
 }
 
 export const webcontainerService = new WebContainerManager();
+
+export const subscribeWebContainer = (onChange: () => void) =>
+  webcontainerService.subscribe(onChange);
+
+export const getWebContainerSnapshot = () => webcontainerService.getState();
