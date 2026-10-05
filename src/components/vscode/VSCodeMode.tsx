@@ -36,10 +36,7 @@ import {
   reconcileViewState,
   writeViewState,
 } from '../../services/vscodeWorkspaceStore';
-import {
-  webcontainerService,
-  WebContainerState,
-} from '../../services/webcontainer/webcontainerService';
+import { webcontainerService } from '../../services/webcontainer/webcontainerService';
 import { ataService } from '../../services/ata/ataService';
 
 /**
