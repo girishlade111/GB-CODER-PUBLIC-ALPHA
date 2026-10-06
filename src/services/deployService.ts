@@ -381,6 +381,17 @@ export const buildDeployFiles = (
   options: ArchiveOptions = {},
 ): { path: string; content: string }[] => buildArchiveFiles(project, options);
 
+/** A human-readable reason the bundle is too big, or `undefined` when it fits. */
+const checkLimits = (fileCount: number, bytes: number): string | undefined => {
+  if (fileCount > MAX_FILES) {
+    return `This project has ${fileCount} files; a direct upload supports up to ${MAX_FILES}.`;
+  }
+  if (bytes > MAX_TOTAL_BYTES) {
+    return `This project is ${(bytes / 1024 / 1024).toFixed(1)} MB; a direct upload supports up to 64 MB.`;
+  }
+  return undefined;
+};
+
 export interface DeployEstimate {
   fileCount: number;
   bytes: number;
@@ -392,15 +403,9 @@ export interface DeployEstimate {
 export const estimateDeploy = (project: MultiFileProject, options: ArchiveOptions = {}): DeployEstimate => {
   const files = buildDeployFiles(project, options);
   const bytes = sumBytes(files);
+  const problem = checkLimits(files.length, bytes);
 
-  let problem: string | undefined;
-  if (files.length > MAX_FILES) {
-    problem = `This project has ${files.length} files; a direct upload supports up to ${MAX_FILES}.`;
-  } else if (bytes > MAX_TOTAL_BYTES) {
-    problem = `This project is ${(bytes / 1024 / 1024).toFixed(1)} MB; a direct upload supports up to 64 MB.`;
-  }
-
-  return { fileCount: files.length, bytes, problem };
+  return problem ? { fileCount: files.length, bytes, problem } : { fileCount: files.length, bytes };
 };
 
 // ─── Vercel ───────────────────────────────────────────────────────────────────
