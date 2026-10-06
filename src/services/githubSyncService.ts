@@ -52,6 +52,15 @@ const API_BASE = 'https://api.github.com';
 const MAX_PULL_FILES = 200;
 const MAX_PULL_FILE_BYTES = 512 * 1024;
 
+/**
+ * Per-request deadline.
+ *
+ * GitHub is reliable, but a request that never resolves would leave the modal
+ * spinning with a progress bar and no way out. Combined with the caller's cancel
+ * signal, so the user can still abandon one deliberately.
+ */
+const REQUEST_TIMEOUT_MS = 60_000;
+
 /** Directories never worth importing into an editor tab. */
 const IGNORED_PULL_PREFIXES = ['node_modules/', 'dist/', 'build/', '.git/', '.next/', 'coverage/'];
 
@@ -271,10 +280,18 @@ const githubRequest = async <T>(
   init: RequestInit = {},
   context = 'reach GitHub',
 ): Promise<T> => {
+  if (init.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const relayAbort = () => controller.abort();
+  init.signal?.addEventListener('abort', relayAbort, { once: true });
+
   let response: Response;
   try {
     response = await fetch(`${API_BASE}${path}`, {
       ...init,
+      signal: controller.signal,
       headers: {
         Accept: 'application/vnd.github+json',
         // Pinned so a future default change cannot silently alter response shapes.
@@ -285,11 +302,15 @@ const githubRequest = async <T>(
       },
     });
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') throw error;
+    // The caller cancelled; that is not a network failure.
+    if (init.signal?.aborted) throw error;
     throw new GitHubSyncError('Could not reach GitHub. Check your connection and try again.', {
       kind: 'network',
       retryable: true,
     });
+  } finally {
+    window.clearTimeout(timer);
+    init.signal?.removeEventListener('abort', relayAbort);
   }
 
   if (!response.ok) throw toSyncError(response, context);
@@ -452,6 +473,150 @@ interface RawBlob {
 const repoPath = (ref: RepoRef): string =>
   `/repos/${encodeURIComponent(ref.owner)}/${encodeURIComponent(ref.repo)}`;
 
+/** One entry in a git tree. `sha: null` removes the path. */
+type TreeEntry = { path: string; mode: string; type: string; sha: string | null };
+
+/** Resolves the branch head and the tree it points at. */
+interface BranchHead {
+  headSha: string;
+  baseTreeSha: string;
+}
+
+const readBranchHead = async (
+  token: string,
+  base: string,
+  branch: string,
+  signal?: AbortSignal,
+): Promise<BranchHead> => {
+  const headRef = await githubRequest<RawRef>(
+    token,
+    `${base}/git/ref/heads/${encodeURIComponent(branch)}`,
+    { signal },
+    'find the branch',
+  );
+  const headCommit = await githubRequest<RawCommit>(
+    token,
+    `${base}/git/commits/${headRef.object.sha}`,
+    { signal },
+    'read the latest commit',
+  );
+  return { headSha: headRef.object.sha, baseTreeSha: headCommit.tree.sha };
+};
+
+/** Walks a tree into a path → blob-sha map, for diffing against. */
+const readTreePaths = async (
+  token: string,
+  base: string,
+  treeSha: string,
+  signal?: AbortSignal,
+): Promise<Map<string, string>> => {
+  const tree = await githubRequest<RawTree>(
+    token,
+    `${base}/git/trees/${treeSha}?recursive=1`,
+    { signal },
+    'read the repository tree',
+  );
+  return new Map(tree.tree.filter((entry) => entry.type === 'blob').map((entry) => [entry.path, entry.sha]));
+};
+
+/** Uploads each changed file as a blob and returns the tree entries for them. */
+const uploadBlobs = async (
+  token: string,
+  base: string,
+  files: { path: string; content: string }[],
+  signal: AbortSignal | undefined,
+  report: (message: string, percent: number) => void,
+  from: number,
+  span: number,
+): Promise<TreeEntry[]> => {
+  const entries: TreeEntry[] = [];
+  let done = 0;
+
+  for (const file of files) {
+    report(`Uploading ${file.path}…`, from + Math.round((done / Math.max(files.length, 1)) * span));
+    done += 1;
+
+    const blob = await githubRequest<RawBlob>(
+      token,
+      `${base}/git/blobs`,
+      { method: 'POST', body: JSON.stringify({ content: toBase64(file.content), encoding: 'base64' }), signal },
+      `upload ${file.path}`,
+    );
+    if (!blob.sha) {
+      throw new GitHubSyncError(`GitHub accepted ${file.path} but returned no hash for it.`, {
+        kind: 'unknown',
+        retryable: true,
+      });
+    }
+    entries.push({ path: file.path, mode: '100644', type: 'blob', sha: blob.sha });
+  }
+
+  return entries;
+};
+
+/**
+ * Writes a tree.
+ *
+ * `baseTree` is omitted only when creating a repository's very first commit,
+ * where there is nothing to build on.
+ */
+const createTree = async (
+  token: string,
+  base: string,
+  entries: TreeEntry[],
+  baseTree: string | null,
+  signal?: AbortSignal,
+): Promise<string> => {
+  const tree = await githubRequest<RawTree>(
+    token,
+    `${base}/git/trees`,
+    {
+      method: 'POST',
+      body: JSON.stringify(baseTree ? { base_tree: baseTree, tree: entries } : { tree: entries }),
+      signal,
+    },
+    'build the commit tree',
+  );
+  return tree.sha;
+};
+
+const createCommit = async (
+  token: string,
+  base: string,
+  message: string,
+  treeSha: string,
+  parents: string[],
+  signal?: AbortSignal,
+): Promise<RawCommit> =>
+  githubRequest<RawCommit>(
+    token,
+    `${base}/git/commits`,
+    { method: 'POST', body: JSON.stringify({ message, tree: treeSha, parents }), signal },
+    'create the commit',
+  );
+
+/**
+ * Moves a branch to a commit.
+ *
+ * `force: false` is the whole reason this is safe: if someone pushed between our
+ * read of the head and this write, GitHub rejects it rather than overwriting their
+ * commit.
+ */
+const updateRef = async (
+  token: string,
+  base: string,
+  branch: string,
+  sha: string,
+  signal?: AbortSignal,
+): Promise<void> => {
+  await githubRequest<RawRef>(
+    token,
+    `${base}/git/refs/heads/${encodeURIComponent(branch)}`,
+    { method: 'PATCH', body: JSON.stringify({ sha, force: false }), signal },
+    'update the branch',
+  );
+};
+
 export interface CommitFilesOptions {
   token: string;
   ref: RepoRef;
@@ -487,30 +652,13 @@ export const commitFiles = async (options: CommitFilesOptions): Promise<GitHubCo
   const { token, ref, branch, message, files, deleteMissing = false, onProgress, signal } = options;
   const report = onProgress ?? (() => {});
   const base = repoPath(ref);
-  const branchRef = `/heads/${encodeURIComponent(branch)}`;
+  const commitBase = `https://github.com/${ref.owner}/${ref.repo}/commit`;
 
   report('Finding the latest commit…', 10);
-  const headRef = await githubRequest<RawRef>(token, `${base}/git/ref/${branchRef}`, { signal }, 'find the branch');
-  const headSha = headRef.object.sha;
+  const { headSha, baseTreeSha } = await readBranchHead(token, base, branch, signal);
 
   report('Reading the current tree…', 18);
-  const headCommit = await githubRequest<RawCommit>(
-    token,
-    `${base}/git/commits/${headSha}`,
-    { signal },
-    'read the latest commit',
-  );
-  const baseTreeSha = headCommit.tree.sha;
-
-  const remoteTree = await githubRequest<RawTree>(
-    token,
-    `${base}/git/trees/${baseTreeSha}?recursive=1`,
-    { signal },
-    'read the repository tree',
-  );
-  const remotePaths = new Map(
-    remoteTree.tree.filter((entry) => entry.type === 'blob').map((entry) => [entry.path, entry.sha]),
-  );
+  const remotePaths = await readTreePaths(token, base, baseTreeSha, signal);
 
   /*
    * Hash locally and compare against the remote tree, so an unchanged file costs
@@ -522,10 +670,11 @@ export const commitFiles = async (options: CommitFilesOptions): Promise<GitHubCo
   );
   const writes = entries.filter((entry) => remotePaths.get(entry.file.path) !== entry.sha);
 
+  // A Set, so the deletion scan stays linear: a repository can hold thousands of
+  // paths and this runs once per push.
+  const localPaths = new Set(files.map((file) => file.path));
   const deletions = deleteMissing
-    ? [...remotePaths.keys()].filter(
-        (path) => !files.some((file) => file.path === path),
-      )
+    ? [...remotePaths.keys()].filter((path) => !localPaths.has(path))
     : [];
 
   if (writes.length === 0 && deletions.length === 0) {
@@ -533,7 +682,7 @@ export const commitFiles = async (options: CommitFilesOptions): Promise<GitHubCo
     return {
       branch,
       commitSha: headSha,
-      commitUrl: `https://github.com/${ref.owner}/${ref.repo}/commit/${headSha}`,
+      commitUrl: `${commitBase}/${headSha}`,
       filesChanged: 0,
       alreadyUpToDate: true,
     };
@@ -541,33 +690,15 @@ export const commitFiles = async (options: CommitFilesOptions): Promise<GitHubCo
 
   // 1. Blobs for changed content. Deleted paths need no blob — a null sha removes
   //    the entry from the new tree.
-  const treeEntries: { path: string; mode: string; type: string; sha: string | null }[] = [];
-
-  let uploaded = 0;
-  /*
-   * `sha` was computed to decide whether the file changed; the blob GitHub
-   * creates is the authoritative hash for the tree entry, so the local value is
-   * not reused here.
-   */
-  for (const { file } of writes) {
-    report(`Uploading ${file.path}…`, 20 + Math.round((uploaded / Math.max(writes.length, 1)) * 45));
-    uploaded += 1;
-
-    const blob = await githubRequest<RawBlob>(
-      token,
-      `${base}/git/blobs`,
-      { method: 'POST', body: JSON.stringify({ content: toBase64(file.content), encoding: 'base64' }), signal },
-      `upload ${file.path}`,
-    );
-    if (!blob.sha) {
-      throw new GitHubSyncError(`GitHub accepted ${file.path} but returned no hash for it.`, {
-        kind: 'unknown',
-        retryable: true,
-      });
-    }
-    treeEntries.push({ path: file.path, mode: '100644', type: 'blob', sha: blob.sha });
-  }
-
+  const treeEntries = await uploadBlobs(
+    token,
+    base,
+    writes.map((entry) => entry.file),
+    signal,
+    report,
+    20,
+    45,
+  );
   for (const path of deletions) {
     treeEntries.push({ path, mode: '100644', type: 'blob', sha: null });
   }
@@ -575,45 +706,21 @@ export const commitFiles = async (options: CommitFilesOptions): Promise<GitHubCo
   // 2. A tree based on the old one, so untouched paths are carried forward
   //    automatically rather than being re-sent.
   report('Building the commit tree…', 70);
-  const newTree = await githubRequest<RawTree>(
-    token,
-    `${base}/git/trees`,
-    { method: 'POST', body: JSON.stringify({ base_tree: baseTreeSha, tree: treeEntries }), signal },
-    'build the commit tree',
-  );
+  const treeSha = await createTree(token, base, treeEntries, baseTreeSha, signal);
 
-  // 3. The commit itself.
+  // 3. The commit, then the branch move.
   report('Creating the commit…', 82);
-  const commit = await githubRequest<RawCommit>(
-    token,
-    `${base}/git/commits`,
-    {
-      method: 'POST',
-      body: JSON.stringify({ message, tree: newTree.sha, parents: [headSha] }),
-      signal,
-    },
-    'create the commit',
-  );
+  const commit = await createCommit(token, base, message, treeSha, [headSha], signal);
 
-  /*
-   * 4. Move the branch. `force: false` is the whole reason this is safe: if
-   *    someone pushed between our read of the head and this write, GitHub rejects
-   *    it rather than overwriting their commit.
-   */
   report('Updating the branch…', 92);
-  await githubRequest<RawRef>(
-    token,
-    `${base}/git/refs/${branchRef}`,
-    { method: 'PATCH', body: JSON.stringify({ sha: commit.sha, force: false }), signal },
-    'update the branch',
-  );
+  await updateRef(token, base, branch, commit.sha, signal);
 
   report('Pushed.', 100);
 
   return {
     branch,
     commitSha: commit.sha,
-    commitUrl: commit.html_url || `https://github.com/${ref.owner}/${ref.repo}/commit/${commit.sha}`,
+    commitUrl: commit.html_url || `${commitBase}/${commit.sha}`,
     filesChanged: writes.length + deletions.length,
     alreadyUpToDate: false,
   };
@@ -665,19 +772,63 @@ export const createRepository = async (options: CreateRepoOptions): Promise<GitH
   );
 
   const repo = toRepo(created);
+  const ref: RepoRef = { owner: created.owner.login, repo: created.name };
+  const scaled = (message: string, percent: number): [string, number] => [
+    message,
+    15 + Math.round(percent * 0.85),
+  ];
 
-  const commit = await commitFiles({
-    token,
-    ref: { owner: created.owner.login, repo: created.name },
-    branch: created.default_branch,
-    message: commitMessage,
-    files,
-    // A brand-new repository holds nothing but the seed README, so there is
-    // nothing to protect by leaving files alone.
-    deleteMissing: true,
-    onProgress: (message, percent) => report(message, 15 + Math.round(percent * 0.85)),
-    signal,
-  });
+  /*
+   * Two shapes of "first commit", because an empty repository has no branch to
+   * push onto.
+   *
+   * With `auto_init`, GitHub has already made a seed commit, so the normal
+   * build-on-head path applies and `deleteMissing` is safe: the only thing in the
+   * repository is that README, which the project overwrites with its own.
+   *
+   * Without it there is no head at all, and asking for one returns 404. So the
+   * first commit is created with no parents and no base tree, and the branch ref
+   * is created to point at it.
+   */
+  let commit: GitHubCommitResult;
+
+  if (autoInit) {
+    commit = await commitFiles({
+      token,
+      ref,
+      branch: created.default_branch,
+      message: commitMessage,
+      files,
+      deleteMissing: true,
+      onProgress: (message, percent) => report(...scaled(message, percent)),
+      signal,
+    });
+  } else {
+    const base = repoPath(ref);
+    const treeEntries = await uploadBlobs(token, base, files, signal, report, 20, 55);
+    const treeSha = await createTree(token, base, treeEntries, null, signal);
+    const root = await createCommit(token, base, commitMessage, treeSha, [], signal);
+
+    await githubRequest<RawRef>(
+      token,
+      `${base}/git/refs`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ ref: `refs/heads/${created.default_branch}`, sha: root.sha }),
+        signal,
+      },
+      'create the default branch',
+    );
+
+    commit = {
+      branch: created.default_branch,
+      commitSha: root.sha,
+      commitUrl:
+        root.html_url || `https://github.com/${ref.owner}/${ref.repo}/commit/${root.sha}`,
+      filesChanged: files.length,
+      alreadyUpToDate: false,
+    };
+  }
 
   return { repo, commit };
 };
@@ -708,21 +859,12 @@ export const pullFiles = async (options: {
   const base = repoPath(ref);
 
   report('Finding the latest commit…', 10);
-  const headRef = await githubRequest<RawRef>(
-    token,
-    `${base}/git/ref/heads/${encodeURIComponent(branch)}`,
-    { signal },
-    'find the branch',
-  );
-  const headCommit = await githubRequest<RawCommit>(
-    token,
-    `${base}/git/commits/${headRef.object.sha}`,
-    { signal },
-    'read the latest commit',
-  );
+  const { baseTreeSha } = await readBranchHead(token, base, branch, signal);
+
+  report('Reading the repository tree…', 15);
   const tree = await githubRequest<RawTree>(
     token,
-    `${base}/git/trees/${headCommit.tree.sha}?recursive=1`,
+    `${base}/git/trees/${baseTreeSha}?recursive=1`,
     { signal },
     'read the repository tree',
   );

@@ -166,7 +166,9 @@ const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({
     setCreateResult(null);
     setPullResult(null);
     setTab('push');
-    setRemember(storedToken !== null);
+    // Only a *persisted* credential means the box should start ticked; a
+    // session-only one is gone after a reload.
+    setRemember(storedToken?.sessionOnly === false);
 
     const controller = new AbortController();
     controllerRef.current = controller;

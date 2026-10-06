@@ -20,6 +20,8 @@ import {
   DEPLOY_PROVIDERS,
   deployProject,
   estimateDeploy,
+  readNetlifySiteId,
+  rememberNetlifySiteId,
   sanitizeDeployName,
   type DeployProgress,
   type DeployProvider,
@@ -129,7 +131,10 @@ const DeployModal: React.FC<DeployModalProps> = ({
     setError(null);
     setCopied(false);
     setSiteName(sanitizeDeployName(projectName));
-    setRemember(describeCredential(TOKEN_ID[provider]) !== null);
+    // Only a *persisted* credential means the box should start ticked. A
+    // session-only one is gone after a reload, so leaving it checked would claim a
+    // persistence that does not exist.
+    setRemember(describeCredential(TOKEN_ID[provider])?.sessionOnly === false);
 
     const loadId = loadTokenIdRef.current + 1;
     loadTokenIdRef.current = loadId;
@@ -196,6 +201,14 @@ const DeployModal: React.FC<DeployModalProps> = ({
       // pasted again for the next deploy.
       await saveCredential(TOKEN_ID[provider], trimmed, remember);
 
+      /*
+       * Netlify needs to be told which site to update. Without a remembered id it
+       * would create a second site — a second subdomain, and the first one left
+       * behind in the account.
+       */
+      const netlifySiteId =
+        provider === 'netlify' ? (readNetlifySiteId(sanitizeDeployName(siteName)) ?? undefined) : undefined;
+
       const deployed = await deployProject({
         project,
         provider,
@@ -204,6 +217,7 @@ const DeployModal: React.FC<DeployModalProps> = ({
         externalLibraries,
         resolvedVersions,
         includeInjections,
+        netlifySiteId,
         signal: controller.signal,
         onProgress: (next) => {
           setProgress(next);
@@ -212,6 +226,12 @@ const DeployModal: React.FC<DeployModalProps> = ({
           );
         },
       });
+
+      // The provider may have assigned a different name than the one requested;
+      // the returned one is what the site actually answers on.
+      if (provider === 'netlify') {
+        rememberNetlifySiteId(sanitizeDeployName(siteName), deployed.target);
+      }
 
       setResult(deployed);
       setPhase('done');
@@ -525,6 +545,18 @@ const DeployModal: React.FC<DeployModalProps> = ({
               <p className="mt-2 text-[11px] text-content-muted">
                 {result.fileCount} {result.fileCount === 1 ? 'file' : 'files'} ·{' '}
                 {formatBytes(result.bytes)} · {Math.max(1, Math.round(result.durationMs / 1000))}s
+              </p>
+            )}
+            {/*
+              Netlify site names are a global namespace, so a taken name is
+              replaced with another one. Saying so beats letting the user believe
+              the subdomain they typed is the live address.
+            */}
+            {result && result.assignedName !== sanitizedName && (
+              <p className="mt-1.5 text-[11px] leading-relaxed text-content-muted">
+                <span className="font-medium text-content-secondary">{result.provider === 'vercel' ? 'Vercel' : 'Netlify'}</span>{' '}
+                had already taken <span className="font-mono">{sanitizedName}</span>, so it published this
+                one instead.
               </p>
             )}
           </div>

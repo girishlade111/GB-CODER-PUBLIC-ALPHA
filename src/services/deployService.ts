@@ -73,8 +73,16 @@ export interface DeployResult {
   url: string;
   /** Provider's deployment id, for support and for finding it in a dashboard. */
   deploymentId: string;
-  /** Vercel project name / Netlify site id, depending on provider. */
+  /** Vercel project name, or Netlify site id. */
   target: string;
+  /**
+   * The name the provider actually assigned.
+   *
+   * Usually what was asked for, but not always: Netlify site names are a global
+   * namespace, so a taken name gets silently replaced. Reporting the real one
+   * stops the UI from claiming a subdomain that does not exist.
+   */
+  assignedName: string;
   fileCount: number;
   bytes: number;
   durationMs: number;
@@ -92,6 +100,15 @@ export interface DeployOptions {
   externalLibraries?: ExternalLibrary[];
   resolvedVersions?: Record<string, string>;
   includeInjections?: boolean;
+  /**
+   * An existing Netlify site id to deploy into, when one is known.
+   *
+   * Without this, every deploy would create a *new* site: a fresh subdomain each
+   * time and an orphaned site left behind in the account. Vercel needs no
+   * equivalent because a deployment is created against a named project, so repeat
+   * deploys update it naturally.
+   */
+  netlifySiteId?: string;
   onProgress?: (progress: DeployProgress) => void;
   /** Lets the UI abandon a deploy the user no longer wants. */
   signal?: AbortSignal;
@@ -296,6 +313,10 @@ const fetchWithTimeout = async (
   stage: DeployStage,
   description: string,
 ): Promise<Response> => {
+  // Already cancelled: `addEventListener` would never fire, so the relay below
+  // would never propagate it and the request would run to completion anyway.
+  if (init.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   const relayAbort = () => controller.abort();
@@ -386,11 +407,23 @@ export const estimateDeploy = (project: MultiFileProject, options: ArchiveOption
 
 interface VercelDeployment {
   id: string;
-  url: string;
-  readyState: 'PENDING' | 'BUILDING' | 'ERROR' | 'INITIALIZING' | 'QUEUED' | 'READY' | string;
+  url?: string;
+  /** Assigned for `target: "production"`; preferred over `url` when present. */
+  alias?: string[];
+  readyState: 'BLOCKED' | 'BUILDING' | 'CANCELED' | 'ERROR' | 'INITIALIZING' | 'QUEUED' | 'READY' | string;
   inspectorUrl?: string;
+  /** Documented top-level failure text. */
+  errorMessage?: string | null;
+  /** Present on some responses instead of `errorMessage`. */
   error?: { message?: string };
 }
+
+/** Terminal states. Anything else means the build is still working. */
+const VERCEL_TERMINAL_FAILURES = new Set(['ERROR', 'CANCELED', 'BLOCKED']);
+
+/** The build's failure text, whichever field this response happens to use. */
+const vercelErrorText = (deployment: VercelDeployment): string | undefined =>
+  deployment.errorMessage ?? deployment.error?.message ?? undefined;
 
 const deployToVercel = async (options: DeployOptions, files: { path: string; content: string }[]): Promise<DeployResult> => {
   const startedAt = Date.now();
@@ -403,20 +436,46 @@ const deployToVercel = async (options: DeployOptions, files: { path: string; con
   const headers = authHeaders(token);
 
   /*
-   * `projectSettings` is deliberately omitted. Sending `framework: null` would
-   * suppress auto-detection and stop Vercel building React/Vue projects at all,
-   * while pinning a framework would break plain HTML/CSS/JS. Detection from the
-   * presence of a package.json gets both cases right on its own.
+   * `skipAutoDetectionConfirmation` is not optional for us. Vercel answers a
+   * detected framework that disagrees with the project setting with a 400 asking
+   * for confirmation — a prompt no browser tab can answer, which would turn every
+   * first deploy into a dead end. The parameter is documented for exactly this
+   * automated-pipeline case.
    */
+  const url = `${VERCEL_API}/v13/deployments?skipAutoDetectionConfirmation=1`;
+
+  /*
+   * `projectSettings` is required on a project's first deployment, so it is always
+   * sent — but what goes in it depends on what the project actually needs:
+   *
+   *  - Plain HTML/CSS/JS has no `package.json`, so there is nothing to detect.
+   *    `framework: null` is the documented way to say "serve these files
+   *    statically", and it is exactly right.
+   *  - React and Vue ship a generated `package.json` and `vite.config.js`, so the
+   *    build command, install command and output directory genuinely have to be
+   *    detected. Each of those accepts `null` to mean "automatically detected",
+   *    and `framework` is left absent so Vercel detects it from the manifest
+   *    rather than being pinned to something that would be wrong for a plain
+   *    project.
+   */
+  const isStatic = !files.some((file) => file.path === 'package.json');
+  const projectSettings = isStatic
+    ? { framework: null }
+    : { buildCommand: null, installCommand: null, outputDirectory: null };
+
   const response = await fetchWithTimeout(
-    `${VERCEL_API}/v13/deployments`,
+    url,
     {
       method: 'POST',
       headers,
       body: JSON.stringify({
         name,
         target: 'production',
-        files: files.map((file) => ({ file: file.path, data: file.content, encoding: 'utf-8' })),
+        // No `encoding` field: `file` and `data` are the documented required pair
+        // and the data is sent as text. Pinning an encoding value the reference
+        // does not document would risk a 422 on every deploy.
+        files: files.map((file) => ({ file: file.path, data: file.content })),
+        projectSettings,
       }),
       signal,
     },
@@ -434,13 +493,25 @@ const deployToVercel = async (options: DeployOptions, files: { path: string; con
   report({ stage: 'securing', message: 'Issuing an HTTPS certificate…', percent: 92 });
   report({ stage: 'ready', message: 'Deployed.', percent: 100 });
 
+  const host = ready.alias?.[0] ?? ready.url;
+  if (!host) {
+    throw new DeployError('Vercel built the project but returned no URL for it. Open the deployment in your dashboard.', {
+      retryable: false,
+      stage: 'failed',
+    });
+  }
+
   return {
     provider: 'vercel',
-    // The API's own URL is authoritative; it carries the hash suffix Vercel
-    // assigned, which a reconstructed `name.vercel.app` would usually miss.
-    url: toHttpsUrl(ready.url),
+    /*
+     * `alias[0]` is the production alias when one was assigned, and `url` is the
+     * deployment-specific address. Both serve this build; the alias is the one
+     * that stays stable across redeploys, so it wins when present.
+     */
+    url: toHttpsUrl(host),
     deploymentId: ready.id,
     target: name,
+    assignedName: name,
     fileCount: files.length,
     bytes: sumBytes(files),
     durationMs: Date.now() - startedAt,
@@ -448,7 +519,7 @@ const deployToVercel = async (options: DeployOptions, files: { path: string; con
   };
 };
 
-/** Polls until the deployment is READY or ERROR. */
+/** Polls until the deployment is READY or reaches a terminal failure. */
 const waitForVercel = async (
   deploymentId: string,
   headers: Record<string, string>,
@@ -459,16 +530,23 @@ const waitForVercel = async (
   let percent = 55;
 
   while (Date.now() < deadline) {
-    const response = await fetch(`${VERCEL_API}/v13/deployments/${deploymentId}`, { headers, signal });
+    const response = await fetchWithTimeout(
+      `${VERCEL_API}/v13/deployments/${deploymentId}`,
+      { headers, signal },
+      'building',
+      'Checking the build status',
+    );
     if (!response.ok) throw await toDeployError(response, 'vercel', 'building');
 
     const deployment = (await response.json()) as VercelDeployment;
 
-    if (deployment.readyState === 'ERROR') {
+    if (VERCEL_TERMINAL_FAILURES.has(deployment.readyState)) {
+      const detail = vercelErrorText(deployment);
+      const state = deployment.readyState.toLowerCase();
       throw new DeployError(
-        deployment.error?.message
-          ? `Vercel could not build this project: ${deployment.error.message}`
-          : 'Vercel could not build this project. Open the build logs for the specific error.',
+        detail
+          ? `Vercel could not build this project (${state}): ${detail}`
+          : `Vercel could not build this project (${state}). Open the build logs for the specific error.`,
         { status: 0, retryable: false, stage: 'building' },
       );
     }
@@ -509,13 +587,18 @@ interface NetlifyDeploy {
 
 const deployToNetlify = async (options: DeployOptions, files: { path: string; content: string }[]): Promise<DeployResult> => {
   const startedAt = Date.now();
-  const { token, project, projectName, externalLibraries, resolvedVersions, includeInjections, onProgress, signal } = options;
+  const { token, project, projectName, externalLibraries, resolvedVersions, includeInjections, netlifySiteId, onProgress, signal } = options;
   const report = onProgress ?? (() => {});
   const headers = authHeaders(token);
 
   report({ stage: 'uploading', message: 'Creating your Netlify site…', percent: 25 });
 
-  const site = await createNetlifySite(sanitizeDeployName(projectName), headers, signal);
+  const site = netlifySiteId
+    ? // A remembered site still has to be verified: it may have been deleted or
+      // the token may no longer reach it, and a 404 here is recoverable while a
+      // deploy into it is not.
+      await resolveNetlifySite(token, netlifySiteId, headers, signal)
+    : await createNetlifySite(sanitizeDeployName(projectName), headers, signal);
 
   report({ stage: 'uploading', message: 'Packaging files…', percent: 35 });
 
@@ -568,11 +651,41 @@ const deployToNetlify = async (options: DeployOptions, files: { path: string; co
     url: toHttpsUrl(site.ssl_url ?? site.url ?? ready.deploy_ssl_url ?? ready.deploy_ssl_url ?? ''),
     deploymentId: ready.id,
     target: site.id,
+    assignedName: site.name,
     fileCount: files.length,
     bytes: sumBytes(files),
     durationMs: Date.now() - startedAt,
     logsUrl: ready.admin_url,
   };
+};
+
+/**
+ * Looks up a remembered site, falling back to creating a new one if it is gone.
+ *
+ * A site can be deleted from the Netlify dashboard between two deploys, and the
+ * id is remembered locally rather than being re-derived, so this is a real case
+ * and not a theoretical one. Creating a replacement keeps a deploy working; the
+ * caller gets the new id back and overwrites the stale entry.
+ */
+const resolveNetlifySite = async (
+  token: string,
+  siteId: string,
+  headers: Record<string, string>,
+  signal?: AbortSignal,
+): Promise<NetlifySite> => {
+  const response = await fetchWithTimeout(
+    `${NETLIFY_API}/sites/${siteId}`,
+    { headers, signal },
+    'uploading',
+    'Checking the Netlify site',
+  );
+
+  if (response.ok) return (await response.json()) as NetlifySite;
+  // 404 is the only status worth replacing the site over; an auth failure must
+  // surface, or a bad token would silently mint new sites on every deploy.
+  if (response.status !== 404) throw await toDeployError(response, 'netlify', 'uploading');
+
+  return createNetlifySite('', headers, signal);
 };
 
 /**
@@ -619,10 +732,12 @@ const waitForNetlify = async (
   let percent = 60;
 
   while (Date.now() < deadline) {
-    const response = await fetch(`${NETLIFY_API}/deploys/${deployId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal,
-    });
+    const response = await fetchWithTimeout(
+      `${NETLIFY_API}/deploys/${deployId}`,
+      { headers: { Authorization: `Bearer ${token}` }, signal },
+      'building',
+      'Checking the build status',
+    );
     if (!response.ok) throw await toDeployError(response, 'netlify', 'building');
 
     const deploy = (await response.json()) as NetlifyDeploy;
@@ -646,6 +761,45 @@ const waitForNetlify = async (
     'Netlify has not finished building yet. The deploy usually still completes — check your Netlify dashboard.',
     { status: 0, retryable: true, stage: 'building' },
   );
+};
+
+// ─── Netlify site reuse ───────────────────────────────────────────────────────
+
+/**
+ * Site ids of past Netlify deployments, so a repeat deploy updates the same site.
+ *
+ * Plain JSON in `localStorage`, not the encrypted credential store: a site id is
+ * not a secret, and this is bookkeeping rather than a secret. Keyed by name
+ * because that is what the user is looking at when they click deploy.
+ */
+const NETLIFY_SITES_KEY = 'gbcoder_netlify_sites_v1';
+
+type NetlifySiteMap = Record<string, string>;
+
+/** The site id previously created for this name, if any. */
+export const readNetlifySiteId = (name: string): string | null => {
+  try {
+    const raw = window.localStorage.getItem(NETLIFY_SITES_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as NetlifySiteMap;
+    return typeof parsed?.[name] === 'string' ? parsed[name] : null;
+  } catch {
+    // Blocked or corrupt storage just means no remembered site, which is the
+    // same as a first deploy.
+    return null;
+  }
+};
+
+/** Records the site id for a name so the next deploy reuses it. */
+export const rememberNetlifySiteId = (name: string, siteId: string): void => {
+  try {
+    const raw = window.localStorage.getItem(NETLIFY_SITES_KEY);
+    const parsed = raw ? (JSON.parse(raw) as NetlifySiteMap) : {};
+    parsed[name] = siteId;
+    window.localStorage.setItem(NETLIFY_SITES_KEY, JSON.stringify(parsed));
+  } catch {
+    /* best-effort: a missed reuse only costs a duplicate site next time */
+  }
 };
 
 // ─── Entry point ──────────────────────────────────────────────────────────────
