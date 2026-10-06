@@ -60,5 +60,7 @@ function makeStorage() {
   };
 }
 
-export const services = await import(join(outdir, 'bundle.mjs'));
+// On Windows a bare absolute path is not a valid ESM specifier, so it has to be
+// converted to a file:// URL before dynamic import.
+export const services = await import(pathToFileURL(join(outdir, 'bundle.mjs')).href);
 export const cleanup = () => rmSync(outdir, { recursive: true, force: true });
