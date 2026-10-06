@@ -152,9 +152,21 @@ reason.
 
 ## Post-deploy checklist
 
-1. `npm run verify:deploy` passes locally.
+1. `npm run verify:deploy` passes locally — in particular the function count.
 2. `/api/health` returns 200 — confirms the functions deployed and the key is present.
 3. Deploy **Preview** first, not Production. Preview gives a URL to test the
    serverless functions against without touching the production domain.
 4. If a function times out, check the plan's `maxDuration` ceiling before assuming
    the code is slow.
+5. Read the log past `Build Completed`. A failure *after* that line is an upload or
+   routing problem — a function-count overflow, or a route pattern matching nothing
+   — not a build failure. The build output says nothing about either.
+
+### Reading a failure by where it stops
+
+| Last log line | What it means |
+| --- | --- |
+| `Installing dependencies...` | Install failed — an unresolvable or conflicting dependency. |
+| During `vite build` | A real build error; the output above it names the module. |
+| `Build Completed in /vercel/output` then `Deploying outputs...` | The build was fine. Suspect the function count, or a `functions`/`rewrites` entry that matches nothing. |
+| Nothing at all | The config was rejected before any build — usually `vercel.json` is not strict JSON. |
