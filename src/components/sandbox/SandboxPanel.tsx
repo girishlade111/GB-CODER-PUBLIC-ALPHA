@@ -102,14 +102,25 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
    */
   const [showGuide, setShowGuide] = useState(() => !readStoredKey());
   const [customCommand, setCustomCommand] = useState('');
+  /*
+   * Whether the E2B key is written to disk. Defaults to off.
+   *
+   * The key is a paid credential that can run sandboxes on the user's account, and
+   * it is the one secret this origin holds in plaintext — which a preview of an
+   * untrusted repository can read, because the preview frame shares this origin
+   * (see the note on the iframe in PreviewPanel). Holding it for the tab only is
+   * the safer default; remembering is offered explicitly, and the UI says which is
+   * in effect rather than implying persistence that is not there.
+   */
+  const [rememberKey, setRememberKey] = useState(() => isKeyRemembered());
 
   const hasKey = apiKey.trim().length > 0;
   const isConnected = Boolean(state.sandboxId);
 
   const handleConnect = useCallback(async () => {
-    storeKey(apiKey.trim());
+    storeKey(apiKey.trim(), rememberKey);
     await sandboxSession.create(files);
-  }, [apiKey, files]);
+  }, [apiKey, files, rememberKey]);
 
   const activePreview = state.previews.find((preview) => preview.port === state.activePort);
 
