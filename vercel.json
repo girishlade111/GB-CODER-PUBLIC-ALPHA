@@ -16,13 +16,6 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/preview/(.*)", "destination": "/index.html" },
-    /*
-     * The QR mobile-preview page. Not strictly required -- the catch-all below
-     * would serve index.html for it too -- but stated explicitly because the
-     * session id in the path is what the client reads back out of
-     * `window.location`, and an implicit match here would be one refactor away
-     * from silently breaking it.
-     */
     { "source": "/mpreview/(.*)", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
