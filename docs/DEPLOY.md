@@ -23,8 +23,9 @@ Vercel does, plus checks that every `functions` key points at a file that exists
 and that the `/(.*)` catch-all rewrite is still last.
 
 ```bash
-npm run verify:deploy    # config only
+npm run verify:deploy    # config, function count, route/file cross-checks
 npm run audit:tests      # service test suite
+npm run audit:devserver  # boots Vite, verifies the traversal + secret boundaries
 npm run lint
 npm run build
 ```
