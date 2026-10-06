@@ -3899,6 +3899,8 @@ function App() {
         onToggleNavDrawer={() => setIsNavDrawerOpen((open) => !open)}
         isNavDrawerOpen={isNavDrawerOpen}
         onOpenExport={() => handleOpenExport('screenshot')}
+        onOpenDeploy={() => setShowDeploy(true)}
+        onOpenGitHub={() => setShowGitHubSync(true)}
         customActions={
           <div className="flex items-center gap-1 sm:gap-2">
             {/* Export & Share is the only feature icon left in the top bar;
