@@ -180,7 +180,10 @@ describe('sanitizeForTerminal — escape-sequence injection', () => {
   });
 
   test('sanitizeLines drops lines that became empty', () => {
-    assert.deepEqual(sanitizeLines(['a', '\x1b[2J', 'b']), ['a', 'b']);
+    // Stripping the introducer leaves the parameters as inert visible text, which
+    // is the point: `[2J` on its own repaints nothing.
+    assert.deepEqual(sanitizeLines(['a', '\x1b\x1b', 'b']), ['a', 'b']);
+    assert.deepEqual(sanitizeLines(['a', '\x1b[2J', 'b']), ['a', '[2J', 'b']);
   });
 });
 
