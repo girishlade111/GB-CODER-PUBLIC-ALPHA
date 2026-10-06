@@ -267,14 +267,6 @@ export const forgetCredential = (id: string): void => {
   removeStorage(envelope(id));
 };
 
-/**
- * Whether a token is available without a decrypt round-trip.
- *
- * Only drives UI affordances, so the cheap check is enough.
- */
-export const hasCredential = (id: string): boolean =>
-  sessionSecrets.has(id) || readStorage(envelope(id)) !== null;
-
 /** Describes how a stored credential is held. `null` when there is none. */
 export const describeCredential = (id: string): CredentialRecord | null => {
   const inMemory = sessionSecrets.get(id);
