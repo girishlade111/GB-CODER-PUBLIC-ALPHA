@@ -53,6 +53,15 @@ const MAX_PULL_FILES = 200;
 const MAX_PULL_FILE_BYTES = 512 * 1024;
 
 /**
+ * Repository pages to walk for the picker. 3 × 100 = 300 repositories.
+ *
+ * Bounded deliberately: this is one API call per page against a shared hourly
+ * budget, and "every repository this account has ever touched" is not what a
+ * picker needs.
+ */
+const MAX_REPO_PAGES = 3;
+
+/**
  * Per-request deadline.
  *
  * GitHub is reliable, but a request that never resolves would leave the modal
