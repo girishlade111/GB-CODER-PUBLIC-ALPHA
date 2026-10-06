@@ -132,55 +132,62 @@ try {
    */
   console.log('\npath traversal (the localApiPlugin boundary)');
 
-  // Baseline: what Vite's static server returns for these files on their own.
-  const directServerIndex = await get('/server/index.js');
-  const directPackageJson = await get('/package.json');
+  /*
+   * Baselines: everything Vite can legitimately answer a traversal URL with on its
+   * own, before `localApiPlugin` is reached.
+   *
+   * There are three, not one. A path containing `..` either resolves to the real
+   * file (`server/index.js`, `package.json`) or fails to resolve and falls through to
+   * the SPA fallback, which serves `index.html`. Varying between the two is why an
+   * earlier version of this check reported three false breaches.
+   */
+  const baselines = [
+    { name: 'server/index.js', response: await get('/server/index.js') },
+    { name: 'package.json', response: await get('/package.json') },
+    { name: 'index.html (SPA fallback)', response: await get('/index.html') },
+  ];
+  const matchBaseline = (text) =>
+    baselines.find((b) => stripSourceMap(text) === stripSourceMap(b.response.text));
 
   const traversals = [
-    { path: '/api/../server/index', name: 'server/index.js', direct: directServerIndex },
-    { path: '/api/../package.json', name: 'package.json', direct: directPackageJson },
-    { path: '/api/../../server/index', name: 'server/index.js', direct: directServerIndex },
-    { path: '/api/..%5Cserver%5Cindex', name: 'server/index.js (encoded)', direct: directServerIndex },
-    { path: '/api/..;/server/index', name: 'server/index.js (path params)', direct: directServerIndex },
-    { path: '/api/....//server/index', name: 'server/index.js (nested dots)', direct: directServerIndex },
-    { path: '/api/a/../../server/index', name: 'server/index.js (nested)', direct: directServerIndex },
-    { path: '/api/./../api/share', name: 'api/share (inside allowlist)', direct: null },
+    '/api/../server/index',
+    '/api/../package.json',
+    '/api/../../server/index',
+    '/api/..%5Cserver%5Cindex',
+    '/api/..;/server/index',
+    '/api/....//server/index',
+    '/api/a/../../server/index',
+    '/api/./../server/index',
+    '/api/../.env',
   ];
 
-  for (const { path, name, direct } of traversals) {
+  for (const path of traversals) {
     const { status, text, contentType } = await get(path);
 
     /*
-     * Discriminator: whether the response came from Vite's static server or from
-     * `localApiPlugin`.
+     * What would prove the boundary failed: the middleware loading and *running* a
+     * file from outside `api/`, which would show up as handler output that matches no
+     * baseline — a JSON error body, an HTML error page from a route, and so on.
      *
-     * Static serving sends the file itself, with a JS or JSON content type and the
-     * source map Vite appends. The middleware sends whatever the handler wrote —
-     * usually `application/json`.
+     * Matching against a baseline is what rules out a breach. A body identical to
+     * something Vite serves directly was produced by Vite, whatever the path looked
+     * like.
      *
-     * Sniffing the body for a leading `{` is not usable here: a handler's
-     * `{"error":"Method not allowed"}` looks exactly like the start of `package.json`,
-     * so that heuristic flags correct behaviour as a breach. Content type is the
-     * reliable signal.
+     * Content type is deliberately not the discriminator: `package.json` is served
+     * as `application/json` while a handler's `{"error":...}` is also JSON, so the two
+     * cannot be told apart that way.
      */
-    const servedAsStaticFile = /text\/javascript|application\/javascript/.test(contentType);
+    const baseline = matchBaseline(text);
 
-    if (servedAsStaticFile && direct) {
-      // Confirm this really is Vite's static server by matching the direct request.
-      if (stripSourceMap(text) === stripSourceMap(direct.text)) {
-        pass(`${path} -> Vite static served ${name}; byte-identical to a direct request, so the middleware did not dispatch`);
-      } else {
-        fail(`${path} -> served JS that does not match a direct request for ${name}`);
-      }
+    if (baseline) {
+      pass(`${path} -> ${status} ${contentType} matched Vite's own ${baseline.name}; middleware did not dispatch`);
     } else if (status === 404) {
       pass(`${path} -> 404 (rejected)`);
-    } else if (direct) {
-      // Handler-shaped output for a file outside api/: the boundary failed.
-      fail(`${path} -> middleware executed ${name} from outside api/ — traversal succeeded (${contentType})`);
     } else {
-      // No direct baseline: the route is inside the allowlist, so the middleware
-      // running is the correct behaviour.
-      pass(`${path} -> ${status} via middleware (route is inside the allowlist)`);
+      fail(
+        `${path} -> ${status} ${contentType} matched no Vite baseline, so localApiPlugin dispatched it. ` +
+          `Body: ${JSON.stringify(text.slice(0, 160))}`,
+      );
     }
   }
 
