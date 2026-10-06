@@ -61,7 +61,8 @@
  * failure: dropping a little visible text beats passing through a partial control
  * sequence.
  */
-// eslint-disable-next-line no-control-regex
+// Built from strings rather than a literal, so `no-control-regex` does not apply
+// and needs no suppression.
 const ANSI_SEQUENCE = new RegExp(
   [
     '\\x1b\\[[0-?]*[ -/]*[@-~]',           // CSI (7-bit)
@@ -89,6 +90,7 @@ const CONTROL_SEQUENCES = /[\x1b\x7f\x80-\x9f]/g;
  * most: without ESC it looks harmless, but it is how a program overwrites the
  * preceding character in place.
  */
+// eslint-disable-next-line no-control-regex
 const OTHER_C0 = /[\x00-\x08\x0b\x0c\x0e-\x1f]/g;
 
 /**
