@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useSettings, EditorFontFamily, AI_PROVIDERS } from '../../hooks/useSettings';
 import { VOICE_LANGUAGES } from '../../services/voiceCommandService';
+import { formatBytes } from '../../services/projectArchiveService';
 import { useSnapshots } from '../../hooks/useSnapshots';
 import toast from 'react-hot-toast';
 
@@ -336,8 +337,8 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                     className="w-full rounded-md border border-[#262636] bg-[#12131c] px-3 py-2 text-white focus:border-cyan-400 focus:outline-none"
                   >
                     {VOICE_LANGUAGES.map((lang) => (
-                      <option key={lang.tag} value={lang.tag}>
-                        {lang.label} ({lang.tag})
+                      <option key={lang.code} value={lang.code}>
+                        {lang.label}
                       </option>
                     ))}
                   </select>
@@ -376,7 +377,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                 <div className="rounded-lg border border-[#262636] bg-[#141522] p-4 space-y-2">
                   <h4 className="font-semibold text-white text-xs">IndexedDB & Workspace Storage</h4>
                   <p className="text-[11px] text-slate-400">
-                    Local project backups and snapshot cache: <span className="font-bold text-white">{storageUsage}</span>
+                    Local project backups and snapshot cache: <span className="font-bold text-white">{formatBytes(storageUsage.usedBytes)} / {formatBytes(storageUsage.maxBytes)} ({storageUsage.percentage}% used)</span>
                   </p>
                   <button
                     type="button"

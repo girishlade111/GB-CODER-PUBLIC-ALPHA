@@ -62,7 +62,11 @@ interface TabbedRightPanelProps {
     onOpenInjectionManager?: () => void;
 }
 
-const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
+/*
+ * The forwarded ref lands on PreviewPanel's imperative handle, which exposes
+ * the preview container `<div>`, so the ref type is HTMLDivElement throughout.
+ */
+const TabbedRightPanel = forwardRef<HTMLDivElement, TabbedRightPanelProps>(({
     errorCount,
     problemCount,
     // Preview props
@@ -119,7 +123,7 @@ const TabbedRightPanel = forwardRef<HTMLElement, TabbedRightPanelProps>(({
         setActiveTab(panelRequest.tab === 'preview' ? 'preview' : 'console');
         if (panelRequest.tab !== 'preview') setSubTabRequest(panelRequest);
     }, [panelRequest]);
-    const internalRef = useRef<HTMLElement>(null);
+    const internalRef = useRef<HTMLDivElement>(null);
     
     // Use the passed ref or internal ref
     const previewRef = ref || internalRef;

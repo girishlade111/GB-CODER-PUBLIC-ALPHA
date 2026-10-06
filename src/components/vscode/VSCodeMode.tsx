@@ -85,6 +85,7 @@ import { Snapshot } from '../../services/snapshotService';
 
 interface VSCodeModeProps {
   project: MultiFileProject;
+  projectName?: string;
   onChangeFile: (path: string, content: string) => void;
   onCreateFile?: (path: string, content?: string) => void;
   onRenameFile?: (oldPath: string, newPath: string) => void;
@@ -129,8 +130,6 @@ interface VSCodeModeProps {
 
 const subscribeWebContainer = (onChange: () => void) => webcontainerService.subscribe(onChange);
 const getWebContainerSnapshot = () => webcontainerService.getState();
-const subscribeAta = (onChange: () => void) => ataService.subscribe(onChange);
-const getAtaSnapshot = () => ataService.getState();
 
 /** Most recently opened files, newest last, as VS Code orders its tabs. */
 const MAX_TABS = 12;
@@ -187,6 +186,7 @@ const LANGUAGE_LABEL: Record<string, string> = {
 
 const VSCodeMode: React.FC<VSCodeModeProps> = ({
   project,
+  projectName = 'gb-coder-project',
   onChangeFile,
   onCreateFile,
   onRenameFile,
@@ -195,11 +195,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   onExit,
   fontFamily,
   fontSize,
-  entryReason = 'detected',
   onAddImport,
-  onOpenDependencies,
-  onOpenAIChat,
-  onOpenVoiceCommands,
   onOpenProjects,
 }) => {
   const webcontainer = useSyncExternalStore(
@@ -209,7 +205,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   );
   const { isDark } = useTheme();
   const [previewKey, setPreviewKey] = useState(0);
-  const ata = useSyncExternalStore(subscribeAta, getAtaSnapshot, getAtaSnapshot);
   const [splitOpenPaths, setSplitOpenPaths] = useState<string[]>([]);
   const [splitActivePath, setSplitActivePath] = useState<string | null>(null);
   const [splitRatio, setSplitRatio] = useState<number>(50);
@@ -228,7 +223,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const [openPaths, setOpenPaths] = useState<string[]>(restoredView.openPaths);
   const [activePath, setActivePath] = useState<string | null>(restoredView.activePath);
   const [dirtyPaths, setDirtyPaths] = useState<Set<string>>(new Set());
-  const [showBanner, setShowBanner] = useState(false);
   const [showTerminal, setShowTerminal] = useState(true);
   const [hasOpenedTerminal, setHasOpenedTerminal] = useState(true);
   const [activityTab, setActiveTab] = useState<ActivityTab>('explorer');
@@ -308,7 +302,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     });
   }, []);
 
-  const [terminalHeight, setTerminalHeight] = useState(240);
+  const [terminalHeight, setTerminalHeight] = useState(TERMINAL_DEFAULT_H);
   /** Cursor position, mirrored into the status bar. */
   const [cursor, setCursor] = useState({ line: 1, column: 1 });
   const [isExplorerDropTarget, setIsExplorerDropTarget] = useState(false);
@@ -889,7 +883,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           <div className="flex items-center gap-2 truncate">
             <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
             <span className="truncate text-slate-300 font-mono text-[11px]">
-              codewithusa/{project.name || 'gb-coder-app'}
+              codewithusa/{projectName}
             </span>
           </div>
           <kbd className="hidden sm:inline-block rounded border border-white/15 bg-white/5 px-1 py-0.2 text-[9px] text-slate-400 font-mono">
@@ -1075,7 +1069,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-slate-300 hover:bg-white/5 uppercase select-none"
                   >
                     {isProjectRootOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                    <span className="truncate">{project.name || 'GB-CODER-WORKSPACE'}</span>
+                    <span className="truncate">{projectName}</span>
                     <span className="ml-auto rounded bg-slate-800 px-1 text-[9px] text-slate-400">
                       {project.files.length}
                     </span>
@@ -2033,7 +2027,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           <span
             onClick={() => {
               setIsPreviewMinimized(false);
-              setRightTab('preview');
             }}
             className="flex items-center gap-1 font-medium hover:bg-white/20 px-1 rounded cursor-pointer text-cyan-200"
             title="Live Preview Port"
@@ -2165,7 +2158,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         isOpen={isCodeRabbitOpen}
         onClose={() => setIsCodeRabbitOpen(false)}
         files={project.files.map((f) => ({
-          name: f.path,
+          filename: f.path,
           content: f.content,
           language: f.language,
         }))}

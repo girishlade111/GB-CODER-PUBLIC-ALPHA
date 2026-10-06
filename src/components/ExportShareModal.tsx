@@ -29,6 +29,13 @@ interface ExportShareModalProps {
   externalLibraries?: ExternalLibrary[];
   resolvedVersions?: Record<string, string>;
   projectName?: string;
+  /**
+   * Id of the *saved* project, used to scope custom injections.
+   *
+   * `project` is the project's file contents, which carry no identity of their
+   * own — the id lives on the saved record, so it arrives as its own prop.
+   */
+  projectId?: string;
   /** Tab to open on. Lets a shortcut jump straight to Screenshot. */
   initialTab?: TabId;
 }
@@ -50,6 +57,7 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
   externalLibraries = [],
   resolvedVersions = {},
   projectName = 'gb-coder-project',
+  projectId,
   initialTab = 'screenshot',
 }) => {
   const [tab, setTab] = useState<TabId>(initialTab);
@@ -76,8 +84,8 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
     !triple.javascript.trim();
 
   const archiveOptions = useMemo(
-    () => ({ projectName, externalLibraries, resolvedVersions, includeInjections, projectId: project.id }),
-    [projectName, externalLibraries, resolvedVersions, includeInjections, project.id],
+    () => ({ projectName, externalLibraries, resolvedVersions, includeInjections, projectId }),
+    [projectName, externalLibraries, resolvedVersions, includeInjections, projectId],
   );
 
   const sizes = useMemo(

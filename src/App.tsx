@@ -275,6 +275,29 @@ const VOICE_SELECTION_LABELS: Record<string, string> = {
   enhance_design: 'enhance the design',
 };
 
+/*
+ * Fire-and-forget WebContainer VFS writes.
+ *
+ * The WebContainer runtime is code-split (it pulls in the `@webcontainer/api`
+ * WASM loader), so it is reached through `loadChunk` here exactly as the mount
+ * paths above do, rather than through a static import that would put the runtime
+ * in the entry chunk for every visitor.
+ */
+const loadWebContainerService = () =>
+  loadChunk(() => import('./services/webcontainer/webcontainerService'), 'WebContainer service');
+
+const syncWebContainerFile = (path: string, content: string): void => {
+  void loadWebContainerService().then(({ webcontainerService }) =>
+    webcontainerService.syncFile(path, content),
+  );
+};
+
+const deleteWebContainerFile = (path: string): void => {
+  void loadWebContainerService().then(({ webcontainerService }) =>
+    webcontainerService.deleteFile(path),
+  );
+};
+
 /** First unused `new-file-N` path, so "new file" never needs a dialog. */
 const nextVoiceFilePath = (project: MultiFileProject): string => {
   const existing = new Set(project.files.map((file) => file.path));
@@ -786,7 +809,7 @@ function App() {
   const [showInjectionManager, setShowInjectionManager] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [customInjections, setCustomInjections] = useState<any[]>([]);
-  const previewRef = React.useRef<HTMLElement>(null);
+  const previewRef = React.useRef<HTMLDivElement>(null);
   const [showWelcomeTour, setShowWelcomeTour] = useState(() => {
     try {
       return !localStorage.getItem('gbcoder_onboarded');
@@ -1542,10 +1565,10 @@ function App() {
       if (current.files.some((f) => f.path === path)) return current;
       return {
         ...current,
-        files: [...current.files, { path, content }],
+        files: [...current.files, { path, content, language: languageForPath(path) }],
       };
     });
-    void webcontainerService.syncFile(path, content);
+    syncWebContainerFile(path, content);
   }, []);
 
   /** Renames a file or folder in VS Code mode and syncs to WebContainer VFS. */
@@ -1554,11 +1577,15 @@ function App() {
       if (!current) return current;
       const fileToRename = current.files.find((f) => f.path === oldPath);
       if (fileToRename) {
-        void webcontainerService.syncFile(newPath, fileToRename.content);
-        void webcontainerService.deleteFile(oldPath);
+        syncWebContainerFile(newPath, fileToRename.content);
+        deleteWebContainerFile(oldPath);
         return {
           ...current,
-          files: current.files.map((f) => (f.path === oldPath ? { ...f, path: newPath } : f)),
+          files: current.files.map((f) =>
+            f.path === oldPath
+              ? { ...f, path: newPath, language: languageForPath(newPath) }
+              : f,
+          ),
         };
       }
       // Folder rename: prefix match
@@ -1569,8 +1596,8 @@ function App() {
         files: current.files.map((f) => {
           if (f.path.startsWith(oldPrefix)) {
             const renamed = newPrefix + f.path.slice(oldPrefix.length);
-            void webcontainerService.syncFile(renamed, f.content);
-            void webcontainerService.deleteFile(f.path);
+            syncWebContainerFile(renamed, f.content);
+            deleteWebContainerFile(f.path);
             return { ...f, path: renamed };
           }
           return f;
@@ -1584,7 +1611,7 @@ function App() {
     setFullStackProject((current) => {
       if (!current) return current;
       const isExactFile = current.files.some((f) => f.path === path);
-      void webcontainerService.deleteFile(path);
+      deleteWebContainerFile(path);
       if (isExactFile) {
         return {
           ...current,
@@ -1622,10 +1649,13 @@ function App() {
         newPath = `${path}.copy`;
       }
 
-      void webcontainerService.syncFile(newPath, original.content);
+      syncWebContainerFile(newPath, original.content);
       return {
         ...current,
-        files: [...current.files, { path: newPath, content: original.content }],
+        files: [
+          ...current.files,
+          { path: newPath, content: original.content, language: languageForPath(newPath) },
+        ],
       };
     });
   }, []);
@@ -4397,6 +4427,7 @@ function App() {
               projectBundle.resolvedPackages.map((pkg) => [pkg.name, pkg.resolvedVersion ?? pkg.version]),
             )}
             projectName={project.currentProject?.name ?? 'gb-coder-project'}
+            projectId={project.currentProject?.id}
             initialTab={exportModalTab}
           />
         </Suspense>

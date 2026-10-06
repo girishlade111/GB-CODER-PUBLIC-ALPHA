@@ -12,21 +12,10 @@ import { useTheme } from '../hooks/useTheme';
 
 interface LegalPageLayoutProps {
     onAutoSaveToggle: () => void;
-    onSnippetsToggle: () => void;
     onRun: () => void;
-    onReset: () => void;
-    onImport: () => void;
-    onExport: () => void;
-    onUndo: () => void;
-    onRedo: () => void;
-    onAIAssistantToggle: () => void;
-    onAISuggestionsToggle: () => void;
+    onOpenBuildFromPrompt: () => void;
     onExternalLibraryManagerToggle: () => void;
-    canUndo: boolean;
-    canRedo: boolean;
     autoSaveEnabled: boolean;
-    aiAssistantOpen: boolean;
-    aiSuggestionsOpen: boolean;
     setCurrentView: (view: string) => void;
     showExternalLibraryManager: boolean;
     externalLibraries: ExternalLibrary[];
@@ -36,21 +25,10 @@ interface LegalPageLayoutProps {
 
 export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
     onAutoSaveToggle,
-    onSnippetsToggle,
     onRun,
-    onReset,
-    onImport,
-    onExport,
-    onUndo,
-    onRedo,
-    onAIAssistantToggle,
-    onAISuggestionsToggle,
+    onOpenBuildFromPrompt,
     onExternalLibraryManagerToggle,
-    canUndo,
-    canRedo,
     autoSaveEnabled,
-    aiAssistantOpen,
-    aiSuggestionsOpen,
     setCurrentView,
     showExternalLibraryManager,
     externalLibraries,
@@ -64,21 +42,10 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
             }`}>
             <NavigationBar
                 onAutoSaveToggle={onAutoSaveToggle}
-                onSnippetsToggle={onSnippetsToggle}
                 onRun={onRun}
-                onReset={onReset}
-                onImport={onImport}
-                onExport={onExport}
-                onUndo={onUndo}
-                onRedo={onRedo}
-                onAIAssistantToggle={onAIAssistantToggle}
-                onAISuggestionsToggle={onAISuggestionsToggle}
+                onOpenBuildFromPrompt={onOpenBuildFromPrompt}
                 onExternalLibraryManagerToggle={onExternalLibraryManagerToggle}
-                canUndo={canUndo}
-                canRedo={canRedo}
                 autoSaveEnabled={autoSaveEnabled}
-                aiAssistantOpen={aiAssistantOpen}
-                aiSuggestionsOpen={aiSuggestionsOpen}
                 customActions={
                     <button
                         onClick={() => setCurrentView('editor')}
