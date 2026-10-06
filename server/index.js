@@ -11,6 +11,7 @@ const cors = require('cors');
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const server = http.createServer(app);
@@ -24,8 +25,39 @@ const ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000'
 ];
 
+/**
+ * Shared secret required to open the terminal WebSocket.
+ *
+ * Read once at startup; the upgrade handler refuses every connection when it is
+ * unset, so forgetting to configure it fails closed.
+ */
+const TERMINAL_TOKEN = process.env.TERMINAL_TOKEN || '';
+
+/** Loopback check, tolerant of IPv4-mapped IPv6 (`::ffff:127.0.0.1`). */
+function isLoopbackAddress(address) {
+    return address === '::1' || address === '127.0.0.1' || /^127\./.test(address);
+}
+
+/**
+ * Length-safe constant-time string comparison.
+ *
+ * `crypto.timingSafeEqual` throws on a length mismatch, which would itself leak
+ * the token's length, so the lengths are folded into the result first.
+ */
+function timingSafeEqualStr(a, b) {
+    const bufA = Buffer.from(String(a));
+    const bufB = Buffer.from(String(b));
+    // Compare against a fixed-width digest so a length difference cannot short-circuit.
+    const ha = crypto.createHash('sha256').update(bufA).digest();
+    const hb = crypto.createHash('sha256').update(bufB).digest();
+    return crypto.timingSafeEqual(ha, hb);
+}
+
 function isOriginAllowed(origin) {
-    if (!origin) return true; // allow same-origin, curl, server-to-server
+    // A missing Origin is NOT allowed. Browsers always send it on a WebSocket
+    // handshake; clients that omit it are curl, websocat, wscat and similar — and
+    // those are exactly the ones that should not receive a shell.
+    if (!origin) return false;
     if (ALLOWED_ORIGINS.includes(origin)) return true;
     try {
         const url = new URL(origin);
@@ -106,14 +138,17 @@ app.all('/api/*', async (req, res) => {
 // WebSocket server for terminal connections (unattached to server until origin check)
 const wss = new WebSocket.Server({ noServer: true });
 
-// Handle HTTP upgrade with origin & path authorization
+// Handle HTTP upgrade with path, loopback, token & origin authorization
 server.on('upgrade', (request, socket, head) => {
     const origin = request.headers.origin;
     let pathname = '';
+    let requestUrl;
     try {
-        pathname = new URL(request.url, `http://${request.headers.host || 'localhost'}`).pathname;
+        requestUrl = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+        pathname = requestUrl.pathname;
     } catch (_) {
         pathname = request.url;
+        return;
     }
 
     if (pathname !== '/terminal') {
@@ -122,7 +157,43 @@ server.on('upgrade', (request, socket, head) => {
         return;
     }
 
-    if (origin && !isOriginAllowed(origin)) {
+    /*
+     * This endpoint hands out a real PTY. Two gates, both required.
+     *
+     * 1. A shared secret. `TERMINAL_TOKEN` must be set in server/.env; without one
+     *    the upgrade is refused outright, so the shell is closed by default rather
+     *    than open by default. A WebSocket cannot carry an Authorization header, so
+     *    the secret necessarily travels as a query parameter — which is only
+     *    acceptable because of gate 2.
+     *
+     * 2. The peer must be loopback. `server.listen(PORT, '127.0.0.1')` already
+     *    guarantees that today, but the check is kept so the shell cannot be
+     *    widened by a future bind change. Note the Vite `/terminal` proxy that used
+     *    to sit in front of this on a LAN-bound dev server has been removed.
+     */
+    const peer = request.socket.remoteAddress || '';
+    const peerHost = peer.startsWith('::ffff:') ? peer.slice(7) : peer;
+    if (!isLoopbackAddress(peerHost)) {
+        socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+        socket.destroy();
+        return;
+    }
+
+    if (!TERMINAL_TOKEN) {
+        console.error('[terminal] refusing upgrade: TERMINAL_TOKEN is not set.');
+        socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+        socket.destroy();
+        return;
+    }
+
+    // Compared in constant time so a wrong guess leaks no timing signal.
+    if (!timingSafeEqualStr(requestUrl.searchParams.get('token') || '', TERMINAL_TOKEN)) {
+        socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+        socket.destroy();
+        return;
+    }
+
+    if (!origin || !isOriginAllowed(origin)) {
         socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
         socket.destroy();
         return;

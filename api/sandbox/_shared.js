@@ -23,6 +23,7 @@
 'use strict';
 
 const { Sandbox } = require('e2b');
+const { clientIp: sharedClientIp } = require('../_client-ip');
 
 /** Sandbox lifetime, refreshed on each interaction. */
 const SANDBOX_TIMEOUT_MS = 15 * 60 * 1000;
@@ -49,9 +50,10 @@ const RATE_LIMITS = {
 const buckets = new Map();
 
 function clientIp(req) {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) return forwarded.split(',')[0].trim();
-  return req.headers['x-real-ip'] || req.socket?.remoteAddress || 'unknown';
+  // Shared implementation — the previous local copy preferred X-Forwarded-For
+  // unconditionally, which off Vercel meant the caller picked its own bucket.
+  // See api/_client-ip.js.
+  return sharedClientIp(req);
 }
 
 /** @returns {{ allowed: boolean, retryAfterSeconds: number }} */

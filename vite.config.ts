@@ -47,6 +47,29 @@ const SAFE_API_ROUTE = /^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/;
 /** Matches the `express.json({ limit: '10mb' })` the standalone server uses. */
 const MAX_API_BODY_BYTES = 10 * 1024 * 1024;
 
+/**
+ * True when the peer is this machine.
+ *
+ * `host: true` below binds the dev server to every interface so a phone on the
+ * same Wi-Fi can load the app for the QR mobile preview. That is a genuine need,
+ * but it also means the `/api/*` handlers are LAN-reachable — and those handlers
+ * spend the operator's LLM key with no authentication of their own.
+ *
+ * The split this makes is the useful one: a phone needs the *app*, which is
+ * static, and never needs the API. A developer's own browser is always loopback.
+ * So loopback-only leaves mobile preview working while denying the paid endpoints
+ * to every other device on the network.
+ *
+ * The middleware also registers before Vite's own CORS handling, so an Origin
+ * check here cannot be relied on — the peer address cannot be forged by a header.
+ */
+const isLoopbackPeer = (address: string | undefined): boolean => {
+  if (!address) return false;
+  // IPv4-mapped IPv6 arrives as '::ffff:127.0.0.1'.
+  const normalized = address.startsWith('::ffff:') ? address.slice(7) : address;
+  return normalized === '127.0.0.1' || normalized === '::1' || /^127\./.test(normalized);
+};
+
 function localApiPlugin(): Plugin {
   return {
     name: 'local-api-handler',
@@ -54,6 +77,18 @@ function localApiPlugin(): Plugin {
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith('/api/')) {
           return next();
+        }
+
+        /*
+         * These handlers are unauthenticated and spend the operator's LLM key, so
+         * they are for the developer on this machine and nobody else — see
+         * `isLoopbackPeer`. Refused with a plain 403 rather than a CORS error, so
+         * the reason is unambiguous when someone tries this from a phone.
+         */
+        if (!isLoopbackPeer(req.socket.remoteAddress)) {
+          res.statusCode = 403;
+          res.end(JSON.stringify({ error: 'The local API is only reachable from the machine running it.' }));
+          return;
         }
 
         const urlPath = req.url.split('?')[0];
@@ -402,12 +437,21 @@ export default defineConfig({
       'Cross-Origin-Embedder-Policy': 'require-corp',
       'Cross-Origin-Opener-Policy': 'same-origin',
     },
-    proxy: {
-      '/terminal': {
-        target: 'http://localhost:3001',
-        ws: true,
-      },
-    },
+    /*
+     * The `/terminal` WebSocket proxy to server/index.js has been removed.
+     *
+     * It existed to forward the PTY terminal, and it defeated the only boundary
+     * protecting that shell. `server/index.js` binds 127.0.0.1 specifically because
+     * it hands out a real shell, but this proxy sat in front of it on a server
+     * bound to every interface — and http-proxy forwards the request headers
+     * verbatim, so a caller on the LAN simply omitted `Origin` and passed the
+     * check. Net effect: a LAN-reachable shell, while the comment above
+     * `host: true` claimed the opposite.
+     *
+     * Re-add this only alongside a shared-secret handshake on the upgrade path.
+     * A WebSocket cannot carry an Authorization header, so the secret has to be a
+     * query parameter, and that is only safe if the peer is loopback.
+     */
   },
   preview: {
     headers: {

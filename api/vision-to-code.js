@@ -46,20 +46,17 @@ const PRO_MODEL = 'gemini-1.5-pro';
 
 // ─── Rate limiting (simple in-memory tracker, mirrors api/ai.js) ───────────────
 
-const rateLimitMap = new Map();
 const RATE_WINDOW_MS = 60_000;
 // Lower than /api/ai's 30: a vision call costs far more than a text call.
 const RATE_MAX = 10;
 
+// Shared so the bucket key cannot be chosen by the caller, and so the map is
+// pruned instead of growing for the life of the instance. See api/_client-ip.js.
+const { clientIp, RateLimiter } = require('../_client-ip');
+const rateLimiter = new RateLimiter({ default: RATE_MAX }, RATE_WINDOW_MS);
+
 function checkRateLimit(ip) {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now - entry.start > RATE_WINDOW_MS) {
-    rateLimitMap.set(ip, { start: now, count: 1 });
-    return true;
-  }
-  entry.count++;
-  return entry.count <= RATE_MAX;
+  return rateLimiter.check(ip, RATE_MAX).allowed;
 }
 
 // ─── Prompts ──────────────────────────────────────────────────────────────────
@@ -172,7 +169,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+  const ip = clientIp(req);
   if (!checkRateLimit(ip)) {
     return res.status(429).json({ error: 'Too many screenshot requests — please wait a moment.' });
   }

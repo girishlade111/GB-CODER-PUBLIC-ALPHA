@@ -1,11 +1,28 @@
+/**
+ * Ceiling on the raw request body, and on the payload actually stored.
+ *
+ * The stored value is well under Redis's 512 MB value limit, so a share always
+ * fits; the point is to fail fast with a 413 instead of deep inside a write on
+ * someone else's bill.
+ */
+const MAX_BODY_BYTES = 8 * 1024 * 1024
+const MAX_PAYLOAD_BYTES = 6 * 1024 * 1024
+
 module.exports = async (req, res) => {
-  // CORS headers first
+  const { clientIp } = require('./_client-ip')
+
+  // CORS headers first.
+  //
+  // `*` is deliberate: a share link is meant to be creatable from anywhere, and
+  // nothing here reads authenticated state. The write is unauthenticated, which is
+  // why the rate limit below and the size caps further down are load-bearing
+  // rather than optional.
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   if (req.method === 'OPTIONS') { res.status(200).end(); return }
-  if (req.method !== 'POST') { 
-    return res.status(405).json({ error: 'Method not allowed' }) 
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
@@ -16,10 +33,21 @@ module.exports = async (req, res) => {
     } else if (typeof req.body === 'object' && req.body !== null) {
       body = req.body  // already parsed (Express or Vercel with bodyParser)
     } else {
-      // Raw stream — read manually
+      // Raw stream — read manually, and bounded.
+      //
+      // Unbounded was the problem: this endpoint is open to the whole internet and
+      // stores whatever arrives for 30 days, so without a cap a single streamed
+      // request is free persistent storage on the operator's Redis bill.
       const chunks = []
+      let size = 0
       for await (const chunk of req) {
-        chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk)
+        const buffer = typeof chunk === 'string' ? Buffer.from(chunk) : chunk
+        size += buffer.length
+        if (size > MAX_BODY_BYTES) {
+          res.status(413).end(JSON.stringify({ error: 'Project too large to share.' }))
+          return
+        }
+        chunks.push(buffer)
       }
       body = JSON.parse(Buffer.concat(chunks).toString())
     }
@@ -29,6 +57,21 @@ module.exports = async (req, res) => {
     // Validate: at least one panel must have content
     if (!html.trim() && !css.trim() && !javascript.trim()) {
       return res.status(400).json({ error: 'Cannot share an empty project' })
+    }
+
+    /*
+     * Size caps on what actually gets stored.
+     *
+     * Redis rejects values over 512 MB, so without this a large-but-accepted body
+     * fails at the last step with an opaque 500. Checking up front turns that into
+     * a 413 the client can act on. The generous ceiling covers a real multi-file
+     * project while staying well inside the platform's request limit.
+     */
+    const totalBytes = Buffer.byteLength(html) + Buffer.byteLength(css) + Buffer.byteLength(javascript)
+    if (totalBytes > MAX_PAYLOAD_BYTES) {
+      return res.status(413).json({
+        error: `Project is too large to share (${(totalBytes / 1024 / 1024).toFixed(1)} MB).`,
+      })
     }
 
     // Redis client — initialized INSIDE handler
@@ -46,10 +89,12 @@ module.exports = async (req, res) => {
     const crypto = require('crypto')
     const shortId = crypto.randomBytes(6).toString('base64url').slice(0, 8)
 
-    // Rate limiting
-    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
-               req.headers['x-real-ip'] || 
-               'unknown'
+    // Rate limiting.
+    //
+    // Keyed on the socket address rather than X-Forwarded-For off Vercel — see
+    // api/_client-ip.js. The previous version preferred the header unconditionally,
+    // which off Vercel let a caller mint a fresh bucket per request by varying it.
+    const ip = clientIp(req)
     const rateLimitKey = `ratelimit:share:${ip}`
     const currentCount = await redis.get(rateLimitKey)
     

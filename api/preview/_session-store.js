@@ -71,13 +71,10 @@ const GLOBAL_KEY = '__gbCoderMobilePreviewSessions__';
  */
 const buckets = new Map();
 
-function clientIp(req) {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) {
-    return forwarded.split(',')[0].trim();
-  }
-  return req.headers['x-real-ip'] || req.socket?.remoteAddress || 'unknown';
-}
+// Shared implementation — the previous local copy preferred X-Forwarded-For
+// unconditionally, which off Vercel meant the caller picked its own bucket and the
+// limit proved nothing. See api/_client-ip.js.
+const { clientIp } = require('../_client-ip');
 
 let redisClient;
 let redisChecked = false;

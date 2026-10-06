@@ -68,19 +68,19 @@ function getProviderConfig(requestedProvider, customApiKey) {
 
 // ─── Rate limiting (simple in-memory tracker) ────────────────────────────────
 
-const rateLimitMap = new Map();
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 30;
 
+// Best-effort and per-instance: serverless containers are recycled, so this stops
+// one client hammering a warm function rather than being a hard guarantee. That is
+// the right trade for a key the operator pays for -- but only if the bucket cannot
+// be chosen by the caller, which is what clientIp exists to guarantee. It also
+// prunes, so a long-lived instance cannot accumulate buckets forever.
+const { clientIp, RateLimiter } = require('./_client-ip');
+const rateLimiter = new RateLimiter({ default: RATE_MAX }, RATE_WINDOW_MS);
+
 function checkRateLimit(ip) {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now - entry.start > RATE_WINDOW_MS) {
-    rateLimitMap.set(ip, { start: now, count: 1 });
-    return true;
-  }
-  entry.count++;
-  return entry.count <= RATE_MAX;
+  return rateLimiter.check(ip, RATE_MAX).allowed;
 }
 
 // ─── Shared output discipline ─────────────────────────────────────────────────
@@ -724,7 +724,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+  const ip = clientIp(req);
   if (!checkRateLimit(ip)) {
     return res.status(429).json({ error: 'Too many requests — please wait a moment.' });
   }
@@ -770,6 +770,32 @@ module.exports = async function handler(req, res) {
     return res.status(413).json({ error: 'Payload too large — please reduce the code size.' });
   }
 
+  /*
+   * Chat history is bounded separately, and it has to be.
+   *
+   * The budget above sums every text field except `conversationHistory`, which was
+   * then spliced straight into the prompt. `slice(-6)` capped the number of
+   * messages but not their size, so a single request could carry megabytes of
+   * history — and history is *input*, so it is billed as input tokens, on the
+   * operator's key, once per call.
+   *
+   * Two limits because either alone is insufficient: a per-message cap stops one
+   * huge turn, and a total cap stops six of them each being merely large.
+   */
+  const MAX_HISTORY_MESSAGES = 6;
+  const MAX_HISTORY_CHARS_PER_MESSAGE = 8_000;
+  const MAX_HISTORY_CHARS_TOTAL = 24_000;
+
+  let historyChars = 0;
+  if (Array.isArray(conversationHistory)) {
+    for (const message of conversationHistory) {
+      if (typeof message?.content === 'string') historyChars += message.content.length;
+    }
+  }
+  if (historyChars > MAX_HISTORY_CHARS_TOTAL) {
+    return res.status(413).json({ error: 'Conversation history is too large — start a new chat.' });
+  }
+
   if (feature === 'generate' && !String(prompt || '').trim()) {
     return res.status(400).json({ error: 'A prompt is required to build with AI.' });
   }
@@ -793,10 +819,22 @@ module.exports = async function handler(req, res) {
       const messages = buildMessages(feature, payload);
 
       if (Array.isArray(conversationHistory) && conversationHistory.length > 0) {
-        const history = conversationHistory.slice(-6).map((m) => ({
-          role: m.role === 'user' ? 'user' : 'assistant',
-          content: String(m.content ?? ''),
-        }));
+        /*
+         * Truncate per message as well as counting them.
+         *
+         * The role coercion is deliberate and worth keeping: `m.role === 'user' ?
+         * 'user' : 'assistant'` refuses to pass a client-supplied `system` role
+         * through, which is what stops this being a prompt-override vector. The
+         * content is coerced with `String()` and then sliced, so an object or array
+         * cannot smuggle a large payload past the length check either.
+         */
+        const history = conversationHistory
+          .slice(-MAX_HISTORY_MESSAGES)
+          .map((m) => ({
+            role: m.role === 'user' ? 'user' : 'assistant',
+            content: String(m.content ?? '').slice(0, MAX_HISTORY_CHARS_PER_MESSAGE),
+          }))
+          .filter((m) => m.content.length > 0);
         messages.splice(1, 0, ...history);
       }
 
@@ -815,6 +853,31 @@ module.exports = async function handler(req, res) {
 
       let buffer = '';
 
+      /*
+       * SSE writes are guarded on `writableEnded`.
+       *
+       * These three handlers can all fire for one response: a stream that errors
+       * will still usually emit `end` afterwards. Writing after `res.end()` raises
+       * ERR_STREAM_WRITE_AFTER_END, and because this response has no `error`
+       * listener the throw escapes into the function's own error handling — turning
+       * a recoverable mid-stream interruption into an unhandled exception on a
+       * serverless instance. The `try/catch` on the error path hid the write but
+       * not the `end` path, so `end` after `error` was still the live case.
+       */
+      const writeEvent = (payload) => {
+        if (res.writableEnded) return false;
+        try {
+          res.write(`data: ${JSON.stringify(payload)}\n\n`);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+      const endResponse = () => {
+        if (res.writableEnded) return;
+        res.end();
+      };
+
       aiStream.on('data', (chunk) => {
         buffer += chunk.toString();
         const lines = buffer.split('\n');
@@ -828,7 +891,7 @@ module.exports = async function handler(req, res) {
           try {
             const json = JSON.parse(trimmed.slice(6));
             const delta = json?.choices?.[0]?.delta?.content;
-            if (delta) res.write(`data: ${JSON.stringify({ delta })}\n\n`);
+            if (delta) writeEvent({ delta });
           } catch {
             // malformed SSE chunk — skip
           }
@@ -836,15 +899,18 @@ module.exports = async function handler(req, res) {
       });
 
       aiStream.on('end', () => {
-        res.write('data: [DONE]\n\n');
-        res.end();
+        // Terminate the SSE framing even if the error path already closed it, so a
+        // client waiting on `[DONE]` is not left hanging.
+        if (res.writableEnded) return;
+        try {
+          res.write('data: [DONE]\n\n');
+        } catch {}
+        endResponse();
       });
 
       aiStream.on('error', () => {
-        try {
-          res.write(`data: ${JSON.stringify({ error: 'Stream interrupted.' })}\n\n`);
-          res.end();
-        } catch {}
+        writeEvent({ error: 'Stream interrupted.' });
+        endResponse();
       });
 
       req.on('close', () => {
