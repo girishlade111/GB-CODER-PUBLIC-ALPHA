@@ -157,3 +157,124 @@ export function matchesConsoleMessage(
   if (tokens.length === 0) return true;
   return tokens.every((token) => sourceText.includes(token));
 }
+
+export interface HighlightSegment {
+  text: string;
+  isMatch: boolean;
+}
+
+/**
+ * Splits input text into matching and non-matching segments based on search query/pattern.
+ */
+export function getHighlightSegments(
+  text: string,
+  query: string,
+  options: SearchFilterOptions = {},
+): HighlightSegment[] {
+  if (!text || !query || !query.trim()) {
+    return [{ text, isMatch: false }];
+  }
+
+  const rawQuery = query.trim();
+  const intervals: [number, number][] = [];
+
+  // 1. Slash notation regex detection: e.g. /TypeError/i
+  const slashRegexMatch = rawQuery.match(/^\/(.+)\/([gimsuy]*)$/);
+  let regex: RegExp | null = null;
+
+  if (slashRegexMatch) {
+    try {
+      const pattern = slashRegexMatch[1];
+      const flags = slashRegexMatch[2] || (options.isCaseSensitive ? '' : 'i');
+      const gFlags = flags.includes('g') ? flags : flags + 'g';
+      regex = new RegExp(pattern, gFlags);
+    } catch {
+      // Incomplete regex while typing
+    }
+  } else if (options.isRegex) {
+    try {
+      const flags = options.isCaseSensitive ? 'g' : 'gi';
+      regex = new RegExp(rawQuery, flags);
+    } catch {
+      // Fallback to substring matching if regex syntax invalid
+    }
+  }
+
+  if (regex) {
+    let match: RegExpExecArray | null;
+    let safeguard = 0;
+    while ((match = regex.exec(text)) !== null && safeguard++ < 500) {
+      if (match[0].length === 0) {
+        regex.lastIndex++;
+        continue;
+      }
+      intervals.push([match.index, match.index + match[0].length]);
+    }
+  } else {
+    // Exact quoted phrase or space-separated tokens
+    let tokens: string[] = [];
+    if (rawQuery.startsWith('"') && rawQuery.endsWith('"') && rawQuery.length > 1) {
+      tokens = [rawQuery.slice(1, -1)];
+    } else {
+      tokens = rawQuery.split(/\s+/).filter(Boolean);
+    }
+
+    const sourceText = options.isCaseSensitive ? text : text.toLowerCase();
+    for (const token of tokens) {
+      const target = options.isCaseSensitive ? token : token.toLowerCase();
+      let pos = 0;
+      let safeguard = 0;
+      while ((pos = sourceText.indexOf(target, pos)) !== -1 && safeguard++ < 500) {
+        intervals.push([pos, pos + target.length]);
+        pos += target.length;
+      }
+    }
+  }
+
+  if (intervals.length === 0) {
+    return [{ text, isMatch: false }];
+  }
+
+  // Sort and merge overlapping intervals
+  intervals.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const merged: [number, number][] = [];
+  for (const [start, end] of intervals) {
+    if (merged.length === 0) {
+      merged.push([start, end]);
+    } else {
+      const last = merged[merged.length - 1];
+      if (start <= last[1]) {
+        last[1] = Math.max(last[1], end);
+      } else {
+        merged.push([start, end]);
+      }
+    }
+  }
+
+  // Build segments
+  const segments: HighlightSegment[] = [];
+  let currentIndex = 0;
+
+  for (const [start, end] of merged) {
+    if (start > currentIndex) {
+      segments.push({
+        text: text.slice(currentIndex, start),
+        isMatch: false,
+      });
+    }
+    segments.push({
+      text: text.slice(start, end),
+      isMatch: true,
+    });
+    currentIndex = end;
+  }
+
+  if (currentIndex < text.length) {
+    segments.push({
+      text: text.slice(currentIndex),
+      isMatch: false,
+    });
+  }
+
+  return segments;
+}

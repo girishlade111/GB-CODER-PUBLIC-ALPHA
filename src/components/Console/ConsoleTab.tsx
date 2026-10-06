@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { AlertCircle, AlertTriangle, Bug, ChevronRight, Info, Terminal } from 'lucide-react';
 import ConsoleValueTree from './ConsoleValueTree';
+import HighlightText from './HighlightText';
 import { editorNavigator } from '../../services/editorNavigator';
 import { matchesConsoleMessage } from '../../utils/consoleFilter';
 import type {
@@ -50,12 +51,27 @@ const LEVEL_ROW: Record<ConsoleMessage['level'], string> = {
  * the exact line; frames from libraries, bundles or the injected bridge render
  * as inert text rather than as a link that would navigate somewhere misleading.
  */
-const StackFrameRow: React.FC<{ resolved: ResolvedStackFrame }> = ({ resolved }) => {
+const StackFrameRow: React.FC<{
+  resolved: ResolvedStackFrame;
+  searchQuery?: string;
+  isRegex?: boolean;
+  isCaseSensitive?: boolean;
+}> = ({ resolved, searchQuery, isRegex, isCaseSensitive }) => {
   const { frame, location } = resolved;
   const label = frame.fn ? `${frame.fn} (${frame.file}:${frame.line}:${frame.column})` : `${frame.file}:${frame.line}:${frame.column}`;
 
   if (!location) {
-    return <div className="text-[11px] text-content-on-dark-soft font-mono pl-5 truncate">at {label}</div>;
+    return (
+      <div className="text-[11px] text-content-on-dark-soft font-mono pl-5 truncate">
+        at{' '}
+        <HighlightText
+          text={label}
+          query={searchQuery}
+          isRegex={isRegex}
+          isCaseSensitive={isCaseSensitive}
+        />
+      </div>
+    );
   }
 
   return (
@@ -65,9 +81,26 @@ const StackFrameRow: React.FC<{ resolved: ResolvedStackFrame }> = ({ resolved })
       title={`Jump to ${location.file}:${location.line}:${location.column}`}
       className="block w-full text-left text-[11px] font-mono pl-5 text-sky-400/80 hover:text-sky-300 hover:underline truncate"
     >
-      at {frame.fn ? `${frame.fn} ` : ''}
+      at{' '}
+      {frame.fn ? (
+        <>
+          <HighlightText
+            text={frame.fn}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />{' '}
+        </>
+      ) : (
+        ''
+      )}
       <span className="text-sky-300">
-        {location.file}:{location.line}:{location.column}
+        <HighlightText
+          text={`${location.file}:${location.line}:${location.column}`}
+          query={searchQuery}
+          isRegex={isRegex}
+          isCaseSensitive={isCaseSensitive}
+        />
       </span>
     </button>
   );
@@ -180,11 +213,22 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({
             <div className="flex flex-wrap items-start gap-x-2 gap-y-0.5 break-words">
               {/* Each argument keeps its own type and expandability. */}
               {message.args.map((arg, index) => (
-                <ConsoleValueTree key={index} value={arg} />
+                <ConsoleValueTree
+                  key={index}
+                  value={arg}
+                  searchQuery={searchQuery}
+                  isRegex={isRegex}
+                  isCaseSensitive={isCaseSensitive}
+                />
               ))}
               {message.origin === 'build' && (
                 <span className="text-[10px] uppercase tracking-wide text-content-on-dark-soft border border-stroke-dark-strong rounded px-1">
-                  build
+                  <HighlightText
+                    text="build"
+                    query={searchQuery}
+                    isRegex={isRegex}
+                    isCaseSensitive={isCaseSensitive}
+                  />
                 </span>
               )}
             </div>
@@ -192,7 +236,13 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({
             {message.stack.length > 0 && (
               <div className="mt-1 space-y-0.5">
                 {message.stack.map((resolved, index) => (
-                  <StackFrameRow key={index} resolved={resolved} />
+                  <StackFrameRow
+                    key={index}
+                    resolved={resolved}
+                    searchQuery={searchQuery}
+                    isRegex={isRegex}
+                    isCaseSensitive={isCaseSensitive}
+                  />
                 ))}
               </div>
             )}
