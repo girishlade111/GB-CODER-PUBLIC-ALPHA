@@ -600,22 +600,19 @@ export const deployProject = async (options: DeployOptions): Promise<DeployResul
 
   report({ stage: 'packaging', message: 'Collecting project files…', percent: 8 });
 
-  const files = buildDeployFiles(project, {
+  const bundleOptions: ArchiveOptions = {
     projectName: options.projectName,
     externalLibraries: options.externalLibraries,
     resolvedVersions: options.resolvedVersions,
     includeInjections: options.includeInjections,
-  });
+  };
 
-  const estimate = estimateDeploy(project, {
-    projectName: options.projectName,
-    externalLibraries: options.externalLibraries,
-    resolvedVersions: options.resolvedVersions,
-    includeInjections: options.includeInjections,
-  });
-  if (estimate.problem) {
-    throw new DeployError(estimate.problem, { retryable: false });
-  }
+  // Checked against the limits before anything leaves the tab, and reused below so
+  // the byte count reported to the user is the count that was actually sent.
+  const estimate = estimateDeploy(project, bundleOptions);
+  if (estimate.problem) throw new DeployError(estimate.problem, { retryable: false });
+
+  const files = buildDeployFiles(project, bundleOptions);
 
   report({ stage: 'packaging', message: `Packaged ${files.length} files.`, percent: 20 });
 
