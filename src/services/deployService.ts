@@ -273,6 +273,49 @@ const toDeployError = async (
 const toHttpsUrl = (value: string): string =>
   value.startsWith('http://') || value.startsWith('https://') ? value : `https://${value}`;
 
+/** JSON headers for an authenticated request. */
+const authHeaders = (token: string): Record<string, string> => ({
+  Authorization: `Bearer ${token}`,
+  'Content-Type': 'application/json',
+});
+
+/**
+ * `fetch` with a deadline.
+ *
+ * Two independent reasons a request must end: the user gave up, or the provider
+ * never answered. Both surface from `fetch` as an `AbortError`, so they are told
+ * apart by checking whether the caller's own signal is the thing that fired —
+ * only the timeout is our fault to report as one.
+ *
+ * Applied to the uploads rather than the polling GETs, which are governed by
+ * `MAX_POLL_MS` instead and are expected to return quickly.
+ */
+const fetchWithTimeout = async (
+  url: string,
+  init: RequestInit,
+  stage: DeployStage,
+  description: string,
+): Promise<Response> => {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const relayAbort = () => controller.abort();
+  init.signal?.addEventListener('abort', relayAbort, { once: true });
+
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    // The caller's signal fired: they cancelled, so let that propagate untouched.
+    if (init.signal?.aborted) throw error;
+    throw new DeployError(`${description} timed out after ${REQUEST_TIMEOUT_MS / 1000} seconds.`, {
+      retryable: true,
+      stage,
+    });
+  } finally {
+    window.clearTimeout(timer);
+    init.signal?.removeEventListener('abort', relayAbort);
+  }
+};
+
 /**
  * Uncompressed total of the bundle.
  *
@@ -357,7 +400,7 @@ const deployToVercel = async (options: DeployOptions, files: { path: string; con
 
   report({ stage: 'uploading', message: `Uploading ${files.length} files to Vercel…`, percent: 45 });
 
-  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const headers = authHeaders(token);
 
   /*
    * `projectSettings` is deliberately omitted. Sending `framework: null` would
@@ -365,16 +408,21 @@ const deployToVercel = async (options: DeployOptions, files: { path: string; con
    * while pinning a framework would break plain HTML/CSS/JS. Detection from the
    * presence of a package.json gets both cases right on its own.
    */
-  const response = await fetch(`${VERCEL_API}/v13/deployments`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      name,
-      target: 'production',
-      files: files.map((file) => ({ file: file.path, data: file.content, encoding: 'utf-8' })),
-    }),
-    signal,
-  });
+  const response = await fetchWithTimeout(
+    `${VERCEL_API}/v13/deployments`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        name,
+        target: 'production',
+        files: files.map((file) => ({ file: file.path, data: file.content, encoding: 'utf-8' })),
+      }),
+      signal,
+    },
+    'uploading',
+    'Uploading to Vercel',
+  );
 
   if (!response.ok) throw await toDeployError(response, 'vercel', 'uploading');
 
