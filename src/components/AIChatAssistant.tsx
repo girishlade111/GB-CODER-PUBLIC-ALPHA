@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, MessageSquare, Trash2, Copy, Check, Code2, Sparkles, Loader2 } from 'lucide-react';
 import { aiChatAssistant, ChatMessage } from '../services/aiChatAssistant';
+import { renderInlineMarkup } from '../utils/safeMarkup';
 import { ExternalLibrary } from '../services/externalLibraryService';
 import toast from 'react-hot-toast';
 
