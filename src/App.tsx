@@ -1277,6 +1277,15 @@ function App() {
         // The project is the source of truth now, so nothing needs restoring.
         setIsRestoringWorkspace(false);
         if (options.navigate) navigateTo(VSCODE_ROUTE);
+
+        // Mount files and trigger WebContainer dev server startup
+        void loadChunk(
+          () => import('./services/webcontainer/webcontainerService'),
+          'WebContainer service',
+        ).then(async ({ webcontainerService }) => {
+          await webcontainerService.mountProject(files, undefined, record.projectType);
+          webcontainerService.requestRestart(`Project "${record.name}" opened`);
+        });
       } else {
         setFullStackProject(null);
         setVsCodeReturn(null);
@@ -1450,9 +1459,10 @@ function App() {
        * path that pulls the full-stack chunk.
        */
       if (kind === 'fullstack') {
+        const fsFiles = importPlan.result.files;
         setFullStackProject({
           projectType: 'plain',
-          files: importPlan.result.files,
+          files: fsFiles,
           entry: importPlan.result.entry,
         });
         setImportPlan(null);
@@ -1460,6 +1470,16 @@ function App() {
         // has to move with it or a refresh would land back in the editor.
         setIsVSCodeRoute(true);
         navigateTo(VSCODE_ROUTE);
+
+        // Mount files and trigger WebContainer dev server startup
+        void loadChunk(
+          () => import('./services/webcontainer/webcontainerService'),
+          'WebContainer service',
+        ).then(async ({ webcontainerService }) => {
+          await webcontainerService.mountProject(fsFiles, undefined, 'plain');
+          webcontainerService.requestRestart('Full-stack project detected');
+        });
+
         toast.success('Full-stack project detected — WebContainer environment ready.');
         return;
       }
@@ -1683,15 +1703,20 @@ function App() {
           return;
         }
 
+        const isFolderOrZip = plan.source === 'folder' || plan.source === 'zip';
+        const hasPackageJson = incoming.some((f) => /(^|\/)package\.json$/i.test(f.path));
+
         setFullStackProject((current) => {
+          if (isFolderOrZip) {
+            // When opening a new folder/project, cleanly replace the workspace files
+            return {
+              projectType: plan.result.projectType ?? 'plain',
+              entry: plan.result.entry,
+              files: incoming,
+            };
+          }
           const byPath = new Map((current?.files ?? []).map((file) => [file.path, file]));
           for (const file of incoming) byPath.set(file.path, file);
-          /*
-           * `current` is null when the mode is open with nothing loaded — someone
-           * arrived at the route directly and used the empty state's Load
-           * buttons. That is a first import rather than a merge, so the project
-           * is created here instead of the update being dropped.
-           */
           return {
             projectType: current?.projectType ?? 'plain',
             entry: current?.entry ?? plan.result.entry,
@@ -1702,18 +1727,37 @@ function App() {
         const existingPaths = new Set(fullStackProject?.files.map((file) => file.path) ?? []);
         const added = incoming.filter((file) => !existingPaths.has(file.path)).length;
         const replaced = incoming.length - added;
+
         // Automatically mount clean source files into WebContainer virtual filesystem
+        // and trigger automatic dependencies installation & dev server startup!
         void loadChunk(
           () => import('./services/webcontainer/webcontainerService'),
           'WebContainer service',
-        ).then(({ webcontainerService }) => {
-          void webcontainerService.mountProject(incoming, undefined, plan.result.projectType);
+        ).then(async ({ webcontainerService }) => {
+          const filesToMount = isFolderOrZip
+            ? incoming
+            : (fullStackProject?.files ?? [])
+                .map((f) => {
+                  const updated = incoming.find((inc) => inc.path === f.path);
+                  return updated ?? f;
+                })
+                .concat(incoming.filter((inc) => !(fullStackProject?.files ?? []).some((f) => f.path === inc.path)));
+
+          await webcontainerService.mountProject(filesToMount, undefined, plan.result.projectType);
+
+          if (isFolderOrZip || hasPackageJson) {
+            webcontainerService.requestRestart(
+              isFolderOrZip ? 'New folder loaded' : 'Dependencies updated',
+            );
+          }
         });
 
         toast.success(
-          replaced > 0
-            ? `Added ${added} file${added === 1 ? '' : 's'}, updated ${replaced}.`
-            : `Added ${added} file${added === 1 ? '' : 's'}.`,
+          isFolderOrZip
+            ? `Loaded folder "${plan.sourceName}" (${incoming.length} files). Installing dependencies...`
+            : replaced > 0
+              ? `Added ${added} file${added === 1 ? '' : 's'}, updated ${replaced}.`
+              : `Added ${added} file${added === 1 ? '' : 's'}.`,
         );
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'Those files could not be added.');

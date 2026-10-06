@@ -435,7 +435,7 @@ export const buildImportPlan = async (input: DropInput): Promise<ImportPlan> => 
 
   const fromFiles: DroppedFile[] = (input.files ?? [])
     .map((file) => ({
-      path: (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name,
+      path: ((file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name).replace(/\\/g, '/'),
       file,
     }))
     .filter((item) => !shouldSkipPath(item.path));
@@ -449,10 +449,11 @@ export const buildImportPlan = async (input: DropInput): Promise<ImportPlan> => 
   const all: DroppedFile[] = [];
   const seen = new Set<string>();
   for (const item of [...fromEntries, ...fromHandles, ...fromFiles]) {
-    const key = `${item.path}\u0000${item.file.size}`;
+    const normalizedItemPath = item.path.replace(/\\/g, '/');
+    const key = `${normalizedItemPath}\u0000${item.file.size}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    all.push(item);
+    all.push({ ...item, path: normalizedItemPath });
   }
 
   if (all.length === 0) {

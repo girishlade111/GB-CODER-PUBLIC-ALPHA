@@ -138,7 +138,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
     try {
       fitAddon.fit();
-      sessionRef.current?.resize(term.cols, term.rows);
       webcontainerShellRef.current?.resize(term.cols, term.rows);
     } catch {
       // Fit error on zero dimension container is safe to ignore
@@ -216,6 +215,47 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       isStartingShellRef.current = false;
     }
   }, [autoStartProject]);
+
+  /** Triggers dev server restart and dependencies installation */
+  const triggerDevServerRestart = useCallback(
+    (reason = 'Restart request') => {
+      const term = termRef.current;
+      const shell = webcontainerShellRef.current;
+
+      if (mode !== 'webcontainer') {
+        if (webcontainerService.isSupported()) {
+          setMode('webcontainer');
+        }
+      }
+
+      webcontainerService.setStartupStage('installing');
+
+      if (shell) {
+        // Send Ctrl+C to terminate any running process (e.g. Vite or node dev server)
+        shell.write('\x03\r');
+        if (term) {
+          term.write(
+            `\r\n${ANSI.brightCyan}⚡ [${reason}]: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
+          );
+        }
+        // Brief delay to allow Vite/process to exit and shell prompt to return
+        setTimeout(() => {
+          shell.write('npm install && npm run dev\r');
+        }, 400);
+      } else {
+        hasAutoStartedRef.current = false;
+        void startWebContainerShell(true);
+      }
+    },
+    [mode, startWebContainerShell],
+  );
+
+  // Subscribe to external restart requests (e.g. new local folder loaded or user restart)
+  useEffect(() => {
+    return webcontainerService.onRestartRequest((reason) => {
+      triggerDevServerRestart(reason || 'Restarting dev server');
+    });
+  }, [triggerDevServerRestart]);
 
   /** Creates the terminal once, then wires input handling. */
   useEffect(() => {
@@ -534,9 +574,9 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
                 npm run dev
               </button>
               <button
-                onClick={() => void startWebContainerShell(true)}
+                onClick={() => triggerDevServerRestart('Terminal Restart')}
                 className="p-1 rounded text-content-on-dark-soft hover:text-content-on-dark hover:bg-product"
-                title="Restart WebContainer Shell"
+                title="Restart Environment & Dev Server"
               >
                 <RotateCcw className="h-3 w-3" />
               </button>

@@ -828,10 +828,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const hasFiles = project.files.length > 0;
 
   const handleRestartDevServer = useCallback(() => {
-    webcontainerService.setStartupStage('installing');
     openTerminal();
     toast.success('Restarting WebContainer environment...');
-    void webcontainerService.mountProject(project.files, project.dependencies, project.projectType);
+    void webcontainerService
+      .mountProject(project.files, project.dependencies, project.projectType)
+      .then(() => {
+        webcontainerService.requestRestart('Restart Dev Server');
+      });
   }, [openTerminal, project.files, project.dependencies, project.projectType]);
 
   return (
@@ -962,7 +965,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           onOpenSettings={() => setIsSettingsOpen(true)}
           onExit={onExit}
           onResetContainer={() => {
-            void webcontainerService.mountProject(project.files, project.dependencies, project.projectType);
+            void webcontainerService
+              .mountProject(project.files, project.dependencies, project.projectType)
+              .then(() => {
+                webcontainerService.requestRestart('Container reset');
+              });
             toast.success('WebContainer virtual filesystem remounted');
           }}
         />

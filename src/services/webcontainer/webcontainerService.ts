@@ -231,6 +231,7 @@ class WebContainerManager {
   };
 
   private listeners = new Set<() => void>();
+  private restartListeners = new Set<(reason?: string) => void>();
 
   constructor() {
     // Re-verify support in browser runtime
@@ -254,6 +255,52 @@ class WebContainerManager {
   public subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  public onRestartRequest(listener: (reason?: string) => void): () => void {
+    this.restartListeners.add(listener);
+    return () => this.restartListeners.delete(listener);
+  }
+
+  /**
+   * Resets server URLs and transitions the preview back to the StackBlitz Startup Loader,
+   * notifying all terminal listeners to execute `npm install && npm run dev`.
+   */
+  public requestRestart(reason = 'Restart request'): void {
+    this.updateState({
+      serverUrl: null,
+      serverPort: null,
+      activeServers: [],
+      startupStage: 'installing',
+    });
+    this.restartListeners.forEach((listener) => {
+      try {
+        listener(reason);
+      } catch (err) {
+        console.error('[WebContainer] Restart listener error:', err);
+      }
+    });
+  }
+
+  public resetServerState(): void {
+    this.updateState({
+      serverUrl: null,
+      serverPort: null,
+      activeServers: [],
+      startupStage: 'installing',
+    });
+  }
+
+  public writeToShell(data: string): boolean {
+    if (this.shellWriter) {
+      try {
+        this.shellWriter.write(data);
+        return true;
+      } catch (err) {
+        console.warn('[WebContainer] Direct shell write failed:', err);
+      }
+    }
+    return false;
   }
 
   private notify() {
