@@ -462,16 +462,30 @@ export const fetchViewer = async (token: string): Promise<GitHubUser> => {
  *
  * `affiliation` is what makes push work: it includes repos owned by others the
  * user has been granted write access to, which is where most real work lives.
+ *
+ * Paginated because `per_page=100` alone silently truncates. Someone with 150
+ * repositories would otherwise find their target missing from the picker with no
+ * indication that it existed, and no way to reach it. Bounded at `MAX_REPO_PAGES`
+ * because this runs against a 5,000/hour budget and a linear scan of every
+ * repository a user has ever touched is not what the picker is for.
  */
 export const listRepos = async (token: string, signal?: AbortSignal): Promise<GitHubRepo[]> => {
-  const raw = await githubRequest<RawRepo[]>(
-    token,
-    '/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member',
-    { signal },
-    'list your repositories',
-  );
+  const collected: GitHubRepo[] = [];
 
-  return raw.map(toRepo);
+  for (let page = 1; page <= MAX_REPO_PAGES; page += 1) {
+    const raw = await githubRequest<RawRepo[]>(
+      token,
+      `/user/repos?per_page=100&page=${page}&sort=updated&affiliation=owner,collaborator,organization_member`,
+      { signal },
+      'list your repositories',
+    );
+
+    collected.push(...raw.map(toRepo));
+    // A short page means there is no page after it.
+    if (raw.length < 100) break;
+  }
+
+  return collected;
 };
 
 /** Branch names, default branch first. */
