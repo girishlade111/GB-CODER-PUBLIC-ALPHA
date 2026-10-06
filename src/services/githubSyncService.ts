@@ -70,6 +70,14 @@ export interface GitHubRepo {
   defaultBranch: string;
   description: string | null;
   updatedAt: string;
+  /**
+   * Whether the token can push here.
+   *
+   * `/user/repos` includes repositories the user can only read — an org repo they
+   * follow, a fork they cannot write to. Pushing to one fails deep inside the
+   * commit sequence with a 403, so the UI marks them instead.
+   */
+  canPush: boolean;
 }
 
 export interface GitHubCommitResult {
@@ -348,7 +356,22 @@ interface RawRepo {
   default_branch: string;
   description: string | null;
   updated_at: string;
+  /** Sent by `/user/repos`; absent on some responses, hence the optional. */
+  permissions?: { push?: boolean; admin?: boolean; maintain?: boolean };
 }
+
+/** Unwraps the list shape and fills in `canPush` from the permissions block. */
+const toRepo = (repo: RawRepo): GitHubRepo => ({
+  id: repo.id,
+  name: repo.name,
+  fullName: repo.full_name,
+  private: repo.private,
+  defaultBranch: repo.default_branch,
+  description: repo.description,
+  updatedAt: repo.updated_at,
+  // `maintain` and `admin` both imply write access, so any of the three counts.
+  canPush: Boolean(repo.permissions?.push || repo.permissions?.maintain || repo.permissions?.admin),
+});
 
 /** Verifies a token and returns the account it belongs to. */
 export const fetchViewer = async (token: string): Promise<GitHubUser> => {
@@ -370,15 +393,7 @@ export const listRepos = async (token: string, signal?: AbortSignal): Promise<Gi
     'list your repositories',
   );
 
-  return raw.map((repo) => ({
-    id: repo.id,
-    name: repo.name,
-    fullName: repo.full_name,
-    private: repo.private,
-    defaultBranch: repo.default_branch,
-    description: repo.description,
-    updatedAt: repo.updated_at,
-  }));
+  return raw.map(toRepo);
 };
 
 /** Branch names, default branch first. */
@@ -649,15 +664,7 @@ export const createRepository = async (options: CreateRepoOptions): Promise<GitH
     'create the repository',
   );
 
-  const repo: GitHubRepo = {
-    id: created.id,
-    name: created.name,
-    fullName: created.full_name,
-    private: created.private,
-    defaultBranch: created.default_branch,
-    description: created.description,
-    updatedAt: created.updated_at,
-  };
+  const repo = toRepo(created);
 
   const commit = await commitFiles({
     token,
