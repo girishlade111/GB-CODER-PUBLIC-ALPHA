@@ -40,8 +40,7 @@
  */
 
 import type { MultiFileProject } from '../types/files';
-import type { ExternalLibrary } from './externalLibraryService';
-import { buildArchiveFiles } from './projectArchiveService';
+import { buildArchiveFiles, type ArchiveOptions } from './projectArchiveService';
 
 const API_BASE = 'https://api.github.com';
 
@@ -740,11 +739,5 @@ export const pullFiles = async (options: {
  */
 export const buildPushableFiles = (
   project: MultiFileProject,
-  options: { projectName?: string; externalLibraries?: ExternalLibrary[]; resolvedVersions?: Record<string, string>; includeInjections?: boolean } = {},
-): { path: string; content: string }[] =>
-  buildArchiveFiles(project, {
-    projectName: options.projectName,
-    externalLibraries: options.externalLibraries,
-    resolvedVersions: options.resolvedVersions,
-    includeInjections: options.includeInjections,
-  });
+  options: ArchiveOptions = {},
+): { path: string; content: string }[] => buildArchiveFiles(project, options);
