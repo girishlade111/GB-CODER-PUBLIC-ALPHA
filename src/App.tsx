@@ -14,7 +14,7 @@ import React, {
  * imported module". See src/utils/loadChunk.ts.
  */
 import { lazyWithRecovery, loadChunk } from './utils/loadChunk';
-import { Code2, Eye, Share2 } from 'lucide-react';
+import { Code2, Eye, Share2, Rocket, Github } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
 import AppSidebar from './components/AppSidebar';
