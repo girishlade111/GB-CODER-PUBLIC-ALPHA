@@ -273,6 +273,15 @@ const toDeployError = async (
 const toHttpsUrl = (value: string): string =>
   value.startsWith('http://') || value.startsWith('https://') ? value : `https://${value}`;
 
+/**
+ * Uncompressed total of the bundle.
+ *
+ * Reported by both providers so the number means the same thing regardless of
+ * which one compressed the payload on the way out.
+ */
+const sumBytes = (files: { path: string; content: string }[]): number =>
+  files.reduce((total, file) => total + byteLength(file.content), 0);
+
 // ─── Project → deployable file set ────────────────────────────────────────────
 
 /**
