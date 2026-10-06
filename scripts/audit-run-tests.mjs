@@ -864,5 +864,5 @@ describe('credentialStore', () => {
 function shaOf(content) {
   const bytes = Buffer.from(content, 'utf8');
   const header = Buffer.from(`blob ${bytes.length}\0`, 'utf8');
-  return require('node:crypto').createHash('sha1').update(Buffer.concat([header, bytes])).digest('hex');
+  return createHash('sha1').update(Buffer.concat([header, bytes])).digest('hex');
 }
