@@ -945,6 +945,7 @@ export const pullFiles = async (options: {
     (entry) =>
       entry.type === 'blob' &&
       !IGNORED_PULL_PREFIXES.some((prefix) => entry.path.startsWith(prefix)) &&
+      isPullablePath(entry.path) &&
       (entry.size ?? 0) <= MAX_PULL_FILE_BYTES,
   );
   const wanted = candidates.slice(0, MAX_PULL_FILES);
