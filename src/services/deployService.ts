@@ -451,7 +451,7 @@ const deployToVercel = async (options: DeployOptions, files: { path: string; con
 /** Polls until the deployment is READY or ERROR. */
 const waitForVercel = async (
   deploymentId: string,
-  headers: { Authorization: string; 'Content-Type': 'string' },
+  headers: Record<string, string>,
   report: (progress: DeployProgress) => void,
   signal?: AbortSignal,
 ): Promise<VercelDeployment> => {
@@ -511,11 +511,11 @@ const deployToNetlify = async (options: DeployOptions, files: { path: string; co
   const startedAt = Date.now();
   const { token, project, projectName, externalLibraries, resolvedVersions, includeInjections, onProgress, signal } = options;
   const report = onProgress ?? (() => {});
-  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const headers = authHeaders(token);
 
   report({ stage: 'uploading', message: 'Creating your Netlify site…', percent: 25 });
 
-  const site = await createNetlifySite(token, sanitizeDeployName(projectName), headers, signal);
+  const site = await createNetlifySite(sanitizeDeployName(projectName), headers, signal);
 
   report({ stage: 'uploading', message: 'Packaging files…', percent: 35 });
 
@@ -539,12 +539,17 @@ const deployToNetlify = async (options: DeployOptions, files: { path: string; co
    * multipart, not base64. `Content-Length` is left unset because it is a
    * forbidden header and the browser sets it correctly from the ArrayBuffer.
    */
-  const deployResponse = await fetch(`${NETLIFY_API}/sites/${site.id}/deploys`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/zip' },
-    body: buffer,
-    signal,
-  });
+  const deployResponse = await fetchWithTimeout(
+    `${NETLIFY_API}/sites/${site.id}/deploys`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/zip' },
+      body: buffer,
+      signal,
+    },
+    'uploading',
+    'Uploading to Netlify',
+  );
 
   if (!deployResponse.ok) throw await toDeployError(deployResponse, 'netlify', 'uploading');
 
@@ -580,13 +585,17 @@ const deployToNetlify = async (options: DeployOptions, files: { path: string; co
  * the real name back.
  */
 const createNetlifySite = async (
-  token: string,
   name: string,
-  headers: { Authorization: string; 'Content-Type': 'string' },
+  headers: Record<string, string>,
   signal?: AbortSignal,
 ): Promise<NetlifySite> => {
   const post = async (body: Record<string, unknown>): Promise<Response> =>
-    fetch(`${NETLIFY_API}/sites`, { method: 'POST', headers, body: JSON.stringify(body), signal });
+    fetchWithTimeout(
+      `${NETLIFY_API}/sites`,
+      { method: 'POST', headers, body: JSON.stringify(body), signal },
+      'uploading',
+      'Creating the Netlify site',
+    );
 
   let response = await post({ name });
 
@@ -648,7 +657,7 @@ const waitForNetlify = async (
  * only resolves once the deployment reports itself ready.
  */
 export const deployProject = async (options: DeployOptions): Promise<DeployResult> => {
-  const { project, provider, token, onProgress, signal } = options;
+  const { project, provider, token, onProgress } = options;
   const report = onProgress ?? (() => {});
 
   if (!token.trim()) {

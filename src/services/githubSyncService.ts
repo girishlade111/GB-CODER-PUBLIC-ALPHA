@@ -428,6 +428,8 @@ interface RawTree {
   tree: Array<{ path: string; type: string; sha: string; size?: number }>;
 }
 interface RawBlob {
+  /** Returned by `POST /git/blobs`; absent when reading one back by path. */
+  sha?: string;
   content: string;
   encoding: string;
 }
@@ -527,7 +529,12 @@ export const commitFiles = async (options: CommitFilesOptions): Promise<GitHubCo
   const treeEntries: { path: string; mode: string; type: string; sha: string | null }[] = [];
 
   let uploaded = 0;
-  for (const { file, sha } of writes) {
+  /*
+   * `sha` was computed to decide whether the file changed; the blob GitHub
+   * creates is the authoritative hash for the tree entry, so the local value is
+   * not reused here.
+   */
+  for (const { file } of writes) {
     report(`Uploading ${file.path}…`, 20 + Math.round((uploaded / Math.max(writes.length, 1)) * 45));
     uploaded += 1;
 
@@ -537,6 +544,12 @@ export const commitFiles = async (options: CommitFilesOptions): Promise<GitHubCo
       { method: 'POST', body: JSON.stringify({ content: toBase64(file.content), encoding: 'base64' }), signal },
       `upload ${file.path}`,
     );
+    if (!blob.sha) {
+      throw new GitHubSyncError(`GitHub accepted ${file.path} but returned no hash for it.`, {
+        kind: 'unknown',
+        retryable: true,
+      });
+    }
     treeEntries.push({ path: file.path, mode: '100644', type: 'blob', sha: blob.sha });
   }
 
