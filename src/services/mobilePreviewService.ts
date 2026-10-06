@@ -110,10 +110,27 @@ const postJson = async (url: string, body: unknown, signal?: AbortSignal): Promi
  * The port is passed in because the API cannot know it: in local dev `/api` is
  * served by Vite on 5173, not by Express on 3001, and the browser already knows
  * which origin actually answered.
+ *
+ * A missing route is answered rather than thrown. `lan-info` is development-only —
+ * a serverless function cannot see the developer's LAN, so in production the only
+ * honest answer is "none available" and the caller switches to cloud mode. Treating
+ * 404 as that answer keeps the deployed behaviour identical to the version that
+ * shipped a constant-response function, without spending one of Vercel's twelve
+ * Hobby slots on it. Any other failure still throws, so a genuine error is visible.
  */
 export const fetchLanInfo = async (signal?: AbortSignal): Promise<LanInfo> => {
   const port = window.location.port || '5173';
   const response = await fetch(`/api/preview/lan-info?port=${encodeURIComponent(port)}`, { signal });
+  if (response.status === 404) {
+    return {
+      localIp: null,
+      port: null,
+      addresses: [],
+      sameNetworkLikely: false,
+      serverless: true,
+      durable: false,
+    };
+  }
   if (!response.ok) {
     throw new Error(await readError(response, 'Could not read the local network address.'));
   }

@@ -22,7 +22,8 @@
  * Run with `npm run verify:deploy`.
  */
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import path from 'node:path';
 
 let failures = 0;
 
@@ -100,6 +101,49 @@ if (names.length === 0) {
       pass(`"${name}" exists`);
     }
   }
+}
+
+/*
+ * ── Function count ─────────────────────────────────────────────────────────
+ *
+ * Vercel builds one serverless function per `.js` file under `api/`, ignoring any
+ * file or directory whose name starts with `_`. Hobby allows 12; Pro and Enterprise
+ * allow more. Exceeding the limit fails at *upload*, not build — the build completes
+ * and reports success, then the deploy dies with no mention of a count, which is why
+ * this is worth asserting before a deploy rather than discovering on one.
+ *
+ * `dev-api/` is deliberately outside this count. Locally-useful handlers live there so
+ * they cost no function slots, and both dev servers fall back to it.
+ */
+console.log('\nfunction count (Hobby limit: 12)');
+
+const apiRoot = process.cwd();
+const walk = (dir, prefix = '') => {
+  const out = [];
+  for (const entry of readdirSync(path.join(apiRoot, dir), { withFileTypes: true })) {
+    if (entry.name.startsWith('_')) continue; // Vercel ignores these.
+    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) out.push(...walk(path.join(dir, entry.name), rel));
+    else if (entry.name.endsWith('.js')) out.push(rel);
+  }
+  return out;
+};
+
+const deployedFunctions = walk('api').sort();
+console.log(`  ${deployedFunctions.length} function(s) in api/`);
+for (const name of deployedFunctions) console.log(`    ${name}`);
+
+const LIMIT = 12;
+if (deployedFunctions.length > LIMIT) {
+  fail(
+    `${deployedFunctions.length} functions exceeds the Hobby limit of ${LIMIT}. ` +
+      'The build will succeed and the deploy will fail at upload. ' +
+      'Move development-only handlers to dev-api/, or consolidate routes.',
+  );
+} else if (deployedFunctions.length === LIMIT) {
+  pass(`${deployedFunctions.length}/${LIMIT} — at the limit, no headroom for a new route`);
+} else {
+  pass(`${deployedFunctions.length}/${LIMIT}`);
 }
 
 /* ── rewrites ─────────────────────────────────────────────────────────────── */

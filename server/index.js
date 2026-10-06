@@ -105,18 +105,24 @@ const SAFE_API_ROUTE = /^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/;
 app.all('/api/*', async (req, res) => {
     const route = decodeURIComponent(req.path.replace(/^\/api\//, ''));
 
-    const apiDir = path.resolve(__dirname, '../api');
+    const searchDirs = [path.resolve(__dirname, '../api'), path.resolve(__dirname, '../dev-api')];
     if (!SAFE_API_ROUTE.test(route)) {
         return res.status(404).json({ error: 'API route not found.' });
     }
 
-    const candidateFile = path.resolve(apiDir, `${route}.js`);
-    // Second gate, independent of the regex above.
-    if (!candidateFile.startsWith(apiDir + path.sep)) {
-        return res.status(404).json({ error: 'API route not found.' });
+    // Resolve against `api/` first, then `dev-api/`. The second directory holds
+    // locally-useful handlers that must not be deployed; see vite.config.ts for why
+    // they were moved out of `api/`. Each directory is gated independently so a route
+    // rejected by one is not silently retried against the other.
+    let candidateFile = null;
+    for (const dir of searchDirs) {
+        const resolved = path.resolve(dir, `${route}.js`);
+        // Second gate, independent of the regex above.
+        if (!resolved.startsWith(dir + path.sep)) continue;
+        if (fs.existsSync(resolved)) { candidateFile = resolved; break; }
     }
 
-    if (fs.existsSync(candidateFile)) {
+    if (candidateFile) {
         try {
             const handler = require(candidateFile);
             const fn = typeof handler === 'function' ? handler : handler.default || handler;

@@ -3,13 +3,21 @@
 /**
  * `GET /api/preview/lan-info` — which address should the QR code point at?
  *
- * Deliberately a no-op on Vercel: `os.networkInterfaces()` there describes the
- * serverless function's own sandbox, not the developer's laptop, so the honest
- * answer is "no LAN address available". The client falls back to cloud mode.
+ * Development-only, and served by the dev servers via a fallback lookup in
+ * `dev-api/`. It is not deployed.
+ *
+ * It used to live in `api/`, where simply existing published it as a live
+ * serverless function. That was a poor trade: `os.networkInterfaces()` inside a
+ * serverless function describes that function's own sandbox, never the
+ * developer's laptop, so every deployed call returned a constant "no LAN address
+ * available" — while consuming one of Vercel's twelve Hobby function slots.
+ *
+ * The client treats a 404 from this route as "no LAN available" and falls back to
+ * cloud mode, so nothing is lost in production by its absence here.
  */
 
-const { buildLanInfo } = require('./_lan');
-const { sendJson, isDurable } = require('./_session-store');
+const { buildLanInfo } = require('../../api/preview/_lan');
+const { sendJson, isDurable } = require('../../api/preview/_session-store');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') {

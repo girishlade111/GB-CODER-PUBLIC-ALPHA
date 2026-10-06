@@ -100,18 +100,34 @@ function localApiPlugin(): Plugin {
           return next();
         }
 
-        const apiDir = path.resolve(__dirname, 'api');
-        const candidateFile = path.resolve(apiDir, `${route}.js`);
+        /*
+         * Resolve against `api/` first, then `dev-api/`.
+         *
+         * `dev-api/` holds handlers that are useful locally but must not be deployed
+         * — a Redis connectivity probe and the LAN-address lookup. Both were in `api/`,
+         * where being present is enough to publish a live function, and the pair pushed
+         * the count to 14 against Vercel's twelve-function Hobby limit, so every deploy
+         * failed at upload with the build itself succeeding.
+         *
+         * Each candidate directory is checked independently: a route that escapes one
+         * must not then be tried against the other.
+         */
+        const searchDirs = [path.resolve(__dirname, 'api'), path.resolve(__dirname, 'dev-api')];
 
-        // Second gate, independent of the regex above.
-        if (!candidateFile.startsWith(apiDir + path.sep)) {
-          return next();
+        let handlerFile: string | undefined;
+        for (const dir of searchDirs) {
+          // Second gate, independent of the regex above, and re-applied per directory.
+          const candidateFile = path.resolve(dir, `${route}.js`);
+          if (!candidateFile.startsWith(dir + path.sep)) continue;
+          if (fs.existsSync(candidateFile)) {
+            handlerFile = candidateFile;
+            break;
+          }
         }
 
-        if (!fs.existsSync(candidateFile)) {
+        if (!handlerFile) {
           return next();
         }
-        const handlerFile = candidateFile;
 
         try {
           const apiRes = res as unknown as ApiServerResponse;
