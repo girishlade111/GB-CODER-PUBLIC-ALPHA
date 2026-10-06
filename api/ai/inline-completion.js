@@ -67,6 +67,15 @@ const MODEL = 'gemini-1.5-flash';
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 120;
 
+/**
+ * Upstream deadline for a suggestion.
+ *
+ * Short on purpose: this sits in a typing loop, so a response the user has already
+ * stopped waiting for is worthless. 15s is far beyond a Flash completion and well
+ * inside any platform function limit.
+ */
+const UPSTREAM_TIMEOUT_MS = 15_000;
+
 // Shared so the bucket key cannot be chosen by the caller, and so the map is
 // pruned instead of growing for the life of the instance. See api/_client-ip.js.
 const { clientIp, RateLimiter } = require('../_client-ip');
@@ -282,9 +291,19 @@ module.exports = async function handler(req, res) {
      * same order of magnitude as the 350 ms client debounce, so streaming would
      * add parsing complexity without buying a perceptible win.
      */
-    const result = await generativeModel.generateContent([
-      { text: buildUserMessage(request) },
-    ]);
+    /*
+     * Deadline passed through as a request option.
+     *
+     * This is the endpoint a user triggers on every pause in typing, so a hung
+     * upstream is the most likely place for one to be noticed: without a timeout
+     * the function sits pinned until the platform reaps it, and the client has no
+     * way to tell "still thinking" from "gone". Kept short because the whole point
+     * is to stay inside the 350ms client debounce's shadow.
+     */
+    const result = await generativeModel.generateContent(
+      [{ text: buildUserMessage(request) }],
+      { timeout: UPSTREAM_TIMEOUT_MS },
+    );
 
     const completion = normalizeCompletion(result?.response?.text?.());
 

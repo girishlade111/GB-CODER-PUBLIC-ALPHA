@@ -13,6 +13,7 @@
  */
 import { MultiFileProject, PROJECT_TYPE_LABEL, sortedFiles } from '../types/files';
 import { addDependencyToPackageJson, parsePackageJson } from './npm/npmRegistryService';
+import { sanitizeForTerminal, sanitizeLines } from '../utils/terminalSafety';
 
 /** ANSI escapes, matching xterm's 16-colour palette. */
 export const ANSI = {
@@ -37,8 +38,42 @@ const dim = (text: string) => `${ANSI.dim}${text}${ANSI.reset}`;
 const cyan = (text: string) => `${ANSI.brightCyan}${text}${ANSI.reset}`;
 const green = (text: string) => `${ANSI.brightGreen}${text}${ANSI.reset}`;
 const yellow = (text: string) => `${ANSI.brightYellow}${text}${ANSI.reset}`;
-const red = (text: string) => `${ANSI.red}${text}${ANSI.reset}`;
+const red = (text: string) => `${ANSI.brightRed}${text}${ANSI.reset}`;
 const gray = (text: string) => `${ANSI.gray}${text}${ANSI.reset}`;
+
+/**
+ * npm's package-name grammar, narrowed.
+ *
+ * Deliberately stricter than npm's own rule about a bare `..`, since this value
+ * becomes a `package.json` key and a filesystem path segment rather than only a
+ * registry lookup.
+ */
+const PACKAGE_NAME = /^(?:@[a-z0-9-*~][a-z0-9-*._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
+
+/** True when `name` is safe to write into a dependency manifest. */
+export const isValidPackageName = (name: string): boolean => {
+  if (!name || name.length > 214) return false;
+  if (name === '.' || name === '..') return false;
+  if (name.includes('..')) return false;
+  if (name.startsWith('.') || name.startsWith('/') || name.startsWith('-')) return false;
+  if (name.includes('/') && !name.startsWith('@')) return false;
+  if (name.endsWith('/') || name.includes('//')) return false;
+  return PACKAGE_NAME.test(name);
+};
+
+/**
+ * True when `version` is a plausible semver range.
+ *
+ * Allows the tags npm accepts plus a semver range, and rejects anything carrying
+ * separators or whitespace — those are the characters that would break the JSON or
+ * smuggle a second field into a manifest.
+ */
+export const isValidVersionSpecifier = (version: string): boolean => {
+  const trimmed = version.trim();
+  if (!trimmed || trimmed.length > 64) return false;
+  if (!/^[a-zA-Z0-9*.\-+~^<>=|\s]+$/.test(trimmed)) return false;
+  return /^(?:latest|next|beta|canary|nightly|[~^<>=]*v?\d)/.test(trimmed);
+};
 
 /** A resolved CDN package, as produced by the dependency resolver. */
 export interface ShellPackage {
@@ -164,8 +199,8 @@ const COMMANDS: CommandDefinition[] = [
         output.push(
           ...table(
             resolvedPackages.map((pkg) => [
-              pkg.name,
-              `${green(pkg.resolvedVersion ?? pkg.version)}${pkg.url ? gray(`  ${pkg.url}`) : ''}`,
+              sanitizeForTerminal(pkg.name),
+              `${green(pkg.resolvedVersion ?? pkg.version)}${pkg.url ? gray(`  ${sanitizeForTerminal(pkg.url)}`) : ''}`,
             ]),
           ),
         );
@@ -174,9 +209,9 @@ const COMMANDS: CommandDefinition[] = [
       if (unresolvedPackages.length > 0) {
         output.push('', bold(`Unresolved (${unresolvedPackages.length})`));
         output.push(
-          ...unresolvedPackages.map(
+            ...unresolvedPackages.map(
             (pkg) =>
-              `  ${red(pkg.name)}${gray(` — ${pkg.message}`)}${
+              `  ${red(sanitizeForTerminal(pkg.name))}${gray(` — ${sanitizeForTerminal(pkg.message)}`)}${
                 pkg.requiresSandbox ? yellow('  [needs Sandbox]') : ''
               }`,
           ),
@@ -198,7 +233,9 @@ const COMMANDS: CommandDefinition[] = [
         output: [
           ...table(
             files.map((file) => [
-              file.path,
+              // A path from an imported repository is attacker-chosen text, and it
+              // goes into a terminal. Same reasoning as `cat` above.
+              sanitizeForTerminal(file.path),
               `${gray(file.language)}  ${dim(`${file.content.split('\n').length} lines`)}`,
             ]),
           ),
@@ -228,8 +265,19 @@ const COMMANDS: CommandDefinition[] = [
         };
       }
 
-      // Numbered like `cat -n`, so output lines up with editor line numbers.
-      const lines = file.content.split('\n');
+      /*
+       * File *contents* are sanitised, and so is the line numbering derived from
+       * them.
+       *
+       * `cat`-ing a file from an untrusted repository writes its raw bytes into
+       * xterm, which means a file containing `ESC]0;…BEL` can rewrite the tab title
+       * and `ESC[2J ESC[H` can clear the screen the user believes is their command
+       * history. Sanitising per line keeps the `cat -n` numbering aligned with the
+       * editor, which a post-hoc filter would not.
+       *
+       * See utils/terminalSafety.ts.
+       */
+      const lines = sanitizeLines(file.content.split('\n'));
       const width = String(lines.length).length;
       return {
         output: lines.map((line, index) => `${gray(String(index + 1).padStart(width))}  ${line}`),
@@ -305,6 +353,39 @@ const COMMANDS: CommandDefinition[] = [
           if (atIndex > 0) {
             pkgName = pkgArg.slice(0, atIndex);
             pkgVer = pkgArg.slice(atIndex + 1);
+          }
+
+          /*
+           * Validate before it becomes a dependency.
+           *
+           * `pkgName` came from a typed command and went straight into
+           * `project.dependencies` and then into `package.json` via
+           * `addDependencyToPackageJson`, which uses it as an object key and
+           * re-serialises. That package.json is what a real install later reads, and
+           * in WebContainer mode the name is also a path segment on disk.
+           *
+           * This is not shell injection — nothing here runs a shell — but it is
+           * unvalidated text becoming a manifest entry and a filesystem path, and
+           * `npm i "../../evil"` or a name containing a newline would ride straight
+           * through. The grammar is npm's own: URL-safe characters, optional scope,
+           * and no path traversal.
+           */
+          if (!isValidPackageName(pkgName)) {
+            return {
+              output: [
+                red(`npm: '${pkgArg}' is not a valid package name.`),
+                gray(`Names may contain letters, digits and -._ only, optionally scoped as @scope/name.`),
+              ],
+            };
+          }
+
+          if (!isValidVersionSpecifier(pkgVer)) {
+            return {
+              output: [
+                red(`npm: '${pkgVer}' is not a valid version.`),
+                gray('Use a semver range such as 1.7.0, ^1.7.0 or latest.'),
+              ],
+            };
           }
 
           if (!context.project.dependencies) {

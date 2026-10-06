@@ -8,6 +8,9 @@
     },
     "api/vision-to-code.js": {
       "maxDuration": 120
+    },
+    "api/ai/inline-completion.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [

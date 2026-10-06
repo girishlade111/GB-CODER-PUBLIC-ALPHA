@@ -958,13 +958,40 @@ ${importMapHTML}
             ref={iframeRef}
             className={`w-full h-full ${isProjectEmpty ? 'bg-transparent' : 'bg-white'}`}
             title="Code Preview"
-            // Security trust model: The sandbox restricts the iframe to only scripts
-            // and same-origin access. allow-same-origin is required for console message
-            // passing between the iframe and parent via postMessage. User-authored code
-            // runs in this sandbox and can access same-origin storage. No sensitive auth
-            // tokens or secrets should be stored in localStorage/sessionStorage on this
-            // origin. HTML sanitization was intentionally removed because this is a code
-            // playground where users expect their script tags to execute.
+            /*
+             * Security posture — read this before changing it.
+             *
+             * `allow-scripts` + `allow-same-origin` together are NOT a sandbox. A
+             * document with both is same-origin with this page, which means:
+             *
+             *  - it can read this origin's `localStorage`, `sessionStorage` and
+             *    IndexedDB directly;
+             *  - it can reach `frameElement`, remove the `sandbox` attribute from
+             *    the DOM, and reload — the standard same-origin sandbox escape, so
+             *    the frame is isolated only for as long as it chooses to be.
+             *
+             * The previous comment here claimed `allow-same-origin` was "required for
+             * console message passing via postMessage". That was incorrect:
+             * `postMessage` crosses origins, and `parseBridgeMessage` already gates on
+             * `event.source === iframe.contentWindow` plus a channel marker, neither of
+             * which needs it. Removing the token is a one-line change and it breaks
+             * nothing on the bridge side.
+             *
+             * It is kept because five shipped templates (`todo`, `tasks`,
+             * `calculator`, `store`, `developer`) read and write `localStorage`, and an
+             * opaque-origin frame throws `SecurityError` on access — so dropping it
+             * would break the templates feature outright.
+             *
+             * The real fix is to give previews their own origin (a preview subdomain),
+             * after which `allow-same-origin` is genuinely safe and this becomes
+             * defence in depth rather than the only thing standing between an untrusted
+             * repository and this origin's storage.
+             *
+             * Mitigations applied in the meantime: the E2B API key is session-only by
+             * default (`storeKey`), and deploy/GitHub tokens are held by
+             * `credentialStore`, which documents that its encryption does not protect
+             * against script on this origin.
+             */
             sandbox="allow-scripts allow-same-origin"
             srcDoc={previewContent}
           />

@@ -16,6 +16,7 @@ import {
   SandboxTerminalStatus,
   sandboxTerminal,
 } from '../sandboxTerminal';
+import { sanitizeForTerminal, sanitizeForTerminalLines } from '../../utils/terminalSafety';
 
 /** localStorage key holding the user's own E2B API key. */
 export const E2B_KEY_STORAGE = 'gbcoder_e2b_key';
@@ -105,8 +106,14 @@ export interface SandboxFile {
   content: string;
 }
 
-/** Reads the stored key. Returns '' when absent. */
+/**
+ * Reads the stored key. Returns '' when absent.
+ *
+ * Checks the in-memory value first, which is where the key lives unless the user
+ * explicitly asked for it to be remembered. See `storeKey`.
+ */
 export const readStoredKey = (): string => {
+  if (sessionKey) return sessionKey;
   try {
     return window.localStorage.getItem(E2B_KEY_STORAGE) ?? '';
   } catch {
@@ -114,12 +121,56 @@ export const readStoredKey = (): string => {
   }
 };
 
-export const storeKey = (key: string): void => {
+/**
+ * The key for this tab only. Module-scoped, so a reload discards it.
+ *
+ * This is the important part of the storage decision: an E2B API key is a paid
+ * credential that can create and run sandboxes on the user's account, and it is
+ * the one secret on this origin written in plaintext. Anything able to run script
+ * here — including a preview of an untrusted repository, which shares this origin —
+ * can read it.
+ */
+let sessionKey = '';
+
+/**
+ * Persists the key, or forgets it.
+ *
+ * Defaults to *not* persisting: the key is held in memory for the tab, and dropped
+ * on reload. Remembering is opt-in because the cost of doing so silently is a paid
+ * credential exposed to every script that ever runs in a preview.
+ *
+ * The caller's copy of the key — including in a localStorage entry, which the user
+ * can revoke — is unaffected by not remembering it.
+ */
+export const storeKey = (key: string, remember = false): void => {
+  sessionKey = key;
   try {
-    if (key) window.localStorage.setItem(E2B_KEY_STORAGE, key);
-    else window.localStorage.removeItem(E2B_KEY_STORAGE);
+    if (!key) {
+      window.localStorage.removeItem(E2B_KEY_STORAGE);
+    } else if (remember) {
+      window.localStorage.setItem(E2B_KEY_STORAGE, key);
+    } else {
+      // Make sure an earlier "remember" does not leave the key behind when the user
+      // has since chosen session-only.
+      window.localStorage.removeItem(E2B_KEY_STORAGE);
+    }
   } catch {
     // Private browsing: the session still works, it just will not be remembered.
+  }
+};
+
+/**
+ * True when a key is being persisted to disk rather than held for this tab.
+ *
+ * Surfaced in the UI so the panel can tell the user which of the two is in effect,
+ * rather than implying a persistence that is not there.
+ */
+export const isKeyRemembered = (): boolean => {
+  if (sessionKey) return false;
+  try {
+    return window.localStorage.getItem(E2B_KEY_STORAGE) !== null;
+  } catch {
+    return false;
   }
 };
 
@@ -436,7 +487,9 @@ class SandboxSession {
     let historyIndex = -1;
 
     const emit = (chunk: string) => dataListeners.forEach((listener) => listener(chunk));
-    const prompt = () => emit(`\r\n\x1b[36m${cwd.replace('/home/user', '~')}\x1b[0m$ `);
+    // `cwd` comes back from the server (it is derived from the sandbox's own `pwd`),
+    // so a directory named with escape sequences would otherwise reach xterm here.
+    const prompt = () => emit(`\r\n\x1b[36m${sanitizeForTerminal(cwd.replace('/home/user', '~'))}\x1b[0m$ `);
 
     // Greeting states the transport's limits up front.
     setTimeout(() => {
@@ -470,8 +523,16 @@ class SandboxSession {
       try {
         const result = await this.exec(command, cwd);
         cwd = result.cwd || cwd;
-        if (result.stdout) emit(result.stdout.replace(/\n/g, '\r\n'));
-        if (result.stderr) emit(`\x1b[91m${result.stderr.replace(/\n/g, '\r\n')}\x1b[0m`);
+        /*
+         * Program output is sanitised on the way in.
+         *
+         * This is the one place where a dependency's install script, or the project
+         * itself, can put arbitrary bytes on the terminal. Without this, output can
+         * forge the prompt, rewrite the line the user is typing, scroll away what it
+         * just did, or set the tab title. See utils/terminalSafety.ts.
+         */
+        if (result.stdout) emit(sanitizeForTerminalLines(result.stdout));
+        if (result.stderr) emit(`\x1b[91m${sanitizeForTerminalLines(result.stderr)}\x1b[0m`);
         if (result.exitCode !== 0 && !result.stderr) {
           emit(`\x1b[90mexit ${result.exitCode}\x1b[0m`);
         }

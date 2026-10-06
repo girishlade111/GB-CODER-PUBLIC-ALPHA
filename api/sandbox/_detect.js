@@ -40,9 +40,29 @@ const EXCLUDED_PATTERN = new RegExp(
   'i',
 );
 
-/** True when a path must not be written into the sandbox. */
+/**
+ * True when a path must not be written into the sandbox.
+ *
+ * `..` counts as excluded. These paths are concatenated onto PROJECT_ROOT to build
+ * the write destination, so a `..` segment is a traversal out of the project tree
+ * and into the rest of the sandbox filesystem. Nothing in the exclusion list above
+ * catches that, because `..` is not a name in it.
+ *
+ * Windows separators are rejected too: a path is joined with `/`, so `a\..\..\x`
+ * would not resolve through the join but would still be nonsense to write, and
+ * normalising one separator convention while accepting the other is how the check
+ * quietly stops matching.
+ *
+ * The blast radius is the caller's own sandbox under their own key, not this host,
+ * so this is a scoping fix rather than a boundary — but writing outside the
+ * directory the caller named is not what the endpoint claims to do.
+ */
 function isExcludedPath(path) {
-  return EXCLUDED_PATTERN.test(String(path || ''));
+  const value = String(path || '');
+  if (value.includes('\\')) return true;
+  if (value.includes('\0')) return true;
+  if (value.split('/').includes('..')) return true;
+  return EXCLUDED_PATTERN.test(value);
 }
 
 /** Drops excluded entries from a file list. */

@@ -50,6 +50,12 @@ const RATE_WINDOW_MS = 60_000;
 // Lower than /api/ai's 30: a vision call costs far more than a text call.
 const RATE_MAX = 10;
 
+/**
+ * Upstream deadline, comfortably under the 120s `vercel.json` cap for this
+ * function so the error path can still respond rather than being cut off.
+ */
+const UPSTREAM_TIMEOUT_MS = 90_000;
+
 // Shared so the bucket key cannot be chosen by the caller, and so the map is
 // pruned instead of growing for the life of the instance. See api/_client-ip.js.
 const { clientIp, RateLimiter } = require('../_client-ip');
@@ -234,15 +240,27 @@ module.exports = async function handler(req, res) {
       },
     });
 
-    const result = await generativeModel.generateContent([
-      { text: buildUserMessage(framework, body.userPrompt) },
-      {
-        inlineData: {
-          mimeType,
-          data: imageBase64,
+    /*
+     * Deadline passed through as a request option.
+     *
+     * The SDK has no client-side request timeout by default, so without this a
+     * hung upstream pins the function until the platform kills it — burning the
+     * invocation and holding a rate-limit bucket for the duration. Under 90s
+     * because `vercel.json` caps this function at 120s, which leaves room for the
+     * error path to actually respond rather than being cut off mid-flight.
+     */
+    const result = await generativeModel.generateContent(
+      [
+        { text: buildUserMessage(framework, body.userPrompt) },
+        {
+          inlineData: {
+            mimeType,
+            data: imageBase64,
+          },
         },
-      },
-    ]);
+      ],
+      { timeout: UPSTREAM_TIMEOUT_MS },
+    );
 
     const rawText = result?.response?.text?.();
     const code = extractCode(rawText);
