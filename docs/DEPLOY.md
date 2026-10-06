@@ -43,6 +43,42 @@ and Vercel will reject the build. Lower them to 60 if the project is on Hobby.
 Every key under `functions` must match a real file. Vercel fails the build on a
 pattern that matches nothing.
 
+## Function count is capped at 12 on Hobby
+
+**This is the second most common cause of a deploy failing *after* a successful
+build.** Vercel builds one serverless function per `.js` file under `api/`,
+ignoring any file or directory whose name starts with `_`. Hobby allows **12**.
+
+Exceeding it produces a particularly confusing failure: the build completes, Vercel
+reports `Build Completed in /vercel/output`, and the deploy then dies during
+`Deploying outputs...` — with nothing in the log mentioning a count, and nothing
+pointing at `api/`.
+
+Current count is **12/12**. There is no headroom: adding a route to `api/` without
+removing or consolidating another will break the deploy. `npm run verify:deploy`
+prints the count and fails above 12.
+
+### Development-only handlers belong in `dev-api/`
+
+Two handlers used to sit in `api/`, where merely existing publishes them as live
+functions:
+
+| Handler | Why it must not be deployed |
+| --- | --- |
+| `test-redis` | Wrote to Redis on every hit and returned the driver's raw `error.message`, which can name the endpoint and account. It already returned 404 in production, but still consumed a slot. |
+| `preview/lan-info` | `os.networkInterfaces()` inside a serverless function describes *that function's* sandbox, never the developer's laptop. Every deployed call returned a constant "no LAN address available". |
+
+Both now live in `dev-api/`, which Vercel does not deploy. Both dev servers
+(`vite.config.ts` and `server/index.js`) resolve `api/` first and fall back to
+`dev-api/`, re-applying the traversal gate per directory.
+
+`dev-api/package.json` declares `"type": "commonjs"`, matching `api/package.json`.
+Without it the root `"type": "module"` applies and every handler there fails to load
+with `require is not defined in ES module scope`.
+
+`fetchLanInfo` treats a 404 from `lan-info` as "no LAN available" and falls back to
+cloud mode, so removing the deployed route changed no user-visible behaviour.
+
 ## Rewrites
 
 ```json
