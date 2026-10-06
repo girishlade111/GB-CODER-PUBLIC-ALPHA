@@ -832,12 +832,12 @@ export const deployProject = async (options: DeployOptions): Promise<DeployResul
     includeInjections: options.includeInjections,
   };
 
-  // Checked against the limits before anything leaves the tab, and reused below so
-  // the byte count reported to the user is the count that was actually sent.
-  const estimate = estimateDeploy(project, bundleOptions);
-  if (estimate.problem) throw new DeployError(estimate.problem, { retryable: false });
-
   const files = buildDeployFiles(project, bundleOptions);
+
+  // Measured from the array that is actually about to be sent, so the number
+  // checked here and the number reported afterwards cannot disagree.
+  const problem = checkLimits(files.length, sumBytes(files));
+  if (problem) throw new DeployError(problem, { retryable: false });
 
   report({ stage: 'packaging', message: `Packaged ${files.length} files.`, percent: 20 });
 
