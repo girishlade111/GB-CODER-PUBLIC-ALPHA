@@ -124,7 +124,7 @@ Set in the Vercel project settings. `.env` is gitignored and must stay that way.
 | Variable | Used by |
 | --- | --- |
 | `GEMINI_API_KEY` | `api/ai.js`, `api/vision-to-code.js`, `api/ai/inline-completion.js` |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | `api/share.js`, `api/preview/*`, `api/test-redis.js` |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | `api/share.js`, `api/preview/sync.js`; locally also `dev-api/test-redis.js` |
 | `E2B_API_KEY` (optional) | `api/sandbox/*` proxy |
 | `TERMINAL_TOKEN` | `server/index.js` WebSocket terminal |
 
