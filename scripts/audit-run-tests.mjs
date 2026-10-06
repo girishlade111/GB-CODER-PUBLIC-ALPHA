@@ -529,12 +529,13 @@ describe('parseRepoInput', () => {
 
 describe('listRepos', () => {
   test('walks pages until a short page, and reports write access', async () => {
+    const page1 = Array.from({ length: 100 }, (_, i) => ({
+      id: i, name: `r${i}`, full_name: `me/r${i}`, private: false, default_branch: 'main',
+      description: null, updated_at: '', permissions: { push: true },
+    }));
     const calls = installFetch([
-      { match: '/user/repos?per_page=100&page=1', reply: Array.from({ length: 100 }, (_, i) => ({
-        id: i, name: `r${i}`, full_name: `me/r${i}`, private: false, default_branch: 'main',
-        description: null, updated_at: '', permissions: { push: true },
-      })) },
-      { match: '/user/repos?per_page=100&page=2', reply: [{ id: 999, name: 'last', full_name: 'me/last', private: true, default_branch: 'main', description: 'x', updated_at: '', permissions: { pull: true } }] },
+      { match: '/user/repos?per_page=100&page=1', reply: json(page1) },
+      { match: '/user/repos?per_page=100&page=2', reply: json([{ id: 999, name: 'last', full_name: 'me/last', private: true, default_branch: 'main', description: 'x', updated_at: '', permissions: { pull: true } }]) },
     ]);
 
     const repos = await listRepos(token);
@@ -546,12 +547,12 @@ describe('listRepos', () => {
   });
 
   test('stops at the page cap', async () => {
-    const calls = installFetch([
-      { match: '/user/repos', reply: Array.from({ length: 100 }, (_, i) => ({
-        id: i, name: `r${i}`, full_name: `me/r${i}`, private: false, default_branch: 'main',
-        description: null, updated_at: '', permissions: { push: true },
-      })) },
-    ]);
+    const page = Array.from({ length: 100 }, (_, i) => ({
+      id: i, name: `r${i}`, full_name: `me/r${i}`, private: false, default_branch: 'main',
+      description: null, updated_at: '', permissions: { push: true },
+    }));
+    const calls = installFetch([{ match: '/user/repos', reply: json(page) }]);
+
     const repos = await listRepos(token);
     assert.equal(repos.length, 300, 'bounded at 3 pages');
     assert.equal(calls.length, 3);
