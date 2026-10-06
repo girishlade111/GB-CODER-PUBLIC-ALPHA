@@ -3914,6 +3914,32 @@ function App() {
                 <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </Tooltip>
+            {/*
+              Publishing needs its own icon rather than another Export tab: it
+              hands the project to someone else, which is a different decision
+              from downloading it. Both are hidden below 1025px, where the
+              overflow menu re-triggers the same handlers.
+            */}
+            <Tooltip label="Deploy to Vercel or Netlify" className="hidden desktop:inline-flex">
+              <button
+                onClick={() => setShowDeploy(true)}
+                className={toolbarIconButtonClass}
+                title="Deploy"
+                aria-label="Deploy"
+              >
+                <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
+            <Tooltip label="Push to or pull from GitHub" className="hidden desktop:inline-flex">
+              <button
+                onClick={() => setShowGitHubSync(true)}
+                className={toolbarIconButtonClass}
+                title="GitHub"
+                aria-label="GitHub sync"
+              >
+                <Github className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
           </div>
         }
       />
