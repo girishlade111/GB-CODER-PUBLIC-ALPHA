@@ -23,6 +23,7 @@ import {
   readStoredKey,
   sandboxSession,
   storeKey,
+  isKeyRemembered,
 } from '../../services/sandbox/sandboxSession';
 
 /**
@@ -328,16 +329,39 @@ const SandboxPanel: React.FC<SandboxPanelProps> = ({ files, onClose }) => {
                 Connect
               </button>
             </div>
+            <label className="mt-2 flex cursor-pointer items-start gap-2 text-[11px] leading-snug text-content-muted">
+              <input
+                type="checkbox"
+                checked={rememberKey}
+                onChange={(event) => setRememberKey(event.target.checked)}
+                className="mt-0.5 accent-accent"
+              />
+              <span>
+                Remember this key on this device.{' '}
+                {rememberKey ? (
+                  <>
+                    Currently <strong className="font-medium text-content-secondary">stored in this browser</strong>{' '}
+                    (<code>gbcoder_e2b_key</code>), where any code running in the preview can read it.
+                  </>
+                ) : (
+                  <>
+                    Currently <strong className="font-medium text-content-secondary">held for this tab only</strong>{' '}
+                    and forgotten on reload. Leaving it off is the safer option, because a preview shares this
+                    origin and can read what is stored here.
+                  </>
+                )}
+              </span>
+            </label>
             <p className="mt-2 text-[11px] leading-snug text-content-muted">
-              Stored in this browser only (<code>gbcoder_e2b_key</code>). It is sent to our proxy
-              solely to talk to E2B on your behalf, and is never written to a log or a database.{' '}
+              Sent to our proxy solely to talk to E2B on your behalf, and never written to a log or a
+              database.{' '}
               <a
                 href="https://e2b.dev/dashboard"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-0.5 text-accent hover:underline"
               >
-                Get a key <ExternalLink className="h-3 w-3" />
+                Get a key <ExternalLink className="w-3 h-3" />
               </a>
             </p>
           </div>
