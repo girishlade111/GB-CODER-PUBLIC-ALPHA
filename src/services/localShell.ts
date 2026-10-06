@@ -28,6 +28,16 @@ export const ANSI = {
   cyan: '\x1b[36m',
   white: '\x1b[37m',
   gray: '\x1b[90m',
+  /*
+   * `brightRed` was referenced by the `red()` helper below but never existed here,
+   * so every red message rendered as the literal text "undefined…" in the terminal —
+   * for example `undefinednpm: invalid package name.` It type-checked as an error
+   * under `tsc`, but `vite build` does not type-check, so it shipped.
+   *
+   * 91 is the bright-red slot in xterm's 16-colour palette, sitting alongside the
+   * brightGreen/brightYellow/brightCyan that were already here.
+   */
+  brightRed: '\x1b[91m',
   brightGreen: '\x1b[92m',
   brightYellow: '\x1b[93m',
   brightCyan: '\x1b[96m',
