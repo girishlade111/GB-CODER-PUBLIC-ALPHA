@@ -423,8 +423,16 @@ interface VercelDeployment {
   error?: { message?: string };
 }
 
-/** Terminal states. Anything else means the build is still working. */
-const VERCEL_TERMINAL_FAILURES = new Set(['ERROR', 'CANCELED', 'BLOCKED']);
+/**
+ * States from which a build will never become READY.
+ *
+ * `ERROR` and `CANCELED` are unambiguous. `BLOCKED` is deliberately absent: Vercel
+ * documents it as a deployment state but not as a terminal one, and treating a
+ * merely-delayed build as a failure would report a broken deploy for a site that
+ * goes live a minute later. `MAX_POLL_MS` bounds that case instead, with a message
+ * that points at the dashboard rather than claiming failure.
+ */
+const VERCEL_TERMINAL_FAILURES = new Set(['ERROR', 'CANCELED']);
 
 /** The build's failure text, whichever field this response happens to use. */
 const vercelErrorText = (deployment: VercelDeployment): string | undefined =>
