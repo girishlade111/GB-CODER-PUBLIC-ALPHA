@@ -28,6 +28,25 @@ interface ApiServerRequest {
   [Symbol.asyncIterator]?: () => AsyncIterableIterator<Buffer | string>;
 }
 
+/**
+ * API routes are nested file names like `ai` and `sandbox/exec`.
+ *
+ * This is a security boundary, not validation for its own sake. The request URL is
+ * joined onto the `api/` directory and then `require()`d and invoked as a handler,
+ * so a route containing `..` resolves outside that directory and makes the server
+ * load and run any `.js` file it can name — `server/index.js` itself included.
+ * Node's HTTP server does not normalise the URL before a middleware sees it, so
+ * `GET /api/../server/index` arrives here verbatim.
+ *
+ * Dots are excluded from the character class, which is what makes traversal
+ * impossible rather than merely unlikely: no combination of accepted segments can
+ * produce a path outside `api/`.
+ */
+const SAFE_API_ROUTE = /^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/;
+
+/** Matches the `express.json({ limit: '10mb' })` the standalone server uses. */
+const MAX_API_BODY_BYTES = 10 * 1024 * 1024;
+
 function localApiPlugin(): Plugin {
   return {
     name: 'local-api-handler',
@@ -38,9 +57,22 @@ function localApiPlugin(): Plugin {
         }
 
         const urlPath = req.url.split('?')[0];
-        const route = urlPath.replace(/^\/api\//, '');
+        const route = decodeURIComponent(urlPath.replace(/^\/api\//, ''));
 
-        const candidateFile = path.resolve(__dirname, 'api', `${route}.js`);
+        if (!SAFE_API_ROUTE.test(route)) {
+          // Falls through to Vite's 404 rather than 400, so a bad route looks the
+          // same as a missing one and cannot be used to probe the filesystem.
+          return next();
+        }
+
+        const apiDir = path.resolve(__dirname, 'api');
+        const candidateFile = path.resolve(apiDir, `${route}.js`);
+
+        // Second gate, independent of the regex above.
+        if (!candidateFile.startsWith(apiDir + path.sep)) {
+          return next();
+        }
+
         if (!fs.existsSync(candidateFile)) {
           return next();
         }
@@ -74,10 +106,32 @@ function localApiPlugin(): Plugin {
 
           if (['POST', 'PUT', 'PATCH'].includes(req.method || '')) {
             if (!apiReq.body) {
-              const chunks: Buffer[] = [];
-              for await (const chunk of req) {
-                chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+              /*
+               * Bounded because this middleware has no reverse proxy in front of it
+               * in development, and `express.json({ limit })` — which the standalone
+               * server uses — has no equivalent here. Without a cap, a single
+               * streaming request can grow the heap until the dev server dies.
+               */
+              const declared = Number(req.headers['content-length'] ?? 0);
+              if (declared > MAX_API_BODY_BYTES) {
+                res.statusCode = 413;
+                res.end(JSON.stringify({ error: 'Request body too large.' }));
+                return;
               }
+
+              const chunks: Buffer[] = [];
+              let size = 0;
+              for await (const chunk of req) {
+                const buffer = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
+                size += buffer.length;
+                if (size > MAX_API_BODY_BYTES) {
+                  res.statusCode = 413;
+                  res.end(JSON.stringify({ error: 'Request body too large.' }));
+                  return;
+                }
+                chunks.push(buffer);
+              }
+
               const bodyStr = Buffer.concat(chunks).toString('utf-8');
               try {
                 apiReq.body = bodyStr ? JSON.parse(bodyStr) : {};
@@ -104,8 +158,13 @@ function localApiPlugin(): Plugin {
           if (!res.headersSent) {
             res.statusCode = 500;
             res.setHeader('Content-Type', 'application/json');
-            const message = err instanceof Error ? err.message : 'Internal Server Error';
-            res.end(JSON.stringify({ error: message }));
+            /*
+             * A constant message. `err.message` from a failed `require` embeds the
+             * absolute path of the file it could not find, which turns this
+             * dispatcher into a filesystem oracle for anyone who can reach it.
+             * The detail is already in the log above.
+             */
+            res.end(JSON.stringify({ error: 'Internal Server Error' }));
           }
         }
       });

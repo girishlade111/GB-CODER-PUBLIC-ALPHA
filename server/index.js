@@ -60,9 +60,29 @@ app.get('/', (req, res) => {
 });
 
 // Dynamic API handler routing to all endpoints in api/ (including ai, health, preview, share, sandbox)
+//
+// The route allowlist is a security boundary, not validation for its own sake. The
+// route is joined onto the api/ directory and then require()d and invoked as a
+// handler, so a route containing `..` resolves outside that directory and makes the
+// server load and run any .js file it can name. Express does not normalise the path
+// before a handler sees it, so `GET /api/../server/index` arrives here verbatim.
+// Dots are excluded from the character class, which is what makes traversal
+// impossible rather than merely unlikely.
+const SAFE_API_ROUTE = /^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/;
+
 app.all('/api/*', async (req, res) => {
-    const route = req.path.replace(/^\/api\//, '');
-    const candidateFile = path.resolve(__dirname, '../api', `${route}.js`);
+    const route = decodeURIComponent(req.path.replace(/^\/api\//, ''));
+
+    const apiDir = path.resolve(__dirname, '../api');
+    if (!SAFE_API_ROUTE.test(route)) {
+        return res.status(404).json({ error: 'API route not found.' });
+    }
+
+    const candidateFile = path.resolve(apiDir, `${route}.js`);
+    // Second gate, independent of the regex above.
+    if (!candidateFile.startsWith(apiDir + path.sep)) {
+        return res.status(404).json({ error: 'API route not found.' });
+    }
 
     if (fs.existsSync(candidateFile)) {
         try {
@@ -72,11 +92,14 @@ app.all('/api/*', async (req, res) => {
         } catch (err) {
             console.error(`Error in /api/${route}:`, err);
             if (!res.headersSent) {
-                res.status(500).json({ error: err.message || 'Internal Server Error' });
+                // Constant message: a failed require() embeds the absolute path of
+                // the file it could not find, which would make this dispatcher a
+                // filesystem oracle. The detail is in the log above.
+                res.status(500).json({ error: 'Internal Server Error' });
             }
         }
     } else {
-        res.status(404).json({ error: `API route not found: /api/${route}` });
+        res.status(404).json({ error: 'API route not found.' });
     }
 });
 
