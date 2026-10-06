@@ -701,15 +701,17 @@ const createNetlifySite = async (
   headers: Record<string, string>,
   signal?: AbortSignal,
 ): Promise<NetlifySite> => {
+  // `created_via` is Netlify's documented way for a tool to identify itself in
+  // their dashboard, so a user looking at a Netlify site can see what made it.
   const post = async (body: Record<string, unknown>): Promise<Response> =>
     fetchWithTimeout(
       `${NETLIFY_API}/sites`,
-      { method: 'POST', headers, body: JSON.stringify(body), signal },
+      { method: 'POST', headers, body: JSON.stringify({ created_via: 'gb-coder', ...body }), signal },
       'uploading',
       'Creating the Netlify site',
     );
 
-  let response = await post({ name });
+  let response = await post(name ? { name } : {});
 
   if (response.status === 422) {
     response = await post({});
