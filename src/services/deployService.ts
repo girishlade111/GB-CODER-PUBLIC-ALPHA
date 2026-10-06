@@ -327,7 +327,7 @@ export interface DeployEstimate {
 /** Checks the bundle against provider limits before anything leaves the tab. */
 export const estimateDeploy = (project: MultiFileProject, options: ArchiveOptions = {}): DeployEstimate => {
   const files = buildDeployFiles(project, options);
-  const bytes = files.reduce((total, file) => total + byteLength(file.content), 0);
+  const bytes = sumBytes(files);
 
   let problem: string | undefined;
   if (files.length > MAX_FILES) {
@@ -394,7 +394,7 @@ const deployToVercel = async (options: DeployOptions, files: { path: string; con
     deploymentId: ready.id,
     target: name,
     fileCount: files.length,
-    bytes: files.reduce((total, file) => total + byteLength(file.content), 0),
+    bytes: sumBytes(files),
     durationMs: Date.now() - startedAt,
     logsUrl: ready.inspectorUrl,
   };
@@ -516,7 +516,7 @@ const deployToNetlify = async (options: DeployOptions, files: { path: string; co
     deploymentId: ready.id,
     target: site.id,
     fileCount: files.length,
-    bytes: blob.size,
+    bytes: sumBytes(files),
     durationMs: Date.now() - startedAt,
     logsUrl: ready.admin_url,
   };
