@@ -1,12 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AlertCircle,
+  AlertTriangle,
+  Check,
   CheckCircle,
   ChevronDown,
+  ChevronRight,
   Copy,
   Download,
   FileCode,
   FileText,
   Filter,
+  Info,
   Maximize2,
   Minimize2,
   Play,
@@ -66,6 +71,52 @@ type ConsoleMode = 'console' | 'validator' | 'preview' | 'terminal';
 const CONSOLE_FILTERS: ConsoleLevelFilter[] = ['all', 'log', 'info', 'warn', 'error'];
 const VALIDATOR_FILTERS: ValidatorFilter[] = ['all', 'errors', 'warnings'];
 
+interface SeverityOption {
+  key: ConsoleLevelFilter;
+  label: string;
+  icon: React.ReactNode;
+  tone: string;
+  badgeTone: string;
+}
+
+const SEVERITY_OPTIONS: SeverityOption[] = [
+  {
+    key: 'all',
+    label: 'All Levels',
+    icon: <Filter className="w-3.5 h-3.5 text-teal" />,
+    tone: 'text-content-on-dark',
+    badgeTone: 'bg-product-active text-content-on-dark-soft',
+  },
+  {
+    key: 'error',
+    label: 'Error',
+    icon: <AlertCircle className="w-3.5 h-3.5 text-red-400" />,
+    tone: 'text-red-300',
+    badgeTone: 'bg-danger/20 text-red-300',
+  },
+  {
+    key: 'warn',
+    label: 'Warning',
+    icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />,
+    tone: 'text-amber-300',
+    badgeTone: 'bg-amber-500/20 text-amber-300',
+  },
+  {
+    key: 'info',
+    label: 'Info',
+    icon: <Info className="w-3.5 h-3.5 text-sky-400" />,
+    tone: 'text-sky-300',
+    badgeTone: 'bg-sky-500/20 text-sky-300',
+  },
+  {
+    key: 'log',
+    label: 'Log',
+    icon: <ChevronRight className="w-3.5 h-3.5 text-content-on-dark-soft" />,
+    tone: 'text-content-on-dark',
+    badgeTone: 'bg-product-active text-content-on-dark-soft',
+  },
+];
+
 const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
   messages,
   counts,
@@ -99,6 +150,8 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
   const [hasOpenedTerminal, setHasOpenedTerminal] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
+  const [showSeverityMenu, setShowSeverityMenu] = useState(false);
+  const severityMenuRef = useRef<HTMLDivElement>(null);
 
   /* A voice command can focus a sub-tab directly. */
   useEffect(() => {
@@ -120,6 +173,31 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showExportMenu]);
+
+  /* Close severity dropdown when clicking outside */
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (severityMenuRef.current && !severityMenuRef.current.contains(event.target as Node)) {
+        setShowSeverityMenu(false);
+      }
+    };
+    if (showSeverityMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showSeverityMenu]);
+
+  const currentSeverityOption = useMemo(() => {
+    return (
+      SEVERITY_OPTIONS.find((opt) => opt.key === consoleFilter) || SEVERITY_OPTIONS[0]
+    );
+  }, [consoleFilter]);
+
+  const currentSeverityCount = useMemo(() => {
+    return consoleFilter === 'all'
+      ? counts.total
+      : counts[consoleFilter as keyof ConsoleCounts];
+  }, [consoleFilter, counts]);
 
   /** Messages matching the level and search query */
   const filteredConsoleMessages = useMemo(() => {
@@ -470,26 +548,103 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
       {activeMode === 'console' && (
         <div className="bg-product border-b border-stroke-dark px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Filter className="w-3.5 h-3.5 text-content-on-dark-soft mr-0.5" />
-            {CONSOLE_FILTERS.map((filter) => {
-              const count =
-                filter === 'all' ? counts.total : counts[filter as keyof ConsoleCounts];
-              return (
-                <button
-                  key={filter}
-                  onClick={() => setConsoleFilter(filter)}
-                  data-testid={`console-filter-${filter}`}
-                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
-                    consoleFilter === filter
-                      ? 'bg-accent text-accent-fg'
-                      : 'bg-product-hover text-content-on-dark-soft hover:bg-product-active'
-                  }`}
+            {/* Severity Level Dropdown Menu */}
+            <div className="relative" ref={severityMenuRef}>
+              <button
+                type="button"
+                onClick={() => setShowSeverityMenu((open) => !open)}
+                className={`px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1.5 border transition-colors ${
+                  showSeverityMenu
+                    ? 'bg-product-hover border-stroke-dark-strong text-content-on-dark'
+                    : consoleFilter !== 'all'
+                      ? 'bg-product-soft border-accent/40 text-content-on-dark'
+                      : 'bg-product-soft hover:bg-product-hover border-stroke-dark text-content-on-dark'
+                }`}
+                title="Filter logs by severity level (Error, Warning, Info, Log)"
+                aria-label="Filter logs by severity level"
+                aria-expanded={showSeverityMenu}
+                data-testid="console-severity-dropdown-btn"
+              >
+                {currentSeverityOption.icon}
+                <span className="font-medium">{currentSeverityOption.label}</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-product-active text-content-on-dark-soft">
+                  {currentSeverityCount}
+                </span>
+                <ChevronDown className="w-3 h-3 text-content-on-dark-soft ml-0.5" />
+              </button>
+
+              {showSeverityMenu && (
+                <div
+                  className="absolute left-0 top-full mt-1.5 w-52 bg-product-elevated border border-stroke-dark-strong rounded-lg shadow-2xl z-50 p-1 text-xs font-sans text-content-on-dark animate-in fade-in zoom-in-95 duration-100"
+                  data-testid="console-severity-dropdown-menu"
                 >
-                  {filter === 'all' ? 'All' : filter.toUpperCase()}
-                  <span className="ml-1 opacity-70">{count}</span>
-                </button>
-              );
-            })}
+                  <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-content-on-dark-soft border-b border-stroke-dark pb-1 mb-1">
+                    Filter by Severity
+                  </div>
+                  <div className="space-y-0.5">
+                    {SEVERITY_OPTIONS.map((option) => {
+                      const count =
+                        option.key === 'all'
+                          ? counts.total
+                          : counts[option.key as keyof ConsoleCounts];
+                      const isSelected = consoleFilter === option.key;
+
+                      return (
+                        <button
+                          key={option.key}
+                          type="button"
+                          onClick={() => {
+                            setConsoleFilter(option.key);
+                            setShowSeverityMenu(false);
+                          }}
+                          data-testid={`console-filter-${option.key}`}
+                          className={`w-full text-left px-2 py-1.5 rounded flex items-center justify-between gap-2 transition-colors ${
+                            isSelected
+                              ? 'bg-product-hover text-content-on-dark font-medium'
+                              : 'text-content-on-dark-soft hover:bg-product-hover hover:text-content-on-dark'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            {option.icon}
+                            <span className={isSelected ? option.tone : ''}>{option.label}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${option.badgeTone}`}
+                            >
+                              {count}
+                            </span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-accent" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Filter Pill Buttons (for direct 1-click access on desktop) */}
+            <div className="hidden lg:flex items-center gap-1 ml-1 border-l border-stroke-dark pl-2">
+              {CONSOLE_FILTERS.map((filter) => {
+                const count =
+                  filter === 'all' ? counts.total : counts[filter as keyof ConsoleCounts];
+                return (
+                  <button
+                    key={filter}
+                    onClick={() => setConsoleFilter(filter)}
+                    className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                      consoleFilter === filter
+                        ? 'bg-accent text-accent-fg'
+                        : 'bg-product-hover text-content-on-dark-soft hover:bg-product-active'
+                    }`}
+                  >
+                    {filter === 'all' ? 'All' : filter.toUpperCase()}
+                    <span className="ml-1 opacity-70">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Search / Filter input */}
