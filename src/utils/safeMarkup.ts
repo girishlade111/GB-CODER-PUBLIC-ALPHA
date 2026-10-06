@@ -55,12 +55,20 @@ export const escapeHtml = (value: string): string =>
  *
  * Everything else — headings, lists, links, images, raw HTML — stays as literal
  * text.
+ *
+ * The `<code>` class is this app's token set, so the module is deliberately
+ * presentation-aware: it renders *this* app's assistant, not a general markdown
+ * dialect, and keeping the styling here is what stops the class from drifting back
+ * into the component as an unescaped string literal.
  */
 export const renderInlineMarkup = (text: string): string => {
   const escaped = escapeHtml(text);
 
   return escaped
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(
+      /`([^`]+)`/g,
+      '<code class="bg-product-active text-content-on-dark px-1 py-0.5 rounded text-sm">$1</code>',
+    )
     .replace(/\n/g, '<br />');
 };
