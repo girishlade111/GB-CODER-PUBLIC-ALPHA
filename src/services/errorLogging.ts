@@ -122,7 +122,10 @@ if (typeof window !== 'undefined') {
     });
 
     window.addEventListener('unhandledrejection', (event) => {
-        errorLoggingService.logPromiseRejection(event.reason, event.promise);
+        // Only the reason is passed. The signature takes one argument, so the
+        // second here was being dropped at runtime regardless of what the type
+        // checker said about it.
+        errorLoggingService.logPromiseRejection(event.reason);
         event.preventDefault(); // Prevent console spam
     });
 }

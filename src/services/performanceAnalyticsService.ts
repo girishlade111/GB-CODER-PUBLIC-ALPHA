@@ -13,6 +13,24 @@ export class PerformanceAnalyticsService {
     this.sessionId = this.generateSessionId();
     this.startTime = Date.now();
     this.metrics = this.initializeMetrics();
+    /*
+     * Restore before monitoring starts.
+     *
+     * `saveEvents()` runs on every tracked event, so the previous session's events
+     * were already on disk — but nothing ever read them back, meaning the array
+     * silently started empty on each reload and the "last 1000 events" window could
+     * never actually span a page load. `loadEvents` existed for this and was simply
+     * never called.
+     *
+     * Guarded on `sessionStorage` because this module is imported in contexts where
+     * storage access can throw, and a monitoring service should not be the thing
+     * that breaks the page.
+     */
+    try {
+      this.loadEvents();
+    } catch {
+      // Storage blocked or unavailable — start empty rather than fail construction.
+    }
     this.startMonitoring();
   }
 

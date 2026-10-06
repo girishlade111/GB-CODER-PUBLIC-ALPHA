@@ -345,9 +345,13 @@ class CodeAssistService {
           reasoningOutput = `Code Assist evaluated the workspace and produced the following implementation guidance.`;
         }
       } else {
-        // Fallback simulation / intelligent mock response when backend API key is missing or offline
-        const errJson = await response.json().catch(() => ({}));
-        const isOffline = response.status === 404 || response.status === 500 || errJson.error;
+        // Fallback simulation / intelligent mock response when backend API key is missing or offline.
+        //
+        // This branch used to parse the error body into `errJson` and derive an
+        // `isOffline` flag from it, then use neither. Both are gone: the response is
+        // already known to be non-OK here, and nothing downstream consulted the
+        // parsed body, so leaving the `json()` call in place only cost a promise and
+        // a token of confusion about what this path decides.
 
         reasoningOutput = `The user wants to implement: "${prompt}".\n\n1. Analyze current workspace files (${project.files.length} files detected).\n2. Construct modular components, state management and modern styles.\n3. Verify compatibility with WebContainer runtime.`;
 

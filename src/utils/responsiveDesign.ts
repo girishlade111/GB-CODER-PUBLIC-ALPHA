@@ -36,7 +36,6 @@ const BREAKPOINTS: Record<Breakpoint, number> = {
 export class ResponsiveDesignService {
   private currentConfig: ResponsiveConfig;
   private listeners: Set<(config: ResponsiveConfig) => void> = new Set();
-  private resizeObserver?: ResizeObserver;
   private mediaQueryLists: Map<Breakpoint, MediaQueryList> = new Map();
   private orientationTimer?: ReturnType<typeof setTimeout>;
 
