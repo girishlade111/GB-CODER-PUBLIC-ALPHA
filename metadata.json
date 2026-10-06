@@ -1,0 +1,7 @@
+{
+  "name": "GB Coder",
+  "description": "Free AI-powered online code editor for HTML, CSS & JavaScript with live preview, intelligent code suggestions, and real-time debugging. No signup required.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

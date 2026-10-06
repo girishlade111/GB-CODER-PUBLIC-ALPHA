@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0 --port 3000",
     "dev:server": "cd server && node index.js",
     "dev:all": "concurrently --names \"SERVER,VITE\" --prefix-colors \"cyan,green\" \"cd server && node index.js\" \"vite\"",
     "build": "vite build",

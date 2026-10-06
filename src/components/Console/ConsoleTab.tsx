@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { AlertCircle, AlertTriangle, Bug, ChevronRight, Info, Terminal } from 'lucide-react';
 import ConsoleValueTree from './ConsoleValueTree';
+import HighlightText from './HighlightText';
 import { editorNavigator } from '../../services/editorNavigator';
+import { matchesConsoleMessage } from '../../utils/consoleFilter';
 import type {
   ConsoleLevelFilter,
   ConsoleMessage,
@@ -11,6 +13,10 @@ import type {
 interface ConsoleTabProps {
   messages: ConsoleMessage[];
   filter: ConsoleLevelFilter;
+  searchQuery?: string;
+  isRegex?: boolean;
+  isCaseSensitive?: boolean;
+  onClearSearch?: () => void;
 }
 
 /** HH:MM:SS.mmm, as specified. `toLocaleTimeString` drops milliseconds. */
@@ -45,12 +51,27 @@ const LEVEL_ROW: Record<ConsoleMessage['level'], string> = {
  * the exact line; frames from libraries, bundles or the injected bridge render
  * as inert text rather than as a link that would navigate somewhere misleading.
  */
-const StackFrameRow: React.FC<{ resolved: ResolvedStackFrame }> = ({ resolved }) => {
+const StackFrameRow: React.FC<{
+  resolved: ResolvedStackFrame;
+  searchQuery?: string;
+  isRegex?: boolean;
+  isCaseSensitive?: boolean;
+}> = ({ resolved, searchQuery, isRegex, isCaseSensitive }) => {
   const { frame, location } = resolved;
   const label = frame.fn ? `${frame.fn} (${frame.file}:${frame.line}:${frame.column})` : `${frame.file}:${frame.line}:${frame.column}`;
 
   if (!location) {
-    return <div className="text-[11px] text-content-on-dark-soft font-mono pl-5 truncate">at {label}</div>;
+    return (
+      <div className="text-[11px] text-content-on-dark-soft font-mono pl-5 truncate">
+        at{' '}
+        <HighlightText
+          text={label}
+          query={searchQuery}
+          isRegex={isRegex}
+          isCaseSensitive={isCaseSensitive}
+        />
+      </div>
+    );
   }
 
   return (
@@ -60,23 +81,52 @@ const StackFrameRow: React.FC<{ resolved: ResolvedStackFrame }> = ({ resolved })
       title={`Jump to ${location.file}:${location.line}:${location.column}`}
       className="block w-full text-left text-[11px] font-mono pl-5 text-sky-400/80 hover:text-sky-300 hover:underline truncate"
     >
-      at {frame.fn ? `${frame.fn} ` : ''}
+      at{' '}
+      {frame.fn ? (
+        <>
+          <HighlightText
+            text={frame.fn}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />{' '}
+        </>
+      ) : (
+        ''
+      )}
       <span className="text-sky-300">
-        {location.file}:{location.line}:{location.column}
+        <HighlightText
+          text={`${location.file}:${location.line}:${location.column}`}
+          query={searchQuery}
+          isRegex={isRegex}
+          isCaseSensitive={isCaseSensitive}
+        />
       </span>
     </button>
   );
 };
 
-const ConsoleTab: React.FC<ConsoleTabProps> = ({ messages, filter }) => {
+const ConsoleTab: React.FC<ConsoleTabProps> = ({
+  messages,
+  filter,
+  searchQuery = '',
+  isRegex = false,
+  isCaseSensitive = false,
+  onClearSearch,
+}) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   /** True while the user is scrolled to the bottom, so autoscroll can pause. */
   const pinnedToBottom = useRef(true);
 
-  const visible = useMemo(
-    () => (filter === 'all' ? messages : messages.filter((message) => message.level === filter)),
-    [messages, filter],
-  );
+  const visible = useMemo(() => {
+    let result = filter === 'all' ? messages : messages.filter((message) => message.level === filter);
+    if (searchQuery && searchQuery.trim()) {
+      result = result.filter((message) =>
+        matchesConsoleMessage(message, searchQuery, { isRegex, isCaseSensitive }),
+      );
+    }
+    return result;
+  }, [messages, filter, searchQuery, isRegex, isCaseSensitive]);
 
   const handleScroll = () => {
     const element = scrollRef.current;
@@ -97,19 +147,44 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({ messages, filter }) => {
   }, [visible.length]);
 
   if (visible.length === 0) {
+    const hasSearch = Boolean(searchQuery && searchQuery.trim());
     return (
       <div className="h-full flex flex-col items-center justify-center text-center px-4 text-content-on-dark-soft">
         <Terminal className="w-6 h-6 mb-2 opacity-50" />
         <p className="text-sm">
-          {messages.length === 0
-            ? 'No console output yet.'
-            : `No ${filter} messages. ${messages.length} hidden by the filter.`}
+          {messages.length === 0 ? (
+            'No console output yet.'
+          ) : hasSearch ? (
+            <>
+              No logs matching pattern{' '}
+              <span className="font-mono text-accent bg-product-active px-1.5 py-0.5 rounded text-xs">
+                "{searchQuery}"
+              </span>
+            </>
+          ) : (
+            `No ${filter} messages. ${messages.length} hidden by the filter.`
+          )}
         </p>
-        {messages.length === 0 && (
+        {messages.length === 0 ? (
           <p className="text-xs mt-1 text-content-on-dark-soft">
             Calls to console.log, warn, error and info from the Live Preview appear here.
           </p>
-        )}
+        ) : hasSearch ? (
+          <div className="mt-2 flex flex-col items-center gap-1.5">
+            <span className="text-xs text-content-on-dark-soft">
+              {messages.length} log{messages.length === 1 ? '' : 's'} hidden by active filters
+            </span>
+            {onClearSearch && (
+              <button
+                type="button"
+                onClick={onClearSearch}
+                className="mt-1 px-2.5 py-1 text-xs rounded border border-stroke-dark bg-product-hover text-accent hover:bg-product-active transition-colors"
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -138,11 +213,22 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({ messages, filter }) => {
             <div className="flex flex-wrap items-start gap-x-2 gap-y-0.5 break-words">
               {/* Each argument keeps its own type and expandability. */}
               {message.args.map((arg, index) => (
-                <ConsoleValueTree key={index} value={arg} />
+                <ConsoleValueTree
+                  key={index}
+                  value={arg}
+                  searchQuery={searchQuery}
+                  isRegex={isRegex}
+                  isCaseSensitive={isCaseSensitive}
+                />
               ))}
               {message.origin === 'build' && (
                 <span className="text-[10px] uppercase tracking-wide text-content-on-dark-soft border border-stroke-dark-strong rounded px-1">
-                  build
+                  <HighlightText
+                    text="build"
+                    query={searchQuery}
+                    isRegex={isRegex}
+                    isCaseSensitive={isCaseSensitive}
+                  />
                 </span>
               )}
             </div>
@@ -150,7 +236,13 @@ const ConsoleTab: React.FC<ConsoleTabProps> = ({ messages, filter }) => {
             {message.stack.length > 0 && (
               <div className="mt-1 space-y-0.5">
                 {message.stack.map((resolved, index) => (
-                  <StackFrameRow key={index} resolved={resolved} />
+                  <StackFrameRow
+                    key={index}
+                    resolved={resolved}
+                    searchQuery={searchQuery}
+                    isRegex={isRegex}
+                    isCaseSensitive={isCaseSensitive}
+                  />
                 ))}
               </div>
             )}
