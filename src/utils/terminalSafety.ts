@@ -40,13 +40,44 @@
  */
 
 /**
- * ESC (0x1b) and DEL (0x7f) plus every C1 control (0x80-0x9f).
+ * Complete escape sequences, matched whole.
  *
- * Removing the introducers is what actually neutralises the sequences — an orphaned
- * `[2J` is just seven visible characters, and an orphaned `]0;…` is likewise inert.
- * The C1 range is included because 8-bit CSI and OSC (`0x9b`, `0x9d`) are
- * single-byte equivalents of the same attacks, and terminals that support them do
- * not require the ESC prefix.
+ * Stripping only the ESC byte is not enough. `\x1b[10D` would leave `[10D` — inert
+ * as far as xterm is concerned, since it has no introducer left, but visible to the
+ * user as garbage that looks like a corrupted prompt. Removing the sequence
+ * introducer *and* its parameters and final byte is what actually makes the output
+ * disappear.
+ *
+ * The forms covered:
+ *
+ *  - **CSI** — `ESC [ params intermediates final`, and its 8-bit `\x9b` equivalent.
+ *    This is the one that moves the cursor, clears the screen and erases lines.
+ *  - **OSC** — `ESC ] …` up to BEL or ST (`ESC \`), and its 8-bit `\x9d`
+ *    equivalent. This is the one that sets the window title.
+ *  - **Everything else** — `ESC` plus a single byte, which covers the two-byte
+ *    Fe/nF families (`ESC ( B`, `ESC =`, and so on).
+ *
+ * An unterminated OSC deliberately consumes to end of string. That is the safe
+ * failure: dropping a little visible text beats passing through a partial control
+ * sequence.
+ */
+// eslint-disable-next-line no-control-regex
+const ANSI_SEQUENCE = new RegExp(
+  [
+    '\\x1b\\[[0-?]*[ -/]*[@-~]',           // CSI (7-bit)
+    '\\x9b[0-?]*[ -/]*[@-~]',              // CSI (8-bit)
+    '\\x1b\\][^\\x07\\x1b]*(?:\\x07|\\x1b\\\\)?', // OSC, BEL or ST terminated
+    '\\x9d[^\\x07\\x9c]*(?:\\x07|\\x9c)?',  // OSC (8-bit)
+    '\\x1b[ -/]*[0-~]',                    // two-byte Fe/nF families
+  ].join('|'),
+  'g',
+);
+
+/**
+ * Any remaining control byte: a lone ESC, DEL, and the C1 range.
+ *
+ * Reached only after whole sequences are gone, so this is the backstop for
+ * malformed or truncated input.
  */
 // eslint-disable-next-line no-control-regex
 const CONTROL_SEQUENCES = /[\x1b\x7f\x80-\x9f]/g;
@@ -64,10 +95,10 @@ const OTHER_C0 = /[\x00-\x08\x0b\x0c\x0e-\x1f]/g;
  * Makes a string safe to write to the terminal.
  *
  * @param value text of unknown provenance
- * @returns the text with control sequences removed
+ * @returns the text with escape sequences and control characters removed
  */
 export const sanitizeForTerminal = (value: string): string =>
-  value.replace(CONTROL_SEQUENCES, '').replace(OTHER_C0, '');
+  value.replace(ANSI_SEQUENCE, '').replace(CONTROL_SEQUENCES, '').replace(OTHER_C0, '');
 
 /**
  * Convenience for multi-line output.
