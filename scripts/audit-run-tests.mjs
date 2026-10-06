@@ -16,8 +16,9 @@
  * it.
  */
 
-import { test, describe, before, after, beforeEach } from 'node:test';
+import { test, describe, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { services, cleanup } from './audit-harness.mjs';
 
 const {
