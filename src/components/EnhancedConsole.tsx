@@ -1,7 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle,
+  ChevronDown,
   Copy,
+  Download,
+  FileCode,
+  FileText,
   Filter,
   Maximize2,
   Minimize2,
@@ -13,6 +17,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import ConsoleTab from './Console/ConsoleTab';
 import ValidatorTab, { ValidatorFilter } from './Console/ValidatorTab';
 import TerminalTab from './Console/TerminalTab';
@@ -21,6 +26,7 @@ import { MultiFileProject } from '../types/files';
 import { ValidationSummary } from '../services/validationService';
 import { ShellPackage, ShellPackageError } from '../services/localShell';
 import { matchesConsoleMessage } from '../utils/consoleFilter';
+import { exportConsoleLogs } from '../utils/consoleExport';
 import type { ConsoleLevelFilter, ConsoleMessage } from '../types/consoleFeed';
 import type { ConsoleCounts } from '../hooks/useConsoleFeed';
 
@@ -91,6 +97,8 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
   const [previewCount, setPreviewCount] = useState(0);
   /** Set the first time the Terminal tab is opened; never unset. */
   const [hasOpenedTerminal, setHasOpenedTerminal] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   /* A voice command can focus a sub-tab directly. */
   useEffect(() => {
@@ -99,6 +107,19 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
     if (subTabRequest.tab === 'terminal') setHasOpenedTerminal(true);
     onSubTabRequestHandled?.();
   }, [subTabRequest, onSubTabRequestHandled]);
+
+  /* Close export dropdown when clicking outside */
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false);
+      }
+    };
+    if (showExportMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showExportMenu]);
 
   /** Messages matching the level and search query */
   const filteredConsoleMessages = useMemo(() => {
@@ -185,6 +206,34 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
     else if (activeMode === 'validator') onRevalidate();
   }, [activeMode, onClear, onRevalidate]);
 
+  const handleExport = useCallback(
+    (format: 'txt' | 'json', exportFilteredOnly: boolean) => {
+      const listToExport = exportFilteredOnly ? filteredConsoleMessages : messages;
+
+      if (listToExport.length === 0) {
+        toast.error('No console logs to export');
+        setShowExportMenu(false);
+        return;
+      }
+
+      exportConsoleLogs(listToExport, format, {
+        filter: consoleFilter,
+        searchQuery: consoleSearchQuery,
+        totalCount: messages.length,
+        baseName:
+          exportFilteredOnly && (consoleFilter !== 'all' || consoleSearchQuery.trim())
+            ? 'filtered-console-logs'
+            : 'console-logs',
+      });
+
+      toast.success(
+        `Exported ${listToExport.length} log${listToExport.length === 1 ? '' : 's'} (.${format})`,
+      );
+      setShowExportMenu(false);
+    },
+    [filteredConsoleMessages, messages, consoleFilter, consoleSearchQuery],
+  );
+
   const tabs: { key: ConsoleMode; label: string; icon: React.ReactNode; badge?: string | null; tone?: string }[] = [
     {
       key: 'console',
@@ -260,6 +309,99 @@ const EnhancedConsole: React.FC<EnhancedConsoleProps> = ({
                 Run
               </button>
             </>
+          )}
+
+          {activeMode === 'console' && (
+            <div className="relative" ref={exportMenuRef}>
+              <button
+                type="button"
+                onClick={() => setShowExportMenu((open) => !open)}
+                className={`px-2 py-1 rounded text-xs flex items-center gap-1 transition-colors ${
+                  showExportMenu
+                    ? 'bg-product-hover text-content-on-dark'
+                    : 'text-content-on-dark-soft hover:bg-product-hover hover:text-content-on-dark'
+                }`}
+                title="Export console logs as Text or JSON"
+                aria-label="Export Logs"
+                aria-expanded={showExportMenu}
+                data-testid="console-export-logs-button"
+              >
+                <Download className="w-3.5 h-3.5 text-accent" />
+                <span className="hidden sm:inline font-medium">Export</span>
+                <ChevronDown className="w-3 h-3 opacity-60" />
+              </button>
+
+              {showExportMenu && (
+                <div
+                  className="absolute right-0 top-full mt-1.5 w-60 bg-product-elevated border border-stroke-dark-strong rounded-lg shadow-2xl z-50 p-1.5 text-xs font-sans text-content-on-dark"
+                  data-testid="console-export-dropdown"
+                >
+                  <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-content-on-dark-soft border-b border-stroke-dark pb-1.5 mb-1 flex justify-between items-center">
+                    <span>Export Logs</span>
+                    <span className="text-[10px] text-accent font-mono font-normal">
+                      {filteredConsoleMessages.length} log{filteredConsoleMessages.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleExport('txt', true)}
+                      className="w-full text-left px-2 py-1.5 rounded flex items-center gap-2 hover:bg-product-hover text-content-on-dark transition-colors group"
+                      data-testid="console-export-txt-btn"
+                    >
+                      <FileText className="w-4 h-4 text-amber-400 group-hover:scale-105 transition-transform flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-xs">Text File (.txt)</div>
+                        <div className="text-[10px] text-content-on-dark-soft truncate">
+                          Formatted with timestamps & stack traces
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleExport('json', true)}
+                      className="w-full text-left px-2 py-1.5 rounded flex items-center gap-2 hover:bg-product-hover text-content-on-dark transition-colors group"
+                      data-testid="console-export-json-btn"
+                    >
+                      <FileCode className="w-4 h-4 text-teal group-hover:scale-105 transition-transform flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-xs">JSON File (.json)</div>
+                        <div className="text-[10px] text-content-on-dark-soft truncate">
+                          Full structured logs & arguments
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  {(consoleFilter !== 'all' || Boolean(consoleSearchQuery && consoleSearchQuery.trim())) &&
+                    messages.length !== filteredConsoleMessages.length && (
+                      <div className="mt-1.5 pt-1.5 border-t border-stroke-dark">
+                        <div className="px-2 py-0.5 text-[10px] text-content-on-dark-soft">
+                          Export unfiltered:
+                        </div>
+                        <div className="grid grid-cols-2 gap-1 mt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleExport('txt', false)}
+                            className="px-2 py-1 rounded text-[11px] bg-product-soft hover:bg-product-hover text-center truncate transition-colors text-content-on-dark-soft hover:text-content-on-dark border border-stroke-dark"
+                          >
+                            All .txt ({messages.length})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleExport('json', false)}
+                            className="px-2 py-1 rounded text-[11px] bg-product-soft hover:bg-product-hover text-center truncate transition-colors text-content-on-dark-soft hover:text-content-on-dark border border-stroke-dark"
+                          >
+                            All .json ({messages.length})
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                </div>
+              )}
+            </div>
           )}
 
           {(activeMode === 'console' || activeMode === 'validator') && (
