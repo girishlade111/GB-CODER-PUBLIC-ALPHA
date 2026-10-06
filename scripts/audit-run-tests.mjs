@@ -276,15 +276,19 @@ describe('buildDeployFiles / estimateDeploy', () => {
   });
 
   test('reports a problem when the file count is over the limit', () => {
+    // A framework project, because that is the mode where every editor file
+    // becomes an archive member — plain mode always emits its three fixed paths.
     const many = {
-      projectType: 'plain',
+      projectType: 'react',
+      entry: 'main.jsx',
       files: Array.from({ length: 1200 }, (_, i) => ({
-        path: `f${i}.js`, content: 'x', language: 'javascript',
+        path: `src/f${i}.js`, content: 'x', language: 'javascript',
       })),
     };
     const estimate = estimateDeploy(many);
-    assert.ok(estimate.problem, 'expected a limit problem');
+    assert.ok(estimate.problem, `expected a limit problem, got ${JSON.stringify(estimate)}`);
     assert.match(estimate.problem, /files/);
+    assert.ok(estimate.fileCount > 900);
   });
 });
 
@@ -292,9 +296,19 @@ describe('buildDeployFiles / estimateDeploy', () => {
 
 describe('deployProject — Vercel', () => {
   test('creates, polls to READY, and returns the production URL', async () => {
+    let polls = 0;
     const calls = installFetch([
       { match: '/v13/deployments?skipAutoDetectionConfirmation', reply: json({ id: 'dpl_1', readyState: 'QUEUED', url: 'demo-abc.vercel.app' }) },
-      { match: '/v13/deployments/dpl_1', reply: (n) => json({ id: 'dpl_1', readyState: n < 2 ? 'BUILDING' : 'READY', url: 'demo-abc.vercel.app', alias: ['demo.vercel.app'] }) },
+      {
+        match: '/v13/deployments/dpl_1',
+        reply: () => {
+          polls += 1;
+          // Two non-ready states first, so the polling loop is genuinely exercised.
+          return polls < 3
+            ? json({ id: 'dpl_1', readyState: polls === 1 ? 'INITIALIZING' : 'BUILDING', url: 'demo-abc.vercel.app' })
+            : json({ id: 'dpl_1', readyState: 'READY', url: 'demo-abc.vercel.app', alias: ['demo.vercel.app'] });
+        },
+      },
     ]);
 
     const result = await deployProject({ project: plainProject, provider: 'vercel', token, projectName: 'demo' });
@@ -303,7 +317,7 @@ describe('deployProject — Vercel', () => {
     assert.equal(result.url, 'https://demo.vercel.app', 'should prefer the production alias');
     assert.equal(result.deploymentId, 'dpl_1');
     assert.ok(result.fileCount >= 4);
-    assert.ok(calls.length >= 3, `expected create + polls, got ${calls.length}`);
+    assert.equal(calls.length, 4, `expected 1 create + 3 polls, got ${calls.length}`);
 
     const create = calls[0];
     assert.equal(create.method, 'POST');
@@ -401,9 +415,16 @@ describe('deployProject — Vercel', () => {
 
 describe('deployProject — Netlify', () => {
   test('creates a site, uploads a zip, polls, and returns the site URL', async () => {
+    let polls = 0;
     const calls = installFetch([
       { match: '/api/v1/sites', method: 'POST', reply: json({ id: 'site_1', name: 'demo', ssl_url: 'https://demo.netlify.app' }) },
-      { match: '/api/v1/deploys/', reply: (n) => json({ id: 'dep_1', state: n < 2 ? 'uploaded' : 'ready' }) },
+      {
+        match: '/api/v1/deploys/',
+        reply: () => {
+          polls += 1;
+          return json({ id: 'dep_1', state: polls < 2 ? 'uploaded' : 'ready' });
+        },
+      },
     ]);
 
     const result = await deployProject({ project: plainProject, provider: 'netlify', token, projectName: 'demo' });
@@ -412,6 +433,7 @@ describe('deployProject — Netlify', () => {
     assert.equal(result.url, 'https://demo.netlify.app');
     assert.equal(result.target, 'site_1');
     assert.equal(result.assignedName, 'demo');
+    assert.ok(polls >= 2, `expected the deploy to be polled, saw ${polls}`);
 
     const siteCall = calls.find((c) => c.url.endsWith('/sites') && c.method === 'POST');
     const siteBody = JSON.parse(siteCall.body);
