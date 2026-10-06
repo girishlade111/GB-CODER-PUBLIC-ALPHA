@@ -211,15 +211,26 @@ const AUTH_HELP =
  *
  * 401 is a bad token; 403 is either a scope problem or an exhausted rate limit,
  * distinguished by the headers GitHub sets; 404 is a repo or branch that is not
- * there (or is private and the token cannot see it); 422 on a ref update is a
- * non-fast-forward, i.e. the branch moved underneath us.
+ * there (or is private and the token cannot see it).
+ *
+ * 422 is deliberately *not* treated as a merge conflict here. It is GitHub's
+ * generic validation status: `POST /user/repos` returns it for a name that is
+ * already taken, which is a name problem and not a concurrent-push problem. Only
+ * `updateRef` knows its 422 means "not a fast forward", so only it converts one —
+ * see `updateRef`.
+ *
+ * GitHub's own `message` is included where present, because it is specific
+ * ("name already exists on this account", "No commit found for SHA") and far more
+ * useful than the bare status.
  */
-const toSyncError = (response: Response, context: string): GitHubSyncError => {
+const toSyncError = async (response: Response, context: string): Promise<GitHubSyncError> => {
   const { remaining, resetAt } = readRateLimit(response);
   const retryAfterSeconds = resetAt ? Math.max(0, resetAt - Math.floor(Date.now() / 1000)) : undefined;
+  const detail = await readErrorMessage(response);
+  const suffix = detail ? ` (${detail})` : '';
 
   if (response.status === 401) {
-    return new GitHubSyncError(`GitHub rejected that token. ${AUTH_HELP}`, {
+    return new GitHubSyncError(`GitHub rejected that token. ${AUTH_HELP}${suffix}`, {
       kind: 'auth',
       status: 401,
       retryable: false,
@@ -235,7 +246,7 @@ const toSyncError = (response: Response, context: string): GitHubSyncError => {
     });
   }
   if (response.status === 403) {
-    return new GitHubSyncError(`That token is not permitted to ${context}. ${AUTH_HELP}`, {
+    return new GitHubSyncError(`That token is not permitted to ${context}. ${AUTH_HELP}${suffix}`, {
       kind: 'auth',
       status: 403,
       retryable: false,
@@ -243,14 +254,14 @@ const toSyncError = (response: Response, context: string): GitHubSyncError => {
   }
   if (response.status === 404) {
     return new GitHubSyncError(
-      `Not found while trying to ${context}. Check the repository name, the branch, and that the token can see a private repository.`,
+      `Not found while trying to ${context}. Check the repository name, the branch, and that the token can see a private repository.${suffix}`,
       { kind: 'not-found', status: 404, retryable: false },
     );
   }
-  if (response.status === 409 || response.status === 422) {
+  if (response.status === 409) {
     return new GitHubSyncError(
-      `The branch moved while you were editing, so GitHub refused the update. Pull the latest changes, then push again — nothing was overwritten.`,
-      { kind: 'conflict', status: response.status, retryable: false },
+      `The branch moved while you were editing, so GitHub refused the update. Pull the latest changes, then push again — nothing was overwritten.${suffix}`,
+      { kind: 'conflict', status: 409, retryable: false },
     );
   }
   if (response.status >= 500) {
@@ -261,11 +272,29 @@ const toSyncError = (response: Response, context: string): GitHubSyncError => {
     });
   }
 
-  return new GitHubSyncError(`Could not ${context} (${response.status}).`, {
+  return new GitHubSyncError(`Could not ${context} (${response.status}).${suffix}`, {
     kind: 'validation',
     status: response.status,
     retryable: false,
   });
+};
+
+/**
+ * Pulls GitHub's `message` out of an error body.
+ *
+ * GitHub answers with `{ message, documentation_url, errors? }` and the message is
+ * the actionable part. The body can only be read once, so this is called before any
+ * other use of the response.
+ */
+const readErrorMessage = async (response: Response): Promise<string> => {
+  try {
+    const body = (await response.clone().json()) as { message?: unknown };
+    if (typeof body?.message !== 'string') return '';
+    // Cap it: these can be long, and they end up in a toast.
+    return body.message.slice(0, 200);
+  } catch {
+    return '';
+  }
 };
 
 /**
@@ -313,7 +342,7 @@ const githubRequest = async <T>(
     init.signal?.removeEventListener('abort', relayAbort);
   }
 
-  if (!response.ok) throw toSyncError(response, context);
+  if (!response.ok) throw await toSyncError(response, context);
 
   // 204 and 201-with-no-body responses have nothing to parse.
   if (response.status === 204) return undefined as T;
