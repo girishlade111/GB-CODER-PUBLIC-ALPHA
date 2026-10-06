@@ -153,12 +153,17 @@ describe('sanitizeForTerminal — escape-sequence injection', () => {
     assert.equal(sanitizeForTerminal('a\x1b[2J\x1b[Hb'), 'ab');
   });
 
-  test('strips OSC title-set (phishing)', () => {
-    assert.equal(sanitizeForTerminal('\x1b]0;Trusted - npm audit clean\x07'), 'Trusted - npm audit clean');
+  test('strips OSC title-set entirely (phishing)', () => {
+    // The whole payload goes, including the fake title text — leaving the text
+    // behind would put "Trusted - npm audit clean" in the output, which is the
+    // message the attacker wanted read.
+    assert.equal(sanitizeForTerminal('\x1b]0;Trusted - npm audit clean\x07'), '');
+    assert.equal(sanitizeForTerminal('before\x1b]2;pwned\x07after'), 'beforeafter');
   });
 
   test('strips cursor movement', () => {
     assert.equal(sanitizeForTerminal('\x1b[10D\x1b[5Ctext'), 'text');
+    assert.equal(sanitizeForTerminal('\x1b[2K\x1b[1A\x1b[?25ltext'), 'text');
   });
 
   test('strips 8-bit CSI and OSC introducers', () => {
@@ -180,10 +185,10 @@ describe('sanitizeForTerminal — escape-sequence injection', () => {
   });
 
   test('sanitizeLines drops lines that became empty', () => {
-    // Stripping the introducer leaves the parameters as inert visible text, which
-    // is the point: `[2J` on its own repaints nothing.
+    // A whole sequence goes, so a line that was only a sequence disappears —
+    // which is what keeps `cat -n` numbering free of gaps.
+    assert.deepEqual(sanitizeLines(['a', '\x1b[2J', 'b']), ['a', 'b']);
     assert.deepEqual(sanitizeLines(['a', '\x1b\x1b', 'b']), ['a', 'b']);
-    assert.deepEqual(sanitizeLines(['a', '\x1b[2J', 'b']), ['a', '[2J', 'b']);
   });
 });
 
