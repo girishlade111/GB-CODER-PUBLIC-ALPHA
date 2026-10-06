@@ -4402,14 +4402,50 @@ function App() {
         </Suspense>
       )}
 
-      {/* Import */}
+{/* Import */}
       {showImport && (
         <Suspense fallback={<LazyFallback label="Import" variant="overlay" />}>
-  <ImportModal
+   <ImportModal
             isOpen={showImport}
             onClose={() => setShowImport(false)}
             onFiles={importFiles}
             isDragging={isImportDragging}
+          />
+        </Suspense>
+      )}
+
+      {/* Deploy — publishes the same bundle "Download ZIP" produces. */}
+      {showDeploy && (
+        <Suspense fallback={<LazyFallback label="Deploy" variant="overlay" />}>
+          <DeployModal
+            isOpen={showDeploy}
+            onClose={() => setShowDeploy(false)}
+            project={fileProject}
+            projectName={project.currentProject?.name ?? 'gb-coder-project'}
+            externalLibraries={externalLibraries}
+            resolvedVersions={Object.fromEntries(
+              projectBundle.resolvedPackages.map((pkg) => [pkg.name, pkg.resolvedVersion ?? pkg.version]),
+            )}
+          />
+        </Suspense>
+      )}
+
+      {/*
+        GitHub. A pull arrives through `importFiles`, so it lands in the same
+        review-and-apply flow as a ZIP drop rather than overwriting the project.
+      */}
+      {showGitHubSync && (
+        <Suspense fallback={<LazyFallback label="GitHub" variant="overlay" />}>
+          <GitHubSyncModal
+            isOpen={showGitHubSync}
+            onClose={() => setShowGitHubSync(false)}
+            project={fileProject}
+            projectName={project.currentProject?.name ?? 'gb-coder-project'}
+            externalLibraries={externalLibraries}
+            resolvedVersions={Object.fromEntries(
+              projectBundle.resolvedPackages.map((pkg) => [pkg.name, pkg.resolvedVersion ?? pkg.version]),
+            )}
+            onImportFiles={importFiles}
           />
         </Suspense>
       )}
