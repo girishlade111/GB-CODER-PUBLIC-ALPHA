@@ -243,8 +243,21 @@ const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({
     setViewer(null);
     setRepos([]);
     setRateLimit(null);
+    /*
+     * Clear the selection too. A user who forgets one token and connects another is
+     * usually working in a different account, and leaving a repository and branch
+     * from the old one selected means the next push targets a repo the new token
+     * probably cannot see — failing at the ref update with a confusing 404/403.
+     */
+    setRepoFullName('');
     setBranch('');
     setBranches([]);
+    setPullTarget('');
+    setPullBranch('');
+    setPullBranches([]);
+    setPushResult(null);
+    setCreateResult(null);
+    setPullResult(null);
     toast.success('Token forgotten.');
   }, []);
 
