@@ -21,7 +21,8 @@
 
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
-import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 const PORT = 5199;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -44,10 +45,18 @@ const get = async (path, headers = {}) => {
  * Spawn Vite's JS entry directly rather than going through `npx`.
  *
  * On Windows `spawn` cannot execute a `.cmd` without a shell (it raises EINVAL), so
- * `npx vite` is not an option. Resolving the binary and running `node <entry>` is
- * both shell-free and faster, since it skips the package-resolution step entirely.
+ * `npx vite` is not an option. Running `node <entry>` is shell-free and skips the
+ * package-resolution step.
+ *
+ * The path is resolved from `node_modules` rather than through `import.meta.resolve`,
+ * because Vite's `exports` map does not publish `./bin/vite.js` — only its
+ * programmatic API — so the subpath is not resolvable even though the file exists.
  */
-const viteEntry = fileURLToPath(import.meta.resolve('vite/bin/vite.js'));
+const viteEntry = join(process.cwd(), 'node_modules', 'vite', 'bin', 'vite.js');
+if (!existsSync(viteEntry)) {
+  console.log(`  FAIL  vite binary not found at ${viteEntry} — run npm install first.`);
+  process.exit(1);
+}
 
 const vite = spawn(
   process.execPath,
