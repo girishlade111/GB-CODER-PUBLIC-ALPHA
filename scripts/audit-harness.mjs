@@ -14,6 +14,7 @@ import { build } from 'esbuild';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 /* ── Bundle the real modules ────────────────────────────────────────────────
  * esbuild resolves the project's extensionless bundler-style imports and strips
