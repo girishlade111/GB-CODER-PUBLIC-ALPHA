@@ -595,9 +595,9 @@ const deployToNetlify = async (options: DeployOptions, files: { path: string; co
 
   const site = netlifySiteId
     ? // A remembered site still has to be verified: it may have been deleted or
-      // the token may no longer reach it, and a 404 here is recoverable while a
-      // deploy into it is not.
-      await resolveNetlifySite(token, netlifySiteId, headers, signal)
+        // the token may no longer reach it, and a 404 here is recoverable while a
+        // deploy into it is not.
+        await resolveNetlifySite(netlifySiteId, headers, signal)
     : await createNetlifySite(sanitizeDeployName(projectName), headers, signal);
 
   report({ stage: 'uploading', message: 'Packaging files…', percent: 35 });
@@ -668,7 +668,6 @@ const deployToNetlify = async (options: DeployOptions, files: { path: string; co
  * caller gets the new id back and overwrites the stale entry.
  */
 const resolveNetlifySite = async (
-  token: string,
   siteId: string,
   headers: Record<string, string>,
   signal?: AbortSignal,
