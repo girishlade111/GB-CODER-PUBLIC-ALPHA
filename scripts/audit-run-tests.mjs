@@ -69,7 +69,8 @@ const installFetch = (handlers) => {
 
 const json = (body, status = 200, headers = {}) => ({ status, body, headers: { 'Content-Type': 'application/json', ...headers } });
 
-before(() => { globalThis.TextEncoder ??= (await import('node:util')).TextEncoder; });
+// Node has these as globals; the `??=` is belt-and-braces for older runtimes.
+globalThis.TextEncoder ??= (await import('node:util')).TextEncoder;
 after(() => cleanup());
 
 beforeEach(() => {
