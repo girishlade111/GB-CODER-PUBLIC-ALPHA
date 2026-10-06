@@ -11,6 +11,7 @@
     "verify:bundle": "node scripts/measure-initial-bundle.mjs --assert-absent",
     "lint": "eslint .",
     "verify:deploy": "node scripts/verify-deploy-config.mjs",
+    "audit:devserver": "node scripts/audit-devserver.mjs",
     "audit:tests": "node scripts/audit-run-tests.mjs",
     "audit:coderabbit": "node scripts/coderabbit-audit.mjs",
     "preview": "vite preview",

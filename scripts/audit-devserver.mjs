@@ -149,6 +149,9 @@ try {
   const matchBaseline = (text) =>
     baselines.find((b) => stripSourceMap(text) === stripSourceMap(b.response.text));
 
+  const isViteFsDenyPage = (text) =>
+    /403 Restricted/.test(text) && /outside of Vite serving allow list/.test(text);
+
   const traversals = [
     '/api/../server/index',
     '/api/../package.json',
@@ -183,6 +186,15 @@ try {
       pass(`${path} -> ${status} ${contentType} matched Vite's own ${baseline.name}; middleware did not dispatch`);
     } else if (status === 404) {
       pass(`${path} -> 404 (rejected)`);
+    } else if (isViteFsDenyPage(text)) {
+      /*
+       * Vite's own refusal. `server.fs.deny` blocks `.env` and similar files, and its
+       * 403 page echoes the resolved absolute path — a dev-server disclosure that has
+       * no bearing on the middleware boundary, and does not occur in a deployed build
+       * where this server does not run. Checked separately so the echo is recorded
+       * rather than either missed or misread as a breach.
+       */
+      pass(`${path} -> 403 Vite fs.deny refusal (path echo is Vite's own dev-server behaviour; middleware did not dispatch)`);
     } else {
       fail(
         `${path} -> ${status} ${contentType} matched no Vite baseline, so localApiPlugin dispatched it. ` +
