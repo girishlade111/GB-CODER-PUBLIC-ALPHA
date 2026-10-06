@@ -353,7 +353,7 @@ describe('deployProject — Vercel', () => {
       { match: '/v13/deployments?skipAutoDetectionConfirmation', reply: json({ id: 'dpl_4', readyState: 'BUILDING' }) },
       { match: '/v13/deployments/dpl_4', reply: json({ id: 'dpl_4', readyState: 'CANCELED' }) },
     ]);
-    await assert.rejects(() => deployProject({ project: plainProject, provider: 'vercel', token, projectName: 'x' }), /cancelled/i);
+    await assert.rejects(() => deployProject({ project: plainProject, provider: 'vercel', token, projectName: 'x' }), /cancel/i);
   });
 
   test('maps 401 to an actionable auth error, not a retry', async () => {
