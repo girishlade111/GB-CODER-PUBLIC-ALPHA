@@ -104,6 +104,13 @@ const DependenciesPanel = lazyWithRecovery(() => import('./components/Dependenci
 const MultiFileEditor = lazyWithRecovery(() => import('./components/MultiFileEditor'));
 const ExportShareModal = lazyWithRecovery(() => import('./components/ExportShareModal'));
 const ImportModal = lazyWithRecovery(() => import('./components/ImportModal'));
+/*
+ * Publishing dialogs. Each pulls in its own provider SDK surface (JSZip for
+ * Netlify, WebCrypto plus GitHub's API shape) and neither is on the path of
+ * editing, so both stay out of the first paint.
+ */
+const DeployModal = lazyWithRecovery(() => import('./components/DeployModal'));
+const GitHubSyncModal = lazyWithRecovery(() => import('./components/GitHubSyncModal'));
 const PreviewSharePage = lazyWithRecovery(() => import('./components/PreviewSharePage'));
 /*
  * `/mpreview/:id` — the page a phone reaches by scanning the QR code in the
@@ -664,6 +671,8 @@ function App() {
   const [showExportShare, setShowExportShare] = useState<boolean>(false);
   const [exportModalTab, setExportModalTab] = useState<'screenshot' | 'export' | 'share'>('screenshot');
   const [showImport, setShowImport] = useState<boolean>(false);
+  const [showDeploy, setShowDeploy] = useState<boolean>(false);
+  const [showGitHubSync, setShowGitHubSync] = useState<boolean>(false);
 
   // ===== NEW FEATURES STATE =====
   const [showAIChat, setShowAIChat] = useState(false);

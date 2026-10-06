@@ -14,6 +14,8 @@ import {
   MicOff,
   Bug,
   Scan,
+  Rocket,
+  Github,
 } from 'lucide-react';
 import { PROJECT_TYPE_LABEL, ProjectType } from '../types/files';
 
@@ -48,6 +50,16 @@ interface NavigationBarProps {
    */
   onOpenExport?: () => void;
   /**
+   * Publishes the project to Vercel or Netlify.
+   *
+   * Optional for the same reason `onOpenExport` is: the legal and documentation
+   * pages render this bar with no project to deploy, so the trigger only appears
+   * where the handler is actually supplied.
+   */
+  onOpenDeploy?: () => void;
+  /** Pushes, creates, or pulls the project's GitHub repository. */
+  onOpenGitHub?: () => void;
+  /**
    * Returns to the project dashboard.
    *
    * When omitted the logo stays the plain, non-interactive mark it has always
@@ -80,6 +92,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   onToggleNavDrawer,
   isNavDrawerOpen = false,
   onOpenExport,
+  onOpenDeploy,
+  onOpenGitHub,
 }) => {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -286,7 +300,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 toolbar uses — no duplicated feature logic, just a second
                 trigger surface that fits a narrow bar.
               */}
-              {(onToggleVoice || onOpenExport) && (
+              {(onToggleVoice || onOpenExport || onOpenDeploy || onOpenGitHub) && (
                 <div className="relative hidden compact:block" ref={overflowRef}>
                   <button
                     onClick={() => setIsOverflowOpen((open) => !open)}
@@ -329,6 +343,32 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                           >
                             <Share2 className="h-4 w-4" />
                             Export &amp; Share
+                          </button>
+                        )}
+
+                        {onOpenDeploy && (
+                          <button
+                            onClick={() => {
+                              onOpenDeploy();
+                              setIsOverflowOpen(false);
+                            }}
+                            className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left ${NAV_LINK} text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary`}
+                          >
+                            <Rocket className="h-4 w-4" />
+                            Deploy
+                          </button>
+                        )}
+
+                        {onOpenGitHub && (
+                          <button
+                            onClick={() => {
+                              onOpenGitHub();
+                              setIsOverflowOpen(false);
+                            }}
+                            className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left ${NAV_LINK} text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary`}
+                          >
+                            <Github className="h-4 w-4" />
+                            GitHub
                           </button>
                         )}
                       </div>
