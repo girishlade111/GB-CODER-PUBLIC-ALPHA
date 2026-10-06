@@ -591,7 +591,11 @@ const deployToNetlify = async (options: DeployOptions, files: { path: string; co
   const report = onProgress ?? (() => {});
   const headers = authHeaders(token);
 
-  report({ stage: 'uploading', message: 'Creating your Netlify site…', percent: 25 });
+  report({
+    stage: 'uploading',
+    message: netlifySiteId ? 'Finding your Netlify site…' : 'Creating your Netlify site…',
+    percent: 25,
+  });
 
   const site = netlifySiteId
     ? // A remembered site still has to be verified: it may have been deleted or
