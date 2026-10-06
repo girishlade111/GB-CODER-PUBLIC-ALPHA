@@ -24,7 +24,6 @@ export interface ChatContext {
 class AIChatAssistantService {
   private apiKey: string;
   private model: any = null;
-  private chatSession: any = null;
   private messageHistory: ChatMessage[] = [];
 
   constructor() {
