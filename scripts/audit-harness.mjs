@@ -28,8 +28,8 @@ await build({
       export * from './src/services/githubSyncService.ts';
       export * from './src/services/credentialStore.ts';
       export * from './src/utils/terminalSafety.ts';
+      export * from './src/utils/safeMarkup.ts';
       export * from './src/services/localShell.ts';
-      export { renderInlineMarkupProbe as renderInlineMarkup } from './audit-probe.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',
