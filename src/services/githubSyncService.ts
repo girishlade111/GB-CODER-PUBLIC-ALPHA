@@ -630,6 +630,11 @@ const createCommit = async (
  * `force: false` is the whole reason this is safe: if someone pushed between our
  * read of the head and this write, GitHub rejects it rather than overwriting their
  * commit.
+ *
+ * A 422 here means "update is not a fast forward", which is a conflict and not the
+ * generic validation failure the status usually carries — so it is translated here,
+ * the one place that knows the difference. Without this, a user whose branch moved
+ * would be told to pull and try again with no explanation of what happened.
  */
 const updateRef = async (
   token: string,
@@ -638,12 +643,22 @@ const updateRef = async (
   sha: string,
   signal?: AbortSignal,
 ): Promise<void> => {
-  await githubRequest<RawRef>(
-    token,
-    `${base}/git/refs/heads/${encodeURIComponent(branch)}`,
-    { method: 'PATCH', body: JSON.stringify({ sha, force: false }), signal },
-    'update the branch',
-  );
+  try {
+    await githubRequest<RawRef>(
+      token,
+      `${base}/git/refs/heads/${encodeURIComponent(branch)}`,
+      { method: 'PATCH', body: JSON.stringify({ sha, force: false }), signal },
+      'update the branch',
+    );
+  } catch (error) {
+    if (error instanceof GitHubSyncError && (error.kind === 'validation' || error.kind === 'conflict')) {
+      throw new GitHubSyncError(
+        'The branch moved while you were editing, so GitHub refused the update. Pull the latest changes, then push again — nothing of yours or anyone else’s was overwritten.',
+        { kind: 'conflict', status: error.status, retryable: false },
+      );
+    }
+    throw error;
+  }
 };
 
 export interface CommitFilesOptions {
