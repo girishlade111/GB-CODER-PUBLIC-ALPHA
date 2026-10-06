@@ -653,11 +653,22 @@ const deployToNetlify = async (options: DeployOptions, files: { path: string; co
   report({ stage: 'securing', message: 'Issuing an HTTPS certificate…', percent: 92 });
   report({ stage: 'ready', message: 'Deployed.', percent: 100 });
 
+  /*
+   * Preference order matters. `site.ssl_url` is the stable site address that
+   * survives redeploys, so it wins; the per-deploy URL is the fallback, and the
+   * plain http variants are only reached if an HTTPS one is somehow absent.
+   */
+  const host = site.ssl_url ?? site.url ?? ready.deploy_ssl_url ?? ready.deploy_url ?? ready.url ?? ready.ssl_url;
+  if (!host) {
+    throw new DeployError('Netlify built the project but returned no URL for it. Open the site in your dashboard.', {
+      retryable: false,
+      stage: 'failed',
+    });
+  }
+
   return {
     provider: 'netlify',
-    // `deploy_ssl_url` is the stable per-deploy address; the site URL is the
-    // friendlier of the two to show, and both serve the same content.
-    url: toHttpsUrl(site.ssl_url ?? site.url ?? ready.deploy_ssl_url ?? ready.deploy_ssl_url ?? ''),
+    url: toHttpsUrl(host),
     deploymentId: ready.id,
     target: site.id,
     assignedName: site.name,
