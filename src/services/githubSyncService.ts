@@ -64,6 +64,34 @@ const REQUEST_TIMEOUT_MS = 60_000;
 /** Directories never worth importing into an editor tab. */
 const IGNORED_PULL_PREFIXES = ['node_modules/', 'dist/', 'build/', '.git/', '.next/', 'coverage/'];
 
+/**
+ * Extensions worth importing.
+ *
+ * A `srcDoc`/editor project is text. Without this filter, `pullFiles` would decode a
+ * PNG's base64 as UTF-8 and hand the editor a file full of replacement characters —
+ * and worse, one whose *path* looks plausible (`assets/logo.png`), so it would be
+ * committed straight back out on the next push.
+ *
+ * An allowlist rather than a blocklist, because "is this text" is the actual
+ * question and extensions are how it is answered cheaply for 200 files.
+ */
+const PULLABLE_EXTENSIONS = new Set([
+  'html', 'htm', 'css', 'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'vue', 'svelte',
+  'json', 'jsonc', 'md', 'markdown', 'txt', 'yml', 'yaml', 'toml', 'env.example',
+  'xml', 'svg', 'csv', 'tsv', 'sql', 'sh', 'bash', 'zsh', 'fish', 'py', 'rb',
+  'go', 'rs', 'java', 'kt', 'c', 'h', 'cpp', 'hpp', 'cs', 'php', 'swift',
+  'dockerfile', 'gitignore', 'editorconfig', 'lock', 'conf', 'cfg', 'ini', 'gradle',
+]);
+
+/** True when a path is one the editor can meaningfully open. */
+const isPullablePath = (path: string): boolean => {
+  const base = path.split('/').pop() ?? '';
+  const dot = base.lastIndexOf('.');
+  // No extension at all: only allow the well-known extensionless dotfiles.
+  if (dot <= 0) return ['Dockerfile', 'Makefile', 'LICENSE', 'Procfile', 'Gemfile'].includes(base);
+  return PULLABLE_EXTENSIONS.has(base.slice(dot + 1).toLowerCase());
+};
+
 export interface GitHubUser {
   login: string;
   name: string | null;
