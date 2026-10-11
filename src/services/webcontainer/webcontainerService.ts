@@ -307,6 +307,19 @@ class WebContainerManager {
   private shellProcess: Awaited<ReturnType<WebContainer['spawn']>> | null = null;
   private shellWriter: WritableStreamDefaultWriter<string> | null = null;
   private serverListenersAttached = new WeakSet<WebContainer>();
+  private eventUnsubscribers: Array<() => void> = [];
+  private shellSpawnPromise: Promise<{
+    write: (data: string) => void;
+    resize: (cols: number, rows: number) => void;
+    kill: () => void;
+    disconnect: () => void;
+  }> | null = null;
+  private shellDataListeners = new Set<(chunk: string) => void>();
+  private shellOutputBuffer: string[] = [];
+  private isDevServerActive = false;
+  private isDevServerStartingState = false;
+  private sessionEpoch = 0;
+  private spawnAttempts = 0;
   private installedManifestFingerprint: string | null = null;
 
   private state: WebContainerState = {
@@ -353,9 +366,12 @@ class WebContainerManager {
 
   /**
    * Resets server URLs and transitions the preview back to the StackBlitz Startup Loader,
-   * notifying all terminal listeners to execute `npm install && npm run dev`.
+   * notifying all terminal listeners to execute dev server restart.
    */
   public requestRestart(reason = 'Restart request'): void {
+    this.sessionEpoch++;
+    this.isDevServerActive = false;
+    this.isDevServerStartingState = false;
     this.updateState({
       serverUrl: null,
       serverPort: null,
@@ -372,12 +388,76 @@ class WebContainerManager {
   }
 
   public resetServerState(): void {
+    this.isDevServerActive = false;
+    this.isDevServerStartingState = false;
     this.updateState({
       serverUrl: null,
       serverPort: null,
       activeServers: [],
       startupStage: 'installing',
     });
+  }
+
+  public isShellRunning(): boolean {
+    return Boolean(this.shellProcess);
+  }
+
+  public isDevServerRunning(): boolean {
+    return Boolean(this.state.serverUrl || this.isDevServerActive);
+  }
+
+  public isDevServerStarting(): boolean {
+    return Boolean(this.state.startupStage === 'starting_server' || this.isDevServerStartingState);
+  }
+
+  public setDevServerStarting(starting: boolean): void {
+    this.isDevServerStartingState = starting;
+    if (starting) {
+      this.updateState({ startupStage: 'starting_server' });
+    }
+  }
+
+  public getSessionEpoch(): number {
+    return this.sessionEpoch;
+  }
+
+  public getSpawnAttempts(): number {
+    return this.spawnAttempts;
+  }
+
+  public stopDevServer(): void {
+    if (this.shellWriter) {
+      try {
+        this.shellWriter.write('\x03\r');
+      } catch {
+        // Ignored
+      }
+    }
+    this.isDevServerActive = false;
+    this.isDevServerStartingState = false;
+    this.updateState({
+      serverUrl: null,
+      serverPort: null,
+      activeServers: [],
+      startupStage: 'idle',
+    });
+  }
+
+  public terminateShell(): void {
+    if (this.shellProcess) {
+      try {
+        this.shellWriter?.releaseLock();
+        this.shellProcess.kill();
+      } catch {
+        // Ignored
+      }
+      this.shellProcess = null;
+      this.shellWriter = null;
+    }
+    this.shellDataListeners.clear();
+    this.shellOutputBuffer = [];
+    this.isDevServerActive = false;
+    this.isDevServerStartingState = false;
   }
 
   public writeToShell(data: string): boolean {
@@ -411,13 +491,28 @@ class WebContainerManager {
     return typeof window !== 'undefined' && Boolean(window.crossOriginIsolated);
   }
 
+  public cleanupServerListeners(): void {
+    for (const unsub of this.eventUnsubscribers) {
+      try {
+        unsub();
+      } catch (err) {
+        console.warn('[WebContainer] Error removing listener:', err);
+      }
+    }
+    this.eventUnsubscribers = [];
+  }
+
   private setupServerListeners(container: WebContainer) {
     if (this.serverListenersAttached.has(container)) return;
     this.serverListenersAttached.add(container);
 
-    // Listen for internal web server bindings (e.g. Vite, Next, Express)
-    container.on('server-ready', (port, url) => {
+    this.cleanupServerListeners();
+
+    // 1. server-ready: internal web server is listening and ready to answer requests
+    const unsubServerReady = container.on('server-ready', (port, url) => {
       console.log(`[WebContainer] Server ready at port ${port}: ${url}`);
+      this.isDevServerActive = true;
+      this.isDevServerStartingState = false;
       const newServer: WebContainerServerInfo = { port, url };
       const updatedServers = [
         ...this.state.activeServers.filter((s) => s.port !== port),
@@ -429,12 +524,47 @@ class WebContainerManager {
         activeServers: updatedServers,
         startupStage: 'ready',
       });
+      webcontainerPerf.recordTiming('server_ready', 0, { port, url });
     });
 
-    container.on('error', (err) => {
-      console.error('[WebContainer] Runtime error:', err);
-      this.updateState({ error: err.message });
+    // 2. port: emitted when a port opens or closes
+    const unsubPort = container.on('port', (port, type, url) => {
+      console.log(`[WebContainer] Port ${port} ${type}: ${url}`);
+      if (type === 'open') {
+        const newServer: WebContainerServerInfo = { port, url };
+        const updated = [
+          ...this.state.activeServers.filter((s) => s.port !== port),
+          newServer,
+        ];
+        this.updateState({
+          activeServers: updated,
+          ...(this.state.serverUrl ? {} : { serverUrl: url, serverPort: port, startupStage: 'ready' }),
+        });
+      } else if (type === 'close') {
+        const updated = this.state.activeServers.filter((s) => s.port !== port);
+        const wasActive = this.state.serverPort === port;
+        const nextServer = updated[updated.length - 1] ?? null;
+        if (wasActive) {
+          this.isDevServerActive = Boolean(nextServer);
+          this.updateState({
+            serverPort: nextServer ? nextServer.port : null,
+            serverUrl: nextServer ? nextServer.url : null,
+            activeServers: updated,
+            startupStage: nextServer ? 'ready' : 'idle',
+          });
+        } else {
+          this.updateState({ activeServers: updated });
+        }
+      }
     });
+
+    // 3. error: runtime error
+    const unsubError = container.on('error', (err) => {
+      console.error('[WebContainer] Runtime error:', err);
+      this.updateState({ error: err.message, startupStage: 'error' });
+    });
+
+    this.eventUnsubscribers.push(unsubServerReady, unsubPort, unsubError);
   }
 
   /**
@@ -705,78 +835,179 @@ class WebContainerManager {
 
   /**
    * Spawns an interactive shell process (jsh) and hooks its I/O to callbacks.
+   * If a healthy shell is already active and forceRestart is false, reconnects
+   * the caller and replays recent buffer without destroying the process or killing Vite.
    */
   public async spawnInteractiveShell(options: {
     cols: number;
     rows: number;
     onData: (data: string) => void;
+    forceRestart?: boolean;
   }): Promise<{
     write: (data: string) => void;
     resize: (cols: number, rows: number) => void;
     kill: () => void;
+    disconnect: () => void;
   }> {
-    const container = await this.boot();
+    // 1. If not forcing a restart, check if an existing shell is active and healthy
+    if (!options.forceRestart && this.shellProcess && this.shellWriter) {
+      this.shellDataListeners.add(options.onData);
 
-    // Kill any existing shell process before spawning a new one
-    if (this.shellProcess) {
-      try {
-        this.shellWriter?.releaseLock();
-        this.shellProcess.kill();
-      } catch {
-        // Ignored
-      }
-      this.shellProcess = null;
-      this.shellWriter = null;
-    }
-
-    const process = await container.spawn('jsh', {
-      terminal: {
-        cols: options.cols,
-        rows: options.rows,
-      },
-    });
-
-    this.shellProcess = process;
-    const writer = process.input.getWriter();
-    this.shellWriter = writer;
-
-    // Stream process output to terminal callback
-    process.output.pipeTo(
-      new WritableStream({
-        write(chunk) {
+      // Replay recent terminal buffer so the connecting terminal gets immediate output context
+      for (const chunk of this.shellOutputBuffer) {
+        try {
           options.onData(chunk);
-        },
-      }),
-    ).catch((err) => {
-      console.warn('[WebContainer] Shell output stream closed:', err);
-    });
-
-    this.updateState({ status: 'running' });
-
-    return {
-      write: (data: string) => {
-        try {
-          writer.write(data);
-        } catch (err) {
-          console.error('[WebContainer] Failed to write to shell:', err);
-        }
-      },
-      resize: (cols: number, rows: number) => {
-        try {
-          process.resize({ cols, rows });
-        } catch (err) {
-          console.error('[WebContainer] Failed to resize shell:', err);
-        }
-      },
-      kill: () => {
-        try {
-          writer.releaseLock();
-          process.kill();
         } catch {
           // Ignored
         }
-      },
-    };
+      }
+
+      try {
+        this.shellProcess.resize({ cols: options.cols, rows: options.rows });
+      } catch {
+        // Ignored
+      }
+
+      const writer = this.shellWriter;
+      const process = this.shellProcess;
+
+      return {
+        write: (data: string) => {
+          try {
+            writer.write(data);
+          } catch (err) {
+            console.error('[WebContainer] Failed to write to shell:', err);
+          }
+        },
+        resize: (cols: number, rows: number) => {
+          try {
+            process.resize({ cols, rows });
+          } catch (err) {
+            console.error('[WebContainer] Failed to resize shell:', err);
+          }
+        },
+        kill: () => {
+          this.terminateShell();
+        },
+        disconnect: () => {
+          this.shellDataListeners.delete(options.onData);
+        },
+      };
+    }
+
+    // 2. If a spawn is currently in progress, await it
+    if (this.shellSpawnPromise) {
+      await this.shellSpawnPromise;
+      return this.spawnInteractiveShell(options);
+    }
+
+    // 3. Otherwise, spawn a new shell session
+    this.spawnAttempts++;
+    const endSpawnTimer = webcontainerPerf.startTimer('shell_spawn');
+
+    this.shellSpawnPromise = (async () => {
+      const container = await this.boot();
+
+      // Clean up previous shell if any
+      this.terminateShell();
+
+      const process = await container.spawn('jsh', {
+        terminal: {
+          cols: options.cols,
+          rows: options.rows,
+        },
+      });
+
+      this.shellProcess = process;
+      const writer = process.input.getWriter();
+      this.shellWriter = writer;
+      this.shellDataListeners.clear();
+      this.shellOutputBuffer = [];
+      this.shellDataListeners.add(options.onData);
+
+      endSpawnTimer({ attempt: this.spawnAttempts });
+
+      // Pipe output to buffer and all active listeners
+      process.output
+        .pipeTo(
+          new WritableStream({
+            write: (chunk: string) => {
+              this.shellOutputBuffer.push(chunk);
+              if (this.shellOutputBuffer.length > 500) {
+                this.shellOutputBuffer.shift();
+              }
+              this.shellDataListeners.forEach((listener) => {
+                try {
+                  listener(chunk);
+                } catch {
+                  // Ignored
+                }
+              });
+
+              if (
+                chunk.includes('ready in') ||
+                chunk.includes('VITE') ||
+                chunk.includes('Local:   http://') ||
+                chunk.includes('Network: http://')
+              ) {
+                this.isDevServerActive = true;
+                this.isDevServerStartingState = false;
+                this.updateState({ startupStage: 'ready' });
+              }
+            },
+          }),
+        )
+        .catch((err) => {
+          console.warn('[WebContainer] Shell output stream closed:', err);
+        });
+
+      // Handle process exit
+      void process.exit.then((exitCode) => {
+        console.log(`[WebContainer] Shell process exited with code ${exitCode}`);
+        this.shellProcess = null;
+        this.shellWriter = null;
+        this.isDevServerActive = false;
+        this.isDevServerStartingState = false;
+        this.updateState({
+          status: 'ready',
+          startupStage: 'idle',
+          serverUrl: null,
+          serverPort: null,
+          activeServers: [],
+        });
+      });
+
+      this.updateState({ status: 'running' });
+
+      return {
+        write: (data: string) => {
+          try {
+            writer.write(data);
+          } catch (err) {
+            console.error('[WebContainer] Failed to write to shell:', err);
+          }
+        },
+        resize: (cols: number, rows: number) => {
+          try {
+            process.resize({ cols, rows });
+          } catch (err) {
+            console.error('[WebContainer] Failed to resize shell:', err);
+          }
+        },
+        kill: () => {
+          this.terminateShell();
+        },
+        disconnect: () => {
+          this.shellDataListeners.delete(options.onData);
+        },
+      };
+    })();
+
+    try {
+      return await this.shellSpawnPromise;
+    } finally {
+      this.shellSpawnPromise = null;
+    }
   }
 
   /**
