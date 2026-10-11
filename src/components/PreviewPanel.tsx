@@ -626,9 +626,17 @@ ${importMapHTML}
   }, [previewContent]);
 
   const openInNewTab = () => {
-    const content = generatePreviewContent('external');
-    livePreviewChannel.broadcastCode(content, '', '');
-    window.open('/preview-popout', '_blank');
+    try {
+      const content = generatePreviewContent('external');
+      livePreviewChannel.broadcastCode(content, '', '');
+      const newWin = window.open('/preview-popout', '_blank', 'noopener,noreferrer');
+      if (!newWin && typeof window !== 'undefined') {
+        toast.error('Popup window was blocked by browser. Please allow popups for this site.');
+      }
+    } catch (err) {
+      console.error('[OpenInNewTab] Failed to open new tab:', err);
+      toast.error('Could not open preview in new tab.');
+    }
   };
 
   const handleViewModeChange = (mode: 'fullscreen' | 'normal') => {
@@ -789,6 +797,7 @@ ${importMapHTML}
               onClick={openInNewTab}
               className="p-1.5 hover:bg-surface-hover rounded text-content-muted hover:text-content-primary transition-colors"
               title="Open in New Tab"
+              data-testid="normal-preview-open-new-tab-btn"
             >
               <ExternalLink className="w-4 h-4" />
             </button>

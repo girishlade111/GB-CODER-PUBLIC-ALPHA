@@ -763,11 +763,28 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         activePreview.port,
         activePreview.label,
       );
+    } else {
+      livePreviewChannel.broadcastServerOffline();
     }
   }, [activePreview?.url, activePreview?.port, activePreview?.label]);
 
   const handleOpenInNewTab = useCallback(() => {
-    if (activePreview) {
+    if (!activePreview?.url) {
+      if (
+        webcontainer.startupStage === 'installing' ||
+        webcontainer.startupStage === 'booting' ||
+        webcontainer.startupStage === 'starting_server'
+      ) {
+        toast('Development server is still starting. Please wait for it to be ready.', {
+          icon: '⏳',
+        });
+      } else {
+        toast.error('Development server is not running. Start the dev server before opening preview.');
+      }
+      return;
+    }
+
+    try {
       livePreviewChannel.broadcastDevServer(
         activePreview.url,
         activePreview.port,
@@ -775,9 +792,16 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       );
       const urlParam = encodeURIComponent(activePreview.url);
       const portParam = encodeURIComponent(String(activePreview.port));
-      window.open(`/preview-popout?url=${urlParam}&port=${portParam}`, '_blank');
+      const popoutUrl = `/preview-popout?url=${urlParam}&port=${portParam}`;
+      const newWin = window.open(popoutUrl, '_blank', 'noopener,noreferrer');
+      if (!newWin && typeof window !== 'undefined') {
+        toast.error('Popup window was blocked by browser. Please allow popups for this site.');
+      }
+    } catch (err) {
+      console.error('[OpenInNewTab] Failed to open new tab:', err);
+      toast.error('Could not open preview in new tab.');
     }
-  }, [activePreview]);
+  }, [activePreview, webcontainer.startupStage]);
 
   const handleReloadPreview = useCallback(async () => {
     // 1. Dev server health guard: do not reload if dev server is not ready or offline
@@ -1958,12 +1982,25 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 </div>
 
                 {/* Popout */}
-                <Tooltip label="Open in New Tab" side="bottom">
+                <Tooltip
+                  label={!activePreview?.url ? 'Preview not ready (server offline)' : 'Open in New Tab'}
+                  side="bottom"
+                >
                   <button
                     type="button"
                     onClick={handleOpenInNewTab}
-                    title="Open in New Tab (Live Updating Popout)"
-                    className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+                    disabled={!activePreview?.url}
+                    title={
+                      !activePreview?.url
+                        ? 'Development server not running'
+                        : 'Open in New Tab (Live Updating Popout)'
+                    }
+                    className={`rounded p-1 transition-colors ${
+                      !activePreview?.url
+                        ? 'text-slate-600 cursor-not-allowed'
+                        : 'text-slate-400 hover:bg-white/10 hover:text-white'
+                    }`}
+                    data-testid="preview-open-new-tab-btn"
                   >
                     <ExternalLink className="h-3 w-3" />
                   </button>
@@ -2189,8 +2226,14 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               <button
                 type="button"
                 onClick={handleOpenInNewTab}
-                className="flex items-center gap-1.5 rounded bg-[#333] hover:bg-[#444] px-2.5 py-1 text-xs text-gray-200 transition-colors"
-                title="Open in new tab"
+                disabled={!activePreview?.url}
+                className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${
+                  !activePreview?.url
+                    ? 'bg-[#2a2a2a] text-slate-500 cursor-not-allowed'
+                    : 'bg-[#333] hover:bg-[#444] text-gray-200'
+                }`}
+                title={!activePreview?.url ? 'Development server not running' : 'Open in new tab'}
+                data-testid="fullscreen-preview-open-new-tab-btn"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline text-[11px]">New Tab</span>

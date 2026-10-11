@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ExternalLink,
+  Check,
+  Copy,
   Laptop,
   Maximize2,
   Minimize2,
@@ -18,37 +19,41 @@ import {
 type DeviceWidth = '100%' | '1440px' | '768px' | '375px';
 
 export const LivePreviewPopoutPage: React.FC = () => {
-  const [payload, setPayload] = useState<LivePreviewPayload | null>(() =>
-    livePreviewChannel.getCurrentState(),
-  );
-  const [reloadCounter, setReloadCounter] = useState(0);
-  const [deviceWidth, setDeviceWidth] = useState<DeviceWidth>('100%');
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isConnected, setIsConnected] = useState(true);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Check initial query parameter ?url= if passed directly via URL
+  // Synchronous initialization: parse query params immediately on first paint
+  const [payload, setPayload] = useState<LivePreviewPayload | null>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const urlParam = params.get('url');
       const portParam = params.get('port');
       if (urlParam) {
-        setPayload({
+        return {
           type: 'dev_server',
           url: decodeURIComponent(urlParam),
-          port: portParam ? parseInt(portParam, 10) : 3000,
-          label: `Port ${portParam || 3000}`,
+          port: portParam ? parseInt(portParam, 10) : 5173,
+          label: `Port ${portParam || 5173}`,
           timestamp: Date.now(),
-        });
+        };
       }
     }
+    return livePreviewChannel.getCurrentState();
+  });
 
+  const [deviceWidth, setDeviceWidth] = useState<DeviceWidth>('100%');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const srcDocIframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
     const unsubscribe = livePreviewChannel.subscribe((newPayload) => {
-      setIsConnected(true);
       if (newPayload.type === 'reload') {
-        setReloadCounter((k) => k + 1);
+        handleManualReload();
+      } else if (newPayload.type === 'dev_server_offline') {
+        setIsConnected(false);
       } else {
+        setIsConnected(true);
         setPayload(newPayload);
       }
     });
@@ -57,8 +62,34 @@ export const LivePreviewPopoutPage: React.FC = () => {
   }, []);
 
   const handleManualReload = () => {
-    setReloadCounter((k) => k + 1);
-    livePreviewChannel.broadcastReload();
+    if (iframeRef.current) {
+      try {
+        iframeRef.current.contentWindow?.location?.reload();
+      } catch {
+        // Cross-origin fallback: re-assigning src reloads without destroying DOM node
+        const currentSrc = iframeRef.current.src;
+        iframeRef.current.src = currentSrc;
+      }
+    }
+    if (srcDocIframeRef.current) {
+      try {
+        srcDocIframeRef.current.contentWindow?.location?.reload();
+      } catch {
+        // Ignored
+      }
+    }
+  };
+
+  const handleCopyUrl = async () => {
+    try {
+      if (typeof window !== 'undefined') {
+        await navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch (err) {
+      console.warn('Copy failed:', err);
+    }
   };
 
   const toggleBrowserFullscreen = async () => {
@@ -144,6 +175,12 @@ export const LivePreviewPopoutPage: React.FC = () => {
               Port {devServerPort}
             </span>
           )}
+
+          {!isConnected && (
+            <span className="hidden sm:inline-flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-medium text-amber-400 border border-amber-500/20">
+              IDE Disconnected
+            </span>
+          )}
         </div>
 
         {/* Center: Address Bar */}
@@ -207,28 +244,31 @@ export const LivePreviewPopoutPage: React.FC = () => {
           <button
             onClick={handleManualReload}
             title="Reload Preview"
+            data-testid="popout-reload-btn"
             className="rounded-md p-1.5 text-[#b8b5ad] hover:bg-[#252320] hover:text-white transition-colors"
           >
             <RotateCcw className="h-4 w-4" />
           </button>
 
-          {/* Direct Raw URL link */}
-          {devServerUrl && (
-            <a
-              href={devServerUrl}
-              target="_blank"
-              rel="noreferrer"
-              title="Open Direct Dev Server URL"
-              className="rounded-md p-1.5 text-[#b8b5ad] hover:bg-[#252320] hover:text-white transition-colors"
-            >
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          )}
+          {/* Copy Preview URL Button */}
+          <button
+            onClick={handleCopyUrl}
+            title={copied ? 'Copied Preview URL!' : 'Copy Preview URL'}
+            data-testid="popout-copy-url-btn"
+            className="rounded-md p-1.5 text-[#b8b5ad] hover:bg-[#252320] hover:text-white transition-colors"
+          >
+            {copied ? (
+              <Check className="h-4 w-4 text-emerald-400" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </button>
 
           {/* Fullscreen Toggle */}
           <button
             onClick={toggleBrowserFullscreen}
             title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+            data-testid="popout-fullscreen-btn"
             className="rounded-md p-1.5 text-[#b8b5ad] hover:bg-[#252320] hover:text-white transition-colors"
           >
             {isFullscreen ? (
@@ -248,11 +288,12 @@ export const LivePreviewPopoutPage: React.FC = () => {
             className="h-full max-h-full transition-all duration-200 flex flex-col shadow-2xl bg-white"
           >
             <iframe
-              key={`dev-server-${reloadCounter}-${devServerUrl}`}
+              ref={iframeRef}
               src={devServerUrl}
               title="Live Dev Server"
               className="h-full w-full border-0 bg-white"
               sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
+              data-testid="popout-preview-iframe"
             />
           </div>
         ) : srcDoc ? (
@@ -261,11 +302,12 @@ export const LivePreviewPopoutPage: React.FC = () => {
             className="h-full max-h-full transition-all duration-200 flex flex-col shadow-2xl bg-white"
           >
             <iframe
-              key={`srcdoc-${reloadCounter}`}
+              ref={srcDocIframeRef}
               srcDoc={srcDoc}
               title="Live Standalone Preview"
               className="h-full w-full border-0 bg-white"
               sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
+              data-testid="popout-srcdoc-iframe"
             />
           </div>
         ) : (
@@ -280,14 +322,9 @@ export const LivePreviewPopoutPage: React.FC = () => {
               Start your dev server (e.g. <code className="text-accent">npm run dev</code>)
               in the GB Coder IDE terminal or make an edit to display your live preview here.
             </p>
-            {typeof window !== 'undefined' && window.opener && (
-              <button
-                onClick={() => window.opener?.focus()}
-                className="mt-4 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
-              >
-                Switch to GB Coder IDE Tab
-              </button>
-            )}
+            <p className="mt-3 text-[11px] max-w-xs text-[#6e6b62]">
+              ⚡ Live WebContainer preview is served dynamically by the active GB Coder IDE session in this browser.
+            </p>
           </div>
         )}
       </main>
