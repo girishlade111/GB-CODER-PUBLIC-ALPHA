@@ -30,6 +30,8 @@ const {
   sanitizeForTerminal, sanitizeForTerminalLines, sanitizeLines,
   isValidPackageName, isValidVersionSpecifier,
   renderInlineMarkup, escapeHtml,
+  initLaminar, observe, Laminar,
+  _resetLaminarStateForTesting, _setLaminarModuleForTesting, _isLaminarInitialized,
 } = services;
 
 /* ── Fixture ──────────────────────────────────────────────────────────────── */
