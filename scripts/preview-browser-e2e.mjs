@@ -61,7 +61,7 @@ async function runBrowserValidation() {
 
   try {
     console.log(`[Browser Automation] Navigating to ${TARGET_URL}...`);
-    const response = await page.goto(TARGET_URL, { waitUntil: 'networkidle', timeout: 35000 });
+    const response = await page.goto(TARGET_URL, { waitUntil: 'domcontentloaded', timeout: 35000 });
     console.log(`[Browser Automation] Navigation response status: ${response?.status()}`);
 
     // If ErrorBoundary appeared, read the exact error via Report Issue button
