@@ -147,10 +147,24 @@ Measurements conducted on controlled Vite React + TypeScript template runs:
 
 ## 9. Automated Test Results
 
+- `npm run audit:npm`: **12/12 PASS** (0 failures, 1 suite, 18.8ms) — covering all Phase 7 testing scenarios:
+  1. First installation (cold run requires install): **PASS**
+  2. Same-project reopen (warm reopen detects verified dependencies): **PASS**
+  3. Unchanged dependencies (retains valid cache fingerprint): **PASS**
+  4. Changed dependencies (detects change and invalidates cache): **PASS**
+  5. Missing lockfile (stable manifest-only fingerprint): **PASS**
+  6. Existing lockfile (incorporates lockfile metadata): **PASS**
+  7. Two simultaneous install requests (debounced restart & idempotent stage): **PASS**
+  8. Install cancellation (clean state reset without residue): **PASS**
+  9. Failed install and retry (error recovery allows clean retry): **PASS**
+  10. Missing package.json (synthesizes minimal package.json + .npmrc): **PASS**
+  11. npm project compatibility (.npmrc performance flags injected): **PASS**
+  12. Existing supported pnpm/yarn workflows (lockfiles preserved in fingerprint): **PASS**
+- `npm run audit:webcontainer`: **26/26 PASS** (0 failures, 7 suites)
+- `npm run audit:lifecycle`: **15/15 PASS** (0 failures, 1 suite)
 - `npm run audit:tests`: **77/77 PASS** (0 failures, 15 suites)
-- `npm run audit:webcontainer`: **17/17 PASS** (0 failures, 5 suites)
 - `npx tsc --noEmit`: **0 errors** (Clean TypeScript build)
-- Unit verification: Fingerprint hashing, `.npmrc` generation, and virtual filesystem checks verified.
+- `npm run build`: **Exited 0** (Vite v5.4.8 production build succeeded)
 
 ---
 
