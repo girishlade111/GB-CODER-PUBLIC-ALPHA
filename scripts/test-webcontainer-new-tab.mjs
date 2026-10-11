@@ -19,8 +19,8 @@ async function main() {
 
   const page = await context.newPage();
 
-  console.log('[Test] Navigating to http://localhost:4174/ide...');
-  await page.goto('http://localhost:4174/ide', { waitUntil: 'domcontentloaded' });
+  console.log('[Test] Navigating to http://localhost:4175/ide...');
+  await page.goto('http://localhost:4175/ide', { waitUntil: 'domcontentloaded' });
 
   // Monitor console for [WebContainer] messages
   let serverReadyUrl = null;
@@ -89,7 +89,7 @@ async function main() {
     console.log('[Test] Opening /preview-popout in new tab...');
     const popoutTab = await context.newPage();
     try {
-      const popoutUrl = `http://localhost:4174/preview-popout?url=${encodeURIComponent(serverReadyUrl)}&port=${serverReadyPort || 5173}`;
+      const popoutUrl = `http://localhost:4175/preview-popout?url=${encodeURIComponent(serverReadyUrl)}&port=${serverReadyPort || 5173}`;
       const popoutRes = await popoutTab.goto(popoutUrl, { timeout: 15000, waitUntil: 'domcontentloaded' });
       console.log('[Test] Popout tab response status:', popoutRes?.status());
       await popoutTab.waitForTimeout(2000);
