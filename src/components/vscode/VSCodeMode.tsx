@@ -1737,7 +1737,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       Container virtual filesystem mounted: {project.files.length} files.
                     </p>
                     <p className="text-slate-500">
-                      WebContainer environment: Cross-Origin Isolated (COOP/COEP verified).
+                      WebContainer environment:{' '}
+                      {webcontainer.isSupported
+                        ? 'Cross-Origin Isolated (COOP/COEP verified).'
+                        : 'Not isolated — WebContainer unavailable (COOP/COEP missing).'}
                     </p>
                   </div>
                 )}

@@ -16,8 +16,11 @@
  * so a JSONC-style edit cannot quietly come back.
  *
  * It also checks the things a strict parse alone would not catch: that every key
- * under `functions` points at a file that actually exists, and that the encoding is
- * clean.
+ * under `functions` points at a file that actually exists, that the encoding is
+ * clean, and — since the WebContainer production outage — that the
+ * `Cross-Origin-Opener-Policy: same-origin` /
+ * `Cross-Origin-Embedder-Policy: require-corp` headers are configured and cover
+ * the `/ide` document route.
  *
  * Run with `npm run verify:deploy`.
  */
@@ -37,6 +40,12 @@ const pass = (message) => console.log(`  PASS  ${message}`);
 /* ── vercel.json ──────────────────────────────────────────────────────────── */
 
 console.log('vercel.json');
+
+if (!existsSync('vercel.json')) {
+  fail('vercel.json is missing — Vercel would deploy with default settings and no COOP/COEP headers');
+  console.log('\n0 problem(s) checked — the config file itself is absent.');
+  process.exit(1);
+}
 
 const raw = readFileSync('vercel.json', 'utf8');
 
@@ -170,6 +179,128 @@ if (!Array.isArray(rewrites)) {
       pass('catch-all /(.*) is last');
     }
   }
+}
+
+/* ── headers (WebContainer cross-origin isolation) ──────────────────────
+ *
+ * `@webcontainer/api` requires the root document to be cross-origin
+ * isolated: `Cross-Origin-Opener-Policy: same-origin` plus
+ * `Cross-Origin-Embedder-Policy: require-corp`. The Vite dev and preview
+ * servers set both (`vite.config.ts`), so this feature always works locally
+ * and always fails in production when `vercel.json` does not repeat them.
+ * Without them `window.crossOriginIsolated === false`, the WebContainer
+ * service reports unsupported, and the terminal falls back to its local
+ * simulated shell with the WebContainer option disabled.
+ *
+ * Static validation here proves the *configuration* is present. It does not
+ * prove the *deployed response* carries the headers — for that, re-run with
+ * `--live-url=https://<preview-or-prod>/ide`, which performs a read-only
+ * fetch and inspects the final response headers.
+ */
+
+console.log('\nheaders (COOP/COEP for WebContainer)');
+const headers = config.headers ?? [];
+if (!Array.isArray(headers)) {
+  fail('"headers" must be an array');
+} else {
+  const rules = headers.filter((r) => r && typeof r.source === 'string');
+  const hasCoop = (rule) =>
+    (rule.headers ?? []).some(
+      (h) => h.key === 'Cross-Origin-Opener-Policy' && h.value === 'same-origin',
+    );
+  const hasCoep = (rule) =>
+    (rule.headers ?? []).some(
+      (h) => h.key === 'Cross-Origin-Embedder-Policy' && h.value === 'require-corp',
+    );
+  const qualifying = rules.filter((r) => hasCoop(r) && hasCoep(r));
+
+  if (qualifying.length === 0) {
+    fail(
+      'no headers rule sets both Cross-Origin-Opener-Policy: same-origin and ' +
+        'Cross-Origin-Embedder-Policy: require-corp — WebContainer will be ' +
+        'unavailable in production (window.crossOriginIsolated === false)',
+    );
+  } else {
+    pass(`${qualifying.length} rule(s) set COOP: same-origin + COEP: require-corp`);
+  }
+
+  // Flag wrong values explicitly: a present-but-wrong header fails the same
+  // way as an absent one, but is harder to spot in a dashboard diff.
+  for (const rule of rules) {
+    for (const h of rule.headers ?? []) {
+      if (h.key === 'Cross-Origin-Opener-Policy' && h.value !== 'same-origin') {
+        fail(
+          `rule "${rule.source}" sets Cross-Origin-Opener-Policy: ${h.value} — must be "same-origin" for WebContainer`,
+        );
+      }
+      if (h.key === 'Cross-Origin-Embedder-Policy' && h.value !== 'require-corp') {
+        fail(
+          `rule "${rule.source}" sets Cross-Origin-Embedder-Policy: ${h.value} — must be "require-corp" for WebContainer`,
+        );
+      }
+    }
+  }
+
+  // The configured pattern must cover the Advanced IDE document route (/ide).
+  // Converts Vercel source syntax to a RegExp: `:param` segments become a
+  // single-segment wildcard; `(.*)` groups pass through as regex.
+  const sourceMatches = (source, path) => {
+    try {
+      const pattern = `^${source.replace(/:[A-Za-z0-9_]+[?*]?/g, '[^/]+?')}$`;
+      return new RegExp(pattern).test(path);
+    } catch {
+      return false;
+    }
+  };
+  const coversIde = qualifying.some(
+    (r) => sourceMatches(r.source, '/ide') || sourceMatches(r.source, '/'),
+  );
+  if (!coversIde) {
+    fail('no qualifying headers rule covers the Advanced IDE document route (/ide)');
+  } else {
+    pass('headers cover the Advanced IDE document route (/ide)');
+  }
+}
+
+/* ── live response check (opt-in, read-only) ────────────────────────────────
+ *
+ * Static checks above cannot prove what the CDN actually serves. When invoked
+ * as `node scripts/verify-deploy-config.mjs --live-url=https://<host>/ide`
+ * this section fetches that URL without following redirects (so a redirect
+ * cannot masquerade as a verified document response) and reports the served
+ * COOP/COEP values. It never deploys, writes, or authenticates anything.
+ */
+
+const liveArg = process.argv.find((a) => a.startsWith('--live-url='));
+if (liveArg) {
+  console.log('\nlive headers');
+  const url = liveArg.slice('--live-url='.length);
+  try {
+    const res = await fetch(url, { redirect: 'manual' });
+    console.log(`  ${res.status} ${url}`);
+    // Drain the body so the socket is not left hanging; the document is small.
+    await res.arrayBuffer().catch(() => {});
+    if (res.status >= 300 && res.status < 400) {
+      fail(
+        `responded with redirect (${res.status}) to ${res.headers.get('location') ?? '(no location)'} — ` +
+          're-run against the final URL; headers must be read from the final document response, not a redirect',
+      );
+    } else if (res.status < 200 || res.status >= 300) {
+      fail(`unexpected status ${res.status} — cannot verify isolation headers from this response`);
+    } else {
+      const coop = res.headers.get('cross-origin-opener-policy');
+      const coep = res.headers.get('cross-origin-embedder-policy');
+      if (coop === 'same-origin') pass(`live Cross-Origin-Opener-Policy: ${coop}`);
+      else fail(`live Cross-Origin-Opener-Policy is ${coop === null ? 'MISSING' : `"${coop}"`} — expected "same-origin"`);
+      if (coep === 'require-corp') pass(`live Cross-Origin-Embedder-Policy: ${coep}`);
+      else fail(`live Cross-Origin-Embedder-Policy is ${coep === null ? 'MISSING' : `"${coep}"`} — expected "require-corp"`);
+    }
+  } catch (err) {
+    fail(`network error verifying ${url} — ${err.message}; the static config above is still the deploy gate`);
+  }
+} else {
+  console.log('\nlive headers');
+  console.log('  (skipped — pass --live-url=https://<preview-or-prod>/ide to verify served response headers)');
 }
 
 /* ── Result ───────────────────────────────────────────────────────────────── */

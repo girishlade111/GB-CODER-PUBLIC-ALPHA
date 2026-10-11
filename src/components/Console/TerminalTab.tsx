@@ -15,6 +15,10 @@ import {
   webcontainerService,
   WebContainerStatus,
 } from '../../services/webcontainer/webcontainerService';
+import {
+  describeWebContainerUnavailableReason,
+  getWebContainerUnavailableReason,
+} from '../../services/webcontainer/webcontainerSupport';
 
 export type TerminalExecutionMode = 'webcontainer' | 'local';
 
@@ -89,6 +93,30 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   };
 
   const isWebContainerSupported = webcontainerService.isSupported();
+
+  /**
+   * Specific reason the WebContainer option is unavailable, if it is.
+   *
+   * The option stays rendered in all cases (see the mode-switch pill below):
+   * a capability gap must never look like a missing feature. Deriving this
+   * value never boots the runtime — boot happens only in the mode effect
+   * when `mode === 'webcontainer'`, which is unreachable while unsupported
+   * because the control is disabled and the initial mode falls back to
+   * `'local'`.
+   */
+  const webContainerUnavailableReason = isWebContainerSupported
+    ? null
+    : getWebContainerUnavailableReason({
+        crossOriginIsolated:
+          typeof window !== 'undefined' && Boolean(window.crossOriginIsolated),
+        isSecureContext:
+          typeof window === 'undefined' ? true : Boolean(window.isSecureContext),
+        sharedArrayBufferAvailable: typeof SharedArrayBuffer !== 'undefined',
+        status: webcontainerStatus,
+      });
+  const webContainerUnavailableMessage = webContainerUnavailableReason
+    ? describeWebContainerUnavailableReason(webContainerUnavailableReason)
+    : null;
 
   const writePrompt = useCallback((term: XTerm) => {
     term.write(`\r\n${PROMPT}`);
@@ -524,21 +552,28 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
             </span>
           </div>
 
-          {/* Mode Switcher Pill */}
+          {/* Mode Switcher Pill — the WebContainer option stays visible even
+              when unsupported so a capability gap never looks like a missing
+              feature. Disabled state carries the specific reason as a tooltip
+              and via aria; it cannot be activated while disabled. */}
           <div className="flex items-center bg-product border border-stroke-dark rounded-md p-0.5 text-[10px]">
-            {isWebContainerSupported && (
-              <button
-                onClick={() => setMode('webcontainer')}
-                className={`px-2 py-0.5 rounded font-medium transition-colors ${
-                  mode === 'webcontainer'
-                    ? 'bg-accent text-white shadow-sm'
-                    : 'text-content-on-dark-soft hover:text-white'
-                }`}
-                title="Zero-cost in-browser Node.js runtime powered by WebAssembly"
-              >
-                WebContainer
-              </button>
-            )}
+            <button
+              onClick={() => setMode('webcontainer')}
+              disabled={!isWebContainerSupported}
+              aria-disabled={!isWebContainerSupported}
+              className={`px-2 py-0.5 rounded font-medium transition-colors ${
+                mode === 'webcontainer'
+                  ? 'bg-accent text-white shadow-sm'
+                  : 'text-content-on-dark-soft hover:text-white'
+              }${isWebContainerSupported ? '' : ' opacity-50 cursor-not-allowed'}`}
+              title={
+                isWebContainerSupported
+                  ? 'Zero-cost in-browser Node.js runtime powered by WebAssembly'
+                  : (webContainerUnavailableMessage ?? 'WebContainer unavailable')
+              }
+            >
+              WebContainer
+            </button>
             <button
               onClick={() => setMode('local')}
               className={`px-2 py-0.5 rounded font-medium transition-colors ${

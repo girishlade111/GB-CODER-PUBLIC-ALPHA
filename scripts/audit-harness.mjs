@@ -31,6 +31,8 @@ await build({
       export * from './src/utils/terminalSafety.ts';
       export * from './src/utils/safeMarkup.ts';
       export * from './src/services/localShell.ts';
+      export * from './src/services/webcontainer/webcontainerService.ts';
+      export * from './src/services/webcontainer/webcontainerSupport.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',
