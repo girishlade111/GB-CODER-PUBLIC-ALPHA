@@ -64,11 +64,14 @@ async function runBrowserValidation() {
     const response = await page.goto(TARGET_URL, { waitUntil: 'networkidle', timeout: 35000 });
     console.log(`[Browser Automation] Navigation response status: ${response?.status()}`);
 
-    // Dismiss any introductory tour or modal if displayed
-    const dismissBtns = page.locator('button:has-text("Get Started"), button:has-text("Skip"), button[aria-label="Close"]');
-    if (await dismissBtns.count() > 0) {
-      await dismissBtns.first().click().catch(() => {});
-      console.log('[Browser Automation] Dismissed intro modal.');
+    // If ErrorBoundary appeared, read the exact error via Report Issue button
+    const reportIssueBtn = page.locator('button:has-text("Report Issue")');
+    if (await reportIssueBtn.count() > 0) {
+      console.log('[Browser Automation] ErrorBoundary detected! Reading error report...');
+      await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+      await reportIssueBtn.click();
+      const clipboardText = await page.evaluate(() => navigator.clipboard.readText()).catch((e) => e.message);
+      console.log('[Browser Automation] Error Report from ErrorBoundary:\n', clipboardText);
     }
 
     // Wait for the IDE shell or preview elements
