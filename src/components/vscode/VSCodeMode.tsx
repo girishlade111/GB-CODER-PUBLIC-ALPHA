@@ -881,10 +881,12 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   ]);
 
   const handleIframeLoad = useCallback(() => {
+    webcontainerService.setPreviewStatus('ready');
     setPreviewLoadError(null);
   }, []);
 
   const handleIframeError = useCallback(() => {
+    webcontainerService.setPreviewStatus('error', 'Unable to render live preview.');
     setPreviewLoadError('Unable to render live preview. Check that the dev server is responding.');
   }, []);
 
@@ -2126,8 +2128,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               <StackBlitzStartupLoader
                 stage={webcontainer.startupStage}
                 serverPort={webcontainer.serverPort}
+                runtimeError={webcontainer.runtimeError}
                 onOpenTerminal={openTerminal}
                 onRestart={() => void handleRestartDevServer()}
+                onRetryInstall={() => {
+                  openTerminal();
+                  webcontainerService.requestRestart('Retry Installation');
+                }}
               />
             )}
           </div>
@@ -2183,13 +2190,44 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
           <span
             onClick={() => {
-              setIsPreviewMinimized(false);
+              if (webcontainer.startupStage === 'error') {
+                openTerminal();
+              } else {
+                setIsPreviewMinimized(false);
+              }
             }}
             className="flex items-center gap-1 font-medium hover:bg-white/20 px-1 rounded cursor-pointer text-cyan-200"
-            title="Live Preview Port"
+            title={
+              webcontainer.startupStage === 'ready'
+                ? `Dev Server listening on port ${webcontainer.serverPort || 5173}`
+                : webcontainer.startupStage === 'error'
+                ? `Runtime Error: ${webcontainer.runtimeError?.message || 'Check terminal'}`
+                : `WebContainer: ${webcontainer.startupStage}`
+            }
+            data-testid="status-bar-runtime-status"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
-            Port {webcontainer.serverPort || 5173}
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                webcontainer.startupStage === 'ready'
+                  ? 'bg-emerald-300 animate-pulse'
+                  : webcontainer.startupStage === 'error'
+                  ? 'bg-rose-400 animate-pulse'
+                  : webcontainer.startupStage === 'installing' ||
+                    webcontainer.startupStage === 'mounting_files' ||
+                    webcontainer.startupStage === 'booting'
+                  ? 'bg-cyan-300 animate-pulse'
+                  : webcontainer.startupStage === 'starting_server'
+                  ? 'bg-amber-300 animate-pulse'
+                  : 'bg-slate-400'
+              }`}
+            />
+            {webcontainer.startupStage === 'ready' && `Port ${webcontainer.serverPort || 5173}`}
+            {webcontainer.startupStage === 'installing' && 'Installing...'}
+            {webcontainer.startupStage === 'starting_server' && 'Starting Server...'}
+            {webcontainer.startupStage === 'mounting_files' && 'Mounting Files...'}
+            {webcontainer.startupStage === 'booting' && 'Booting Runtime...'}
+            {webcontainer.startupStage === 'error' && 'Runtime Error'}
+            {webcontainer.startupStage === 'idle' && 'Runtime Idle'}
           </span>
 
           <span className="hover:bg-white/20 px-1 rounded cursor-pointer hidden lg:inline">
