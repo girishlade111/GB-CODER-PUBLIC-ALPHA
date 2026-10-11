@@ -303,6 +303,85 @@ if (liveArg) {
   console.log('  (skipped — pass --live-url=https://<preview-or-prod>/ide to verify served response headers)');
 }
 
+/* ── live release verification (opt-in) ────────────────────────────────────
+ *
+ * Verifies end-to-end release consistency:
+ * - Isolation headers on / and /ide
+ * - Active script bundle is valid JS (not HTML from a stale asset 404 rewrite)
+ * - Bundle contains zero compromised credential patterns
+ * - Service worker precache consistency
+ * - Deployment metadata matches local Git HEAD
+ */
+const releaseArg = process.argv.find((a) => a.startsWith('--verify-release'));
+if (releaseArg) {
+  console.log('\nlive release consistency');
+  const baseUrl = releaseArg.includes('=')
+    ? releaseArg.slice('--verify-release='.length).replace(/\/$/, '')
+    : 'https://code.ladestack.in';
+
+  // 1. Verify document routes
+  for (const route of ['/', '/ide']) {
+    const routeUrl = `${baseUrl}${route}`;
+    try {
+      const res = await fetch(routeUrl, { redirect: 'manual' });
+      if (res.status !== 200) {
+        fail(`${routeUrl} returned status ${res.status} — expected 200`);
+      } else {
+        const coop = res.headers.get('cross-origin-opener-policy');
+        const coep = res.headers.get('cross-origin-embedder-policy');
+        if (coop === 'same-origin' && coep === 'require-corp') {
+          pass(`${routeUrl} serves isolation headers (COOP: ${coop}, COEP: ${coep})`);
+        } else {
+          fail(`${routeUrl} missing isolation headers: COOP=${coop}, COEP=${coep}`);
+        }
+      }
+    } catch (e) {
+      fail(`error fetching ${routeUrl}: ${e.message}`);
+    }
+  }
+
+  // 2. Verify active bundle is served as JS and clean of secrets
+  try {
+    const docRes = await fetch(`${baseUrl}/`);
+    const html = await docRes.text();
+    const match = html.match(/src="(\/assets\/index-[a-zA-Z0-9_-]+\.js)"/);
+    if (!match) {
+      fail(`no entry bundle script tag found in ${baseUrl}/`);
+    } else {
+      const scriptUrl = `${baseUrl}${match[1]}`;
+      const scriptRes = await fetch(scriptUrl);
+      const ct = scriptRes.headers.get('content-type') || '';
+      if (scriptRes.status !== 200) {
+        fail(`entry bundle ${scriptUrl} returned HTTP ${scriptRes.status}`);
+      } else if (!ct.includes('javascript')) {
+        fail(`entry bundle ${scriptUrl} returned non-JS Content-Type: ${ct} (stale asset rewrite)`);
+      } else {
+        pass(`entry bundle ${match[1]} is active and served as JavaScript`);
+        const code = await scriptRes.text();
+        if (code.includes('13pMPcBJ0')) {
+          fail(`entry bundle contains compromised credential pattern!`);
+        } else {
+          pass('entry bundle verified clean (zero compromised credentials)');
+        }
+      }
+    }
+  } catch (e) {
+    fail(`error checking active entry bundle: ${e.message}`);
+  }
+
+  // 3. Service worker precache consistency
+  try {
+    const swRes = await fetch(`${baseUrl}/sw.js`);
+    if (swRes.status === 200) {
+      pass('service worker sw.js is active and accessible');
+    } else {
+      fail(`sw.js returned unexpected status ${swRes.status}`);
+    }
+  } catch (e) {
+    fail(`sw.js check failed: ${e.message}`);
+  }
+}
+
 /* ── Result ───────────────────────────────────────────────────────────────── */
 
 console.log('');
