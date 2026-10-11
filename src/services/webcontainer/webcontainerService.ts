@@ -109,10 +109,23 @@ export type WebContainerStatus =
 export type ProjectStartupStage =
   | 'idle'
   | 'booting'
+  | 'mounting_files'
+  | 'runtime_ready'
   | 'installing'
   | 'starting_server'
   | 'ready'
   | 'error';
+
+export type PreviewStatus = 'idle' | 'loading' | 'ready' | 'error';
+
+export interface WebContainerRuntimeError {
+  phase: 'boot' | 'mount' | 'install' | 'server' | 'preview' | 'general';
+  message: string;
+  details?: string;
+  timestamp: number;
+  recoverable: boolean;
+  retryAction?: 'retry_install' | 'restart_server' | 'reload_preview' | 'reboot_container';
+}
 
 export interface WebContainerServerInfo {
   port: number;
@@ -127,6 +140,9 @@ export interface WebContainerState {
   activeServers: WebContainerServerInfo[];
   error: string | null;
   startupStage: ProjectStartupStage;
+  previewStatus: PreviewStatus;
+  runtimeError: WebContainerRuntimeError | null;
+  sessionEpoch: number;
 }
 
 /** Converts a flat array of ProjectFile objects into a nested WebContainer FileSystemTree */
@@ -321,6 +337,8 @@ class WebContainerManager {
   private sessionEpoch = 0;
   private spawnAttempts = 0;
   private installedManifestFingerprint: string | null = null;
+  private lastStartedFingerprint: string | null = null;
+  private lastStartedEpoch = -1;
 
   private state: WebContainerState = {
     status: typeof window !== 'undefined' && window.crossOriginIsolated ? 'idle' : 'unsupported',
@@ -330,6 +348,9 @@ class WebContainerManager {
     activeServers: [],
     error: null,
     startupStage: 'idle',
+    previewStatus: 'idle',
+    runtimeError: null,
+    sessionEpoch: 0,
   };
 
   private listeners = new Set<() => void>();
@@ -350,8 +371,79 @@ class WebContainerManager {
     return this.state;
   }
 
-  public setStartupStage(stage: ProjectStartupStage) {
-    this.updateState({ startupStage: stage });
+  public setStartupStage(
+    stage: ProjectStartupStage,
+    runtimeError?: WebContainerRuntimeError | null,
+  ): void {
+    const patch: Partial<WebContainerState> = { startupStage: stage };
+    if (stage === 'error') {
+      if (runtimeError) {
+        patch.runtimeError = runtimeError;
+        patch.error = runtimeError.message;
+      }
+    } else if (runtimeError === undefined) {
+      // Transitioning away from error automatically clears error flags
+      patch.runtimeError = null;
+      patch.error = null;
+    }
+    this.updateState(patch);
+  }
+
+  public setPreviewStatus(status: PreviewStatus, errorMsg?: string | null): void {
+    const patch: Partial<WebContainerState> = { previewStatus: status };
+    if (status === 'error') {
+      patch.runtimeError = {
+        phase: 'preview',
+        message: errorMsg || 'Live preview failed to render.',
+        timestamp: Date.now(),
+        recoverable: true,
+        retryAction: 'reload_preview',
+      };
+      patch.error = patch.runtimeError.message;
+    } else if (status === 'ready' && this.state.runtimeError?.phase === 'preview') {
+      patch.runtimeError = null;
+      patch.error = null;
+    }
+    this.updateState(patch);
+  }
+
+  public setRuntimeError(error: WebContainerRuntimeError | null): void {
+    if (error) {
+      this.updateState({
+        runtimeError: error,
+        error: error.message,
+        startupStage: 'error',
+      });
+    } else {
+      this.updateState({
+        runtimeError: null,
+        error: null,
+      });
+    }
+  }
+
+  public clearRuntimeError(): void {
+    this.updateState({
+      runtimeError: null,
+      error: null,
+    });
+  }
+
+  public markProjectStarted(fingerprint: string): void {
+    this.lastStartedFingerprint = fingerprint;
+    this.lastStartedEpoch = this.sessionEpoch;
+  }
+
+  public hasStartedProject(fingerprint: string): boolean {
+    return (
+      this.lastStartedFingerprint === fingerprint &&
+      this.lastStartedEpoch === this.sessionEpoch
+    );
+  }
+
+  public resetProjectStartState(): void {
+    this.lastStartedFingerprint = null;
+    this.lastStartedEpoch = -1;
   }
 
   public subscribe(listener: () => void): () => void {
@@ -372,11 +464,16 @@ class WebContainerManager {
     this.sessionEpoch++;
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
+    this.resetProjectStartState();
     this.updateState({
       serverUrl: null,
       serverPort: null,
       activeServers: [],
       startupStage: 'installing',
+      previewStatus: 'idle',
+      error: null,
+      runtimeError: null,
+      sessionEpoch: this.sessionEpoch,
     });
     this.restartListeners.forEach((listener) => {
       try {
@@ -390,11 +487,15 @@ class WebContainerManager {
   public resetServerState(): void {
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
+    this.resetProjectStartState();
     this.updateState({
       serverUrl: null,
       serverPort: null,
       activeServers: [],
       startupStage: 'installing',
+      previewStatus: 'idle',
+      error: null,
+      runtimeError: null,
     });
   }
 
