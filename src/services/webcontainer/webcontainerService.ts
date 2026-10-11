@@ -492,7 +492,7 @@ class WebContainerManager {
       serverUrl: null,
       serverPort: null,
       activeServers: [],
-      startupStage: 'installing',
+      startupStage: 'idle',
       previewStatus: 'idle',
       error: null,
       runtimeError: null,
@@ -514,13 +514,7 @@ class WebContainerManager {
   public setDevServerStarting(starting: boolean): void {
     this.isDevServerStartingState = starting;
     if (starting) {
-      if (
-        this.state.startupStage !== 'installing' &&
-        this.state.startupStage !== 'mounting_files' &&
-        this.state.startupStage !== 'booting'
-      ) {
-        this.updateState({ startupStage: 'starting_server' });
-      }
+      this.updateState({ startupStage: 'starting_server' });
     } else if (this.state.startupStage === 'starting_server') {
       this.updateState({ startupStage: this.state.serverUrl ? 'ready' : 'idle' });
     }

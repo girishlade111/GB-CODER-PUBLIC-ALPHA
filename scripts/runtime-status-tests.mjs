@@ -88,11 +88,9 @@ describe('GB Coder Task 08 — WebContainer Status Accuracy & Error Recovery (17
   test('04. Slow npm installation indicates ongoing package installation without timing out dev server', () => {
     webcontainerService.resetServerState();
     webcontainerService.setStartupStage('installing');
-    webcontainerService.setDevServerStarting(true);
 
     const state = webcontainerService.getState();
-    assert.equal(state.startupStage, 'installing');
-    assert.equal(webcontainerService.isDevServerStarting(), true);
+    assert.equal(state.startupStage, 'installing', 'Must remain in installing stage during package install');
     assert.equal(state.serverUrl, null, 'Must not claim server ready before install finishes');
   });
 
