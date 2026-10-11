@@ -69,7 +69,7 @@ class MockMessageChannel {
 class MockIFrameElement extends EventEmitter {
   constructor(src = 'https://preview.local-credentialless.webcontainer-api.io/') {
     super();
-    this.src = src;
+    this._src = src;
     this.isConnected = true;
     this.listeners = new Map();
     this.reloadRequestsReceived = 0;
@@ -90,6 +90,21 @@ class MockIFrameElement extends EventEmitter {
       },
     };
     this.simulateSlowOrHung = false;
+  }
+
+  get src() {
+    return this._src;
+  }
+
+  set src(val) {
+    this._src = val;
+    setImmediate(() => {
+      this.emit('load');
+      const set = this.listeners.get('load');
+      if (set) {
+        set.forEach((fn) => fn());
+      }
+    });
   }
 
   addEventListener(type, listener, options) {

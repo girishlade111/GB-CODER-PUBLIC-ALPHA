@@ -16,6 +16,7 @@
     "audit:webcontainer": "node scripts/webcontainer-regression-tests.mjs",
     "audit:lifecycle": "node scripts/dev-server-lifecycle-tests.mjs",
     "audit:npm": "node scripts/npm-install-performance-tests.mjs",
+    "audit:preview": "node scripts/preview-refresh-tests.mjs",
     "audit:e2e": "node scripts/e2e-browser-test.mjs",
     "audit:coderabbit": "node scripts/coderabbit-audit.mjs",
     "preview": "vite preview",
