@@ -80,6 +80,43 @@ with `require is not defined in ES module scope`.
 `fetchLanInfo` treats a 404 from `lan-info` as "no LAN available" and falls back to
 cloud mode, so removing the deployed route changed no user-visible behaviour.
 
+## WebContainer requires COOP/COEP headers on Vercel
+
+`@webcontainer/api` runs only on a **cross-origin isolated** document. The
+root HTML must be served with both:
+
+```http
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
+
+The Vite dev and preview servers set these (`vite.config.ts`), so the
+WebContainer terminal always works locally — including on `vite preview`
+against a production build. Vercel does **not** set them by default, so they
+are declared in `vercel.json` under `headers` with source `/(.*)`, which
+covers the Advanced IDE document at `/ide`.
+
+If these headers regress, production silently degrades: `TerminalTab` falls
+back to the Local Simulated Shell and the WebContainer option renders
+disabled with the reason as its tooltip. Symptoms of a regression:
+
+- `window.crossOriginIsolated === false` in the deployed page console,
+- the terminal header reads "Local Simulated Shell" with the WebContainer
+  pill disabled.
+
+`npm run verify:deploy` asserts the header configuration statically, and
+`npm run audit:webcontainer` covers the fallback logic. Neither proves what
+the CDN actually serves — after deploying, verify the live response:
+
+```bash
+node scripts/verify-deploy-config.mjs --live-url=https://<preview-or-prod>/ide
+```
+
+then confirm `window.crossOriginIsolated === true` in the browser console.
+Note that `require-corp` makes every cross-origin subresource (Google Fonts,
+CDNs used by user previews, analytics) require CORS/CORP headers of its
+own — check the console for COEP violations after enabling it.
+
 ## Rewrites
 
 ```json
