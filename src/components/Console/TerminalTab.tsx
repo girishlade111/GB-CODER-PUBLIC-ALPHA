@@ -47,6 +47,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
+  const fitAddonRef = useRef<FitAddon | null>(null);
   const hasAutoStartedRef = useRef(false);
   const pendingFingerprintRef = useRef<string | null>(null);
   const restartDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
