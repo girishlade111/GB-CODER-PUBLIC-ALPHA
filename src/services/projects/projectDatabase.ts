@@ -323,7 +323,20 @@ export const readProjectFiles = (projectId: string): Promise<ProjectFile[]> =>
       const stored = await awaitRequest(
         index.getAll(projectId) as IDBRequest<StoredFile[]>,
       );
-      return stored.map(({ path, content, language }) => ({ path, content, language }));
+      // Filter out any corrupted records and ensure valid paths and contents
+      return stored
+        .filter(
+          (file) =>
+            Boolean(file) &&
+            typeof file.path === 'string' &&
+            typeof file.content === 'string' &&
+            file.path.trim().length > 0,
+        )
+        .map(({ path, content, language }) => ({
+          path,
+          content,
+          language: language || languageForPath(path),
+        }));
     }),
   ).then((files) => files ?? []);
 
@@ -351,7 +364,7 @@ export const saveProjectFiles = (
   if (changed.length === 0 && removed.length === 0) return Promise.resolve(next);
 
   return enqueue(() =>
-    withTransaction<void>([PROJECTS_STORE, FILES_STORE], 'readwrite', async (transaction) => {
+    withTransaction<boolean>([PROJECTS_STORE, FILES_STORE], 'readwrite', async (transaction) => {
       const fileStore = transaction.objectStore(FILES_STORE);
 
       for (const file of changed) {
@@ -373,8 +386,16 @@ export const saveProjectFiles = (
       if (record && record.fileCount !== files.length) {
         projects.put({ ...record, fileCount: files.length });
       }
+      return true;
     }),
-  ).then(() => next);
+  ).then((res) => {
+    // If the transaction failed (e.g. quota exceeded or database error),
+    // preserve the previous snapshot so that pending unsaved changes are not lost and will be retried
+    if (res === null) {
+      return previous ?? next;
+    }
+    return next;
+  });
 };
 
 /** Patches a project's metadata, leaving its files alone. */

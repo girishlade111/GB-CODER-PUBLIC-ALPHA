@@ -663,6 +663,8 @@ class WebContainerManager {
     dependencies?: Record<string, string>,
     projectType?: ProjectType,
   ): Promise<void> {
+    if (!files || files.length === 0) return;
+
     const endSerialization = webcontainerPerf.startTimer('project_serialization');
     const tree = filesToFileSystemTree(files, dependencies, projectType);
     endSerialization({ fileCount: files.length });

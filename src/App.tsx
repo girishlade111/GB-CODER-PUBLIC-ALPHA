@@ -39,6 +39,8 @@ import {
   clearWorkspace,
   loadWorkspace,
   saveWorkspace,
+  STORAGE_WARNING_EVENT,
+  StorageWarningDetail,
 } from './services/vscodeWorkspaceStore';
 /*
  * The project layer. Eager for the same reason as the route helpers: the first
@@ -1877,6 +1879,16 @@ function App() {
         });
         // Restores "leaving returns this to React/Vue" across the refresh.
         if (stored.returnTo) setVsCodeReturn(stored.returnTo);
+
+        // Mount files and trigger WebContainer dev server startup on reload
+        void loadChunk(
+          () => import('./services/webcontainer/webcontainerService'),
+          'WebContainer service',
+        ).then(async ({ webcontainerService }) => {
+          if (cancelled) return;
+          await webcontainerService.mountProject(stored.files, undefined, stored.projectType);
+          webcontainerService.requestRestart('Workspace restored on reload');
+        });
       }
 
       finish();
@@ -2125,12 +2137,39 @@ function App() {
    */
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') void flushProjectSave();
+      if (document.visibilityState === 'hidden') {
+        if (activeProjectId) {
+          void flushProjectSave();
+        } else if (fullStackProject && fullStackProject.files.length > 0) {
+          void saveWorkspace(fullStackProject, vsCodeReturn);
+        }
+      }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [flushProjectSave]);
+    window.addEventListener('beforeunload', handleVisibilityChange);
+    window.addEventListener('pagehide', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('beforeunload', handleVisibilityChange);
+      window.removeEventListener('pagehide', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [flushProjectSave, activeProjectId, fullStackProject, vsCodeReturn]);
+
+  /* Non-blocking storage warnings (e.g. quota limit reached). */
+  useEffect(() => {
+    const handleStorageWarning = (e: Event) => {
+      const detail = (e as CustomEvent<StorageWarningDetail>).detail;
+      if (detail?.quotaExceeded) {
+        toast.error('Local storage quota limit reached. Earlier projects may need cleanup.', {
+          id: 'storage-quota-warning',
+        });
+      }
+    };
+
+    window.addEventListener(STORAGE_WARNING_EVENT, handleStorageWarning);
+    return () => window.removeEventListener(STORAGE_WARNING_EVENT, handleStorageWarning);
+  }, []);
 
   /*
    * Keeps the stored editor style honest.

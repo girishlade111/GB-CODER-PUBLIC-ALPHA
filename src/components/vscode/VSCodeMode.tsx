@@ -226,6 +226,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const [restoredView] = useState(() => reconcileViewState(readViewState(), project.files));
   const [openPaths, setOpenPaths] = useState<string[]>(restoredView.openPaths);
   const [activePath, setActivePath] = useState<string | null>(restoredView.activePath);
+  const hasHydratedViewRef = useRef(project.files.length > 0 && restoredView.openPaths.length > 0);
   const [dirtyPaths, setDirtyPaths] = useState<Set<string>>(new Set());
   const [showTerminal, setShowTerminal] = useState(true);
   const [hasOpenedTerminal, setHasOpenedTerminal] = useState(true);
@@ -314,19 +315,39 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
-  /* Open a sensible first file so the editor is not empty on entry. */
+  /*
+   * Reconcile open tabs and active file when project files hydrate from IndexedDB on page reload.
+   * Protects against wiping open tabs when VSCodeMode mounts before async storage finishes loading.
+   */
   useEffect(() => {
-    if (activePath || project.files.length === 0) return;
-    const preferred =
-      project.files.find((file) => /(^|\/)(README\.md|package\.json)$/i.test(file.path)) ??
-      project.files.find((file) => /(^|\/)(index|main|app|server)\./i.test(file.path)) ??
-      project.files[0];
-    setOpenPaths([preferred.path]);
-    setActivePath(preferred.path);
+    if (project.files.length === 0) return;
+
+    if (!hasHydratedViewRef.current) {
+      hasHydratedViewRef.current = true;
+      const stored = readViewState();
+      const reconciled = reconcileViewState(stored, project.files);
+      if (reconciled.openPaths.length > 0 && reconciled.activePath) {
+        setOpenPaths(reconciled.openPaths);
+        setActivePath(reconciled.activePath);
+        return;
+      }
+    }
+
+    if (!activePath) {
+      const preferred =
+        project.files.find((file) => /(^|\/)(README\.md|package\.json)$/i.test(file.path)) ??
+        project.files.find((file) => /(^|\/)(index|main|app|server)\./i.test(file.path)) ??
+        project.files[0];
+      if (preferred) {
+        setOpenPaths([preferred.path]);
+        setActivePath(preferred.path);
+      }
+    }
   }, [project.files, activePath]);
 
   /* Remember the tab layout, so returning to the route reopens what was open. */
   useEffect(() => {
+    if (!hasHydratedViewRef.current || openPaths.length === 0) return;
     writeViewState({ openPaths, activePath });
   }, [openPaths, activePath]);
 

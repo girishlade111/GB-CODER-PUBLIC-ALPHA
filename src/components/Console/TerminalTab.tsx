@@ -51,6 +51,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   const hasAutoStartedRef = useRef(false);
   const pendingFingerprintRef = useRef<string | null>(null);
   const restartDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRestartReasonRef = useRef<string | null>(null);
 
   /** Active execution mode */
   const [mode, setMode] = useState<TerminalExecutionMode>(() => {
@@ -180,7 +181,12 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     const term = termRef.current;
     if (!term) return;
 
-    if (isStartingShellRef.current) return;
+    if (isStartingShellRef.current) {
+      if (forceRestart) {
+        pendingRestartReasonRef.current = 'Forced restart request';
+      }
+      return;
+    }
     if (!forceRestart && webcontainerShellRef.current) {
       return;
     }
@@ -195,16 +201,21 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
       const currentProj = projectRef.current;
 
-      // Mount project files into virtual filesystem with guaranteed package.json
-      await webcontainerService.mountProject(
-        currentProj.files,
-        currentProj.dependencies,
-        currentProj.projectType,
-      );
-
-      term.write(
-        `${ANSI.gray}Files mounted into virtual filesystem. Starting interactive shell...${ANSI.reset}\r\n`,
-      );
+      // Mount project files into virtual filesystem if files exist
+      if (currentProj.files.length > 0) {
+        await webcontainerService.mountProject(
+          currentProj.files,
+          currentProj.dependencies,
+          currentProj.projectType,
+        );
+        term.write(
+          `${ANSI.gray}Files mounted into virtual filesystem. Starting interactive shell...${ANSI.reset}\r\n`,
+        );
+      } else {
+        term.write(
+          `${ANSI.gray}Starting interactive shell...${ANSI.reset}\r\n`,
+        );
+      }
 
       // Spawn or reconnect interactive shell
       const shell = await webcontainerService.spawnInteractiveShell({
@@ -233,7 +244,9 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       setWebcontainerStatus('running');
 
       // StackBlitz auto-start: install dependencies and boot dev server
-      if (autoStartProject !== false && !hasAutoStartedRef.current) {
+      // Only auto-start when project files are populated
+      const projToStart = projectRef.current;
+      if (autoStartProject !== false && !hasAutoStartedRef.current && projToStart.files.length > 0) {
         hasAutoStartedRef.current = true;
 
         // Idempotency: verify if dev server is already running
@@ -251,18 +264,17 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           return;
         }
 
-        const currentProj = projectRef.current;
         const fingerprint = webcontainerService.computeDependencyFingerprint(
-          currentProj.files,
-          currentProj.dependencies,
-          currentProj.projectType,
+          projToStart.files,
+          projToStart.dependencies,
+          projToStart.projectType,
         );
         pendingFingerprintRef.current = fingerprint;
 
         const check = await webcontainerService.needsDependencyInstall(
-          currentProj.files,
-          currentProj.dependencies,
-          currentProj.projectType,
+          projToStart.files,
+          projToStart.dependencies,
+          projToStart.projectType,
         );
 
         if (check.needsInstall) {
@@ -293,6 +305,11 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       webcontainerService.setDevServerStarting(false);
     } finally {
       isStartingShellRef.current = false;
+      if (pendingRestartReasonRef.current) {
+        const pendingReason = pendingRestartReasonRef.current;
+        pendingRestartReasonRef.current = null;
+        triggerDevServerRestart(pendingReason);
+      }
     }
   }, [autoStartProject]);
 
@@ -320,6 +337,15 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           const currentProj = projectRef.current;
 
           void (async () => {
+            // Ensure project files are mounted before checking dependencies or starting Vite
+            if (currentProj.files.length > 0) {
+              await webcontainerService.mountProject(
+                currentProj.files,
+                currentProj.dependencies,
+                currentProj.projectType,
+              );
+            }
+
             const fingerprint = webcontainerService.computeDependencyFingerprint(
               currentProj.files,
               currentProj.dependencies,
@@ -356,13 +382,24 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
             }
           })();
         } else {
-          hasAutoStartedRef.current = false;
-          void startWebContainerShell(true);
+          if (isStartingShellRef.current) {
+            pendingRestartReasonRef.current = reason || 'Pending restart';
+          } else {
+            hasAutoStartedRef.current = false;
+            void startWebContainerShell(true);
+          }
         }
       }, 150);
     },
     [mode, startWebContainerShell],
   );
+
+  // Auto-start when project files hydrate from IndexedDB if not already started
+  useEffect(() => {
+    if (project.files.length > 0 && !hasAutoStartedRef.current && webcontainerShellRef.current) {
+      triggerDevServerRestart('Workspace files ready');
+    }
+  }, [project.files.length, triggerDevServerRestart]);
 
   // Subscribe to external restart requests (e.g. new local folder loaded or user restart)
   useEffect(() => {
