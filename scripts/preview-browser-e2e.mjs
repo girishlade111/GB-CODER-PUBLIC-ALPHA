@@ -49,6 +49,9 @@ async function runBrowserValidation() {
   });
 
   page.on('response', (res) => {
+    if (res.status() >= 400) {
+      console.log(`[HTTP ${res.status()}] ${res.url()}`);
+    }
     networkRequests.push({
       url: res.url(),
       status: res.status(),
