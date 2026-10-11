@@ -626,6 +626,9 @@ class WebContainerManager {
         serverPort: port,
         activeServers: updatedServers,
         startupStage: 'ready',
+        previewStatus: 'loading',
+        error: null,
+        runtimeError: null,
       });
       webcontainerPerf.recordTiming('server_ready', 0, { port, url });
     });
@@ -641,7 +644,9 @@ class WebContainerManager {
         ];
         this.updateState({
           activeServers: updated,
-          ...(this.state.serverUrl ? {} : { serverUrl: url, serverPort: port, startupStage: 'ready' }),
+          ...(this.state.serverUrl
+            ? {}
+            : { serverUrl: url, serverPort: port, startupStage: 'ready', previewStatus: 'loading' }),
         });
       } else if (type === 'close') {
         const updated = this.state.activeServers.filter((s) => s.port !== port);
@@ -654,6 +659,7 @@ class WebContainerManager {
             serverUrl: nextServer ? nextServer.url : null,
             activeServers: updated,
             startupStage: nextServer ? 'ready' : 'idle',
+            previewStatus: nextServer ? 'loading' : 'idle',
           });
         } else {
           this.updateState({ activeServers: updated });
@@ -664,7 +670,13 @@ class WebContainerManager {
     // 3. error: runtime error
     const unsubError = container.on('error', (err) => {
       console.error('[WebContainer] Runtime error:', err);
-      this.updateState({ error: err.message, startupStage: 'error' });
+      this.setStartupStage('error', {
+        phase: 'server',
+        message: err.message,
+        timestamp: Date.now(),
+        recoverable: true,
+        retryAction: 'restart_server',
+      });
     });
 
     this.eventUnsubscribers.push(unsubServerReady, unsubPort, unsubError);
@@ -689,7 +701,7 @@ class WebContainerManager {
       (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
         .__GBCODER_WEBCONTAINER_INSTANCE__ = existing;
       this.setupServerListeners(existing);
-      this.updateState({ status: 'ready', error: null });
+      this.updateState({ status: 'ready', error: null, runtimeError: null });
       return existing;
     }
 
@@ -705,11 +717,17 @@ class WebContainerManager {
 
     if (!this.isSupported()) {
       const msg = 'Cross-Origin Isolation is not active. WebContainer requires COOP/COEP headers.';
-      this.updateState({ status: 'unsupported', error: msg });
+      this.setStartupStage('error', {
+        phase: 'boot',
+        message: msg,
+        timestamp: Date.now(),
+        recoverable: false,
+      });
+      this.updateState({ status: 'unsupported' });
       throw new Error(msg);
     }
 
-    this.updateState({ status: 'booting', error: null });
+    this.updateState({ status: 'booting', startupStage: 'booting', error: null, runtimeError: null });
 
     const doBoot = async () => {
       try {
@@ -718,7 +736,7 @@ class WebContainerManager {
         (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
           .__GBCODER_WEBCONTAINER_INSTANCE__ = container;
         this.setupServerListeners(container);
-        this.updateState({ status: 'ready', error: null });
+        this.updateState({ status: 'ready', error: null, runtimeError: null });
         return container;
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -733,13 +751,19 @@ class WebContainerManager {
             (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
               .__GBCODER_WEBCONTAINER_INSTANCE__ = recovered;
             this.setupServerListeners(recovered);
-            this.updateState({ status: 'ready', error: null });
+            this.updateState({ status: 'ready', error: null, runtimeError: null });
             return recovered;
           }
         }
 
         console.error('[WebContainer] Failed to boot:', err);
-        this.updateState({ status: 'error', error: message });
+        this.setStartupStage('error', {
+          phase: 'boot',
+          message: `Failed to boot WebContainer: ${message}`,
+          timestamp: Date.now(),
+          recoverable: true,
+          retryAction: 'reboot_container',
+        });
         this.bootPromise = null;
         (globalThis as unknown as {
           __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<WebContainer> | null;
@@ -766,19 +790,33 @@ class WebContainerManager {
   ): Promise<void> {
     if (!files || files.length === 0) return;
 
-    const endSerialization = webcontainerPerf.startTimer('project_serialization');
-    const tree = filesToFileSystemTree(files, dependencies, projectType);
-    endSerialization({ fileCount: files.length });
+    this.updateState({ startupStage: 'mounting_files' });
 
-    const endMount = webcontainerPerf.startTimer('filesystem_mount');
-    const container = await this.boot();
-    await container.mount(tree);
     try {
-      await container.fs.writeFile('.npmrc', OPTIMIZED_NPMRC);
-    } catch {
-      // ignore
+      const endSerialization = webcontainerPerf.startTimer('project_serialization');
+      const tree = filesToFileSystemTree(files, dependencies, projectType);
+      endSerialization({ fileCount: files.length });
+
+      const endMount = webcontainerPerf.startTimer('filesystem_mount');
+      const container = await this.boot();
+      await container.mount(tree);
+      try {
+        await container.fs.writeFile('.npmrc', OPTIMIZED_NPMRC);
+      } catch {
+        // ignore
+      }
+      endMount();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.setStartupStage('error', {
+        phase: 'mount',
+        message: `Failed to mount project files: ${msg}`,
+        timestamp: Date.now(),
+        recoverable: true,
+        retryAction: 'reboot_container',
+      });
+      throw err;
     }
-    endMount();
   }
 
   /**
