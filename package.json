@@ -14,6 +14,7 @@
     "audit:devserver": "node scripts/audit-devserver.mjs",
     "audit:tests": "node scripts/audit-run-tests.mjs",
     "audit:webcontainer": "node scripts/webcontainer-regression-tests.mjs",
+    "audit:e2e": "node scripts/e2e-browser-test.mjs",
     "audit:coderabbit": "node scripts/coderabbit-audit.mjs",
     "preview": "vite preview",
     "vercel-build": "vite build"

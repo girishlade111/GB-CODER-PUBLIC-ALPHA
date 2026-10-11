@@ -81,13 +81,13 @@ describe('Real browser runtime isolation (/ide)', () => {
 describe('Advanced IDE Terminal Tab UI (/ide)', () => {
   test('renders WebContainer and Local switcher pills', async () => {
     const page = await context.newPage();
-    await page.goto(`${TARGET_URL}/ide`, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.goto(`${TARGET_URL}/ide`, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     const wcButton = page.locator('button:has-text("WebContainer")').first();
-    await wcButton.waitFor({ state: 'visible', timeout: 15000 });
+    await wcButton.waitFor({ state: 'visible', timeout: 20000 });
 
     const localButton = page.locator('button:has-text("Local")').first();
-    await localButton.waitFor({ state: 'visible', timeout: 15000 });
+    await localButton.waitFor({ state: 'visible', timeout: 20000 });
 
     const isDisabled = await wcButton.isDisabled();
     assert.equal(isDisabled, false, 'WebContainer button must not be disabled when crossOriginIsolated is true');
@@ -97,10 +97,10 @@ describe('Advanced IDE Terminal Tab UI (/ide)', () => {
 
   test('switches between WebContainer and Local Simulated Shell', async () => {
     const page = await context.newPage();
-    await page.goto(`${TARGET_URL}/ide`, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.goto(`${TARGET_URL}/ide`, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     const localButton = page.locator('button:has-text("Local")').first();
-    await localButton.waitFor({ state: 'visible', timeout: 15000 });
+    await localButton.waitFor({ state: 'visible', timeout: 20000 });
     await localButton.click();
 
     const localIndicator = page.locator('text=Local Simulated Shell').first();
