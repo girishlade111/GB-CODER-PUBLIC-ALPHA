@@ -677,7 +677,15 @@ function App() {
   const [showSnippets, setShowSnippets] = useState<boolean>(false);
   const [showFileExplorer, setShowFileExplorer] = useState<boolean>(false);
   const [showDependencies, setShowDependencies] = useState<boolean>(false);
-  const [currentView, setCurrentView] = useState<AppView>('editor');
+  const [currentView, setCurrentView] = useState<AppView>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path.startsWith('/preview-popout')) return 'preview-popout';
+      if (path.startsWith('/mpreview/')) return 'mobile-preview';
+      if (path.startsWith('/preview/')) return 'preview-share';
+    }
+    return 'editor';
+  });
   const [previewShareCode, setPreviewShareCode] = useState<{ html: string; css: string; javascript: string } | null>(null);
   const [previewShortId, setPreviewShortId] = useState('');
   /** Session id from `/mpreview/:id`. The page fetches the document itself. */

@@ -29,6 +29,7 @@ export interface StandaloneCodePreviewState {
 export type LivePreviewPayload =
   | DevServerPreviewState
   | StandaloneCodePreviewState
+  | { type: 'dev_server_offline'; timestamp: number }
   | { type: 'reload'; timestamp: number };
 
 const CHANNEL_NAME = 'gbcoder_live_preview_channel';
@@ -145,6 +146,16 @@ class LivePreviewChannel {
   public broadcastReload(): void {
     this.persistAndNotify({
       type: 'reload',
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Broadcasts that the active development server has stopped or exited.
+   */
+  public broadcastServerOffline(): void {
+    this.persistAndNotify({
+      type: 'dev_server_offline',
       timestamp: Date.now(),
     });
   }
