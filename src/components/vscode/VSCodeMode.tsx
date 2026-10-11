@@ -57,6 +57,7 @@ import {
 import { webcontainerService } from '../../services/webcontainer/webcontainerService';
 import { ataService } from '../../services/ata/ataService';
 import { livePreviewChannel } from '../../services/preview/livePreviewChannel';
+import { previewReloadService } from '../../services/preview/previewReloadService';
 import { codeAssistService } from '../../services/ai/codeAssistService';
 import { Snapshot } from '../../services/snapshotService';
 
@@ -204,7 +205,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     getWebContainerSnapshot,
   );
   const { isDark } = useTheme();
-  const [previewKey, setPreviewKey] = useState(0);
+  const [isReloadingPreview, setIsReloadingPreview] = useState(false);
+  const [previewLoadError, setPreviewLoadError] = useState<string | null>(null);
+  const previewIframeRef = useRef<HTMLIFrameElement>(null);
+  const fullscreenIframeRef = useRef<HTMLIFrameElement>(null);
   const [splitOpenPaths, setSplitOpenPaths] = useState<string[]>([]);
   const [splitActivePath, setSplitActivePath] = useState<string | null>(null);
   const [splitRatio, setSplitRatio] = useState<number>(50);
@@ -774,6 +778,70 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       window.open(`/preview-popout?url=${urlParam}&port=${portParam}`, '_blank');
     }
   }, [activePreview]);
+
+  const handleReloadPreview = useCallback(async () => {
+    // 1. Dev server health guard: do not reload if dev server is not ready or offline
+    if (!webcontainer.serverUrl || webcontainer.startupStage !== 'ready') {
+      if (
+        webcontainer.startupStage === 'installing' ||
+        webcontainer.startupStage === 'booting' ||
+        webcontainer.startupStage === 'starting_server'
+      ) {
+        toast('Development server is still starting. Please wait for it to be ready.', {
+          icon: '⏳',
+        });
+      } else {
+        toast.error('Development server is not running. Please start or restart the dev server.');
+      }
+      return;
+    }
+
+    // 2. Prevent overlapping reloads if already in flight (in-flight lock)
+    if (isReloadingPreview) {
+      return;
+    }
+
+    setIsReloadingPreview(true);
+    setPreviewLoadError(null);
+
+    try {
+      // 3. Broadcast reload across any detached popout windows
+      livePreviewChannel.broadcastReload();
+
+      // 4. Target the active preview iframe (fullscreen overlay or embedded panel)
+      const targetIframe = isPreviewFullscreen
+        ? fullscreenIframeRef.current
+        : previewIframeRef.current;
+
+      if (targetIframe) {
+        await previewReloadService.reloadPreview(targetIframe, {
+          serverUrl: activePreview?.url,
+          timeoutMs: 350,
+        });
+      }
+    } catch (err) {
+      console.warn('[VSCodeMode] Preview reload warning:', err);
+    } finally {
+      // Keep smooth visual spin feedback (minimum 400ms) for clear user confirmation
+      setTimeout(() => {
+        setIsReloadingPreview(false);
+      }, 400);
+    }
+  }, [
+    webcontainer.serverUrl,
+    webcontainer.startupStage,
+    isReloadingPreview,
+    isPreviewFullscreen,
+    activePreview?.url,
+  ]);
+
+  const handleIframeLoad = useCallback(() => {
+    setPreviewLoadError(null);
+  }, []);
+
+  const handleIframeError = useCallback(() => {
+    setPreviewLoadError('Unable to render live preview. Check that the dev server is responding.');
+  }, []);
 
   // Escape key exits fullscreen preview
   useEffect(() => {
@@ -1794,14 +1862,25 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               <div className="flex items-center gap-0.5">
                 <button
                   type="button"
-                  onClick={() => {
-                    setPreviewKey((k) => k + 1);
-                    livePreviewChannel.broadcastReload();
-                  }}
-                  title="Reload Live Preview"
-                  className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+                  onClick={() => void handleReloadPreview()}
+                  disabled={isReloadingPreview || !activePreview?.url}
+                  title={
+                    !activePreview?.url
+                      ? 'Development server not running'
+                      : isReloadingPreview
+                      ? 'Reloading preview...'
+                      : 'Reload Live Preview'
+                  }
+                  className={`rounded p-1 transition-colors ${
+                    !activePreview?.url
+                      ? 'text-slate-600 cursor-not-allowed'
+                      : isReloadingPreview
+                      ? 'text-cyan-400 bg-white/5 cursor-wait'
+                      : 'text-slate-400 hover:bg-white/10 hover:text-white'
+                  }`}
+                  data-testid="preview-reload-btn"
                 >
-                  <RotateCcw className="h-3 w-3" />
+                  <RotateCcw className={`h-3 w-3 ${isReloadingPreview ? 'animate-spin' : ''}`} />
                 </button>
                 <button
                   type="button"
@@ -1959,15 +2038,30 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   }`}
                 >
                   <iframe
-                    key={previewKey}
+                    ref={previewIframeRef}
                     src={activePreview.url}
                     title="Live preview"
+                    onLoad={handleIframeLoad}
+                    onError={handleIframeError}
                     className={`min-h-0 flex-1 border-0 bg-white ${
                       isDraggingRightPanel ? 'pointer-events-none' : ''
                     }`}
                     sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
+                    data-testid="preview-iframe"
                   />
                 </div>
+                {previewLoadError && (
+                  <div className="absolute top-2 inset-x-4 z-20 flex items-center justify-between gap-2 rounded bg-red-950/90 border border-red-500/40 px-3 py-1.5 text-xs text-red-200 backdrop-blur">
+                    <span>{previewLoadError}</span>
+                    <button
+                      type="button"
+                      onClick={() => void handleReloadPreview()}
+                      className="rounded bg-red-800/60 hover:bg-red-700/80 px-2 py-0.5 text-[11px] font-medium text-white transition-colors"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               /* When installing dependencies or booting: SHOW STACKBLITZ STARTUP LOADER (Screenshot 3!) */
@@ -2068,15 +2162,28 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
-                onClick={() => {
-                  setPreviewKey((k) => k + 1);
-                  livePreviewChannel.broadcastReload();
-                }}
-                className="flex items-center gap-1.5 rounded bg-[#333] hover:bg-[#444] px-2.5 py-1 text-xs text-gray-200 transition-colors"
-                title="Reload preview"
+                onClick={() => void handleReloadPreview()}
+                disabled={isReloadingPreview || !activePreview?.url}
+                className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${
+                  !activePreview?.url
+                    ? 'bg-[#2a2a2a] text-slate-500 cursor-not-allowed'
+                    : isReloadingPreview
+                    ? 'bg-cyan-500/20 text-cyan-300'
+                    : 'bg-[#333] hover:bg-[#444] text-gray-200'
+                }`}
+                title={
+                  !activePreview?.url
+                    ? 'Development server not running'
+                    : isReloadingPreview
+                    ? 'Reloading preview...'
+                    : 'Reload preview'
+                }
+                data-testid="fullscreen-preview-reload-btn"
               >
-                <RefreshCw className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline text-[11px]">Reload</span>
+                <RefreshCw className={`h-3.5 w-3.5 ${isReloadingPreview ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline text-[11px]">
+                  {isReloadingPreview ? 'Reloading...' : 'Reload'}
+                </span>
               </button>
 
               <button
@@ -2103,11 +2210,14 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
           {/* Iframe */}
           <iframe
-            key={`fs-${previewKey}`}
+            ref={fullscreenIframeRef}
             src={activePreview.url}
             title="Fullscreen live preview"
+            onLoad={handleIframeLoad}
+            onError={handleIframeError}
             className="h-full w-full border-0 bg-white"
             sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
+            data-testid="fullscreen-preview-iframe"
           />
         </div>
       )}
