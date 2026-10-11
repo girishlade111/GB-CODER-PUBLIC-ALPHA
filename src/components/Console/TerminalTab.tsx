@@ -654,7 +654,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   // Setup WebContainer subscription
   useEffect(() => {
     return webcontainerService.subscribe(() => {
-      setWebcontainerStatus(webcontainerService.getState().status);
+      setWcState(webcontainerService.getState());
     });
   }, []);
 
@@ -761,7 +761,15 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
             <span
               className={`w-2 h-2 rounded-full ${
                 mode === 'webcontainer'
-                  ? webcontainerStatus === 'running'
+                  ? wcState.startupStage === 'error'
+                    ? 'bg-rose-500 animate-pulse'
+                    : wcState.startupStage === 'ready'
+                    ? 'bg-emerald-400 animate-pulse'
+                    : wcState.startupStage === 'installing' || wcState.startupStage === 'mounting_files' || wcState.startupStage === 'booting'
+                    ? 'bg-cyan-400 animate-pulse'
+                    : wcState.startupStage === 'starting_server'
+                    ? 'bg-amber-400 animate-pulse'
+                    : webcontainerStatus === 'running'
                     ? 'bg-emerald-400 animate-pulse'
                     : 'bg-amber-400 animate-pulse'
                   : 'bg-gray-400'
@@ -769,7 +777,21 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
               aria-hidden="true"
             />
             <span className="text-xs font-semibold text-content-on-dark flex items-center gap-1">
-              {mode === 'webcontainer' && '⚡ WebContainer (In-Browser)'}
+              {mode === 'webcontainer' && (
+                wcState.startupStage === 'error'
+                  ? `✖ ${wcState.runtimeError?.phase === 'install' ? 'Install Failed' : wcState.runtimeError?.phase === 'server' ? 'Server Failed' : 'Runtime Error'}`
+                  : wcState.startupStage === 'ready'
+                  ? `⚡ Ready (:${wcState.serverPort ?? 5173})`
+                  : wcState.startupStage === 'installing'
+                  ? '⚡ Installing Dependencies...'
+                  : wcState.startupStage === 'starting_server'
+                  ? '⚡ Starting Dev Server...'
+                  : wcState.startupStage === 'mounting_files'
+                  ? '⚡ Mounting Files...'
+                  : wcState.startupStage === 'booting'
+                  ? '⚡ Booting Runtime...'
+                  : '⚡ WebContainer'
+              )}
               {mode === 'local' && '💻 Local Simulated Shell'}
             </span>
           </div>
@@ -814,6 +836,17 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         <div className="flex items-center gap-1.5">
           {mode === 'webcontainer' && (
             <>
+              {wcState.startupStage === 'error' && (
+                <button
+                  onClick={() => triggerDevServerRestart('Error Recovery Retry')}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 text-rose-200 transition-colors"
+                  title={wcState.runtimeError?.message || 'Retry operation'}
+                  data-testid="terminal-retry-error-btn"
+                >
+                  <RotateCcw className="h-2.5 w-2.5 text-rose-400" />
+                  Retry
+                </button>
+              )}
               <button
                 onClick={() => void handleQuickNpmInstall()}
                 className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-product hover:bg-product-active text-content-on-dark border border-stroke-dark transition-colors"

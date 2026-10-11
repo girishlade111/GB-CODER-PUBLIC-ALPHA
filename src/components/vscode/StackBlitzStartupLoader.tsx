@@ -1,25 +1,75 @@
 import React from 'react';
-import { CheckCircle2, Circle, Loader2, TerminalSquare, RotateCcw } from 'lucide-react';
-import { ProjectStartupStage } from '../../services/webcontainer/webcontainerService';
+import {
+  CheckCircle2,
+  Circle,
+  Loader2,
+  TerminalSquare,
+  RotateCcw,
+  AlertCircle,
+  FolderSync,
+  PackageCheck,
+  Server,
+  Cpu,
+} from 'lucide-react';
+import {
+  ProjectStartupStage,
+  WebContainerRuntimeError,
+} from '../../services/webcontainer/webcontainerService';
 
 interface StackBlitzStartupLoaderProps {
   stage: ProjectStartupStage;
   serverPort?: number | null;
+  runtimeError?: WebContainerRuntimeError | null;
   onOpenTerminal?: () => void;
   onRestart?: () => void;
+  onRetryInstall?: () => void;
 }
 
 export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = ({
   stage,
   serverPort,
+  runtimeError,
   onOpenTerminal,
   onRestart,
+  onRetryInstall,
 }) => {
   const isBooting = stage === 'booting';
+  const isMounting = stage === 'mounting_files';
   const isInstalling = stage === 'installing';
   const isStarting = stage === 'starting_server';
   const isReady = stage === 'ready';
   const isError = stage === 'error';
+
+  // Step state calculations
+  const errorPhase = runtimeError?.phase;
+
+  // Step 1: Boot WebContainer
+  const step1Done = !isBooting && !(isError && errorPhase === 'boot');
+  const step1Active = isBooting;
+  const step1Error = isError && errorPhase === 'boot';
+
+  // Step 2: Mount project files
+  const step2Done =
+    step1Done &&
+    !isMounting &&
+    stage !== 'booting' &&
+    !(isError && (errorPhase === 'mount' || errorPhase === 'boot'));
+  const step2Active = isMounting;
+  const step2Error = isError && errorPhase === 'mount';
+
+  // Step 3: Install dependencies
+  const step3Done =
+    step2Done &&
+    !isInstalling &&
+    (stage === 'starting_server' || stage === 'ready') &&
+    !(isError && errorPhase === 'install');
+  const step3Active = isInstalling;
+  const step3Error = isError && errorPhase === 'install';
+
+  // Step 4: Start dev server
+  const step4Done = isReady;
+  const step4Active = isStarting;
+  const step4Error = isError && errorPhase === 'server';
 
   return (
     <div
@@ -28,9 +78,15 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
     >
       {/* Glowing StackBlitz Lightbulb with Lightning Filament */}
       <div className="relative mb-6 flex items-center justify-center">
-        <div className="absolute -inset-6 rounded-full bg-cyan-500/20 blur-2xl animate-pulse" />
+        <div
+          className={`absolute -inset-6 rounded-full blur-2xl animate-pulse ${
+            isError ? 'bg-rose-500/20' : 'bg-cyan-500/20'
+          }`}
+        />
         <svg
-          className="relative h-20 w-20 text-cyan-400 drop-shadow-[0_0_18px_rgba(56,189,248,0.7)]"
+          className={`relative h-20 w-20 drop-shadow-[0_0_18px_rgba(56,189,248,0.7)] ${
+            isError ? 'text-rose-400 drop-shadow-[0_0_18px_rgba(244,63,94,0.7)]' : 'text-cyan-400'
+          }`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -55,97 +111,172 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
         {isReady
           ? 'Development Server Ready'
           : isError
-          ? 'Setup encountered an error'
+          ? 'Setup Encountered an Error'
           : isStarting
-          ? 'Starting development server'
-          : 'Installing dependencies'}
+          ? 'Starting Development Server'
+          : isInstalling
+          ? 'Installing Dependencies'
+          : isMounting
+          ? 'Mounting Project Files'
+          : 'Starting WebContainer'}
       </h2>
 
       <p className="mt-1 max-w-sm text-xs text-slate-400">
         {isReady
           ? `Server is live and listening on port ${serverPort ?? 5173}.`
           : isError
-          ? 'Check terminal output for details or restart the process.'
-          : 'Running in-browser WebContainer with zero cloud latency.'}
+          ? runtimeError?.message || 'Check terminal output for details or retry the operation.'
+          : isStarting
+          ? 'Launching Vite dev server inside WebContainer...'
+          : isInstalling
+          ? 'Running npm install with local offline cache...'
+          : isMounting
+          ? 'Syncing source files to virtual filesystem...'
+          : 'Booting WebAssembly Node.js runtime with zero cloud latency...'}
       </p>
 
-      {/* Step Checklist matching StackBlitz */}
+      {/* Step Checklist matching professional IDE runtime states */}
       <div className="mt-8 flex w-full max-w-xs flex-col gap-3 rounded-xl border border-white/10 bg-[#181926]/90 p-4 shadow-xl backdrop-blur-sm text-left">
         {/* Step 1: Booting WebContainer */}
         <div className="flex items-center gap-2.5 text-xs">
-          {isBooting ? (
+          {step1Error ? (
+            <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+          ) : step1Active ? (
             <Loader2 className="h-4 w-4 shrink-0 text-cyan-400 animate-spin" />
-          ) : (
+          ) : step1Done ? (
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+          ) : (
+            <Circle className="h-4 w-4 shrink-0 text-slate-600" />
           )}
-          <span className={isBooting ? 'font-medium text-white' : 'text-slate-300'}>
+          <span
+            className={
+              step1Active
+                ? 'font-medium text-white'
+                : step1Error
+                ? 'font-medium text-rose-300'
+                : step1Done
+                ? 'text-slate-300'
+                : 'text-slate-500'
+            }
+          >
             Booting WebContainer
           </span>
         </div>
 
-        {/* Step 2: Installing dependencies */}
+        {/* Step 2: Mounting project files */}
         <div className="flex items-center gap-2.5 text-xs">
-          {isBooting ? (
-            <Circle className="h-4 w-4 shrink-0 text-slate-600" />
-          ) : isInstalling ? (
+          {step2Error ? (
+            <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+          ) : step2Active ? (
             <Loader2 className="h-4 w-4 shrink-0 text-cyan-400 animate-spin" />
-          ) : (
+          ) : step2Done ? (
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+          ) : (
+            <Circle className="h-4 w-4 shrink-0 text-slate-600" />
           )}
           <span
             className={
-              isInstalling
+              step2Active
                 ? 'font-medium text-white'
-                : isBooting
-                ? 'text-slate-500'
-                : 'text-slate-300'
+                : step2Error
+                ? 'font-medium text-rose-300'
+                : step2Done
+                ? 'text-slate-300'
+                : 'text-slate-500'
+            }
+          >
+            Mounting project files
+          </span>
+        </div>
+
+        {/* Step 3: Installing dependencies */}
+        <div className="flex items-center gap-2.5 text-xs">
+          {step3Error ? (
+            <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+          ) : step3Active ? (
+            <Loader2 className="h-4 w-4 shrink-0 text-cyan-400 animate-spin" />
+          ) : step3Done ? (
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+          ) : (
+            <Circle className="h-4 w-4 shrink-0 text-slate-600" />
+          )}
+          <span
+            className={
+              step3Active
+                ? 'font-medium text-white'
+                : step3Error
+                ? 'font-medium text-rose-300'
+                : step3Done
+                ? 'text-slate-300'
+                : 'text-slate-500'
             }
           >
             Installing dependencies
           </span>
         </div>
 
-        {/* Step 3: Running start command */}
+        {/* Step 4: Running start command */}
         <div className="flex items-center gap-2.5 text-xs">
-          {isReady ? (
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-          ) : isStarting ? (
+          {step4Error ? (
+            <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+          ) : step4Active ? (
             <Loader2 className="h-4 w-4 shrink-0 text-cyan-400 animate-spin" />
+          ) : step4Done ? (
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
           ) : (
             <Circle className="h-4 w-4 shrink-0 text-slate-600" />
           )}
           <span
             className={
-              isStarting || isReady
+              step4Active || step4Done
                 ? 'font-medium text-white'
+                : step4Error
+                ? 'font-medium text-rose-300'
                 : 'text-slate-500'
             }
           >
-            Running start command
+            Starting development server
           </span>
         </div>
       </div>
 
       {/* Action buttons */}
-      <div className="mt-6 flex items-center gap-2.5">
-        {onOpenTerminal && (
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+        {onRetryInstall && isError && errorPhase === 'install' && (
           <button
             type="button"
-            onClick={onOpenTerminal}
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1e2030] px-3 py-1.5 text-xs font-medium text-slate-300 shadow-sm transition hover:bg-[#282a3f] hover:text-white"
+            onClick={onRetryInstall}
+            className="flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-950/60 px-3 py-1.5 text-xs font-medium text-cyan-300 shadow-sm transition hover:bg-cyan-900/80 hover:text-white"
+            data-testid="loader-retry-install-btn"
           >
-            <TerminalSquare className="h-3.5 w-3.5 text-cyan-400" />
-            View Live Terminal
+            <RotateCcw className="h-3.5 w-3.5 text-cyan-400" />
+            Retry Installation
           </button>
         )}
         {onRestart && (
           <button
             type="button"
             onClick={onRestart}
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1e2030] px-3 py-1.5 text-xs font-medium text-slate-300 shadow-sm transition hover:bg-[#282a3f] hover:text-white"
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium shadow-sm transition ${
+              isError
+                ? 'border-amber-500/30 bg-amber-950/60 text-amber-300 hover:bg-amber-900/80 hover:text-white'
+                : 'border-white/10 bg-[#1e2030] text-slate-300 hover:bg-[#282a3f] hover:text-white'
+            }`}
+            data-testid="loader-restart-btn"
           >
             <RotateCcw className="h-3.5 w-3.5 text-amber-400" />
-            Restart Process
+            {isError ? 'Restart Process' : 'Restart Dev Server'}
+          </button>
+        )}
+        {onOpenTerminal && (
+          <button
+            type="button"
+            onClick={onOpenTerminal}
+            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1e2030] px-3 py-1.5 text-xs font-medium text-slate-300 shadow-sm transition hover:bg-[#282a3f] hover:text-white"
+            data-testid="loader-view-terminal-btn"
+          >
+            <TerminalSquare className="h-3.5 w-3.5 text-cyan-400" />
+            View Live Terminal
           </button>
         )}
       </div>
