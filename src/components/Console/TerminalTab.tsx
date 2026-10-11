@@ -64,6 +64,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     write: (data: string) => void;
     resize: (cols: number, rows: number) => void;
     kill: () => void;
+    disconnect?: () => void;
   } | null>(null);
 
   /** Current input line and cursor offset within it (Local mode only). */
@@ -204,7 +205,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         `${ANSI.gray}Files mounted into virtual filesystem. Starting interactive shell...${ANSI.reset}\r\n`,
       );
 
-      // Spawn interactive shell
+      // Spawn or reconnect interactive shell
       const shell = await webcontainerService.spawnInteractiveShell({
         cols: term.cols || 80,
         rows: term.rows || 24,
@@ -224,6 +225,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
             }
           }
         },
+        forceRestart,
       });
 
       webcontainerShellRef.current = shell;
@@ -232,6 +234,22 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       // StackBlitz auto-start: install dependencies and boot dev server
       if (autoStartProject !== false && !hasAutoStartedRef.current) {
         hasAutoStartedRef.current = true;
+
+        // Idempotency: verify if dev server is already running
+        if (webcontainerService.isDevServerRunning()) {
+          term.write(
+            `\r\n${ANSI.brightGreen}⚡ Connected to active WebContainer Dev Server (${webcontainerService.getState().serverUrl ?? 'port ready'}).${ANSI.reset}\r\n`,
+          );
+          return;
+        }
+
+        if (webcontainerService.isDevServerStarting()) {
+          term.write(
+            `\r\n${ANSI.brightYellow}⚡ Dev Server startup currently in progress...${ANSI.reset}\r\n`,
+          );
+          return;
+        }
+
         const currentProj = projectRef.current;
         const fingerprint = webcontainerService.computeDependencyFingerprint(
           currentProj.files,
@@ -252,10 +270,12 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
             term.write(
               `\r\n${ANSI.brightCyan}⚡ StackBlitz Auto-Start: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
             );
+            webcontainerService.setDevServerStarting(true);
             shell.write('npm install --prefer-offline && npm run dev\r');
           }, 500);
         } else {
-          webcontainerService.setStartupStage('ready');
+          webcontainerService.setStartupStage('starting_server');
+          webcontainerService.setDevServerStarting(true);
           setTimeout(() => {
             term.write(
               `\r\n${ANSI.brightGreen}⚡ Fast Start: Dependencies verified in container. Launching dev server directly...${ANSI.reset}\r\n`,
@@ -269,6 +289,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       term.write(`\r\n${ANSI.red}✖ Failed to start WebContainer: ${msg}${ANSI.reset}\r\n`);
       setWebcontainerStatus('error');
       webcontainerService.setStartupStage('error');
+      webcontainerService.setDevServerStarting(false);
     } finally {
       isStartingShellRef.current = false;
     }
@@ -294,6 +315,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         if (shell) {
           // Send Ctrl+C to terminate any running process (e.g. Vite or node dev server)
           shell.write('\x03\r');
+          webcontainerService.setDevServerStarting(true);
           const currentProj = projectRef.current;
 
           void (async () => {
@@ -321,7 +343,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
                 shell.write('npm install --prefer-offline && npm run dev\r');
               }, 400);
             } else {
-              webcontainerService.setStartupStage('ready');
+              webcontainerService.setStartupStage('starting_server');
               if (term) {
                 term.write(
                   `\r\n${ANSI.brightGreen}⚡ [${reason}]: Dependencies verified. Fast restarting dev server...${ANSI.reset}\r\n`,
@@ -495,6 +517,8 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       termRef.current = null;
       fitAddonRef.current = null;
       setTermReady(false);
+      webcontainerShellRef.current?.disconnect?.();
+      webcontainerShellRef.current = null;
     };
   }, [mode, redrawLine, submitLocal, writePrompt]);
 
@@ -520,7 +544,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         setMode('local');
       }
     } else if (mode === 'local') {
-      webcontainerShellRef.current?.kill();
+      webcontainerShellRef.current?.disconnect?.();
       webcontainerShellRef.current = null;
       term.write(
         [

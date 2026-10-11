@@ -1717,7 +1717,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
               {/* Panel Content */}
               <div className="min-h-0 flex-1 overflow-hidden">
-                {bottomTab === 'terminal' ? (
+                <div className={`h-full ${bottomTab === 'terminal' ? 'block' : 'hidden'}`}>
                   <TerminalTab
                     project={project}
                     resolvedPackages={[]}
@@ -1726,11 +1726,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     isActive={showTerminal && bottomTab === 'terminal'}
                     autoStartProject={true}
                   />
-                ) : bottomTab === 'problems' ? (
+                </div>
+                {bottomTab === 'problems' && (
                   <div className="flex h-full items-center justify-center p-4 text-xs text-slate-500 font-mono">
                     No problems have been detected in the workspace.
                   </div>
-                ) : (
+                )}
+                {bottomTab === 'output' && (
                   <div className="flex h-full flex-col p-3 font-mono text-xs text-slate-400 overflow-y-auto">
                     <p className="text-cyan-400">[GB Coder Output Log]</p>
                     <p className="text-slate-500">
