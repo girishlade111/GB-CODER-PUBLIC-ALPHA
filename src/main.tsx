@@ -4,6 +4,7 @@ import AppWrapper from './AppWrapper.tsx';
 import ErrorBoundary from './components/ErrorBoundary.tsx';
 import { initLaminar } from './services/laminarService.ts';
 import './index.css';
+import './utils/monacoWorkers.ts';
 
 initLaminar();
 
