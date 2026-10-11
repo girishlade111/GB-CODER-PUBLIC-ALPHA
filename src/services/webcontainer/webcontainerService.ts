@@ -514,7 +514,13 @@ class WebContainerManager {
   public setDevServerStarting(starting: boolean): void {
     this.isDevServerStartingState = starting;
     if (starting) {
-      this.updateState({ startupStage: 'starting_server' });
+      if (
+        this.state.startupStage !== 'installing' &&
+        this.state.startupStage !== 'mounting_files' &&
+        this.state.startupStage !== 'booting'
+      ) {
+        this.updateState({ startupStage: 'starting_server' });
+      }
     } else if (this.state.startupStage === 'starting_server') {
       this.updateState({ startupStage: this.state.serverUrl ? 'ready' : 'idle' });
     }
