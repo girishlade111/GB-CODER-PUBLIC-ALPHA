@@ -267,3 +267,122 @@ describe('filesToFileSystemTree', () => {
     assert.match(tree['.npmrc'].file.contents, /legacy-peer-deps/);
   });
 });
+
+/* ── dependency fingerprint determinism & cache efficiency ─────────────── */
+
+describe('computeDependencyFingerprint', () => {
+  test('produces deterministic hash for identical dependency set', () => {
+    const filesA = [
+      {
+        path: 'package.json',
+        content: JSON.stringify({ dependencies: { react: '^18.2.0', vite: '^5.0.0' } }),
+      },
+    ];
+    const filesB = [
+      {
+        path: 'package.json',
+        content: JSON.stringify({ dependencies: { vite: '^5.0.0', react: '^18.2.0' } }),
+      },
+    ];
+    const hashA = webcontainerService.computeDependencyFingerprint(filesA);
+    const hashB = webcontainerService.computeDependencyFingerprint(filesB);
+    assert.equal(hashA, hashB, 'fingerprint must be invariant to key order');
+  });
+
+  test('produces different hash when dependencies change', () => {
+    const filesA = [
+      {
+        path: 'package.json',
+        content: JSON.stringify({ dependencies: { react: '^18.2.0' } }),
+      },
+    ];
+    const filesB = [
+      {
+        path: 'package.json',
+        content: JSON.stringify({ dependencies: { react: '^18.3.1' } }),
+      },
+    ];
+    const hashA = webcontainerService.computeDependencyFingerprint(filesA);
+    const hashB = webcontainerService.computeDependencyFingerprint(filesB);
+    assert.notEqual(hashA, hashB, 'fingerprint must detect dependency changes');
+  });
+
+  test('includes lockfile metadata in fingerprint computation', () => {
+    const filesWithLock = [
+      {
+        path: 'package.json',
+        content: JSON.stringify({ dependencies: { react: '^18.2.0' } }),
+      },
+      {
+        path: 'package-lock.json',
+        content: '{"name":"test","lockfileVersion":3,"packages":{}}',
+      },
+    ];
+    const filesWithoutLock = [
+      {
+        path: 'package.json',
+        content: JSON.stringify({ dependencies: { react: '^18.2.0' } }),
+      },
+    ];
+    const hashWithLock = webcontainerService.computeDependencyFingerprint(filesWithLock);
+    const hashWithoutLock = webcontainerService.computeDependencyFingerprint(filesWithoutLock);
+    assert.notEqual(hashWithLock, hashWithoutLock, 'lockfile presence must alter fingerprint');
+  });
+});
+
+/* ── dev server lifecycle, idempotency & event management ──────────────── */
+
+describe('webcontainerService dev server lifecycle', () => {
+  test('initial dev server running state is idle', () => {
+    webcontainerService.resetServerState();
+    assert.equal(webcontainerService.isDevServerRunning(), false);
+    assert.equal(webcontainerService.isDevServerStarting(), false);
+  });
+
+  test('setDevServerStarting updates startupStage to starting_server', () => {
+    webcontainerService.setDevServerStarting(true);
+    assert.equal(webcontainerService.isDevServerStarting(), true);
+    assert.equal(webcontainerService.getState().startupStage, 'starting_server');
+    webcontainerService.setDevServerStarting(false);
+    assert.equal(webcontainerService.isDevServerStarting(), false);
+  });
+
+  test('requestRestart increments sessionEpoch and safely notifies listeners', () => {
+    const initialEpoch = webcontainerService.getSessionEpoch();
+    let notified = false;
+    const unsub = webcontainerService.onRestartRequest((reason) => {
+      notified = true;
+      assert.equal(reason, 'Test restart');
+    });
+    webcontainerService.requestRestart('Test restart');
+    assert.equal(notified, true);
+    assert.equal(webcontainerService.getSessionEpoch(), initialEpoch + 1);
+    assert.equal(webcontainerService.isDevServerRunning(), false);
+    assert.equal(webcontainerService.getState().startupStage, 'installing');
+    unsub();
+  });
+
+  test('stopDevServer resets serverUrl, port, and transitions startupStage to idle', () => {
+    webcontainerService.stopDevServer();
+    const state = webcontainerService.getState();
+    assert.equal(state.serverUrl, null);
+    assert.equal(state.serverPort, null);
+    assert.deepEqual(state.activeServers, []);
+    assert.equal(state.startupStage, 'idle');
+    assert.equal(webcontainerService.isDevServerRunning(), false);
+  });
+
+  test('cleanupServerListeners safely executes without throwing', () => {
+    assert.doesNotThrow(() => {
+      webcontainerService.cleanupServerListeners();
+    });
+  });
+
+  test('terminateShell resets active shell state and clears in-flight server flags', () => {
+    webcontainerService.terminateShell();
+    assert.equal(webcontainerService.isShellRunning(), false);
+    assert.equal(webcontainerService.isDevServerRunning(), false);
+    assert.equal(webcontainerService.isDevServerStarting(), false);
+  });
+});
+

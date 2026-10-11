@@ -414,6 +414,8 @@ class WebContainerManager {
     this.isDevServerStartingState = starting;
     if (starting) {
       this.updateState({ startupStage: 'starting_server' });
+    } else if (this.state.startupStage === 'starting_server') {
+      this.updateState({ startupStage: this.state.serverUrl ? 'ready' : 'idle' });
     }
   }
 
