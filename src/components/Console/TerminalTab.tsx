@@ -59,9 +59,8 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     return 'local';
   });
 
-  const [webcontainerStatus, setWebcontainerStatus] = useState<WebContainerStatus>(
-    () => webcontainerService.getState().status,
-  );
+  const [wcState, setWcState] = useState(() => webcontainerService.getState());
+  const webcontainerStatus = wcState.status;
   const webcontainerShellRef = useRef<{
     write: (data: string) => void;
     resize: (cols: number, rows: number) => void;
@@ -223,25 +222,76 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         rows: term.rows || 24,
         onData: (chunk) => {
           term.write(chunk);
+
+          // 1. Package install success confirmation
+          if (
+            (chunk.includes('added ') && chunk.includes('package')) ||
+            chunk.includes('up to date')
+          ) {
+            if (pendingFingerprintRef.current) {
+              webcontainerService.recordInstallComplete(pendingFingerprintRef.current);
+            }
+            if (webcontainerService.getState().startupStage === 'installing') {
+              webcontainerService.setStartupStage('starting_server');
+            }
+          }
+
+          // 2. Dev server ready confirmation
           if (
             chunk.includes('VITE') ||
             chunk.includes('ready in') ||
             chunk.includes('Local:   http://') ||
-            chunk.includes('Network: http://') ||
-            chunk.includes('added ') ||
-            chunk.includes('up to date')
+            chunk.includes('Network: http://')
           ) {
-            webcontainerService.setStartupStage('ready');
-            if (pendingFingerprintRef.current) {
-              webcontainerService.recordInstallComplete(pendingFingerprintRef.current);
+            if (webcontainerService.getState().serverUrl) {
+              webcontainerService.setStartupStage('ready');
             }
+          }
+
+          // 3. Process failure detection (npm ERR!, ERESOLVE, EADDRINUSE, etc.)
+          const isInstallErr =
+            chunk.includes('npm ERR!') ||
+            chunk.includes('npm error:') ||
+            chunk.includes('code ERESOLVE') ||
+            chunk.includes('code ENOENT');
+
+          const isServerErr =
+            chunk.includes('EADDRINUSE') ||
+            chunk.includes('address already in use') ||
+            chunk.includes('failed to load config') ||
+            (chunk.includes('Error: Cannot find module') &&
+              (webcontainerService.getState().startupStage === 'starting_server' ||
+                webcontainerService.isDevServerStarting()));
+
+          if (isInstallErr && webcontainerService.getState().startupStage === 'installing') {
+            webcontainerService.setDevServerStarting(false);
+            webcontainerService.setStartupStage('error', {
+              phase: 'install',
+              message: 'npm install failed with error. Check terminal output for details.',
+              timestamp: Date.now(),
+              recoverable: true,
+              retryAction: 'retry_install',
+            });
+          } else if (
+            isServerErr &&
+            (webcontainerService.getState().startupStage === 'starting_server' ||
+              webcontainerService.isDevServerStarting())
+          ) {
+            webcontainerService.setDevServerStarting(false);
+            webcontainerService.setStartupStage('error', {
+              phase: 'server',
+              message: 'Development server failed to start. Port may be in use or configuration is invalid.',
+              timestamp: Date.now(),
+              recoverable: true,
+              retryAction: 'restart_server',
+            });
           }
         },
         forceRestart,
       });
 
       webcontainerShellRef.current = shell;
-      setWebcontainerStatus('running');
+      setWcState(webcontainerService.getState());
 
       // StackBlitz auto-start: install dependencies and boot dev server
       // Only auto-start when project files are populated
@@ -249,11 +299,24 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       if (autoStartProject !== false && !hasAutoStartedRef.current && projToStart.files.length > 0) {
         hasAutoStartedRef.current = true;
 
+        const fingerprint = webcontainerService.computeDependencyFingerprint(
+          projToStart.files,
+          projToStart.dependencies,
+          projToStart.projectType,
+        );
+        pendingFingerprintRef.current = fingerprint;
+
+        // Idempotency: verify if this project has already been started in this session epoch
+        if (webcontainerService.hasStartedProject(fingerprint)) {
+          return;
+        }
+
         // Idempotency: verify if dev server is already running
         if (webcontainerService.isDevServerRunning()) {
           term.write(
             `\r\n${ANSI.brightGreen}⚡ Connected to active WebContainer Dev Server (${webcontainerService.getState().serverUrl ?? 'port ready'}).${ANSI.reset}\r\n`,
           );
+          webcontainerService.markProjectStarted(fingerprint);
           return;
         }
 
@@ -264,12 +327,8 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           return;
         }
 
-        const fingerprint = webcontainerService.computeDependencyFingerprint(
-          projToStart.files,
-          projToStart.dependencies,
-          projToStart.projectType,
-        );
-        pendingFingerprintRef.current = fingerprint;
+        webcontainerService.markProjectStarted(fingerprint);
+        const startEpoch = webcontainerService.getSessionEpoch();
 
         const check = await webcontainerService.needsDependencyInstall(
           projToStart.files,
@@ -277,9 +336,12 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           projToStart.projectType,
         );
 
+        if (startEpoch !== webcontainerService.getSessionEpoch()) return;
+
         if (check.needsInstall) {
           webcontainerService.setStartupStage('installing');
           setTimeout(() => {
+            if (startEpoch !== webcontainerService.getSessionEpoch()) return;
             term.write(
               `\r\n${ANSI.brightCyan}⚡ StackBlitz Auto-Start: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
             );
@@ -290,6 +352,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           webcontainerService.setStartupStage('starting_server');
           webcontainerService.setDevServerStarting(true);
           setTimeout(() => {
+            if (startEpoch !== webcontainerService.getSessionEpoch()) return;
             term.write(
               `\r\n${ANSI.brightGreen}⚡ Fast Start: Dependencies verified in container. Launching dev server directly...${ANSI.reset}\r\n`,
             );
@@ -300,8 +363,13 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       term.write(`\r\n${ANSI.red}✖ Failed to start WebContainer: ${msg}${ANSI.reset}\r\n`);
-      setWebcontainerStatus('error');
-      webcontainerService.setStartupStage('error');
+      webcontainerService.setStartupStage('error', {
+        phase: 'boot',
+        message: msg,
+        timestamp: Date.now(),
+        recoverable: true,
+        retryAction: 'reboot_container',
+      });
       webcontainerService.setDevServerStarting(false);
     } finally {
       isStartingShellRef.current = false;
@@ -330,6 +398,8 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           }
         }
 
+        const restartEpoch = webcontainerService.getSessionEpoch();
+
         if (shell) {
           // Send Ctrl+C to terminate any running process (e.g. Vite or node dev server)
           shell.write('\x03\r');
@@ -337,48 +407,69 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           const currentProj = projectRef.current;
 
           void (async () => {
-            // Ensure project files are mounted before checking dependencies or starting Vite
-            if (currentProj.files.length > 0) {
-              await webcontainerService.mountProject(
+            try {
+              // Ensure project files are mounted before checking dependencies or starting Vite
+              if (currentProj.files.length > 0) {
+                await webcontainerService.mountProject(
+                  currentProj.files,
+                  currentProj.dependencies,
+                  currentProj.projectType,
+                );
+              }
+
+              if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
+
+              const fingerprint = webcontainerService.computeDependencyFingerprint(
                 currentProj.files,
                 currentProj.dependencies,
                 currentProj.projectType,
               );
-            }
+              pendingFingerprintRef.current = fingerprint;
+              webcontainerService.markProjectStarted(fingerprint);
 
-            const fingerprint = webcontainerService.computeDependencyFingerprint(
-              currentProj.files,
-              currentProj.dependencies,
-              currentProj.projectType,
-            );
-            pendingFingerprintRef.current = fingerprint;
+              const check = await webcontainerService.needsDependencyInstall(
+                currentProj.files,
+                currentProj.dependencies,
+                currentProj.projectType,
+              );
 
-            const check = await webcontainerService.needsDependencyInstall(
-              currentProj.files,
-              currentProj.dependencies,
-              currentProj.projectType,
-            );
+              if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
 
-            if (check.needsInstall) {
-              webcontainerService.setStartupStage('installing');
-              if (term) {
-                term.write(
-                  `\r\n${ANSI.brightCyan}⚡ [${reason}]: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
-                );
+              if (check.needsInstall) {
+                webcontainerService.setStartupStage('installing');
+                if (term) {
+                  term.write(
+                    `\r\n${ANSI.brightCyan}⚡ [${reason}]: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
+                  );
+                }
+                setTimeout(() => {
+                  if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
+                  shell.write('npm install --prefer-offline && npm run dev\r');
+                }, 400);
+              } else {
+                webcontainerService.setStartupStage('starting_server');
+                if (term) {
+                  term.write(
+                    `\r\n${ANSI.brightGreen}⚡ [${reason}]: Dependencies verified. Fast restarting dev server...${ANSI.reset}\r\n`,
+                  );
+                }
+                setTimeout(() => {
+                  if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
+                  shell.write('npm run dev\r');
+                }, 400);
               }
-              setTimeout(() => {
-                shell.write('npm install --prefer-offline && npm run dev\r');
-              }, 400);
-            } else {
-              webcontainerService.setStartupStage('starting_server');
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
               if (term) {
-                term.write(
-                  `\r\n${ANSI.brightGreen}⚡ [${reason}]: Dependencies verified. Fast restarting dev server...${ANSI.reset}\r\n`,
-                );
+                term.write(`\r\n${ANSI.red}✖ Failed during restart: ${msg}${ANSI.reset}\r\n`);
               }
-              setTimeout(() => {
-                shell.write('npm run dev\r');
-              }, 400);
+              webcontainerService.setStartupStage('error', {
+                phase: 'server',
+                message: msg,
+                timestamp: Date.now(),
+                recoverable: true,
+                retryAction: 'restart_server',
+              });
             }
           })();
         } else {

@@ -1087,6 +1087,17 @@ class WebContainerManager {
                 }
               });
 
+              // Detect package install completion
+              if (
+                (chunk.includes('added ') && chunk.includes('package')) ||
+                chunk.includes('up to date')
+              ) {
+                if (this.state.startupStage === 'installing') {
+                  this.updateState({ startupStage: 'starting_server' });
+                }
+              }
+
+              // Detect dev server readiness
               if (
                 chunk.includes('ready in') ||
                 chunk.includes('VITE') ||
@@ -1095,7 +1106,46 @@ class WebContainerManager {
               ) {
                 this.isDevServerActive = true;
                 this.isDevServerStartingState = false;
-                this.updateState({ startupStage: 'ready' });
+                if (this.state.serverUrl) {
+                  this.updateState({ startupStage: 'ready' });
+                }
+              }
+
+              // Detect fatal install or server errors
+              const isInstallErr =
+                chunk.includes('npm ERR!') ||
+                chunk.includes('npm error:') ||
+                chunk.includes('code ERESOLVE') ||
+                chunk.includes('code ENOENT');
+
+              const isServerErr =
+                chunk.includes('EADDRINUSE') ||
+                chunk.includes('address already in use') ||
+                chunk.includes('failed to load config') ||
+                (chunk.includes('Error: Cannot find module') &&
+                  (this.state.startupStage === 'starting_server' || this.isDevServerStartingState));
+
+              if (isInstallErr && this.state.startupStage === 'installing') {
+                this.isDevServerStartingState = false;
+                this.setStartupStage('error', {
+                  phase: 'install',
+                  message: 'npm install failed. Check terminal output for details.',
+                  timestamp: Date.now(),
+                  recoverable: true,
+                  retryAction: 'retry_install',
+                });
+              } else if (
+                isServerErr &&
+                (this.state.startupStage === 'starting_server' || this.isDevServerStartingState)
+              ) {
+                this.isDevServerStartingState = false;
+                this.setStartupStage('error', {
+                  phase: 'server',
+                  message: 'Development server startup failed. Check terminal output for details.',
+                  timestamp: Date.now(),
+                  recoverable: true,
+                  retryAction: 'restart_server',
+                });
               }
             },
           }),
@@ -1111,13 +1161,24 @@ class WebContainerManager {
         this.shellWriter = null;
         this.isDevServerActive = false;
         this.isDevServerStartingState = false;
-        this.updateState({
-          status: 'ready',
-          startupStage: 'idle',
-          serverUrl: null,
-          serverPort: null,
-          activeServers: [],
-        });
+        if (exitCode !== 0 && this.state.startupStage !== 'idle') {
+          this.setStartupStage('error', {
+            phase: 'general',
+            message: `Shell process exited with code ${exitCode}`,
+            timestamp: Date.now(),
+            recoverable: true,
+            retryAction: 'restart_server',
+          });
+        } else {
+          this.updateState({
+            status: 'ready',
+            startupStage: 'idle',
+            previewStatus: 'idle',
+            serverUrl: null,
+            serverPort: null,
+            activeServers: [],
+          });
+        }
       });
 
       this.updateState({ status: 'running' });
