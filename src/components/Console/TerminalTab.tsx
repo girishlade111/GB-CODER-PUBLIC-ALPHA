@@ -195,7 +195,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       term.write(
         `\r\n${ANSI.brightGreen}⚡ Booting WebContainer (In-Browser Node.js runtime)...${ANSI.reset}\r\n`,
       );
-      setWebcontainerStatus('booting');
       webcontainerService.setStartupStage('booting');
 
       const currentProj = projectRef.current;
