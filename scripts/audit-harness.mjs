@@ -33,6 +33,7 @@ await build({
       export * from './src/services/localShell.ts';
       export * from './src/services/webcontainer/webcontainerService.ts';
       export * from './src/services/webcontainer/webcontainerSupport.ts';
+      export * from './src/services/preview/previewReloadService.ts';
       export * from './src/services/laminarService.ts';
     `,
     resolveDir: process.cwd(),

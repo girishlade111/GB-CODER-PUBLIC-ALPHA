@@ -59,6 +59,8 @@ class PreviewReloadService {
    * Resets telemetry stats for testing.
    */
   public resetStats(): void {
+    this.isGlobalReloadInFlight = false;
+    this.activeReloads = new WeakSet<HTMLIFrameElement>();
     this.stats = {
       totalReloads: 0,
       postMessageSuccesses: 0,
@@ -144,10 +146,7 @@ class PreviewReloadService {
       };
     } finally {
       this.activeReloads.delete(iframe);
-      // Keep a small buffer (50ms) to prevent debounce flutter
-      setTimeout(() => {
-        this.isGlobalReloadInFlight = false;
-      }, 50);
+      this.isGlobalReloadInFlight = false;
     }
   }
 

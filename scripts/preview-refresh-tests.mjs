@@ -112,9 +112,10 @@ class MockIFrameElement extends EventEmitter {
 globalThis.MessageChannel = MockMessageChannel;
 globalThis.MessagePort = MockMessagePort;
 
-// Load the actual previewReloadService
-const { previewReloadService } = await import('../src/services/preview/previewReloadService.ts');
-const { webcontainerService } = await import('../src/services/webcontainer/webcontainerService.ts');
+import { services, cleanup } from './audit-harness.mjs';
+const { previewReloadService, webcontainerService } = services;
+
+after(() => cleanup());
 
 describe('GB Coder Task 05 — Live Preview Refresh & Reload Reliability (12 Matrix Tests)', () => {
   let mockIframe;
