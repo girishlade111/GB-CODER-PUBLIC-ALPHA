@@ -33,11 +33,13 @@ await build({
       export * from './src/services/localShell.ts';
       export * from './src/services/webcontainer/webcontainerService.ts';
       export * from './src/services/webcontainer/webcontainerSupport.ts';
+      export * from './src/services/laminarService.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',
   },
   bundle: true,
+  external: ['@lmnr-ai/lmnr'],
   format: 'esm',
   platform: 'node',
   target: 'node20',
