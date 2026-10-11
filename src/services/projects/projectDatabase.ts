@@ -33,6 +33,28 @@
  * strings reach the initial payload.
  */
 import type { ProjectFile, ProjectType } from '../../types/files';
+import { languageForPath } from '../../types/files';
+
+export const STORAGE_WARNING_EVENT = 'gb-coder:storage-warning';
+
+export interface StorageWarningDetail {
+  reason: string;
+  quotaExceeded?: boolean;
+}
+
+const dispatchStorageWarning = (reason: string, quotaExceeded = false): void => {
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(
+        new CustomEvent<StorageWarningDetail>(STORAGE_WARNING_EVENT, {
+          detail: { reason, quotaExceeded },
+        }),
+      );
+    } catch {
+      // Ignored in non-window / test environments
+    }
+  }
+};
 
 const DB_NAME = 'gb-coder-projects-db';
 const DB_VERSION = 1;
@@ -189,13 +211,18 @@ const withTransaction = <T>(
   work: (transaction: IDBTransaction) => Promise<T>,
 ): Promise<T | null> =>
   openDatabase().then((db) => {
-    if (!db) return null;
+    if (!db) {
+      dispatchStorageWarning('IndexedDB unavailable or blocked');
+      return null;
+    }
 
     return new Promise<T | null>((resolve) => {
       let transaction: IDBTransaction;
       try {
         transaction = db.transaction(storeNames, mode);
-      } catch {
+      } catch (err) {
+        const isQuota = (err as Error)?.name === 'QuotaExceededError';
+        dispatchStorageWarning(isQuota ? 'Storage quota exceeded' : 'Transaction failed', isQuota);
         db.close();
         resolve(null);
         return;
@@ -211,8 +238,16 @@ const withTransaction = <T>(
       };
 
       transaction.oncomplete = () => settle(value);
-      transaction.onerror = () => settle(null);
-      transaction.onabort = () => settle(null);
+      transaction.onerror = () => {
+        const error = transaction.error;
+        const isQuota = error?.name === 'QuotaExceededError';
+        dispatchStorageWarning(isQuota ? 'Storage quota exceeded' : (error?.message || 'Storage write failed'), isQuota);
+        settle(null);
+      };
+      transaction.onabort = () => {
+        dispatchStorageWarning('Transaction aborted');
+        settle(null);
+      };
 
       work(transaction).then(
         (result) => {

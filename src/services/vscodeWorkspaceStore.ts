@@ -92,6 +92,27 @@ const enqueue = <T>(operation: () => Promise<T>): Promise<T> => {
   return result;
 };
 
+export const STORAGE_WARNING_EVENT = 'gb-coder:storage-warning';
+
+export interface StorageWarningDetail {
+  reason: string;
+  quotaExceeded?: boolean;
+}
+
+const dispatchStorageWarning = (reason: string, quotaExceeded = false): void => {
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(
+        new CustomEvent<StorageWarningDetail>(STORAGE_WARNING_EVENT, {
+          detail: { reason, quotaExceeded },
+        }),
+      );
+    } catch {
+      // Ignored in non-window / test environments
+    }
+  }
+};
+
 const withStore = <T>(
   mode: IDBTransactionMode,
   run: (store: IDBObjectStore) => IDBRequest,
@@ -100,6 +121,7 @@ const withStore = <T>(
     (db) =>
       new Promise<T | null>((resolve) => {
         if (!db) {
+          dispatchStorageWarning('IndexedDB unavailable or blocked');
           resolve(null);
           return;
         }
@@ -112,13 +134,20 @@ const withStore = <T>(
         let request: IDBRequest;
         try {
           request = run(db.transaction(STORE_NAME, mode).objectStore(STORE_NAME));
-        } catch {
+        } catch (err) {
+          const isQuota = (err as Error)?.name === 'QuotaExceededError';
+          dispatchStorageWarning(isQuota ? 'Storage quota exceeded' : 'Transaction failed', isQuota);
           settle(null);
           return;
         }
 
         request.onsuccess = () => settle(request.result as T);
-        request.onerror = () => settle(null);
+        request.onerror = () => {
+          const error = request.error;
+          const isQuota = error?.name === 'QuotaExceededError';
+          dispatchStorageWarning(isQuota ? 'Storage quota exceeded' : (error?.message || 'Storage write failed'), isQuota);
+          settle(null);
+        };
       }),
   );
 
@@ -126,7 +155,7 @@ const withStore = <T>(
 export const saveWorkspace = (
   project: MultiFileProject,
   returnTo: StoredWorkspace['returnTo'],
-): Promise<void> =>
+): Promise<boolean> =>
   enqueue(async () => {
     const record: StoredWorkspace = {
       projectType: project.projectType,
@@ -135,19 +164,37 @@ export const saveWorkspace = (
       returnTo: returnTo ?? null,
       savedAt: Date.now(),
     };
-    await withStore('readwrite', (store) => store.put(record, RECORD_KEY));
+    const result = await withStore('readwrite', (store) => store.put(record, RECORD_KEY));
+    return result !== null;
   });
 
 /**
  * Reads the stored workspace back, or `null` when there is nothing usable.
  *
- * The `files` array is checked rather than assumed: this record outlives a
- * deploy, so a shape written by an older build has to be rejected rather than
- * handed to the editor half-formed.
+ * Validates data integrity: corrupt records or malformed file objects are
+ * rejected or sanitized rather than breaking the editor during initialization.
  */
 export const loadWorkspace = (): Promise<StoredWorkspace | null> =>
   enqueue(() => withStore<StoredWorkspace>('readonly', (store) => store.get(RECORD_KEY))).then(
-    (record) => (record && Array.isArray(record.files) ? record : null),
+    (record) => {
+      if (!record || !Array.isArray(record.files)) return null;
+
+      // Filter out any corrupted or incomplete file records
+      const validFiles = record.files.filter(
+        (file): file is ProjectFile =>
+          Boolean(file) &&
+          typeof file.path === 'string' &&
+          typeof file.content === 'string' &&
+          file.path.trim().length > 0,
+      );
+
+      if (validFiles.length === 0) return null;
+
+      return {
+        ...record,
+        files: validFiles,
+      };
+    },
   );
 
 /** Forgets the workspace. Called on exit, so a refresh does not reopen it. */
