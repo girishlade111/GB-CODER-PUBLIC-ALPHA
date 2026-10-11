@@ -952,6 +952,82 @@ describe('credentialStore', () => {
   });
 });
 
+/* ── laminarService — security & telemetry fallback ───────────────────────── */
+
+describe('laminarService — security & telemetry fallback', () => {
+  beforeEach(() => {
+    _resetLaminarStateForTesting();
+  });
+
+  test('initLaminar does not crash the application in a browser environment', async () => {
+    // globalThis.window is defined in test harness, simulating a browser client
+    assert.equal(typeof globalThis.window !== 'undefined', true);
+    await assert.doesNotReject(async () => {
+      await initLaminar();
+    });
+    assert.equal(_isLaminarInitialized(), true);
+  });
+
+  test('observe transparently executes wrapped function when telemetry is unconfigured', async () => {
+    let callCount = 0;
+    const result = await observe({ name: 'test_operation' }, async () => {
+      callCount++;
+      return { status: 'success', data: 42 };
+    });
+
+    assert.equal(callCount, 1);
+    assert.deepEqual(result, { status: 'success', data: 42 });
+  });
+
+  test('observe transparently executes synchronous function when telemetry is unconfigured', () => {
+    const result = observe({ name: 'sync_operation' }, () => 'sync_result');
+    assert.equal(result, 'sync_result');
+  });
+
+  test('observe gracefully falls back to execute target function if telemetry provider throws', async () => {
+    // Simulate a faulty telemetry module that throws on observe
+    _setLaminarModuleForTesting({
+      observe: () => {
+        throw new Error('Telemetry network exception');
+      },
+    });
+
+    let fallbackExecuted = false;
+    const result = await observe({ name: 'failing_provider' }, async () => {
+      fallbackExecuted = true;
+      return 'recovered';
+    });
+
+    assert.equal(fallbackExecuted, true);
+    assert.equal(result, 'recovered');
+  });
+
+  test('Laminar.initialize and Laminar.shutdown handle missing module safely', async () => {
+    assert.doesNotThrow(() => {
+      Laminar.initialize({ projectApiKey: 'dummy' });
+    });
+    await assert.doesNotReject(async () => {
+      await Laminar.shutdown();
+    });
+  });
+
+  test('source code files do not contain hardcoded private API keys or insecure fallbacks', () => {
+    const laminarSrc = readFileSync('src/services/laminarService.ts', 'utf8');
+    const testScript = readFileSync('scripts/test-laminar-trace.mjs', 'utf8');
+
+    // Pattern matching the previously exposed credential prefix
+    const compromisedPrefix = '13pMPcBJ0';
+    assert.equal(laminarSrc.includes(compromisedPrefix), false,
+      'src/services/laminarService.ts must not contain the compromised API key');
+    assert.equal(testScript.includes(compromisedPrefix), false,
+      'scripts/test-laminar-trace.mjs must not contain the compromised API key');
+
+    // Ensure VITE_LMNR_PROJECT_API_KEY is not read in client code
+    assert.equal(laminarSrc.includes('VITE_LMNR_PROJECT_API_KEY'), false,
+      'src/services/laminarService.ts must not read VITE_LMNR_PROJECT_API_KEY');
+  });
+});
+
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 
 /** git blob sha, for asserting the local diff matches what a remote tree reports. */
