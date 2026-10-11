@@ -47,8 +47,9 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
-  const fitAddonRef = useRef<FitAddon | null>(null);
   const hasAutoStartedRef = useRef(false);
+  const pendingFingerprintRef = useRef<string | null>(null);
+  const restartDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /** Active execution mode */
   const [mode, setMode] = useState<TerminalExecutionMode>(() => {
@@ -213,9 +214,14 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
             chunk.includes('VITE') ||
             chunk.includes('ready in') ||
             chunk.includes('Local:   http://') ||
-            chunk.includes('Network: http://')
+            chunk.includes('Network: http://') ||
+            chunk.includes('added ') ||
+            chunk.includes('up to date')
           ) {
             webcontainerService.setStartupStage('ready');
+            if (pendingFingerprintRef.current) {
+              webcontainerService.recordInstallComplete(pendingFingerprintRef.current);
+            }
           }
         },
       });
@@ -226,13 +232,37 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       // StackBlitz auto-start: install dependencies and boot dev server
       if (autoStartProject !== false && !hasAutoStartedRef.current) {
         hasAutoStartedRef.current = true;
-        webcontainerService.setStartupStage('installing');
-        setTimeout(() => {
-          term.write(
-            `\r\n${ANSI.brightCyan}⚡ StackBlitz Auto-Start: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
-          );
-          shell.write('npm install && npm run dev\r');
-        }, 500);
+        const currentProj = projectRef.current;
+        const fingerprint = webcontainerService.computeDependencyFingerprint(
+          currentProj.files,
+          currentProj.dependencies,
+          currentProj.projectType,
+        );
+        pendingFingerprintRef.current = fingerprint;
+
+        const check = await webcontainerService.needsDependencyInstall(
+          currentProj.files,
+          currentProj.dependencies,
+          currentProj.projectType,
+        );
+
+        if (check.needsInstall) {
+          webcontainerService.setStartupStage('installing');
+          setTimeout(() => {
+            term.write(
+              `\r\n${ANSI.brightCyan}⚡ StackBlitz Auto-Start: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
+            );
+            shell.write('npm install --prefer-offline && npm run dev\r');
+          }, 500);
+        } else {
+          webcontainerService.setStartupStage('ready');
+          setTimeout(() => {
+            term.write(
+              `\r\n${ANSI.brightGreen}⚡ Fast Start: Dependencies verified in container. Launching dev server directly...${ANSI.reset}\r\n`,
+            );
+            shell.write('npm run dev\r');
+          }, 500);
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -247,33 +277,66 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   /** Triggers dev server restart and dependencies installation */
   const triggerDevServerRestart = useCallback(
     (reason = 'Restart request') => {
-      const term = termRef.current;
-      const shell = webcontainerShellRef.current;
-
-      if (mode !== 'webcontainer') {
-        if (webcontainerService.isSupported()) {
-          setMode('webcontainer');
-        }
+      if (restartDebounceTimerRef.current) {
+        clearTimeout(restartDebounceTimerRef.current);
       }
 
-      webcontainerService.setStartupStage('installing');
+      restartDebounceTimerRef.current = setTimeout(() => {
+        const term = termRef.current;
+        const shell = webcontainerShellRef.current;
 
-      if (shell) {
-        // Send Ctrl+C to terminate any running process (e.g. Vite or node dev server)
-        shell.write('\x03\r');
-        if (term) {
-          term.write(
-            `\r\n${ANSI.brightCyan}⚡ [${reason}]: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
-          );
+        if (mode !== 'webcontainer') {
+          if (webcontainerService.isSupported()) {
+            setMode('webcontainer');
+          }
         }
-        // Brief delay to allow Vite/process to exit and shell prompt to return
-        setTimeout(() => {
-          shell.write('npm install && npm run dev\r');
-        }, 400);
-      } else {
-        hasAutoStartedRef.current = false;
-        void startWebContainerShell(true);
-      }
+
+        if (shell) {
+          // Send Ctrl+C to terminate any running process (e.g. Vite or node dev server)
+          shell.write('\x03\r');
+          const currentProj = projectRef.current;
+
+          void (async () => {
+            const fingerprint = webcontainerService.computeDependencyFingerprint(
+              currentProj.files,
+              currentProj.dependencies,
+              currentProj.projectType,
+            );
+            pendingFingerprintRef.current = fingerprint;
+
+            const check = await webcontainerService.needsDependencyInstall(
+              currentProj.files,
+              currentProj.dependencies,
+              currentProj.projectType,
+            );
+
+            if (check.needsInstall) {
+              webcontainerService.setStartupStage('installing');
+              if (term) {
+                term.write(
+                  `\r\n${ANSI.brightCyan}⚡ [${reason}]: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
+                );
+              }
+              setTimeout(() => {
+                shell.write('npm install --prefer-offline && npm run dev\r');
+              }, 400);
+            } else {
+              webcontainerService.setStartupStage('ready');
+              if (term) {
+                term.write(
+                  `\r\n${ANSI.brightGreen}⚡ [${reason}]: Dependencies verified. Fast restarting dev server...${ANSI.reset}\r\n`,
+                );
+              }
+              setTimeout(() => {
+                shell.write('npm run dev\r');
+              }, 400);
+            }
+          })();
+        } else {
+          hasAutoStartedRef.current = false;
+          void startWebContainerShell(true);
+        }
+      }, 150);
     },
     [mode, startWebContainerShell],
   );
@@ -516,9 +579,15 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       if (!webcontainerShellRef.current) {
         await startWebContainerShell();
       }
-      sendCommand('npm install --legacy-peer-deps');
+      const fingerprint = webcontainerService.computeDependencyFingerprint(
+        currentProj.files,
+        currentProj.dependencies,
+        currentProj.projectType,
+      );
+      pendingFingerprintRef.current = fingerprint;
+      sendCommand('npm install --prefer-offline --legacy-peer-deps');
     } else {
-      sendCommand('npm install --legacy-peer-deps');
+      sendCommand('npm install --prefer-offline --legacy-peer-deps');
     }
   }, [mode, startWebContainerShell, sendCommand]);
 

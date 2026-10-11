@@ -9,6 +9,94 @@
 
 import { WebContainer, FileSystemTree } from '@webcontainer/api';
 import { ProjectFile, ProjectType } from '../../types/files';
+import { webcontainerPerf } from './webcontainerPerf';
+
+/**
+ * Optimized npm configuration for WebContainer:
+ * - legacy-peer-deps: avoids ERESOLVE halts on modern packages
+ * - audit=false: prevents slow remote security audit HTTP POST after install (saves 4-8s)
+ * - fund=false: skips funding calculations
+ * - prefer-offline=true: reuses cached packages without slow remote metadata queries
+ * - progress=false: disables terminal ASCII progress bars, reducing browser PTY rendering load
+ * - update-notifier=false: skips checking for npm updates
+ */
+export const OPTIMIZED_NPMRC = [
+  'legacy-peer-deps=true',
+  'audit=false',
+  'fund=false',
+  'prefer-offline=true',
+  'progress=false',
+  'update-notifier=false',
+  '',
+].join('\n');
+
+/**
+ * Computes a deterministic dependency fingerprint from project manifest and lockfiles.
+ * Used to avoid redundant `npm install` cycles when opening or restarting the same project.
+ */
+export function computeDependencyFingerprint(
+  files: ProjectFile[],
+  extraDependencies?: Record<string, string>,
+  projectType?: ProjectType,
+): string {
+  let pkgContent = '';
+  let lockContent = '';
+
+  for (const f of files) {
+    if (!f.path) continue;
+    const clean = f.path.replace(/^\/+/, '');
+    if (clean === 'package.json') {
+      pkgContent = f.content || '';
+    } else if (
+      clean === 'package-lock.json' ||
+      clean === 'pnpm-lock.yaml' ||
+      clean === 'yarn.lock'
+    ) {
+      lockContent += `${clean}:${f.content?.length || 0}:${(f.content || '').slice(0, 500)};`;
+    }
+  }
+
+  let depsKey = '';
+  if (pkgContent) {
+    try {
+      const parsed = JSON.parse(pkgContent);
+      const deps = { ...(parsed.dependencies || {}), ...(extraDependencies || {}) };
+      const devDeps = parsed.devDependencies || {};
+      const sortedDeps = Object.keys(deps)
+        .sort()
+        .map((k) => `${k}@${deps[k]}`)
+        .join(',');
+      const sortedDev = Object.keys(devDeps)
+        .sort()
+        .map((k) => `${k}@${devDeps[k]}`)
+        .join(',');
+      depsKey = `deps:[${sortedDeps}]|dev:[${sortedDev}]`;
+    } catch {
+      depsKey = pkgContent.slice(0, 500);
+    }
+  } else {
+    const isReact =
+      projectType === 'react' ||
+      files.some((f) => /\.(jsx|tsx)$/i.test(f.path) || f.content?.includes('react'));
+    const isVue =
+      projectType === 'vue' ||
+      files.some((f) => /\.vue$/i.test(f.path) || f.content?.includes('vue'));
+    const extra = extraDependencies
+      ? Object.keys(extraDependencies)
+          .sort()
+          .map((k) => `${k}@${extraDependencies[k]}`)
+          .join(',')
+      : '';
+    depsKey = `synth:${isReact ? 'react' : isVue ? 'vue' : 'plain'}|extra:[${extra}]`;
+  }
+
+  const rawString = `${depsKey}|lock:${lockContent}`;
+  let hash = 5381;
+  for (let i = 0; i < rawString.length; i++) {
+    hash = ((hash << 5) + hash) ^ rawString.charCodeAt(i);
+  }
+  return (hash >>> 0).toString(16);
+}
 
 export type WebContainerStatus =
   | 'unsupported'
@@ -201,11 +289,11 @@ console.log(\`
     },
   };
 
-  // Always ensure .npmrc exists with legacy-peer-deps=true to prevent ERESOLVE failures
+  // Always ensure .npmrc exists with performance and isolation settings
   if (!root['.npmrc']) {
     root['.npmrc'] = {
       file: {
-        contents: 'legacy-peer-deps=true\n',
+        contents: OPTIMIZED_NPMRC,
       },
     };
   }
@@ -219,6 +307,7 @@ class WebContainerManager {
   private shellProcess: Awaited<ReturnType<WebContainer['spawn']>> | null = null;
   private shellWriter: WritableStreamDefaultWriter<string> | null = null;
   private serverListenersAttached = new WeakSet<WebContainer>();
+  private installedManifestFingerprint: string | null = null;
 
   private state: WebContainerState = {
     status: typeof window !== 'undefined' && window.crossOriginIsolated ? 'idle' : 'unsupported',
@@ -442,14 +531,103 @@ class WebContainerManager {
     dependencies?: Record<string, string>,
     projectType?: ProjectType,
   ): Promise<void> {
-    const container = await this.boot();
+    const endSerialization = webcontainerPerf.startTimer('project_serialization');
     const tree = filesToFileSystemTree(files, dependencies, projectType);
+    endSerialization({ fileCount: files.length });
+
+    const endMount = webcontainerPerf.startTimer('filesystem_mount');
+    const container = await this.boot();
     await container.mount(tree);
     try {
-      await container.fs.writeFile('.npmrc', 'legacy-peer-deps=true\n');
+      await container.fs.writeFile('.npmrc', OPTIMIZED_NPMRC);
     } catch {
       // ignore
     }
+    endMount();
+  }
+
+  /**
+   * Retrieves the current installed manifest fingerprint, if any.
+   */
+  public getInstalledFingerprint(): string | null {
+    return this.installedManifestFingerprint;
+  }
+
+  /**
+   * Checks whether the node_modules directory exists and is populated in the container virtual filesystem.
+   */
+  public async isDependenciesInstalled(): Promise<boolean> {
+    if (!this.instance) return false;
+    try {
+      const entries = await this.instance.fs.readdir('node_modules');
+      return Array.isArray(entries) && entries.length > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Verifies if dependency installation is needed based on container runtime state and manifest fingerprint.
+   * Prevents redundant `npm install` cycles when reopening the same project with unchanged dependencies.
+   */
+  public async needsDependencyInstall(
+    files: ProjectFile[],
+    extraDependencies?: Record<string, string>,
+    projectType?: ProjectType,
+  ): Promise<{ needsInstall: boolean; reason: string; fingerprint: string }> {
+    const endTimer = webcontainerPerf.startTimer('manifest_detection');
+    const fingerprint = computeDependencyFingerprint(files, extraDependencies, projectType);
+
+    if (!this.instance) {
+      endTimer({ needsInstall: true, reason: 'unbooted' });
+      return {
+        needsInstall: true,
+        reason: 'WebContainer instance is not yet booted',
+        fingerprint,
+      };
+    }
+
+    // Check actual runtime presence of node_modules in virtual filesystem
+    const hasNodeModules = await this.isDependenciesInstalled();
+    if (!hasNodeModules) {
+      endTimer({ needsInstall: true, reason: 'missing_node_modules' });
+      return {
+        needsInstall: true,
+        reason: 'node_modules directory is missing in container virtual filesystem',
+        fingerprint,
+      };
+    }
+
+    // If node_modules exists, check if the installed manifest matches current project
+    if (this.installedManifestFingerprint !== fingerprint) {
+      endTimer({ needsInstall: true, reason: 'fingerprint_mismatch' });
+      return {
+        needsInstall: true,
+        reason: 'Project dependencies or lockfile have changed',
+        fingerprint,
+      };
+    }
+
+    endTimer({ needsInstall: false, reason: 'cached_and_verified' });
+    return {
+      needsInstall: false,
+      reason: 'Dependencies already installed and verified in active container',
+      fingerprint,
+    };
+  }
+
+  /**
+   * Records that installation completed successfully for a given fingerprint.
+   */
+  public recordInstallComplete(fingerprint: string): void {
+    this.installedManifestFingerprint = fingerprint;
+  }
+
+  /**
+   * Invalidates the dependency cache fingerprint (e.g. on container reset or file deletion).
+   */
+  public invalidateDependencyCache(): void {
+    this.installedManifestFingerprint = null;
   }
 
   /**
@@ -465,6 +643,17 @@ class WebContainerManager {
   }
 
   /**
+   * Computes deterministic dependency fingerprint from manifest and lockfiles.
+   */
+  public computeDependencyFingerprint(
+    files: ProjectFile[],
+    extraDependencies?: Record<string, string>,
+    projectType?: ProjectType,
+  ): string {
+    return computeDependencyFingerprint(files, extraDependencies, projectType);
+  }
+
+  /**
    * Writes a single file to the WebContainer filesystem.
    * Creates parent directories recursively if they don't exist.
    */
@@ -472,6 +661,14 @@ class WebContainerManager {
     if (!this.instance) return;
     try {
       const cleanPath = path.replace(/^\/+/, '');
+      if (
+        cleanPath === 'package.json' ||
+        cleanPath === 'package-lock.json' ||
+        cleanPath === 'pnpm-lock.yaml' ||
+        cleanPath === 'yarn.lock'
+      ) {
+        this.invalidateDependencyCache();
+      }
       const dirIndex = cleanPath.lastIndexOf('/');
       if (dirIndex !== -1) {
         const dir = cleanPath.slice(0, dirIndex);
@@ -490,6 +687,16 @@ class WebContainerManager {
     if (!this.instance) return;
     try {
       const cleanPath = path.replace(/^\/+/, '');
+      if (
+        cleanPath === 'package.json' ||
+        cleanPath === 'package-lock.json' ||
+        cleanPath === 'pnpm-lock.yaml' ||
+        cleanPath === 'yarn.lock' ||
+        cleanPath === 'node_modules' ||
+        cleanPath.startsWith('node_modules/')
+      ) {
+        this.invalidateDependencyCache();
+      }
       await this.instance.fs.rm(cleanPath, { recursive: true });
     } catch (err) {
       console.warn(`[WebContainer] Failed to remove file ${path}:`, err);
