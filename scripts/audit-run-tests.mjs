@@ -19,6 +19,7 @@
 import { test, describe, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { services, cleanup } from './audit-harness.mjs';
 
 const {
