@@ -540,11 +540,22 @@ const BRIDGE_SOURCE = String.raw`
   };
 
   /*
-   * Uncaught errors. event.error carries a real Error with a usable stack;
-   * the previous bridge baked the location into a plain string, which made
-   * click-to-jump impossible.
+   * Uncaught errors and external resource loading failures.
    */
   window.addEventListener('error', function (event) {
+    var target = event.target;
+    if (target && target !== window && (target.src || target.href)) {
+      var url = target.src || target.href;
+      var tag = (target.tagName || 'RESOURCE').toUpperCase();
+      var isCoepIsolated = false;
+      try { isCoepIsolated = !!window.crossOriginIsolated; } catch (e) {}
+      var msg = 'Failed to load external ' + tag + ': ' + url;
+      if (isCoepIsolated) {
+        msg += '. In Cross-Origin Isolated environments (COEP: require-corp), external resources must provide "Cross-Origin-Resource-Policy: cross-origin" or CORS headers.';
+      }
+      send('warn', 'console', ['[COEP Diagnostic] ' + msg], []);
+      return;
+    }
     if (event.error instanceof Error) {
       send('error', 'window-error', [event.error], parseStack(event.error.stack));
       return;
@@ -560,7 +571,7 @@ const BRIDGE_SOURCE = String.raw`
       }];
     }
     send('error', 'window-error', [String(event.message || 'Unknown error')], frames);
-  });
+  }, true);
 
   /* Promise rejections were previously dropped entirely. */
   window.addEventListener('unhandledrejection', function (event) {
