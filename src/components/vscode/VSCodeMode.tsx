@@ -45,6 +45,7 @@ import VoiceCommandPanel from '../VoiceCommandPanel';
 import SnapshotManagerModal from '../SnapshotManagerModal';
 import TerminalTab from '../Console/TerminalTab';
 import Tooltip from '../ui/Tooltip';
+import LadeStackLogo from '../LadeStackLogo';
 import { monacoThemeFor, defineGbCoderTheme } from '../../utils/monacoTheme';
 import { useTheme } from '../../hooks/useTheme';
 import { MultiFileProject } from '../../types/files';
@@ -952,21 +953,19 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       className="flex h-full min-h-0 flex-col overflow-hidden bg-vsc-editor text-vsc-text"
       data-testid="vscode-mode"
     >
-      {/* ── Top Bar: StackBlitz Application Header Bar ── */}
+      {/* ── Top Bar: LadeStack IDE Application Header Bar ── */}
       <header
-        className="flex h-10 shrink-0 items-center justify-between border-b border-[#262636] bg-[#181824] px-3 select-none z-20"
+        className="flex h-10 shrink-0 items-center justify-between border-b border-[#1e2235] bg-[#0d0f17] px-3 select-none z-20"
         data-testid="vscode-topbar"
       >
-        {/* Left Section: Lightning Logo & Brand */}
+        {/* Left Section: LadeStack Brand */}
         <div className="flex items-center gap-2">
-          {/* StackBlitz Glowing Lightning Bolt & Brand */}
           <div className="flex items-center gap-1.5 cursor-pointer" onClick={onOpenProjects}>
-            <Zap className="h-4 w-4 text-cyan-400 fill-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]" />
-            <span className="font-semibold text-xs text-white tracking-wide">GB Coder</span>
+            <LadeStackLogo size={20} subtitle="IDE" />
           </div>
 
           {/* Nav Arrows */}
-          <div className="hidden md:flex items-center gap-0.5 ml-1">
+          <div className="hidden md:flex items-center gap-0.5 ml-2">
             <button
               type="button"
               className="rounded p-1 text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
@@ -984,7 +983,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           </div>
         </div>
 
-        {/* Center Section: Command Search / Quick Open Bar (Screenshot 2 & 3) */}
+        {/* Center Section: Command Search / Quick Open Bar */}
         <div
           onClick={() => {
             const path = prompt('Quick Open File:', activePath || '');
@@ -992,13 +991,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               openFile(path);
             }
           }}
-          className="flex items-center gap-2 rounded-md border border-white/10 bg-[#12131c] px-3 py-1 text-xs text-slate-300 shadow-inner hover:border-white/20 transition-all cursor-pointer w-64 md:w-80 justify-between"
+          className="flex items-center gap-2 rounded-md border border-[#22273d] bg-[#131624] px-3 py-1 text-xs text-slate-300 shadow-inner hover:border-indigo-500/40 transition-all cursor-pointer w-64 md:w-80 justify-between"
           title="Quick Open / Command Search (Ctrl+P)"
         >
           <div className="flex items-center gap-2 truncate">
             <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
             <span className="truncate text-slate-300 font-mono text-[11px]">
-              codewithusa/{projectName}
+              ladestack/{projectName}
             </span>
           </div>
           <kbd className="hidden sm:inline-block rounded border border-white/15 bg-white/5 px-1 py-0.2 text-[9px] text-slate-400 font-mono">
@@ -2142,16 +2141,16 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       )}
       </div>
 
-      {/* ── Status bar: VS Code & StackBlitz Classic Blue Bar ── */}
+      {/* ── Status bar: LadeStack Sleek Dark Developer Bar ── */}
       <footer
-        className="flex h-6 shrink-0 items-center justify-between border-t border-[#0069b4] bg-[#007acc] px-2 text-[11px] text-white select-none z-10"
+        className="flex h-6 shrink-0 items-center justify-between border-t border-[#1e2235] bg-[#0d0f17] px-2 text-[11px] text-slate-300 select-none z-10"
         data-testid="vscode-status-bar"
       >
         {/* Left items: diagnostics, terminal toggle */}
         <div className="flex items-center gap-2.5">
-          <span className="flex items-center gap-1 hover:bg-white/20 px-1 rounded cursor-pointer">
-            <span>⊗ 0</span>
-            <span>⚠ 0</span>
+          <span className="flex items-center gap-1.5 hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-slate-300">
+            <span className="text-rose-400">⊗ 0</span>
+            <span className="text-amber-400">⚠ 0</span>
           </span>
 
           <button
@@ -2159,9 +2158,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             data-testid="vscode-terminal-toggle"
             aria-pressed={showTerminal}
             title="Toggle Terminal Panel (Ctrl+`)"
-            className="flex items-center gap-1 rounded px-1 hover:bg-white/20 transition-colors"
+            className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-white/10 transition-colors text-slate-300"
           >
-            <TerminalSquare className="h-3 w-3 text-cyan-200" />
+            <TerminalSquare className="h-3 w-3 text-indigo-400" />
             Terminal
           </button>
         </div>
@@ -2169,22 +2168,22 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         {/* Right items: ATA, Language, Cursor, Port, Layout */}
         <div className="flex items-center gap-2.5">
           {activeLanguage && (
-            <span data-testid="status-language" className="hover:bg-white/20 px-1 rounded cursor-pointer">
+            <span data-testid="status-language" className="hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-slate-300">
               {LANGUAGE_LABEL[activeLanguage] ?? activeLanguage}
             </span>
           )}
 
           {activeFile && (
-            <span data-testid="status-cursor" className="hover:bg-white/20 px-1 rounded cursor-pointer">
+            <span data-testid="status-cursor" className="hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-slate-300">
               Ln {cursor.line}, Col {cursor.column}
             </span>
           )}
 
-          <span className="hover:bg-white/20 px-1 rounded cursor-pointer hidden md:inline">
+          <span className="hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors hidden md:inline text-slate-400">
             UTF-8
           </span>
 
-          <span className="hover:bg-white/20 px-1 rounded cursor-pointer hidden md:inline">
+          <span className="hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors hidden md:inline text-slate-400">
             Spaces: 2
           </span>
 
@@ -2196,7 +2195,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 setIsPreviewMinimized(false);
               }
             }}
-            className="flex items-center gap-1 font-medium hover:bg-white/20 px-1 rounded cursor-pointer text-cyan-200"
+            className="flex items-center gap-1.5 font-medium hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-slate-300"
             title={
               webcontainer.startupStage === 'ready'
                 ? `Dev Server listening on port ${webcontainer.serverPort || 5173}`
@@ -2209,15 +2208,15 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             <span
               className={`h-1.5 w-1.5 rounded-full ${
                 webcontainer.startupStage === 'ready'
-                  ? 'bg-emerald-300 animate-pulse'
+                  ? 'bg-emerald-400 animate-pulse'
                   : webcontainer.startupStage === 'error'
                   ? 'bg-rose-400 animate-pulse'
                   : webcontainer.startupStage === 'installing' ||
                     webcontainer.startupStage === 'mounting_files' ||
                     webcontainer.startupStage === 'booting'
-                  ? 'bg-cyan-300 animate-pulse'
+                  ? 'bg-indigo-400 animate-pulse'
                   : webcontainer.startupStage === 'starting_server'
-                  ? 'bg-amber-300 animate-pulse'
+                  ? 'bg-amber-400 animate-pulse'
                   : 'bg-slate-400'
               }`}
             />
@@ -2230,7 +2229,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             {webcontainer.startupStage === 'idle' && 'Runtime Idle'}
           </span>
 
-          <span className="hover:bg-white/20 px-1 rounded cursor-pointer hidden lg:inline">
+          <span className="hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors hidden lg:inline text-slate-400">
             Layout: US
           </span>
         </div>
