@@ -1,23 +1,51 @@
-/**
- * DESIGN.md defines exactly one visual system — a warm-cream editorial canvas.
- * There is no dark theme, so this hook no longer manages one.
- *
- * It is kept as a compatibility shim: ~30 components still read `isDark` while
- * they migrate to plain semantic token classes (`bg-surface-*`, `text-content-*`,
- * `border-stroke-*`). `isDark` is hard-coded `false` so every legacy
- * `isDark ? darkClasses : lightClasses` branch resolves to its light branch
- * without touching the component.
- *
- * Once the migration is complete this hook should be deleted along with the
- * remaining `isDark` references.
- */
-export type Theme = 'light';
+import { useState, useEffect } from 'react';
 
-/** No-op retained for call sites that still pass a theme around. */
-export const useTheme = () => ({
-  theme: 'light' as Theme,
-  setTheme: (_next?: Theme) => { void _next; },
-  toggleTheme: () => {},
-  isDark: false,
-  isLight: true,
-});
+/**
+ * LadeStack Theme Hook
+ *
+ * Supports LadeStack Dark Developer Theme (default) and Light Mode.
+ * Seamlessly integrates with semantic CSS tokens and Monaco Editor themes.
+ */
+export type Theme = 'dark' | 'light';
+
+export const useTheme = () => {
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'dark';
+    try {
+      const saved = localStorage.getItem('gbcoder_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch {}
+    return 'dark';
+  });
+
+  const isDark = theme === 'dark';
+  const isLight = theme === 'light';
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'light') {
+      document.documentElement.classList.add('theme-light');
+    } else {
+      document.documentElement.classList.remove('theme-light');
+    }
+  }, [theme]);
+
+  const setTheme = (next?: Theme) => {
+    const newTheme = next || (theme === 'dark' ? 'light' : 'dark');
+    setThemeState(newTheme);
+    try {
+      localStorage.setItem('gbcoder_theme', newTheme);
+    } catch {}
+  };
+
+  const toggleTheme = () => setTheme();
+
+  return {
+    theme,
+    setTheme,
+    toggleTheme,
+    isDark,
+    isLight,
+  };
+};
