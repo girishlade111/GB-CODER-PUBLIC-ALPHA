@@ -1883,11 +1883,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               }
             }}
             className={`group relative flex w-1.5 shrink-0 cursor-col-resize items-center justify-center transition-colors select-none ${
-              isDraggingRightPanel ? 'bg-[#007acc]' : 'bg-transparent hover:bg-[#007acc]/40'
+              isDraggingRightPanel ? 'bg-indigo-500' : 'bg-transparent hover:bg-indigo-500/40'
             }`}
             title="Drag to resize right panel (Double click to reset to 480px)"
           >
-            <div className="h-8 w-0.5 rounded-full bg-[#262636] group-hover:bg-[#007acc] transition-colors" />
+            <div className="h-8 w-0.5 rounded-full bg-[#1e2235] group-hover:bg-indigo-500 transition-colors" />
           </div>
         )}
 
@@ -1899,11 +1899,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 ? `${Math.max(rightPanelWidth, Math.floor(window.innerWidth * 0.62))}px`
                 : `${rightPanelWidth}px`,
             }}
-            className="flex min-w-[20rem] shrink-0 flex-col overflow-hidden border-l border-[#262636] bg-[#181824] transition-[width] duration-150"
+            className="flex min-w-[20rem] shrink-0 flex-col overflow-hidden border-l border-[#1e2235] bg-[#11131c] transition-[width] duration-150"
             data-testid="vscode-right-panel"
           >
-            {/* Top Browser Bar Chrome (Screenshot 2 & 3) */}
-            <div className="flex shrink-0 items-center justify-between gap-1 border-b border-[#262636] bg-[#181824] px-2.5 py-1.5 select-none">
+            {/* Top Browser Bar Chrome */}
+            <div className="flex shrink-0 items-center justify-between gap-1 border-b border-[#1e2235] bg-[#11131c] px-2.5 py-1.5 select-none">
               {/* Nav controls */}
               <div className="flex items-center gap-0.5">
                 <button
@@ -1944,9 +1944,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 </button>
               </div>
 
-              {/* URL Address Bar Pill (Screenshot 2) */}
+              {/* URL Address Bar Pill */}
               <div
-                className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md border border-white/10 bg-[#12131c] px-2.5 py-1 text-[11px] text-slate-300 font-mono shadow-inner mx-1.5 group cursor-pointer hover:border-white/20 transition-all"
+                className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md border border-[#22273d] bg-[#131624] px-2.5 py-1 text-[11px] text-slate-300 font-mono shadow-inner mx-1.5 group cursor-pointer hover:border-indigo-500/40 transition-all"
                 onClick={() => {
                   const url = activePreview?.url || `http://localhost:${webcontainer.serverPort || 5173}/`;
                   void navigator.clipboard?.writeText(url);
@@ -1970,13 +1970,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               {/* Right actions: Viewport mode, Popout, Minimize, Maximize Width, Fullscreen */}
               <div className="flex items-center gap-1 shrink-0">
                 {/* Responsive Device Viewport Toggles */}
-                <div className="hidden sm:flex items-center rounded bg-slate-900 border border-white/10 p-0.5">
+                <div className="hidden sm:flex items-center rounded bg-slate-900 border border-[#22273d] p-0.5">
                   <button
                     type="button"
                     onClick={() => setDeviceViewport('desktop')}
                     title="Desktop (100% Fluid)"
                     className={`rounded p-0.5 transition-colors ${
-                      deviceViewport === 'desktop' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
+                      deviceViewport === 'desktop' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     <Monitor className="h-3 w-3" />
@@ -1986,7 +1986,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     onClick={() => setDeviceViewport('tablet')}
                     title="Tablet Viewport (768px)"
                     className={`rounded p-0.5 transition-colors ${
-                      deviceViewport === 'tablet' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
+                      deviceViewport === 'tablet' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     <Tablet className="h-3 w-3" />
@@ -1996,7 +1996,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     onClick={() => setDeviceViewport('mobile')}
                     title="Mobile Viewport (375px)"
                     className={`rounded p-0.5 transition-colors ${
-                      deviceViewport === 'mobile' ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:text-white'
+                      deviceViewport === 'mobile' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     <Smartphone className="h-3 w-3" />
@@ -2035,7 +2035,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     onClick={() => setIsPreviewMaximized(!isPreviewMaximized)}
                     title={isPreviewMaximized ? "Restore Width" : "Maximize Width"}
                     className={`rounded p-1 transition-colors ${
-                      isPreviewMaximized ? 'bg-[#007acc] text-white' : 'text-slate-400 hover:bg-white/10 hover:text-white'
+                      isPreviewMaximized ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-white/10 hover:text-white'
                     }`}
                   >
                     <Columns className="h-3 w-3" />

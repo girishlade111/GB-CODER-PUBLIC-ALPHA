@@ -48,7 +48,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
 }) => {
   return (
     <aside
-      className="flex w-12 shrink-0 flex-col items-center justify-between border-r border-[#262636] bg-[#181824] py-2 select-none z-10"
+      className="flex w-12 shrink-0 flex-col items-center justify-between border-r border-[#1e2235] bg-[#11131c] py-2 select-none z-10"
       data-testid="vscode-activity-bar"
     >
       {/* Top Group: Primary Navigation Panels & Tools */}
@@ -67,7 +67,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             }`}
           >
             {activeTab === 'explorer' && (
-              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-[#007acc] rounded-r" />
+              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)] rounded-r" />
             )}
             <Files className="h-5 w-5" />
           </button>
@@ -87,7 +87,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             }`}
           >
             {activeTab === 'search' && (
-              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-[#007acc] rounded-r" />
+              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)] rounded-r" />
             )}
             <Search className="h-5 w-5" />
           </button>
@@ -107,7 +107,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             }`}
           >
             {activeTab === 'code-assist' && (
-              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-[#007acc] rounded-r" />
+              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)] rounded-r" />
             )}
             <Sparkles className="h-5 w-5 text-cyan-400" />
             {isCodeAssistGenerating && (
@@ -130,7 +130,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             }`}
           >
             {activeTab === 'packages' && (
-              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-[#007acc] rounded-r" />
+              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)] rounded-r" />
             )}
             <Package className="h-5 w-5 text-amber-400" />
           </button>
@@ -150,7 +150,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             }`}
           >
             {activeTab === 'ports' && (
-              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-[#007acc] rounded-r" />
+              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)] rounded-r" />
             )}
             <Radio className="h-5 w-5" />
             {serverRunning && (
