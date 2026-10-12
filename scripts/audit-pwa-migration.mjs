@@ -77,4 +77,14 @@ describe('Service Worker & PWA Migration Invariants (Section 23, 24, 25)', () =>
     assert.ok(backupTypesSource.includes('BACKUP_FORMAT_NAME = \'gb-coder-backup\''), 'Format name preserved');
     assert.ok(backupTypesSource.includes('BACKUP_FORMAT_VERSION = 1'), 'Format version 1 preserved');
   });
+
+  test('11. Root Migration Worker notifies clients with absolute origin URL before unregistering', () => {
+    const content = readFileSync(join(DIST, 'sw.js'), 'utf8');
+    assert.ok(content.includes('includeUncontrolled: true'), 'Must include uncontrolled window clients');
+    assert.ok(content.includes("new URL('/', self.location.href)"), 'Must resolve absolute URL for client.navigate()');
+    const matchAllIdx = content.indexOf('self.clients.matchAll');
+    const unregisterIdx = content.indexOf('self.registration.unregister');
+    assert.ok(matchAllIdx !== -1 && unregisterIdx !== -1 && matchAllIdx < unregisterIdx, 'Must match and notify clients before self-unregistration');
+  });
 });
+
