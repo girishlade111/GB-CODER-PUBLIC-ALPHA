@@ -81,13 +81,16 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
 
   return (
     <div
-      className={`min-h-screen ${isDark ? 'bg-matte-black' : 'bg-bright-white'}`}
+      className="min-h-screen bg-surface-canvas text-content-primary"
       data-testid="project-dashboard"
     >
       <div className="mx-auto w-full max-w-3xl px-5 py-10 sm:py-16">
+        <div className="mb-6">
+          <LadeStackLogo size={28} subtitle="GB Coder" />
+        </div>
         <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-sans text-2xl font-medium text-content-primary">Your projects</h1>
+            <h1 className="font-sans text-2xl font-semibold tracking-tight text-content-primary">Your projects</h1>
             <p className="mt-1 text-sm text-content-secondary">
               Pick up where you left off, or start something new.
             </p>
