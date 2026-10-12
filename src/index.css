@@ -3,141 +3,168 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DESIGN.md — warm-canvas editorial system
+   LADESTACK DESIGN SYSTEM — Professional Browser IDE
    ---------------------------------------------------------------------------
-   The base atmosphere is a tinted cream canvas — deliberately not the cool
-   gray-white every other AI brand uses.
+   A technical, minimalist, high-contrast, developer-first visual identity
+   inspired by StackBlitz and modern Visual Studio Code.
 
-     canvas   #faf9f5  warm cream page floor (never pure white)
-     card     #efe9de  light cream content cards, one step darker
-     coral    #cc785c  the signature accent; scarce on single elements,
-                      generous on full-bleed callouts
-     ink      #141413  warm near-black
-     product  #181715  dark warm-navy product surface — code editors,
-                      terminal, console output. This is where the app shows
-                      its own chrome, exactly as DESIGN.md prescribes.
-
-   Six surface modes alternate as the page's pacing rhythm:
-     cream canvas → cream card → dark product → cream → coral → dark footer
-
-   Type is a three-way editorial split:
-     Cormorant Garamond (stand-in for the licensed Copernicus / Tiempos
-     Headline) at weight 500 with negative tracking for display;
-     Inter (stand-in for StyreneB) for body and UI labels;
-     JetBrains Mono for every code surface.
+     Canvas:    #0c0d14  (deepest workspace floor)
+     Base:      #13151f  (sidebar, terminal, chrome)
+     Raised:    #181b29  (tab bars, panels, modals)
+     Overlay:   #1e2235  (inset wells, active cards)
+     Accent:    #6366f1  (LadeStack electric indigo)
+     Cyan:      #0ea5e9  (technical cyan companion)
+     Text 1:    #f8fafc  (crisp, high-contrast slate-50)
+     Text 2:    #cbd5e1  (slate-300 secondary text)
+     Text Muted:#94a3b8  (slate-400 descriptions)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
     /* Motion */
-    --transition-fast: 120ms ease-out;
-    --transition-normal: 200ms ease-out;
-    --transition-slow: 300ms ease-out;
+    --transition-fast: 120ms cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-normal: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-slow: 300ms cubic-bezier(0.16, 1, 0.3, 1);
 
-    /* ── Surfaces: the cream ladder, lightest floor → deepest wash ── */
-    --surface-canvas: #faf9f5;   /* page floor, top nav */
-    --surface-base: #f5f0e8;     /* surface-soft: sidebar + panel chrome */
-    --surface-raised: #ffffff;   /* tab bars, popovers, modals */
-    --surface-overlay: #efe9de;  /* surface-card: inset wells, gutters */
-    --surface-hover: #eee8dc;    /* hover + active wash */
-    --surface-strong: #e8e0d2;   /* surface-cream-strong: badge / tag fill */
+    /* ── LadeStack Dark Surfaces (Primary IDE Environment) ── */
+    --surface-canvas: #0c0d14;    /* page floor, main IDE canvas */
+    --surface-base: #13151f;      /* sidebar, terminal header, top nav */
+    --surface-raised: #181b29;    /* active panels, tab bars, modals */
+    --surface-overlay: #1e2235;   /* card insets, gutters */
+    --surface-hover: #262a40;     /* hover state wash */
+    --surface-strong: #2f344f;    /* badges, active borders */
 
-    /* Hover/active wash, for layered use over any cream surface */
-    --hover-overlay: rgba(20, 20, 19, 0.04);
-    --active-overlay: rgba(20, 20, 19, 0.08);
+    /* Overlays */
+    --hover-overlay: rgba(255, 255, 255, 0.05);
+    --active-overlay: rgba(99, 102, 241, 0.15);
 
-    /* ── Dark product surfaces ──
-       DESIGN.md puts the product's own chrome — code editors, terminal
-       output — on a dark warm-navy. It is the one place depth comes from
-       surface contrast rather than hairlines, and it is why the editor is
-       readable for long sessions. */
-    --product: #181715;
-    --product-elevated: #252320;
-    --product-soft: #1f1e1b;
-    --product-border: rgba(250, 249, 245, 0.1);
-    --product-border-strong: rgba(250, 249, 245, 0.18);
-    --product-hover: rgba(250, 249, 245, 0.06);
-    --product-active: rgba(250, 249, 245, 0.12);
+    /* ── Dark Product Surfaces (Monaco, Terminals, Code Panes) ── */
+    --product: #0e1017;
+    --product-elevated: #161824;
+    --product-soft: #12141e;
+    --product-border: #24273b;
+    --product-border-strong: #333752;
+    --product-hover: rgba(255, 255, 255, 0.06);
+    --product-active: rgba(99, 102, 241, 0.18);
 
-    /* ── Strokes: 3-tier warm hairline ── */
-    --stroke-soft: #ebe6df;
-    --stroke-subtle: #e6dfd8;
-    --stroke-strong: #d6cdbd;
+    /* ── Strokes / Hairlines ── */
+    --stroke-soft: #1c1f2e;
+    --stroke-subtle: #24273a;
+    --stroke-strong: #343852;
 
-    /* ── Text: 4-tier warm ink ── */
-    --text-primary: #141413;
-    --text-secondary: #3d3d3a;
-    --text-muted: #6c6a64;
-    --text-faint: #8e8b82;
+    /* ── Text: Crisp, Accessible Contrast Scale ── */
+    --text-primary: #f8fafc;     /* Slate-50: Crisp primary headers and labels */
+    --text-secondary: #cbd5e1;   /* Slate-300: High readability body text */
+    --text-muted: #94a3b8;       /* Slate-400: Clear muted descriptions */
+    --text-faint: #64748b;       /* Slate-500: Metadata and shortcuts */
 
-    /* Text on the dark product surfaces — the cream tone, echoed */
-    --text-on-dark: #faf9f5;
-    --text-on-dark-soft: #a09d96;
+    /* Text on dark product surfaces */
+    --text-on-dark: #f8fafc;
+    --text-on-dark-soft: #94a3b8;
 
-    /* ── Accent: warm coral, scarce ── */
-    --accent: #cc785c;
-    --accent-hover: #a9583e;
-    --accent-muted: #a9583e;
-    --accent-subtle: rgba(204, 120, 92, 0.12);
+    /* ── LadeStack Brand Accent: Electric Indigo / Cyan ── */
+    --accent: #6366f1;           /* LadeStack Indigo */
+    --accent-hover: #4f46e5;     /* Darker Indigo */
+    --accent-muted: #818cf8;     /* Light Indigo */
+    --accent-subtle: rgba(99, 102, 241, 0.16);
     --accent-fg: #ffffff;
-    --accent-disabled: #e6dfd8;
+    --accent-disabled: #3730a3;
 
-    /* ── Companion accents: teal + amber, used sparingly on product chrome ── */
-    --accent-teal: #5db8a6;
-    --accent-teal-subtle: rgba(93, 184, 166, 0.14);
-    --accent-amber: #e8a55a;
-    --accent-amber-subtle: rgba(232, 165, 90, 0.14);
+    /* Companion Accents */
+    --accent-teal: #0ea5e9;      /* LadeStack Cyan */
+    --accent-teal-subtle: rgba(14, 165, 233, 0.16);
+    --accent-amber: #f59e0b;     /* Amber 500 */
+    --accent-amber-subtle: rgba(245, 158, 11, 0.16);
 
-    /* ── Semantic ── */
-    --success: #5db872;
-    --success-subtle: rgba(93, 184, 72, 0.12);
-    --danger: #c64545;
-    --danger-subtle: rgba(198, 69, 69, 0.1);
-    --warning: #d4a017;
-    --warning-subtle: rgba(212, 160, 23, 0.12);
+    /* Semantic Feedback */
+    --success: #10b981;
+    --success-subtle: rgba(16, 185, 129, 0.14);
+    --danger: #ef4444;
+    --danger-subtle: rgba(239, 68, 68, 0.14);
+    --warning: #f59e0b;
+    --warning-subtle: rgba(245, 158, 11, 0.14);
 
-    /* ── Timeline signature (agent stages only) ──
-       Re-tuned into the documented palette: amber → teal → neutral → coral →
-       green reads as a progression without introducing a fourth hue. */
-    --timeline-thinking: #e8a55a;
-    --timeline-grep: #5db8a6;
-    --timeline-read: #a8a49b;
-    --timeline-edit: #cc785c;
-    --timeline-done: #5db872;
+    /* Timeline Signature */
+    --timeline-thinking: #f59e0b;
+    --timeline-grep: #0ea5e9;
+    --timeline-read: #94a3b8;
+    --timeline-edit: #6366f1;
+    --timeline-done: #10b981;
 
-    /* ── Radius: 4 tags · 6 rows · 8 controls · 12 cards · 16 hero · pill ── */
+    /* Radius */
     --radius-xs: 4px;
     --radius-sm: 6px;
     --radius-md: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
+    --radius-lg: 10px;
+    --radius-xl: 14px;
 
-    /* Depth is hairline-only on cream; dark product surfaces need no shadow. */
-    --shadow-elevated: none;
+    /* Depth / Shadows */
+    --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.35);
 
-    /* ── Type ── */
-    --font-sans: 'Inter', 'StyreneB', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --font-display: 'Cormorant Garamond', 'Copernicus', 'Tiempos Headline', 'EB Garamond', Garamond, "Times New Roman", serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    /* Typography */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, Monaco, Consolas, monospace;
 
-    /* ── Monaco / editor chrome mappings (dark product surface) ── */
+    /* Monaco / Editor Chrome Mappings */
     --vscode-bg-editor: var(--product);
     --vscode-bg-sidebar: var(--surface-base);
     --vscode-bg-activitybar: var(--surface-base);
     --vscode-bg-panel: var(--product);
-    --vscode-bg-statusbar: var(--product-soft);
+    --vscode-bg-statusbar: var(--surface-base);
     --vscode-border: var(--stroke-subtle);
     --vscode-border-subtle: var(--stroke-soft);
-    --vscode-border-light: var(--stroke-soft);
+    --vscode-border-light: var(--stroke-strong);
     --vscode-text-primary: var(--text-primary);
     --vscode-text-secondary: var(--text-secondary);
     --vscode-text-link: var(--accent);
-    --vscode-selection: rgba(204, 120, 92, 0.24);
-    --vscode-line-highlight: rgba(250, 249, 245, 0.04);
-    --vscode-cursor: var(--accent);
+    --vscode-selection: rgba(99, 102, 241, 0.3);
+    --vscode-line-highlight: rgba(255, 255, 255, 0.03);
+    --vscode-cursor: #6366f1;
     --vscode-error: var(--danger);
     --vscode-warning: var(--warning);
     --vscode-info: var(--accent-teal);
     --vscode-success: var(--success);
+}
+
+/* ── Light Mode Token Support ── */
+[data-theme="light"],
+.theme-light {
+    --surface-canvas: #f8fafc;
+    --surface-base: #f1f5f9;
+    --surface-raised: #ffffff;
+    --surface-overlay: #e2e8f0;
+    --surface-hover: #cbd5e1;
+    --surface-strong: #94a3b8;
+
+    --hover-overlay: rgba(15, 23, 42, 0.04);
+    --active-overlay: rgba(99, 102, 241, 0.12);
+
+    --product: #ffffff;
+    --product-elevated: #f8fafc;
+    --product-soft: #f1f5f9;
+    --product-border: #e2e8f0;
+    --product-border-strong: #cbd5e1;
+    --product-hover: rgba(15, 23, 42, 0.05);
+    --product-active: rgba(99, 102, 241, 0.1);
+
+    --stroke-soft: #f1f5f9;
+    --stroke-subtle: #e2e8f0;
+    --stroke-strong: #cbd5e1;
+
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-faint: #94a3b8;
+
+    --text-on-dark: #f8fafc;
+    --text-on-dark-soft: #94a3b8;
+
+    --accent: #6366f1;
+    --accent-hover: #4f46e5;
+    --accent-muted: #818cf8;
+    --accent-subtle: rgba(99, 102, 241, 0.1);
+    --accent-fg: #ffffff;
+    --accent-disabled: #cbd5e1;
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
@@ -150,53 +177,37 @@ body {
     background-color: var(--surface-canvas);
     color: var(--text-primary);
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.5;
-    letter-spacing: 0;
+    letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
-/*
-   The display/body split is editorial and unbreakable.
-   h1–h2 are display-md and above → serif, weight 500, negative tracking.
-   h3 and below are title-lg and below → sans, weight 500.
-   Bolding a serif display reads as bombastic, so display weight never exceeds
-   500.
-*/
-h1 {
-    font-family: var(--font-display);
-    font-size: 36px;
-    font-weight: 500;
-    line-height: 1.15;
-    letter-spacing: -0.5px;
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    font-weight: 600;
     color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+h1 {
+    font-size: 24px;
+    line-height: 1.25;
 }
 
 h2 {
-    font-family: var(--font-display);
-    font-size: 28px;
-    font-weight: 500;
-    line-height: 1.2;
-    letter-spacing: -0.3px;
-    color: var(--text-primary);
-}
-
-h3,
-h4,
-h5,
-h6 {
-    font-weight: 500;
-    color: var(--text-primary);
+    font-size: 20px;
+    line-height: 1.3;
 }
 
 h3 {
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1.4;
 }
 
 h4 {
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1.4;
 }
 
@@ -264,83 +275,70 @@ button:active:not(:disabled) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   LEGACY PALETTE BRIDGE  ·  temporary
+   LADESTACK UTILITY BRIDGE
    ---------------------------------------------------------------------------
-   ~2,400 class occurrences across ~90 components still carry the old dark-IDE
-   Tailwind grays (bg-gray-900, text-gray-400, hover:bg-gray-700, bg-white/5,
-   …). Rather than break the app while those migrate file-by-file, each legacy
-   token is re-pointed at its DESIGN.md equivalent.
-
-   This layer is deliberately exhaustive — it covers state-prefixed variants
-   (hover:/focus:/active:) and opacity-modified forms, which a plain
-   `.bg-gray-900` rule never matches and which were silently rendering as cool
-   near-black on the cream canvas.
-
-   Delete this whole block once the component migration lands.
+   Ensures existing component utility classes map cleanly to LadeStack
+   high-contrast surfaces and accessible text.
    ───────────────────────────────────────────────────────────────────────────── */
 @layer utilities {
 
-    /* ── Backgrounds ──
-       Legacy dark ladder → DESIGN.md cream ladder (order inverts: the
-       darkest legacy token is the lightest surface). */
+    /* ── Backgrounds ── */
     .bg-gray-950 { background-color: var(--surface-canvas) !important; }
     .bg-gray-900 { background-color: var(--surface-base) !important; }
     .bg-gray-800 { background-color: var(--surface-raised) !important; }
     .bg-gray-700 { background-color: var(--surface-overlay) !important; }
     .bg-gray-600 { background-color: var(--surface-hover) !important; }
-    /* Light-origin tokens → canvas-relative washes. */
+    
     .bg-gray-500\/20,
     .bg-gray-500\/10 { background-color: var(--hover-overlay) !important; }
     .bg-gray-200 { background-color: var(--surface-strong) !important; }
     .bg-gray-100 { background-color: var(--surface-hover) !important; }
     .bg-gray-50 { background-color: var(--surface-overlay) !important; }
-    .bg-white { background-color: var(--surface-base) !important; }
-    .bg-white\/95,
-    .bg-white\/90 { background-color: var(--surface-base) !important; }
+    .bg-white { background-color: var(--surface-raised) !important; }
 
-    /* Opacity-modified darks → translucent cream, never near-black. */
-    .bg-gray-900\/90 { background-color: rgba(250, 249, 245, 0.96) !important; }
+    /* Opacity-modified darks */
+    .bg-gray-900\/90 { background-color: rgba(19, 21, 31, 0.95) !important; }
     .bg-gray-900\/50,
-    .bg-gray-800\/50 { background-color: rgba(250, 249, 245, 0.72) !important; }
+    .bg-gray-800\/50 { background-color: rgba(19, 21, 31, 0.75) !important; }
     .bg-gray-900\/20,
-    .bg-gray-800\/30 { background-color: rgba(250, 249, 245, 0.5) !important; }
+    .bg-gray-800\/30 { background-color: rgba(19, 21, 31, 0.45) !important; }
     .bg-gray-950\/60,
-    .bg-gray-700\/50 { background-color: rgba(250, 249, 245, 0.78) !important; }
+    .bg-gray-700\/50 { background-color: rgba(12, 13, 20, 0.8) !important; }
 
-    /* White translucency was a hover/press wash on dark; on cream it would be
-       invisible, so it becomes an ink wash at the same intent-weighted level. */
+    /* Translucent accents */
     .bg-white\/5,
-    .bg-white\/8 { background-color: var(--hover-overlay) !important; }
+    .bg-white\/8 { background-color: rgba(255, 255, 255, 0.05) !important; }
     .bg-white\/10,
     .bg-white\/15,
-    .bg-white\/20 { background-color: var(--active-overlay) !important; }
+    .bg-white\/20 { background-color: rgba(255, 255, 255, 0.1) !important; }
 
-    /* Black washes → warm-ink scrims. Backdrop overlays and hover tints. */
     .bg-black\/5,
     .bg-black\/10,
-    .bg-black\/20 { background-color: var(--hover-overlay) !important; }
+    .bg-black\/20 { background-color: rgba(0, 0, 0, 0.2) !important; }
     .bg-black\/30,
     .bg-black\/40,
-    .bg-black\/50 { background-color: rgba(20, 20, 19, 0.35) !important; }
+    .bg-black\/50 { background-color: rgba(0, 0, 0, 0.5) !important; }
     .bg-black\/60,
     .bg-black\/65,
     .bg-black\/70,
     .bg-black\/75,
-    .bg-black\/80 { background-color: rgba(20, 20, 19, 0.45) !important; }
+    .bg-black\/80 { background-color: rgba(0, 0, 0, 0.75) !important; }
 
     /* ── Borders ── */
+    .border-gray-900,
     .border-gray-800,
     .border-gray-700 { border-color: var(--stroke-subtle) !important; }
     .border-gray-600,
     .border-gray-500,
     .border-gray-400 { border-color: var(--stroke-strong) !important; }
-    .border-gray-300 { border-color: var(--stroke-strong) !important; }
+    .border-gray-300,
     .border-gray-200,
     .border-gray-100 { border-color: var(--stroke-soft) !important; }
     .border-gray-800\/40,
     .border-gray-700\/50,
     .border-gray-700\/60,
     .border-gray-500\/30 { border-color: var(--stroke-subtle) !important; }
+    .border-white\/10,
     .border-white\/20,
     .border-white\/30 { border-color: var(--stroke-subtle) !important; }
 
@@ -349,10 +347,7 @@ button:active:not(:disabled) {
         border-color: var(--stroke-subtle) !important;
     }
 
-    /* ── Text ──
-       4-tier target. Legacy 900/800 → ink, 700/600 → body, 500/400 → muted,
-       300/200/100 → faint. `text-white` was the dark-theme default text and
-       becomes ink; on an accent fill it must be `text-accent-fg` instead. */
+    /* ── Text: Crisp, High-Contrast Scale ── */
     .text-gray-900,
     .text-gray-800 { color: var(--text-primary) !important; }
     .text-gray-700,
@@ -361,10 +356,10 @@ button:active:not(:disabled) {
     .text-gray-400 { color: var(--text-muted) !important; }
     .text-gray-300,
     .text-gray-200,
-    .text-gray-100 { color: var(--text-faint) !important; }
-    .text-white { color: var(--text-primary) !important; }
+    .text-gray-100 { color: var(--text-secondary) !important; }
+    .text-white { color: #f8fafc !important; }
 
-    .placeholder-gray-600::placeholder { color: var(--text-secondary) !important; }
+    .placeholder-gray-600::placeholder { color: var(--text-muted) !important; }
     .placeholder-gray-500::placeholder,
     .placeholder-gray-400::placeholder { color: var(--text-faint) !important; }
 
