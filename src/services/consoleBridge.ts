@@ -554,6 +554,7 @@ const BRIDGE_SOURCE = String.raw`
         msg += '. In Cross-Origin Isolated environments (COEP: require-corp), external resources must provide "Cross-Origin-Resource-Policy: cross-origin" or CORS headers.';
       }
       send('warn', 'console', ['[COEP Diagnostic] ' + msg], []);
+      try { console.warn('[COEP Diagnostic] ' + msg); } catch (e) {}
       return;
     }
     if (event.error instanceof Error) {
