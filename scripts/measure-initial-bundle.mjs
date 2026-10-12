@@ -16,10 +16,12 @@ import { join, basename } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
 const DIST = 'dist';
-const INDEX = join(DIST, 'index.html');
+const APP_INDEX = join(DIST, 'app', 'index.html');
+const ROOT_INDEX = join(DIST, 'index.html');
+const INDEX = existsSync(APP_INDEX) ? APP_INDEX : ROOT_INDEX;
 
 if (!existsSync(INDEX)) {
-  console.error(`No ${INDEX}. Run \`npm run build\` first.`);
+  console.error(`No build HTML found at ${APP_INDEX} or ${ROOT_INDEX}. Run \`npm run build\` first.`);
   process.exit(1);
 }
 

@@ -10,18 +10,22 @@
  * `/(.*)` — so a new route needs no infrastructure change.
  */
 
-/** The standard plain / React / Vue editor. */
-export const EDITOR_ROUTE = '/';
+/** The base mount point for the GB Coder application. */
+export const APP_BASE_ROUTE = '/app';
+
+/** The standard plain / React / Vue editor / Dashboard. */
+export const EDITOR_ROUTE = '/app';
 
 /**
  * VS Code mode.
  *
  * It needs an address of its own because it is a separate workspace, not a panel
  * of the editor. While it shared the editor's URL, refreshing the page dropped
- * the user back into the standard editor with the imported project gone — the
- * browser had no way to know which of the two had been on screen.
+ * the user back into the standard editor with the imported project gone.
+ * Primary route is /app/ide; legacy /ide remains fully supported for backward compatibility.
  */
-export const VSCODE_ROUTE = '/ide';
+export const VSCODE_ROUTE = '/app/ide';
+export const LEGACY_VSCODE_ROUTE = '/ide';
 
 /**
  * Detached Live Preview popout tab.
@@ -31,13 +35,18 @@ export const PREVIEW_POPOUT_ROUTE = '/preview-popout';
 /**
  * True when `pathname` addresses VS Code mode.
  *
- * The trailing-slash form counts too: a hand-typed or copied URL may carry one,
- * and `/ide/` is unambiguously the same place.
+ * The trailing-slash form counts too: a hand-typed or copied URL may carry one.
+ * Supports /app/ide, /app/ide/, /ide, /ide/.
  */
 export const isVSCodeModePath = (pathname?: string): boolean => {
   if (typeof window === 'undefined') return false;
   const path = pathname ?? window.location.pathname;
-  return path === VSCODE_ROUTE || path === `${VSCODE_ROUTE}/`;
+  return (
+    path === VSCODE_ROUTE ||
+    path === `${VSCODE_ROUTE}/` ||
+    path === LEGACY_VSCODE_ROUTE ||
+    path === `${LEGACY_VSCODE_ROUTE}/`
+  );
 };
 
 /**
@@ -46,7 +55,12 @@ export const isVSCodeModePath = (pathname?: string): boolean => {
 export const isPreviewPopoutPath = (pathname?: string): boolean => {
   if (typeof window === 'undefined') return false;
   const path = pathname ?? window.location.pathname;
-  return path === PREVIEW_POPOUT_ROUTE || path === `${PREVIEW_POPOUT_ROUTE}/` || path.startsWith('/preview-popout');
+  return (
+    path === PREVIEW_POPOUT_ROUTE ||
+    path === `${PREVIEW_POPOUT_ROUTE}/` ||
+    path.startsWith('/preview-popout') ||
+    path.startsWith('/app/preview-popout')
+  );
 };
 
 /**

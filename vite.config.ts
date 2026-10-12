@@ -75,6 +75,13 @@ function localApiPlugin(): Plugin {
     name: 'local-api-handler',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
+        if (req.url === '/' || req.url === '') {
+          res.statusCode = 302;
+          res.setHeader('Location', '/app/');
+          res.end();
+          return;
+        }
+
         if (!req.url?.startsWith('/api/')) {
           return next();
         }
@@ -223,8 +230,12 @@ function localApiPlugin(): Plugin {
   };
 }
 
+const appBase = process.env.VITE_BASE_PATH || '/app/';
+const outDir = process.env.VITE_OUT_DIR || 'dist/app';
+
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: appBase,
   plugins: [
     localApiPlugin(),
     react({
@@ -241,9 +252,11 @@ export default defineConfig({
         theme_color: '#1e1e1e',
         background_color: '#1e1e1e',
         display: 'standalone',
+        start_url: '/app/',
+        scope: '/app/',
         icons: [
           {
-            src: '/favicon.ico',
+            src: '/app/favicon.ico',
             sizes: '64x64 32x32 24x24 16x16',
             type: 'image/x-icon',
           },
@@ -322,6 +335,8 @@ export default defineConfig({
     },
   },
   build: {
+    outDir,
+    emptyOutDir: true,
     target: 'esnext',
     minify: 'esbuild',
     sourcemap: false,

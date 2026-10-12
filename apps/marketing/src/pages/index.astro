@@ -1,0 +1,420 @@
+---
+// GB Coder — Static Marketing Homepage (Phase 1 POC)
+// Brand: LadeStack
+// Target IDE Route: /app
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GB Coder — In-Browser IDE & Code Studio | LadeStack</title>
+    <meta
+      name="description"
+      content="GB Coder is a powerful, browser-based IDE and code playground for HTML, CSS, JavaScript, React, and Vue. Instant live preview, WebContainer runtime, and full-stack capabilities. No signup required."
+    />
+    <meta name="author" content="Girish Lade" />
+    <meta name="robots" content="index, follow" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Legacy Service Worker Transition & Self-Cleanup Guard -->
+    <script is:inline>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          for (var i = 0; i < registrations.length; i++) {
+            var reg = registrations[i];
+            try {
+              var scopePath = new URL(reg.scope).pathname;
+              // Clean up legacy root scope service worker registrations
+              if (scopePath === '/' || scopePath === '') {
+                reg.unregister().then(function (unregistered) {
+                  if (unregistered) {
+                    console.info('[GB Coder Migration] Cleanly unregistered legacy root-scoped Service Worker.');
+                  }
+                });
+              }
+            } catch (err) {
+              console.warn('[GB Coder Migration] Failed checking registration scope:', err);
+            }
+          }
+        });
+      }
+    </script>
+
+    <style>
+      :root {
+        --canvas: #faf9f5;
+        --surface: #ffffff;
+        --border: #e6dfd8;
+        --border-subtle: #f0ebe4;
+        --text-primary: #141413;
+        --text-secondary: #5e5c56;
+        --text-muted: #8e8b82;
+        --accent-terracotta: #cc785c;
+        --accent-hover: #b8654a;
+        --accent-dark: #1f1e1d;
+        --code-bg: #1e1e1e;
+        --code-text: #d4d4d4;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background-color: var(--canvas);
+        color: var(--text-primary);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        border-bottom: 1px solid var(--border);
+        background: rgba(250, 249, 245, 0.95);
+        backdrop-filter: blur(8px);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+
+      .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        color: var(--text-primary);
+      }
+
+      .brand-badge {
+        width: 32px;
+        height: 32px;
+        background: var(--accent-terracotta);
+        color: #ffffff;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+
+      .brand-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-sub {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-left: 0.25rem;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        list-style: none;
+      }
+
+      .nav-link {
+        text-decoration: none;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+
+      .nav-link:hover {
+        color: var(--text-primary);
+      }
+
+      .cta-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--accent-terracotta);
+        color: #ffffff;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 0.65rem 1.25rem;
+        border-radius: 6px;
+        transition: background-color 0.2s, transform 0.1s;
+      }
+
+      .cta-button:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+      }
+
+      .cta-button:active {
+        transform: translateY(0);
+      }
+
+      main {
+        flex: 1;
+      }
+
+      .hero {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4.5rem 1.5rem 3.5rem;
+        text-align: center;
+      }
+
+      .hero-tag {
+        display: inline-block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--accent-terracotta);
+        background: rgba(204, 120, 92, 0.1);
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        margin-bottom: 1.5rem;
+      }
+
+      .hero h1 {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: clamp(2.5rem, 5vw, 4.25rem);
+        font-weight: 600;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+      }
+
+      .hero p {
+        font-size: clamp(1.05rem, 2vw, 1.25rem);
+        color: var(--text-secondary);
+        max-width: 680px;
+        margin: 0 auto 2.5rem;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 3.5rem;
+      }
+
+      .cta-button-lg {
+        padding: 0.85rem 2rem;
+        font-size: 1.05rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 14px rgba(204, 120, 92, 0.25);
+      }
+
+      .cta-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1.05rem;
+        padding: 0.85rem 1.75rem;
+        border-radius: 8px;
+        transition: background-color 0.2s, border-color 0.2s;
+      }
+
+      .cta-secondary:hover {
+        background: var(--surface);
+        border-color: var(--text-muted);
+      }
+
+      .features-section {
+        border-top: 1px solid var(--border);
+        background: var(--surface);
+        padding: 4.5rem 1.5rem;
+      }
+
+      .features-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .section-heading {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+
+      .section-heading h2 {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 2.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .section-heading p {
+        color: var(--text-secondary);
+        font-size: 1rem;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .feature-card {
+        background: var(--canvas);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 1.75rem;
+        transition: border-color 0.2s, transform 0.2s;
+      }
+
+      .feature-card:hover {
+        border-color: var(--border);
+        transform: translateY(-2px);
+      }
+
+      .feature-card h3 {
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+      }
+
+      .feature-card p {
+        font-size: 0.925rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+      }
+
+      footer {
+        border-top: 1px solid var(--border);
+        background: var(--canvas);
+        padding: 2.5rem 1.5rem;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+      }
+
+      .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .footer-links a {
+        color: var(--text-secondary);
+        text-decoration: none;
+      }
+
+      .footer-links a:hover {
+        color: var(--text-primary);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav class="nav-container" aria-label="Main Navigation">
+        <a href="/" class="brand">
+          <div class="brand-badge">GB</div>
+          <div>
+            <span class="brand-title">GB Coder</span>
+            <span class="brand-sub">LadeStack</span>
+          </div>
+        </a>
+        <ul class="nav-links">
+          <li><a href="#features" class="nav-link">Features</a></li>
+          <li><a href="/app" class="cta-button" id="headerCta">Start Coding</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <span class="hero-tag">LadeStack Architecture Proof of Concept</span>
+        <h1>The Browser-First Web Development Studio</h1>
+        <p>
+          Prototype, build, and run HTML, CSS, JavaScript, React, and Vue applications directly inside your browser.
+          Powered by Monaco Editor, WebContainer full-stack runtime, and zero-setup local persistence.
+        </p>
+
+        <div class="hero-actions">
+          <a href="/app" class="cta-button cta-button-lg" id="heroStartBtn">Start Coding Now</a>
+          <a href="/app" class="cta-secondary" id="heroLaunchIdeBtn">Open Dashboard &rarr;</a>
+        </div>
+      </section>
+
+      <section class="features-section" id="features">
+        <div class="features-container">
+          <div class="section-heading">
+            <h2>Built for Speed, Privacy, and Precision</h2>
+            <p>Every feature runs locally in your browser. No mandatory sign-up, no cloud vendor lock-in.</p>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <h3>Static & Multi-File Editor</h3>
+              <p>Instant three-panel HTML/CSS/JS prototyping and multi-file React/Vue development with zero build wait.</p>
+            </div>
+            <div class="feature-card">
+              <h3>Full-Stack WebContainer IDE</h3>
+              <p>Run Node.js, execute npm install, boot development servers, and view live previews directly in the browser.</p>
+            </div>
+            <div class="feature-card">
+              <h3>Monaco Code Editor</h3>
+              <p>Industry-standard code editing experience with TypeScript intelligence, code folding, and autocomplete.</p>
+            </div>
+            <div class="feature-card">
+              <h3>Local-First Persistence</h3>
+              <p>IndexedDB workspace databases ensure your projects remain safe, private, and restored across browser reloads.</p>
+            </div>
+            <div class="feature-card">
+              <h3>Project Backup & Restore</h3>
+              <p>Export tamper-proof SHA-256 validated ZIP archives and restore projects seamlessly anytime.</p>
+            </div>
+            <div class="feature-card">
+              <h3>Live Preview Popout</h3>
+              <p>Detach your preview to external windows or scan a QR code for instantaneous real-device mobile preview.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-links">
+        <a href="/app">Application</a>
+        <span>&bull;</span>
+        <a href="https://code.ladestack.in/">LadeStack</a>
+      </div>
+      <p>&copy; 2026 GB Coder by LadeStack. All rights reserved.</p>
+    </footer>
+  </body>
+</html>

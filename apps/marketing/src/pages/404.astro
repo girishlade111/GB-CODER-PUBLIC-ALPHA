@@ -1,0 +1,79 @@
+---
+// GB Coder — Marketing 404 Page (Phase 1 POC)
+// Brand: LadeStack
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404 — Page Not Found | GB Coder</title>
+    <meta name="robots" content="noindex, follow" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background-color: #faf9f5;
+        color: #141413;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 1.5rem;
+        text-align: center;
+      }
+      .card {
+        background: #ffffff;
+        border: 1px solid #e6dfd8;
+        border-radius: 8px;
+        padding: 3rem 2rem;
+        max-width: 480px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+      h1 {
+        font-size: 3rem;
+        color: #cc785c;
+        margin: 0 0 1rem;
+        font-weight: 700;
+      }
+      p {
+        color: #5e5c56;
+        margin-bottom: 2rem;
+        font-size: 1.05rem;
+      }
+      .actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+      }
+      .btn {
+        display: inline-block;
+        padding: 0.75rem 1.25rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+      .btn-primary {
+        background: #cc785c;
+        color: #ffffff;
+      }
+      .btn-secondary {
+        border: 1px solid #e6dfd8;
+        color: #141413;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>404</h1>
+      <p>The marketing page you are looking for does not exist.</p>
+      <div class="actions">
+        <a href="/" class="btn btn-secondary">Homepage</a>
+        <a href="/app" class="btn btn-primary">Go to GB Coder IDE</a>
+      </div>
+    </div>
+  </body>
+</html>
