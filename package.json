@@ -21,6 +21,7 @@
     "audit:reload": "node scripts/reload-recovery-tests.mjs",
     "audit:status": "node scripts/runtime-status-tests.mjs",
     "audit:monaco": "node scripts/monaco-worker-tests.mjs",
+    "audit:coep": "node scripts/coep-resource-tests.mjs",
     "audit:e2e": "node scripts/e2e-browser-test.mjs",
     "audit:coderabbit": "node scripts/coderabbit-audit.mjs",
     "preview": "vite preview",
