@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { SerializedValue } from '../../services/consoleBridge';
+import HighlightText from './HighlightText';
 
 /**
  * Chrome-DevTools-style value renderer.
@@ -17,54 +18,164 @@ interface ConsoleValueTreeProps {
   depth?: number;
   /** Property name shown before the value inside a tree. */
   label?: string;
+  searchQuery?: string;
+  isRegex?: boolean;
+  isCaseSensitive?: boolean;
 }
 
 /** Inline, non-expandable rendering for primitives. */
-const Primitive: React.FC<{ value: SerializedValue }> = ({ value }) => {
+const Primitive: React.FC<{
+  value: SerializedValue;
+  searchQuery?: string;
+  isRegex?: boolean;
+  isCaseSensitive?: boolean;
+}> = ({ value, searchQuery, isRegex, isCaseSensitive }) => {
   switch (value.kind) {
     case 'string':
       return (
         <span className="text-amber-300">
-          &quot;{value.value}
+          &quot;
+          <HighlightText
+            text={value.value}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
           {value.truncated && <span className="text-content-on-dark-soft">… (truncated)</span>}&quot;
         </span>
       );
     case 'number':
-      return <span className="text-teal-300">{value.value}</span>;
+      return (
+        <span className="text-teal-300">
+          <HighlightText
+            text={value.value}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
+        </span>
+      );
     case 'bigint':
-      return <span className="text-teal-300">{value.value}n</span>;
+      return (
+        <span className="text-teal-300">
+          <HighlightText
+            text={value.value}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
+          n
+        </span>
+      );
     case 'boolean':
-      return <span className="text-accent">{String(value.value)}</span>;
+      return (
+        <span className="text-accent">
+          <HighlightText
+            text={String(value.value)}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
+        </span>
+      );
     case 'null':
       return <span className="text-content-on-dark-soft">null</span>;
     case 'undefined':
       return <span className="text-content-on-dark-soft">undefined</span>;
     case 'symbol':
-      return <span className="text-emerald-300">{value.value}</span>;
+      return (
+        <span className="text-emerald-300">
+          <HighlightText
+            text={value.value}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
+        </span>
+      );
     case 'function':
       return (
         <span className="text-accent italic">
-          {value.isClass ? 'class' : 'ƒ'} {value.name}
+          {value.isClass ? 'class' : 'ƒ'}{' '}
+          <HighlightText
+            text={value.name}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
           {value.isClass ? '' : '()'}
         </span>
       );
     case 'date':
-      return <span className="text-teal-300">{value.value}</span>;
+      return (
+        <span className="text-teal-300">
+          <HighlightText
+            text={value.value}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
+        </span>
+      );
     case 'regexp':
-      return <span className="text-rose-300">{value.value}</span>;
+      return (
+        <span className="text-rose-300">
+          <HighlightText
+            text={value.value}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
+        </span>
+      );
     case 'node':
-      return <span className="text-orange-300">{value.preview}</span>;
+      return (
+        <span className="text-orange-300">
+          <HighlightText
+            text={value.preview}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
+        </span>
+      );
     case 'circular':
       return <span className="text-content-on-dark-soft italic">[Circular]</span>;
     case 'max-depth':
-      return <span className="text-content-on-dark-soft italic">{value.preview} …</span>;
+      return (
+        <span className="text-content-on-dark-soft italic">
+          <HighlightText
+            text={value.preview}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />{' '}
+          …
+        </span>
+      );
     case 'unserializable':
-      return <span className="text-content-on-dark-soft italic">[{value.preview}]</span>;
+      return (
+        <span className="text-content-on-dark-soft italic">
+          [
+          <HighlightText
+            text={value.preview}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
+          ]
+        </span>
+      );
     case 'error':
       /* The stack renders below the row as clickable frames, not inline here. */
       return (
-        <span className="text-red-300">
-          {value.name}: {value.message}
+        <span className="text-red-300 font-medium">
+          <HighlightText
+            text={`${value.name}: ${value.message}`}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
         </span>
       );
     default:
@@ -96,15 +207,37 @@ const summaryOf = (value: SerializedValue): string => {
   }
 };
 
-const ConsoleValueTree: React.FC<ConsoleValueTreeProps> = ({ value, depth = 0, label }) => {
+const ConsoleValueTree: React.FC<ConsoleValueTreeProps> = ({
+  value,
+  depth = 0,
+  label,
+  searchQuery,
+  isRegex,
+  isCaseSensitive,
+}) => {
   // Collapsed by default at every level, as the brief requires.
   const [isOpen, setIsOpen] = useState(false);
 
   if (!isExpandable(value)) {
     return (
       <span>
-        {label !== undefined && <span className="text-accent">{label}: </span>}
-        <Primitive value={value} />
+        {label !== undefined && (
+          <span className="text-accent">
+            <HighlightText
+              text={label}
+              query={searchQuery}
+              isRegex={isRegex}
+              isCaseSensitive={isCaseSensitive}
+            />
+            :{' '}
+          </span>
+        )}
+        <Primitive
+          value={value}
+          searchQuery={searchQuery}
+          isRegex={isRegex}
+          isCaseSensitive={isCaseSensitive}
+        />
       </span>
     );
   }
@@ -125,15 +258,39 @@ const ConsoleValueTree: React.FC<ConsoleValueTreeProps> = ({ value, depth = 0, l
         ) : (
           <ChevronRight className="w-3 h-3 mt-[3px] flex-shrink-0 text-content-on-dark-soft" />
         )}
-        {label !== undefined && <span className="text-accent">{label}: </span>}
-        <span className="text-content-on-dark-soft">{summaryOf(value)}</span>
+        {label !== undefined && (
+          <span className="text-accent">
+            <HighlightText
+              text={label}
+              query={searchQuery}
+              isRegex={isRegex}
+              isCaseSensitive={isCaseSensitive}
+            />
+            :{' '}
+          </span>
+        )}
+        <span className="text-content-on-dark-soft">
+          <HighlightText
+            text={summaryOf(value)}
+            query={searchQuery}
+            isRegex={isRegex}
+            isCaseSensitive={isCaseSensitive}
+          />
+        </span>
       </button>
 
       {isOpen && (
         <div className="ml-4 border-l border-stroke-dark pl-2 mt-0.5 space-y-0.5">
           {entries.map((entry) => (
             <div key={entry.key} className="leading-relaxed">
-              <ConsoleValueTree value={entry.value} depth={depth + 1} label={entry.key} />
+              <ConsoleValueTree
+                value={entry.value}
+                depth={depth + 1}
+                label={entry.key}
+                searchQuery={searchQuery}
+                isRegex={isRegex}
+                isCaseSensitive={isCaseSensitive}
+              />
             </div>
           ))}
           {truncated && (

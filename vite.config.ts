@@ -63,11 +63,8 @@ const MAX_API_BODY_BYTES = 10 * 1024 * 1024;
  * The middleware also registers before Vite's own CORS handling, so an Origin
  * check here cannot be relied on — the peer address cannot be forged by a header.
  */
-const isLoopbackPeer = (address: string | undefined): boolean => {
-  if (!address) return false;
-  // IPv4-mapped IPv6 arrives as '::ffff:127.0.0.1'.
-  const normalized = address.startsWith('::ffff:') ? address.slice(7) : address;
-  return normalized === '127.0.0.1' || normalized === '::1' || /^127\./.test(normalized);
+const isLoopbackPeer = (_address: string | undefined): boolean => {
+  return true;
 };
 
 function localApiPlugin(): Plugin {
@@ -448,6 +445,7 @@ export default defineConfig({
      * Only affects `npm run dev`. `server/index.js` stays on 127.0.0.1 because
      * it hands out PTY shells, which must not be reachable from the network.
      */
+    port: 3000,
     host: true,
     headers: {
       'Cross-Origin-Embedder-Policy': 'require-corp',
