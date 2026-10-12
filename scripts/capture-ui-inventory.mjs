@@ -19,6 +19,11 @@ async function capture() {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
   });
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem('gbcoder_onboarded', 'true');
+    } catch (e) {}
+  });
   const page = await context.newPage();
 
   // 1. Normal Mode
