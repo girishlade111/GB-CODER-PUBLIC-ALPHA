@@ -1734,18 +1734,18 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 onPointerDown={handleResizeDown}
                 onPointerMove={handleResizeMove}
                 onPointerUp={handleResizeUp}
-                className="h-1 shrink-0 cursor-row-resize bg-[#262636] hover:bg-[#007acc] transition-colors"
+                className="h-1 shrink-0 cursor-row-resize bg-[#1e2235] hover:bg-indigo-500 transition-colors"
               />
 
-              {/* StackBlitz Panel Tabs: PROBLEMS, OUTPUT, TERMINAL */}
-              <div className="flex shrink-0 items-center justify-between border-b border-[#262636] bg-[#181824] px-2 h-7 select-none">
+              {/* LadeStack Panel Tabs: PROBLEMS, OUTPUT, TERMINAL */}
+              <div className="flex shrink-0 items-center justify-between border-b border-[#1e2235] bg-[#11131c] px-2 h-7 select-none">
                 <div className="flex items-center gap-1 h-full">
                   <button
                     type="button"
                     onClick={() => setBottomTab('problems')}
                     className={`flex items-center gap-1.5 px-2.5 h-full text-[11px] font-medium transition-colors border-b-2 ${
                       bottomTab === 'problems'
-                        ? 'border-[#007acc] text-white'
+                        ? 'border-indigo-500 text-white'
                         : 'border-transparent text-slate-400 hover:text-slate-200'
                     }`}
                   >
@@ -1758,7 +1758,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     onClick={() => setBottomTab('output')}
                     className={`flex items-center gap-1.5 px-2.5 h-full text-[11px] font-medium transition-colors border-b-2 ${
                       bottomTab === 'output'
-                        ? 'border-[#007acc] text-white'
+                        ? 'border-indigo-500 text-white'
                         : 'border-transparent text-slate-400 hover:text-slate-200'
                     }`}
                   >
@@ -1770,11 +1770,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     onClick={() => setBottomTab('terminal')}
                     className={`flex items-center gap-1.5 px-2.5 h-full text-[11px] font-semibold transition-colors border-b-2 ${
                       bottomTab === 'terminal'
-                        ? 'border-[#007acc] text-white'
+                        ? 'border-indigo-500 text-white'
                         : 'border-transparent text-slate-400 hover:text-slate-200'
                     }`}
                   >
-                    <TerminalSquare className="h-3 w-3 text-cyan-400" />
+                    <TerminalSquare className="h-3 w-3 text-indigo-400" />
                     TERMINAL
                   </button>
                 </div>
