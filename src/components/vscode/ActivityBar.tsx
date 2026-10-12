@@ -199,12 +199,12 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             aria-pressed={isTerminalOpen}
             className={`relative flex h-10 w-full items-center justify-center transition-colors rounded-sm ${
               isTerminalOpen
-                ? 'text-cyan-400 bg-white/10'
+                ? 'text-indigo-400 bg-white/10'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
             }`}
           >
             {isTerminalOpen && (
-              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-cyan-400 rounded-r" />
+              <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.6)] rounded-r" />
             )}
             <TerminalSquare className="h-5 w-5" />
           </button>
