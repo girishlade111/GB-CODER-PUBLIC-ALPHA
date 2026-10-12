@@ -83,13 +83,15 @@ export function triggerBlobDownload(blob: Blob, filename: string): void {
 export interface ExportOptions {
   onProgress?: BackupProgressCallback;
   download?: boolean;
+  includeWorkspace?: boolean;
+  includePreferences?: boolean;
 }
 
 /**
  * Executes a complete, reliable export of all local projects and associated data.
  */
 export async function exportAllProjects(options: ExportOptions = {}): Promise<BackupExportResult> {
-  const { onProgress, download = true } = options;
+  const { onProgress, download = true, includeWorkspace = true, includePreferences = false } = options;
 
   onProgress?.('Reading local projects…', 5);
   const projects = await listProjects();
@@ -122,13 +124,24 @@ export async function exportAllProjects(options: ExportOptions = {}): Promise<Ba
     onProgress?.(`Reading project ${i + 1} of ${projects.length}…`, pct);
   }
 
-  // Load VS Code workspace state (if active)
-  const workspaceState = await loadWorkspace();
-  const hasWorkspace = Boolean(workspaceState && workspaceState.files && workspaceState.files.length > 0);
+  // Load VS Code workspace state (if requested and present)
+  let workspaceState = null;
+  let hasWorkspace = false;
+  if (includeWorkspace) {
+    const rawWs = await loadWorkspace();
+    if (rawWs && rawWs.files && rawWs.files.length > 0) {
+      workspaceState = rawWs;
+      hasWorkspace = true;
+    }
+  }
 
-  // Read safe preferences
-  const preferences = exportPreferences();
-  const hasPreferences = Object.keys(preferences).length > 0;
+  // Read safe preferences (if requested)
+  let preferences: Record<string, unknown> = {};
+  let hasPreferences = false;
+  if (includePreferences) {
+    preferences = exportPreferences();
+    hasPreferences = Object.keys(preferences).length > 0;
+  }
 
   // Build manifest
   const now = Date.now();

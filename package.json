@@ -27,7 +27,9 @@
     "audit:e2e": "node scripts/e2e-browser-test.mjs",
     "audit:coderabbit": "node scripts/coderabbit-audit.mjs",
     "preview": "vite preview",
-    "vercel-build": "vite build"
+    "vercel-build": "vite build",
+    "audit:editor-persistence": "node scripts/editor-persistence-tests.mjs",
+    "audit:e2e:persistence": "node scripts/e2e-editor-persistence.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -293,8 +293,9 @@ export const createProject = (input: NewProjectInput): Promise<ProjectRecord | n
     name: input.name,
     createdAt: now,
     lastOpenedAt: now,
-    editorStyle: input.editorStyle,
-    projectType: input.projectType,
+    editorStyle: input.editorStyle === 'vscode' ? 'vscode' : 'plain',
+    projectType:
+      input.projectType === 'react' || input.projectType === 'vue' ? input.projectType : 'plain',
     entry: input.entry,
     fileCount: input.files.length,
   };
@@ -323,22 +324,29 @@ export const createProject = (input: NewProjectInput): Promise<ProjectRecord | n
 export const restoreProject = (
   record: ProjectRecord,
   files: ProjectFile[],
-): Promise<ProjectRecord | null> =>
-  enqueue(() =>
+): Promise<ProjectRecord | null> => {
+  const sanitizedRecord: ProjectRecord = {
+    ...record,
+    editorStyle: record.editorStyle === 'vscode' ? 'vscode' : 'plain',
+    projectType:
+      record.projectType === 'react' || record.projectType === 'vue' ? record.projectType : 'plain',
+  };
+  return enqueue(() =>
     withTransaction<ProjectRecord>(
       [PROJECTS_STORE, FILES_STORE],
       'readwrite',
       async (transaction) => {
-        transaction.objectStore(PROJECTS_STORE).put(record);
+        transaction.objectStore(PROJECTS_STORE).put(sanitizedRecord);
         const filesStore = transaction.objectStore(FILES_STORE);
         for (const file of files) {
-          const stored: StoredFile = { ...file, projectId: record.id };
+          const stored: StoredFile = { ...file, projectId: sanitizedRecord.id };
           filesStore.put(stored);
         }
-        return record;
+        return sanitizedRecord;
       },
     ),
   );
+};
 
 export const readProjectFiles = (projectId: string): Promise<ProjectFile[]> =>
   enqueue(() =>
@@ -483,3 +491,40 @@ export const suggestProjectName = (existing: ProjectRecord[]): string => {
   const next = used.length === 0 ? 1 : Math.max(...used) + 1;
   return `Untitled Project ${next}`;
 };
+
+/**
+ * Updates a project's persisted editor style preference ('plain' or 'vscode')
+ * atomically in IndexedDB without modifying files or other metadata.
+ */
+export const updateProjectEditorPreference = (
+  id: string,
+  editorStyle: EditorStyle | string,
+): Promise<ProjectRecord | null> => {
+  const sanitized: EditorStyle = editorStyle === 'vscode' ? 'vscode' : 'plain';
+  return updateProject(id, { editorStyle: sanitized });
+};
+
+/**
+ * Duplicates an existing project under a fresh UUID, copying all its files
+ * and preserving its editorStyle, projectType, and other metadata.
+ */
+export const duplicateProject = async (
+  id: string,
+  newName?: string,
+): Promise<ProjectRecord | null> => {
+  const original = await getProject(id);
+  if (!original) return null;
+  const files = await readProjectFiles(id);
+  const newId = createId();
+  const now = Date.now();
+  const duplicatedRecord: ProjectRecord = {
+    ...original,
+    id: newId,
+    name: newName || `${original.name} (Copy)`,
+    createdAt: now,
+    lastOpenedAt: now,
+    fileCount: files.length,
+  };
+  return restoreProject(duplicatedRecord, files);
+};
+

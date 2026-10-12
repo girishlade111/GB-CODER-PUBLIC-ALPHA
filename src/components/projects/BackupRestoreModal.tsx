@@ -47,6 +47,8 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
   const [exportPercent, setExportPercent] = useState(0);
   const [exportResult, setExportResult] = useState<BackupExportResult | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [includeWorkspace, setIncludeWorkspace] = useState(true);
+  const [includePreferences, setIncludePreferences] = useState(true);
 
   // Restore State
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -90,6 +92,8 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
     setExportResult(null);
     try {
       const result = await exportAllProjects({
+        includeWorkspace,
+        includePreferences,
         onProgress: (stage, percent) => {
           setExportStage(stage);
           setExportPercent(percent);
@@ -253,6 +257,43 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
                     <FileCheck2 className="h-4 w-4" />
                     SHA-256 Verified
                   </p>
+                </div>
+              </div>
+
+              {/* Backup Scope Options */}
+              <div className="space-y-2.5 rounded-lg border border-stroke-subtle bg-surface-canvas p-3.5 text-xs">
+                <span className="font-semibold text-content-primary">Backup Scope Options</span>
+                <div className="space-y-2">
+                  <label className="flex items-start gap-2.5 text-content-secondary cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeWorkspace}
+                      onChange={(e) => setIncludeWorkspace(e.target.checked)}
+                      data-testid="checkbox-backup-workspace"
+                      className="mt-0.5 rounded border-stroke-subtle text-accent focus:ring-accent"
+                    />
+                    <div>
+                      <span className="font-medium text-content-primary">Include standalone VS Code workspace</span>
+                      <p className="text-[11px] text-content-muted">
+                        Backs up unattached workspace files (outside named projects). All project files are backed up automatically within their respective projects.
+                      </p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-2.5 text-content-secondary cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includePreferences}
+                      onChange={(e) => setIncludePreferences(e.target.checked)}
+                      data-testid="checkbox-backup-preferences"
+                      className="mt-0.5 rounded border-stroke-subtle text-accent focus:ring-accent"
+                    />
+                    <div>
+                      <span className="font-medium text-content-primary">Include application preferences & editor settings</span>
+                      <p className="text-[11px] text-content-muted">
+                        Preserves theme, editor configuration, and layout preferences in <code>preferences/settings.json</code>.
+                      </p>
+                    </div>
+                  </label>
                 </div>
               </div>
 

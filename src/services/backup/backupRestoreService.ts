@@ -248,14 +248,21 @@ export async function analyzeBackupArchive(
 
     totalFilesToRestore += payload.files.length;
 
+    const editorStyle: EditorStyle =
+      payload.metadata.editorStyle === 'vscode' ? 'vscode' : 'plain';
+    const projectType: ProjectType =
+      payload.metadata.projectType === 'react' || payload.metadata.projectType === 'vue'
+        ? payload.metadata.projectType
+        : 'plain';
+
     planProjects.push({
       originalId,
       targetId,
       name: payload.metadata.name,
       targetName,
       fileCount: payload.files.length,
-      projectType: payload.metadata.projectType || 'plain',
-      editorStyle: payload.metadata.editorStyle || 'plain',
+      projectType,
+      editorStyle,
       action,
       conflict: isConflict,
       files: payload.files,

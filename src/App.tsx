@@ -63,6 +63,7 @@ import {
   suggestProjectName,
   touchProject,
   updateProject,
+  updateProjectEditorPreference,
   writeActiveProjectId,
 } from './services/projects/projectDatabase';
 /*
@@ -1308,7 +1309,7 @@ function App() {
        * browser preserved that across the refresh, so it wins. When the user is
        * actively opening a project, the record's stored style is what to honour.
        */
-      const openInVSCode = options.navigate ? record.editorStyle === 'vscode' : isVSCodeModePath();
+      const openInVSCode = record.editorStyle === 'vscode';
 
       setFileProject(project);
 
@@ -1318,7 +1319,7 @@ function App() {
         setIsVSCodeRoute(true);
         // The project is the source of truth now, so nothing needs restoring.
         setIsRestoringWorkspace(false);
-        if (options.navigate) navigateTo(VSCODE_ROUTE);
+        if (options.navigate || !isVSCodeModePath()) navigateTo(VSCODE_ROUTE);
 
         // Mount files and trigger WebContainer dev server startup
         void loadChunk(
@@ -1332,7 +1333,7 @@ function App() {
         setFullStackProject(null);
         setVsCodeReturn(null);
         setIsVSCodeRoute(false);
-        if (options.navigate) navigateTo(EDITOR_ROUTE);
+        if (options.navigate || isVSCodeModePath()) navigateTo(EDITOR_ROUTE);
       }
     },
     [],
@@ -1681,7 +1682,7 @@ function App() {
      * out of the mode. Pushing another entry there would fight the user's own
      * navigation and leave a history entry they have to press through twice.
      */
-    ({ updateUrl }: { updateUrl: boolean }) => {
+    async ({ updateUrl }: { updateUrl: boolean }) => {
       const project = fullStackProject;
       const restore = vsCodeReturn;
       setFullStackProject(null);
@@ -1695,7 +1696,15 @@ function App() {
        * Skipped when a project is open: that copy was never written in the first
        * place, and the project's own files must survive leaving the mode.
        */
-      if (!activeProjectId) void clearWorkspace();
+      if (!activeProjectId) {
+        void clearWorkspace();
+      } else {
+        const updated = await updateProjectEditorPreference(activeProjectId, 'plain');
+        if (updated) {
+          setActiveProject(updated);
+          setProjects((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+        }
+      }
       if (updateUrl) navigateTo(EDITOR_ROUTE);
 
       /*
@@ -1718,7 +1727,7 @@ function App() {
   );
 
   const handleExitFullStack = useCallback(
-    () => leaveVSCodeMode({ updateUrl: true }),
+    () => void leaveVSCodeMode({ updateUrl: true }),
     [leaveVSCodeMode],
   );
 
@@ -1824,7 +1833,7 @@ function App() {
    * project currently open in VS Code mode" so the existing file-change and exit
    * wiring applies unchanged.
    */
-  const handleEnterVSCodeMode = useCallback(() => {
+  const handleEnterVSCodeMode = useCallback(async () => {
     if (fullStackProject) return;
 
     if (fileProject.files.length === 0) {
@@ -1837,8 +1846,17 @@ function App() {
     // A navigation, not just a state change — see the detected-import path above.
     setIsVSCodeRoute(true);
     navigateTo(VSCODE_ROUTE);
+
+    if (activeProjectId) {
+      const updated = await updateProjectEditorPreference(activeProjectId, 'vscode');
+      if (updated) {
+        setActiveProject(updated);
+        setProjects((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      }
+    }
+
     toast.success('VS Code mode — WebContainer environment ready.');
-  }, [fullStackProject, fileProject]);
+  }, [fullStackProject, fileProject, activeProjectId]);
 
   /*
    * Rebuilds the workspace after a refresh, or on a direct visit to the route.
@@ -1939,7 +1957,7 @@ function App() {
         return;
       }
 
-      if (isVSCodeRoute) leaveVSCodeMode({ updateUrl: false });
+      if (isVSCodeRoute) void leaveVSCodeMode({ updateUrl: false });
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -2172,24 +2190,10 @@ function App() {
   }, []);
 
   /*
-   * Keeps the stored editor style honest.
-   *
-   * "Opens in its stored editor style" is only true if switching modes inside a
-   * project updates the record. Done here rather than in the enter/exit handlers
-   * so that feature's logic is left alone.
+   * Editor style preference is managed explicitly on mode transitions
+   * (handleEnterVSCodeMode, leaveVSCodeMode, applyProjectToEditor)
+   * rather than reactive effects, preserving user choice reliably.
    */
-  useEffect(() => {
-    if (!activeProjectId || isOpeningProject || !activeProject) return;
-
-    const style: EditorStyle = isVSCodeRoute ? 'vscode' : 'plain';
-    if (activeProject.editorStyle === style) return;
-
-    void updateProject(activeProjectId, { editorStyle: style }).then((updated) => {
-      if (!updated) return;
-      setActiveProject(updated);
-      setProjects((current) => current.map((item) => (item.id === updated.id ? updated : item)));
-    });
-  }, [activeProjectId, isOpeningProject, isVSCodeRoute, activeProject]);
 
   /** Ctrl/Cmd+Shift+S — capture and save a PNG without opening the modal. */
   const handleQuickScreenshot = useCallback(async () => {
@@ -2243,6 +2247,18 @@ function App() {
     { id: 'open-snapshot-manager', title: 'Open Snapshot Manager', section: 'Navigation', perform: () => setShowSnapshotManager(true) },
     { id: 'new-file', title: 'New Project', section: 'Files', perform: () => setShowNewProject(true) },
     { id: 'open-project', title: 'Open Project', section: 'Files', perform: () => handleReturnToDashboard() },
+    {
+      id: 'switch-editor-mode',
+      title: isVSCodeRoute ? 'Switch to Static Editor' : 'Switch to VS Code Mode',
+      section: 'View',
+      perform: () => {
+        if (isVSCodeRoute) {
+          void leaveVSCodeMode({ updateUrl: true });
+        } else {
+          void handleEnterVSCodeMode();
+        }
+      },
+    },
     { id: 'format-all', title: 'Format All Files', section: 'Editor', perform: async () => {
         await Promise.all([handleFormatHtml(), handleFormatCss(), handleFormatJavascript()]);
         toast.success('Code formatted.');
