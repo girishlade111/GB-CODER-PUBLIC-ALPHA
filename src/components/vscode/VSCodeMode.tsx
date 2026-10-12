@@ -1598,8 +1598,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                         onClick={() => setActivePath(path)}
                         className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-t-2 border-r-vsc-border px-3 py-1.5 text-xs ${
                           isActive
-                            ? 'border-t-accent bg-vsc-editor text-content-on-dark'
-                            : 'border-t-transparent text-vsc-textMuted hover:bg-product-hover hover:text-vsc-text'
+                            ? 'border-t-indigo-500 bg-vsc-editor text-white font-medium'
+                            : 'border-t-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200'
                         }`}
                         title={path}
                       >
