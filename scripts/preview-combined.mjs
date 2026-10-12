@@ -54,8 +54,19 @@ const server = http.createServer(async (req, res) => {
   const pathname = decodeURIComponent(urlObj.pathname);
 
   // Set Security Headers matching Vercel vercel.json configuration
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  // Scoped to IDE and WebContainer execution environments
+  const isIsolatedRoute =
+    pathname === '/app' ||
+    pathname === '/app/' ||
+    pathname.startsWith('/app/') ||
+    pathname === '/ide' ||
+    pathname === '/ide/' ||
+    pathname.startsWith('/preview-popout');
+
+  if (isIsolatedRoute) {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  }
 
   // 1. API Route Handling (/api/*)
   if (pathname.startsWith('/api/')) {

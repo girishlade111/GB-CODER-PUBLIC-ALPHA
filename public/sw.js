@@ -26,7 +26,8 @@ self.addEventListener('activate', (event) => {
         // Clean up obsolete workbox precaches from root deployment
         const cacheNames = await caches.keys();
         for (const name of cacheNames) {
-          if (name.startsWith('workbox-precache') || name.includes('gb-coder')) {
+          // Only delete legacy root precaches, protect any newly created /app/ scoped caches
+          if ((name.startsWith('workbox-precache') || name.includes('gb-coder')) && !name.includes('/app')) {
             await caches.delete(name);
           }
         }

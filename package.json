@@ -39,7 +39,8 @@
     "audit:routes": "node scripts/audit-routes.mjs",
     "audit:headers": "node scripts/audit-headers.mjs",
     "audit:pwa-migration": "node scripts/audit-pwa-migration.mjs",
-    "audit:build-output": "node scripts/audit-build-output.mjs"
+    "audit:build-output": "node scripts/audit-build-output.mjs",
+    "audit:e2e:phase1-1": "node scripts/e2e-phase1-1-validation.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
