@@ -697,7 +697,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
         {/* ── Right-Click Context Menu ── */}
         {contextMenu && (
           <div
-            className="fixed z-[100] min-w-[170px] overflow-hidden rounded-md border border-[#3e3e42] bg-[#252526] py-1 shadow-2xl text-xs text-[#cccccc]"
+            className="fixed z-[100] min-w-[170px] overflow-hidden rounded-md border border-[#24273b] bg-[#161824] py-1 shadow-2xl text-xs text-slate-200"
             style={{ top: contextMenu.y, left: contextMenu.x }}
             role="menu"
             onClick={(e) => e.stopPropagation()}
@@ -715,7 +715,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                       setDraft({ type: 'file', targetFolder: path });
                       setExpanded((prev) => new Set([...prev, path]));
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                   >
                     <FilePlus className="h-3.5 w-3.5 text-accent" />
                     New File...
@@ -729,12 +729,12 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                       setDraft({ type: 'folder', targetFolder: path });
                       setExpanded((prev) => new Set([...prev, path]));
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                   >
                     <FolderPlus className="h-3.5 w-3.5 text-amber-400" />
                     New Folder...
                   </button>
-                  <div className="my-1 border-t border-[#3e3e42]" />
+                  <div className="my-1 border-t border-[#24273b]" />
                   <button
                     type="button"
                     role="menuitem"
@@ -742,7 +742,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                       setRenamingPath(contextMenu.node!.path);
                       setContextMenu(null);
                     }}
-                    className="flex w-full items-center justify-between px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                    className="flex w-full items-center justify-between px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                   >
                     <span className="flex items-center gap-2">
                       <Pencil className="h-3.5 w-3.5" />
@@ -765,7 +765,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                     </span>
                     <span className="text-[10px] text-red-400/80 font-mono">Del</span>
                   </button>
-                  <div className="my-1 border-t border-[#3e3e42]" />
+                  <div className="my-1 border-t border-[#24273b]" />
                   <button
                     type="button"
                     role="menuitem"
@@ -773,7 +773,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                       void copyToClipboard(contextMenu.node!.path, 'Folder path');
                       setContextMenu(null);
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                   >
                     <Clipboard className="h-3.5 w-3.5" />
                     Copy Path
@@ -789,7 +789,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                       onOpen(contextMenu.node!.path);
                       setContextMenu(null);
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                   >
                     <File className="h-3.5 w-3.5" />
                     Open
@@ -802,7 +802,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                         onOpenToSide(contextMenu.node!.path);
                         setContextMenu(null);
                       }}
-                      className="flex w-full items-center justify-between px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                      className="flex w-full items-center justify-between px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                     >
                       <span className="flex items-center gap-2">
                         <Columns className="h-3.5 w-3.5" />
@@ -811,7 +811,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                       <span className="text-[10px] text-vsc-textMuted font-mono">Ctrl+\</span>
                     </button>
                   )}
-                  <div className="my-1 border-t border-[#3e3e42]" />
+                  <div className="my-1 border-t border-[#24273b]" />
                   <button
                     type="button"
                     role="menuitem"
@@ -819,7 +819,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                       setRenamingPath(contextMenu.node!.path);
                       setContextMenu(null);
                     }}
-                    className="flex w-full items-center justify-between px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                    className="flex w-full items-center justify-between px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                   >
                     <span className="flex items-center gap-2">
                       <Pencil className="h-3.5 w-3.5" />
@@ -835,7 +835,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                       setContextMenu(null);
                       toast.success(`Duplicated ${contextMenu.node!.name}`);
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                   >
                     <Copy className="h-3.5 w-3.5" />
                     Duplicate
@@ -855,7 +855,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                     </span>
                     <span className="text-[10px] text-red-400/80 font-mono">Del</span>
                   </button>
-                  <div className="my-1 border-t border-[#3e3e42]" />
+                  <div className="my-1 border-t border-[#24273b]" />
                   <button
                     type="button"
                     role="menuitem"
@@ -863,7 +863,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                       void copyToClipboard(contextMenu.node!.path, 'Path');
                       setContextMenu(null);
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                   >
                     <Clipboard className="h-3.5 w-3.5" />
                     Copy Path
@@ -875,7 +875,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                       void copyToClipboard(contextMenu.node!.name, 'File name');
                       setContextMenu(null);
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                   >
                     <FileCode className="h-3.5 w-3.5" />
                     Copy File Name
@@ -892,7 +892,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                     setContextMenu(null);
                     setDraft({ type: 'file', targetFolder: '' });
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                 >
                   <FilePlus className="h-3.5 w-3.5 text-accent" />
                   New File...
@@ -904,12 +904,12 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                     setContextMenu(null);
                     setDraft({ type: 'folder', targetFolder: '' });
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                 >
                   <FolderPlus className="h-3.5 w-3.5 text-amber-400" />
                   New Folder...
                 </button>
-                <div className="my-1 border-t border-[#3e3e42]" />
+                <div className="my-1 border-t border-[#24273b]" />
                 <button
                   type="button"
                   role="menuitem"
@@ -917,7 +917,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                     setExpanded(new Set());
                     setContextMenu(null);
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-[#094771] hover:text-white transition-colors"
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
                 >
                   <FolderArchive className="h-3.5 w-3.5" />
                   Collapse All Folders
@@ -936,7 +936,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
             onClick={() => setDeleteTarget(null)}
           >
             <div
-              className="w-full max-w-sm rounded-lg border border-[#3e3e42] bg-[#1e1e1e] p-4 shadow-2xl text-white"
+              className="w-full max-w-sm rounded-lg border border-[#24273b] bg-[#1e1e1e] p-4 shadow-2xl text-white"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-2.5 text-red-400 mb-2 font-semibold text-sm">
