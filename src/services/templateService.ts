@@ -2844,7 +2844,7 @@ const modalTemplates = {
   },
   image: {
     title: 'Beautiful Sunset',
-    content: '<img src="https://picsum.photos/600/400?random=10" class="modal-image" alt="Sunset"><p>A beautiful sunset over the mountains.</p>',
+    content: '<img src="https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=600&auto=format&fit=crop&q=80" class="modal-image" alt="Sunset"><p>A beautiful sunset over the mountains.</p>',
     actions: '<button class="modal-btn primary" onclick="closeModal()">Close</button>'
   }
 };
