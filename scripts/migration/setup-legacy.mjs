@@ -52,17 +52,17 @@ export async function ensureLegacyDist(forceRebuild = false) {
       shell: true,
     });
 
-    // 2. Link repository node_modules so dependencies resolve without running npm install
-    const repoNodeModules = path.resolve(REPO_ROOT, 'node_modules');
-    const targetNodeModules = path.resolve(tempExtractDir, 'node_modules');
-    if (!fs.existsSync(targetNodeModules)) {
-      try {
-        fs.symlinkSync(repoNodeModules, targetNodeModules, 'junction');
-      } catch {
-        // Fallback: directory junction on Windows
-        execSync(`cmd /c mklink /J "${targetNodeModules}" "${repoNodeModules}"`, { stdio: 'pipe' });
-      }
-    }
+    // 2. Install isolated historical dependencies using pinned package-lock.json
+    console.log(`  -> Running isolated historical npm ci...`);
+    execSync(`npm ci`, {
+      cwd: tempExtractDir,
+      stdio: 'inherit',
+      shell: true,
+      env: {
+        ...process.env,
+        NODE_ENV: 'development',
+      },
+    });
 
     // 3. Build legacy Vite SPA directly into LEGACY_DIST_DIR
     console.log(`  -> Compiling legacy application via Vite...`);
@@ -71,6 +71,7 @@ export async function ensureLegacyDist(forceRebuild = false) {
     execSync(`npx vite build --outDir "${LEGACY_DIST_DIR}"`, {
       cwd: tempExtractDir,
       stdio: 'inherit',
+      shell: true,
       env: {
         ...process.env,
         NODE_ENV: 'production',
@@ -80,13 +81,6 @@ export async function ensureLegacyDist(forceRebuild = false) {
     console.log(`[Setup Legacy] Legacy build compiled successfully into: ${LEGACY_DIST_DIR}`);
   } finally {
     // 4. Safely clean up disposable directory
-    try {
-      const targetNodeModules = path.resolve(tempExtractDir, 'node_modules');
-      if (fs.existsSync(targetNodeModules)) {
-        fs.unlinkSync(targetNodeModules);
-      }
-    } catch {}
-
     try {
       if (fs.existsSync(tempExtractDir)) {
         fs.rmSync(tempExtractDir, { recursive: true, force: true });
