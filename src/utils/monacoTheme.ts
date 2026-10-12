@@ -1,4 +1,5 @@
 import type { Monaco } from '@monaco-editor/react';
+import './monacoWorkers';
 
 export const GB_CODER_MONACO_THEME = 'gb-coder-product';
 

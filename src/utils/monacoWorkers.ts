@@ -65,6 +65,8 @@ export function setupMonacoEnvironment(): void {
       return new editorWorker();
     },
   };
+
+  (window as unknown as { __gbCoderWorkerStats: MonacoWorkerStats }).__gbCoderWorkerStats = workerStats;
 }
 
 // Automatically configure when imported in browser environment
