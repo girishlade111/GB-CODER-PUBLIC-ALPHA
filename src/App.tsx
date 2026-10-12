@@ -3876,6 +3876,7 @@ function App() {
           onOpen={(record) => void handleOpenProject(record)}
           onDelete={(record) => void handleDeleteProject(record)}
           onImport={() => setShowImport(true)}
+          onProjectsChanged={() => void listProjects().then((list) => setProjects(list))}
         />
 
         {showNewProject && (

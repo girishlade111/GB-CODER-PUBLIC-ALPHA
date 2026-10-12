@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Code2, FolderPlus, Loader2, PanelsTopLeft, Plus, Trash2, Upload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Archive, Code2, FolderDown, FolderPlus, Loader2, PanelsTopLeft, Plus, Trash2, Upload } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 import LadeStackLogo from '../LadeStackLogo';
 import type { EditorStyle, ProjectRecord } from '../../services/projects/projectDatabase';
+
+const BackupRestoreModal = React.lazy(() => import('./BackupRestoreModal'));
 
 /**
  * The landing screen.
@@ -22,6 +24,8 @@ interface ProjectDashboardProps {
   onDelete: (project: ProjectRecord) => void;
   /** Import straight from here, which also creates a project. */
   onImport: () => void;
+  /** Notifies parent when projects are restored or updated */
+  onProjectsChanged?: () => void;
 }
 
 const EDITOR_STYLE_LABEL: Record<EditorStyle, string> = {
@@ -68,6 +72,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
   onOpen,
   onDelete,
   onImport,
+  onProjectsChanged,
 }) => {
   const { isDark } = useTheme();
   /*
@@ -78,6 +83,16 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
    * question from the thing being deleted.
    */
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [showBackupModal, setShowBackupModal] = useState(false);
+  const [backupTab, setBackupTab] = useState<'backup' | 'restore'>('backup');
+
+  useEffect(() => {
+    const handleProjectsUpdated = () => {
+      onProjectsChanged?.();
+    };
+    window.addEventListener('gb-coder:projects-updated', handleProjectsUpdated);
+    return () => window.removeEventListener('gb-coder:projects-updated', handleProjectsUpdated);
+  }, [onProjectsChanged]);
 
   return (
     <div
@@ -97,6 +112,30 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setBackupTab('backup');
+                setShowBackupModal(true);
+              }}
+              data-testid="dashboard-backup"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-stroke-subtle px-3 py-2 text-sm font-medium text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary"
+            >
+              <Archive className="h-4 w-4" />
+              Backup
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setBackupTab('restore');
+                setShowBackupModal(true);
+              }}
+              data-testid="dashboard-restore"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-stroke-subtle px-3 py-2 text-sm font-medium text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary"
+            >
+              <FolderDown className="h-4 w-4" />
+              Restore
+            </button>
             <button
               type="button"
               onClick={onImport}
@@ -254,6 +293,18 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
           Projects are stored locally in this browser. Clearing browser data will delete them.
         </p>
       </div>
+
+      {showBackupModal && (
+        <React.Suspense fallback={null}>
+          <BackupRestoreModal
+            isOpen={showBackupModal}
+            onClose={() => setShowBackupModal(false)}
+            projects={projects}
+            initialTab={backupTab}
+            onRestored={onProjectsChanged}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 };

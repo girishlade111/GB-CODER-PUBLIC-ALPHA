@@ -316,6 +316,30 @@ export const createProject = (input: NewProjectInput): Promise<ProjectRecord | n
   );
 };
 
+/**
+ * Safely inserts or restores a project record and all its associated files
+ * in a single atomic transaction. Preserves the exact specified ID and timestamps.
+ */
+export const restoreProject = (
+  record: ProjectRecord,
+  files: ProjectFile[],
+): Promise<ProjectRecord | null> =>
+  enqueue(() =>
+    withTransaction<ProjectRecord>(
+      [PROJECTS_STORE, FILES_STORE],
+      'readwrite',
+      async (transaction) => {
+        transaction.objectStore(PROJECTS_STORE).put(record);
+        const filesStore = transaction.objectStore(FILES_STORE);
+        for (const file of files) {
+          const stored: StoredFile = { ...file, projectId: record.id };
+          filesStore.put(stored);
+        }
+        return record;
+      },
+    ),
+  );
+
 export const readProjectFiles = (projectId: string): Promise<ProjectFile[]> =>
   enqueue(() =>
     withTransaction<ProjectFile[]>([FILES_STORE], 'readonly', async (transaction) => {

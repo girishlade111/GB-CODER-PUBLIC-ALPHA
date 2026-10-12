@@ -37,6 +37,10 @@ await build({
       export * from './src/services/laminarService.ts';
       export * from './src/services/vscodeWorkspaceStore.ts';
       export * from './src/services/projects/projectDatabase.ts';
+      export * from './src/services/backup/backupTypes.ts';
+      export * from './src/services/backup/backupCrypto.ts';
+      export * from './src/services/backup/backupExportService.ts';
+      export * from './src/services/backup/backupRestoreService.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',
