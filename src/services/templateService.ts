@@ -1639,49 +1639,49 @@ document.querySelectorAll('.social-btn').forEach(btn => {
     
     <div class="gallery-grid">
       <div class="gallery-item" data-category="nature">
-        <img src="https://picsum.photos/400/300?random=1" alt="Nature 1">
+        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&auto=format&fit=crop&q=80" alt="Nature 1">
         <div class="overlay">
           <span class="view-btn">View</span>
         </div>
       </div>
       <div class="gallery-item" data-category="architecture">
-        <img src="https://picsum.photos/400/300?random=2" alt="Architecture 1">
+        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80" alt="Architecture 1">
         <div class="overlay">
           <span class="view-btn">View</span>
         </div>
       </div>
       <div class="gallery-item" data-category="people">
-        <img src="https://picsum.photos/400/300?random=3" alt="People 1">
+        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80" alt="People 1">
         <div class="overlay">
           <span class="view-btn">View</span>
         </div>
       </div>
       <div class="gallery-item" data-category="nature">
-        <img src="https://picsum.photos/400/300?random=4" alt="Nature 2">
+        <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&auto=format&fit=crop&q=80" alt="Nature 2">
         <div class="overlay">
           <span class="view-btn">View</span>
         </div>
       </div>
       <div class="gallery-item" data-category="architecture">
-        <img src="https://picsum.photos/400/300?random=5" alt="Architecture 2">
+        <img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=80" alt="Architecture 2">
         <div class="overlay">
           <span class="view-btn">View</span>
         </div>
       </div>
       <div class="gallery-item" data-category="people">
-        <img src="https://picsum.photos/400/300?random=6" alt="People 2">
+        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80" alt="People 2">
         <div class="overlay">
           <span class="view-btn">View</span>
         </div>
       </div>
       <div class="gallery-item" data-category="nature">
-        <img src="https://picsum.photos/400/300?random=7" alt="Nature 3">
+        <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&auto=format&fit=crop&q=80" alt="Nature 3">
         <div class="overlay">
           <span class="view-btn">View</span>
         </div>
       </div>
       <div class="gallery-item" data-category="architecture">
-        <img src="https://picsum.photos/400/300?random=8" alt="Architecture 3">
+        <img src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=600&auto=format&fit=crop&q=80" alt="Architecture 3">
         <div class="overlay">
           <span class="view-btn">View</span>
         </div>
