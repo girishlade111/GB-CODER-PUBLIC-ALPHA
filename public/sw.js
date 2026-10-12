@@ -32,22 +32,23 @@ self.addEventListener('activate', (event) => {
           }
         }
 
-        // Self-unregister the root scope
-        if (self.registration && typeof self.registration.unregister === 'function') {
-          await self.registration.unregister();
-        }
-
         // Notify client tabs at root to refresh so they display the Astro marketing page
-        const clients = await self.clients.matchAll({ type: 'window' });
+        const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        const targetUrl = new URL('/', self.location.href).href;
         for (const client of clients) {
           try {
             const clientUrl = new URL(client.url);
             if (clientUrl.pathname === '/' || clientUrl.pathname === '/index.html') {
-              client.navigate('/');
+              client.navigate(targetUrl).catch(() => {});
             }
           } catch {
             // Ignore client navigation failures
           }
+        }
+
+        // Self-unregister the root scope after notifying clients
+        if (self.registration && typeof self.registration.unregister === 'function') {
+          await self.registration.unregister();
         }
       } catch (err) {
         console.warn('[SW Migration] Transition error:', err);

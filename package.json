@@ -1,6 +1,9 @@
 {
   "name": "gb-coder",
   "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -40,7 +43,8 @@
     "audit:headers": "node scripts/audit-headers.mjs",
     "audit:pwa-migration": "node scripts/audit-pwa-migration.mjs",
     "audit:build-output": "node scripts/audit-build-output.mjs",
-    "audit:e2e:phase1-1": "node scripts/e2e-phase1-1-validation.mjs"
+    "audit:e2e:phase1-1": "node scripts/e2e-phase1-1-validation.mjs",
+    "audit:e2e:migration": "node scripts/migration/e2e-migration-verification.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -73,6 +77,8 @@
     "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
+    "playwright": "1.62.0",
+    "astro": "^5.4.2",
     "@eslint/js": "^9.9.1",
     "@types/diff": "^7.0.2",
     "@types/react": "^18.3.5",

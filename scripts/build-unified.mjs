@@ -45,6 +45,20 @@ mkdirSync(STAGING_IDE, { recursive: true });
 
 // 2. Build Astro Marketing Site
 console.log('\n[2/6] Building Astro marketing site (apps/marketing)...');
+const marketingNodeModules = join(APPS_MARKETING_DIR, 'node_modules');
+if (!existsSync(marketingNodeModules)) {
+  console.log('  -> apps/marketing/node_modules not found. Running npm install in workspace...');
+  try {
+    execSync('npm install --prefix apps/marketing', {
+      cwd: ROOT_DIR,
+      stdio: 'inherit',
+      env: { ...process.env, NODE_ENV: 'production' },
+    });
+  } catch (err) {
+    console.warn('  -> Note: npm install --prefix apps/marketing note:', err.message);
+  }
+}
+
 try {
   execSync('npm run build', {
     cwd: APPS_MARKETING_DIR,

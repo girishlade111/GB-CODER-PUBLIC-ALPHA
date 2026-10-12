@@ -1,0 +1,685 @@
+{
+  "timestamp": "2026-10-12T20:11:06.749Z",
+  "durationMs": 16281,
+  "scenariosCount": {
+    "total": 25,
+    "passed": 25,
+    "failed": 0
+  },
+  "acceptanceCriteriaCount": {
+    "total": 40,
+    "passed": 39,
+    "blocked": 1,
+    "failed": 0
+  },
+  "scenarios": {
+    "SCENARIO M01": {
+      "id": "SCENARIO M01",
+      "title": "Fresh browser with no legacy worker",
+      "status": "PASS",
+      "details": {
+        "initialRegistrations": [],
+        "hasInitialController": false
+      },
+      "timestamp": "2026-10-12T20:10:51.324Z"
+    },
+    "SCENARIO M02": {
+      "id": "SCENARIO M02",
+      "title": "Legacy worker installed and active",
+      "status": "PASS",
+      "details": {
+        "scope": "http://localhost:4179/",
+        "activeScript": "http://localhost:4179/sw.js",
+        "state": "activated"
+      },
+      "timestamp": "2026-10-12T20:10:52.666Z"
+    },
+    "SCENARIO M03": {
+      "id": "SCENARIO M03",
+      "title": "Legacy worker actively controlling document",
+      "status": "PASS",
+      "details": {
+        "hasController": true,
+        "controllerScript": "http://localhost:4179/sw.js",
+        "controllerState": "activated"
+      },
+      "timestamp": "2026-10-12T20:10:52.896Z"
+    },
+    "SCENARIO M04": {
+      "id": "SCENARIO M04",
+      "title": "Old cached HTML returned at /",
+      "status": "PASS",
+      "details": {
+        "cacheCount": 2,
+        "cacheNames": [
+          "workbox-precache-v2-http://localhost:4179/",
+          "google-fonts-cache"
+        ]
+      },
+      "timestamp": "2026-10-12T20:10:52.925Z"
+    },
+    "SCENARIO M05": {
+      "id": "SCENARIO M05",
+      "title": "Browser refresh after switching builds",
+      "status": "PASS",
+      "details": {
+        "title": "GB Coder — In-Browser IDE & Code Studio | LadeStack",
+        "isAstroMarketing": true,
+        "navCount": 1
+      },
+      "timestamp": "2026-10-12T20:10:53.957Z"
+    },
+    "SCENARIO M06": {
+      "id": "SCENARIO M06",
+      "title": "Legacy app tab remains open during upgrade",
+      "status": "PASS",
+      "details": {
+        "navCount": 1
+      },
+      "timestamp": "2026-10-12T20:10:53.957Z"
+    },
+    "SCENARIO M07": {
+      "id": "SCENARIO M07",
+      "title": "Two or more browser tabs remain open",
+      "status": "PASS",
+      "details": {
+        "tabBMarketing": true,
+        "tabCReactApp": true
+      },
+      "timestamp": "2026-10-12T20:10:56.334Z"
+    },
+    "SCENARIO M24": {
+      "id": "SCENARIO M24",
+      "title": "Old Service Worker registration retirement",
+      "status": "PASS",
+      "details": {
+        "rootRegRetired": true,
+        "swRegistrationsAfter": [
+          {
+            "scope": "http://localhost:4179/app/",
+            "activeScript": null,
+            "installing": true,
+            "waiting": false
+          }
+        ]
+      },
+      "timestamp": "2026-10-12T20:10:56.340Z"
+    },
+    "SCENARIO M10": {
+      "id": "SCENARIO M10",
+      "title": "Old root cache cleanup",
+      "status": "PASS",
+      "details": {
+        "cacheNames": [
+          "google-fonts-cache",
+          "workbox-precache-v2-http://localhost:4179/app/"
+        ]
+      },
+      "timestamp": "2026-10-12T20:10:56.352Z"
+    },
+    "SCENARIO M16": {
+      "id": "SCENARIO M16",
+      "title": "New /app direct navigation",
+      "status": "PASS",
+      "details": {
+        "appMounted": true
+      },
+      "timestamp": "2026-10-12T20:10:56.900Z"
+    },
+    "SCENARIO M09": {
+      "id": "SCENARIO M09",
+      "title": "New /app Service Worker installation",
+      "status": "PASS",
+      "details": {
+        "allRegs": [
+          "http://localhost:4179/app/"
+        ],
+        "appRegScope": "http://localhost:4179/app/",
+        "appScript": null
+      },
+      "timestamp": "2026-10-12T20:10:56.900Z"
+    },
+    "SCENARIO M11": {
+      "id": "SCENARIO M11",
+      "title": "New /app cache preservation",
+      "status": "PASS",
+      "details": {
+        "cacheInventoryAfter": [
+          "google-fonts-cache",
+          "workbox-precache-v2-http://localhost:4179/app/"
+        ]
+      },
+      "timestamp": "2026-10-12T20:10:56.900Z"
+    },
+    "SCENARIO M08": {
+      "id": "SCENARIO M08",
+      "title": "Browser Back / Forward after migration",
+      "status": "PASS",
+      "details": {
+        "backIsMarketing": true,
+        "forwardIsApp": true
+      },
+      "timestamp": "2026-10-12T20:10:57.533Z"
+    },
+    "SCENARIO M14": {
+      "id": "SCENARIO M14",
+      "title": "Repeated reloads after successful upgrade",
+      "status": "PASS",
+      "details": {
+        "reloads": 5
+      },
+      "timestamp": "2026-10-12T20:10:58.365Z"
+    },
+    "SCENARIO M15": {
+      "id": "SCENARIO M15",
+      "title": "Old app deep-link navigation (/ide)",
+      "status": "PASS",
+      "details": {
+        "ideDeepLinkMounted": true
+      },
+      "timestamp": "2026-10-12T20:10:58.499Z"
+    },
+    "SCENARIO M20": {
+      "id": "SCENARIO M20",
+      "title": "IndexedDB record integrity",
+      "status": "PASS",
+      "details": {
+        "beforeProjectCount": 4,
+        "afterProjectCount": 4,
+        "beforeFileCount": 122,
+        "afterFileCount": 122
+      },
+      "timestamp": "2026-10-12T20:10:58.647Z"
+    },
+    "SCENARIO M21": {
+      "id": "SCENARIO M21",
+      "title": "112-file source integrity",
+      "status": "PASS",
+      "details": {
+        "fileCount": 112,
+        "fileMismatchCount": 0,
+        "sampleMatches": [
+          {
+            "path": ".env.example",
+            "status": "MATCH",
+            "hash": "6db15e0d94978e749cde5752ffb849d58409abebe597e092841908982a60b69b"
+          },
+          {
+            "path": ".gitignore",
+            "status": "MATCH",
+            "hash": "8e6469f8cf9c0fa8ad507daf82bf02c15f9f943cdddd805fe35722ce258a93da"
+          },
+          {
+            "path": "LICENSE",
+            "status": "MATCH",
+            "hash": "894383d2362d347fd7c70edb8ce8fe756e1d1097cfe459af1af4696c66f44a6c"
+          },
+          {
+            "path": "README.md",
+            "status": "MATCH",
+            "hash": "e348cc57d055c79fb986c61c2e1e1fa30ef7bbf9190dbc407a35f7fbee9f273f"
+          },
+          {
+            "path": "assets/🎨-palette.json",
+            "status": "MATCH",
+            "hash": "4f2896a396633f0fb3c28b21cfcc8ec10f8f9cdab7526c23aebbaf00acb4c152"
+          }
+        ]
+      },
+      "timestamp": "2026-10-12T20:10:58.650Z"
+    },
+    "SCENARIO M17": {
+      "id": "SCENARIO M17",
+      "title": "Project Dashboard reopening",
+      "status": "PASS",
+      "details": {
+        "projectCount": 4
+      },
+      "timestamp": "2026-10-12T20:10:58.650Z"
+    },
+    "SCENARIO M18": {
+      "id": "SCENARIO M18",
+      "title": "Advanced IDE reopening",
+      "status": "PASS",
+      "details": {
+        "editorStyle": "vscode"
+      },
+      "timestamp": "2026-10-12T20:10:58.650Z"
+    },
+    "SCENARIO M19": {
+      "id": "SCENARIO M19",
+      "title": "Active project pointer preservation (gb-coder-active-project-id)",
+      "status": "PASS",
+      "details": {
+        "activeProjectId": "proj-synthetic-d-112",
+        "expected": "proj-synthetic-d-112",
+        "legacyKeyAlsoSet": true
+      },
+      "timestamp": "2026-10-12T20:10:58.650Z"
+    },
+    "SCENARIO M22": {
+      "id": "SCENARIO M22",
+      "title": "editorStyle preservation",
+      "status": "PASS",
+      "details": {
+        "projDEditorStyle": "vscode",
+        "projAEditorStyle": "plain"
+      },
+      "timestamp": "2026-10-12T20:10:58.650Z"
+    },
+    "SCENARIO M23": {
+      "id": "SCENARIO M23",
+      "title": "Backup ZIP compatibility after upgrade",
+      "status": "PASS",
+      "details": {
+        "note": "Export archive schema compatible with IndexedDB schema version 1"
+      },
+      "timestamp": "2026-10-12T20:10:58.651Z"
+    },
+    "SCENARIO M25": {
+      "id": "SCENARIO M25",
+      "title": "No unrelated cache or storage deletion",
+      "status": "PASS",
+      "details": {
+        "localStorageIntact": true
+      },
+      "timestamp": "2026-10-12T20:10:58.651Z"
+    },
+    "SCENARIO M13": {
+      "id": "SCENARIO M13",
+      "title": "Upgrade interrupted by offline/network failure",
+      "status": "PASS",
+      "details": {
+        "offlineIdbCheck": 4
+      },
+      "timestamp": "2026-10-12T20:10:58.730Z"
+    },
+    "SCENARIO M12": {
+      "id": "SCENARIO M12",
+      "title": "Browser completely closed and reopened",
+      "status": "PASS",
+      "details": {
+        "reopenedMarketing": true,
+        "count": 4,
+        "activeProjectId": "proj-synthetic-d-112"
+      },
+      "timestamp": "2026-10-12T20:11:00.112Z"
+    }
+  },
+  "acceptanceCriteria": {
+    "AC-01": {
+      "id": "AC-01",
+      "title": "Correct full production Git SHA verified",
+      "status": "PASS",
+      "details": {
+        "sha": "8ebbc5048d4c73b5ca906b6efa9a65ca88ceb36f"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-02": {
+      "id": "AC-02",
+      "title": "Reported incorrect SHA identified",
+      "status": "PASS",
+      "details": {
+        "incorrectSha": "8ebbc50fe0a91f5e8a6ebcaea7fe7d1f50c05562"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-03": {
+      "id": "AC-03",
+      "title": "GitHub deployment ID verified",
+      "status": "PASS",
+      "details": {
+        "id": 7014429958,
+        "status": "success"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-04": {
+      "id": "AC-04",
+      "title": "Actual Vercel deployment ID verified",
+      "status": "BLOCKED",
+      "details": {
+        "reason": "VERCEL_DEPLOYMENT_METADATA_BLOCKED"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-05": {
+      "id": "AC-05",
+      "title": "Rollback target verified",
+      "status": "PASS",
+      "details": {
+        "targetSha": "8ebbc5048d4c73b5ca906b6efa9a65ca88ceb36f",
+        "deploymentId": 7014429958
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-06": {
+      "id": "AC-06",
+      "title": "Rollback procedure documented",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-07": {
+      "id": "AC-07",
+      "title": "Old production build reproducible",
+      "status": "PASS",
+      "details": {
+        "status": "BUILT_IN_ISOLATION"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-08": {
+      "id": "AC-08",
+      "title": "New release build reproducible",
+      "status": "PASS",
+      "details": {
+        "status": "BUILT_IN_ISOLATION"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-09": {
+      "id": "AC-09",
+      "title": "Same-origin test server operational",
+      "status": "PASS",
+      "details": {
+        "origin": "http://localhost:4179"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-10": {
+      "id": "AC-10",
+      "title": "Real legacy root worker installed",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-11": {
+      "id": "AC-11",
+      "title": "Legacy root worker activated",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-12": {
+      "id": "AC-12",
+      "title": "Legacy root worker controls page",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-13": {
+      "id": "AC-13",
+      "title": "Old app projects saved to IndexedDB",
+      "status": "PASS",
+      "details": {
+        "count": 4
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-14": {
+      "id": "AC-14",
+      "title": "Pre-upgrade storage snapshot captured",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-15": {
+      "id": "AC-15",
+      "title": "Old-to-new artifact switch succeeds",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-16": {
+      "id": "AC-16",
+      "title": "Migration worker lifecycle observed",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-17": {
+      "id": "AC-17",
+      "title": "Legacy root worker retires safely",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-18": {
+      "id": "AC-18",
+      "title": "Astro homepage loads after migration",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-19": {
+      "id": "AC-19",
+      "title": "New React app opens at /app",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-20": {
+      "id": "AC-20",
+      "title": "New /app scoped worker works",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-21": {
+      "id": "AC-21",
+      "title": "Legacy caches handled safely",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-22": {
+      "id": "AC-22",
+      "title": "New /app caches preserved",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-23": {
+      "id": "AC-23",
+      "title": "No infinite reload loop",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-24": {
+      "id": "AC-24",
+      "title": "Multi-tab migration safe",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-25": {
+      "id": "AC-25",
+      "title": "Offline interruption recoverable",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-26": {
+      "id": "AC-26",
+      "title": "IndexedDB schemas preserved",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-27": {
+      "id": "AC-27",
+      "title": "Project records preserved",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-28": {
+      "id": "AC-28",
+      "title": "112-file hashes match",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-29": {
+      "id": "AC-29",
+      "title": "Editor preference preserved",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-30": {
+      "id": "AC-30",
+      "title": "Active project pointer preserved (gb-coder-active-project-id)",
+      "status": "PASS",
+      "details": {
+        "key": "gb-coder-active-project-id",
+        "baseline": "proj-synthetic-d-112",
+        "postMigration": "proj-synthetic-d-112",
+        "rollbackOld": "proj-synthetic-d-112",
+        "recoveredNew": "proj-synthetic-d-112"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-31": {
+      "id": "AC-31",
+      "title": "Backup/Restore compatible",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-32": {
+      "id": "AC-32",
+      "title": "Legacy deep links remain compatible",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-33": {
+      "id": "AC-33",
+      "title": "Old-new-old rollback simulated",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-34": {
+      "id": "AC-34",
+      "title": "No LocalStorage deletion",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-35": {
+      "id": "AC-35",
+      "title": "No unrelated Cache Storage deletion",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-36": {
+      "id": "AC-36",
+      "title": "No production data touched",
+      "status": "PASS",
+      "details": {
+        "verified": "LOCAL_DISPOSABLE_ONLY"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-37": {
+      "id": "AC-37",
+      "title": "No production deployment executed",
+      "status": "PASS",
+      "details": {
+        "verified": "NONE_EXECUTED"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-38": {
+      "id": "AC-38",
+      "title": "No Git push executed",
+      "status": "PASS",
+      "details": {
+        "verified": "NONE_EXECUTED"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-39": {
+      "id": "AC-39",
+      "title": "No merge executed",
+      "status": "PASS",
+      "details": {
+        "verified": "NONE_EXECUTED"
+      },
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    },
+    "AC-40": {
+      "id": "AC-40",
+      "title": "Final report completed",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-10-12T20:11:06.749Z"
+    }
+  },
+  "diagnostics": {
+    "totalConsoleLogs": 11,
+    "errorLogs": [
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://localhost:4179/"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://localhost:4179/"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://localhost:4179/"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://localhost:4179/app"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://localhost:4179/app/ide"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://localhost:4179/app/ide"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://localhost:4179/app/ide"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://localhost:4179/app/ide"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://localhost:4179/app/ide"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://localhost:4179/app/ide"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://localhost:4179/ide"
+      }
+    ]
+  }
+}
