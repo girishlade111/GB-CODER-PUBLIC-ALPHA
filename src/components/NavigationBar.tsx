@@ -20,6 +20,7 @@ import {
 import { PROJECT_TYPE_LABEL, ProjectType } from '../types/files';
 
 import Tooltip from './ui/Tooltip';
+import LadeStackLogo from './LadeStackLogo';
 
 interface NavigationBarProps {
   onAutoSaveToggle: () => void;
@@ -183,19 +184,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 title={onNavigateHome ? 'All projects' : undefined}
                 data-testid={onNavigateHome ? 'nav-home' : undefined}
               >
-                <img
-                  src="/tghjkl.jpeg"
-                  alt="GB Coder Logo"
-                  className="h-6 w-6 rounded-md object-contain sm:h-8 sm:w-8 lg:h-9 lg:w-9"
-                />
-                {/*
-                  Wordmark in the display serif — the brand reads as a wordmark,
-                  not a label, so it takes the editorial voice at weight 500
-                  with negative tracking rather than bold sans.
-                */}
-                <span className="font-display truncate text-xl tracking-tight text-content-primary sm:text-2xl">
-                  GB Coder
-                </span>
+                <LadeStackLogo subtitle="GB Coder" size={28} />
               </div>
             </div>
 
