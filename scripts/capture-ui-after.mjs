@@ -29,6 +29,16 @@ async function capture() {
   // 1. Normal Mode (LadeStack Dark Canvas)
   console.log('1. Capturing Normal Mode...');
   await page.goto(`${TARGET_URL}/`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1000);
+  const newProj = page.locator('button:has-text("New Project")').first();
+  if (await newProj.isVisible().catch(() => false)) {
+    await newProj.click().catch(() => {});
+    await page.waitForTimeout(500);
+    const createBtn = page.locator('button:has-text("Create project"), button:has-text("Create")').first();
+    if (await createBtn.isVisible().catch(() => false)) {
+      await createBtn.click().catch(() => {});
+    }
+  }
   await page.waitForTimeout(2000);
   await page.screenshot({ path: join(OUT_DIR, '01_normal_mode.png'), fullPage: false });
 
