@@ -1,6 +1,9 @@
 {
   "name": "gb-coder",
   "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -73,6 +76,7 @@
     "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
+    "astro": "^5.4.2",
     "@eslint/js": "^9.9.1",
     "@types/diff": "^7.0.2",
     "@types/react": "^18.3.5",
