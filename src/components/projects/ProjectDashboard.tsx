@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Code2, FolderPlus, Loader2, PanelsTopLeft, Plus, Trash2, Upload } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
+import LadeStackLogo from '../LadeStackLogo';
 import type { EditorStyle, ProjectRecord } from '../../services/projects/projectDatabase';
 
 /**
