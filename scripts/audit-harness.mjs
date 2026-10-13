@@ -41,6 +41,8 @@ await build({
       export * from './src/services/backup/backupCrypto.ts';
       export * from './src/services/backup/backupExportService.ts';
       export * from './src/services/backup/backupRestoreService.ts';
+      export * from './src/services/snapshotService.ts';
+      export * from './src/types/files.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',

@@ -37,6 +37,7 @@
     "preview:combined": "node scripts/preview-combined.mjs",
     "vercel-build": "node scripts/build-unified.mjs",
     "audit:editor-persistence": "node scripts/editor-persistence-tests.mjs",
+    "audit:workspace-reliability": "node scripts/workspace-reliability-tests.mjs",
     "audit:e2e:persistence": "node scripts/e2e-editor-persistence.mjs",
     "audit:integration": "node scripts/audit-integration.mjs",
     "audit:routes": "node scripts/audit-routes.mjs",
