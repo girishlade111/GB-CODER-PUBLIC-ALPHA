@@ -161,3 +161,22 @@ pending (and note E2 automation above is itself pending access).
    request Stage E3 (merge + Production) authorization separately.
 
 **Verdict: `STAGE_E2_PREVIEW_BLOCKED`**
+
+---
+
+## Resume verification (E2-continued, no access supplied)
+
+- PR #31 still OPEN, MERGEABLE, head `275b769`, base `53ba1e4`; no duplicate PR.
+- Remote branch exactly `275b7696b6fe533cd9b13ce0669115352ec3a612`;
+  `origin/main` exactly `53ba1e454f76c7408aecd7b57c4ede3b07620b0e`.
+- Local tree: branch HEAD `5fbd4b9` (prior E2 report commit) on top of the
+  approved candidate; working tree clean apart from preserved untracked
+  files; no source changes since approval.
+- Access avenues checked: no owner shareable link or authenticated session
+  was supplied; no bypass secret in environment; no Vercel CLI auth.
+  Nothing was created, regenerated, exposed, or reconfigured.
+- SSO wall re-probed (fresh nonces, all routes 302 → `vercel.com/sso-api`,
+  no COOP/COEP observable). Blocker persists through no fault of the code.
+- No pushes, merges, deployments, or config changes performed in this
+  resume. Verdict stands: **`STAGE_E2_PREVIEW_BLOCKED`** — unblock path is
+  unchanged (owner-provided access → rerun E2 §§5–12 verbatim).
