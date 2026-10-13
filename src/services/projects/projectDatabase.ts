@@ -430,10 +430,17 @@ export const saveProjectFiles = (
   });
 };
 
-/** Patches a project's metadata, leaving its files alone. */
+/** Patches a project's metadata, leaving its files alone.
+ *
+ * The patch is allowlisted at runtime: `id`, `createdAt` and the derived
+ * `fileCount` are internally controlled and can never be overwritten through
+ * this entry point, even via an untyped caller. Legitimate updates (name,
+ * last-opened, editor preference, project type, entry) pass through, with
+ * enum fields re-sanitized the same way creation does.
+ */
 export const updateProject = (
   id: string,
-  patch: Partial<Omit<ProjectRecord, 'id' | 'createdAt'>>,
+  patch: Partial<Pick<ProjectRecord, 'name' | 'lastOpenedAt' | 'editorStyle' | 'projectType' | 'entry'>>,
 ): Promise<ProjectRecord | null> =>
   enqueue(() =>
     withTransaction<ProjectRecord | null>(
@@ -446,7 +453,21 @@ export const updateProject = (
         );
         if (!record) return null;
 
-        const updated: ProjectRecord = { ...record, ...patch };
+        const safePatch: Partial<ProjectRecord> = {};
+        if (typeof patch.name === 'string') safePatch.name = patch.name;
+        if (typeof patch.lastOpenedAt === 'number') safePatch.lastOpenedAt = patch.lastOpenedAt;
+        if (typeof patch.entry === 'string') safePatch.entry = patch.entry;
+        if (patch.editorStyle !== undefined) {
+          safePatch.editorStyle = patch.editorStyle === 'vscode' ? 'vscode' : 'plain';
+        }
+        if (patch.projectType !== undefined) {
+          safePatch.projectType =
+            patch.projectType === 'react' || patch.projectType === 'vue'
+              ? patch.projectType
+              : 'plain';
+        }
+
+        const updated: ProjectRecord = { ...record, ...safePatch };
         projects.put(updated);
         return updated;
       },
@@ -462,6 +483,11 @@ export const touchProject = (id: string): Promise<ProjectRecord | null> =>
  *
  * Both stores in one transaction: a half-deleted project would leave file records
  * that nothing can ever reach or clean up.
+ *
+ * The active-project pointer (`gb-coder-active-project-id`) is cleared only
+ * after the delete transaction has committed, and only when it still names
+ * this project. A failed or aborted transaction resolves `null` and preserves
+ * the pointer; a pointer naming any other project is left untouched.
  */
 export const deleteProject = (id: string): Promise<void> =>
   enqueue(() =>
@@ -473,7 +499,11 @@ export const deleteProject = (id: string): Promise<void> =>
       const files = transaction.objectStore(FILES_STORE);
       for (const key of keys) files.delete(key);
     }),
-  ).then(() => undefined);
+  ).then((res) => {
+    // withTransaction resolves its work value (undefined) on commit and null
+    // on any failure — never treat failure as a successful deletion.
+    if (res !== null && readActiveProjectId() === id) writeActiveProjectId(null);
+  });
 
 /**
  * Suggests the next default name, e.g. `Untitled Project 3`.
@@ -507,24 +537,59 @@ export const updateProjectEditorPreference = (
 /**
  * Duplicates an existing project under a fresh UUID, copying all its files
  * and preserving its editorStyle, projectType, and other metadata.
+ *
+ * The read of the original record, the read of its files, and the write of the
+ * copy all happen inside ONE readwrite transaction over both stores. A delete
+ * racing the duplicate therefore either commits first (the duplicate then
+ * sees nothing and creates nothing) or lands after the copy is complete —
+ * never in between, so an incomplete file-less copy can no longer resurrect
+ * a deleted project.
  */
-export const duplicateProject = async (
+export const duplicateProject = (
   id: string,
   newName?: string,
-): Promise<ProjectRecord | null> => {
-  const original = await getProject(id);
-  if (!original) return null;
-  const files = await readProjectFiles(id);
-  const newId = createId();
-  const now = Date.now();
-  const duplicatedRecord: ProjectRecord = {
-    ...original,
-    id: newId,
-    name: newName || `${original.name} (Copy)`,
-    createdAt: now,
-    lastOpenedAt: now,
-    fileCount: files.length,
-  };
-  return restoreProject(duplicatedRecord, files);
-};
+): Promise<ProjectRecord | null> =>
+  enqueue(() =>
+    withTransaction<ProjectRecord | null>(
+      [PROJECTS_STORE, FILES_STORE],
+      'readwrite',
+      async (transaction) => {
+        const projects = transaction.objectStore(PROJECTS_STORE);
+        const original = await awaitRequest(
+          projects.get(id) as IDBRequest<ProjectRecord | undefined>,
+        );
+        // Deleted (or never existed) before our turn: create nothing.
+        if (!original) return null;
+
+        const index = transaction.objectStore(FILES_STORE).index(PROJECT_ID_INDEX);
+        const stored = await awaitRequest(
+          index.getAll(id) as IDBRequest<StoredFile[]>,
+        );
+
+        // Synchronous ID generation only — no async gap may separate the
+        // reads above from the writes below, or the transaction goes idle.
+        const newId = createId();
+        const now = Date.now();
+        const duplicatedRecord: ProjectRecord = {
+          ...original,
+          id: newId,
+          name: newName || `${original.name} (Copy)`,
+          createdAt: now,
+          lastOpenedAt: now,
+          fileCount: stored.length,
+          editorStyle: original.editorStyle === 'vscode' ? 'vscode' : 'plain',
+          projectType:
+            original.projectType === 'react' || original.projectType === 'vue'
+              ? original.projectType
+              : 'plain',
+        };
+        projects.put(duplicatedRecord);
+        const files = transaction.objectStore(FILES_STORE);
+        for (const file of stored) {
+          files.put({ ...file, projectId: newId });
+        }
+        return duplicatedRecord;
+      },
+    ),
+  ).then((record) => record ?? null);
 

@@ -141,6 +141,81 @@ describe('Phase 2.1A — defect reproduction (W-tests: red before fix)', () => {
     assert.equal(normalizePath('src/./a.jsx'), 'src/a.jsx');
   });
 
+  test('W04b: dot normalization preserves traversal signals, slashes, unicode, nesting', () => {
+    assert.equal(normalizePath('./src/components/./Button.tsx'), 'src/components/Button.tsx');
+    assert.equal(normalizePath('src\\win\\style.css'), 'src/win/style.css');
+    // '..' must survive verbatim so validateFilePath keeps rejecting it.
+    assert.equal(normalizePath('../../evil.js'), '../../evil.js');
+    assert.equal(validateFilePath('../../evil.js', 'react', []).valid, false);
+    assert.equal(validateFilePath('src/../evil.js', 'react', []).valid, false);
+    // Repeat slashes still collapse; trailing slash still signals a directory.
+    assert.equal(normalizePath('a//b.jsx'), 'a/b.jsx');
+    assert.equal(validateFilePath('foo.jsx/', 'react', []).valid, false);
+    // Unicode and deep nesting pass through untouched.
+    assert.equal(normalizePath('src/日本語/café.jsx'), 'src/日本語/café.jsx');
+    assert.equal(normalizePath('a/b/c/d/e/f/g.jsx'), 'a/b/c/d/e/f/g.jsx');
+    assert.equal(normalizePath(''), '');
+  });
+
+  test('W03b: valid and legacy recovery records still restore; malformed variants rejected', () => {
+    const valid = {
+      project: {
+        projectType: 'react',
+        files: [{ path: 'src/a.jsx', content: 'aaa', language: 'jsx' }],
+      },
+      openPaths: ['src/a.jsx'],
+      activePath: 'src/a.jsx',
+      externalLibraries: [],
+    };
+    snapshotService.saveAutoSave(valid);
+    const back = snapshotService.getAutoSave();
+    assert.ok(back);
+    assert.equal(back.project.files[0].content, 'aaa');
+
+    const bad = [
+      'not json{{{',
+      'null',
+      '[]',
+      '{}',
+      '{"nope":true}',
+      JSON.stringify({ ...valid, project: { projectType: 'react', files: [{ path: '', content: 'x' }] } }),
+      JSON.stringify({ ...valid, project: { projectType: 'react', files: [{ path: 'a.jsx' }] } }),
+      JSON.stringify({ ...valid, openPaths: 'src/a.jsx' }),
+      JSON.stringify({ ...valid, openPaths: [42] }),
+      JSON.stringify({ ...valid, activePath: 42 }),
+      JSON.stringify({ ...valid, externalLibraries: {} }),
+    ];
+    for (const raw of bad) {
+      globalThis.localStorage.setItem(AUTOSAVE_KEY, raw);
+      assert.equal(snapshotService.getAutoSave(), null, `accepted malformed record: ${raw.slice(0, 60)}`);
+      // The raw bytes must be retained, never wiped by validation.
+      assert.ok(globalThis.localStorage.getItem(AUTOSAVE_KEY) !== null);
+    }
+  });
+
+  test('W05b: failed deletion preserves the active-project pointer', async () => {
+    const proj = await createProject({
+      name: 'keep-me',
+      projectType: 'plain',
+      editorStyle: 'plain',
+      files: [{ path: 'index.html', content: 'x' }],
+    });
+    assert.ok(proj);
+    writeActiveProjectId(proj.id);
+    const realIDB = globalThis.indexedDB;
+    globalThis.indexedDB = undefined;
+    try {
+      await deleteProject(proj.id); // resolves (never rejects), transaction failed
+      assert.equal(readActiveProjectId(), proj.id);
+    } finally {
+      globalThis.indexedDB = realIDB;
+    }
+    // Store is healthy again: project and pointer intact, deletable for real.
+    assert.ok(await getProject(proj.id));
+    await deleteProject(proj.id);
+    assert.equal(readActiveProjectId(), null);
+  });
+
   test('W05: deleteProject() must not leave a dangling active-project pointer', async () => {
     const proj = await createProject({
       name: 'doomed',
@@ -157,8 +232,7 @@ describe('Phase 2.1A — defect reproduction (W-tests: red before fix)', () => {
     assert.equal(readActiveProjectId(), null);
   });
 
-  test('W06: updateProject() must not allow fileCount/id clobber via patch', async () => {
-    const proj = await createProject({
+  test('W06: updateProject() must not allow fileCount/id clobber via patch', async () => {    const proj = await createProject({
       name: 'victim',
       projectType: 'plain',
       editorStyle: 'plain',
@@ -175,6 +249,29 @@ describe('Phase 2.1A — defect reproduction (W-tests: red before fix)', () => {
     assert.equal(updated.id, proj.id);
   });
 
+  test('W06b: legitimate metadata updates still apply and fileCount tracks the file store', async () => {
+    const proj = await createProject({
+      name: 'legit',
+      projectType: 'react',
+      editorStyle: 'plain',
+      files: [{ path: 'src/a.jsx', content: 'aaa' }],
+    });
+    assert.ok(proj);
+    const renamed = await updateProject(proj.id, { name: 'legit-renamed', editorStyle: 'vscode' });
+    assert.ok(renamed);
+    assert.equal(renamed.name, 'legit-renamed');
+    assert.equal(renamed.editorStyle, 'vscode');
+    assert.equal(renamed.projectType, 'react');
+    const snap = await saveProjectFiles(proj.id, [
+      { path: 'src/a.jsx', content: 'aaa' },
+      { path: 'src/b.jsx', content: 'bbb' },
+    ], null);
+    assert.ok(snap);
+    const after = await updateProject(proj.id, { lastOpenedAt: Date.now() });
+    assert.ok(after);
+    assert.equal(after.fileCount, (await readProjectFiles(proj.id)).length);
+  });
+
   test('W07: duplicateProject() concurrent with deleteProject() must never yield a file-less copy', async () => {
     const proj = await createProject({
       name: 'original',
@@ -186,17 +283,61 @@ describe('Phase 2.1A — defect reproduction (W-tests: red before fix)', () => {
       ],
     });
     assert.ok(proj);
-    // FIFO queue order is deterministic: get(id) -> delete(id) -> readFiles(id)
-    // -> restore(copy, []) — the copy resurrects metadata with zero files
-    // (projectDatabase.ts:511-529, three non-atomic queued ops).
+    // Order 1 — duplicate queued before delete: the copy must be complete.
     const [copy] = await Promise.all([duplicateProject(proj.id), deleteProject(proj.id)]);
-    if (copy !== null) {
-      const copyFiles = await readProjectFiles(copy.id);
-      assert.ok(
-        copyFiles.length > 0,
-        `duplicate of deleted project produced a file-less copy (${copy.id})`,
-      );
-      await deleteProject(copy.id);
+    assert.ok(copy, 'duplicate queued first must still produce the copy');
+    const copyFiles = await readProjectFiles(copy.id);
+    assert.deepEqual(
+      copyFiles.map((f) => [f.path, f.content]).sort(),
+      [['src/a.jsx', 'aaa'], ['src/b.jsx', 'bbb']],
+    );
+    await deleteProject(copy.id);
+  });
+
+  test('W07b: delete queued before duplicate yields no copy at all', async () => {
+    const proj = await createProject({
+      name: 'gone-first',
+      projectType: 'react',
+      editorStyle: 'vscode',
+      files: [{ path: 'src/a.jsx', content: 'aaa' }],
+    });
+    assert.ok(proj);
+    // Order 2 — delete commits first: duplicate must see nothing and create nothing.
+    const before = (await listProjects()).length;
+    const [delRes, copy] = await Promise.all([deleteProject(proj.id), duplicateProject(proj.id)]);
+    assert.equal(copy, null);
+    assert.equal((await listProjects()).length, before - 1);
+    assert.equal(delRes, undefined);
+  });
+
+  test('W07c: duplicating a nonexistent project creates nothing', async () => {
+    const before = (await listProjects()).length;
+    assert.equal(await duplicateProject('ghost-id'), null);
+    assert.equal((await listProjects()).length, before);
+  });
+
+  test('W07d: duplicating a 112-file project is byte-for-byte identical', async () => {
+    const files = [];
+    for (let i = 0; i < 112; i++) {
+      const dir = `src/mod${Math.floor(i / 16)}`;
+      const name = i % 17 === 0 ? `ünìcode-${i}.jsx` : `file${i}.jsx`;
+      files.push({ path: `${dir}/${name}`, content: `// file ${i}\nexport const v${i} = ${i};\n` });
+    }
+    const expected = new Map(files.map((f) => [f.path, sha256(f.content)]));
+    const proj = await createProject({
+      name: 'dup-112',
+      projectType: 'react',
+      editorStyle: 'vscode',
+      files,
+    });
+    assert.ok(proj);
+    const copy = await duplicateProject(proj.id);
+    assert.ok(copy);
+    assert.equal(copy.fileCount, 112);
+    const back = await readProjectFiles(copy.id);
+    assert.equal(back.length, 112);
+    for (const b of back) {
+      assert.equal(sha256(b.content), expected.get(b.path));
     }
   });
 });

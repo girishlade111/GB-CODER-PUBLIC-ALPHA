@@ -4709,12 +4709,20 @@ function App() {
           lastSavedAt={sessionRecoveryData.lastModified}
           onRestore={() => {
             setFileProject(sessionRecoveryData.project);
-            workspace.openFile(sessionRecoveryData.activePath || '');
+            // A null/empty path must never become a literal '' tab.
+            if (sessionRecoveryData.activePath) {
+              workspace.openFile(sessionRecoveryData.activePath);
+            }
             setSessionRecoveryData(null);
             toast.success('Session restored');
           }}
           onStartFresh={() => {
-            snapshotService.backupAutoSave();
+            // backupAutoSave preserves the original slot on storage failure and
+            // reports false — never claim a cleanup that did not happen.
+            const backedUp = snapshotService.backupAutoSave();
+            if (!backedUp) {
+              toast.error('Could not back up the unsaved session; it was kept in place.');
+            }
             setSessionRecoveryData(null);
           }}
         />

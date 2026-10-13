@@ -29,6 +29,8 @@ const {
   readProjectFiles,
   restoreProject,
   duplicateProject,
+  writeActiveProjectId,
+  readActiveProjectId,
   saveWorkspace,
   loadWorkspace,
   clearWorkspace,
@@ -648,7 +650,7 @@ describe('Phase 0.5.1 — Editor Persistence & Consistency Suite (T01 - T40)', (
       assert.equal(pFiles[0].path, 'proj-file.txt');
     });
 
-    test('T39: Deleting active project cleans up active pointer without corrupting other projects\' preferences', async () => {
+    test('T39: Deleting active project clears the gb-coder-active-project-id pointer without corrupting other projects\' preferences', async () => {
       const p1 = await createProject({
         name: 'surviving-vscode',
         editorStyle: 'vscode',
@@ -662,7 +664,24 @@ describe('Phase 0.5.1 — Editor Persistence & Consistency Suite (T01 - T40)', (
         files: [{ path: 'index.html', content: '2' }],
       });
 
+      // Point at the doomed project, delete it, and require the authoritative
+      // pointer to be cleared — a stale id must not survive the deletion.
+      writeActiveProjectId(p2.id);
+      assert.equal(readActiveProjectId(), p2.id);
       await deleteProject(p2.id);
+      assert.equal(readActiveProjectId(), null);
+
+      // Deleting an inactive project must preserve a pointer naming another one.
+      writeActiveProjectId(p1.id);
+      const p3 = await createProject({
+        name: 'inactive-victim',
+        editorStyle: 'plain',
+        projectType: 'plain',
+        files: [{ path: 'index.html', content: '3' }],
+      });
+      await deleteProject(p3.id);
+      assert.equal(readActiveProjectId(), p1.id);
+      writeActiveProjectId(null);
 
       const remaining = await getProject(p1.id);
       assert.ok(remaining);
