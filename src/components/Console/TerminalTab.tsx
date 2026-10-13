@@ -52,6 +52,13 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   const pendingFingerprintRef = useRef<string | null>(null);
   const restartDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRestartReasonRef = useRef<string | null>(null);
+  const isShellPromptReadyRef = useRef(false);
+  const pendingAutoStartCmdRef = useRef<{
+    cmd: string;
+    epoch: number;
+    termMessage?: string;
+  } | null>(null);
+  const shellPromptWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /** Active execution mode */
   const [mode, setMode] = useState<TerminalExecutionMode>(() => {
@@ -175,6 +182,59 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     }
   }, []);
 
+  /** Clears the shell prompt readiness watchdog timer. */
+  const clearShellPromptWatchdog = useCallback(() => {
+    if (shellPromptWatchdogRef.current) {
+      clearTimeout(shellPromptWatchdogRef.current);
+      shellPromptWatchdogRef.current = null;
+    }
+  }, []);
+
+  /**
+   * Dispatches a shell command once the interactive prompt (❯) is confirmed ready.
+   * If the prompt has already appeared, dispatches immediately without delay.
+   * Otherwise queues the command and arms a 15-second watchdog timer.
+   */
+  const dispatchWhenShellReady = useCallback(
+    (cmd: string, epoch: number, termMessage?: string) => {
+      const term = termRef.current;
+      const shell = webcontainerShellRef.current;
+
+      const isReady = isShellPromptReadyRef.current || webcontainerService.isShellReady();
+
+      if (isReady && shell) {
+        clearShellPromptWatchdog();
+        pendingAutoStartCmdRef.current = null;
+        if (termMessage && term) {
+          term.write(termMessage);
+        }
+        webcontainerService.setDevServerStarting(true);
+        isShellPromptReadyRef.current = false;
+        shell.write(`${cmd}\n`);
+        return;
+      }
+
+      // Queue command for dispatch upon prompt detection in onData
+      pendingAutoStartCmdRef.current = { cmd, epoch, termMessage };
+      clearShellPromptWatchdog();
+      shellPromptWatchdogRef.current = setTimeout(() => {
+        if (pendingAutoStartCmdRef.current && pendingAutoStartCmdRef.current.epoch === epoch) {
+          console.warn('[WebContainer] Shell prompt readiness watchdog triggered after 15s');
+          webcontainerService.setStartupStage('error', {
+            phase: 'boot',
+            message: 'Shell initialization timed out waiting for prompt',
+            timestamp: Date.now(),
+            recoverable: true,
+            retryAction: 'reboot_container',
+          });
+          webcontainerService.setDevServerStarting(false);
+          pendingAutoStartCmdRef.current = null;
+        }
+      }, 15000);
+    },
+    [clearShellPromptWatchdog],
+  );
+
   /** Spawns or reconnects WebContainer interactive PTY shell */
   const startWebContainerShell = useCallback(async (forceRestart = false) => {
     const term = termRef.current;
@@ -221,6 +281,31 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         rows: term.rows || 24,
         onData: (chunk) => {
           term.write(chunk);
+
+          // 0. Shell prompt readiness detection (❯ prompt in jsh)
+          if (chunk.includes('❯') || /[$#❯]\s*$/.test(chunk)) {
+            isShellPromptReadyRef.current = true;
+            clearShellPromptWatchdog();
+
+            if (pendingAutoStartCmdRef.current) {
+              const pending = pendingAutoStartCmdRef.current;
+              pendingAutoStartCmdRef.current = null;
+
+              if (pending.epoch === webcontainerService.getSessionEpoch()) {
+                if (pending.termMessage) {
+                  term.write(pending.termMessage);
+                }
+                webcontainerService.setDevServerStarting(true);
+                isShellPromptReadyRef.current = false;
+                const activeShell = webcontainerShellRef.current;
+                if (activeShell) {
+                  activeShell.write(`${pending.cmd}\n`);
+                } else {
+                  webcontainerService.writeToShell(`${pending.cmd}\n`);
+                }
+              }
+            }
+          }
 
           // 1. Package install success confirmation
           if (
@@ -339,27 +424,23 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
         if (check.needsInstall) {
           webcontainerService.setStartupStage('installing');
-          setTimeout(() => {
-            if (startEpoch !== webcontainerService.getSessionEpoch()) return;
-            term.write(
-              `\r\n${ANSI.brightCyan}⚡ StackBlitz Auto-Start: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
-            );
-            webcontainerService.setDevServerStarting(true);
-            shell.write('npm install --prefer-offline && npm run dev\r');
-          }, 500);
+          dispatchWhenShellReady(
+            'npm install --prefer-offline && npm run dev',
+            startEpoch,
+            `\r\n${ANSI.brightCyan}⚡ StackBlitz Auto-Start: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
+          );
         } else {
           webcontainerService.setStartupStage('starting_server');
-          webcontainerService.setDevServerStarting(true);
-          setTimeout(() => {
-            if (startEpoch !== webcontainerService.getSessionEpoch()) return;
-            term.write(
-              `\r\n${ANSI.brightGreen}⚡ Fast Start: Dependencies verified in container. Launching dev server directly...${ANSI.reset}\r\n`,
-            );
-            shell.write('npm run dev\r');
-          }, 500);
+          dispatchWhenShellReady(
+            'npm run dev',
+            startEpoch,
+            `\r\n${ANSI.brightGreen}⚡ Fast Start: Dependencies verified in container. Launching dev server directly...${ANSI.reset}\r\n`,
+          );
         }
       }
     } catch (err) {
+      clearShellPromptWatchdog();
+      pendingAutoStartCmdRef.current = null;
       const msg = err instanceof Error ? err.message : String(err);
       term.write(`\r\n${ANSI.red}✖ Failed to start WebContainer: ${msg}${ANSI.reset}\r\n`);
       webcontainerService.setStartupStage('error', {
@@ -378,7 +459,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         triggerDevServerRestart(pendingReason);
       }
     }
-  }, [autoStartProject]);
+  }, [autoStartProject, dispatchWhenShellReady, clearShellPromptWatchdog]);
 
   /** Triggers dev server restart and dependencies installation */
   const triggerDevServerRestart = useCallback(
@@ -401,6 +482,9 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
         if (shell) {
           // Send Ctrl+C to terminate any running process (e.g. Vite or node dev server)
+          isShellPromptReadyRef.current = false;
+          clearShellPromptWatchdog();
+          pendingAutoStartCmdRef.current = null;
           shell.write('\x03\r');
           webcontainerService.setDevServerStarting(true);
           const currentProj = projectRef.current;
@@ -436,28 +520,26 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
               if (check.needsInstall) {
                 webcontainerService.setStartupStage('installing');
-                if (term) {
-                  term.write(
-                    `\r\n${ANSI.brightCyan}⚡ [${reason}]: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
-                  );
-                }
-                setTimeout(() => {
-                  if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
-                  shell.write('npm install --prefer-offline && npm run dev\r');
-                }, 400);
+                dispatchWhenShellReady(
+                  'npm install --prefer-offline && npm run dev',
+                  restartEpoch,
+                  term
+                    ? `\r\n${ANSI.brightCyan}⚡ [${reason}]: Installing dependencies & starting dev server...${ANSI.reset}\r\n`
+                    : undefined,
+                );
               } else {
                 webcontainerService.setStartupStage('starting_server');
-                if (term) {
-                  term.write(
-                    `\r\n${ANSI.brightGreen}⚡ [${reason}]: Dependencies verified. Fast restarting dev server...${ANSI.reset}\r\n`,
-                  );
-                }
-                setTimeout(() => {
-                  if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
-                  shell.write('npm run dev\r');
-                }, 400);
+                dispatchWhenShellReady(
+                  'npm run dev',
+                  restartEpoch,
+                  term
+                    ? `\r\n${ANSI.brightGreen}⚡ [${reason}]: Dependencies verified. Fast restarting dev server...${ANSI.reset}\r\n`
+                    : undefined,
+                );
               }
             } catch (err) {
+              clearShellPromptWatchdog();
+              pendingAutoStartCmdRef.current = null;
               const msg = err instanceof Error ? err.message : String(err);
               if (term) {
                 term.write(`\r\n${ANSI.red}✖ Failed during restart: ${msg}${ANSI.reset}\r\n`);
@@ -481,7 +563,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         }
       }, 150);
     },
-    [mode, startWebContainerShell],
+    [mode, startWebContainerShell, dispatchWhenShellReady, clearShellPromptWatchdog],
   );
 
   // Auto-start when project files hydrate from IndexedDB if not already started
@@ -647,8 +729,12 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       setTermReady(false);
       webcontainerShellRef.current?.disconnect?.();
       webcontainerShellRef.current = null;
+      if (restartDebounceTimerRef.current) {
+        clearTimeout(restartDebounceTimerRef.current);
+      }
+      clearShellPromptWatchdog();
     };
-  }, [mode, redrawLine, submitLocal, writePrompt]);
+  }, [mode, redrawLine, submitLocal, writePrompt, clearShellPromptWatchdog]);
 
   // Setup WebContainer subscription
   useEffect(() => {

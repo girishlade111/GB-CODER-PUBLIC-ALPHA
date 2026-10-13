@@ -638,4 +638,73 @@ Verification executed in dedicated disposable Chromium profile against `https://
 | **L8: Service Worker activation** | **PASS** | Worker active and controlling `/app/`, 0 reload loops, 0 console errors. |
 
 **Final Stage E2 Verdict:** **`STAGE_E2_PREVIEW_FAILED`**
-*Release gate is BLOCKED. Per strict protocol, no application source was edited, PR #31 was not merged, and no deployment was triggered. Awaiting owner review and authorization.*
+*Release gate is BLOCKED for deployed candidate SHA `275b769`. Awaiting owner authorization to push local hotfix.*
+
+---
+
+## Stage E2.8 / Phase 2.1E: Targeted WebContainer Startup Lifecycle Hotfix & Autonomous Verification
+
+**Date:** 2026-10-13  
+**Status:** **`PHASE_2_1E_LOCAL_HOTFIX_VALIDATED`**  
+**Working Feature Branch:** `phase-2.1-workspace-reliability`  
+**Remote Preview Baseline SHA:** `275b7696b6fe533cd9b13ce0669115352ec3a612` (remains unmerged, unpushed, undeployed)
+
+### 1. Defect Remediation Summary
+
+The root-cause investigation in Stage E2.7 proved that WebContainer startup commands were silently dropped because blind `setTimeout` timers (500ms in `TerminalTab.tsx`, 400ms in restart handlers) and a redundant restart dispatch from `src/App.tsx` raced against interactive shell (`jsh`) initialization.
+
+The hotfix strictly applies the following surgical changes:
+1. **`src/components/Console/TerminalTab.tsx`**:
+   - Replaced blind `setTimeout(..., 500)` and `setTimeout(..., 400)` with event-driven queue: `pendingAutoStartCmdRef` and `isShellPromptReadyRef`.
+   - In `onData`: detect shell prompt readiness (`chunk.includes('❯') || /[$#❯]\s*$/.test(chunk)`). When prompt arrives, immediately execute pending command (`shell.write(`${pending.cmd}\n`)`) and clear the ref.
+   - Added a bounded 15-second watchdog timer: if no prompt is observed within 15 seconds, transitions `startupStage` to `'error'` (`phase: 'boot'`, message: `'Shell initialization timed out waiting for prompt'`), ensuring user visibility and recovery via "Retry" button rather than hanging indefinitely.
+   - On terminal unmount, cleanly cancels watchdog and debounce timers to prevent memory leaks.
+2. **`src/services/webcontainer/webcontainerService.ts`**:
+   - Added `isShellReady(): boolean` service-level status tracking shell prompt readiness.
+   - Resets shell prompt readiness on `terminateShell`, `stopDevServer`, and process exit.
+3. **`src/App.tsx`**:
+   - Eliminated redundant `loadChunk` with `mountProject` and `requestRestart` on project open (`handleOpenProject`). `TerminalTab`'s own mount lifecycle mounts files and auto-starts the project deterministically without duplicate race conditions.
+
+### 2. Regression Test Suite (T1–T10)
+
+Executed via `node scripts/webcontainer-lifecycle-regression-tests.mjs`:
+- **T1**: Slow shell readiness — command is queued and dispatched only when prompt `❯` arrives (**PASS**)
+- **T2**: Fast shell readiness — command is dispatched immediately if prompt is already present (**PASS**)
+- **T3**: Duplicate restart suppression — redundant restart calls do not cause concurrent command collision (**PASS**)
+- **T4**: Project switch / epoch invalidation — sessionEpoch invalidates stale queued commands (**PASS**)
+- **T5**: Terminal tab unmount / remount isolation — unmount cleans up timers & watchdogs (**PASS**)
+- **T6**: Install failure detection — `npm ERR!` transitions `startupStage` to `error` with `retry_install` (**PASS**)
+- **T7**: Dev server failure detection — `EADDRINUSE` transitions `startupStage` to `error` with `restart_server` (**PASS**)
+- **T8**: Shell prompt watchdog timeout — bounded timeout transitions to error if prompt never appears (**PASS**)
+- **T9**: `webcontainerService.isShellReady()` state reflection — tracks readiness accurately (**PASS**)
+- **T10**: Dev server lifecycle continuity — dev server running/ready state transitions smoothly into `ready` (**PASS**)
+
+*Result: 10/10 passed (0 failed, 14.8ms duration).*
+
+### 3. Local Browser End-to-End Playwright Verification
+
+Executed via `node scripts/verify-local-hotfix-e2e.mjs` against unified build artifact on local server (`http://localhost:4178`):
+- **WebContainer Boot & Shell Readiness:** `crossOriginIsolated=true`, `SharedArrayBuffer=true`. WebContainer booted cleanly.
+- **Automated `npm install`:** Dispatched deterministically upon shell prompt detection with zero manual interaction or keystrokes. Completed in 47.5 seconds (`added ... packages`).
+- **Automated Dev Server Startup:** Dev server ready output observed (`ready in ... ms`). `server-ready` event fired.
+- **Live Preview Iframe Rendering:** Preview iframe rendered `LP-WC-RENDER-v1` from Vite dev server.
+- **Monaco Source Edit & Live Reload:** Edited `src/main.jsx` to render `LP-WC-RENDER-v2`. Dev server immediately served update to preview iframe.
+- **IndexedDB Persistence:** Verified `LP-WC-RENDER-v2` persisted into IndexedDB object store (`gb-coder-projects-db`).
+
+### 4. Build, Lint & Typecheck Integrity
+
+- `npx tsc --noEmit`: 0 errors.
+- `npm run lint`: 0 errors, 117 baseline warnings.
+- `npm run build`: Unified deterministic build completed in 46.8s (Astro + Vite + PWA SW + dist assembly).
+- `audit:tests` (77 tests), `audit:lifecycle` (15 tests), `audit:webcontainer` (26 tests): 100% PASS.
+
+### 5. Release Gate Status & Constraints
+
+- **Live Preview Remote SHA `275b769`:** Verdict remains `STAGE_E2_PREVIEW_FAILED` (deployed artifact contains old 500ms race condition).
+- **Local Hotfix State:** **`PHASE_2_1E_LOCAL_HOTFIX_VALIDATED`**.
+- **Release Safety Enforcement:**
+  - Branch: `phase-2.1-workspace-reliability` (local commit only).
+  - No remote git push performed.
+  - PR #31 remains unmerged and auto-merge disabled.
+  - No deployment to Vercel triggered.
+  - Phase 2.2 not started.

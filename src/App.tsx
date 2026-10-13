@@ -1409,14 +1409,6 @@ function App() {
         setIsRestoringWorkspace(false);
         if (options.navigate || !isVSCodeModePath()) navigateTo(VSCODE_ROUTE);
 
-        // Mount files and trigger WebContainer dev server startup
-        void loadChunk(
-          () => import('./services/webcontainer/webcontainerService'),
-          'WebContainer service',
-        ).then(async ({ webcontainerService }) => {
-          await webcontainerService.mountProject(files, undefined, record.projectType);
-          webcontainerService.requestRestart(`Project "${record.name}" opened`);
-        });
       } else {
         setFullStackProject(null);
         setVsCodeReturn(null);
