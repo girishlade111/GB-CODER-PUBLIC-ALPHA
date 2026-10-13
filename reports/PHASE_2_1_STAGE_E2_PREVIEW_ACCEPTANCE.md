@@ -225,3 +225,17 @@ pending (and note E2 automation above is itself pending access).
   termination is environmental (owner session/process ended mid-run).
 - Standing by for a complete run. Verdict remains
   **`STAGE_E2_PREVIEW_BLOCKED`** pending L4–L8 evidence.
+
+---
+
+## Agent-process auth re-check (E2.4 continued)
+
+- Project/branch/PR/deployment state re-verified unchanged
+  (HEAD `f6f6ca9`, PR #31 OPEN at `275b769`, tree clean).
+- `BYPASS_AVAILABLE:False` in the agent's own process environment: no
+  `VERCEL_AUTOMATION_BYPASS_SECRET`, no CLI auth, no injection mechanism.
+  Secure interactive collection through the agent terminal is not a viable
+  owner channel (non-interactive tool; chat pasting forbidden).
+- No suite executed (would exit `MISSING_BYPASS_SECRET`). No pushes, merges,
+  deploys, or source changes. Standing by at
+  **`BLOCKED_AUTHENTICATION_NOT_AVAILABLE_TO_AGENT_PROCESS`**.
