@@ -193,3 +193,17 @@ pending (and note E2 automation above is itself pending access).
 - Unrelated new untracked file observed and preserved untouched:
   `project_files.zip` (not created by this agent; left in place).
 - Standing by at **`WAITING_FOR_OWNER_AUTHENTICATION`** — handoff below.
+
+---
+
+## Live-run attempt 1 (environment failure, no app signal)
+
+- Owner executed the runner, but from a working directory where `playwright`
+  is not resolvable: `ERR_MODULE_NOT_FOUND: Cannot find package 'playwright'
+  imported from .../live-preview-acceptance.mjs`. The script requires the
+  repository root as its working directory (that is where Playwright is
+  installed).
+- L1–L8: **NOT_RUN** (suite exited before any scenario; log verified free
+  of secrets and application output).
+- No code, deploy, or config conclusion follows from this run. Rerun with
+  the corrected command below (it enforces cwd first).
