@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { snapshotService, SnapshotProjectState } from '../services/snapshotService';
+import { STORAGE_WARNING_EVENT } from '../services/projects/projectDatabase';
 
 interface UseAutoSaveProps {
   projectState: SnapshotProjectState | null;
@@ -37,18 +38,35 @@ export const useAutoSave = ({
   const autoSnapshotIntervalRef = useRef<NodeJS.Timeout>();
   const lastSavedHashRef = useRef<number>(NaN);
 
-  const performAutoSave = useCallback(() => {
-    if (!enabled || !projectState) return;
+  const performAutoSave = useCallback((): boolean => {
+    if (!enabled || !projectState) return false;
 
     const currentHash = createContentHash(projectState);
 
     // Only save if content has changed
-    if (currentHash === lastSavedHashRef.current) return;
+    if (currentHash === lastSavedHashRef.current) return true;
 
     setIsSaving(true);
     try {
-      snapshotService.saveAutoSave(projectState);
-      
+      // The write reports success itself: the hash, timestamp and success
+      // event advance only on a confirmed persist, so a failed write stays
+      // retry-eligible and is never announced as saved. Failures surface
+      // through the shared storage-warning channel (quota gets its toast).
+      const { ok, quotaExceeded } = snapshotService.saveAutoSave(projectState);
+      if (!ok) {
+        window.dispatchEvent(
+          new CustomEvent(STORAGE_WARNING_EVENT, {
+            detail: {
+              reason: quotaExceeded
+                ? 'Auto-save failed: local storage quota exceeded'
+                : 'Auto-save failed: storage unavailable',
+              quotaExceeded,
+            },
+          }),
+        );
+        return false;
+      }
+
       const timestamp = new Date().toISOString();
       lastSavedHashRef.current = currentHash;
       setLastSaveTime(timestamp);
@@ -57,8 +75,10 @@ export const useAutoSave = ({
       window.dispatchEvent(new CustomEvent('autosave', {
         detail: { timestamp }
       }));
+      return true;
     } catch (error) {
       console.error('Auto-save failed:', error);
+      return false;
     } finally {
       setIsSaving(false);
     }
@@ -112,8 +132,8 @@ export const useAutoSave = ({
 
   // Manual auto-save function (if needed)
   const manualSave = async () => {
-    performAutoSave();
-    return { error: null };
+    const ok = performAutoSave();
+    return { error: ok ? null : new Error('Auto-save failed') };
   };
 
   return {

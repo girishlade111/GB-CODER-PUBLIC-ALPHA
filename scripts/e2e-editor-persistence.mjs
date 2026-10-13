@@ -25,6 +25,8 @@ import JSZip from 'jszip';
 
 let PORT = 4198;
 let BASE_URL = `http://localhost:${PORT}`;
+// Unified build: the IDE app (dashboard + editors) is served under /app.
+let APP_URL = `${BASE_URL}/app/`;
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -50,9 +52,24 @@ function startPreviewServer() {
     let reqPath = decodeURIComponent(req.url.split('?')[0]);
     if (reqPath === '/') reqPath = '/index.html';
 
-    let filePath = path.join(distDir, reqPath.replace(/^\//, ''));
-    if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-      filePath = path.join(distDir, 'index.html');
+    // Unified-build layout (Phase 1): the IDE app lives under /app, with
+    // /ide kept as a legacy alias (mirrors vercel.json rewrites). The suite
+    // predates the split and navigates these routes directly.
+    let filePath;
+    if (reqPath === '/ide' || reqPath === '/ide/') {
+      filePath = path.join(distDir, 'app', 'index.html');
+    } else if (reqPath.startsWith('/app')) {
+      const sub = reqPath.replace(/^\/app\/?/, '');
+      const candidate = path.join(distDir, 'app', sub);
+      filePath =
+        sub && fs.existsSync(candidate) && fs.statSync(candidate).isFile()
+          ? candidate
+          : path.join(distDir, 'app', 'index.html');
+    } else {
+      filePath = path.join(distDir, reqPath.replace(/^\//, ''));
+      if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+        filePath = path.join(distDir, 'index.html');
+      }
     }
 
     const ext = path.extname(filePath).toLowerCase();
@@ -73,6 +90,7 @@ function startPreviewServer() {
     server.listen(0, () => {
       PORT = server.address().port;
       BASE_URL = `http://localhost:${PORT}`;
+      APP_URL = `${BASE_URL}/app/`;
       resolve(server);
     });
   });
@@ -102,7 +120,7 @@ async function run() {
       window.localStorage.setItem('gbcoder_onboarded', 'true');
     });
 
-    await pageA.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await pageA.goto(APP_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     // Inject "webos" project into IndexedDB with editorStyle: 'vscode'
     console.log('Injecting "webos" multi-file project with editorStyle: "vscode"...');
@@ -148,7 +166,7 @@ async function run() {
     });
 
     // Reload page to let dashboard pick up the project
-    await pageA.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await pageA.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 
     // Click on "webos" project card to open it
     console.log('Clicking "webos" project card in dashboard...');
@@ -156,8 +174,8 @@ async function run() {
     await webosCard.waitFor({ timeout: 10000 });
     await webosCard.click();
 
-    // Verify it routes to #vscode
-    await pageA.waitForFunction(() => window.location.pathname.startsWith('/ide') || window.location.hash.includes('vscode'), { timeout: 10000 });
+    // Verify it routes to the IDE (unified route /app/ide; legacy /ide kept).
+    await pageA.waitForFunction(() => window.location.pathname.includes('/ide') || window.location.hash.includes('vscode'), { timeout: 10000 });
     console.log('Verified: URL navigated to #vscode.');
 
     // Verify project record in IndexedDB still has editorStyle: 'vscode'
@@ -190,7 +208,7 @@ async function run() {
       window.localStorage.setItem('gbcoder_onboarded', 'true');
     });
 
-    await pageB.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await pageB.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 
     // Inject switch-test project with editorStyle: 'plain'
     await pageB.evaluate(async () => {
@@ -254,10 +272,10 @@ async function run() {
 
     // Cold reload directly at root URL (http://localhost:PORT/)
     console.log('Reloading browser at root "/" to simulate cold start...');
-    await pageB.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await pageB.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 
     // Verify URL navigated to #vscode because active project preference is 'vscode'
-    await pageB.waitForFunction(() => window.location.pathname.startsWith('/ide') || window.location.hash.includes('vscode'), { timeout: 10000 });
+    await pageB.waitForFunction(() => window.location.pathname.includes('/ide') || window.location.hash.includes('vscode'), { timeout: 10000 });
     console.log('Verified: Resumed active project synchronized URL to #vscode.');
 
     // Verify database was NOT silently overwritten to 'plain'
@@ -293,7 +311,7 @@ async function run() {
       window.localStorage.setItem('gbcoder_onboarded', 'true');
     });
 
-    await pageC.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await pageC.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 
     // Inject "webos" project
     await pageC.evaluate(async () => {
@@ -330,7 +348,7 @@ async function run() {
       await new Promise((res) => (tx.oncomplete = res));
     });
 
-    await pageC.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await pageC.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 
     // Open Backup modal via "Backup & Restore" button on dashboard
     const backupBtn = pageC.locator('button:has-text("Backup / Restore"), button:has-text("Backup")').first();
@@ -375,7 +393,7 @@ async function run() {
       window.localStorage.setItem('gbcoder_onboarded', 'true');
     });
 
-    await pageD.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await pageD.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 
     // Open restore modal
     const restoreModalBtn = pageD.locator('button:has-text("Backup / Restore"), button:has-text("Backup")').first();
@@ -414,7 +432,7 @@ async function run() {
     await restoredCard.click();
 
     // Verify it automatically launches Advanced IDE (#vscode)
-    await pageD.waitForFunction(() => window.location.pathname.startsWith('/ide') || window.location.hash.includes('vscode'), { timeout: 10000 });
+    await pageD.waitForFunction(() => window.location.pathname.includes('/ide') || window.location.hash.includes('vscode'), { timeout: 10000 });
     console.log('Verified: Restored "webos" project successfully launched in Advanced IDE (#vscode).');
     console.log('Scenario D PASS: Restored project launches in Advanced IDE.');
     await contextD.close();
@@ -429,7 +447,7 @@ async function run() {
       window.localStorage.setItem('gbcoder_onboarded', 'true');
     });
 
-    await pageE.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await pageE.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 
     // Seed existing project with colliding ID
     await pageE.evaluate(async () => {
@@ -464,7 +482,7 @@ async function run() {
       await new Promise((res) => (tx.oncomplete = res));
     });
 
-    await pageE.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await pageE.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 
     // Re-open modal and restore archive to create conflict
     const restoreModalBtnE = pageE.locator('button:has-text("Backup / Restore"), button:has-text("Backup")').first();

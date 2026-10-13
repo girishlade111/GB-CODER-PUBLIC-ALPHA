@@ -47,8 +47,14 @@ import TerminalTab from '../Console/TerminalTab';
 import Tooltip from '../ui/Tooltip';
 import LadeStackLogo from '../LadeStackLogo';
 import { monacoThemeFor, defineGbCoderTheme } from '../../utils/monacoTheme';
+import {
+  chooseEvictionTab,
+  remapPath,
+  validateWorkspaceFolder,
+  validateWorkspacePath,
+} from '../../utils/workspaceCoordination';
 import { useTheme } from '../../hooks/useTheme';
-import { MultiFileProject } from '../../types/files';
+import { MultiFileProject, ProjectFile } from '../../types/files';
 import { carriesFiles, collectTransfer } from '../../utils/dropTransfer';
 import {
   readViewState,
@@ -89,13 +95,23 @@ interface VSCodeModeProps {
   project: MultiFileProject;
   projectName?: string;
   onChangeFile: (path: string, content: string) => void;
-  onCreateFile?: (path: string, content?: string) => void;
-  onRenameFile?: (oldPath: string, newPath: string) => void;
+  onCreateFile?: (path: string, content?: string) => boolean | void;
+  onRenameFile?: (oldPath: string, newPath: string) => boolean | void;
   onDeleteFile?: (path: string) => void;
   onDuplicateFile?: (path: string) => void;
   onExit: () => void;
   fontFamily: string;
   fontSize: number;
+  /**
+   * Confirmed-persist notifications from the app's IndexedDB flush.
+   *
+   * Dirty markers clear only for paths whose live content still matches the
+   * committed revision (edits typed mid-flush stay dirty), and only when the
+   * signal names the project currently open here.
+   */
+  persistSignal?: { seq: number; projectId: string; files: ProjectFile[] } | null;
+  /** Project the mode is currently showing; scopes persistSignal. */
+  activeProjectId?: string | null;
   /**
    * How the mode was entered. Only affects wording: claiming a project was
    * "detected as full-stack" when the user switched by hand would be untrue, and
@@ -197,6 +213,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   onExit,
   fontFamily,
   fontSize,
+  persistSignal = null,
+  activeProjectId = null,
   onAddImport,
   onOpenProjects,
 }) => {
@@ -229,6 +247,17 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const [activePath, setActivePath] = useState<string | null>(restoredView.activePath);
   const hasHydratedViewRef = useRef(project.files.length > 0 && restoredView.openPaths.length > 0);
   const [dirtyPaths, setDirtyPaths] = useState<Set<string>>(new Set());
+  /*
+   * Synchronous mirrors for use inside tab-list updaters (which must stay
+   * pure): eviction needs the focused tab and the dirty set without closing
+   * over render-scoped values.
+   */
+  const activePathMirrorRef = useRef<string | null>(null);
+  activePathMirrorRef.current = activePath;
+  const splitActivePathMirrorRef = useRef<string | null>(null);
+  splitActivePathMirrorRef.current = splitActivePath;
+  const dirtyPathsMirrorRef = useRef<Set<string>>(dirtyPaths);
+  dirtyPathsMirrorRef.current = dirtyPaths;
   const [showTerminal, setShowTerminal] = useState(true);
   const [hasOpenedTerminal, setHasOpenedTerminal] = useState(true);
   const [activityTab, setActiveTab] = useState<ActivityTab>('explorer');
@@ -352,12 +381,63 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     writeViewState({ openPaths, activePath });
   }, [openPaths, activePath]);
 
+  /*
+   * Dirty markers live on tabs: entries for closed, evicted or deleted paths
+   * are pruned so a reopened path never shows a stale dot. Content safety
+   * does not depend on this set — unsaved content lives in project state and
+   * the persist pipeline saves by file list, not by tab.
+   */
+  useEffect(() => {
+    setDirtyPaths((current) => {
+      let changed = false;
+      const next = new Set<string>();
+      for (const p of current) {
+        if (openPaths.includes(p) || splitOpenPaths.includes(p)) next.add(p);
+        else changed = true;
+      }
+      return changed ? next : current;
+    });
+  }, [openPaths, splitOpenPaths]);
+
+  /*
+   * Clears dirty markers on confirmed IndexedDB commits. A path clears only
+   * when its live content still matches the committed revision (edits typed
+   * mid-flush stay dirty) and only when the signal names the project open
+   * here — a late flush for a previous project never clears the new one.
+   */
+  const lastPersistSeqRef = useRef(0);
+  useEffect(() => {
+    if (!persistSignal || persistSignal.projectId !== activeProjectId) return;
+    if (persistSignal.seq <= lastPersistSeqRef.current) return;
+    lastPersistSeqRef.current = persistSignal.seq;
+    const committed = new Map(persistSignal.files.map((f) => [f.path, f.content]));
+    setDirtyPaths((current) => {
+      let changed = false;
+      const next = new Set<string>();
+      for (const p of current) {
+        const live = project.files.find((f) => f.path === p)?.content;
+        if (live !== undefined && live === committed.get(p)) changed = true;
+        else next.add(p);
+      }
+      return changed ? next : current;
+    });
+  }, [persistSignal, activeProjectId, project.files]);
+
   const openFile = useCallback((path: string) => {
     setOpenPaths((current) => {
       if (current.includes(path)) return current;
-      const next = [...current, path];
-      // Evict the oldest tab that is not the one being opened.
-      return next.length > MAX_TABS ? next.slice(next.length - MAX_TABS) : next;
+      if (current.length < MAX_TABS) return [...current, path];
+      // Evict the oldest tab that is neither focused nor dirty; the evicted
+      // path's dirty marker is pruned by the effect above. Content is safe:
+      // it lives in project state, not in the tab.
+      const evict = chooseEvictionTab(
+        current,
+        activePathMirrorRef.current,
+        dirtyPathsMirrorRef.current,
+        MAX_TABS,
+      );
+      const next = evict ? current.filter((p) => p !== evict) : current.slice(1);
+      return [...next, path];
     });
     setActivePath(path);
   }, []);
@@ -386,47 +466,73 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
   const handleCreateFile = useCallback(
     (path: string, content = '') => {
-      onCreateFile?.(path, content);
-      openFile(path);
+      // Strict pre-validation mirrors the owner's choke point: reject before
+      // any tab opens so a refused path never leaves a phantom tab behind.
+      const checked = validateWorkspacePath(
+        path,
+        project.projectType,
+        project.files.map((f) => f.path),
+      );
+      if (!checked.valid) {
+        toast.error(checked.error ?? 'Invalid file name.');
+        return;
+      }
+      if (onCreateFile?.(checked.path, content) === false) return;
+      openFile(checked.path);
     },
-    [onCreateFile, openFile],
+    [onCreateFile, openFile, project.files, project.projectType],
   );
 
   const handleCreateFolder = useCallback(
     (folderPath: string) => {
       const keepPath = `${folderPath.replace(/\/+$/, '')}/.gitkeep`;
-      onCreateFile?.(keepPath, '');
+      // Propagate the owner's verdict so the tree keeps the draft on rejection.
+      return onCreateFile?.(keepPath, '') ?? true;
     },
     [onCreateFile],
   );
 
   const handleRenameFile = useCallback(
     (oldPath: string, newPath: string) => {
-      onRenameFile?.(oldPath, newPath);
+      // Strict pre-validation (the tree did a first pass only): traversal,
+      // case-collisions and wrong extensions stop here, before tabs move.
+      const existing = project.files.map((f) => f.path);
+      const isFolder = !project.files.some((f) => f.path === oldPath);
+      const checked = isFolder
+        ? validateWorkspaceFolder(newPath, existing, oldPath)
+        : validateWorkspacePath(newPath, project.projectType, existing, oldPath);
+      if (!checked.valid) {
+        toast.error(checked.error ?? 'Invalid name.');
+        return;
+      }
+      // The owner re-validates and reports false on rejection (already
+      // toasted there): local tab, focus and dirty updates must not run.
+      if (onRenameFile?.(oldPath, checked.path) === false) return;
+      const finalNew = checked.path;
 
       const updateList = (paths: string[]) =>
-        paths.map((p) =>
-          p === oldPath
-            ? newPath
-            : p.startsWith(oldPath + '/')
-            ? newPath + p.slice(oldPath.length)
-            : p,
-        );
+        paths.map((p) => remapPath(p, oldPath, finalNew));
 
       setOpenPaths(updateList);
       setSplitOpenPaths(updateList);
 
-      if (activePath === oldPath || (activePath && activePath.startsWith(oldPath + '/'))) {
-        setActivePath(newPath);
-      }
-      if (
-        splitActivePath === oldPath ||
-        (splitActivePath && splitActivePath.startsWith(oldPath + '/'))
-      ) {
-        setSplitActivePath(newPath);
-      }
+      // Focus follows the renamed file — including files inside a renamed
+      // folder, which previously collapsed to the bare folder path and left
+      // an empty editor open.
+      setActivePath((current) =>
+        current === null ? current : remapPath(current, oldPath, finalNew),
+      );
+      setSplitActivePath((current) =>
+        current === null ? current : remapPath(current, oldPath, finalNew),
+      );
+      // Dirty markers travel with their files so dots stay truthful.
+      setDirtyPaths((current) => {
+        const next = new Set<string>();
+        for (const p of current) next.add(remapPath(p, oldPath, finalNew));
+        return next;
+      });
     },
-    [onRenameFile, activePath, splitActivePath],
+    [onRenameFile, project.files, project.projectType],
   );
 
   const handleDeleteFile = useCallback(
@@ -486,8 +592,15 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const openToSide = useCallback((path: string) => {
     setSplitOpenPaths((current) => {
       if (current.includes(path)) return current;
-      const next = [...current, path];
-      return next.length > MAX_TABS ? next.slice(next.length - MAX_TABS) : next;
+      if (current.length < MAX_TABS) return [...current, path];
+      const evict = chooseEvictionTab(
+        current,
+        splitActivePathMirrorRef.current,
+        dirtyPathsMirrorRef.current,
+        MAX_TABS,
+      );
+      const next = evict ? current.filter((p) => p !== evict) : current.slice(1);
+      return [...next, path];
     });
     setSplitActivePath(path);
   }, []);

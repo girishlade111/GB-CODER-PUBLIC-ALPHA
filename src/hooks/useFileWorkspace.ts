@@ -33,17 +33,26 @@ export interface FileWorkspace {
   removeFile: (path: string) => { ok: boolean; error?: string };
   canModify: (path: string) => boolean;
 
-  markAllSaved: () => void;
+  /**
+   * Records an explicitly persisted revision as the new clean baseline.
+   *
+   * Takes the files that were actually committed (not the live project: edits
+   * typed while the write was in flight must stay dirty), so markers always
+   * reflect real save state rather than timer completion.
+   */
+  markFilesSaved: (files: ProjectFile[]) => void;
 }
 
 /** Content snapshot used to decide which tabs show an unsaved dot. */
 type Snapshot = Record<string, string>;
 
-const snapshotOf = (project: MultiFileProject): Snapshot =>
-  project.files.reduce<Snapshot>((acc, file) => {
+const snapshotOfFiles = (files: ProjectFile[]): Snapshot =>
+  files.reduce<Snapshot>((acc, file) => {
     acc[file.path] = file.content;
     return acc;
   }, {});
+
+const snapshotOf = (project: MultiFileProject): Snapshot => snapshotOfFiles(project.files);
 
 const DEFAULT_OPEN_LIMIT = 1;
 
@@ -58,8 +67,16 @@ const DEFAULT_OPEN_LIMIT = 1;
 export const useFileWorkspace = (
   project: MultiFileProject,
   setProject: React.Dispatch<React.SetStateAction<MultiFileProject>>,
-  /** Bumping this (e.g. autosave time) clears every dirty marker. */
-  savedSignal?: number | null,
+  /**
+   * Identity of the project (and editor location) the tabs belong to.
+   *
+   * The hook cannot tell "user typed" apart from "different project loaded"
+   * by object identity alone, and without this a same-type project switch
+   * leaves stale tabs plus phantom dirty dots computed against the previous
+   * project's baseline. A key change resets tabs, focus and the baseline to
+   * the freshly loaded revision.
+   */
+  projectKey: string | null,
 ): FileWorkspace => {
   const files = useMemo(() => sortedFiles(project), [project]);
 
@@ -68,6 +85,19 @@ export const useFileWorkspace = (
   const [savedSnapshot, setSavedSnapshot] = useState<Snapshot>(() => snapshotOf(project));
 
   const projectTypeRef = useRef(project.projectType);
+  const projectKeyRef = useRef(projectKey);
+
+  // Project (or editor-location) switch: the previous tabs, focus and dirty
+  // baseline belong to another revision and must not leak across.
+  useEffect(() => {
+    if (projectKeyRef.current === projectKey) return;
+    projectKeyRef.current = projectKey;
+
+    const initial = project.entry ?? sortedFiles(project)[0]?.path ?? null;
+    setOpenPaths(initial ? [initial] : []);
+    setActivePathState(initial);
+    setSavedSnapshot(snapshotOf(project));
+  }, [projectKey, project]);
 
   // On a project-type switch the whole file set is replaced, so reset tabs to
   // the new entry file and treat everything as freshly saved.
@@ -106,16 +136,9 @@ export const useFileWorkspace = (
     if (openPaths.length > 0) setActivePathState(openPaths[openPaths.length - 1]);
   }, [activePath, openPaths]);
 
-  const markAllSaved = useCallback(() => {
-    setSavedSnapshot(snapshotOf(project));
-  }, [project]);
-
-  useEffect(() => {
-    if (savedSignal === undefined || savedSignal === null) return;
-    setSavedSnapshot(snapshotOf(project));
-    // Only react to the save signal, not to every project edit.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [savedSignal]);
+  const markFilesSaved = useCallback((savedFiles: ProjectFile[]) => {
+    setSavedSnapshot(snapshotOfFiles(savedFiles));
+  }, []);
 
   const dirtyPaths = useMemo(() => {
     const dirty = new Set<string>();
@@ -226,6 +249,13 @@ export const useFileWorkspace = (
 
       setProject((current) => deleteFileFromProject(current, path));
       closeFile(path);
+      // Drop the baseline entry: recreating the same path later must read as
+      // a brand-new unsaved file, not as clean against pre-delete content.
+      setSavedSnapshot((current) => {
+        if (!(path in current)) return current;
+        const { [path]: _removed, ...rest } = current;
+        return rest;
+      });
       return { ok: true };
     },
     [closeFile, project.files.length, project.projectType, setProject],
@@ -256,7 +286,7 @@ export const useFileWorkspace = (
     renameFile,
     removeFile,
     canModify,
-    markAllSaved,
+    markFilesSaved,
   };
 };
 

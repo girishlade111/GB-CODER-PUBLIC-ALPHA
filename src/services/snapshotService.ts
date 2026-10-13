@@ -87,15 +87,20 @@ class SnapshotService {
    * Auto-Save Management
    */
 
-  public saveAutoSave(state: SnapshotProjectState): void {
+  public saveAutoSave(state: SnapshotProjectState): { ok: boolean; quotaExceeded: boolean } {
     try {
       const data = JSON.stringify({
         ...state,
         lastModified: new Date().toISOString(),
       });
       localStorage.setItem(AUTOSAVE_KEY, data);
+      return { ok: true, quotaExceeded: false };
     } catch (e) {
+      // The write failed (quota, blocked storage): report it so the hook does
+      // not advance its saved hash, timestamp or success event on a mirage.
+      const quotaExceeded = (e as Error)?.name === 'QuotaExceededError';
       console.error('Failed to save auto-save:', e);
+      return { ok: false, quotaExceeded };
     }
   }
 

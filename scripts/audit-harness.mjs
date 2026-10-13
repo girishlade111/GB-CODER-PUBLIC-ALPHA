@@ -43,6 +43,7 @@ await build({
       export * from './src/services/backup/backupRestoreService.ts';
       export * from './src/services/snapshotService.ts';
       export * from './src/types/files.ts';
+      export * from './src/utils/workspaceCoordination.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',

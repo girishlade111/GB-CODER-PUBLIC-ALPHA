@@ -219,6 +219,10 @@ import {
   setFileContent,
 } from './types/files';
 import { migrateSnippets } from './utils/snippetUtils';
+import {
+  validateWorkspaceFolder,
+  validateWorkspacePath,
+} from './utils/workspaceCoordination';
 import { externalLibraryService, ExternalLibrary } from './services/externalLibraryService';
 import { formattingService } from './services/formattingService';
 import { SelectionOperationType } from './services/selectionOperationsService';
@@ -730,6 +734,13 @@ function App() {
    * React / Vue editors, which are untouched by this feature.
    */
   const [fullStackProject, setFullStackProject] = useState<MultiFileProject | null>(null);
+  /*
+   * Synchronous mirror for validation inside event handlers: the file
+   * operations below deliberately use functional updates (no stale state), so
+   * pre-validation reads the mirror instead of closing over state.
+   */
+  const fullStackProjectRef = React.useRef(fullStackProject);
+  fullStackProjectRef.current = fullStackProject;
   /**
    * What to restore when leaving VS Code mode, set only for a *manual* entry.
    *
@@ -814,6 +825,14 @@ function App() {
   const pendingProjectSaveRef = React.useRef<{ projectId: string; files: ProjectFile[] } | null>(
     null,
   );
+  /**
+   * Late-bound handleOpenProject for effects declared above it (the restore
+   * effect). Assigned every render; effects only call it after mount, so the
+   * binding is always the current one. Avoids moving the open flow.
+   */
+  const handleOpenProjectRef = React.useRef<((record: ProjectRecord) => Promise<void>) | null>(null);
+  /** Seeded starter array of a recovered-empty project: not auto-persisted until edited. */
+  const seededFilesRef = React.useRef<ProjectFile[] | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [aiSuggestionsUsed] = useState(0);
@@ -863,18 +882,39 @@ function App() {
   // Code history for undo/redo functionality
   const codeHistory = useCodeHistory({ html, css, javascript });
   
-  const [saveSignal, setSaveSignal] = useState<number | null>(null);
-
   /**
    * Editor-facing view of the project: open tabs, focused file, per-file dirty
-   * state and file CRUD. Dirty markers clear whenever autosave actually writes,
-   * so the tab dots reflect real save state rather than a guess.
+   * state and file CRUD.
+   *
+   * Identity key = project + editor location: switching either resets tabs and
+   * the dirty baseline to the freshly loaded revision (same-type switches
+   * previously leaked stale tabs and phantom dots). Dirty markers clear only
+   * via markFilesSaved() on a confirmed IndexedDB commit — never on a timer.
    */
+  const workspaceKey = activeProjectId ? `${activeProjectId}:${isVSCodeRoute ? 'ide' : 'editor'}` : null;
+
   const workspace = useFileWorkspace(
     fileProject,
     setFileProject,
-    saveSignal,
+    workspaceKey,
   );
+
+  // Stable callback identity (the workspace object itself is fresh per render).
+  const { markFilesSaved: markFlushedSaved } = workspace;
+
+  /**
+   * Confirmed-persist notifications for the Advanced IDE's own dirty markers.
+   *
+   * Carries the committed revision so the IDE clears a path only when its
+   * live content still matches what was written — edits typed mid-flush stay
+   * dirty. Scoped by project id so a late flush never clears a newer project.
+   */
+  const [persistSignal, setPersistSignal] = useState<{
+    seq: number;
+    projectId: string;
+    files: ProjectFile[];
+    at: number;
+  } | null>(null);
 
   const snapshotProjectState = React.useMemo(() => ({
     project: fileProject,
@@ -884,17 +924,13 @@ function App() {
     settings: { autoSaveEnabled, theme: settings.theme, editorFontSize: settings.editorFontSize },
   }), [fileProject, workspace.openPaths, workspace.activePath, externalLibraries, autoSaveEnabled, settings.theme, settings.editorFontSize]);
 
-  const autoSave = useAutoSave({
+  // LocalStorage mirror writes (crash-recovery source). Dirty dots are driven
+  // by confirmed IndexedDB commits instead — see flushProjectSave.
+  useAutoSave({
     projectState: snapshotProjectState,
     intervalMs: 2000,
     enabled: autoSaveEnabled,
   });
-
-  useEffect(() => {
-    if (autoSave.lastSaveTime) {
-      setSaveSignal(new Date(autoSave.lastSaveTime).getTime());
-    }
-  }, [autoSave.lastSaveTime]);
 
   /*
    * Validation. Debounced inside the hook, and driven from App rather than from
@@ -1271,18 +1307,51 @@ function App() {
    * writing on each keystroke, not to make navigation lossy, and "I clicked away
    * and my last paragraph vanished" is the one failure this layer must not have.
    *
+   * Returns null when nothing was pending. On a failed write the pending entry
+   * is restored (the editor still holds the content) and `ok: false` is
+   * returned so callers can block a destructive transition instead of
+   * silently discarding unsaved work.
+   *
    * Declared up here, ahead of the import handlers, because they need it too.
    */
-  const flushProjectSave = useCallback(async () => {
+  const flushProjectSave = useCallback(async (): Promise<{
+    ok: boolean;
+    projectId: string;
+    files: ProjectFile[];
+  } | null> => {
     const pendingSave = pendingProjectSaveRef.current;
-    if (!pendingSave) return;
+    if (!pendingSave) return null;
 
     pendingProjectSaveRef.current = null;
-    savedFilesRef.current = await saveProjectFiles(
+    const { snapshot, persisted } = await saveProjectFiles(
       pendingSave.projectId,
       pendingSave.files,
       savedFilesRef.current,
     );
+    if (!persisted) {
+      pendingProjectSaveRef.current = pendingSave;
+      return { ok: false, projectId: pendingSave.projectId, files: pendingSave.files };
+    }
+    savedFilesRef.current = snapshot;
+    return { ok: true, projectId: pendingSave.projectId, files: pendingSave.files };
+  }, []);
+
+  /**
+   * Generation counter for project transitions (open / create / import /
+   * dashboard-return / delete).
+   *
+   * Async loads race user intent: opening B then C must never let B's slower
+   * read win. Every transition bumps the generation first; completions check
+   * `isCurrentTransition` after each await and abandon stale work before
+   * touching the pointer, the editor, or the file store.
+   */
+  const openTransitionRef = React.useRef(0);
+  const beginTransition = useCallback((): number => {
+    openTransitionRef.current += 1;
+    return openTransitionRef.current;
+  }, []);
+  const isCurrentTransition = useCallback((id: number): boolean => {
+    return id === openTransitionRef.current;
   }, []);
 
   /**
@@ -1294,15 +1363,34 @@ function App() {
    * project. Seeding both makes that merge a no-op.
    */
   const applyProjectToEditor = useCallback(
-    (record: ProjectRecord, files: ProjectFile[], options: { navigate: boolean }) => {
+    (
+      record: ProjectRecord,
+      files: ProjectFile[],
+      options: { navigate: boolean; seededEmpty?: boolean },
+    ) => {
       const project: MultiFileProject = {
         projectType: record.projectType,
         files,
         entry: record.entry,
       };
 
-      savedFilesRef.current = snapshotOf(files);
+      /*
+       * A recovered-empty project is seeded with starter content that was
+       * never persisted. Baselining against an EMPTY snapshot (rather than
+       * the starter) means the first save writes the starter without ever
+       * deleting unknown paths — and the tabs honestly show unsaved dots
+       * until that first commit lands.
+       */
+      savedFilesRef.current = options.seededEmpty ? new Map() : snapshotOf(files);
       pendingProjectSaveRef.current = null;
+      /*
+       * A seeded starter is a draft until the user touches it: the persist
+       * effect below skips scheduling while the files are still exactly this
+       * array, so opening a fileless project never auto-persists scaffold
+       * over store content a transient read failure may have hidden. The
+       * first keystroke changes the array identity and persists normally.
+       */
+      seededFilesRef.current = options.seededEmpty ? files : null;
 
       /*
        * On a cold start the URL already says which editor was on screen and the
@@ -1389,7 +1477,14 @@ function App() {
    */
   const createProjectFromImport = useCallback(
     async (plan: ImportPlanType, kind: DetectedKind) => {
-      await flushProjectSave();
+      const transition = beginTransition();
+
+      const flushed = await flushProjectSave();
+      if (flushed && !flushed.ok) {
+        toast.error('Could not save the current project. Staying put so no edits are lost.');
+        return;
+      }
+      if (!isCurrentTransition(transition)) return;
 
       const projectType: ProjectType =
         kind === 'react' ? 'react' : kind === 'vue' ? 'vue' : 'plain';
@@ -1413,6 +1508,12 @@ function App() {
         toast.error('Could not save that import as a project. This browser may be blocking storage.');
         return;
       }
+      if (!isCurrentTransition(transition)) {
+        // Stale completion: the record is stored and listed, but must not
+        // seize the editor from the newer selection.
+        setProjects((current) => [record, ...current]);
+        return;
+      }
 
       setProjects((current) => [record, ...current]);
       writeActiveProjectId(record.id);
@@ -1422,7 +1523,7 @@ function App() {
       setIsOpeningProject(false);
       toast.success(`Imported "${record.name}" as a new project.`);
     },
-    [applyProjectToEditor, flushProjectSave],
+    [applyProjectToEditor, flushProjectSave, beginTransition, isCurrentTransition],
   );
 
   const handleImportPlan = useCallback(
@@ -1570,41 +1671,74 @@ function App() {
   }, []);
 
   /** Creates a new file in VS Code mode and syncs to WebContainer VFS. */
-  const handleFullStackCreateFile = useCallback((path: string, content = '') => {
-    setFullStackProject((current) => {
-      if (!current) return current;
-      if (current.files.some((f) => f.path === path)) return current;
+  const handleFullStackCreateFile = useCallback((path: string, content = ''): boolean => {
+    const current = fullStackProjectRef.current;
+    if (!current) return false;
+    // Central strict validation: the tree's own checks are a first pass only,
+    // so traversal, extensions and case-insensitive collisions are enforced
+    // here where the project files are actually owned. Rejections never reach
+    // the store and report false so no phantom tab opens.
+    const checked = validateWorkspacePath(
+      path,
+      current.projectType,
+      current.files.map((f) => f.path),
+    );
+    if (!checked.valid) {
+      toast.error(checked.error ?? 'Invalid file name.');
+      return false;
+    }
+    const safePath = checked.path;
+    setFullStackProject((prev) => {
+      if (!prev) return prev;
+      if (prev.files.some((f) => f.path === safePath)) return prev;
       return {
-        ...current,
-        files: [...current.files, { path, content, language: languageForPath(path) }],
+        ...prev,
+        files: [...prev.files, { path: safePath, content, language: languageForPath(safePath) }],
       };
     });
-    syncWebContainerFile(path, content);
+    syncWebContainerFile(safePath, content);
+    return true;
   }, []);
 
   /** Renames a file or folder in VS Code mode and syncs to WebContainer VFS. */
-  const handleFullStackRenameFile = useCallback((oldPath: string, newPath: string) => {
-    setFullStackProject((current) => {
-      if (!current) return current;
-      const fileToRename = current.files.find((f) => f.path === oldPath);
+  const handleFullStackRenameFile = useCallback((oldPath: string, newPath: string): boolean => {
+    const current = fullStackProjectRef.current;
+    if (!current) return false;
+    const existing = current.files.map((f) => f.path);
+    const isFolderRename = !current.files.some((f) => f.path === oldPath);
+    // Same central validation as creation: renames onto an existing,
+    // case-colliding, traversal or wrong-extension path are rejected before
+    // any store or tab update, so no silent overwrite or duplicate records.
+    // Folders carry no extension, so they validate under folder rules.
+    const checked = isFolderRename
+      ? validateWorkspaceFolder(newPath, existing, oldPath)
+      : validateWorkspacePath(newPath, current.projectType, existing, oldPath);
+    if (!checked.valid) {
+      toast.error(checked.error ?? 'Invalid file name.');
+      return false;
+    }
+    const safeNewPath = checked.path;
+    setFullStackProject((prev) => {
+      if (!prev) return prev;
+      const fileToRename = prev.files.find((f) => f.path === oldPath);
       if (fileToRename) {
-        syncWebContainerFile(newPath, fileToRename.content);
+        syncWebContainerFile(safeNewPath, fileToRename.content);
         deleteWebContainerFile(oldPath);
         return {
-          ...current,
-          files: current.files.map((f) =>
+          ...prev,
+          files: prev.files.map((f) =>
             f.path === oldPath
-              ? { ...f, path: newPath, language: languageForPath(newPath) }
+              ? { ...f, path: safeNewPath, language: languageForPath(safeNewPath) }
               : f,
           ),
         };
       }
       // Folder rename: prefix match
       const oldPrefix = oldPath.endsWith('/') ? oldPath : `${oldPath}/`;
-      const newPrefix = newPath.endsWith('/') ? newPath : `${newPath}/`;
+      const newPrefix = safeNewPath.endsWith('/') ? safeNewPath : `${safeNewPath}/`;
       return {
-        ...current,
-        files: current.files.map((f) => {
+        ...prev,
+        files: prev.files.map((f) => {
           if (f.path.startsWith(oldPrefix)) {
             const renamed = newPrefix + f.path.slice(oldPrefix.length);
             syncWebContainerFile(renamed, f.content);
@@ -1615,6 +1749,7 @@ function App() {
         }),
       };
     });
+    return true;
   }, []);
 
   /** Deletes a file or directory in VS Code mode and removes from WebContainer VFS. */
@@ -1698,7 +1833,13 @@ function App() {
        */
       if (!activeProjectId) {
         void clearWorkspace();
-      } else {
+      } else if (updateUrl) {
+        /*
+         * Explicit exit only: leaving is then a deliberate style choice. A
+         * Back-press out of the mode (updateUrl false) must not rewrite the
+         * stored preference — the user only navigated, and a Forward press
+         * must bring the same editor back, not a silently downgraded one.
+         */
         const updated = await updateProjectEditorPreference(activeProjectId, 'plain');
         if (updated) {
           setActiveProject(updated);
@@ -1877,7 +2018,37 @@ function App() {
      * project, which is why it is skipped here rather than removed.
      */
     if (activeProjectId) {
-      setIsRestoringWorkspace(false);
+      if (fullStackProject || isOpeningProject) {
+        // Memory intact, or the cold-start open below owns the load: the
+        // restore branch below is only for forward navigation back into a
+        // mode whose in-memory project was dropped by leaving it.
+        setIsRestoringWorkspace(false);
+        return;
+      }
+      /*
+       * Forward navigation back into the mode after a leave dropped the
+       * in-memory project: reload it from IndexedDB through the guarded open
+       * path. Without this the route renders an empty shell over an intact
+       * store, and the next refresh would reopen that same emptiness.
+       */
+      const projectId = activeProjectId;
+      const transition = beginTransition();
+      void (async () => {
+        const record = await getProject(projectId);
+        // A newer user navigation started while reading: abandon the restore
+        // rather than seizing the editor from under it.
+        if (!isCurrentTransition(transition)) return;
+        if (!record) {
+          writeActiveProjectId(null);
+          setActiveProjectId(null);
+          setIsRestoringWorkspace(false);
+          navigateTo(EDITOR_ROUTE);
+          return;
+        }
+        setIsRestoringWorkspace(false);
+        const opener = handleOpenProjectRef.current;
+        if (opener) await opener(record);
+      })();
       return;
     }
 
@@ -1915,7 +2086,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [isRestoringWorkspace, activeProjectId]);
+  }, [isRestoringWorkspace, activeProjectId, fullStackProject, isOpeningProject, beginTransition, isCurrentTransition]);
 
   /*
    * Records the workspace as it changes, debounced so typing does not write on
@@ -1967,23 +2138,38 @@ function App() {
   /** Opens a project from the dashboard. */
   const handleOpenProject = useCallback(
     async (record: ProjectRecord) => {
-      // The project being left may have unsaved edits.
-      await flushProjectSave();
+      const transition = beginTransition();
+
+      // The project being left may have unsaved edits. A failed flush blocks
+      // the switch: leaving would strand those edits in a discarded state.
+      const flushed = await flushProjectSave();
+      if (flushed && !flushed.ok) {
+        toast.error('Could not save the current project. Staying put so no edits are lost.');
+        setIsOpeningProject(false);
+        return;
+      }
+      if (!isCurrentTransition(transition)) return;
 
       const [files, touched] = await Promise.all([
         readProjectFiles(record.id),
         touchProject(record.id),
       ]);
+      // A newer transition (or a delete) started while reading: this result
+      // belongs to a selection the user has already moved past.
+      if (!isCurrentTransition(transition)) return;
       const opened = touched ?? record;
 
       /*
        * A project with no files means its records were lost while its metadata
        * survived. Reopening into a blank editor would look like data corruption
        * with no explanation, so say so and start it from the standard scaffold.
+       * The scaffold is baselined as unsaved (seededEmpty), never persisted
+       * over unknown store content.
        */
+      const recoveredEmpty = files.length === 0;
       const restored =
-        files.length > 0 ? files : createPlainProject(defaultHTML, defaultCSS, defaultJS).files;
-      if (files.length === 0) {
+        !recoveredEmpty ? files : createPlainProject(defaultHTML, defaultCSS, defaultJS).files;
+      if (recoveredEmpty) {
         toast.error(`"${opened.name}" had no files stored. Starting it fresh.`);
       }
 
@@ -1991,16 +2177,24 @@ function App() {
       setActiveProjectId(opened.id);
       setActiveProject(opened);
       setProjects((current) => [opened, ...current.filter((item) => item.id !== opened.id)]);
-      applyProjectToEditor(opened, restored, { navigate: true });
+      applyProjectToEditor(opened, restored, { navigate: true, seededEmpty: recoveredEmpty });
       setIsOpeningProject(false);
     },
-    [applyProjectToEditor, flushProjectSave],
+    [applyProjectToEditor, flushProjectSave, beginTransition, isCurrentTransition],
   );
+  handleOpenProjectRef.current = handleOpenProject;
 
   /** Creates a project from the New Project modal and opens it. */
   const handleCreateProject = useCallback(
     async ({ name, editorStyle }: { name: string; editorStyle: EditorStyle }) => {
-      await flushProjectSave();
+      const transition = beginTransition();
+
+      const flushed = await flushProjectSave();
+      if (flushed && !flushed.ok) {
+        toast.error('Could not save the current project. Staying put so no edits are lost.');
+        return;
+      }
+      if (!isCurrentTransition(transition)) return;
 
       // A brand-new project starts from the same scaffold the editor used to open
       // with by default — that content is a starting point, not a landing page.
@@ -2016,6 +2210,13 @@ function App() {
         toast.error('Could not create the project. This browser may be blocking local storage.');
         return;
       }
+      if (!isCurrentTransition(transition)) {
+        // A newer transition won while creating: the record is safely stored
+        // and listed, but this stale completion must not seize the editor.
+        setProjects((current) => [record, ...current]);
+        setShowNewProject(false);
+        return;
+      }
 
       setShowNewProject(false);
       setProjects((current) => [record, ...current]);
@@ -2026,11 +2227,15 @@ function App() {
       setIsOpeningProject(false);
       toast.success(`Created "${record.name}".`);
     },
-    [applyProjectToEditor, flushProjectSave],
+    [applyProjectToEditor, flushProjectSave, beginTransition, isCurrentTransition],
   );
 
   const handleDeleteProject = useCallback(
     async (record: ProjectRecord) => {
+      // Invalidate any in-flight open of this project first: its completion
+      // must not resurrect the editor (or its files) after deletion.
+      beginTransition();
+
       // Drop any queued write first, or a save for the project being deleted
       // could be flushed afterwards and recreate its files.
       if (pendingProjectSaveRef.current?.projectId === record.id) {
@@ -2049,12 +2254,19 @@ function App() {
 
       toast.success(`Deleted "${record.name}".`);
     },
-    [activeProjectId],
+    [activeProjectId, beginTransition],
   );
 
   /** Leaves the active project and returns to the dashboard. */
   const handleReturnToDashboard = useCallback(async () => {
-    await flushProjectSave();
+    const transition = beginTransition();
+
+    const flushed = await flushProjectSave();
+    if (flushed && !flushed.ok) {
+      toast.error('Could not save the current project. Staying put so no edits are lost.');
+      return;
+    }
+    if (!isCurrentTransition(transition)) return;
 
     savedFilesRef.current = null;
     writeActiveProjectId(null);
@@ -2068,7 +2280,7 @@ function App() {
 
     // Re-read so the list reflects the lastOpenedAt just written.
     setProjects(await listProjects());
-  }, [flushProjectSave]);
+  }, [flushProjectSave, beginTransition, isCurrentTransition]);
 
   /* The dashboard's list, loaded once. */
   useEffect(() => {
@@ -2137,14 +2349,31 @@ function App() {
 
   useEffect(() => {
     if (!activeProjectId || isOpeningProject) return;
+    // A recovered-empty seed is a draft: never auto-persist the scaffold
+    // itself. The first real edit swaps the array identity and persists.
+    if (seededFilesRef.current && projectFilesToPersist === seededFilesRef.current) return;
 
     pendingProjectSaveRef.current = { projectId: activeProjectId, files: projectFilesToPersist };
     const timer = window.setTimeout(() => {
-      void flushProjectSave();
+      void flushProjectSave().then((result) => {
+        if (!result?.ok) return;
+        // The commit landed. Adopt the flushed revision as the clean baseline
+        // — but only if the user has not since moved to another project (its
+        // baseline was reset on switch and must not be touched).
+        if (result.projectId === activeProjectId) {
+          markFlushedSaved(result.files);
+          setPersistSignal((previous) => ({
+            seq: (previous?.seq ?? 0) + 1,
+            projectId: result.projectId,
+            files: result.files,
+            at: Date.now(),
+          }));
+        }
+      });
     }, PROJECT_SAVE_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [activeProjectId, isOpeningProject, projectFilesToPersist, flushProjectSave]);
+  }, [activeProjectId, isOpeningProject, projectFilesToPersist, flushProjectSave, markFlushedSaved]);
 
   /*
    * Flush when the tab stops being visible.
@@ -3826,6 +4055,8 @@ function App() {
                 onOpenProjects={() => void handleReturnToDashboard()}
                 fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
                 fontSize={settings.editorFontSize}
+                persistSignal={persistSignal}
+                activeProjectId={activeProjectId}
               />
             </Suspense>
           )}
@@ -4307,7 +4538,7 @@ function App() {
                 )}
                 {autoSaveEnabled && (
                   <span>
-                    {saveSignal ? `Saved ${new Date(saveSignal).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Saving...'}
+                    {persistSignal ? `Saved ${new Date(persistSignal.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Saving...'}
                   </span>
                 )}
               </div>

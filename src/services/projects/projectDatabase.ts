@@ -377,13 +377,15 @@ export const readProjectFiles = (projectId: string): Promise<ProjectFile[]> =>
  *
  * Passing `previous` as `null` writes every file, which is what a first save or a
  * freshly loaded project needs. Returns the snapshot the caller should hold for
- * the next call.
+ * the next call, plus whether the transaction committed: on failure the
+ * previous snapshot is returned with `persisted: false` so pending changes stay
+ * retryable and no caller can mistake the outcome for a successful save.
  */
 export const saveProjectFiles = (
   projectId: string,
   files: ProjectFile[],
   previous: FileSnapshot | null,
-): Promise<FileSnapshot> => {
+): Promise<{ snapshot: FileSnapshot; persisted: boolean }> => {
   const changed = files.filter(
     (file) => previous === null || previous.get(file.path) !== file.content,
   );
@@ -393,7 +395,9 @@ export const saveProjectFiles = (
 
   // Nothing to do — avoids opening a transaction on every debounce tick when the
   // user is reading rather than typing.
-  if (changed.length === 0 && removed.length === 0) return Promise.resolve(next);
+  if (changed.length === 0 && removed.length === 0) {
+    return Promise.resolve({ snapshot: next, persisted: true });
+  }
 
   return enqueue(() =>
     withTransaction<boolean>([PROJECTS_STORE, FILES_STORE], 'readwrite', async (transaction) => {
@@ -422,11 +426,13 @@ export const saveProjectFiles = (
     }),
   ).then((res) => {
     // If the transaction failed (e.g. quota exceeded or database error),
-    // preserve the previous snapshot so that pending unsaved changes are not lost and will be retried
+    // preserve the previous snapshot so that pending unsaved changes are not lost and will be retried.
+    // `persisted: false` keeps the failure observable: no caller may treat it
+    // as a successful save.
     if (res === null) {
-      return previous ?? next;
+      return { snapshot: previous ?? next, persisted: false };
     }
-    return next;
+    return { snapshot: next, persisted: true };
   });
 };
 
