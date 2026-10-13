@@ -1,17 +1,19 @@
 # Phase 2.1 Stage E2 — Preview Acceptance Report
 
-**Verdict: `STAGE_E2_PASS_PENDING_OWNER_SMOKE`**
+**Verdict: `STAGE_E2_PREVIEW_FAILED` (Release Gate Blocked by Confirmed Lifecycle Defect)**
 
-Live Preview browser verification across L1–L8 has been executed using the
-owner-provisioned Vercel Deployment Protection bypass. Seven of eight live
-scenarios passed on the Preview deployment (L1, L2, L3, L4, L6, L7, L8). No
-application defects or regressions were observed. The one automated failure
-(L5) is environmental (npm install stall in this sandbox after a benign
-restart-signal race; zero app errors; registry egress proven fast) — full
-forensics in §12. Per standard release protocol, owner manual smoke testing
-(§19) is **STILL REQUIRED**, specifically covering the interactive
-WebContainer/npm flow (which doubles as the manual backstop for L5) prior to
-requesting Stage E3 authorization.
+Live Preview browser verification and dedicated Stage E2.7 root-cause investigation
+have isolated the remaining L5 failure. While scenarios L1, L2, L3, L4, L6, L7, and L8
+all PASS with 100% integrity (including verified Service Worker activation under scope
+`/app/` and clean multi-file ZIP export/restore), the L5 WebContainer auto-start stall
+is confirmed to be an **`APPLICATION_LIFECYCLE_DEFECT`** in `src/components/Console/TerminalTab.tsx`.
+
+A fixed 500ms timer attempts to write `npm install` into the `jsh` shell stdin before
+the asynchronous shell process has attached its TTY read loop and emitted its prompt (`❯`).
+The command is silently dropped by the shell, leaving the terminal permanently idle at
+the prompt while the React UI state remains indefinitely trapped in "Installing Dependencies...".
+Because this defect directly impacts real users on devices where shell boot takes >500ms,
+production promotion is **BLOCKED** pending approval of a minimal lifecycle repair.
 
 **This report is local-only and was not pushed.**
 
@@ -501,8 +503,139 @@ The hardened L5 workflow was observed in progressive stages:
    - WebContainer runtime boot is confirmed functional in the Preview deployment.
    - In automated headless execution, the 500ms auto-start timer in `TerminalTab.tsx` races with `jsh` shell initialization. In interactive human usage, the shell prompt is ready before user typing, and commands can be typed or restarted on demand.
 
-### 6. Final Stage E2 Verdict & Owner Smoke Requirement
-- **Final Verdict:** **`STAGE_E2_PASS_PENDING_OWNER_SMOKE`**
-- **Owner Manual Smoke Testing Status:** **STILL REQUIRED (L5 WebContainer Dev Flow only).**
-  - Static Editor, Dashboard, 112-file integrity, ZIP export/restore (L7), and Service Worker safety (L8) are all 100% automated PASS on the live Preview deployment.
-  - The owner must perform an interactive browser smoke check of the WebContainer dev server (§19 item 2) prior to Stage E3 authorization.
+### 6. Final Stage E2 Verdict & Owner Smoke Requirement (from Attempt 4)
+- **Status:** Superseded by Stage E2.7 investigation below.
+
+---
+
+## Stage E2.7: WebContainer Auto-Start Race Investigation & Final Release Gate Results
+
+### 1. Executive Summary & Defect Classification
+
+Dedicated controlled experiments (Cases A–D) and Service Worker activation probes were executed on the live Preview deployment (`https://gb-coder-public-alpha-3mkrqezzq.vercel.app`):
+
+- **Service Worker Activation:** **PASS (100% Verified).**
+  - Worker registered under `/app/` scope, transitioned cleanly to `activeState: "activated"`, and established active page control (`hasController: true`, `controllerScriptURL: ".../app/sw.js"`).
+  - Precache and asset serving operational with zero SecurityErrors and zero reload loops.
+- **L5 WebContainer Failure Classification:** **`APPLICATION_LIFECYCLE_DEFECT`**.
+  - The failure is **NOT** a Playwright timing artifact and **NOT** an external CDN/network failure.
+  - The defect resides in `src/components/Console/TerminalTab.tsx` (compounded by `src/App.tsx`).
+  - A hardcoded 500ms timer writes `npm install --prefer-offline && npm run dev\r` into the PTY stream before the WebContainer `jsh` shell process has initialized its TTY read loop and emitted its prompt (`❯`).
+  - The early keystrokes are discarded by `jsh`. `jsh` subsequently renders an idle prompt `~/cipsh... ❯` and waits for input, while the React application state remains permanently stuck in `startupStage: 'installing'`.
+  - No watchdog timeout or retry recovery mechanism exists in `TerminalTab.tsx`.
+
+### 2. Complete Terminal Lifecycle Trace
+
+Tracing the 12 lifecycle stages across `TerminalTab.tsx`, `webcontainerService.ts`, and `App.tsx`:
+
+1. **WebContainer Boot Request:** `startWebContainerShell()` is invoked when `TerminalTab` mounts (`isActive: true`).
+2. **WebContainer Boot Completion:** `webcontainerService.boot()` finishes; runtime instance is active.
+3. **Filesystem Mount:** `webcontainerService.mountProject()` mounts project files into virtual filesystem.
+4. **Shell Process Spawn:** `webcontainerService.spawnInteractiveShell()` calls `container.spawn('jsh', { terminal })`.
+5. **Terminal Instance Creation:** xterm.js instance created in DOM host (`termRef.current = term`).
+6. **I/O Stream Wiring:** `process.output.pipeTo(onData)` wires terminal output; `process.input.getWriter()` wires input.
+7. **The Auto-Start Race (Defect Trigger):**
+   - In `TerminalTab.tsx` (lines 342–349): `webcontainerService.setStartupStage('installing')` is set immediately, and a fixed `setTimeout(..., 500)` fires.
+   - Concurrently, in `App.tsx` (line 1418): opening the project fires `webcontainerService.requestRestart('Project "..." opened')`.
+   - `requestRestart` increments `this.sessionEpoch++`, triggering `TerminalTab`'s `triggerDevServerRestart()`.
+   - `triggerDevServerRestart` immediately sends `shell.write('\x03\r')` (SIGINT Ctrl+C), followed by another fixed `setTimeout(..., 400)` writing `npm install...`.
+8. **Shell Readiness (The Race Disconnect):**
+   - The `jsh` binary inside WebContainer takes between 1000ms to 12000ms+ to initialize its terminal modes, configure bracketed paste mode (`\u001b[?2004h`), and print the prompt `❯`.
+   - When input is written at `t = 500ms`, `jsh`'s interactive command read loop is **not yet active**.
+   - Input sent to `process.input` before `jsh` completes initialization is discarded or flushed by the incoming `^C` / terminal mode switch.
+9. **Prompt Emergence at Idle:**
+   - `jsh` finishes booting and emits `~/cipsh2u4r5ssxd0t8jpdvkb4047wb4-ipko ❯ `.
+   - The shell prompt sits completely idle awaiting user input.
+10. **State Disconnect & Stuck UI:**
+    - `webcontainerService.getState().startupStage` remains `'installing'`.
+    - `webcontainerService.isDevServerStartingState` remains `true`.
+    - The UI status bar indicator continuously pulses cyan with `Installing Dependencies...`.
+    - Because no command was actually executed by `jsh`, no output (`added ... packages` or `npm ERR!`) is ever produced.
+    - `startupStage` never transitions to `'error'` or `'ready'`.
+    - The "Retry" button (which only displays when `startupStage === 'error'`) never renders.
+11. **Dev Server & Live Preview:**
+    - `npm run dev` was chained to `npm install` (`npm install ... && npm run dev\r`); since the command was dropped, the dev server never starts.
+    - No server listens on port 5173; `server-ready` event never fires; the preview iframe remains blank or idle.
+12. **Terminal Restart Lifecycle:**
+    - Clicking the restart button (`triggerDevServerRestart`) repeats the identical flawed sequence (`\x03\r` followed by `setTimeout(..., 400)`), dropping input again if `jsh` restarts.
+
+### 3. Controlled Reproduction Matrix
+
+| Test Case | Scenario / Setup | Observed Outcome | Interpretation |
+| :--- | :--- | :--- | :--- |
+| **Case A — Normal Startup** | Open synthetic npm project (`LP-CaseA`) without interference. Sample terminal every 500ms. | Terminal displays auto-start announcement, followed at `+12.9s` by `~/cipsh... ❯`. `npm install` never starts; prompt sits idle. | **REPRODUCED**: Auto-start silently drops command during normal project open. |
+| **Case B — Timing Analysis** | Direct WebContainer PTY experiment (`test-jsh-race.mjs`) testing early write vs Ctrl+C + 400ms delay. | Commands written before prompt `❯` are printed into pre-prompt buffer but **never executed** by `jsh`. Shell simply renders prompt after them. | **CONFIRMED**: `jsh` requires full interactive readiness before accepting executable commands. |
+| **Case C — Shell-Ready Startup** | Wait for prompt `❯` in `.xterm-rows`, then send commands after shell is verified ready. | `npm install` and `dev server` run cleanly when given input post-readiness. | **CONFIRMED**: WebContainer and Node.js runtime are 100% operational when commands are timed to shell readiness. |
+| **Case D — Independent Command Execution** | Execute `node -v` and `npm -v` directly in WebContainer (`test-jsh-newlines.mjs`). | `node -v` returns `v22.22.3` (exit 0); `npm -v` returns `10.8.2` (exit 0). | **CONFIRMED**: Node.js and npm binaries in WebContainer are completely functional. |
+
+### 4. Service Worker Activation Evidence
+
+Verification executed in dedicated disposable Chromium profile against `https://gb-coder-public-alpha-3mkrqezzq.vercel.app/app/`:
+
+- **HTTP Status:** HTTP 200, Content-Type `application/javascript; charset=utf-8`, 5789 bytes. Verified authentic Workbox runtime (zero SSO redirection).
+- **Registration State:**
+  ```json
+  {
+    "scope": "https://gb-coder-public-alpha-3mkrqezzq.vercel.app/app/",
+    "activeState": "activated",
+    "activeScriptURL": "https://gb-coder-public-alpha-3mkrqezzq.vercel.app/app/sw.js",
+    "controller": true
+  }
+  ```
+- **Post-Reload State:**
+  ```json
+  {
+    "scope": "https://gb-coder-public-alpha-3mkrqezzq.vercel.app/app/",
+    "activeState": "activated",
+    "activeScriptURL": "https://gb-coder-public-alpha-3mkrqezzq.vercel.app/app/sw.js",
+    "hasController": true,
+    "controllerScriptURL": "https://gb-coder-public-alpha-3mkrqezzq.vercel.app/app/sw.js"
+  }
+  ```
+- **Security & Integrity:** Zero `SecurityError` exceptions, zero console errors, zero failed network requests. Reload guard verified (`window.__L8_ALIVE__ === 1`). IndexedDB project data untouched.
+- **Service Worker Final Verdict:** **`PASS (100% Verified)`**.
+
+### 5. Real User Impact Assessment
+
+- **Does this affect real users?** **YES.**
+  - This is an inherent race condition in the application frontend logic, independent of headless Playwright.
+  - Any user loading GB Coder on a device where WebContainer or `jsh` boot takes longer than 500ms (laptops under background load, mobile devices, throttled CPUs, or first-visit cold starts) will experience this failure.
+  - The project opens, the terminal displays "Installing dependencies & starting dev server...", but the terminal sits at an idle `❯` prompt while the UI shows "Installing Dependencies..." forever.
+  - The user must realize the auto-start hung, manually click into the terminal, and type `npm install` and `npm run dev`.
+
+### 6. Proposed Fix Design (For Owner Review — Not Implemented)
+
+**Target Files:**
+1. `src/components/Console/TerminalTab.tsx`
+2. `src/App.tsx`
+
+**Proposed Architecture:**
+1. **Event-Driven Shell Readiness:**
+   - Remove blind `setTimeout(..., 500)` and `setTimeout(..., 400)` in `TerminalTab.tsx`.
+   - Store pending auto-start commands in a ref (`pendingAutoStartCmdRef.current = 'npm install --prefer-offline && npm run dev'`).
+   - In `onData` callback, detect shell prompt readiness by matching `chunk.includes('❯') || /[\$#❯]\s*$/.test(chunk)`.
+   - Once the prompt is observed, immediately flush the pending command to `shell.write(...)`.
+2. **Watchdog Fallback Timer:**
+   - If the prompt is not observed within 10 seconds, transition `startupStage` to `'error'` with reason `'Shell initialization timed out'`, making the "Retry" button visible to the user rather than hanging indefinitely.
+3. **De-duplicate Initial Project Open:**
+   - In `src/App.tsx` (line 1418), suppress redundant `webcontainerService.requestRestart()` during initial project mounting when `TerminalTab` is already auto-starting the project.
+
+**Regression Test Plan:**
+- Run full suite: L1–L8.
+- Verify L5 passes automatically with zero human interaction: WebContainer boot → npm install output → dev server ready → live preview renders.
+
+### 7. Final Stage E2 Release Gate Verdict
+
+| Scenario | Final Evaluation | Justification |
+| :--- | :---: | :--- |
+| **L1: HTTP routes & COOP/COEP** | **PASS** | 7/7 routes compliant, COI=true, SAB=true. |
+| **L2: Astro homepage & routing** | **PASS** | Brand styling intact, CTA navigates to `/app/`. |
+| **L3: Static editor persist/reload** | **PASS** | Monaco edits, IndexedDB atomic commit, reload safe. |
+| **L4: Advanced IDE rename/persist** | **PASS** | Rename, dirty indicator, hard reload safe. |
+| **L5: WebContainer auto-start** | **FAILED (App Defect)** | Auto-start drops startup commands due to 500ms PTY timer race. |
+| **L6: 112-file SHA-256 integrity** | **PASS** | 112/112 files zero hash drift in IndexedDB. |
+| **L7: ZIP backup & clean restore** | **PASS** | Export archive downloaded and restored with 100% data recovery. |
+| **L8: Service Worker activation** | **PASS** | Worker active and controlling `/app/`, 0 reload loops, 0 console errors. |
+
+**Final Stage E2 Verdict:** **`STAGE_E2_PREVIEW_FAILED`**
+*Release gate is BLOCKED. Per strict protocol, no application source was edited, PR #31 was not merged, and no deployment was triggered. Awaiting owner review and authorization.*
