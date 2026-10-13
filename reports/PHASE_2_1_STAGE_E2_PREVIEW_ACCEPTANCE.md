@@ -207,3 +207,21 @@ pending (and note E2 automation above is itself pending access).
   of secrets and application output).
 - No code, deploy, or config conclusion follows from this run. Rerun with
   the corrected command below (it enforces cwd first).
+
+---
+
+## Live run attempt 2 (partial: L1–L3 PASS, runner terminated)
+
+- With owner-provisioned bypass, the live suite authenticated correctly and
+  executed: **L1 PASS** (routes, `COOP: same-origin` / `COEP: require-corp`
+  on `/app` + `/app/ide`, `crossOriginIsolated === true`, SharedArrayBuffer
+  present), **L2 PASS** (Astro homepage, branding, CTA → `/app`, no SPA
+  fallback), **L3 PASS** (static create → edit → persist → refresh → reopen,
+  exact content, pointer correct).
+- The runner process then ended after L3 with no completion marker, no FAIL
+  lines, and no exit code recorded; no test-runner node process remains.
+  L4–L8: **NOT_RUN** (never executed — not inferred, not assumed).
+- No application failure is evidenced anywhere in the partial log; the
+  termination is environmental (owner session/process ended mid-run).
+- Standing by for a complete run. Verdict remains
+  **`STAGE_E2_PREVIEW_BLOCKED`** pending L4–L8 evidence.
