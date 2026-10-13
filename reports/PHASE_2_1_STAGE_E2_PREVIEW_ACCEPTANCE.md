@@ -180,3 +180,16 @@ pending (and note E2 automation above is itself pending access).
 - No pushes, merges, deployments, or config changes performed in this
   resume. Verdict stands: **`STAGE_E2_PREVIEW_BLOCKED`** — unblock path is
   unchanged (owner-provided access → rerun E2 §§5–12 verbatim).
+
+---
+
+## E2.1 access re-scan (no owner action supplied)
+
+- PR #31 still OPEN (head `275b769`, base `53ba1e4`); remote SHAs unchanged;
+  local HEAD `a6c6684`; no source changes since approval.
+- Access scan repeated: no Vercel CLI, no bypass secret in environment, no
+  owner shareable link or session supplied. No anonymous re-probing (SSO
+  outcome established twice already).
+- Unrelated new untracked file observed and preserved untouched:
+  `project_files.zip` (not created by this agent; left in place).
+- Standing by at **`WAITING_FOR_OWNER_AUTHENTICATION`** — handoff below.
