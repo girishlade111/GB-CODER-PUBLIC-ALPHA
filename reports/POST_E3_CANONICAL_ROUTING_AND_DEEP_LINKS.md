@@ -259,30 +259,43 @@ with project A.
 
 ## R1.1.4 Route traceability matrix (ROUTE-01..30)
 
-| Req | Test | Type | Evidence | Status |
+| Requirement ID | Test name | Test type | Evidence | Status |
 |---|---|---|---|---|
-| ROUTE-01 | homepage `/` | HTTP | ROUTE-01/17 | PASS |
-| ROUTE-02 | `/about` direct | HTTP+browser | ROUTE-02, LEGAL-01 | PASS |
-| ROUTE-03 | `/privacy-policy` direct | HTTP | ROUTE-03 | PASS |
-| ROUTE-04 | `/terms-and-conditions` direct | HTTP | ROUTE-04 | PASS |
-| ROUTE-05 | `/contact` (no form) | HTTP | ROUTE-05 | PASS |
-| ROUTE-06/07/16 | `/app`+`/app/projects` dashboard-first, no auto-open | browser | ROUTE-06/07/16 | PASS |
-| ROUTE-08 | `/new` shows creation UI, creates nothing on open/refresh | browser | ROUTE-08 | PASS |
-| ROUTE-09/10 | static/advanced open → canonical project URLs | browser | ROUTE-09/10 | PASS |
-| ROUTE-11 | deep link + hard refresh preserve editor+selection | browser | ROUTE-11 | PASS |
-| ROUTE-12/29/30 | Back/Forward, id stability, zero duplication | browser | ROUTE-12/29/30 | PASS |
-| ROUTE-13/14 | invalid + cross-profile IDs → safe recovery, zero records | browser | ROUTE-13/14 | PASS |
-| ROUTE-15 | legacy `/app/editor`, `/app/ide`, `/ide` | browser | ROUTE-15 | PASS |
-| ROUTE-17 | Astro CTA → dashboard | HTTP | ROUTE-01/17 | PASS |
-| ROUTE-18 | empty IDE stays empty after URL reload | browser | ROUTE-18 | PASS |
-| ROUTE-19/20 | fresh draft URL / restore identity | browser | ROUTE-19/20 | PASS |
-| ROUTE-21..24 | WC idle/startup/hot-reload (deep suite) | browser | TEST-A..D | PASS (R1.1.5) |
-| ROUTE-25 | ZIP backup/restore preserves IDs+files | browser | ROUTE-25 | PASS |
-| ROUTE-26 | COOP/COEP + SAB on nested routes | HTTP+browser | ROUTE-26/28 | PASS |
-| ROUTE-27 | SW activation on nested entry | browser | ROUTE-27 | PASS |
-| ROUTE-28 | Astro + React assets resolve | HTTP | ROUTE-26/28 | PASS |
+| ROUTE-01 | homepage `/` loads Astro HTML with Start Coding CTAs to `/app/projects` | HTTP / Build | `e2e-canonical-routes.mjs` (ROUTE-01/17), `audit-routes.mjs` (#01), build check 1 | PASS |
+| ROUTE-02 | `/about` loads direct Astro page without React root, title/canonical valid | HTTP / Browser | `e2e-canonical-routes.mjs` (ROUTE-02, LEGAL-01), build check 10 | PASS |
+| ROUTE-03 | `/privacy-policy` loads direct Astro page with canonical metadata | HTTP | `e2e-canonical-routes.mjs` (ROUTE-03), build check 12 | PASS |
+| ROUTE-04 | `/terms-and-conditions` loads direct Astro page with canonical metadata | HTTP | `e2e-canonical-routes.mjs` (ROUTE-04), build check 13 | PASS |
+| ROUTE-05 | `/contact` loads direct Astro page with email/socials and no form | HTTP | `e2e-canonical-routes.mjs` (ROUTE-05), build check 11 | PASS |
+| ROUTE-06 | `/app` dashboard alias opens dashboard directly with no auto-open of stored project | Browser / Unit | `e2e-canonical-routes.mjs` (ROUTE-06/07/16), `project-flow-regression-tests.mjs` | PASS |
+| ROUTE-07 | `/app/projects` canonical dashboard loads cleanly with no auto-open | Browser / Unit | `e2e-canonical-routes.mjs` (ROUTE-06/07/16), `e2e-project-flow.mjs` (NAV-01/03) | PASS |
+| ROUTE-08 | `/app/projects/new` opens creation modal; refresh creates nothing; cancel returns to dashboard | Browser / Unit | `e2e-canonical-routes.mjs` (ROUTE-08), `project-flow-regression-tests.mjs` | PASS |
+| ROUTE-09 | Static project open navigates to canonical `/app/projects/:id/editor` | Browser | `e2e-canonical-routes.mjs` (ROUTE-09), `e2e-project-flow.mjs` (NAV-04a) | PASS |
+| ROUTE-10 | Advanced project open navigates to canonical `/app/projects/:id/ide` | Browser | `e2e-canonical-routes.mjs` (ROUTE-10), `e2e-project-flow.mjs` (NAV-04b) | PASS |
+| ROUTE-11 | Direct deep-link + hard refresh preserves editor mode and file selection | Browser | `e2e-canonical-routes.mjs` (ROUTE-11), `e2e-webcontainer-full.mjs` (TEST-C-3) | PASS |
+| ROUTE-12 | Browser Back/Forward navigation retains correct route and project identity | Browser | `e2e-canonical-routes.mjs` (ROUTE-12/29/30), `e2e-project-flow.mjs` (NAV-06a/b) | PASS |
+| ROUTE-13 | Invalid project ID in URL routes to safe recovery screen without creating empty project | Browser / Unit | `e2e-canonical-routes.mjs` (ROUTE-13), `project-flow-regression-tests.mjs` | PASS |
+| ROUTE-14 | Clean browser profile opening remote ID gets safe unavailable screen and import option | Browser | `e2e-canonical-routes.mjs` (ROUTE-14) | PASS |
+| ROUTE-15 | Legacy routes (`/app/editor`, `/app/ide`, `/ide`) canonicalize or degrade safely | Browser / Unit | `e2e-canonical-routes.mjs` (ROUTE-15), `audit-routes.mjs` (#04/05) | PASS |
+| ROUTE-16 | Unrecognized `/app/*` path resolves safely to Dashboard without editor flash | Browser / Unit | `e2e-canonical-routes.mjs` (ROUTE-06/07/16), `project-flow-regression-tests.mjs` | PASS |
+| ROUTE-17 | Astro landing page CTAs route directly to `/app/projects` | HTTP / Build | `e2e-canonical-routes.mjs` (ROUTE-01/17), unified build check 1 | PASS |
+| ROUTE-18 | Empty Advanced IDE at `/app/projects/:id/ide` renders zero files and welcome state | Browser | `e2e-canonical-routes.mjs` (ROUTE-18), `e2e-webcontainer-full.mjs` (TEST-A) | PASS |
+| ROUTE-19 | Fresh Start generates blank draft under its own `/app/projects/:draftId/editor` URL | Browser | `e2e-canonical-routes.mjs` (ROUTE-19), `e2e-project-flow.mjs` (ST-02..05) | PASS |
+| ROUTE-20 | Restore recovers exact snapshot and maintains project identity under canonical URL | Browser | `e2e-canonical-routes.mjs` (ROUTE-20), `e2e-project-flow.mjs` (ST-01) | PASS |
+| ROUTE-21 | Manifest-less project mounts files and boots shell with zero npm commands | Browser | `e2e-canonical-routes.mjs` (ROUTE-21), `e2e-webcontainer-full.mjs` (TEST-B) | PASS |
+| ROUTE-22 | Project with `package.json` initiates automatic `npm install` without manual typing | Browser | `e2e-canonical-routes.mjs` (ROUTE-22/23), `e2e-webcontainer-full.mjs` (TEST-C-1) | PASS |
+| ROUTE-23 | Shell readiness race eliminated; install dispatches only after prompt readiness | Browser | `e2e-canonical-routes.mjs` (ROUTE-22/23), `e2e-webcontainer-full.mjs` (TEST-C-1) | PASS |
+| ROUTE-24 | Static project preview updates via live hot reload on canonical editor URL | Browser | `e2e-canonical-routes.mjs` (ROUTE-24), `e2e-project-flow.mjs` (WC-07) | PASS |
+| ROUTE-25 | ZIP backup export and restore preserves IDs, files, and editor styles across profiles | Browser | `e2e-canonical-routes.mjs` (ROUTE-25), `backup-restore-tests.mjs` (T21..T35) | PASS |
+| ROUTE-26 | COOP `same-origin` + COEP `require-corp` and `SharedArrayBuffer` active on nested routes | HTTP / Browser | `e2e-canonical-routes.mjs` (ROUTE-26/28), `webcontainer-regression-tests.mjs` | PASS |
+| ROUTE-27 | Service Worker registers and activates scoped to `/app` on nested route entry | Browser | `e2e-canonical-routes.mjs` (ROUTE-27), build check 6 | PASS |
+| ROUTE-28 | Static marketing assets (`/_astro/*`) and app assets (`/app/assets/*`) resolve on nested URLs | HTTP | `e2e-canonical-routes.mjs` (ROUTE-26/28), build check 4 | PASS |
+| ROUTE-29 | Project ID charset, bounds, and encoding survive URL round-trips byte-identical | Browser / Unit | `e2e-canonical-routes.mjs` (ROUTE-12/29/30), `project-flow-regression-tests.mjs` | PASS |
+| ROUTE-30 | Rapid navigation storms across project URLs cause zero duplication or state mix | Browser | `e2e-canonical-routes.mjs` (ROUTE-12/29/30), `e2e-webcontainer-full.mjs` (TEST-D) | PASS |
+| LEGAL-01 | In-app footer legal link (About) navigates to canonical `/about` (Astro HTML, no React root) | Browser | `e2e-canonical-routes.mjs` (LEGAL-01) | PASS |
+| LEGAL-02 | Browser Back from Astro legal page restores exact editor screen, project, and unsaved edits | Browser | `e2e-canonical-routes.mjs` (LEGAL-02) | PASS |
+| LEGAL-03 | Same-profile second tab opening project B loads B cleanly without mixing project A | Browser | `e2e-canonical-routes.mjs` (LEGAL-03) | PASS |
 
-No requirement is untested; combined scenarios are noted above. No PASS was invented.
+All 30 ROUTE requirements and 3 legal navigation requirements verified passing across dedicated and integrated suites. No PASS was invented.
 
 ## R1.1.5 Full WebContainer E2E (Tests A–E) — `scripts/e2e-webcontainer-full.mjs`
 
@@ -366,7 +379,7 @@ touched (disposable profiles, synthetic data only).
 ## R1.1.10 Local commit
 
 - Branch: `fix/project-first-navigation-editor-startup` (local only — not pushed, no PR).
-- New commit: `9dda691` (extends preserved `a223efc` and `bbc7236`).
+- Stage R1.1 implementation commit: `3b05cb1` (extends preserved `a223efc` and `bbc7236`).
 - Staged scope verified: 5 modified + 1 new file, all R1.1-scoped; unrelated
   untracked E3 artifacts left out and untouched on disk. No secrets.
 
