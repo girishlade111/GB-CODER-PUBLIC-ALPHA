@@ -11,6 +11,7 @@ import { WebContainer, FileSystemTree } from '@webcontainer/api';
 import { ProjectFile, ProjectType } from '../../types/files';
 import { webcontainerPerf } from './webcontainerPerf';
 import { FileSyncCoordinator } from './fileSyncCoordinator';
+export { FileSyncCoordinator };
 
 /**
  * Optimized npm configuration for WebContainer:
@@ -131,6 +132,8 @@ export interface WebContainerRuntimeError {
 export interface WebContainerServerInfo {
   port: number;
   url: string;
+  projectId?: string | null;
+  sessionEpoch?: number;
 }
 
 export interface WebContainerState {
@@ -353,6 +356,9 @@ class WebContainerManager {
   private lastStartedFingerprint: string | null = null;
   private lastStartedEpoch = -1;
   private isShellPromptReady = false;
+  private drainingPorts = new Map<number, { projectId: string | null; sessionEpoch: number }>();
+  private devServerStartEpoch: number | null = null;
+  private devServerStartProjectId: string | null = null;
 
   private fileSyncCoordinator = new FileSyncCoordinator({
     debounceMs: 200,
@@ -526,15 +532,27 @@ class WebContainerManager {
   public attachProject(projectId: string): void {
     if (this.activeProjectId === projectId) return;
 
+    // Track any existing active servers as draining so late events cannot pollute state
+    for (const server of this.state.activeServers) {
+      this.drainingPorts.set(server.port, {
+        projectId: this.activeProjectId,
+        sessionEpoch: this.sessionEpoch,
+      });
+    }
+
     // If another project was attached, cleanly tear down its dev server and pending writes
     if (this.activeProjectId !== null) {
       this.stopDevServer();
       this.sessionEpoch++;
       this.resetProjectStartState();
       this.fileSyncCoordinator.cancelAll();
+    } else {
+      this.sessionEpoch++;
     }
 
     this.activeProjectId = projectId;
+    this.devServerStartEpoch = null;
+    this.devServerStartProjectId = null;
     this.fileSyncCoordinator.setScope(projectId);
     this.updateState({
       activeProjectId: projectId,
@@ -553,6 +571,14 @@ class WebContainerManager {
     if (projectId && this.activeProjectId !== projectId) {
       return;
     }
+
+    for (const server of this.state.activeServers) {
+      this.drainingPorts.set(server.port, {
+        projectId: this.activeProjectId,
+        sessionEpoch: this.sessionEpoch,
+      });
+    }
+
     if (this.activeProjectId !== null) {
       this.stopDevServer();
       this.sessionEpoch++;
@@ -560,6 +586,8 @@ class WebContainerManager {
       this.fileSyncCoordinator.cancelAll();
     }
     this.activeProjectId = null;
+    this.devServerStartEpoch = null;
+    this.devServerStartProjectId = null;
     this.fileSyncCoordinator.setScope(null);
     this.updateState({
       activeProjectId: null,
@@ -611,12 +639,18 @@ class WebContainerManager {
     return Boolean(this.state.startupStage === 'starting_server' || this.isDevServerStartingState);
   }
 
-  public setDevServerStarting(starting: boolean): void {
+  public setDevServerStarting(starting: boolean, epoch?: number, projectId?: string): void {
     this.isDevServerStartingState = starting;
     if (starting) {
+      this.devServerStartEpoch = epoch ?? this.sessionEpoch;
+      this.devServerStartProjectId = projectId ?? this.activeProjectId;
       this.updateState({ startupStage: 'starting_server' });
-    } else if (this.state.startupStage === 'starting_server') {
-      this.updateState({ startupStage: this.state.serverUrl ? 'ready' : 'idle' });
+    } else {
+      this.devServerStartEpoch = null;
+      this.devServerStartProjectId = null;
+      if (this.state.startupStage === 'starting_server') {
+        this.updateState({ startupStage: this.state.serverUrl ? 'ready' : 'idle' });
+      }
     }
   }
 
@@ -636,8 +670,16 @@ class WebContainerManager {
         // Ignored
       }
     }
+    for (const server of this.state.activeServers) {
+      this.drainingPorts.set(server.port, {
+        projectId: this.activeProjectId,
+        sessionEpoch: this.sessionEpoch,
+      });
+    }
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
+    this.devServerStartEpoch = null;
+    this.devServerStartProjectId = null;
     this.updateState({
       serverUrl: null,
       serverPort: null,
@@ -718,10 +760,42 @@ class WebContainerManager {
         console.warn(`[WebContainer] Discarded late server-ready at port ${port} (no active project attached)`);
         return;
       }
+
+      // Check if this port is a draining port from a prior session/project
+      const draining = this.drainingPorts.get(port);
+      if (draining) {
+        if (draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId) {
+          console.warn(
+            `[WebContainer] Discarded late server-ready at port ${port} (draining server from project ${draining.projectId}, epoch ${draining.sessionEpoch})`,
+          );
+          return;
+        }
+      }
+
+      // Guard: is a dev server starting or active in the current session epoch?
+      const isExpected =
+        this.isDevServerStartingState ||
+        this.isDevServerActive ||
+        this.state.startupStage === 'starting_server';
+
+      if (!isExpected) {
+        console.warn(
+          `[WebContainer] Discarded unsolicited/late server-ready at port ${port} (no dev server starting or active for project "${this.activeProjectId}")`,
+        );
+        return;
+      }
+
       console.log(`[WebContainer] Server ready for project "${this.activeProjectId}" at port ${port}: ${url}`);
       this.isDevServerActive = true;
       this.isDevServerStartingState = false;
-      const newServer: WebContainerServerInfo = { port, url };
+      this.drainingPorts.delete(port);
+
+      const newServer: WebContainerServerInfo = {
+        port,
+        url,
+        projectId: this.activeProjectId,
+        sessionEpoch: this.sessionEpoch,
+      };
       const updatedServers = [
         ...this.state.activeServers.filter((s) => s.port !== port),
         newServer,
@@ -742,7 +816,19 @@ class WebContainerManager {
     const unsubPort = container.on('port', (port, type, url) => {
       console.log(`[WebContainer] Port ${port} ${type}: ${url}`);
       if (type === 'open') {
-        const newServer: WebContainerServerInfo = { port, url };
+        if (!this.activeProjectId) return;
+        if (this.drainingPorts.has(port)) {
+          const draining = this.drainingPorts.get(port)!;
+          if (draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId) {
+            return;
+          }
+        }
+        const newServer: WebContainerServerInfo = {
+          port,
+          url,
+          projectId: this.activeProjectId,
+          sessionEpoch: this.sessionEpoch,
+        };
         const updated = [
           ...this.state.activeServers.filter((s) => s.port !== port),
           newServer,
@@ -754,6 +840,23 @@ class WebContainerManager {
             : { serverUrl: url, serverPort: port, startupStage: 'ready', previewStatus: 'loading' }),
         });
       } else if (type === 'close') {
+        // If this port was draining from a previous project/epoch, clean it up without touching active state
+        if (this.drainingPorts.has(port)) {
+          this.drainingPorts.delete(port);
+          console.log(`[WebContainer] Draining port ${port} closed cleanly`);
+          const updated = this.state.activeServers.filter((s) => s.port !== port);
+          if (updated.length !== this.state.activeServers.length) {
+            this.updateState({ activeServers: updated });
+          }
+          return;
+        }
+
+        const closingServer = this.state.activeServers.find((s) => s.port === port);
+        // If closing port belonged to a different project or epoch, ignore
+        if (closingServer && closingServer.projectId && closingServer.projectId !== this.activeProjectId) {
+          return;
+        }
+
         const updated = this.state.activeServers.filter((s) => s.port !== port);
         const wasActive = this.state.serverPort === port;
         const nextServer = updated[updated.length - 1] ?? null;
@@ -898,6 +1001,9 @@ class WebContainerManager {
     this.updateState({ startupStage: 'mounting_files' });
 
     try {
+      // Barrier: ensure any in-flight writes have settled before mounting files
+      await this.fileSyncCoordinator.barrier();
+
       const endSerialization = webcontainerPerf.startTimer('project_serialization');
       const tree = filesToFileSystemTree(files, dependencies, projectType);
       endSerialization({ fileCount: files.length });
@@ -1069,6 +1175,13 @@ class WebContainerManager {
    */
   public async flushFileSync(): Promise<void> {
     await this.fileSyncCoordinator.flush();
+  }
+
+  /**
+   * Waits for any currently in-flight writes to settle to virtual disk.
+   */
+  public async barrierFileSync(timeoutMs?: number): Promise<boolean> {
+    return this.fileSyncCoordinator.barrier(timeoutMs);
   }
 
   /**

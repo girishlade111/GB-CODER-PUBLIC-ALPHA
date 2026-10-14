@@ -94,6 +94,20 @@ export class FileSyncCoordinator {
     });
   }
 
+  public async barrier(timeoutMs = 5000): Promise<boolean> {
+    const start = Date.now();
+    while (this.inFlightPaths.size > 0) {
+      if (Date.now() - start > timeoutMs) {
+        console.warn(
+          `[FileSyncCoordinator] Barrier timeout waiting for in-flight writes (${this.inFlightPaths.size} remaining)`,
+        );
+        return false;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    return true;
+  }
+
   private async executeWrite(cleanPath: string): Promise<void> {
     const item = this.pendingWrites.get(cleanPath);
     if (!item) return;
@@ -114,7 +128,14 @@ export class FileSyncCoordinator {
     this.pendingWrites.delete(cleanPath);
 
     try {
-      await this.rawWrite(cleanPath, item.content);
+      // Re-verify project scope immediately prior to raw write execution
+      if (
+        item.projectId === null ||
+        this.activeProjectId === null ||
+        item.projectId === this.activeProjectId
+      ) {
+        await this.rawWrite(cleanPath, item.content);
+      }
     } catch (err) {
       console.warn(`[FileSyncCoordinator] Failed to write file ${cleanPath}:`, err);
     } finally {
@@ -175,20 +196,45 @@ export class FileSyncCoordinator {
   }
 
   public handleRename(oldPath: string, newPath: string): void {
-    const cleanOld = oldPath.replace(/^\/+/, '');
-    const cleanNew = newPath.replace(/^\/+/, '');
+    const cleanOld = oldPath.replace(/^\/+/, '').replace(/\/+$/, '');
+    const cleanNew = newPath.replace(/^\/+/, '').replace(/\/+$/, '');
+    const oldPrefix = `${cleanOld}/`;
+    const newPrefix = `${cleanNew}/`;
 
+    // 1. Direct path match
     const oldItem = this.pendingWrites.get(cleanOld);
     if (oldItem) {
       if (oldItem.timer) clearTimeout(oldItem.timer);
       this.pendingWrites.delete(cleanOld);
       this.queueSync(cleanNew, oldItem.content, oldItem.projectId);
     }
+
+    // 2. Directory prefix matches: remap any descendants in pendingWrites
+    for (const [key, item] of Array.from(this.pendingWrites.entries())) {
+      if (key.startsWith(oldPrefix)) {
+        if (item.timer) clearTimeout(item.timer);
+        this.pendingWrites.delete(key);
+        const subPath = key.slice(oldPrefix.length);
+        const remappedPath = `${newPrefix}${subPath}`;
+        this.queueSync(remappedPath, item.content, item.projectId);
+      }
+    }
   }
 
   public async handleDelete(path: string): Promise<void> {
     this.cancelPath(path);
     const cleanPath = path.replace(/^\/+/, '');
+    const prefix = cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`;
+
+    // Await any in-flight writes on this path or its descendants before deleting
+    const start = Date.now();
+    while (
+      Array.from(this.inFlightPaths).some((p) => p === cleanPath || p.startsWith(prefix))
+    ) {
+      if (Date.now() - start > 3000) break;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
     if (
       cleanPath === 'package.json' ||
       cleanPath === 'package-lock.json' ||

@@ -2248,14 +2248,17 @@ function App() {
       : PROJECTS_ROUTE;
 
     const leaveToNonProject = async (unavailable: string | null): Promise<boolean> => {
+      const transition = beginTransition();
       const flushed = await flushProjectSave();
       if (flushed && !flushed.ok) {
         toast.error('Could not save the current project. Staying put so no edits are lost.');
         navigateReplace(fallbackUrl);
         return false;
       }
+      if (!isCurrentTransition(transition)) return false;
       void loadWebContainerService().then(({ webcontainerService }) => {
         void webcontainerService.flushFileSync().then(() => {
+          if (!isCurrentTransition(transition)) return;
           webcontainerService.detachProject();
         });
       });
@@ -2472,6 +2475,7 @@ function App() {
       // Flush any pending file writes for previous project and attach newly opened project
       void loadWebContainerService().then(({ webcontainerService }) => {
         void webcontainerService.flushFileSync().then(() => {
+          if (!isCurrentTransition(transition)) return;
           webcontainerService.attachProject(opened.id);
         });
       });
@@ -2625,6 +2629,7 @@ function App() {
     // Flush any pending debounced WebContainer writes and detach project dev server
     void loadWebContainerService().then(({ webcontainerService }) => {
       void webcontainerService.flushFileSync().then(() => {
+        if (!isCurrentTransition(transition)) return;
         webcontainerService.detachProject();
       });
     });
