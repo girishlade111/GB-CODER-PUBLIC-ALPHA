@@ -423,6 +423,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     });
   }, [persistSignal, activeProjectId, project.files]);
 
+  // Flush any pending debounced writes when leaving the mode
+  useEffect(() => {
+    return () => {
+      void webcontainerService.flushFileSync();
+    };
+  }, []);
+
   const openFile = useCallback((path: string) => {
     setOpenPaths((current) => {
       if (current.includes(path)) return current;
@@ -526,11 +533,12 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         current === null ? current : remapPath(current, oldPath, finalNew),
       );
       // Dirty markers travel with their files so dots stay truthful.
-      setDirtyPaths((current) => {
+        setDirtyPaths((current) => {
         const next = new Set<string>();
         for (const p of current) next.add(remapPath(p, oldPath, finalNew));
         return next;
       });
+      webcontainerService.renameFile(oldPath, finalNew);
     },
     [onRenameFile, project.files, project.projectType],
   );
@@ -538,6 +546,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const handleDeleteFile = useCallback(
     (path: string) => {
       onDeleteFile?.(path);
+      void webcontainerService.deleteFile(path);
 
       const isTarget = (p: string) => p === path || p.startsWith(path + '/');
 
@@ -572,7 +581,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       if (!activePath) return;
       const text = value ?? '';
       onChangeFile(activePath, text);
-      void webcontainerService.syncFile(activePath, text);
+      void webcontainerService.syncFile(activePath, text, activeProjectId ?? undefined);
       ataService.acquireTypes(text);
       setDirtyPaths((current) => {
         if (current.has(activePath)) return current;
@@ -581,7 +590,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         return next;
       });
     },
-    [activePath, onChangeFile],
+    [activePath, onChangeFile, activeProjectId],
   );
 
   const isSplitActive = Boolean(splitActivePath && splitOpenPaths.length > 0);
@@ -685,7 +694,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       if (!splitActivePath) return;
       const text = value ?? '';
       onChangeFile(splitActivePath, text);
-      void webcontainerService.syncFile(splitActivePath, text);
+      void webcontainerService.syncFile(splitActivePath, text, activeProjectId ?? undefined);
       ataService.acquireTypes(text);
       setDirtyPaths((current) => {
         if (current.has(splitActivePath)) return current;
@@ -694,7 +703,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         return next;
       });
     },
-    [splitActivePath, onChangeFile],
+    [splitActivePath, onChangeFile, activeProjectId],
   );
 
   /** Mirrors the caret into the status bar, the way VS Code reports Ln/Col. */
@@ -1974,6 +1983,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     isResolvingPackages={false}
                     isActive={showTerminal && bottomTab === 'terminal'}
                     autoStartProject={true}
+                    projectId={activeProjectId ?? undefined}
                   />
                 </div>
                 {bottomTab === 'problems' && (

@@ -30,6 +30,7 @@ interface TerminalTabProps {
   /** Terminal is only mounted/fitted while its tab is visible. */
   isActive: boolean;
   autoStartProject?: boolean;
+  projectId?: string;
 }
 
 const PROMPT = `${ANSI.brightGreen}gb${ANSI.reset}${ANSI.gray}:${ANSI.reset}${ANSI.brightCyan}~${ANSI.reset}${ANSI.gray}$${ANSI.reset} `;
@@ -44,6 +45,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   isResolvingPackages,
   isActive,
   autoStartProject = true,
+  projectId,
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
@@ -258,6 +260,10 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       webcontainerService.setStartupStage('booting');
 
       const currentProj = projectRef.current;
+      const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
+      if (effectiveProjectId) {
+        webcontainerService.attachProject(effectiveProjectId);
+      }
 
       // Mount project files into virtual filesystem if files exist
       if (currentProj.files.length > 0) {
@@ -402,8 +408,8 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           return;
         }
 
-        // Idempotency: verify if dev server is already running
-        if (webcontainerService.isDevServerRunning()) {
+        // Idempotency: verify if dev server is already running for this project
+        if (webcontainerService.isDevServerRunning(effectiveProjectId)) {
           term.write(
             `\r\n${ANSI.brightGreen}⚡ Connected to active WebContainer Dev Server (${webcontainerService.getState().serverUrl ?? 'port ready'}).${ANSI.reset}\r\n`,
           );
@@ -607,6 +613,14 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       triggerDevServerRestart(reason || 'Restarting dev server');
     });
   }, [triggerDevServerRestart]);
+
+  // Attach project scope to webcontainerService
+  useEffect(() => {
+    const effectiveId = projectId || (project as unknown as { id?: string }).id;
+    if (effectiveId) {
+      webcontainerService.attachProject(effectiveId);
+    }
+  }, [projectId, (project as unknown as { id?: string }).id]);
 
   /** Creates the terminal once, then wires input handling. */
   useEffect(() => {

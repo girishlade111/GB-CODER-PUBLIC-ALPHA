@@ -2254,6 +2254,11 @@ function App() {
         navigateReplace(fallbackUrl);
         return false;
       }
+      void loadWebContainerService().then(({ webcontainerService }) => {
+        void webcontainerService.flushFileSync().then(() => {
+          webcontainerService.detachProject();
+        });
+      });
       savedFilesRef.current = null;
       setActiveProjectId(null);
       setActiveProject(null);
@@ -2463,6 +2468,13 @@ function App() {
       setActiveProjectId(opened.id);
       setActiveProject(opened);
       setProjects((current) => [opened, ...current.filter((item) => item.id !== opened.id)]);
+
+      // Flush any pending file writes for previous project and attach newly opened project
+      void loadWebContainerService().then(({ webcontainerService }) => {
+        void webcontainerService.flushFileSync().then(() => {
+          webcontainerService.attachProject(opened.id);
+        });
+      });
       // Explicit opens push a history entry; navigation-driven opens (Back /
       // Forward / cold deep link) replace so the trail never gains duplicates.
       applyProjectToEditor(opened, restored, {
@@ -2582,6 +2594,9 @@ function App() {
       setProjects((current) => current.filter((item) => item.id !== record.id));
 
       if (activeProjectId === record.id) {
+        void loadWebContainerService().then(({ webcontainerService }) => {
+          webcontainerService.detachProject(record.id);
+        });
         savedFilesRef.current = null;
         writeActiveProjectId(null);
         setActiveProjectId(null);
@@ -2606,6 +2621,13 @@ function App() {
       return;
     }
     if (!isCurrentTransition(transition)) return;
+
+    // Flush any pending debounced WebContainer writes and detach project dev server
+    void loadWebContainerService().then(({ webcontainerService }) => {
+      void webcontainerService.flushFileSync().then(() => {
+        webcontainerService.detachProject();
+      });
+    });
 
     savedFilesRef.current = null;
     writeActiveProjectId(null);

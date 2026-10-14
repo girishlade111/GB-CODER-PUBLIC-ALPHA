@@ -10,6 +10,7 @@
 import { WebContainer, FileSystemTree } from '@webcontainer/api';
 import { ProjectFile, ProjectType } from '../../types/files';
 import { webcontainerPerf } from './webcontainerPerf';
+import { FileSyncCoordinator } from './fileSyncCoordinator';
 
 /**
  * Optimized npm configuration for WebContainer:
@@ -143,6 +144,7 @@ export interface WebContainerState {
   previewStatus: PreviewStatus;
   runtimeError: WebContainerRuntimeError | null;
   sessionEpoch: number;
+  activeProjectId: string | null;
 }
 
 /** Converts a flat array of ProjectFile objects into a nested WebContainer FileSystemTree */
@@ -152,13 +154,17 @@ export function filesToFileSystemTree(
   projectType?: ProjectType,
 ): FileSystemTree {
   const root: FileSystemTree = {};
-  let hasPackageJson = false;
+  let hasRootPackageJson = false;
+  let hasNestedPackageJson = false;
 
   for (const file of files) {
     if (!file.path) continue;
     const cleanPath = file.path.replace(/^\/+/, '');
-    if (/(^|\/)package\.json$/i.test(cleanPath)) {
-      hasPackageJson = true;
+    const lower = cleanPath.toLowerCase();
+    if (lower === 'package.json') {
+      hasRootPackageJson = true;
+    } else if (lower.endsWith('/package.json')) {
+      hasNestedPackageJson = true;
     }
     const segments = cleanPath.split('/').filter(Boolean);
     if (segments.length === 0) continue;
@@ -186,8 +192,25 @@ export function filesToFileSystemTree(
     }
   }
 
-  // Ensure root package.json is present so `npm install` and Node commands always succeed
-  if (!hasPackageJson) {
+  // Root package.json handling:
+  // 1. Explicit root manifest present: preserve it and merge extraDependencies if any.
+  // 2. Nested manifest only: DO NOT synthesize root package.json (stays idle at root, no synthesis).
+  // 3. Truly empty project (files.length === 0): DO NOT synthesize root package.json (stays idle).
+  // 4. Non-empty plain project: provide fallback package.json for manual Node/npm commands in terminal.
+  if (hasRootPackageJson) {
+    if (extraDependencies && Object.keys(extraDependencies).length > 0) {
+      const pkgNode = root['package.json'] as { file?: { contents: string } } | undefined;
+      if (pkgNode?.file) {
+        try {
+          const parsed = JSON.parse(pkgNode.file.contents);
+          parsed.dependencies = { ...(parsed.dependencies || {}), ...extraDependencies };
+          pkgNode.file.contents = JSON.stringify(parsed, null, 2);
+        } catch {
+          // ignore
+        }
+      }
+    }
+  } else if (!hasNestedPackageJson && files.length > 0) {
     const isReact =
       projectType === 'react' ||
       files.some((f) => /\.(jsx|tsx)$/i.test(f.path) || f.content.includes('react'));
@@ -235,17 +258,6 @@ export function filesToFileSystemTree(
         ),
       },
     };
-  } else if (extraDependencies && Object.keys(extraDependencies).length > 0) {
-    const pkgNode = root['package.json'] as { file?: { contents: string } } | undefined;
-    if (pkgNode?.file) {
-      try {
-        const parsed = JSON.parse(pkgNode.file.contents);
-        parsed.dependencies = { ...(parsed.dependencies || {}), ...extraDependencies };
-        pkgNode.file.contents = JSON.stringify(parsed, null, 2);
-      } catch {
-        // ignore
-      }
-    }
   }
 
   // Built-in help command script for WebContainer
@@ -337,9 +349,30 @@ class WebContainerManager {
   private sessionEpoch = 0;
   private spawnAttempts = 0;
   private installedManifestFingerprint: string | null = null;
+  private activeProjectId: string | null = null;
   private lastStartedFingerprint: string | null = null;
   private lastStartedEpoch = -1;
   private isShellPromptReady = false;
+
+  private fileSyncCoordinator = new FileSyncCoordinator({
+    debounceMs: 200,
+    rawWrite: async (cleanPath, content) => {
+      if (!this.instance) return;
+      const dirIndex = cleanPath.lastIndexOf('/');
+      if (dirIndex !== -1) {
+        const dir = cleanPath.slice(0, dirIndex);
+        await this.instance.fs.mkdir(dir, { recursive: true });
+      }
+      await this.instance.fs.writeFile(cleanPath, content);
+    },
+    rawDelete: async (cleanPath) => {
+      if (!this.instance) return;
+      await this.instance.fs.rm(cleanPath, { recursive: true });
+    },
+    onDependencyInvalidation: () => {
+      this.invalidateDependencyCache();
+    },
+  });
 
   private state: WebContainerState = {
     status: typeof window !== 'undefined' && window.crossOriginIsolated ? 'idle' : 'unsupported',
@@ -352,6 +385,7 @@ class WebContainerManager {
     previewStatus: 'idle',
     runtimeError: null,
     sessionEpoch: 0,
+    activeProjectId: null,
   };
 
   private listeners = new Set<() => void>();
@@ -485,6 +519,61 @@ class WebContainerManager {
     });
   }
 
+  public getActiveProjectId(): string | null {
+    return this.activeProjectId;
+  }
+
+  public attachProject(projectId: string): void {
+    if (this.activeProjectId === projectId) return;
+
+    // If another project was attached, cleanly tear down its dev server and pending writes
+    if (this.activeProjectId !== null) {
+      this.stopDevServer();
+      this.sessionEpoch++;
+      this.resetProjectStartState();
+      this.fileSyncCoordinator.cancelAll();
+    }
+
+    this.activeProjectId = projectId;
+    this.fileSyncCoordinator.setScope(projectId);
+    this.updateState({
+      activeProjectId: projectId,
+      serverUrl: null,
+      serverPort: null,
+      activeServers: [],
+      startupStage: 'idle',
+      previewStatus: 'idle',
+      error: null,
+      runtimeError: null,
+      sessionEpoch: this.sessionEpoch,
+    });
+  }
+
+  public detachProject(projectId?: string): void {
+    if (projectId && this.activeProjectId !== projectId) {
+      return;
+    }
+    if (this.activeProjectId !== null) {
+      this.stopDevServer();
+      this.sessionEpoch++;
+      this.resetProjectStartState();
+      this.fileSyncCoordinator.cancelAll();
+    }
+    this.activeProjectId = null;
+    this.fileSyncCoordinator.setScope(null);
+    this.updateState({
+      activeProjectId: null,
+      serverUrl: null,
+      serverPort: null,
+      activeServers: [],
+      startupStage: 'idle',
+      previewStatus: 'idle',
+      error: null,
+      runtimeError: null,
+      sessionEpoch: this.sessionEpoch,
+    });
+  }
+
   public resetServerState(): void {
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
@@ -508,8 +597,14 @@ class WebContainerManager {
     return Boolean(this.shellProcess && this.isShellPromptReady);
   }
 
-  public isDevServerRunning(): boolean {
-    return Boolean(this.state.serverUrl || this.isDevServerActive);
+  public isDevServerRunning(projectId?: string): boolean {
+    if (projectId) {
+      return (
+        this.activeProjectId === projectId &&
+        Boolean(this.state.serverUrl || this.isDevServerActive)
+      );
+    }
+    return Boolean(this.activeProjectId && (this.state.serverUrl || this.isDevServerActive));
   }
 
   public isDevServerStarting(): boolean {
@@ -619,7 +714,11 @@ class WebContainerManager {
 
     // 1. server-ready: internal web server is listening and ready to answer requests
     const unsubServerReady = container.on('server-ready', (port, url) => {
-      console.log(`[WebContainer] Server ready at port ${port}: ${url}`);
+      if (!this.activeProjectId) {
+        console.warn(`[WebContainer] Discarded late server-ready at port ${port} (no active project attached)`);
+        return;
+      }
+      console.log(`[WebContainer] Server ready for project "${this.activeProjectId}" at port ${port}: ${url}`);
       this.isDevServerActive = true;
       this.isDevServerStartingState = false;
       const newServer: WebContainerServerInfo = { port, url };
@@ -636,7 +735,7 @@ class WebContainerManager {
         error: null,
         runtimeError: null,
       });
-      webcontainerPerf.recordTiming('server_ready', 0, { port, url });
+      webcontainerPerf.recordTiming('server_ready', 0, { port, url, projectId: this.activeProjectId });
     });
 
     // 2. port: emitted when a port opens or closes
@@ -846,17 +945,27 @@ class WebContainerManager {
   }
 
   /**
-   * Whether the project's own files declare npm metadata.
+   * Whether the project's own files declare root npm metadata.
    *
    * Automatic install/dev-server dispatch is gated on this: a project without
-   * its own package.json stays idle (no invented manifest, no npm work), while
+   * its own root package.json stays idle (no invented manifest, no npm work), while
    * explicit manual terminal commands keep working against the booted shell.
-   * Mirrors the manifest detection in filesToFileSystemTree.
+   * Nested package.json (e.g. in packages/app/package.json) does NOT trigger root auto-start.
    */
   public hasNpmManifest(files: ProjectFile[]): boolean {
     return files.some((f) =>
-      /(^|\/)package\.json$/i.test((f.path || '').replace(/^\/+/, '')),
+      (f.path || '').replace(/^\/+/, '').toLowerCase() === 'package.json',
     );
+  }
+
+  /**
+   * Whether the project declares any nested npm manifests (e.g. in a monorepo).
+   */
+  public hasNestedNpmManifest(files: ProjectFile[]): boolean {
+    return files.some((f) => {
+      const clean = (f.path || '').replace(/^\/+/, '').toLowerCase();
+      return clean !== 'package.json' && clean.endsWith('/package.json');
+    });
   }
 
   /**
@@ -948,51 +1057,42 @@ class WebContainerManager {
 
   /**
    * Writes a single file to the WebContainer filesystem.
-   * Creates parent directories recursively if they don't exist.
+   * Debounced (200ms) and serialized through FileSyncCoordinator to eliminate write races.
    */
-  public async syncFile(path: string, content: string): Promise<void> {
-    if (!this.instance) return;
-    try {
-      const cleanPath = path.replace(/^\/+/, '');
-      if (
-        cleanPath === 'package.json' ||
-        cleanPath === 'package-lock.json' ||
-        cleanPath === 'pnpm-lock.yaml' ||
-        cleanPath === 'yarn.lock'
-      ) {
-        this.invalidateDependencyCache();
-      }
-      const dirIndex = cleanPath.lastIndexOf('/');
-      if (dirIndex !== -1) {
-        const dir = cleanPath.slice(0, dirIndex);
-        await this.instance.fs.mkdir(dir, { recursive: true });
-      }
-      await this.instance.fs.writeFile(cleanPath, content);
-    } catch (err) {
-      console.warn(`[WebContainer] Failed to sync file ${path}:`, err);
-    }
+  public async syncFile(path: string, content: string, projectId?: string): Promise<void> {
+    this.fileSyncCoordinator.queueSync(path, content, projectId ?? this.activeProjectId);
   }
 
   /**
-   * Removes a file from the WebContainer filesystem.
+   * Flushes all pending debounced writes immediately.
+   * Used prior to navigation, project switching, or backups.
+   */
+  public async flushFileSync(): Promise<void> {
+    await this.fileSyncCoordinator.flush();
+  }
+
+  /**
+   * Removes a file from the WebContainer filesystem, cancelling any pending debounced writes for it.
    */
   public async deleteFile(path: string): Promise<void> {
-    if (!this.instance) return;
-    try {
-      const cleanPath = path.replace(/^\/+/, '');
-      if (
-        cleanPath === 'package.json' ||
-        cleanPath === 'package-lock.json' ||
-        cleanPath === 'pnpm-lock.yaml' ||
-        cleanPath === 'yarn.lock' ||
-        cleanPath === 'node_modules' ||
-        cleanPath.startsWith('node_modules/')
-      ) {
-        this.invalidateDependencyCache();
-      }
-      await this.instance.fs.rm(cleanPath, { recursive: true });
-    } catch (err) {
-      console.warn(`[WebContainer] Failed to remove file ${path}:`, err);
+    await this.fileSyncCoordinator.handleDelete(path);
+  }
+
+  /**
+   * Coordinates file rename in virtual filesystem, migrating any pending writes to newPath.
+   */
+  public renameFile(oldPath: string, newPath: string): void {
+    this.fileSyncCoordinator.handleRename(oldPath, newPath);
+  }
+
+  /**
+   * Cancels pending file syncs for a specific path or all paths.
+   */
+  public cancelPendingSync(path?: string): void {
+    if (path) {
+      this.fileSyncCoordinator.cancelPath(path);
+    } else {
+      this.fileSyncCoordinator.cancelAll();
     }
   }
 
