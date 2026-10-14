@@ -1,0 +1,87 @@
+---
+import Site from '../layouts/Site.astro';
+// Canonical public About page. Copy matches the in-app About page
+// (src/components/pages/AboutPage.tsx); the app links here as canonical.
+---
+
+<Site
+  title="About GB Coder — Browser-First Web Development Studio | LadeStack"
+  description="GB Coder is a free, browser-based code studio by Girish Lade: Monaco editing, live preview, AI assistance, and local-first projects. No signup required."
+  canonicalPath="/about"
+>
+  <section class="page-hero">
+    <span class="hero-tag">AI-Powered Code Editor</span>
+    <h1>Code Smarter with AI Assistance</h1>
+    <p>
+      Write, preview, and enhance HTML, CSS, and JavaScript instantly.
+      The modern way to build for the web.
+    </p>
+    <div class="cta-row">
+      <a href="/app/projects" class="cta-button">Start Coding Now</a>
+    </div>
+  </section>
+
+  <div class="content-wrap">
+    <div class="card">
+      <h2>Everything You Need to Code</h2>
+      <p>A complete development environment in your browser.</p>
+      <div class="grid-2">
+        <div class="mini-card">
+          <h3>Write &amp; Run Code</h3>
+          <p>Edit HTML, CSS, and JavaScript in a professional Monaco-based editor.</p>
+        </div>
+        <div class="mini-card">
+          <h3>AI Assistance</h3>
+          <p>Get intelligent suggestions to improve and optimize your code.</p>
+        </div>
+        <div class="mini-card">
+          <h3>Live Preview</h3>
+          <p>See your changes in real-time with instant browser rendering.</p>
+        </div>
+        <div class="mini-card">
+          <h3>Project Management</h3>
+          <p>Organize your work with projects and version history.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Why Developers Love GB Coder</h2>
+      <p>Built for productivity, designed for simplicity.</p>
+      <ul>
+        <li><strong>Free to use</strong> — lifetime free access.</li>
+        <li><strong>AI powered suggestions</strong> for better code.</li>
+        <li><strong>One-click code enhancement.</strong></li>
+        <li><strong>Live preview</strong> as you type.</li>
+        <li><strong>No login required.</strong></li>
+        <li><strong>Ad-free experience.</strong></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Built by Developers, for Developers</h2>
+      <p>
+        GB Coder is created by <strong>Girish Lade</strong>, an experienced programmer,
+        AI tools maker, and UI/UX engineer. The mission is to make coding faster, smarter,
+        and more accessible using the power of artificial intelligence.
+      </p>
+      <p>
+        Explore more projects at <a href="https://ladestack.in">ladestack.in</a>.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Connect With Us</h2>
+      <p>Follow the journey and stay updated.</p>
+      <ul>
+        <li><a href="https://www.instagram.com/girish_lade_/">Instagram</a></li>
+        <li><a href="https://www.linkedin.com/in/girish-lade-075bba201/">LinkedIn</a></li>
+        <li><a href="https://github.com/girishlade111">GitHub</a></li>
+        <li><a href="https://codepen.io/Girish-Lade-the-looper">CodePen</a></li>
+        <li><a href="mailto:girishlade111@gmail.com">Email</a></li>
+      </ul>
+      <div class="cta-row">
+        <a href="/app/projects" class="cta-button">Open Editor</a>
+      </div>
+    </div>
+  </div>

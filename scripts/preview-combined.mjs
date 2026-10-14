@@ -128,6 +128,20 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 2b. Directory index for Astro directory-format pages (e.g. /about ->
+  // dist/about/index.html). Mirrors static-host clean-URL behavior so nested
+  // public routes resolve identically in local preview and on Vercel.
+  // Never applies under /app/* (React shell owns those paths).
+  if (!pathname.startsWith('/app/') && pathname !== '/app') {
+    const indexPath = join(DIST, pathname.replace(/^\//, ''), 'index.html');
+    if (existsSync(indexPath) && statSync(indexPath).isFile()) {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.end(readFileSync(indexPath));
+      return;
+    }
+  }
+
   // 3. Exact Root Route (/) -> Astro Homepage
   if (pathname === '/' || pathname === '') {
     const astroHtml = join(DIST, 'index.html');

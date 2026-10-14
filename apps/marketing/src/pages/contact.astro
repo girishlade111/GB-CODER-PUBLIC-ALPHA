@@ -1,0 +1,64 @@
+---
+import Site from '../layouts/Site.astro';
+// Canonical public Contact page. Contact details match the in-app Contact page
+// (src/components/pages/ContactPage.tsx). No contact form by design: direct
+// contact runs through the email address below.
+---
+
+<Site
+  title="Contact GB Coder — LadeStack"
+  description="Contact GB Coder: email Girish Lade, find GB Coder on Instagram, LinkedIn, GitHub and CodePen, or start coding in the browser."
+  canonicalPath="/contact"
+>
+  <section class="page-hero">
+    <span class="hero-tag">Get In Touch</span>
+    <h1>Contact Us</h1>
+    <p>Have questions? We'd love to hear from you.</p>
+  </section>
+
+  <div class="content-wrap">
+    <div class="card">
+      <h2>Get in Touch</h2>
+      <ul>
+        <li>
+          <strong>Email:</strong>
+          <a href="mailto:girishlade111@gmail.com">girishlade111@gmail.com</a>
+        </li>
+        <li><strong>Location:</strong> Mumbai, India</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Connect With Us</h2>
+      <div class="grid-2">
+        <div class="mini-card">
+          <h3>Instagram</h3>
+          <p><a href="https://www.instagram.com/girish_lade_/">girish_lade_</a></p>
+        </div>
+        <div class="mini-card">
+          <h3>LinkedIn</h3>
+          <p><a href="https://www.linkedin.com/in/girish-lade-075bba201/">Girish Lade</a></p>
+        </div>
+        <div class="mini-card">
+          <h3>GitHub</h3>
+          <p><a href="https://github.com/girishlade111">girishlade111</a></p>
+        </div>
+        <div class="mini-card">
+          <h3>CodePen</h3>
+          <p><a href="https://codepen.io/Girish-Lade-the-looper">Girish-Lade-the-looper</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>About the Creator</h2>
+      <p>
+        GB Coder is created and maintained by <strong>Girish Lade</strong>, a passionate
+        developer from Mumbai, India. Feel free to reach out for questions, feedback,
+        or collaboration opportunities!
+      </p>
+      <div class="cta-row">
+        <a href="/app/projects" class="cta-button">Start Coding Now</a>
+      </div>
+    </div>
+  </div>

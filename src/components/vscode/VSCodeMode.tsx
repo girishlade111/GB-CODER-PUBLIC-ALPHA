@@ -1051,6 +1051,18 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const hasFiles = project.files.length > 0;
 
   const handleRestartDevServer = useCallback(() => {
+    // Idle means idle: restarting with no project loaded must not invent
+    // npm work. The user asked for a restart, not for a project.
+    if (!hasFiles) {
+      toast('Nothing to restart — load or create project files first.');
+      return;
+    }
+    // Without the project's own package.json there is nothing to install or
+    // serve; restarting would only run commands against an invented manifest.
+    if (!webcontainerService.hasNpmManifest(project.files)) {
+      toast('No package.json — nothing to install or serve.');
+      return;
+    }
     openTerminal();
     toast.success('Restarting WebContainer environment...');
     void webcontainerService
@@ -1058,7 +1070,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       .then(() => {
         webcontainerService.requestRestart('Restart Dev Server');
       });
-  }, [openTerminal, project.files, project.dependencies, project.projectType]);
+  }, [openTerminal, hasFiles, project.files, project.dependencies, project.projectType]);
 
   return (
     // h-full inside App's h-screen wrapper; overflow-hidden forbids page scroll.
@@ -1186,12 +1198,22 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           onOpenSettings={() => setIsSettingsOpen(true)}
           onExit={onExit}
           onResetContainer={() => {
+            if (!hasFiles) {
+              toast('Nothing to remount — load or create project files first.');
+              return;
+            }
             void webcontainerService
               .mountProject(project.files, project.dependencies, project.projectType)
               .then(() => {
-                webcontainerService.requestRestart('Container reset');
+                // Remounting is always safe; only the restart dispatch needs
+                // npm metadata. Without it the container stays idle.
+                if (webcontainerService.hasNpmManifest(project.files)) {
+                  webcontainerService.requestRestart('Container reset');
+                  toast.success('WebContainer virtual filesystem remounted');
+                } else {
+                  toast('Filesystem remounted — no package.json, staying idle.');
+                }
               });
-            toast.success('WebContainer virtual filesystem remounted');
           }}
         />
 

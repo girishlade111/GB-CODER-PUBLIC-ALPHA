@@ -144,10 +144,10 @@ if (!existsSync(astroIndexHtml)) {
   fail('dist/index.html is missing');
 } else {
   const content = readFileSync(astroIndexHtml, 'utf8');
-  if (!content.includes('GB Coder') || !content.includes('/app')) {
-    fail('dist/index.html does not contain GB Coder marketing CTA to /app');
+  if (!content.includes('GB Coder') || !content.includes('/app/projects')) {
+    fail('dist/index.html does not contain GB Coder marketing CTA to /app/projects');
   } else {
-    pass('Astro root index.html verified with Start Coding CTA to /app');
+    pass('Astro root index.html verified with Start Coding CTA to /app/projects');
   }
 
   // Ensure heavy IDE libraries did not leak into marketing HTML
@@ -239,6 +239,31 @@ for (const forbidden of forbiddenFiles) {
   }
 }
 pass('No environment or secret files leaked into dist/');
+
+// Check 8: Canonical public Astro pages (directory format)
+const publicPages = [
+  { route: '/about', title: 'About GB Coder' },
+  { route: '/contact', title: 'Contact GB Coder' },
+  { route: '/privacy-policy', title: 'Privacy Policy' },
+  { route: '/terms-and-conditions', title: 'Terms & Conditions' },
+];
+for (const { route, title } of publicPages) {
+  const pagePath = join(FINAL_DIST, route.replace(/^\//, ''), 'index.html');
+  if (!existsSync(pagePath)) {
+    fail(`Canonical public page missing from dist: ${route} (${pagePath})`);
+    continue;
+  }
+  const pageContent = readFileSync(pagePath, 'utf8').replace(/&amp;/g, '&');
+  if (!pageContent.includes('<title>') || !pageContent.includes(title.split(' — ')[0])) {
+    fail(`Public page has wrong title: ${route}`);
+  } else if (!pageContent.includes(`rel="canonical" href="https://code.ladestack.in${route}"`)) {
+    fail(`Public page missing canonical metadata: ${route}`);
+  } else if (pageContent.includes('@webcontainer/api') || pageContent.includes('monaco-editor')) {
+    fail(`Public page leaked IDE runtime marker: ${route}`);
+  } else {
+    pass(`Public page verified with title + canonical + isolation: ${route}`);
+  }
+}
 
 // 6. Generate Build Manifest
 console.log('\n[6/6] Generating build manifest...');

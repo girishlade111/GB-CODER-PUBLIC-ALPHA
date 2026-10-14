@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Code2, PanelsTopLeft, X } from 'lucide-react';
+import { Code2, FilePlus2, FlaskConical, PanelsTopLeft, Shapes, X } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 import type { EditorStyle } from '../../services/projects/projectDatabase';
 
@@ -10,11 +10,21 @@ import type { EditorStyle } from '../../services/projects/projectDatabase';
  * is how the project will be reopened later — not a transient view toggle.
  */
 
+/**
+ * Explicit starting point for a new project.
+ *
+ * - `starter`: the classic responsive scaffold (static editor).
+ * - `blank`: genuinely empty HTML/CSS/JS buffers (static editor).
+ * - `empty`: zero files — a truly empty Advanced IDE workspace.
+ * - `react` / `vue`: the matching scaffold, generated once at creation.
+ */
+export type NewProjectTemplate = 'starter' | 'blank' | 'empty' | 'react' | 'vue';
+
 interface NewProjectModalProps {
   /** Pre-filled default, e.g. `Untitled Project 2`. */
   suggestedName: string;
   onCancel: () => void;
-  onCreate: (input: { name: string; editorStyle: EditorStyle }) => void;
+  onCreate: (input: { name: string; editorStyle: EditorStyle; template: NewProjectTemplate }) => void;
 }
 
 const STYLE_OPTIONS: {
@@ -25,15 +35,59 @@ const STYLE_OPTIONS: {
 }[] = [
   {
     value: 'plain',
-    title: 'Plain HTML/CSS/JS',
+    title: 'Static Editor',
     description: 'Three panels and a live preview. Nothing to configure.',
     icon: <Code2 className="h-5 w-5" />,
   },
   {
     value: 'vscode',
-    title: 'VS Code Style',
+    title: 'Advanced IDE',
     description: 'File tree, tabs and a terminal. For projects with a server side.',
     icon: <PanelsTopLeft className="h-5 w-5" />,
+  },
+];
+
+const TEMPLATE_OPTIONS: {
+  value: NewProjectTemplate;
+  styles: EditorStyle[];
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}[] = [
+  {
+    value: 'starter',
+    styles: ['plain'],
+    title: 'Starter HTML/CSS/JS',
+    description: 'A responsive starter scaffold to build on.',
+    icon: <Shapes className="h-5 w-5" />,
+  },
+  {
+    value: 'blank',
+    styles: ['plain'],
+    title: 'Blank',
+    description: 'Genuinely empty HTML, CSS and JavaScript buffers.',
+    icon: <FilePlus2 className="h-5 w-5" />,
+  },
+  {
+    value: 'empty',
+    styles: ['vscode'],
+    title: 'Empty Project',
+    description: 'Zero files. Create, import, or scaffold only what you need.',
+    icon: <FilePlus2 className="h-5 w-5" />,
+  },
+  {
+    value: 'react',
+    styles: ['vscode'],
+    title: 'React',
+    description: 'Vite-ready React scaffold, generated once at creation.',
+    icon: <FlaskConical className="h-5 w-5" />,
+  },
+  {
+    value: 'vue',
+    styles: ['vscode'],
+    title: 'Vue',
+    description: 'Vite-ready Vue scaffold, generated once at creation.',
+    icon: <FlaskConical className="h-5 w-5" />,
   },
 ];
 
@@ -45,7 +99,19 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
   const { isDark } = useTheme();
   const [name, setName] = useState(suggestedName);
   const [editorStyle, setEditorStyle] = useState<EditorStyle>('plain');
+  const [template, setTemplate] = useState<NewProjectTemplate>('starter');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const visibleTemplates = TEMPLATE_OPTIONS.filter((option) =>
+    option.styles.includes(editorStyle),
+  );
+
+  const selectStyle = (style: EditorStyle) => {
+    setEditorStyle(style);
+    // Templates belong to one editor each: moving editors re-seeds the only
+    // choice that is valid there, so creation can never mix them.
+    setTemplate(style === 'vscode' ? 'empty' : 'starter');
+  };
 
   /*
    * Focus and select the suggested name, so it can be typed over immediately —
@@ -68,7 +134,12 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
     // Fall back to the suggestion rather than refusing to proceed: an empty name
     // is a slip, and blocking on it would be pedantic.
     const trimmed = name.trim();
-    onCreate({ name: trimmed.length > 0 ? trimmed : suggestedName, editorStyle });
+    // The template is always re-seeded on style change, but defend the boundary
+    // anyway: a stale choice must never create a mismatched project.
+    const safeTemplate = visibleTemplates.some((option) => option.value === template)
+      ? template
+      : visibleTemplates[0].value;
+    onCreate({ name: trimmed.length > 0 ? trimmed : suggestedName, editorStyle, template: safeTemplate });
   };
 
   const surface = isDark ? 'bg-surface-raised' : 'bg-white';
@@ -128,8 +199,47 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  onClick={() => setEditorStyle(option.value)}
+                  onClick={() => selectStyle(option.value)}
                   data-testid={`new-project-style-${option.value}`}
+                  className={`flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                    isSelected
+                      ? 'border-accent bg-accent-subtle'
+                      : 'border-stroke-subtle hover:bg-surface-hover'
+                  }`}
+                >
+                  <span
+                    className={`mt-0.5 shrink-0 ${
+                      isSelected ? 'text-accent' : 'text-content-muted'
+                    }`}
+                    aria-hidden
+                  >
+                    {option.icon}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-content-primary">
+                      {option.title}
+                    </span>
+                    <span className="mt-0.5 block text-xs leading-relaxed text-content-secondary">
+                      {option.description}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="mb-2 mt-4 text-xs font-medium text-content-secondary">Starting point</p>
+          <div className="space-y-2" role="radiogroup" aria-label="Starting point">
+            {visibleTemplates.map((option) => {
+              const isSelected = template === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => setTemplate(option.value)}
+                  data-testid={`new-project-template-${option.value}`}
                   className={`flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
                     isSelected
                       ? 'border-accent bg-accent-subtle'

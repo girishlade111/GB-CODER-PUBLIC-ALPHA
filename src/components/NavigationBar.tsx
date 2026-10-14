@@ -477,16 +477,16 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                           Info
                         </h4>
                         <div className="space-y-1">
-                          <button
+                          <a
+                            href="/about"
                             onClick={() => {
-                              window.dispatchEvent(new CustomEvent('navigate-to-about'));
                               setIsDropdownOpen(false);
                             }}
                             className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left ${NAV_LINK} text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary`}
                           >
                             <FileText className="h-4 w-4" />
                             About Us
-                          </button>
+                          </a>
                         </div>
                       </div>
                     </div>

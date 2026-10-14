@@ -34,7 +34,7 @@ import { useImportDrop } from './hooks/useImportDrop';
  * from the full-stack feature, so this does not pull that chunk into the initial
  * payload — `npm run verify:bundle` enforces that.
  */
-import { EDITOR_ROUTE, VSCODE_ROUTE, isVSCodeModePath, navigateTo } from './utils/appRoutes';
+import { EDITOR_ROUTE, PROJECTS_ROUTE, VSCODE_ROUTE, isVSCodeModePath, navigateReplace, navigateTo, parseAppRoute, projectEditorUrl, projectIdeUrl } from './utils/appRoutes';
 import {
   clearWorkspace,
   loadWorkspace,
@@ -72,6 +72,7 @@ import {
  * everybody sees first.
  */
 import ProjectDashboard from './components/projects/ProjectDashboard';
+import ProjectNotAvailable from './components/projects/ProjectNotAvailable';
 /*
  * Type-only imports from the lazy import chunk. `import type` is erased during
  * compilation, so naming these types does not create a runtime dependency and
@@ -130,6 +131,7 @@ const LivePreviewPopoutPage = lazyWithRecovery(
 );
 const ImportReviewModal = lazyWithRecovery(() => import('./components/ImportReviewModal'));
 const NewProjectModal = lazyWithRecovery(() => import('./components/projects/NewProjectModal'));
+import type { NewProjectTemplate } from './components/projects/NewProjectModal';
 
 /*
  * The full-stack feature (VS Code mode, sandbox panel, sandbox client, E2B
@@ -763,7 +765,10 @@ function App() {
    * The URL is the source of truth for *which mode is on screen*. It is the only
    * part of the app's state the browser preserves across a refresh by itself.
    */
-  const [isVSCodeRoute, setIsVSCodeRoute] = useState<boolean>(() => isVSCodeModePath());
+  const [isVSCodeRoute, setIsVSCodeRoute] = useState<boolean>(() => {
+    const route = parseAppRoute();
+    return route.kind === 'ide' || isVSCodeModePath();
+  });
   /**
    * True while the stored workspace is being read back.
    *
@@ -772,40 +777,82 @@ function App() {
    * wrong means flashing "No project loaded" over a workspace that is about to
    * appear.
    */
-  const [isRestoringWorkspace, setIsRestoringWorkspace] = useState<boolean>(() =>
-    isVSCodeModePath(),
-  );
+  const [isRestoringWorkspace, setIsRestoringWorkspace] = useState<boolean>(() => {
+    const route = parseAppRoute();
+    return route.kind === 'ide' || isVSCodeModePath();
+  });
 
   /* ===== PROJECT LAYER =====
    *
    * A project is the unit of work: the editors are only ever shown with one open.
    * `activeProjectId` being null is what puts the dashboard on screen, so it is
-   * read from localStorage in the initialiser — synchronously, because deciding
-   * this in an effect would render an editor for a frame before replacing it with
-   * the dashboard.
+   * seeded synchronously — deciding this in an effect would render an editor for
+   * a frame before replacing it with the dashboard.
+   *
+   * Project-first entry: the URL is the source of truth for selection. A
+   * project-specific route (`/app/projects/:id/...`) arms that id; dashboard
+   * arrivals (`/app`, `/app/projects`, `/app/projects/new`) never auto-open,
+   * no matter what the stored pointer says — the pointer is still kept, so the
+   * dashboard can surface the recent project and an explicit open re-arms it.
+   * Legacy editor routes honour the pointer once, then canonicalize the URL.
    *
    * Only the *pointer* lives in localStorage. Records and files are in IndexedDB,
    * which has no practical size ceiling; see services/projects/projectDatabase.
    */
-  const [activeProjectId, setActiveProjectId] = useState<string | null>(() =>
-    readActiveProjectId(),
-  );
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(() => {
+    const route = parseAppRoute();
+    return route.kind === 'editor' || route.kind === 'ide' || route.kind === 'project'
+      ? route.projectId
+      : null;
+  });
   const [activeProject, setActiveProject] = useState<ProjectRecord | null>(null);
-  /** True while the pointed-at project's files are being read back. */
-  const [isOpeningProject, setIsOpeningProject] = useState<boolean>(
-    () => readActiveProjectId() !== null,
-  );
+  /**
+   * True while the selected project's files are being read back.
+   *
+   * Also true for legacy editor routes carrying a pointer: the loading screen
+   * (not the dashboard) shows while the project resolves and canonicalizes.
+   */
+  const [isOpeningProject, setIsOpeningProject] = useState<boolean>(() => {
+    const route = parseAppRoute();
+    return (
+      route.kind === 'editor' ||
+      route.kind === 'ide' ||
+      route.kind === 'project' ||
+      ((route.kind === 'legacy-editor' || route.kind === 'legacy-ide') &&
+        readActiveProjectId() !== null)
+    );
+  });
+  /**
+   * Project id from the URL that has no local record: deleted, mistyped, or a
+   * deep link opened in a profile whose IndexedDB never held it. Renders the
+   * safe recovery screen — never another project, never an editor.
+   */
+  const [unavailableProjectId, setUnavailableProjectId] = useState<string | null>(null);
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [isProjectListLoading, setIsProjectListLoading] = useState<boolean>(true);
-  const [showNewProject, setShowNewProject] = useState<boolean>(false);
+  const [showNewProject, setShowNewProject] = useState<boolean>(
+    () => parseAppRoute().kind === 'new',
+  );
   const [showSnapshotManager, setShowSnapshotManager] = useState<boolean>(false);
   const [sessionRecoveryData, setSessionRecoveryData] = useState<(SnapshotProjectState & { lastModified: string }) | null>(null);
   
   // Check for auto-save on mount
   useEffect(() => {
     const autoSave = snapshotService.getAutoSave();
-    if (autoSave) {
+    if (!autoSave) return;
+    /*
+     * An autosave with no recoverable content (every buffer blank, no files)
+     * is not recovery data — it is the residue of a Fresh Start. Offering
+     * "Restore" for it would loop a phantom prompt after every fresh start,
+     * so the slot is dropped silently instead of asked about.
+     */
+    const hasRecoverableContent = autoSave.project.files.some(
+      (f) => f.content.trim().length > 0,
+    );
+    if (hasRecoverableContent) {
       setSessionRecoveryData(autoSave);
+    } else {
+      snapshotService.clearAutoSave();
     }
   }, []);
 
@@ -830,7 +877,9 @@ function App() {
    * effect). Assigned every render; effects only call it after mount, so the
    * binding is always the current one. Avoids moving the open flow.
    */
-  const handleOpenProjectRef = React.useRef<((record: ProjectRecord) => Promise<void>) | null>(null);
+  const handleOpenProjectRef = React.useRef<
+    ((record: ProjectRecord, options?: { replaceUrl?: boolean; editorOverride?: EditorStyle }) => Promise<boolean>) | null
+  >(null);
   /** Seeded starter array of a recovered-empty project: not auto-persisted until edited. */
   const seededFilesRef = React.useRef<ProjectFile[] | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -1366,7 +1415,7 @@ function App() {
     (
       record: ProjectRecord,
       files: ProjectFile[],
-      options: { navigate: boolean; seededEmpty?: boolean },
+      options: { navigate: boolean; seededEmpty?: boolean; editorOverride?: EditorStyle },
     ) => {
       const project: MultiFileProject = {
         projectType: record.projectType,
@@ -1396,10 +1445,20 @@ function App() {
        * On a cold start the URL already says which editor was on screen and the
        * browser preserved that across the refresh, so it wins. When the user is
        * actively opening a project, the record's stored style is what to honour.
+       * Either way the preference itself is never rewritten here — only the
+       * explicit mode-switch buttons do that — so a deep link cannot silently
+       * flip how the project opens next time.
        */
-      const openInVSCode = record.editorStyle === 'vscode';
+      const openInVSCode = options.editorOverride
+        ? options.editorOverride === 'vscode'
+        : record.editorStyle === 'vscode';
+      // Canonical project URL: the address always carries the open project's
+      // own id. Explicit opens push; cold starts and in-place corrections
+      // replace (pushing would stack a duplicate the Back button must cross).
+      const canonical = openInVSCode ? projectIdeUrl(record.id) : projectEditorUrl(record.id);
 
       setFileProject(project);
+      setUnavailableProjectId(null);
 
       if (openInVSCode) {
         setFullStackProject(project);
@@ -1407,17 +1466,73 @@ function App() {
         setIsVSCodeRoute(true);
         // The project is the source of truth now, so nothing needs restoring.
         setIsRestoringWorkspace(false);
-        if (options.navigate || !isVSCodeModePath()) navigateTo(VSCODE_ROUTE);
-
       } else {
         setFullStackProject(null);
         setVsCodeReturn(null);
         setIsVSCodeRoute(false);
-        if (options.navigate || isVSCodeModePath()) navigateTo(EDITOR_ROUTE);
       }
+      if (options.navigate) navigateTo(canonical);
+      else navigateReplace(canonical);
     },
     [],
   );
+
+  /*
+   * Fresh Start: a genuinely blank static session.
+   *
+   * The state-ownership fix, not a cosmetic clear: fileProject itself is
+   * replaced with empty buffers (the triple, Monaco and Preview all derive
+   * from it, so nothing can rehydrate old code), the queued project save is
+   * dropped, the dirty baseline is re-taken on the empties, and history is
+   * baselined so undo stays coherent.
+   *
+   * Declared after applyProjectToEditor (which it calls): anything earlier
+   * would read the binding before its initialisation and crash first render.
+   *
+   * Data protection: when a saved project is open it is flushed first (a
+   * failed flush blocks, exactly like switching projects), then the blank
+   * session gets its OWN draft identity — empty buffers are never persisted
+   * over the saved project's files.
+   */
+  const handleFreshStart = useCallback(async () => {
+    if (activeProjectId) {
+      const flushed = await flushProjectSave();
+      if (flushed && !flushed.ok) {
+        toast.error('Could not save the current project. Staying put so no edits are lost.');
+        return;
+      }
+      const record = await createProjectRecord({
+        name: suggestProjectName(projects),
+        editorStyle: 'plain',
+        projectType: 'plain',
+        files: [],
+      });
+      if (!record) {
+        toast.error('Could not start a fresh session. This browser may be blocking local storage.');
+        return;
+      }
+      setProjects((current) => [record, ...current]);
+      writeActiveProjectId(record.id);
+      setActiveProjectId(record.id);
+      setActiveProject(record);
+      applyProjectToEditor(record, [], { navigate: true, seededEmpty: true });
+      codeHistory.saveState({ html: '', css: '', javascript: '' }, 'Fresh start');
+      setSessionRecoveryData(null);
+      setIsOpeningProject(false);
+      toast.success('Started fresh — the previous project was kept intact.');
+      return;
+    }
+
+    pendingProjectSaveRef.current = null;
+    const empty = createPlainProject('', '', '');
+    savedFilesRef.current = snapshotOf(empty.files);
+    seededFilesRef.current = null;
+    setFileProject(empty);
+    markFlushedSaved(empty.files);
+    codeHistory.saveState({ html: '', css: '', javascript: '' }, 'Fresh start');
+    setSessionRecoveryData(null);
+    toast.success('Started fresh.');
+  }, [activeProjectId, flushProjectSave, projects, applyProjectToEditor, codeHistory, markFlushedSaved]);
 
   /*
    * ===== DRAG & DROP IMPORT =====
@@ -1838,7 +1953,11 @@ function App() {
           setProjects((current) => current.map((item) => (item.id === updated.id ? updated : item)));
         }
       }
-      if (updateUrl) navigateTo(EDITOR_ROUTE);
+      if (updateUrl) {
+        navigateTo(
+          activeProjectId ? projectEditorUrl(activeProjectId) : EDITOR_ROUTE,
+        );
+      }
 
       /*
        * Nothing was ever loaded — someone opened `/ide` directly and left again.
@@ -1977,8 +2096,9 @@ function App() {
     setVsCodeReturn({ projectType: fileProject.projectType, entry: fileProject.entry });
     setFullStackProject(fileProject);
     // A navigation, not just a state change — see the detected-import path above.
+    // Canonical project URL keeps the address carrying the open project.
     setIsVSCodeRoute(true);
-    navigateTo(VSCODE_ROUTE);
+    navigateTo(activeProjectId ? projectIdeUrl(activeProjectId) : VSCODE_ROUTE);
 
     if (activeProjectId) {
       const updated = await updateProjectEditorPreference(activeProjectId, 'vscode');
@@ -2010,13 +2130,20 @@ function App() {
      * project, which is why it is skipped here rather than removed.
      */
     if (activeProjectId) {
-      if (fullStackProject || isOpeningProject) {
-        // Memory intact, or the cold-start open below owns the load: the
-        // restore branch below is only for forward navigation back into a
-        // mode whose in-memory project was dropped by leaving it.
+      if (fullStackProject) {
+        // Memory intact: nothing to restore.
         setIsRestoringWorkspace(false);
         return;
       }
+      /*
+       * A cold-start load (isOpeningProject) is already reading this project
+       * from the route; it owns the flag and clears it when the files land.
+       * Clearing it here would mount the mode with an empty project before
+       * the load completes — and the file tree, initialized once from that
+       * empty tree, keeps every nested folder collapsed even after the real
+       * files arrive. So: wait, don't clear.
+       */
+      if (isOpeningProject) return;
       /*
        * Forward navigation back into the mode after a leave dropped the
        * in-memory project: reload it from IndexedDB through the guarded open
@@ -2034,7 +2161,7 @@ function App() {
           writeActiveProjectId(null);
           setActiveProjectId(null);
           setIsRestoringWorkspace(false);
-          navigateTo(EDITOR_ROUTE);
+          navigateTo(PROJECTS_ROUTE);
           return;
         }
         setIsRestoringWorkspace(false);
@@ -2103,14 +2230,160 @@ function App() {
   }, [isVSCodeRoute, isRestoringWorkspace, fullStackProject, vsCodeReturn, activeProjectId]);
 
   /*
-   * Back and Forward across the mode boundary.
+   * Back and Forward across dashboard, project, and editor routes.
    *
-   * The app had no `popstate` listener at all, so without this the URL would
-   * change on a Back press while the view stayed where it was.
+   * The URL is truth: every branch resolves the newly arrived-at address
+   * without pushing (navigation already happened — pushing would stack a
+   * duplicate the user must press through twice). Project switches reuse the
+   * guarded open path, so failed saves block the switch and repair the URL
+   * instead of stranding the screen and the address in disagreement. No branch
+   * starts saves, resets, or installs: `popstate` only ever moves selection.
    */
   useEffect(() => {
+    // Where Back/Forward should land the user if a guarded switch refuses.
+    const fallbackUrl = activeProjectId
+      ? isVSCodeRoute
+        ? projectIdeUrl(activeProjectId)
+        : projectEditorUrl(activeProjectId)
+      : PROJECTS_ROUTE;
+
+    const leaveToNonProject = async (unavailable: string | null): Promise<boolean> => {
+      const flushed = await flushProjectSave();
+      if (flushed && !flushed.ok) {
+        toast.error('Could not save the current project. Staying put so no edits are lost.');
+        navigateReplace(fallbackUrl);
+        return false;
+      }
+      savedFilesRef.current = null;
+      setActiveProjectId(null);
+      setActiveProject(null);
+      setFullStackProject(null);
+      setVsCodeReturn(null);
+      setIsVSCodeRoute(false);
+      setIsRestoringWorkspace(false);
+      setUnavailableProjectId(unavailable);
+      setProjects(await listProjects());
+      return true;
+    };
+
+    const openUrlProject = async (
+      projectId: string,
+      editorOverride?: EditorStyle,
+    ): Promise<void> => {
+      const transition = beginTransition();
+      setIsOpeningProject(true);
+      const flushed = await flushProjectSave();
+      if (flushed && !flushed.ok) {
+        toast.error('Could not save the current project. Staying put so no edits are lost.');
+        setIsOpeningProject(false);
+        navigateReplace(fallbackUrl);
+        return;
+      }
+      if (!isCurrentTransition(transition)) {
+        setIsOpeningProject(false);
+        return;
+      }
+      const record = await getProject(projectId);
+      if (!isCurrentTransition(transition)) {
+        setIsOpeningProject(false);
+        return;
+      }
+      if (!record) {
+        if (readActiveProjectId() === projectId) writeActiveProjectId(null);
+        setActiveProjectId(null);
+        setActiveProject(null);
+        setFullStackProject(null);
+        setVsCodeReturn(null);
+        setIsVSCodeRoute(false);
+        setIsRestoringWorkspace(false);
+        setUnavailableProjectId(projectId);
+        setIsOpeningProject(false);
+        return;
+      }
+      const opener = handleOpenProjectRef.current;
+      if (opener) {
+        const ok = await opener(record, { replaceUrl: true, editorOverride });
+        if (!ok) navigateReplace(fallbackUrl);
+      } else {
+        setIsOpeningProject(false);
+      }
+    };
+
     const handlePopState = () => {
-      if (isVSCodeModePath()) {
+      const route = parseAppRoute();
+
+      // Canonical project screens (explicit id in the URL).
+      if (route.kind === 'editor' || route.kind === 'ide' || route.kind === 'project') {
+        // Same project, URL names the other editor: hand files across without
+        // a reload (persistence rewrite is for the mode buttons only).
+        if (activeProjectId === route.projectId) {
+          if (route.kind === 'ide' && !isVSCodeRoute) {
+            setVsCodeReturn({ projectType: fileProject.projectType, entry: fileProject.entry });
+            setFullStackProject(fileProject);
+            setIsVSCodeRoute(true);
+            setIsRestoringWorkspace(false);
+            navigateReplace(projectIdeUrl(route.projectId));
+          } else if (route.kind === 'editor' && (isVSCodeRoute || fullStackProject)) {
+            void leaveVSCodeMode({ updateUrl: false }).then(() => {
+              navigateReplace(projectEditorUrl(route.projectId));
+            });
+          } else {
+            // Already on the right screen ('project' suffix): canonicalize.
+            navigateReplace(
+              isVSCodeRoute ? projectIdeUrl(route.projectId) : projectEditorUrl(route.projectId),
+            );
+          }
+          return;
+        }
+        void openUrlProject(
+          route.projectId,
+          route.kind === 'editor' ? 'plain' : route.kind === 'ide' ? 'vscode' : undefined,
+        );
+        return;
+      }
+
+      // Unresolvable project URL: recovery screen, never another project.
+      if (route.kind === 'invalid') {
+        void leaveToNonProject(route.rawId);
+        return;
+      }
+
+      // Creation screen: dashboard state plus the modal.
+      if (route.kind === 'new') {
+        if (activeProjectId || fullStackProject || isVSCodeRoute) {
+          void leaveToNonProject(null).then((left) => {
+            if (left) setShowNewProject(true);
+          });
+        } else {
+          setUnavailableProjectId(null);
+          setShowNewProject(true);
+        }
+        return;
+      }
+
+      // Legacy static editor: resolve through the pointer, then canonicalize.
+      if (route.kind === 'legacy-editor') {
+        if (activeProjectId) {
+          navigateReplace(projectEditorUrl(activeProjectId));
+          return;
+        }
+        const id = readActiveProjectId();
+        if (!id) {
+          navigateReplace(PROJECTS_ROUTE);
+          return;
+        }
+        void openUrlProject(id);
+        return;
+      }
+
+      // Legacy IDE: resolve through pointer/memory, else the idle shell.
+      if (route.kind === 'legacy-ide' || isVSCodeModePath()) {
+        if (activeProjectId || readActiveProjectId()) {
+          const id = activeProjectId ?? readActiveProjectId()!;
+          if (activeProjectId === id && (isVSCodeRoute || fullStackProject)) return;
+          void openUrlProject(id, 'vscode');
+          return;
+        }
         setIsVSCodeRoute(true);
         /*
          * Forward into the mode after having left it. Leaving cleared the
@@ -2120,17 +2393,35 @@ function App() {
         return;
       }
 
-      if (isVSCodeRoute) void leaveVSCodeMode({ updateUrl: false });
+      // Dashboard (or anything else): leave any editor in memory. The stored
+      // pointer is deliberately kept — only an explicit dashboard return or a
+      // new open rewrites it — so Forward re-arms the same project.
+      if (isVSCodeRoute || fullStackProject || activeProjectId || unavailableProjectId) {
+        void leaveToNonProject(null);
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [isVSCodeRoute, fullStackProject, leaveVSCodeMode]);
+  }, [isVSCodeRoute, fullStackProject, activeProjectId, unavailableProjectId, fileProject, leaveVSCodeMode, flushProjectSave, beginTransition, isCurrentTransition]);
 
-  /** Opens a project from the dashboard. */
+  /**
+   * Opens a project from the dashboard (or a deep link).
+   *
+   * Returns true when the switch completed; false when it was blocked (failed
+   * flush) or superseded, so navigation-driven callers can repair the URL
+   * instead of leaving the address and the screen in disagreement.
+   */
   const handleOpenProject = useCallback(
-    async (record: ProjectRecord) => {
+    async (
+      record: ProjectRecord,
+      options?: { replaceUrl?: boolean; editorOverride?: EditorStyle },
+    ): Promise<boolean> => {
       const transition = beginTransition();
+      // A loading state instead of the dashboard while reading: the dashboard
+      // is honest, but it would flash for a frame before the editor replaces
+      // it — the exact flash the cold-start path already avoids.
+      setIsOpeningProject(true);
 
       // The project being left may have unsaved edits. A failed flush blocks
       // the switch: leaving would strand those edits in a discarded state.
@@ -2138,9 +2429,12 @@ function App() {
       if (flushed && !flushed.ok) {
         toast.error('Could not save the current project. Staying put so no edits are lost.');
         setIsOpeningProject(false);
-        return;
+        return false;
       }
-      if (!isCurrentTransition(transition)) return;
+      if (!isCurrentTransition(transition)) {
+        setIsOpeningProject(false);
+        return false;
+      }
 
       const [files, touched] = await Promise.all([
         readProjectFiles(record.id),
@@ -2148,29 +2442,36 @@ function App() {
       ]);
       // A newer transition (or a delete) started while reading: this result
       // belongs to a selection the user has already moved past.
-      if (!isCurrentTransition(transition)) return;
+      if (!isCurrentTransition(transition)) return false;
       const opened = touched ?? record;
 
       /*
-       * A project with no files means its records were lost while its metadata
-       * survived. Reopening into a blank editor would look like data corruption
-       * with no explanation, so say so and start it from the standard scaffold.
-       * The scaffold is baselined as unsaved (seededEmpty), never persisted
-       * over unknown store content.
+       * A project with no stored files opens as a genuinely empty workspace —
+       * never with injected scaffold. The empty file list is baselined as an
+       * unsaved draft (seededEmpty): opening persists nothing, and the first
+       * real edit swaps the array identity and persists normally. This holds
+       * for both editors: an empty Advanced IDE project must not gain
+       * index.html/style.css/script.js (or a package.json) it never had.
        */
       const recoveredEmpty = files.length === 0;
-      const restored =
-        !recoveredEmpty ? files : createPlainProject(defaultHTML, defaultCSS, defaultJS).files;
+      const restored = files;
       if (recoveredEmpty) {
-        toast.error(`"${opened.name}" had no files stored. Starting it fresh.`);
+        toast(`"${opened.name}" has no stored files — opened an empty workspace.`);
       }
 
       writeActiveProjectId(opened.id);
       setActiveProjectId(opened.id);
       setActiveProject(opened);
       setProjects((current) => [opened, ...current.filter((item) => item.id !== opened.id)]);
-      applyProjectToEditor(opened, restored, { navigate: true, seededEmpty: recoveredEmpty });
+      // Explicit opens push a history entry; navigation-driven opens (Back /
+      // Forward / cold deep link) replace so the trail never gains duplicates.
+      applyProjectToEditor(opened, restored, {
+        navigate: !options?.replaceUrl,
+        seededEmpty: recoveredEmpty,
+        editorOverride: options?.editorOverride,
+      });
       setIsOpeningProject(false);
+      return true;
     },
     [applyProjectToEditor, flushProjectSave, beginTransition, isCurrentTransition],
   );
@@ -2178,28 +2479,65 @@ function App() {
 
   /** Creates a project from the New Project modal and opens it. */
   const handleCreateProject = useCallback(
-    async ({ name, editorStyle }: { name: string; editorStyle: EditorStyle }) => {
+    async ({
+      name,
+      editorStyle,
+      template,
+    }: {
+      name: string;
+      editorStyle: EditorStyle;
+      template: NewProjectTemplate;
+    }) => {
       const transition = beginTransition();
+      setIsOpeningProject(true);
 
       const flushed = await flushProjectSave();
       if (flushed && !flushed.ok) {
         toast.error('Could not save the current project. Staying put so no edits are lost.');
+        setIsOpeningProject(false);
         return;
       }
-      if (!isCurrentTransition(transition)) return;
+      if (!isCurrentTransition(transition)) {
+        setIsOpeningProject(false);
+        return;
+      }
 
-      // A brand-new project starts from the same scaffold the editor used to open
-      // with by default — that content is a starting point, not a landing page.
-      const starter = createPlainProject(defaultHTML, defaultCSS, defaultJS);
+      /*
+       * Starting points, resolved from the user's explicit template choice —
+       * never invented. `editorStyle` (which editor opens it) and
+       * `projectType` (what the code is) stay separate fields on the record
+       * so the project always reopens in its correct editor.
+       */
+      const resolvedStyle: EditorStyle =
+        template === 'react' || template === 'vue' ? 'vscode' : editorStyle;
+      let projectType: ProjectType = 'plain';
+      let entry: string | undefined;
+      let files: ProjectFile[];
+      if (template === 'react' || template === 'vue') {
+        const scaffold = createProjectOfType(template);
+        projectType = scaffold.projectType;
+        entry = scaffold.entry;
+        files = scaffold.files;
+      } else if (template === 'empty') {
+        files = [];
+      } else if (template === 'blank') {
+        files = createPlainProject('', '', '').files;
+      } else {
+        // 'starter': the same scaffold the editor used to open with by
+        // default — a starting point, not a landing page.
+        files = createPlainProject(defaultHTML, defaultCSS, defaultJS).files;
+      }
       const record = await createProjectRecord({
         name,
-        editorStyle,
-        projectType: 'plain',
-        files: starter.files,
+        editorStyle: resolvedStyle,
+        projectType,
+        entry,
+        files,
       });
 
       if (!record) {
         toast.error('Could not create the project. This browser may be blocking local storage.');
+        setIsOpeningProject(false);
         return;
       }
       if (!isCurrentTransition(transition)) {
@@ -2207,15 +2545,21 @@ function App() {
         // and listed, but this stale completion must not seize the editor.
         setProjects((current) => [record, ...current]);
         setShowNewProject(false);
+        // A route-visited creation screen closes back to the dashboard address.
+        if (parseAppRoute().kind === 'new') navigateReplace(PROJECTS_ROUTE);
         return;
       }
 
       setShowNewProject(false);
       setProjects((current) => [record, ...current]);
+      // Collapse a route-visited `/new` entry first: the created project's
+      // canonical URL then pushes over the dashboard, so Back lands on the
+      // dashboard instead of reopening an empty creation form.
+      if (parseAppRoute().kind === 'new') navigateReplace(PROJECTS_ROUTE);
       writeActiveProjectId(record.id);
       setActiveProjectId(record.id);
       setActiveProject(record);
-      applyProjectToEditor(record, starter.files, { navigate: true });
+      applyProjectToEditor(record, files, { navigate: true });
       setIsOpeningProject(false);
       toast.success(`Created "${record.name}".`);
     },
@@ -2243,10 +2587,13 @@ function App() {
         setActiveProjectId(null);
         setActiveProject(null);
       }
+      // A deleted recovery-screen id must not linger: the honesty effect
+      // would otherwise keep correcting around a stale address.
+      if (unavailableProjectId === record.id) setUnavailableProjectId(null);
 
       toast.success(`Deleted "${record.name}".`);
     },
-    [activeProjectId, beginTransition],
+    [activeProjectId, unavailableProjectId, beginTransition],
   );
 
   /** Leaves the active project and returns to the dashboard. */
@@ -2268,7 +2615,8 @@ function App() {
     setVsCodeReturn(null);
     setIsVSCodeRoute(false);
     setIsRestoringWorkspace(false);
-    navigateTo(EDITOR_ROUTE);
+    setUnavailableProjectId(null);
+    navigateTo(PROJECTS_ROUTE);
 
     // Re-read so the list reflects the lastOpenedAt just written.
     setProjects(await listProjects());
@@ -2283,10 +2631,17 @@ function App() {
   }, []);
 
   /*
-   * Reopens whatever was active when the tab was last closed.
+   * Cold start: resolve the URL, not the pointer.
    *
-   * Runs once: `isOpeningProject` starts true only when the pointer exists, so an
-   * empty pointer goes straight to the dashboard with no async work at all.
+   * A project-specific route (`/app/projects/:id/...`) arms that id; legacy
+   * editor routes fall back to the stored pointer once, then canonicalize.
+   * Dashboard arrivals never open anything. A dead id (deleted, mistyped, or
+   * from another profile's IndexedDB) shows the safe recovery screen instead
+   * of any other project — and a dead pointer is cleared so the dashboard's
+   * "active project" affordances cannot chase a ghost.
+   *
+   * Runs once: `isOpeningProject` starts true only for project URLs and for
+   * legacy editor routes carrying a pointer.
    */
   useEffect(() => {
     if (!isOpeningProject) return;
@@ -2294,18 +2649,41 @@ function App() {
     let cancelled = false;
 
     void (async () => {
-      const id = readActiveProjectId();
+      const route = parseAppRoute();
+      const routeId =
+        route.kind === 'editor' || route.kind === 'ide' || route.kind === 'project'
+          ? route.projectId
+          : null;
+      const editorOverride =
+        route.kind === 'editor' ? 'plain' as const : route.kind === 'ide' ? 'vscode' as const : undefined;
+      const id = routeId ?? readActiveProjectId();
       const record = id ? await getProject(id) : null;
       if (cancelled) return;
 
       if (!record) {
-        /*
-         * The pointer names a project that is gone — deleted in another tab, or
-         * the database was cleared while this key survived. The dashboard is the
-         * honest destination; an editor would have nothing to edit.
-         */
-        writeActiveProjectId(null);
-        setActiveProjectId(null);
+        if (routeId) {
+          // The URL names a project this profile does not have.
+          setActiveProjectId(null);
+          setActiveProject(null);
+          setFullStackProject(null);
+          setVsCodeReturn(null);
+          setIsVSCodeRoute(false);
+          setIsRestoringWorkspace(false);
+          setUnavailableProjectId(id ?? routeId);
+          // A pointer naming the same dead id is tidied; a pointer to a
+          // different (valid) project is left alone for dashboard recency.
+          if (readActiveProjectId() === (id ?? routeId)) writeActiveProjectId(null);
+        } else {
+          // Legacy route, dead pointer: tidy it and stay on the dashboard.
+          // The IDE flags must also clear: a legacy /app/ide arrival renders
+          // the shell branch, which would otherwise shadow the dashboard.
+          writeActiveProjectId(null);
+          setActiveProjectId(null);
+          setFullStackProject(null);
+          setVsCodeReturn(null);
+          setIsVSCodeRoute(false);
+          setIsRestoringWorkspace(false);
+        }
         setIsOpeningProject(false);
         return;
       }
@@ -2317,9 +2695,22 @@ function App() {
       if (cancelled) return;
 
       const opened = touched ?? record;
+      // A deep link is an explicit open: persist the selection.
+      writeActiveProjectId(opened.id);
+      setActiveProjectId(opened.id);
       setActiveProject(opened);
       setProjects((current) => [opened, ...current.filter((item) => item.id !== opened.id)]);
-      if (files.length > 0) applyProjectToEditor(opened, files, { navigate: false });
+      /*
+       * Always apply — including zero files. An empty project opens as a
+       * genuinely empty draft (seededEmpty: nothing persists until the first
+       * edit); skipping the apply would leave the starter scaffold on screen
+       * for a project that owns nothing.
+       */
+      applyProjectToEditor(opened, files, {
+        navigate: false,
+        seededEmpty: files.length === 0,
+        editorOverride,
+      });
       setIsOpeningProject(false);
     })();
 
@@ -2328,6 +2719,29 @@ function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /*
+   * URL honesty: the address must always name the screen on display.
+   *
+   * With canonical project URLs, the only honest corrections left are for
+   * stale generic addresses: a legacy editor URL (or a project URL left over
+   * from a delete) with no project open and no open in flight resolves back
+   * to the dashboard with replace, not push, so Back still leaves the app
+   * rather than looping. The idle IDE shell (`/app/ide`, `/ide`) is a valid
+   * destination on its own and is never "corrected" away.
+   */
+  useEffect(() => {
+    if (activeProjectId || isOpeningProject || unavailableProjectId) return;
+    const route = parseAppRoute();
+    if (
+      route.kind === 'legacy-editor' ||
+      route.kind === 'editor' ||
+      route.kind === 'ide' ||
+      route.kind === 'project'
+    ) {
+      navigateReplace(PROJECTS_ROUTE);
+    }
+  }, [activeProjectId, isOpeningProject, unavailableProjectId]);
 
   /*
    * Autosave. Records the pending state on every change and writes it once edits
@@ -4093,11 +4507,60 @@ function App() {
   }
 
   /*
+   * A project is being resolved, but its files are still being read.
+   *
+   * Checked before the dashboard deliberately: legacy editor routes carrying
+   * a pointer (and project URLs mid-open) must show loading rather than flash
+   * the dashboard for a frame. Dashboard cold arrivals never set this flag,
+   * so they still land instantly.
+   *
+   * Rendering the editor now would show the previous project's content, or the
+   * starter scaffold, for a frame before swapping — which reads as the wrong
+   * project having opened.
+   */
+  if (isOpeningProject) {
+    return (
+      <div
+        className={`grid min-h-screen place-items-center bg-surface-canvas`}
+        data-testid="project-opening"
+      >
+        <LazyFallback label={activeProject ? activeProject.name : 'your project'} variant="panel" />
+      </div>
+    );
+  }
+
+  /*
+   * The URL names a project this profile does not have (deleted, mistyped, or
+   * a deep link from another device). Recovery screen only: never another
+   * project, never an editor, nothing created.
+   */
+  if (unavailableProjectId) {
+    return (
+      <>
+        <ProjectNotAvailable
+          projectId={unavailableProjectId}
+          onDashboard={() => {
+            setUnavailableProjectId(null);
+            navigateReplace(PROJECTS_ROUTE);
+          }}
+          onImport={() => {
+            setUnavailableProjectId(null);
+            navigateReplace(PROJECTS_ROUTE);
+            setShowImport(true);
+          }}
+        />
+        <Toaster position="bottom-right" />
+      </>
+    );
+  }
+
+  /*
    * The dashboard, shown whenever no project is active.
    *
    * Placed after the VS Code branch deliberately: `/ide` addresses that mode
    * directly and has its own empty state, so arriving there must not be redirected
-   * into the dashboard.
+   * into the dashboard. Stale generic editor addresses with no project are
+   * corrected back to the dashboard URL by the honesty effect above.
    *
    * Drag-and-drop stays live here — the window-level import handlers are attached
    * by `useImportDrop`, not by the editor's markup — so a folder can be dropped
@@ -4122,7 +4585,12 @@ function App() {
           <Suspense fallback={<LazyFallback label="new project" variant="overlay" />}>
             <NewProjectModal
               suggestedName={suggestProjectName(projects)}
-              onCancel={() => setShowNewProject(false)}
+              onCancel={() => {
+                setShowNewProject(false);
+                // A route-visited creation screen closes back to the dashboard
+                // address rather than stranding /new in history.
+                if (parseAppRoute().kind === 'new') navigateReplace(PROJECTS_ROUTE);
+              }}
               onCreate={(input) => void handleCreateProject(input)}
             />
           </Suspense>
@@ -4156,22 +4624,10 @@ function App() {
   }
 
   /*
-   * A project is active but its files are still being read.
-   *
-   * Rendering the editor now would show the previous project's content, or the
-   * starter scaffold, for a frame before swapping — which reads as the wrong
-   * project having opened.
+   * Fall-through: the Static Editor with a project open. (Loading is handled
+   * above; reaching here with no project means the dashboard branch already
+   * returned.)
    */
-  if (isOpeningProject) {
-    return (
-      <div
-        className={`grid min-h-screen place-items-center bg-surface-canvas`}
-        data-testid="project-opening"
-      >
-        <LazyFallback label={activeProject ? activeProject.name : 'your project'} variant="panel" />
-      </div>
-    );
-  }
 
   return (
     <div
@@ -4946,7 +5402,7 @@ function App() {
             if (!backedUp) {
               toast.error('Could not back up the unsaved session; it was kept in place.');
             }
-            setSessionRecoveryData(null);
+            void handleFreshStart();
           }}
         />
       )}
