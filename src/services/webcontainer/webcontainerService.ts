@@ -355,8 +355,9 @@ class WebContainerManager {
   private activeProjectId: string | null = null;
   private lastStartedFingerprint: string | null = null;
   private lastStartedEpoch = -1;
-  private isShellPromptReady = false;
-  private drainingPorts = new Map<number, { projectId: string | null; sessionEpoch: number }>();
+  private drainingPorts = new Map<number, { projectId: string | null; sessionEpoch: number; drainedAt: number }>();
+  private pendingDrainingCloses = new Map<number, number>();
+  private mountQueue: Promise<void> = Promise.resolve();
   private devServerStartEpoch: number | null = null;
   private devServerStartProjectId: string | null = null;
 
@@ -532,12 +533,26 @@ class WebContainerManager {
   public attachProject(projectId: string): void {
     if (this.activeProjectId === projectId) return;
 
+    // Prune expired draining port records (> 10s)
+    const now = Date.now();
+    for (const [p, info] of Array.from(this.drainingPorts.entries())) {
+      if (now - info.drainedAt > 10000) {
+        this.drainingPorts.delete(p);
+        this.pendingDrainingCloses.delete(p);
+      }
+    }
+
     // Track any existing active servers as draining so late events cannot pollute state
     for (const server of this.state.activeServers) {
       this.drainingPorts.set(server.port, {
         projectId: this.activeProjectId,
         sessionEpoch: this.sessionEpoch,
+        drainedAt: now,
       });
+      this.pendingDrainingCloses.set(
+        server.port,
+        (this.pendingDrainingCloses.get(server.port) ?? 0) + 1,
+      );
     }
 
     // If another project was attached, cleanly tear down its dev server and pending writes
@@ -572,11 +587,17 @@ class WebContainerManager {
       return;
     }
 
+    const now = Date.now();
     for (const server of this.state.activeServers) {
       this.drainingPorts.set(server.port, {
         projectId: this.activeProjectId,
         sessionEpoch: this.sessionEpoch,
+        drainedAt: now,
       });
+      this.pendingDrainingCloses.set(
+        server.port,
+        (this.pendingDrainingCloses.get(server.port) ?? 0) + 1,
+      );
     }
 
     if (this.activeProjectId !== null) {
@@ -670,14 +691,27 @@ class WebContainerManager {
         // Ignored
       }
     }
+    const now = Date.now();
+    for (const [p, info] of Array.from(this.drainingPorts.entries())) {
+      if (now - info.drainedAt > 10000) {
+        this.drainingPorts.delete(p);
+        this.pendingDrainingCloses.delete(p);
+      }
+    }
     for (const server of this.state.activeServers) {
       this.drainingPorts.set(server.port, {
         projectId: this.activeProjectId,
         sessionEpoch: this.sessionEpoch,
+        drainedAt: now,
       });
+      this.pendingDrainingCloses.set(
+        server.port,
+        (this.pendingDrainingCloses.get(server.port) ?? 0) + 1,
+      );
     }
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
+    this.isShellPromptReady = false;
     this.devServerStartEpoch = null;
     this.devServerStartProjectId = null;
     this.updateState({
@@ -704,6 +738,21 @@ class WebContainerManager {
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
     this.isShellPromptReady = false;
+  }
+
+  /**
+   * Manually marks a draining port as confirmed quiescent.
+   */
+  public markPortQuiescent(port: number): void {
+    this.drainingPorts.delete(port);
+    this.pendingDrainingCloses.delete(port);
+  }
+
+  /**
+   * Sets shell prompt readiness state directly (useful in testing or shell coordination).
+   */
+  public setShellPromptReady(ready: boolean): void {
+    this.isShellPromptReady = ready;
   }
 
   public writeToShell(data: string): boolean {
@@ -761,17 +810,6 @@ class WebContainerManager {
         return;
       }
 
-      // Check if this port is a draining port from a prior session/project
-      const draining = this.drainingPorts.get(port);
-      if (draining) {
-        if (draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId) {
-          console.warn(
-            `[WebContainer] Discarded late server-ready at port ${port} (draining server from project ${draining.projectId}, epoch ${draining.sessionEpoch})`,
-          );
-          return;
-        }
-      }
-
       // Guard: is a dev server starting or active in the current session epoch?
       const isExpected =
         this.isDevServerStartingState ||
@@ -783,6 +821,32 @@ class WebContainerManager {
           `[WebContainer] Discarded unsolicited/late server-ready at port ${port} (no dev server starting or active for project "${this.activeProjectId}")`,
         );
         return;
+      }
+
+      // Check if this port is a draining port from a prior session/project
+      const draining = this.drainingPorts.get(port);
+      if (draining) {
+        const isFromPriorSession =
+          draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId;
+
+        if (isFromPriorSession) {
+          const drainDuration = Date.now() - draining.drainedAt;
+          const isQuiescent =
+            drainDuration > 1000 ||
+            this.isShellPromptReady;
+
+          if (!isQuiescent) {
+            console.warn(
+              `[WebContainer] Discarded late server-ready at port ${port} (draining server from project ${draining.projectId}, epoch ${draining.sessionEpoch})`,
+            );
+            return;
+          }
+
+          console.log(
+            `[WebContainer] Draining port ${port} reclaimed for project "${this.activeProjectId}" (drain timeout or shell quiescence confirmed)`,
+          );
+          this.drainingPorts.delete(port);
+        }
       }
 
       console.log(`[WebContainer] Server ready for project "${this.activeProjectId}" at port ${port}: ${url}`);
@@ -820,7 +884,15 @@ class WebContainerManager {
         if (this.drainingPorts.has(port)) {
           const draining = this.drainingPorts.get(port)!;
           if (draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId) {
-            return;
+            const drainDuration = Date.now() - draining.drainedAt;
+            const isQuiescent =
+              drainDuration > 1000 ||
+              this.isShellPromptReady;
+
+            if (!isQuiescent) {
+              return;
+            }
+            this.drainingPorts.delete(port);
           }
         }
         const newServer: WebContainerServerInfo = {
@@ -840,7 +912,19 @@ class WebContainerManager {
             : { serverUrl: url, serverPort: port, startupStage: 'ready', previewStatus: 'loading' }),
         });
       } else if (type === 'close') {
-        // If this port was draining from a previous project/epoch, clean it up without touching active state
+        // If this port has pending draining closes from a prior session, consume it
+        const pendingCount = this.pendingDrainingCloses.get(port) ?? 0;
+        if (pendingCount > 0) {
+          if (pendingCount === 1) {
+            this.pendingDrainingCloses.delete(port);
+          } else {
+            this.pendingDrainingCloses.set(port, pendingCount - 1);
+          }
+          this.drainingPorts.delete(port);
+          console.log(`[WebContainer] Draining port ${port} closed cleanly (consumed pending close)`);
+          return;
+        }
+
         if (this.drainingPorts.has(port)) {
           this.drainingPorts.delete(port);
           console.log(`[WebContainer] Draining port ${port} closed cleanly`);
@@ -998,11 +1082,32 @@ class WebContainerManager {
   ): Promise<void> {
     if (!files || files.length === 0) return;
 
-    this.updateState({ startupStage: 'mounting_files' });
+    // Chain onto current mount operation so concurrent mount calls are strictly serialized
+    const previousMount = this.mountQueue;
+    let releaseMountLock: () => void = () => {};
+    this.mountQueue = new Promise<void>((resolve) => {
+      releaseMountLock = resolve;
+    });
 
     try {
+      await previousMount.catch(() => {});
+
+      this.updateState({ startupStage: 'mounting_files' });
+
       // Barrier: ensure any in-flight writes have settled before mounting files
-      await this.fileSyncCoordinator.barrier();
+      const settled = await this.fileSyncCoordinator.barrier();
+      if (!settled) {
+        const errMsg = 'WebContainer filesystem barrier timeout: previous writes failed to settle';
+        console.error(`[WebContainer] ${errMsg}`);
+        this.setStartupStage('error', {
+          phase: 'mount',
+          message: errMsg,
+          timestamp: Date.now(),
+          recoverable: true,
+          retryAction: 'reboot_container',
+        });
+        throw new Error(errMsg);
+      }
 
       const endSerialization = webcontainerPerf.startTimer('project_serialization');
       const tree = filesToFileSystemTree(files, dependencies, projectType);
@@ -1027,6 +1132,8 @@ class WebContainerManager {
         retryAction: 'reboot_container',
       });
       throw err;
+    } finally {
+      releaseMountLock();
     }
   }
 

@@ -36,6 +36,7 @@ export class FileSyncCoordinator {
 
   private pendingWrites = new Map<string, PendingItem>();
   private inFlightPaths = new Set<string>();
+  private inFlightPromises = new Map<string, Promise<void>>();
   private activeProjectId: string | null = null;
 
   constructor(options: SyncCoordinatorOptions) {
@@ -96,14 +97,22 @@ export class FileSyncCoordinator {
 
   public async barrier(timeoutMs = 5000): Promise<boolean> {
     const start = Date.now();
-    while (this.inFlightPaths.size > 0) {
+    while (this.inFlightPaths.size > 0 || this.inFlightPromises.size > 0) {
       if (Date.now() - start > timeoutMs) {
         console.warn(
           `[FileSyncCoordinator] Barrier timeout waiting for in-flight writes (${this.inFlightPaths.size} remaining)`,
         );
         return false;
       }
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      if (this.inFlightPromises.size > 0) {
+        const promises = Array.from(this.inFlightPromises.values());
+        await Promise.race([
+          Promise.all(promises),
+          new Promise((resolve) => setTimeout(resolve, 20)),
+        ]);
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
     }
     return true;
   }
@@ -127,30 +136,36 @@ export class FileSyncCoordinator {
     this.inFlightPaths.add(cleanPath);
     this.pendingWrites.delete(cleanPath);
 
-    try {
-      // Re-verify project scope immediately prior to raw write execution
-      if (
-        item.projectId === null ||
-        this.activeProjectId === null ||
-        item.projectId === this.activeProjectId
-      ) {
-        await this.rawWrite(cleanPath, item.content);
-      }
-    } catch (err) {
-      console.warn(`[FileSyncCoordinator] Failed to write file ${cleanPath}:`, err);
-    } finally {
-      this.inFlightPaths.delete(cleanPath);
-
-      // Check if a newer write was queued while the previous write was in-flight
-      const nextItem = this.pendingWrites.get(cleanPath);
-      if (nextItem) {
-        if (nextItem.timer) {
-          clearTimeout(nextItem.timer);
-          nextItem.timer = null;
+    const writePromise = (async () => {
+      try {
+        // Re-verify project scope immediately prior to raw write execution
+        if (
+          item.projectId === null ||
+          this.activeProjectId === null ||
+          item.projectId === this.activeProjectId
+        ) {
+          await this.rawWrite(cleanPath, item.content);
         }
-        void this.executeWrite(cleanPath);
+      } catch (err) {
+        console.warn(`[FileSyncCoordinator] Failed to write file ${cleanPath}:`, err);
+      } finally {
+        this.inFlightPaths.delete(cleanPath);
+        this.inFlightPromises.delete(cleanPath);
+
+        // Check if a newer write was queued while the previous write was in-flight
+        const nextItem = this.pendingWrites.get(cleanPath);
+        if (nextItem) {
+          if (nextItem.timer) {
+            clearTimeout(nextItem.timer);
+            nextItem.timer = null;
+          }
+          void this.executeWrite(cleanPath);
+        }
       }
-    }
+    })();
+
+    this.inFlightPromises.set(cleanPath, writePromise);
+    await writePromise;
   }
 
   public async flush(): Promise<void> {
