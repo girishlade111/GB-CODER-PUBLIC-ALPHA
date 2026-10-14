@@ -51,8 +51,8 @@ export interface FileTreeViewProps {
   onOpenToSide?: (path: string) => void;
   onCreateFile?: (path: string, content?: string) => boolean | void;
   onCreateFolder?: (path: string) => boolean | void;
-  onRename?: (oldPath: string, newPath: string) => boolean | void;
-  onDelete?: (path: string) => void;
+  onRename?: (oldPath: string, newPath: string) => boolean | void | Promise<boolean | void>;
+  onDelete?: (path: string) => void | Promise<void>;
   onDuplicate?: (path: string) => void;
 }
 
@@ -603,7 +603,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
     };
 
     // Commit Rename
-    const handleCommitRename = (oldPath: string, newName: string) => {
+    const handleCommitRename = async (oldPath: string, newName: string) => {
       const trimmed = newName.trim();
       setRenamingPath(null);
       if (!trimmed) return;
@@ -627,14 +627,15 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
 
       // Rejected by the owner (strict validation): keep the row as-is; the
       // owner has already explained why. Success toast only on acceptance.
-      if (onRename?.(oldPath, newPath) === false) return;
+      const res = await onRename?.(oldPath, newPath);
+      if (res === false) return;
       toast.success(`Renamed to ${trimmed}`);
     };
 
     // Confirm Delete
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
       if (!deleteTarget) return;
-      onDelete?.(deleteTarget.path);
+      await onDelete?.(deleteTarget.path);
       toast.success(`Deleted ${deleteTarget.name}`);
       setDeleteTarget(null);
     };

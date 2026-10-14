@@ -349,6 +349,7 @@ class WebContainerManager {
   private shellOutputBuffer: string[] = [];
   private isDevServerActive = false;
   private isDevServerStartingState = false;
+  private isShellPromptReady = false;
   private sessionEpoch = 0;
   private spawnAttempts = 0;
   private installedManifestFingerprint: string | null = null;
@@ -695,6 +696,8 @@ class WebContainerManager {
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
     this.isShellPromptReady = false;
+    this.drainingPorts.clear();
+    this.pendingDrainingCloses.clear();
   }
 
   /**
@@ -766,6 +769,39 @@ class WebContainerManager {
         return;
       }
 
+      // Guard 1: is a dev server starting or active in the current session epoch?
+      const isExpected =
+        this.isDevServerStartingState ||
+        this.isDevServerActive ||
+        this.state.startupStage === 'starting_server';
+
+      if (!isExpected) {
+        console.warn(
+          `[WebContainer] Discarded unsolicited/late server-ready at port ${port} (no dev server starting or active for project "${this.activeProjectId}")`,
+        );
+        return;
+      }
+
+      if (
+        this.devServerStartEpoch !== null &&
+        this.devServerStartEpoch !== this.sessionEpoch
+      ) {
+        console.warn(
+          `[WebContainer] Discarded server-ready at port ${port} for mismatched epoch (started in ${this.devServerStartEpoch}, current is ${this.sessionEpoch})`,
+        );
+        return;
+      }
+
+      if (
+        this.devServerStartProjectId !== null &&
+        this.devServerStartProjectId !== this.activeProjectId
+      ) {
+        console.warn(
+          `[WebContainer] Discarded server-ready at port ${port} for mismatched project (started for ${this.devServerStartProjectId}, current is ${this.activeProjectId})`,
+        );
+        return;
+      }
+
       // Check if this port is a draining port from a prior session/project
       const draining = this.drainingPorts.get(port);
       if (draining) {
@@ -784,20 +820,8 @@ class WebContainerManager {
             `[WebContainer] Draining port ${port} reclaimed for project "${this.activeProjectId}" (shell quiescence confirmed)`,
           );
           this.drainingPorts.delete(port);
+          this.pendingDrainingCloses.delete(port);
         }
-      }
-
-      // Guard: is a dev server starting or active in the current session epoch?
-      const isExpected =
-        this.isDevServerStartingState ||
-        this.isDevServerActive ||
-        this.state.startupStage === 'starting_server';
-
-      if (!isExpected) {
-        console.warn(
-          `[WebContainer] Discarded unsolicited/late server-ready at port ${port} (no dev server starting or active for project "${this.activeProjectId}")`,
-        );
-        return;
       }
 
       console.log(`[WebContainer] Server ready for project "${this.activeProjectId}" at port ${port}: ${url}`);
@@ -1036,8 +1060,8 @@ class WebContainerManager {
     projectType?: ProjectType,
     targetProjectId?: string,
     targetEpoch?: number,
-  ): Promise<void> {
-    if (!files || files.length === 0) return;
+  ): Promise<boolean> {
+    if (!files || files.length === 0) return false;
 
     const targetProject = targetProjectId ?? this.activeProjectId;
     const targetGen = targetEpoch ?? this.sessionEpoch;
@@ -1057,7 +1081,7 @@ class WebContainerManager {
         console.warn(
           `[WebContainer] Discarded stale mount for project "${targetProject}" (epoch ${targetGen}) - active project is now "${this.activeProjectId}" (epoch ${this.sessionEpoch})`,
         );
-        return;
+        return false;
       }
 
       this.updateState({ startupStage: 'mounting_files' });
@@ -1082,7 +1106,7 @@ class WebContainerManager {
         console.warn(
           `[WebContainer] Discarded stale mount after barrier for project "${targetProject}"`,
         );
-        return;
+        return false;
       }
 
       const endSerialization = webcontainerPerf.startTimer('project_serialization');
@@ -1094,11 +1118,20 @@ class WebContainerManager {
         console.warn(
           `[WebContainer] Discarded stale mount before container.mount for project "${targetProject}"`,
         );
-        return;
+        return false;
       }
 
       const endMount = webcontainerPerf.startTimer('filesystem_mount');
       const container = await this.boot();
+
+      // Stale mount guard 4: verify project scope after boot() completes
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+        console.warn(
+          `[WebContainer] Discarded stale mount after boot() for project "${targetProject}"`,
+        );
+        return false;
+      }
+
       await container.mount(tree);
       try {
         await container.fs.writeFile('.npmrc', OPTIMIZED_NPMRC);
@@ -1106,6 +1139,7 @@ class WebContainerManager {
         // ignore
       }
       endMount();
+      return true;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       this.setStartupStage('error', {

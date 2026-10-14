@@ -5,7 +5,7 @@
  * cryptographic integrity metadata, conflict resolution strategies,
  * and allowlisted preferences.
  */
-import type { EditorStyle, ProjectRecord } from '../projects/projectDatabase';
+import type { EditorStyle } from '../projects/projectDatabase';
 import type { ProjectFile, ProjectType } from '../../types/files';
 import type { StoredWorkspace } from '../vscodeWorkspaceStore';
 

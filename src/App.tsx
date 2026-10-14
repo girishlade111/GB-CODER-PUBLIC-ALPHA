@@ -62,7 +62,6 @@ import {
   snapshotOf,
   suggestProjectName,
   touchProject,
-  updateProject,
   updateProjectEditorPreference,
   writeActiveProjectId,
 } from './services/projects/projectDatabase';
@@ -805,6 +804,9 @@ function App() {
       ? route.projectId
       : null;
   });
+  const activeProjectIdRef = useRef<string | null>(activeProjectId);
+  activeProjectIdRef.current = activeProjectId;
+  const openTransitionTargetRef = useRef<string | null>(null);
   const [activeProject, setActiveProject] = useState<ProjectRecord | null>(null);
   /**
    * True while the selected project's files are being read back.
@@ -2428,62 +2430,71 @@ function App() {
       // is honest, but it would flash for a frame before the editor replaces
       // it — the exact flash the cold-start path already avoids.
       setIsOpeningProject(true);
+      openTransitionTargetRef.current = record.id;
 
-      // The project being left may have unsaved edits. A failed flush blocks
-      // the switch: leaving would strand those edits in a discarded state.
-      const flushed = await flushProjectSave();
-      if (flushed && !flushed.ok) {
-        toast.error('Could not save the current project. Staying put so no edits are lost.');
+      try {
+        // The project being left may have unsaved edits. A failed flush blocks
+        // the switch: leaving would strand those edits in a discarded state.
+        const flushed = await flushProjectSave();
+        if (flushed && !flushed.ok) {
+          toast.error('Could not save the current project. Staying put so no edits are lost.');
+          return false;
+        }
+        if (!isCurrentTransition(transition)) return false;
+
+        // Flush any pending virtual filesystem debounced writes for the project being left
+        // BEFORE updating active project state
+        const { webcontainerService: wc } = await loadWebContainerService();
+        if (!isCurrentTransition(transition)) return false;
+        const wcFlush = await wc.flushFileSync();
+        if (!wcFlush.ok && wcFlush.failed.length > 0) {
+          console.warn('[Navigation] Some pending writes failed to flush to WebContainer:', wcFlush.failed);
+        }
+        if (!isCurrentTransition(transition)) return false;
+
+        const [files, touched] = await Promise.all([
+          readProjectFiles(record.id),
+          touchProject(record.id),
+        ]);
+        // A newer transition (or a delete) started while reading: this result
+        // belongs to a selection the user has already moved past.
+        if (!isCurrentTransition(transition)) return false;
+        const opened = touched ?? record;
+
+        /*
+         * A project with no stored files opens as a genuinely empty workspace —
+         * never with injected scaffold. The empty file list is baselined as an
+         * unsaved draft (seededEmpty): opening persists nothing, and the first
+         * real edit swaps the array identity and persists normally. This holds
+         * for both editors: an empty Advanced IDE project must not gain
+         * index.html/style.css/script.js (or a package.json) it never had.
+         */
+        const recoveredEmpty = files.length === 0;
+        const restored = files;
+        if (recoveredEmpty) {
+          toast(`"${opened.name}" has no stored files — opened an empty workspace.`);
+        }
+
+        writeActiveProjectId(opened.id);
+        setActiveProjectId(opened.id);
+        setActiveProject(opened);
+        setProjects((current) => [opened, ...current.filter((item) => item.id !== opened.id)]);
+
+        wc.attachProject(opened.id);
+        // Explicit opens push a history entry; navigation-driven opens (Back /
+        // Forward / cold deep link) replace so the trail never gains duplicates.
+        applyProjectToEditor(opened, restored, {
+          navigate: !options?.replaceUrl,
+          seededEmpty: recoveredEmpty,
+          editorOverride: options?.editorOverride,
+        });
+        return true;
+      } finally {
+        if (openTransitionTargetRef.current === record.id) {
+          openTransitionTargetRef.current = null;
+        }
         setIsOpeningProject(false);
-        return false;
       }
-      if (!isCurrentTransition(transition)) {
-        setIsOpeningProject(false);
-        return false;
-      }
-
-      const [files, touched] = await Promise.all([
-        readProjectFiles(record.id),
-        touchProject(record.id),
-      ]);
-      // A newer transition (or a delete) started while reading: this result
-      // belongs to a selection the user has already moved past.
-      if (!isCurrentTransition(transition)) return false;
-      const opened = touched ?? record;
-
-      /*
-       * A project with no stored files opens as a genuinely empty workspace —
-       * never with injected scaffold. The empty file list is baselined as an
-       * unsaved draft (seededEmpty): opening persists nothing, and the first
-       * real edit swaps the array identity and persists normally. This holds
-       * for both editors: an empty Advanced IDE project must not gain
-       * index.html/style.css/script.js (or a package.json) it never had.
-       */
-      const recoveredEmpty = files.length === 0;
-      const restored = files;
-      if (recoveredEmpty) {
-        toast(`"${opened.name}" has no stored files — opened an empty workspace.`);
-      }
-
-      writeActiveProjectId(opened.id);
-      setActiveProjectId(opened.id);
-      setActiveProject(opened);
-      setProjects((current) => [opened, ...current.filter((item) => item.id !== opened.id)]);
-
-      // Flush any pending file writes for previous project and attach newly opened project
-      const { webcontainerService: wc } = await loadWebContainerService();
-      await wc.flushFileSync();
-      if (!isCurrentTransition(transition)) return false;
-      wc.attachProject(opened.id);
-      // Explicit opens push a history entry; navigation-driven opens (Back /
-      // Forward / cold deep link) replace so the trail never gains duplicates.
-      applyProjectToEditor(opened, restored, {
-        navigate: !options?.replaceUrl,
-        seededEmpty: recoveredEmpty,
-        editorOverride: options?.editorOverride,
-      });
-      setIsOpeningProject(false);
-      return true;
     },
     [applyProjectToEditor, flushProjectSave, beginTransition, isCurrentTransition],
   );
@@ -2580,9 +2591,12 @@ function App() {
 
   const handleDeleteProject = useCallback(
     async (record: ProjectRecord) => {
-      // Invalidate any in-flight open of this project first: its completion
-      // must not resurrect the editor (or its files) after deletion.
-      beginTransition();
+      // Invalidate in-flight open ONLY if this specific project is being opened:
+      // deleting an unrelated project must not cancel an open of another project.
+      if (openTransitionTargetRef.current === record.id) {
+        beginTransition();
+        openTransitionTargetRef.current = null;
+      }
 
       // Drop any queued write first, or a save for the project being deleted
       // could be flushed afterwards and recreate its files.
@@ -2593,7 +2607,7 @@ function App() {
       await deleteProjectRecord(record.id);
       setProjects((current) => current.filter((item) => item.id !== record.id));
 
-      if (activeProjectId === record.id) {
+      if (activeProjectIdRef.current === record.id) {
         const { webcontainerService: wc } = await loadWebContainerService();
         wc.detachProject(record.id);
         savedFilesRef.current = null;
@@ -2607,7 +2621,7 @@ function App() {
 
       toast.success(`Deleted "${record.name}".`);
     },
-    [activeProjectId, unavailableProjectId, beginTransition],
+    [unavailableProjectId, beginTransition],
   );
 
   /** Leaves the active project and returns to the dashboard. */

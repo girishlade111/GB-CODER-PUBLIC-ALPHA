@@ -13,7 +13,6 @@ import {
 } from '../../services/localShell';
 import {
   webcontainerService,
-  WebContainerStatus,
 } from '../../services/webcontainer/webcontainerService';
 import {
   describeWebContainerUnavailableReason,
@@ -267,13 +266,19 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
       // Mount project files into virtual filesystem if files exist
       if (currentProj.files.length > 0) {
-        await webcontainerService.mountProject(
+        const mounted = await webcontainerService.mountProject(
           currentProj.files,
           currentProj.dependencies,
           currentProj.projectType,
           effectiveProjectId,
           webcontainerService.getSessionEpoch(),
         );
+        if (!mounted) {
+          term.write(
+            `${ANSI.brightYellow}Mount aborted — project switched or session invalidated.${ANSI.reset}\r\n`,
+          );
+          return;
+        }
         term.write(
           `${ANSI.gray}Files mounted into virtual filesystem. Starting interactive shell...${ANSI.reset}\r\n`,
         );
@@ -530,13 +535,16 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
               }
 
               const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
-              await webcontainerService.mountProject(
+              const mounted = await webcontainerService.mountProject(
                 currentProj.files,
                 currentProj.dependencies,
                 currentProj.projectType,
                 effectiveProjectId,
                 restartEpoch,
               );
+              if (!mounted) {
+                return;
+              }
 
               if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
 
@@ -854,14 +862,18 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
   const handleQuickNpmInstall = useCallback(async () => {
     if (mode === 'webcontainer') {
+      const currentProj = projectRef.current;
       const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
-      await webcontainerService.mountProject(
+      const mounted = await webcontainerService.mountProject(
         currentProj.files,
         currentProj.dependencies,
         currentProj.projectType,
         effectiveProjectId,
         webcontainerService.getSessionEpoch(),
       );
+      if (!mounted) {
+        return;
+      }
       if (!webcontainerShellRef.current) {
         await startWebContainerShell();
       }

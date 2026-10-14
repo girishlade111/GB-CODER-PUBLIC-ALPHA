@@ -6,7 +6,7 @@
  * ZIP-slip and ZIP-bomb defenses, conflict resolution, and staged verification.
  */
 
-import { getProject, listProjects, readProjectFiles, restoreProject, type ProjectRecord } from '../projects/projectDatabase';
+import { getProject, listProjects, readProjectFiles, restoreProject, type EditorStyle, type ProjectRecord } from '../projects/projectDatabase';
 import { saveWorkspace, type StoredWorkspace } from '../vscodeWorkspaceStore';
 import {
   ALLOWLISTED_PREFERENCE_KEYS,
@@ -18,7 +18,6 @@ import {
   type BackupChecksums,
   type BackupData,
   type BackupManifest,
-  type BackupProjectMeta,
   type BackupProjectPayload,
   type RestoreAnalysis,
   type RestoreExecutionResult,
@@ -26,7 +25,7 @@ import {
   type RestorePlanProject,
 } from './backupTypes';
 import { computeSha256, safeJsonParse, validateAndNormalizeArchivePath } from './backupCrypto';
-import type { ProjectFile } from '../../types/files';
+import { languageForPath, type ProjectFile, type ProjectType } from '../../types/files';
 
 /** Custom event dispatched when projects have been restored to trigger UI refreshes. */
 export const PROJECTS_RESTORED_EVENT = 'gb-coder:projects-updated';
@@ -168,6 +167,7 @@ export async function analyzeBackupArchive(
       files.push({
         path: cleanFilePath,
         content,
+        language: languageForPath(cleanFilePath),
       });
     }
 

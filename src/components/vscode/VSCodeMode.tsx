@@ -16,7 +16,6 @@ import {
   Minimize2,
   FolderArchive,
   FolderDown,
-  Zap,
   Share2,
   Search,
   ChevronDown,
@@ -500,7 +499,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   );
 
   const handleRenameFile = useCallback(
-    (oldPath: string, newPath: string) => {
+    async (oldPath: string, newPath: string) => {
       // Strict pre-validation (the tree did a first pass only): traversal,
       // case-collisions and wrong extensions stop here, before tabs move.
       const existing = project.files.map((f) => f.path);
@@ -510,12 +509,22 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         : validateWorkspacePath(newPath, project.projectType, existing, oldPath);
       if (!checked.valid) {
         toast.error(checked.error ?? 'Invalid name.');
-        return;
+        return false;
       }
+      const finalNew = checked.path;
+
+      // Fail-closed integration: await virtual filesystem rename before mutating tabs or notifying parent
+      try {
+        await webcontainerService.renameFile(oldPath, finalNew);
+      } catch (err) {
+        console.error('[VSCodeMode] Failed to rename file in WebContainer:', err);
+        toast.error(`Failed to rename "${oldPath}". Virtual filesystem write failed.`);
+        return false;
+      }
+
       // The owner re-validates and reports false on rejection (already
       // toasted there): local tab, focus and dirty updates must not run.
-      if (onRenameFile?.(oldPath, checked.path) === false) return;
-      const finalNew = checked.path;
+      if (onRenameFile?.(oldPath, finalNew) === false) return false;
 
       const updateList = (paths: string[]) =>
         paths.map((p) => remapPath(p, oldPath, finalNew));
@@ -533,20 +542,28 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         current === null ? current : remapPath(current, oldPath, finalNew),
       );
       // Dirty markers travel with their files so dots stay truthful.
-        setDirtyPaths((current) => {
+      setDirtyPaths((current) => {
         const next = new Set<string>();
         for (const p of current) next.add(remapPath(p, oldPath, finalNew));
         return next;
       });
-      webcontainerService.renameFile(oldPath, finalNew);
+      return true;
     },
     [onRenameFile, project.files, project.projectType],
   );
 
   const handleDeleteFile = useCallback(
-    (path: string) => {
+    async (path: string) => {
+      // Fail-closed integration: await virtual filesystem delete before mutating tabs or notifying parent
+      try {
+        await webcontainerService.deleteFile(path);
+      } catch (err) {
+        console.error('[VSCodeMode] Failed to delete file in WebContainer:', err);
+        toast.error(`Failed to delete "${path}". Virtual filesystem write failed.`);
+        return;
+      }
+
       onDeleteFile?.(path);
-      void webcontainerService.deleteFile(path);
 
       const isTarget = (p: string) => p === path || p.startsWith(path + '/');
 

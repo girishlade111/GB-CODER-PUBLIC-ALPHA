@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Archive, Code2, FolderDown, FolderPlus, Loader2, PanelsTopLeft, Plus, Trash2, Upload } from 'lucide-react';
-import { useTheme } from '../../hooks/useTheme';
 import LadeStackLogo from '../LadeStackLogo';
 import type { EditorStyle, ProjectRecord } from '../../services/projects/projectDatabase';
 
@@ -74,7 +73,6 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
   onImport,
   onProjectsChanged,
 }) => {
-  const { isDark } = useTheme();
   /*
    * Confirmation is inline per row rather than a modal.
    *

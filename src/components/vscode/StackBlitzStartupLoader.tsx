@@ -6,10 +6,6 @@ import {
   TerminalSquare,
   RotateCcw,
   AlertCircle,
-  FolderSync,
-  PackageCheck,
-  Server,
-  Cpu,
 } from 'lucide-react';
 import {
   ProjectStartupStage,
@@ -52,7 +48,6 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
   const step2Done =
     step1Done &&
     !isMounting &&
-    stage !== 'booting' &&
     !(isError && (errorPhase === 'mount' || errorPhase === 'boot'));
   const step2Active = isMounting;
   const step2Error = isError && errorPhase === 'mount';
