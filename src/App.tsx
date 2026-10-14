@@ -34,7 +34,7 @@ import { useImportDrop } from './hooks/useImportDrop';
  * from the full-stack feature, so this does not pull that chunk into the initial
  * payload — `npm run verify:bundle` enforces that.
  */
-import { EDITOR_ROUTE, VSCODE_ROUTE, isVSCodeModePath, navigateTo } from './utils/appRoutes';
+import { EDITOR_ROUTE, STATIC_EDITOR_ROUTE, VSCODE_ROUTE, isEditorRoutePath, isStaticEditorPath, isVSCodeModePath, navigateReplace, navigateTo } from './utils/appRoutes';
 import {
   clearWorkspace,
   loadWorkspace,
@@ -130,6 +130,7 @@ const LivePreviewPopoutPage = lazyWithRecovery(
 );
 const ImportReviewModal = lazyWithRecovery(() => import('./components/ImportReviewModal'));
 const NewProjectModal = lazyWithRecovery(() => import('./components/projects/NewProjectModal'));
+import type { NewProjectTemplate } from './components/projects/NewProjectModal';
 
 /*
  * The full-stack feature (VS Code mode, sandbox panel, sandbox client, E2B
@@ -784,16 +785,22 @@ function App() {
    * this in an effect would render an editor for a frame before replacing it with
    * the dashboard.
    *
+   * Project-first entry: the stored pointer is honoured ONLY on editor routes
+   * (`/app/editor`, `/app/ide`, `/ide`). Arriving from the landing page at the
+   * dashboard (`/app`, `/app/projects`) always lands on the dashboard, no matter
+   * what the pointer says — the pointer is still kept, so the dashboard can
+   * surface the recent project and an explicit open re-arms it.
+   *
    * Only the *pointer* lives in localStorage. Records and files are in IndexedDB,
    * which has no practical size ceiling; see services/projects/projectDatabase.
    */
   const [activeProjectId, setActiveProjectId] = useState<string | null>(() =>
-    readActiveProjectId(),
+    isEditorRoutePath() ? readActiveProjectId() : null,
   );
   const [activeProject, setActiveProject] = useState<ProjectRecord | null>(null);
   /** True while the pointed-at project's files are being read back. */
   const [isOpeningProject, setIsOpeningProject] = useState<boolean>(
-    () => readActiveProjectId() !== null,
+    () => readActiveProjectId() !== null && isEditorRoutePath(),
   );
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [isProjectListLoading, setIsProjectListLoading] = useState<boolean>(true);
@@ -804,8 +811,20 @@ function App() {
   // Check for auto-save on mount
   useEffect(() => {
     const autoSave = snapshotService.getAutoSave();
-    if (autoSave) {
+    if (!autoSave) return;
+    /*
+     * An autosave with no recoverable content (every buffer blank, no files)
+     * is not recovery data — it is the residue of a Fresh Start. Offering
+     * "Restore" for it would loop a phantom prompt after every fresh start,
+     * so the slot is dropped silently instead of asked about.
+     */
+    const hasRecoverableContent = autoSave.project.files.some(
+      (f) => f.content.trim().length > 0,
+    );
+    if (hasRecoverableContent) {
       setSessionRecoveryData(autoSave);
+    } else {
+      snapshotService.clearAutoSave();
     }
   }, []);
 
@@ -1413,11 +1432,68 @@ function App() {
         setFullStackProject(null);
         setVsCodeReturn(null);
         setIsVSCodeRoute(false);
-        if (options.navigate || isVSCodeModePath()) navigateTo(EDITOR_ROUTE);
+        if (options.navigate || isVSCodeModePath()) navigateTo(STATIC_EDITOR_ROUTE);
       }
     },
     [],
   );
+
+  /*
+   * Fresh Start: a genuinely blank static session.
+   *
+   * The state-ownership fix, not a cosmetic clear: fileProject itself is
+   * replaced with empty buffers (the triple, Monaco and Preview all derive
+   * from it, so nothing can rehydrate old code), the queued project save is
+   * dropped, the dirty baseline is re-taken on the empties, and history is
+   * baselined so undo stays coherent.
+   *
+   * Declared after applyProjectToEditor (which it calls): anything earlier
+   * would read the binding before its initialisation and crash first render.
+   *
+   * Data protection: when a saved project is open it is flushed first (a
+   * failed flush blocks, exactly like switching projects), then the blank
+   * session gets its OWN draft identity — empty buffers are never persisted
+   * over the saved project's files.
+   */
+  const handleFreshStart = useCallback(async () => {
+    if (activeProjectId) {
+      const flushed = await flushProjectSave();
+      if (flushed && !flushed.ok) {
+        toast.error('Could not save the current project. Staying put so no edits are lost.');
+        return;
+      }
+      const record = await createProjectRecord({
+        name: suggestProjectName(projects),
+        editorStyle: 'plain',
+        projectType: 'plain',
+        files: [],
+      });
+      if (!record) {
+        toast.error('Could not start a fresh session. This browser may be blocking local storage.');
+        return;
+      }
+      setProjects((current) => [record, ...current]);
+      writeActiveProjectId(record.id);
+      setActiveProjectId(record.id);
+      setActiveProject(record);
+      applyProjectToEditor(record, [], { navigate: true, seededEmpty: true });
+      codeHistory.saveState({ html: '', css: '', javascript: '' }, 'Fresh start');
+      setSessionRecoveryData(null);
+      setIsOpeningProject(false);
+      toast.success('Started fresh — the previous project was kept intact.');
+      return;
+    }
+
+    pendingProjectSaveRef.current = null;
+    const empty = createPlainProject('', '', '');
+    savedFilesRef.current = snapshotOf(empty.files);
+    seededFilesRef.current = null;
+    setFileProject(empty);
+    markFlushedSaved(empty.files);
+    codeHistory.saveState({ html: '', css: '', javascript: '' }, 'Fresh start');
+    setSessionRecoveryData(null);
+    toast.success('Started fresh.');
+  }, [activeProjectId, flushProjectSave, projects, applyProjectToEditor, codeHistory, markFlushedSaved]);
 
   /*
    * ===== DRAG & DROP IMPORT =====
@@ -1838,7 +1914,7 @@ function App() {
           setProjects((current) => current.map((item) => (item.id === updated.id ? updated : item)));
         }
       }
-      if (updateUrl) navigateTo(EDITOR_ROUTE);
+      if (updateUrl) navigateTo(activeProjectId ? STATIC_EDITOR_ROUTE : EDITOR_ROUTE);
 
       /*
        * Nothing was ever loaded — someone opened `/ide` directly and left again.
@@ -2103,10 +2179,12 @@ function App() {
   }, [isVSCodeRoute, isRestoringWorkspace, fullStackProject, vsCodeReturn, activeProjectId]);
 
   /*
-   * Back and Forward across the mode boundary.
+   * Back and Forward across dashboard and editor routes.
    *
-   * The app had no `popstate` listener at all, so without this the URL would
-   * change on a Back press while the view stayed where it was.
+   * Without this the URL would change on a Back press while the view stayed
+   * where it was. Every branch resolves toward URL-is-truth without pushing:
+   * corrections use replace (or no-op when already at the path), so Back and
+   * Forward never stack entries the user has to press through twice.
    */
   useEffect(() => {
     const handlePopState = () => {
@@ -2120,17 +2198,71 @@ function App() {
         return;
       }
 
-      if (isVSCodeRoute) void leaveVSCodeMode({ updateUrl: false });
+      if (isStaticEditorPath()) {
+        // Back/Forward into the Static Editor.
+        if (isVSCodeRoute || fullStackProject) {
+          void leaveVSCodeMode({ updateUrl: false });
+          return;
+        }
+        // Already editing: nothing to rebuild.
+        if (activeProjectId) return;
+        // The dashboard was on screen: re-arm the stored selection. Opening
+        // no-ops its own navigate when already at this path, so no duplicate
+        // entry is stacked.
+        const id = readActiveProjectId();
+        if (!id) {
+          navigateReplace(EDITOR_ROUTE);
+          return;
+        }
+        void (async () => {
+          const record = await getProject(id);
+          if (!record) {
+            writeActiveProjectId(null);
+            navigateReplace(EDITOR_ROUTE);
+            return;
+          }
+          const opener = handleOpenProjectRef.current;
+          if (opener) await opener(record);
+        })();
+        return;
+      }
+
+      /*
+       * Dashboard (or anything else): leave any editor in memory. The stored
+       * pointer is deliberately kept — only an explicit dashboard return or a
+       * new open rewrites it — so Forward re-arms the same project.
+       */
+      if (isVSCodeRoute || fullStackProject || activeProjectId) {
+        void (async () => {
+          const flushed = await flushProjectSave();
+          if (flushed && !flushed.ok) {
+            toast.error('Could not save the current project. Staying put so no edits are lost.');
+            return;
+          }
+          savedFilesRef.current = null;
+          setActiveProjectId(null);
+          setActiveProject(null);
+          setFullStackProject(null);
+          setVsCodeReturn(null);
+          setIsVSCodeRoute(false);
+          setIsRestoringWorkspace(false);
+          setProjects(await listProjects());
+        })();
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [isVSCodeRoute, fullStackProject, leaveVSCodeMode]);
+  }, [isVSCodeRoute, fullStackProject, activeProjectId, leaveVSCodeMode, flushProjectSave]);
 
   /** Opens a project from the dashboard. */
   const handleOpenProject = useCallback(
     async (record: ProjectRecord) => {
       const transition = beginTransition();
+      // A loading state instead of the dashboard while reading: the dashboard
+      // is honest, but it would flash for a frame before the editor replaces
+      // it — the exact flash the cold-start path already avoids.
+      setIsOpeningProject(true);
 
       // The project being left may have unsaved edits. A failed flush blocks
       // the switch: leaving would strand those edits in a discarded state.
@@ -2140,7 +2272,10 @@ function App() {
         setIsOpeningProject(false);
         return;
       }
-      if (!isCurrentTransition(transition)) return;
+      if (!isCurrentTransition(transition)) {
+        setIsOpeningProject(false);
+        return;
+      }
 
       const [files, touched] = await Promise.all([
         readProjectFiles(record.id),
@@ -2152,17 +2287,17 @@ function App() {
       const opened = touched ?? record;
 
       /*
-       * A project with no files means its records were lost while its metadata
-       * survived. Reopening into a blank editor would look like data corruption
-       * with no explanation, so say so and start it from the standard scaffold.
-       * The scaffold is baselined as unsaved (seededEmpty), never persisted
-       * over unknown store content.
+       * A project with no stored files opens as a genuinely empty workspace —
+       * never with injected scaffold. The empty file list is baselined as an
+       * unsaved draft (seededEmpty): opening persists nothing, and the first
+       * real edit swaps the array identity and persists normally. This holds
+       * for both editors: an empty Advanced IDE project must not gain
+       * index.html/style.css/script.js (or a package.json) it never had.
        */
       const recoveredEmpty = files.length === 0;
-      const restored =
-        !recoveredEmpty ? files : createPlainProject(defaultHTML, defaultCSS, defaultJS).files;
+      const restored = files;
       if (recoveredEmpty) {
-        toast.error(`"${opened.name}" had no files stored. Starting it fresh.`);
+        toast(`"${opened.name}" has no stored files — opened an empty workspace.`);
       }
 
       writeActiveProjectId(opened.id);
@@ -2178,28 +2313,65 @@ function App() {
 
   /** Creates a project from the New Project modal and opens it. */
   const handleCreateProject = useCallback(
-    async ({ name, editorStyle }: { name: string; editorStyle: EditorStyle }) => {
+    async ({
+      name,
+      editorStyle,
+      template,
+    }: {
+      name: string;
+      editorStyle: EditorStyle;
+      template: NewProjectTemplate;
+    }) => {
       const transition = beginTransition();
+      setIsOpeningProject(true);
 
       const flushed = await flushProjectSave();
       if (flushed && !flushed.ok) {
         toast.error('Could not save the current project. Staying put so no edits are lost.');
+        setIsOpeningProject(false);
         return;
       }
-      if (!isCurrentTransition(transition)) return;
+      if (!isCurrentTransition(transition)) {
+        setIsOpeningProject(false);
+        return;
+      }
 
-      // A brand-new project starts from the same scaffold the editor used to open
-      // with by default — that content is a starting point, not a landing page.
-      const starter = createPlainProject(defaultHTML, defaultCSS, defaultJS);
+      /*
+       * Starting points, resolved from the user's explicit template choice —
+       * never invented. `editorStyle` (which editor opens it) and
+       * `projectType` (what the code is) stay separate fields on the record
+       * so the project always reopens in its correct editor.
+       */
+      const resolvedStyle: EditorStyle =
+        template === 'react' || template === 'vue' ? 'vscode' : editorStyle;
+      let projectType: ProjectType = 'plain';
+      let entry: string | undefined;
+      let files: ProjectFile[];
+      if (template === 'react' || template === 'vue') {
+        const scaffold = createProjectOfType(template);
+        projectType = scaffold.projectType;
+        entry = scaffold.entry;
+        files = scaffold.files;
+      } else if (template === 'empty') {
+        files = [];
+      } else if (template === 'blank') {
+        files = createPlainProject('', '', '').files;
+      } else {
+        // 'starter': the same scaffold the editor used to open with by
+        // default — a starting point, not a landing page.
+        files = createPlainProject(defaultHTML, defaultCSS, defaultJS).files;
+      }
       const record = await createProjectRecord({
         name,
-        editorStyle,
-        projectType: 'plain',
-        files: starter.files,
+        editorStyle: resolvedStyle,
+        projectType,
+        entry,
+        files,
       });
 
       if (!record) {
         toast.error('Could not create the project. This browser may be blocking local storage.');
+        setIsOpeningProject(false);
         return;
       }
       if (!isCurrentTransition(transition)) {
@@ -2215,7 +2387,7 @@ function App() {
       writeActiveProjectId(record.id);
       setActiveProjectId(record.id);
       setActiveProject(record);
-      applyProjectToEditor(record, starter.files, { navigate: true });
+      applyProjectToEditor(record, files, { navigate: true });
       setIsOpeningProject(false);
       toast.success(`Created "${record.name}".`);
     },
@@ -2319,7 +2491,13 @@ function App() {
       const opened = touched ?? record;
       setActiveProject(opened);
       setProjects((current) => [opened, ...current.filter((item) => item.id !== opened.id)]);
-      if (files.length > 0) applyProjectToEditor(opened, files, { navigate: false });
+      /*
+       * Always apply — including zero files. An empty project opens as a
+       * genuinely empty draft (seededEmpty: nothing persists until the first
+       * edit); skipping the apply would leave the starter scaffold on screen
+       * for a project that owns nothing.
+       */
+      applyProjectToEditor(opened, files, { navigate: false, seededEmpty: files.length === 0 });
       setIsOpeningProject(false);
     })();
 
@@ -2328,6 +2506,20 @@ function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /*
+   * URL honesty for the Static Editor route.
+   *
+   * `/app/editor` requires an explicit selected project. If the dashboard is
+   * legitimately on screen there — a deep link with no (or a dead) pointer
+   * and no open in flight — the URL is corrected back to the dashboard with
+   * replace, not push, so Back still leaves the app rather than looping.
+   */
+  useEffect(() => {
+    if (!activeProjectId && !isOpeningProject && isStaticEditorPath()) {
+      navigateReplace(EDITOR_ROUTE);
+    }
+  }, [activeProjectId, isOpeningProject]);
 
   /*
    * Autosave. Records the pending state on every change and writes it once edits
@@ -4097,7 +4289,8 @@ function App() {
    *
    * Placed after the VS Code branch deliberately: `/ide` addresses that mode
    * directly and has its own empty state, so arriving there must not be redirected
-   * into the dashboard.
+   * into the dashboard. Landing on `/app/editor` with no project is corrected
+   * back to the dashboard URL by the honesty effect above.
    *
    * Drag-and-drop stays live here — the window-level import handlers are attached
    * by `useImportDrop`, not by the editor's markup — so a folder can be dropped
@@ -4946,7 +5139,7 @@ function App() {
             if (!backedUp) {
               toast.error('Could not back up the unsaved session; it was kept in place.');
             }
-            setSessionRecoveryData(null);
+            void handleFreshStart();
           }}
         />
       )}

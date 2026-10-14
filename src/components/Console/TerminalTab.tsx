@@ -377,10 +377,17 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       webcontainerShellRef.current = shell;
       setWcState(webcontainerService.getState());
 
-      // StackBlitz auto-start: install dependencies and boot dev server
-      // Only auto-start when project files are populated
+      // StackBlitz auto-start: install dependencies and boot dev server.
+      // Only auto-start when the project itself declares npm metadata: a
+      // manifest-less project stays idle on a ready shell (no invented
+      // package.json, no phantom install), per project-first lifecycle.
       const projToStart = projectRef.current;
-      if (autoStartProject !== false && !hasAutoStartedRef.current && projToStart.files.length > 0) {
+      if (!webcontainerService.hasNpmManifest(projToStart.files)) {
+        hasAutoStartedRef.current = true;
+        term.write(
+          `${ANSI.gray}No package.json in this project — staying idle. Load an npm project or run commands manually.${ANSI.reset}\r\n`,
+        );
+      } else if (autoStartProject !== false && !hasAutoStartedRef.current && projToStart.files.length > 0) {
         hasAutoStartedRef.current = true;
 
         const fingerprint = webcontainerService.computeDependencyFingerprint(
@@ -491,14 +498,35 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
           void (async () => {
             try {
-              // Ensure project files are mounted before checking dependencies or starting Vite
-              if (currentProj.files.length > 0) {
-                await webcontainerService.mountProject(
-                  currentProj.files,
-                  currentProj.dependencies,
-                  currentProj.projectType,
-                );
+              // Idle means idle: a restart with no project files must not
+              // dispatch npm work. Manual shell commands still work.
+              if (currentProj.files.length === 0) {
+                if (term) {
+                  term.write(
+                    `\r\n${ANSI.brightYellow}⚡ [${reason}]: No project files loaded — staying idle. Load or create files, then restart.${ANSI.reset}\r\n`,
+                  );
+                }
+                return;
               }
+
+              // No npm metadata, no npm work: without its own package.json the
+              // project can neither install nor serve, so restarting would only
+              // invent commands against a manifest the user never wrote.
+              if (!webcontainerService.hasNpmManifest(currentProj.files)) {
+                if (term) {
+                  term.write(
+                    `\r\n${ANSI.brightYellow}⚡ [${reason}]: No package.json in this project — staying idle. Load an npm project or run commands manually.${ANSI.reset}\r\n`,
+                  );
+                }
+                return;
+              }
+
+              // Ensure project files are mounted before checking dependencies or starting Vite
+              await webcontainerService.mountProject(
+                currentProj.files,
+                currentProj.dependencies,
+                currentProj.projectType,
+              );
 
               if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
 

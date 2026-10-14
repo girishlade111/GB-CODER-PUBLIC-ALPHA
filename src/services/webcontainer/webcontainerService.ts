@@ -846,6 +846,20 @@ class WebContainerManager {
   }
 
   /**
+   * Whether the project's own files declare npm metadata.
+   *
+   * Automatic install/dev-server dispatch is gated on this: a project without
+   * its own package.json stays idle (no invented manifest, no npm work), while
+   * explicit manual terminal commands keep working against the booted shell.
+   * Mirrors the manifest detection in filesToFileSystemTree.
+   */
+  public hasNpmManifest(files: ProjectFile[]): boolean {
+    return files.some((f) =>
+      /(^|\/)package\.json$/i.test((f.path || '').replace(/^\/+/, '')),
+    );
+  }
+
+  /**
    * Verifies if dependency installation is needed based on container runtime state and manifest fingerprint.
    * Prevents redundant `npm install` cycles when reopening the same project with unchanged dependencies.
    */
