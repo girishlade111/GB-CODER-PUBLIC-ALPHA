@@ -4,7 +4,9 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
   output: 'static',
   build: {
-    format: 'file',
+    // Directory format emits about/index.html style output so canonical
+    // extensionless URLs (/about, /contact, ...) resolve on static hosts.
+    format: 'directory',
   },
   server: {
     port: 4321,

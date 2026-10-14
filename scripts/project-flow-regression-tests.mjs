@@ -24,6 +24,12 @@ import {
   isStaticEditorPath,
   isVSCodeModePath,
   isEditorRoutePath,
+  isValidProjectId,
+  parseAppRoute,
+  projectEditorUrl,
+  projectIdeUrl,
+  projectUrl,
+  NEW_PROJECT_ROUTE,
 } from '../src/utils/appRoutes.ts';
 
 import {
@@ -76,6 +82,71 @@ describe('NAV route helpers', () => {
       assert.equal(isDashboardPath(p), false, `${p} not dashboard`);
       assert.equal(isStaticEditorPath(p), false, `${p} not static editor`);
       assert.equal(isVSCodeModePath(p), false, `${p} not vscode`);
+    }
+  });
+});
+
+describe('R1 canonical route resolution', () => {
+  test('ROUTE-06/07: dashboard aliases resolve, never editors', () => {
+    for (const p of ['/app', '/app/', '/app/projects', '/app/projects/']) {
+      assert.deepEqual(parseAppRoute(p), { kind: 'dashboard' }, p);
+    }
+  });
+
+  test('ROUTE-08: creation route is addressable without side effects', () => {
+    assert.deepEqual(parseAppRoute('/app/projects/new'), { kind: 'new' });
+    assert.deepEqual(parseAppRoute('/app/projects/new/'), { kind: 'new' });
+    assert.equal(NEW_PROJECT_ROUTE, '/app/projects/new');
+  });
+
+  test('ROUTE-09/10: project URLs carry the stable id and editor', () => {
+    assert.deepEqual(parseAppRoute('/app/projects/abc123/editor'), { kind: 'editor', projectId: 'abc123' });
+    assert.deepEqual(parseAppRoute('/app/projects/abc123/ide'), { kind: 'ide', projectId: 'abc123' });
+    assert.deepEqual(parseAppRoute('/app/projects/abc123'), { kind: 'project', projectId: 'abc123' });
+    assert.deepEqual(parseAppRoute('/app/projects/abc123/'), { kind: 'project', projectId: 'abc123' });
+    assert.equal(projectEditorUrl('abc123'), '/app/projects/abc123/editor');
+    assert.equal(projectIdeUrl('abc123'), '/app/projects/abc123/ide');
+    assert.equal(projectUrl('abc123'), '/app/projects/abc123');
+  });
+
+  test('ROUTE-13/14: invalid ids route to safe recovery, never an editor', () => {
+    for (const p of [
+      '/app/projects/%zz/editor',
+      '/app/projects//editor',
+      '/app/projects/abc123/editor/extra',
+      '/app/projects/abc123/unknown',
+      '/app/projects/new/extra',
+      '/app/projects/a b/ide',
+    ]) {
+      const r = parseAppRoute(p);
+      assert.equal(r.kind, 'invalid', `${p} is invalid, got ${r.kind}`);
+      assert.ok(!('projectId' in r) || r.projectId !== undefined, 'no usable id leaks');
+    }
+    assert.equal(isValidProjectId(''), false);
+    assert.equal(isValidProjectId('a/b'), false);
+    assert.equal(isValidProjectId('ok-id_123'), true);
+  });
+
+  test('ROUTE-15: legacy routes keep their kinds', () => {
+    assert.deepEqual(parseAppRoute('/app/editor'), { kind: 'legacy-editor' });
+    assert.deepEqual(parseAppRoute('/app/ide'), { kind: 'legacy-ide' });
+    assert.deepEqual(parseAppRoute('/ide'), { kind: 'legacy-ide' });
+    assert.deepEqual(parseAppRoute('/ide/'), { kind: 'legacy-ide' });
+  });
+
+  test('ROUTE-16: unknown app paths fall back to dashboard, not editors', () => {
+    for (const p of ['/app/dashboard', '/app/something/deep', '/app/projects']) {
+      const r = parseAppRoute(p);
+      assert.ok(r.kind === 'dashboard' || r.kind === 'unknown-app', `${p} safe, got ${r.kind}`);
+    }
+    assert.deepEqual(parseAppRoute('/app/dashboard'), { kind: 'unknown-app' });
+  });
+
+  test('ROUTE-29: ids survive URL round-trips byte-identical', () => {
+    for (const id of ['abc123', 'a-b_c9', 'x'.repeat(64)]) {
+      assert.equal(parseAppRoute(projectEditorUrl(id)).projectId, id);
+      assert.equal(parseAppRoute(projectIdeUrl(id)).projectId, id);
+      assert.equal(parseAppRoute(projectUrl(id)).projectId, id);
     }
   });
 });

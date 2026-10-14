@@ -174,14 +174,14 @@ try {
       assert.ok(body.includes('GB Coder'), 'branding present');
       const hrefs = await page.locator('a[href^="/app"]').evaluateAll((els) => els.map((e) => e.getAttribute('href')));
       assert.ok(hrefs.length >= 2, `landing has app CTAs (found ${hrefs.length})`);
-      for (const h of hrefs) assert.ok(h === '/app' || h.startsWith('/app#') || h.startsWith('/app?'), `CTA targets dashboard entry, got ${h}`);
+      for (const h of hrefs) assert.ok(h === '/app/projects' || h.startsWith('/app/projects#') || h.startsWith('/app/projects?'), `CTA targets canonical dashboard entry, got ${h}`);
       await Promise.all([
         page.waitForURL(/\/app/, { timeout: 15000 }),
         page.locator('#heroStartBtn').click(),
       ]);
       await page.locator('[data-testid="project-dashboard"]').waitFor({ timeout: 30000 });
       assert.equal(await page.locator('.monaco-editor').count(), 0, 'no editor auto-opened');
-      record('NAV-01', 'PASS', `Start Coding -> dashboard, ${hrefs.length} CTAs all target /app`);
+      record('NAV-01', 'PASS', `Start Coding -> dashboard, ${hrefs.length} CTAs all target /app/projects`);
     } catch (e) { failures.push(`NAV-01: ${e.message}`); record('NAV-01', 'FAIL', String(e.message).slice(0, 200)); }
     finally { await page.close(); await ctx.close(); }
   }
@@ -216,25 +216,25 @@ try {
       ]);
       await page.reload({ waitUntil: 'domcontentloaded' });
       await page.locator('text=PF-Plain').first().click();
-      await page.waitForURL(/\/app\/editor/, { timeout: 30000 });
+      await page.waitForURL(/\/app\/projects\/.+\/editor/, { timeout: 30000 });
       await page.waitForFunction(() => document.body.innerText.includes('PFPLAIN-V1'), undefined, { timeout: 60000, polling: 500 });
       assert.equal(await page.locator('[data-testid="vscode-mode"]').count(), 0, 'plain opens static, not IDE');
-      record('NAV-04a', 'PASS', 'plain project -> /app/editor static editor');
+      record('NAV-04a', 'PASS', 'plain project -> canonical static editor URL');
 
       await page.goBack();
       await page.locator('[data-testid="project-dashboard"]').waitFor({ timeout: 30000 });
       record('NAV-06a', 'PASS', 'Back from editor -> dashboard');
       await page.goForward();
-      await page.waitForURL(/\/app\/editor/, { timeout: 30000 });
+      await page.waitForURL(/\/app\/projects\/.+\/editor/, { timeout: 30000 });
       await page.waitForFunction(() => document.body.innerText.includes('PFPLAIN-V1'), undefined, { timeout: 60000, polling: 500 });
       record('NAV-06b', 'PASS', 'Forward -> editor reopens with content');
 
       await page.locator('[data-testid="nav-home"]').click();
       await page.locator('[data-testid="project-dashboard"]').waitFor({ timeout: 30000 });
       await page.locator('text=PF-IDE').first().click();
-      await page.waitForURL(/\/app\/ide/, { timeout: 30000 });
+      await page.waitForURL(/\/app\/projects\/.+\/ide/, { timeout: 30000 });
       await page.locator('[data-testid="vscode-mode"]').waitFor({ timeout: 90000 });
-      record('NAV-04b', 'PASS', 'vscode project -> /app/ide advanced IDE');
+      record('NAV-04b', 'PASS', 'vscode project -> canonical IDE URL');
     } catch (e) { failures.push(`NAV-04/06: ${e.message}`); record('NAV-04/06', 'FAIL', String(e.message).slice(0, 250)); }
     finally { await page.close(); await ctx.close(); }
   }
@@ -342,7 +342,7 @@ try {
       await page.locator('[data-testid="new-project-template-empty"]').click();
       await page.locator('[data-testid="new-project-name"]').fill('PF-Empty-IDE');
       await page.locator('[data-testid="new-project-create"]').click();
-      await page.waitForURL(/\/app\/ide/, { timeout: 30000 });
+      await page.waitForURL(/\/app\/projects\/.+\/ide/, { timeout: 30000 });
       await page.locator('[data-testid="vscode-mode"]').waitFor({ timeout: 90000 });
       await page.locator('[data-testid="vscode-empty-state"]').waitFor({ timeout: 30000 });
       assert.equal(await page.locator('[data-testid="tree-file"]').count(), 0, 'zero default files');
@@ -408,7 +408,7 @@ try {
       await page.locator('[data-testid="new-project-template-react"]').click();
       await page.locator('[data-testid="new-project-name"]').fill('PF-React-Tpl');
       await page.locator('[data-testid="new-project-create"]').click();
-      await page.waitForURL(/\/app\/ide/, { timeout: 30000 });
+      await page.waitForURL(/\/app\/projects\/.+\/ide/, { timeout: 30000 });
       await page.locator('[data-testid="tree-file"][data-path="package.json"]').waitFor({ timeout: 60000 });
       const paths = await page.locator('[data-testid="tree-file"]').evaluateAll((els) => els.map((e) => e.getAttribute('data-path')).sort());
       assert.deepEqual(paths, ['App.jsx', 'index.css', 'main.jsx', 'package.json']);
@@ -453,7 +453,7 @@ try {
       await page.locator('[data-testid="vscode-topbar"] .cursor-pointer').first().click();
       await page.locator('[data-testid="project-dashboard"]').waitFor({ timeout: 30000 });
       await page.locator('text=PF-Live').first().click();
-      await page.waitForURL(/\/app\/editor/, { timeout: 30000 });
+      await page.waitForURL(/\/app\/projects\/.+\/editor/, { timeout: 30000 });
       await page.waitForFunction(() => document.body.innerText.includes('PFLIVE-V1'), undefined, { timeout: 60000, polling: 500 });
       record('WC-06', 'PASS', 'project switch away from starting IDE lands cleanly');
 

@@ -38,6 +38,90 @@ export const PROJECTS_ROUTE = '/app/projects';
 export const STATIC_EDITOR_ROUTE = '/app/editor';
 
 /**
+ * Canonical project URL segments (Stage R1).
+ *
+ * Every meaningful app screen has a stable address carrying the project's own
+ * stable ID — never a filesystem path or file content. No router library: the
+ * App ladder + History API pattern continues, these builders keep every
+ * navigation site spelling URLs identically.
+ */
+export const PROJECT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
+
+/** True when `id` is safe to embed in a route path. */
+export const isValidProjectId = (id: string): boolean => PROJECT_ID_PATTERN.test(id);
+
+/** Canonical editor URL for an explicitly opened project. */
+export const projectEditorUrl = (projectId: string): string =>
+  `${PROJECTS_ROUTE}/${encodeURIComponent(projectId)}/editor`;
+
+/** Canonical IDE URL for an explicitly opened project. */
+export const projectIdeUrl = (projectId: string): string =>
+  `${PROJECTS_ROUTE}/${encodeURIComponent(projectId)}/ide`;
+
+/** Canonical project URL (no editor suffix): resolves to the right editor. */
+export const projectUrl = (projectId: string): string =>
+  `${PROJECTS_ROUTE}/${encodeURIComponent(projectId)}`;
+
+/** Project creation screen. Opening it never creates anything by itself. */
+export const NEW_PROJECT_ROUTE = '/app/projects/new';
+
+export type ParsedAppRoute =
+  | { kind: 'dashboard' }
+  | { kind: 'new' }
+  | { kind: 'project'; projectId: string }
+  | { kind: 'editor'; projectId: string }
+  | { kind: 'ide'; projectId: string }
+  | { kind: 'legacy-editor' }
+  | { kind: 'legacy-ide' }
+  | { kind: 'invalid'; rawId: string }
+  | { kind: 'unknown-app' };
+
+/**
+ * Resolves an /app/* pathname to its logical screen.
+ *
+ * Trailing slashes tolerated everywhere. Anything project-shaped under
+ * /app/projects/ that is not `new` and not a valid id/editor pair is
+ * 'invalid' (safe recovery screen — never another project, never an editor).
+ * Anything else unrecognized under /app is 'unknown-app' (dashboard).
+ * '/app/dashboard' never existed; it resolves as unknown-app → dashboard.
+ */
+export const parseAppRoute = (pathname?: string): ParsedAppRoute => {
+  const path = pathname ?? currentPathname();
+  if (path === undefined) return { kind: 'unknown-app' };
+  const clean = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
+
+  if (
+    clean === APP_BASE_ROUTE ||
+    clean === PROJECTS_ROUTE
+  ) {
+    return { kind: 'dashboard' };
+  }
+  if (clean === NEW_PROJECT_ROUTE) return { kind: 'new' };
+  if (clean === STATIC_EDITOR_ROUTE) return { kind: 'legacy-editor' };
+  if (clean === VSCODE_ROUTE || clean === LEGACY_VSCODE_ROUTE) return { kind: 'legacy-ide' };
+
+  const projectsPrefix = `${PROJECTS_ROUTE}/`;
+  if (clean === PROJECTS_ROUTE || clean.startsWith(projectsPrefix)) {
+    const rest = clean.slice(projectsPrefix.length);
+    if (rest.length === 0) return { kind: 'dashboard' };
+    const [rawId, sub, extra] = rest.split('/');
+    let projectId: string;
+    try {
+      projectId = decodeURIComponent(rawId);
+    } catch {
+      return { kind: 'invalid', rawId };
+    }
+    if (!isValidProjectId(projectId)) return { kind: 'invalid', rawId };
+    if (sub === undefined) return { kind: 'project', projectId };
+    if (sub === 'editor' && extra === undefined) return { kind: 'editor', projectId };
+    if (sub === 'ide' && extra === undefined) return { kind: 'ide', projectId };
+    return { kind: 'invalid', rawId: rest };
+  }
+
+  return { kind: 'unknown-app' };
+};
+
+/**
  * VS Code mode.
  *
  * It needs an address of its own because it is a separate workspace, not a panel
