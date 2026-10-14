@@ -56,12 +56,14 @@ const Footer: React.FC<FooterProps> = ({ focusMode = false, errorCount = 0, warn
               </>
             )}
 
-            <button onClick={() => handleNavigation('about')} className={linkClass}>About</button>
+            {/* Canonical public pages navigate out to Astro; app-internal views
+                (Documentation, Cookies, Disclaimer) stay in-app views. */}
+            <a href="/about" className={linkClass}>About</a>
             <button onClick={() => handleNavigation('documentation')} className={linkClass}>Documentation</button>
-            <button onClick={() => handleNavigation('contact')} className={linkClass}>Contact</button>
+            <a href="/contact" className={linkClass}>Contact</a>
             <span aria-hidden className="text-stroke-dark-strong">|</span>
-            <button onClick={() => handleNavigation('privacy')} className={linkClass}>Privacy</button>
-            <button onClick={() => handleNavigation('terms')} className={linkClass}>Terms</button>
+            <a href="/privacy-policy" className={linkClass}>Privacy</a>
+            <a href="/terms-and-conditions" className={linkClass}>Terms</a>
             <button onClick={() => handleNavigation('cookies')} className={linkClass}>Cookies</button>
             <button onClick={() => handleNavigation('disclaimer')} className={linkClass}>Disclaimer</button>
           </div>

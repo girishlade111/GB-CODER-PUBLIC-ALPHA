@@ -460,8 +460,10 @@ try {
       record('ROUTE-21', 'PASS', 'no npm startup without eligible loaded project');
       await page.goto(`${APP}/projects/rt-npm/ide`, { waitUntil: 'domcontentloaded', timeout: 45000 });
       await page.locator('.xterm-rows').first().waitFor({ timeout: 90000 });
+      // Budget matches the baseline suite: under machine load the WebContainer
+      // boot (large asset fetch) can take well over a minute before dispatch.
       let dispatched = false;
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 40; i++) {
         await page.waitForTimeout(3000);
         if (/Installing dependencies|npm install/.test(await termText(page))) { dispatched = true; break; }
       }
@@ -521,6 +523,47 @@ try {
       await page2.close(); await ctx2.close();
       record('ROUTE-25', 'PASS', 'backup/restore preserves IDs + files');
     } catch (e) { failures.push(`ROUTE-25: ${e.message}`); record('ROUTE-25', 'FAIL', String(e.message).slice(0, 250)); }
+  }
+
+  // LEGAL-01/02/03: in-app legal navigation uses canonical Astro pages; Back preserves work
+  {
+    const { ctx, page } = await newPage(browser);
+    try {
+      await page.goto(APP, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      await seedProjects(page, [
+        { id: 'rt-leg-a', name: 'RT-LegA', editorStyle: 'plain', projectType: 'plain',
+          files: [{ path: 'index.html', content: '<h1>RTLEGA</h1>' }, { path: 'style.css', content: '' }, { path: 'script.js', content: '' }] },
+        { id: 'rt-leg-b', name: 'RT-LegB', editorStyle: 'plain', projectType: 'plain',
+          files: [{ path: 'index.html', content: '<h1>RTLEGB</h1>' }, { path: 'style.css', content: '' }, { path: 'script.js', content: '' }] },
+      ]);
+      await page.goto(`${APP}/projects/rt-leg-a/editor`, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      await page.waitForFunction(() => document.body.innerText.includes('RTLEGA'), undefined, { timeout: 60000, polling: 500 });
+      // Footer legal links point at canonical Astro destinations (not in-app views).
+      const footerHrefs = await page.locator('footer a').evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+      for (const [text, href] of [['About', '/about'], ['Contact', '/contact'], ['Privacy', '/privacy-policy'], ['Terms', '/terms-and-conditions']]) {
+        assert.ok(footerHrefs.includes(href), `footer links ${text} -> ${href}`);
+      }
+      await page.locator('footer a[href="/about"]').click();
+      await page.waitForURL(/\/about\/?$/, { timeout: 30000 });
+      await page.waitForFunction(() => document.title.includes('About GB Coder'), undefined, { timeout: 30000, polling: 500 });
+      assert.equal(await page.locator('#root').count(), 0, 'Astro HTML owns the document (no React root)');
+      record('LEGAL-01', 'PASS', 'footer About -> canonical /about (Astro-owned)');
+      // Back returns to the exact editor screen with the project intact.
+      await page.goBack();
+      await page.waitForURL(/\/app\/projects\/rt-leg-a\/editor/, { timeout: 30000 });
+      await page.waitForFunction(() => document.body.innerText.includes('RTLEGA'), undefined, { timeout: 60000, polling: 500 });
+      const aFiles = await idbFiles(page, 'rt-leg-a');
+      assert.ok((aFiles['index.html'] || '').includes('RTLEGA'), 'project A intact after legal detour + Back');
+      record('LEGAL-02', 'PASS', 'Back from Astro page restores editor screen + project, zero data loss');
+      // Same-profile second tab deep link loads the other project (no mixing).
+      const page2 = await ctx.newPage();
+      await page2.goto(`${APP}/projects/rt-leg-b/editor`, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      await page2.waitForFunction(() => document.body.innerText.includes('RTLEGB'), undefined, { timeout: 60000, polling: 500 });
+      assert.ok(!(await page2.evaluate(() => document.body.innerText)).includes('RTLEGA'), 'second tab shows its own project');
+      await page2.close();
+      record('LEGAL-03', 'PASS', 'same-profile second-tab deep link loads the correct project');
+    } catch (e) { failures.push(`LEGAL: ${e.message}`); record('LEGAL', 'FAIL', String(e.message).slice(0, 250)); }
+    finally { await page.close(); await ctx.close(); }
   }
 
   // ROUTE-27: service worker on nested routes

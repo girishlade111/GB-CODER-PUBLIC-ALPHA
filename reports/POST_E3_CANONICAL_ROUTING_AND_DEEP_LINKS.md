@@ -210,3 +210,176 @@ contract at equal strictness (same waits, same content checks, same isolation).
 3. Manually walk §20 items 1–10 incl. bookmark/refresh on `/app/projects/:id/ide`, Back/Forward
    across all five canonical screens, and an invalid-ID URL.
 4. Promote via PR + merge only after Preview acceptance; Production needs no config changes.
+
+---
+
+# Stage R1.1 — Final Routing Audit, Legal Navigation & Full WebContainer Verification
+
+**Date:** 2026-10-14 · **Branch:** `fix/project-first-navigation-editor-startup` (extends `a223efc`, preserved)
+**Remote actions:** NONE.
+
+## R1.1.1 Preflight
+
+- HEAD `a223efc` present; `bbc7236` preserved; `38c3d1e` ancestor; `origin/main` unchanged at `38c3d1e`.
+- Worktree clean at start (only unrelated untracked E3 artifacts, left untouched).
+
+## R1.1.2 Page/route inventory (final)
+
+**Astro-owned (static, directly navigable, refresh-safe):** `/`, `/about`, `/contact`,
+`/privacy-policy`, `/terms-and-conditions`.
+
+**React-owned (SPA shell for all `/app/*`):** `/app` (dashboard alias), `/app/projects`
+(canonical dashboard), `/app/projects/new` (creation UI, no side effects), `/app/projects/:id`
+(resolves to correct editor), `/app/projects/:id/editor`, `/app/projects/:id/ide`.
+Legacy-safe: `/app/editor`, `/app/ide`, `/ide` (canonicalize or degrade gracefully).
+
+`/app/projects/:id` is a **safe redirect**, not a details page: it resolves the project and
+navigates to its stored editor. No placeholder routes were created.
+
+## R1.1.3 In-app legal/about navigation audit
+
+Audited every menu, footer link and dialog that opens About/Privacy/Terms/Contact content:
+
+| Entry point | Before R1.1 | After R1.1 |
+|---|---|---|
+| `components/ui/Footer.tsx` — About / Contact / Privacy / Terms buttons | dispatched `navigate-to-*` events → URL-less React views | real `<a href>` to canonical Astro pages (`/about`, `/contact`, `/privacy-policy`, `/terms-and-conditions`) |
+| `components/NavigationBar.tsx` — "About Us" menu item | dispatched `navigate-to-about` event → URL-less view | `<a href="/about">` |
+| `components/pages/AboutPage.tsx` — footer `/privacy`, `/terms` links | 404 on Production (no such Astro pages) | `/privacy-policy`, `/terms-and-conditions` |
+
+Documentation / Cookies / Disclaimer remain in-app `currentView` screens: no Astro pages exist
+for them and no approved public content was available, so none were fabricated (per directive).
+Contextual-action dialogs (e.g. snapshot restore confirm) are preserved as dialogs — they perform
+an action, not navigate.
+
+**Back-button behavior:** verified (LEGAL-02) — Footer → `/about` (Astro) → Back restores the
+exact editor screen with the project and its IndexedDB files intact, zero data loss.
+**Astro ownership:** verified (LEGAL-01) — `/about` serves Astro HTML with no React root.
+**Same-profile second tab:** verified (LEGAL-03) — deep link to project B loads B, never mixes
+with project A.
+
+## R1.1.4 Route traceability matrix (ROUTE-01..30)
+
+| Req | Test | Type | Evidence | Status |
+|---|---|---|---|---|
+| ROUTE-01 | homepage `/` | HTTP | ROUTE-01/17 | PASS |
+| ROUTE-02 | `/about` direct | HTTP+browser | ROUTE-02, LEGAL-01 | PASS |
+| ROUTE-03 | `/privacy-policy` direct | HTTP | ROUTE-03 | PASS |
+| ROUTE-04 | `/terms-and-conditions` direct | HTTP | ROUTE-04 | PASS |
+| ROUTE-05 | `/contact` (no form) | HTTP | ROUTE-05 | PASS |
+| ROUTE-06/07/16 | `/app`+`/app/projects` dashboard-first, no auto-open | browser | ROUTE-06/07/16 | PASS |
+| ROUTE-08 | `/new` shows creation UI, creates nothing on open/refresh | browser | ROUTE-08 | PASS |
+| ROUTE-09/10 | static/advanced open → canonical project URLs | browser | ROUTE-09/10 | PASS |
+| ROUTE-11 | deep link + hard refresh preserve editor+selection | browser | ROUTE-11 | PASS |
+| ROUTE-12/29/30 | Back/Forward, id stability, zero duplication | browser | ROUTE-12/29/30 | PASS |
+| ROUTE-13/14 | invalid + cross-profile IDs → safe recovery, zero records | browser | ROUTE-13/14 | PASS |
+| ROUTE-15 | legacy `/app/editor`, `/app/ide`, `/ide` | browser | ROUTE-15 | PASS |
+| ROUTE-17 | Astro CTA → dashboard | HTTP | ROUTE-01/17 | PASS |
+| ROUTE-18 | empty IDE stays empty after URL reload | browser | ROUTE-18 | PASS |
+| ROUTE-19/20 | fresh draft URL / restore identity | browser | ROUTE-19/20 | PASS |
+| ROUTE-21..24 | WC idle/startup/hot-reload (deep suite) | browser | TEST-A..D | PASS (R1.1.5) |
+| ROUTE-25 | ZIP backup/restore preserves IDs+files | browser | ROUTE-25 | PASS |
+| ROUTE-26 | COOP/COEP + SAB on nested routes | HTTP+browser | ROUTE-26/28 | PASS |
+| ROUTE-27 | SW activation on nested entry | browser | ROUTE-27 | PASS |
+| ROUTE-28 | Astro + React assets resolve | HTTP | ROUTE-26/28 | PASS |
+
+No requirement is untested; combined scenarios are noted above. No PASS was invented.
+
+## R1.1.5 Full WebContainer E2E (Tests A–E) — `scripts/e2e-webcontainer-full.mjs`
+
+Real Chromium, local unified build, COOP/COEP isolation, disposable profiles, synthetic `WC-*`
+data. Application-level success only (no direct WebContainer API substitution).
+
+- **Test A — empty IDE:** 0 files (explorer + stored record), welcome state, WebContainer boots,
+  shell reaches ready prompt, zero npm install / dev / fake package.json. **PASS**
+- **Test B — manifest-less project:** exact 3-file mount, zero npm, manual shell alive, store
+  clean. **PASS** (after the R1.1.6 fix below)
+- **Test C — React/Vite:** identity from canonical URL → mount → boot → shell ready → automatic
+  install (zero typing) → install completes → `npm run dev` → Vite ready signal → **rendered
+  React content read from the live preview frame** (CDP frame access, not SOP-bound) → Monaco
+  edit → **live hot update** → IndexedDB persist → reload preserves route/identity/files → single
+  startup dispatch. **PASS**
+- **Test D — mid-init switch:** switch during shell init → stale work invalidated, zero
+  cross-project installs/writes. **PASS**
+- **Test E — Vue/Vite:** boot → install → dev → rendered Vue content. **PASS**
+
+## R1.1.6 Genuine defect found & fixed: collapsed file tree on IDE deep links
+
+**Symptom (caught by TEST-B / ROUTE-style direct-URL verification):** opening
+`/app/projects/:id/ide` directly rendered the file tree with nested folders **collapsed**
+(`src/` closed, children absent from the DOM) — even though the project's files loaded fully
+(install/render proved it). The same project opened from the dashboard showed the tree fully
+expanded.
+
+**Root cause (confirmed via in-page instrumentation — `console.*` is dropped in production
+builds, so localStorage was used):** the IDE-restoring effect's guard
+`if (fullStackProject || isOpeningProject) { setIsRestoringWorkspace(false); return; }` ran on
+cold start. `isOpeningProject` is true (set from the route), so it **prematurely cleared
+`isRestoringWorkspace`** — mounting VSCodeMode with `EMPTY_VSCODE_PROJECT` (files=[]) *before*
+the in-flight cold-start load completed. The FileTreeView's `expanded` Set initializes once from
+that empty tree (`initial=[]`) and never re-expands when the real files arrive. Dashboard-opened
+projects never hit this (they mount only after the load), so the bug was invisible to the R1
+baseline.
+
+**Fix (`src/App.tsx`):** split the guard — `fullStackProject` (memory intact) still clears the
+flag; `isOpeningProject` now **returns without clearing**, letting the cold-start load own the
+flag and clear it via `applyProjectToEditor` when the files land. VSCodeMode/FileTreeView then
+mount once, with the full project, and the tree initializes expanded. The popstate path is
+unaffected (there `isOpeningProject` is false when the restore branch should run).
+
+**Verification:** after the fix, the FileTreeView mounts with the full tree and `src` renders
+expanded on direct canonical IDE URLs (TEST-B passes; tree-file assertions green).
+
+## R1.1.7 Environmental artifacts (distinguished from app defects)
+
+- Running three Chromium suites concurrently caused Playwright actionability timeouts (nav-home
+  click) and slow WebContainer boots (60s npm-dispatch poll exceeded). Isolated re-runs pass.
+- In-page `fetch()` of the cross-origin preview frame is CORS-blocked (Vite dev server sends no
+  ACAO) — a technique limitation, not an app defect; rendered-content proof uses CDP frame access.
+- `console.*` instrumentation is stripped by the production build (`esbuild.drop: ['console']`);
+  localStorage-based probes were used instead.
+
+## R1.1.8 R1.1 test results
+
+| Suite | Result |
+|---|---|
+| `project-flow-regression-tests.mjs` | 18/18, exit 0 |
+| `e2e-canonical-routes.mjs` (26 checks incl. LEGAL-01..03) | 26/26, exit 0 |
+| `e2e-project-flow.mjs` (prior baseline) | 20/20, exit 0 |
+| `e2e-webcontainer-full.mjs` TEST-A..E | 5/5, exit 0 |
+| workspace-reliability / coordination / editor-persistence / webcontainer / lifecycle / backup-restore / audit-routes | 0 failures |
+| `tsc --noEmit` | 0 errors |
+| `npm run lint` | 0 errors, 117 warnings (baseline) |
+| `npm run build` | SUCCESS, 13/13 checks |
+
+## R1.1.9 Files changed in R1.1
+
+- `src/components/ui/Footer.tsx` — legal links → canonical Astro `<a href>`.
+- `src/components/NavigationBar.tsx` — About Us → `<a href="/about">`.
+- `src/App.tsx` — IDE-restoring guard fix (collapsed-tree root cause).
+- `scripts/e2e-canonical-routes.mjs` — added LEGAL-01..03 block.
+- `scripts/e2e-webcontainer-full.mjs` — NEW deep WebContainer verification suite.
+- `reports/POST_E3_CANONICAL_ROUTING_AND_DEEP_LINKS.md` — this addendum.
+
+No storage/schema changes; no new dependencies; no destructive operations; no real user data
+touched (disposable profiles, synthetic data only).
+
+## R1.1.10 Local commit
+
+- Branch: `fix/project-first-navigation-editor-startup` (local only — not pushed, no PR).
+- New commit: `9dda691` (extends preserved `a223efc` and `bbc7236`).
+- Staged scope verified: 5 modified + 1 new file, all R1.1-scoped; unrelated
+  untracked E3 artifacts left out and untouched on disk. No secrets.
+
+## R1.1.11 Remaining limitations
+
+- Documentation/Cookies/Disclaimer remain URL-less in-app screens (no approved public content;
+  none fabricated).
+- No localized routes (`en es nl fr ja ko zh ru pt` all missing — separate authorized step).
+- No pricing page; contact has no form (per directive).
+- Owner smoke still pending by definition.
+
+## R1.1.12 Release gate
+
+**`READY_FOR_STAGE_R2_PREVIEW`** — routing is canonical and verified, legal navigation is
+consistent, the deep-link file-tree defect is fixed, and the full WebContainer chain (empty /
+manifest-less / React / Vue / mid-init switch) is verified end-to-end in real Chromium.

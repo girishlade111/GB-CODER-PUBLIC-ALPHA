@@ -2130,13 +2130,20 @@ function App() {
      * project, which is why it is skipped here rather than removed.
      */
     if (activeProjectId) {
-      if (fullStackProject || isOpeningProject) {
-        // Memory intact, or the cold-start open below owns the load: the
-        // restore branch below is only for forward navigation back into a
-        // mode whose in-memory project was dropped by leaving it.
+      if (fullStackProject) {
+        // Memory intact: nothing to restore.
         setIsRestoringWorkspace(false);
         return;
       }
+      /*
+       * A cold-start load (isOpeningProject) is already reading this project
+       * from the route; it owns the flag and clears it when the files land.
+       * Clearing it here would mount the mode with an empty project before
+       * the load completes — and the file tree, initialized once from that
+       * empty tree, keeps every nested folder collapsed even after the real
+       * files arrive. So: wait, don't clear.
+       */
+      if (isOpeningProject) return;
       /*
        * Forward navigation back into the mode after a leave dropped the
        * in-memory project: reload it from IndexedDB through the guarded open
