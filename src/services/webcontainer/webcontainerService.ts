@@ -10,8 +10,8 @@
 import { WebContainer, FileSystemTree } from '@webcontainer/api';
 import { ProjectFile, ProjectType } from '../../types/files';
 import { webcontainerPerf } from './webcontainerPerf';
-import { FileSyncCoordinator } from './fileSyncCoordinator';
-export { FileSyncCoordinator };
+import { FileSyncCoordinator, type FlushResult } from './fileSyncCoordinator';
+export { FileSyncCoordinator, type FlushResult };
 
 /**
  * Optimized npm configuration for WebContainer:
@@ -656,16 +656,6 @@ class WebContainerManager {
         // Ignored
       }
     }
-    // Keep draining map bounded to at most 10 recent ports
-    while (this.drainingPorts.size > 10) {
-      const oldestKey = this.drainingPorts.keys().next().value;
-      if (oldestKey !== undefined) {
-        this.drainingPorts.delete(oldestKey);
-        this.pendingDrainingCloses.delete(oldestKey);
-      } else {
-        break;
-      }
-    }
     const now = Date.now();
     for (const server of this.state.activeServers) {
       this.drainingPorts.set(server.port, {
@@ -673,10 +663,8 @@ class WebContainerManager {
         sessionEpoch: this.sessionEpoch,
         drainedAt: now,
       });
-      this.pendingDrainingCloses.set(
-        server.port,
-        (this.pendingDrainingCloses.get(server.port) ?? 0) + 1,
-      );
+      // Cap at 1 pending close per port to prevent unbounded counter drift
+      this.pendingDrainingCloses.set(server.port, 1);
     }
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
@@ -778,19 +766,6 @@ class WebContainerManager {
         return;
       }
 
-      // Guard: is a dev server starting or active in the current session epoch?
-      const isExpected =
-        this.isDevServerStartingState ||
-        this.isDevServerActive ||
-        this.state.startupStage === 'starting_server';
-
-      if (!isExpected) {
-        console.warn(
-          `[WebContainer] Discarded unsolicited/late server-ready at port ${port} (no dev server starting or active for project "${this.activeProjectId}")`,
-        );
-        return;
-      }
-
       // Check if this port is a draining port from a prior session/project
       const draining = this.drainingPorts.get(port);
       if (draining) {
@@ -810,6 +785,19 @@ class WebContainerManager {
           );
           this.drainingPorts.delete(port);
         }
+      }
+
+      // Guard: is a dev server starting or active in the current session epoch?
+      const isExpected =
+        this.isDevServerStartingState ||
+        this.isDevServerActive ||
+        this.state.startupStage === 'starting_server';
+
+      if (!isExpected) {
+        console.warn(
+          `[WebContainer] Discarded unsolicited/late server-ready at port ${port} (no dev server starting or active for project "${this.activeProjectId}")`,
+        );
+        return;
       }
 
       console.log(`[WebContainer] Server ready for project "${this.activeProjectId}" at port ${port}: ${url}`);
@@ -844,6 +832,11 @@ class WebContainerManager {
       console.log(`[WebContainer] Port ${port} ${type}: ${url}`);
       if (type === 'open') {
         if (!this.activeProjectId) return;
+
+        // If this port is currently draining from a previous session, a new 'open' event
+        // indicates that the next project has successfully rebound the port.
+        // But if the shell is not ready (still busy running prior project's shutdown or command),
+        // a late 'open' from the previous process must be discarded.
         if (this.drainingPorts.has(port)) {
           const draining = this.drainingPorts.get(port)!;
           if (draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId) {
@@ -851,8 +844,13 @@ class WebContainerManager {
               return;
             }
             this.drainingPorts.delete(port);
+            this.pendingDrainingCloses.delete(port);
+          } else {
+            this.drainingPorts.delete(port);
+            this.pendingDrainingCloses.delete(port);
           }
         }
+
         const newServer: WebContainerServerInfo = {
           port,
           url,
@@ -894,7 +892,6 @@ class WebContainerManager {
         }
 
         const closingServer = this.state.activeServers.find((s) => s.port === port);
-        // If closing port belonged to a different project or epoch, ignore
         if (closingServer && closingServer.projectId && closingServer.projectId !== this.activeProjectId) {
           return;
         }
@@ -1037,8 +1034,13 @@ class WebContainerManager {
     files: ProjectFile[],
     dependencies?: Record<string, string>,
     projectType?: ProjectType,
+    targetProjectId?: string,
+    targetEpoch?: number,
   ): Promise<void> {
     if (!files || files.length === 0) return;
+
+    const targetProject = targetProjectId ?? this.activeProjectId;
+    const targetGen = targetEpoch ?? this.sessionEpoch;
 
     // Chain onto current mount operation so concurrent mount calls are strictly serialized
     const previousMount = this.mountQueue;
@@ -1049,6 +1051,14 @@ class WebContainerManager {
 
     try {
       await previousMount.catch(() => {});
+
+      // Stale mount guard 1: verify project identity and session epoch before progressing
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+        console.warn(
+          `[WebContainer] Discarded stale mount for project "${targetProject}" (epoch ${targetGen}) - active project is now "${this.activeProjectId}" (epoch ${this.sessionEpoch})`,
+        );
+        return;
+      }
 
       this.updateState({ startupStage: 'mounting_files' });
 
@@ -1067,9 +1077,25 @@ class WebContainerManager {
         throw new Error(errMsg);
       }
 
+      // Stale mount guard 2: verify project scope after barrier
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+        console.warn(
+          `[WebContainer] Discarded stale mount after barrier for project "${targetProject}"`,
+        );
+        return;
+      }
+
       const endSerialization = webcontainerPerf.startTimer('project_serialization');
       const tree = filesToFileSystemTree(files, dependencies, projectType);
       endSerialization({ fileCount: files.length });
+
+      // Stale mount guard 3: verify project scope before mutating container filesystem
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+        console.warn(
+          `[WebContainer] Discarded stale mount before container.mount for project "${targetProject}"`,
+        );
+        return;
+      }
 
       const endMount = webcontainerPerf.startTimer('filesystem_mount');
       const container = await this.boot();
@@ -1238,8 +1264,8 @@ class WebContainerManager {
    * Flushes all pending debounced writes immediately.
    * Used prior to navigation, project switching, or backups.
    */
-  public async flushFileSync(): Promise<void> {
-    await this.fileSyncCoordinator.flush();
+  public async flushFileSync(): Promise<FlushResult> {
+    return this.fileSyncCoordinator.flush();
   }
 
   /**
@@ -1252,15 +1278,15 @@ class WebContainerManager {
   /**
    * Removes a file from the WebContainer filesystem, cancelling any pending debounced writes for it.
    */
-  public async deleteFile(path: string): Promise<void> {
-    await this.fileSyncCoordinator.handleDelete(path);
+  public async deleteFile(path: string, timeoutMs?: number): Promise<void> {
+    await this.fileSyncCoordinator.handleDelete(path, timeoutMs);
   }
 
   /**
    * Coordinates file rename in virtual filesystem, migrating any pending writes to newPath.
    */
-  public renameFile(oldPath: string, newPath: string): void {
-    this.fileSyncCoordinator.handleRename(oldPath, newPath);
+  public async renameFile(oldPath: string, newPath: string, timeoutMs?: number): Promise<void> {
+    await this.fileSyncCoordinator.handleRename(oldPath, newPath, timeoutMs);
   }
 
   /**

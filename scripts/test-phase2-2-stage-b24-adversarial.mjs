@@ -431,10 +431,16 @@ async function run() {
   }
 
   console.log('\n======================================================================');
-  console.log(`TOTAL: ${results.filter((r) => r.status === 'PASS').length} / ${results.length} PASS`);
+  const passed = results.filter((r) => r.status === 'PASS').length;
+  const failed = results.filter((r) => r.status === 'FAIL').length;
+  console.log(`TOTAL: ${passed} / ${results.length} PASS (${failed} FAILED)`);
   console.log('======================================================================');
 
   fs.rmSync(tmpDir, { recursive: true, force: true });
+
+  if (failed > 0) {
+    process.exit(1);
+  }
 }
 
 run().catch((err) => {

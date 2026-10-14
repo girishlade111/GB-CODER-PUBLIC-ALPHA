@@ -271,6 +271,8 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           currentProj.files,
           currentProj.dependencies,
           currentProj.projectType,
+          effectiveProjectId,
+          webcontainerService.getSessionEpoch(),
         );
         term.write(
           `${ANSI.gray}Files mounted into virtual filesystem. Starting interactive shell...${ANSI.reset}\r\n`,
@@ -527,11 +529,13 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
                 return;
               }
 
-              // Ensure project files are mounted before checking dependencies or starting Vite
+              const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
               await webcontainerService.mountProject(
                 currentProj.files,
                 currentProj.dependencies,
                 currentProj.projectType,
+                effectiveProjectId,
+                restartEpoch,
               );
 
               if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
@@ -850,11 +854,13 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
   const handleQuickNpmInstall = useCallback(async () => {
     if (mode === 'webcontainer') {
-      const currentProj = projectRef.current;
+      const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
       await webcontainerService.mountProject(
         currentProj.files,
         currentProj.dependencies,
         currentProj.projectType,
+        effectiveProjectId,
+        webcontainerService.getSessionEpoch(),
       );
       if (!webcontainerShellRef.current) {
         await startWebContainerShell();

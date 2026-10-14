@@ -8,10 +8,10 @@
  * 2. Per-path sequential FIFO queue: guarantees that writes for the same path never execute out-of-order.
  * 3. Project scoping: pending writes are bound to a projectId. If the project is switched or detached,
  *    foreign writes are dropped.
- * 4. Flush: flush() flushes all pending debounced writes immediately to disk in order.
+ * 4. Flush: flush() flushes all pending debounced writes immediately to disk in order and reports reliable results.
  * 5. Rename & Delete coordination:
  *    - renameFile(oldPath, newPath) cancels or migrates pending writes for oldPath.
- *    - deleteFile(path) cancels pending writes for path before deleting from fs.
+ *    - deleteFile(path) cancels pending writes for path before deleting from fs, with fail-closed timeout.
  */
 
 export interface SyncCoordinatorOptions {
@@ -19,6 +19,13 @@ export interface SyncCoordinatorOptions {
   rawWrite: (path: string, content: string) => Promise<void>;
   rawDelete: (path: string) => Promise<void>;
   onDependencyInvalidation?: (cleanPath: string) => void;
+}
+
+export interface FlushResult {
+  ok: boolean;
+  persisted: string[];
+  failed: Array<{ path: string; error: Error }>;
+  canceled: string[];
 }
 
 interface PendingItem {
@@ -37,6 +44,10 @@ export class FileSyncCoordinator {
   private pendingWrites = new Map<string, PendingItem>();
   private inFlightPaths = new Set<string>();
   private inFlightPromises = new Map<string, Promise<void>>();
+  private lastWriteResults = new Map<
+    string,
+    { status: 'persisted' | 'failed' | 'canceled'; error?: Error }
+  >();
   private activeProjectId: string | null = null;
 
   constructor(options: SyncCoordinatorOptions) {
@@ -64,6 +75,7 @@ export class FileSyncCoordinator {
 
     // Discard write if it explicitly targets an inactive project
     if (scopedProject !== null && this.activeProjectId !== null && scopedProject !== this.activeProjectId) {
+      this.lastWriteResults.set(cleanPath, { status: 'canceled' });
       return;
     }
 
@@ -124,6 +136,7 @@ export class FileSyncCoordinator {
     // Project scope guard
     if (item.projectId !== null && this.activeProjectId !== null && item.projectId !== this.activeProjectId) {
       this.pendingWrites.delete(cleanPath);
+      this.lastWriteResults.set(cleanPath, { status: 'canceled' });
       return;
     }
 
@@ -145,9 +158,14 @@ export class FileSyncCoordinator {
           item.projectId === this.activeProjectId
         ) {
           await this.rawWrite(cleanPath, item.content);
+          this.lastWriteResults.set(cleanPath, { status: 'persisted' });
+        } else {
+          this.lastWriteResults.set(cleanPath, { status: 'canceled' });
         }
       } catch (err) {
-        console.warn(`[FileSyncCoordinator] Failed to write file ${cleanPath}:`, err);
+        const error = err instanceof Error ? err : new Error(String(err));
+        console.warn(`[FileSyncCoordinator] Failed to write file ${cleanPath}:`, error);
+        this.lastWriteResults.set(cleanPath, { status: 'failed', error });
       } finally {
         this.inFlightPaths.delete(cleanPath);
         this.inFlightPromises.delete(cleanPath);
@@ -168,7 +186,7 @@ export class FileSyncCoordinator {
     await writePromise;
   }
 
-  public async flush(): Promise<void> {
+  public async flush(): Promise<FlushResult> {
     // Clear all pending debounce timers
     const entries = Array.from(this.pendingWrites.entries());
     for (const [, item] of entries) {
@@ -178,8 +196,10 @@ export class FileSyncCoordinator {
       }
     }
 
+    const flushPaths = entries.map(([p]) => p);
+
     // Drain all queued writes
-    const flushPromises = entries.map(async ([path]) => {
+    const flushPromises = flushPaths.map(async (path) => {
       await this.executeWrite(path);
     });
 
@@ -187,8 +207,35 @@ export class FileSyncCoordinator {
 
     // Wait if any paths remain in-flight
     while (this.inFlightPaths.size > 0) {
-      await new Promise((resolve) => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
+
+    const persisted: string[] = [];
+    const failed: Array<{ path: string; error: Error }> = [];
+    const canceled: string[] = [];
+
+    // Collect results for all paths that were part of this flush or recent execution
+    const allPathsToCheck = new Set([...flushPaths, ...this.lastWriteResults.keys()]);
+    for (const path of allPathsToCheck) {
+      const res = this.lastWriteResults.get(path);
+      if (res?.status === 'persisted') {
+        persisted.push(path);
+      } else if (res?.status === 'failed') {
+        failed.push({ path, error: res.error ?? new Error('Unknown write error') });
+      } else if (res?.status === 'canceled') {
+        canceled.push(path);
+      }
+    }
+
+    // Clear tracked results after flushing
+    this.lastWriteResults.clear();
+
+    return {
+      ok: failed.length === 0,
+      persisted,
+      failed,
+      canceled,
+    };
   }
 
   public cancelPath(path: string): void {
@@ -199,18 +246,20 @@ export class FileSyncCoordinator {
       if (key === cleanPath || key.startsWith(prefix)) {
         if (item.timer) clearTimeout(item.timer);
         this.pendingWrites.delete(key);
+        this.lastWriteResults.set(key, { status: 'canceled' });
       }
     }
   }
 
   public cancelAll(): void {
-    for (const [, item] of this.pendingWrites.entries()) {
+    for (const [key, item] of this.pendingWrites.entries()) {
       if (item.timer) clearTimeout(item.timer);
+      this.lastWriteResults.set(key, { status: 'canceled' });
     }
     this.pendingWrites.clear();
   }
 
-  public handleRename(oldPath: string, newPath: string): void {
+  public async handleRename(oldPath: string, newPath: string, timeoutMs = 3000): Promise<void> {
     const cleanOld = oldPath.replace(/^\/+/, '').replace(/\/+$/, '');
     const cleanNew = newPath.replace(/^\/+/, '').replace(/\/+$/, '');
     const oldPrefix = `${cleanOld}/`;
@@ -221,32 +270,68 @@ export class FileSyncCoordinator {
     if (oldItem) {
       if (oldItem.timer) clearTimeout(oldItem.timer);
       this.pendingWrites.delete(cleanOld);
-      this.queueSync(cleanNew, oldItem.content, oldItem.projectId);
     }
 
     // 2. Directory prefix matches: remap any descendants in pendingWrites
+    const descendantsToRemap: Array<{ path: string; content: string; projectId: string | null }> = [];
     for (const [key, item] of Array.from(this.pendingWrites.entries())) {
       if (key.startsWith(oldPrefix)) {
         if (item.timer) clearTimeout(item.timer);
         this.pendingWrites.delete(key);
         const subPath = key.slice(oldPrefix.length);
-        const remappedPath = `${newPrefix}${subPath}`;
-        this.queueSync(remappedPath, item.content, item.projectId);
+        descendantsToRemap.push({
+          path: `${newPrefix}${subPath}`,
+          content: item.content,
+          projectId: item.projectId,
+        });
       }
+    }
+
+    // 3. Await in-flight writes on oldPath or its descendants before proceeding (fail-closed)
+    const start = Date.now();
+    while (
+      Array.from(this.inFlightPaths).some(
+        (p) => p === cleanOld || p.startsWith(oldPrefix),
+      )
+    ) {
+      if (Date.now() - start > timeoutMs) {
+        const err = new Error(
+          `Cannot rename "${cleanOld}": in-flight write did not settle within ${timeoutMs}ms`,
+        );
+        console.error(`[FileSyncCoordinator] ${err.message}`);
+        throw err;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
+    // 4. Queue remapped writes for new destination
+    if (oldItem) {
+      this.queueSync(cleanNew, oldItem.content, oldItem.projectId);
+    }
+    for (const desc of descendantsToRemap) {
+      this.queueSync(desc.path, desc.content, desc.projectId);
     }
   }
 
-  public async handleDelete(path: string): Promise<void> {
+  public async handleDelete(path: string, timeoutMs = 3000): Promise<void> {
     this.cancelPath(path);
     const cleanPath = path.replace(/^\/+/, '');
     const prefix = cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`;
 
-    // Await any in-flight writes on this path or its descendants before deleting
+    // Await any in-flight writes on this path or its descendants before deleting (fail-closed)
     const start = Date.now();
     while (
-      Array.from(this.inFlightPaths).some((p) => p === cleanPath || p.startsWith(prefix))
+      Array.from(this.inFlightPaths).some(
+        (p) => p === cleanPath || p.startsWith(prefix),
+      )
     ) {
-      if (Date.now() - start > 3000) break;
+      if (Date.now() - start > timeoutMs) {
+        const err = new Error(
+          `Cannot delete "${cleanPath}": in-flight write did not settle within ${timeoutMs}ms`,
+        );
+        console.error(`[FileSyncCoordinator] ${err.message}`);
+        throw err;
+      }
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
 
@@ -260,11 +345,7 @@ export class FileSyncCoordinator {
     ) {
       this.onDependencyInvalidation?.(cleanPath);
     }
-    try {
-      await this.rawDelete(cleanPath);
-    } catch (err) {
-      console.warn(`[FileSyncCoordinator] Failed to delete ${cleanPath}:`, err);
-    }
+    await this.rawDelete(cleanPath);
   }
 
   public hasPendingWrites(): boolean {
