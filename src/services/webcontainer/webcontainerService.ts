@@ -802,7 +802,13 @@ class WebContainerManager {
         return;
       }
 
-      // Check if this port is a draining port from a prior session/project
+      // Check if this port is a draining port from a prior session/project.
+      // Note: @webcontainer/api events ('server-ready' and 'port') do NOT expose PIDs, process handles,
+      // or project tokens. Provenance is tracked via session epochs, dev server starting state, and draining ports.
+      // If a port is draining from a prior project and the shell is still busy (!isShellPromptReady),
+      // late server-ready events from the prior process are safely discarded.
+      // Once shell quiescence is established (isShellPromptReady = true), the port is eligible for
+      // reclamation by the current project's dev server to handle environments where port-close was not emitted.
       const draining = this.drainingPorts.get(port);
       if (draining) {
         const isFromPriorSession =
@@ -811,7 +817,7 @@ class WebContainerManager {
         if (isFromPriorSession) {
           if (!this.isShellPromptReady) {
             console.warn(
-              `[WebContainer] Discarded late server-ready at port ${port} (draining server from project ${draining.projectId}, epoch ${draining.sessionEpoch})`,
+              `[WebContainer] Discarded late server-ready at port ${port} (draining server from project "${draining.projectId}", epoch ${draining.sessionEpoch})`,
             );
             return;
           }
@@ -1133,6 +1139,15 @@ class WebContainerManager {
       }
 
       await container.mount(tree);
+
+      // Stale mount guard 5: verify project scope after container.mount() completes
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+        console.warn(
+          `[WebContainer] Discarded stale mount after container.mount() for project "${targetProject}"`,
+        );
+        return false;
+      }
+
       try {
         await container.fs.writeFile('.npmrc', OPTIMIZED_NPMRC);
       } catch {
@@ -1317,10 +1332,87 @@ class WebContainerManager {
   }
 
   /**
-   * Coordinates file rename in virtual filesystem, migrating any pending writes to newPath.
+   * Renames a file or directory in the WebContainer virtual filesystem.
+   *
+   * Step 1: coordinator remaps any pending debounced writes from oldPath → newPath
+   *         and waits for in-flight writes on the old path to settle (fail-closed).
+   * Step 2: the physical file (or directory tree) is moved via container.fs.rename().
+   *         If the API throws (e.g. cross-device move not supported), we fall back to a
+   *         read → write → delete sequence for files, and a recursive copy+delete for dirs.
    */
   public async renameFile(oldPath: string, newPath: string, timeoutMs?: number): Promise<void> {
+    // Step 1: remap pending writes in coordinator (waits for in-flight writes to settle)
     await this.fileSyncCoordinator.handleRename(oldPath, newPath, timeoutMs);
+
+    if (!this.instance) return; // WebContainer not booted yet; coordinator-only remap is sufficient
+
+    const cleanOld = oldPath.replace(/^\/+/, '');
+    const cleanNew = newPath.replace(/^\/+/, '');
+
+    // Step 2: physical move via native rename (atomic, supports directories)
+    try {
+      // Ensure parent directory of new path exists
+      const newDirIndex = cleanNew.lastIndexOf('/');
+      if (newDirIndex !== -1) {
+        await this.instance.fs.mkdir(cleanNew.slice(0, newDirIndex), { recursive: true });
+      }
+      await this.instance.fs.rename(cleanOld, cleanNew);
+    } catch (renameErr) {
+      // Fall back to copy+delete (handles edge cases like cross-"device" renames)
+      console.warn(
+        `[WebContainer] fs.rename failed for "${cleanOld}" → "${cleanNew}", falling back to copy+delete:`,
+        renameErr,
+      );
+      try {
+        await this.physicalCopyThenDelete(cleanOld, cleanNew);
+      } catch (copyErr) {
+        const errMsg = copyErr instanceof Error ? copyErr.message : String(copyErr);
+        throw new Error(
+          `Failed to rename "${cleanOld}" to "${cleanNew}" in virtual filesystem: ${errMsg}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Fallback rename implementation: recursively copies all content from oldPath to newPath,
+   * then removes oldPath. Used when container.fs.rename() is unavailable or throws.
+   *
+   * NOTE: This is NOT atomic and may leave partial state if interrupted. It is only invoked
+   * as a last resort after the native rename() API fails.
+   */
+  private async physicalCopyThenDelete(cleanOld: string, cleanNew: string): Promise<void> {
+    if (!this.instance) throw new Error('WebContainer not booted');
+
+    // Determine if this is a file or a directory by attempting to read it as a file first
+    let isFile = false;
+    let fileContent: Uint8Array | null = null;
+    try {
+      fileContent = await this.instance.fs.readFile(cleanOld);
+      isFile = true;
+    } catch {
+      // Not a file (or unreadable) — treat as directory
+    }
+
+    if (isFile && fileContent !== null) {
+      // Single file copy
+      const newDirIndex = cleanNew.lastIndexOf('/');
+      if (newDirIndex !== -1) {
+        await this.instance.fs.mkdir(cleanNew.slice(0, newDirIndex), { recursive: true });
+      }
+      await this.instance.fs.writeFile(cleanNew, fileContent);
+      await this.instance.fs.rm(cleanOld, { recursive: true });
+    } else {
+      // Directory: enumerate all entries and copy recursively
+      await this.instance.fs.mkdir(cleanNew, { recursive: true });
+      const entries = await this.instance.fs.readdir(cleanOld, { withFileTypes: true });
+      for (const entry of entries) {
+        const childOld = `${cleanOld}/${entry.name}`;
+        const childNew = `${cleanNew}/${entry.name}`;
+        await this.physicalCopyThenDelete(childOld, childNew);
+      }
+      await this.instance.fs.rm(cleanOld, { recursive: true });
+    }
   }
 
   /**

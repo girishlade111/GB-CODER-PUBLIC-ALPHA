@@ -877,6 +877,14 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       if (!webcontainerShellRef.current) {
         await startWebContainerShell();
       }
+      // Stale transition guard: ensure active project did not change while shell was starting
+      const activeProjId = webcontainerService.getActiveProjectId();
+      if (effectiveProjectId && activeProjId && effectiveProjectId !== activeProjId) {
+        console.warn(
+          `[TerminalTab] Aborted quick npm install: project changed during shell startup (target "${effectiveProjectId}", now "${activeProjId}")`,
+        );
+        return;
+      }
       const fingerprint = webcontainerService.computeDependencyFingerprint(
         currentProj.files,
         currentProj.dependencies,

@@ -300,11 +300,6 @@ const syncWebContainerFile = (path: string, content: string): void => {
   );
 };
 
-const deleteWebContainerFile = (path: string): void => {
-  void loadWebContainerService().then(({ webcontainerService }) =>
-    webcontainerService.deleteFile(path),
-  );
-};
 
 /** First unused `new-file-N` path, so "new file" never needs a dialog. */
 const nextVoiceFilePath = (project: MultiFileProject): string => {
@@ -1831,8 +1826,6 @@ function App() {
       if (!prev) return prev;
       const fileToRename = prev.files.find((f) => f.path === oldPath);
       if (fileToRename) {
-        syncWebContainerFile(safeNewPath, fileToRename.content);
-        deleteWebContainerFile(oldPath);
         return {
           ...prev,
           files: prev.files.map((f) =>
@@ -1850,8 +1843,6 @@ function App() {
         files: prev.files.map((f) => {
           if (f.path.startsWith(oldPrefix)) {
             const renamed = newPrefix + f.path.slice(oldPrefix.length);
-            syncWebContainerFile(renamed, f.content);
-            deleteWebContainerFile(f.path);
             return { ...f, path: renamed };
           }
           return f;
@@ -1862,11 +1853,10 @@ function App() {
   }, []);
 
   /** Deletes a file or directory in VS Code mode and removes from WebContainer VFS. */
-  const handleFullStackDeleteFile = useCallback((path: string) => {
+  const handleFullStackDeleteFile = useCallback((path: string): boolean => {
     setFullStackProject((current) => {
       if (!current) return current;
       const isExactFile = current.files.some((f) => f.path === path);
-      deleteWebContainerFile(path);
       if (isExactFile) {
         return {
           ...current,
@@ -1880,6 +1870,7 @@ function App() {
         files: current.files.filter((f) => !f.path.startsWith(folderPrefix)),
       };
     });
+    return true;
   }, []);
 
   /** Duplicates a file in VS Code mode and syncs to WebContainer VFS. */
@@ -2493,7 +2484,9 @@ function App() {
         if (openTransitionTargetRef.current === record.id) {
           openTransitionTargetRef.current = null;
         }
-        setIsOpeningProject(false);
+        if (isCurrentTransition(transition)) {
+          setIsOpeningProject(false);
+        }
       }
     },
     [applyProjectToEditor, flushProjectSave, beginTransition, isCurrentTransition],
@@ -2607,13 +2600,19 @@ function App() {
       await deleteProjectRecord(record.id);
       setProjects((current) => current.filter((item) => item.id !== record.id));
 
+      // Re-check identity AFTER the await: a concurrent project-open could have changed
+      // activeProjectIdRef.current between `deleteProjectRecord` awaiting and returning.
+      // Only detach and clear state if the deleted project is still the active one.
       if (activeProjectIdRef.current === record.id) {
         const { webcontainerService: wc } = await loadWebContainerService();
-        wc.detachProject(record.id);
-        savedFilesRef.current = null;
-        writeActiveProjectId(null);
-        setActiveProjectId(null);
-        setActiveProject(null);
+        // Second re-check after await: another open may have raced ahead during loadWebContainerService()
+        if (activeProjectIdRef.current === record.id) {
+          wc.detachProject(record.id);
+          savedFilesRef.current = null;
+          writeActiveProjectId(null);
+          setActiveProjectId(null);
+          setActiveProject(null);
+        }
       }
       // A deleted recovery-screen id must not linger: the honesty effect
       // would otherwise keep correcting around a stale address.
@@ -2623,6 +2622,7 @@ function App() {
     },
     [unavailableProjectId, beginTransition],
   );
+
 
   /** Leaves the active project and returns to the dashboard. */
   const handleReturnToDashboard = useCallback(async () => {

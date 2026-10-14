@@ -96,7 +96,7 @@ interface VSCodeModeProps {
   onChangeFile: (path: string, content: string) => void;
   onCreateFile?: (path: string, content?: string) => boolean | void;
   onRenameFile?: (oldPath: string, newPath: string) => boolean | void;
-  onDeleteFile?: (path: string) => void;
+  onDeleteFile?: (path: string) => boolean | void;
   onDuplicateFile?: (path: string) => void;
   onExit: () => void;
   fontFamily: string;
@@ -553,17 +553,19 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   );
 
   const handleDeleteFile = useCallback(
-    async (path: string) => {
+    async (path: string): Promise<boolean | void> => {
       // Fail-closed integration: await virtual filesystem delete before mutating tabs or notifying parent
       try {
         await webcontainerService.deleteFile(path);
       } catch (err) {
         console.error('[VSCodeMode] Failed to delete file in WebContainer:', err);
         toast.error(`Failed to delete "${path}". Virtual filesystem write failed.`);
-        return;
+        // Return false to signal failure: FileTreeView will suppress the success toast
+        // and keep the confirmation dialog open so the user can retry.
+        return false;
       }
 
-      onDeleteFile?.(path);
+      if (onDeleteFile?.(path) === false) return false;
 
       const isTarget = (p: string) => p === path || p.startsWith(path + '/');
 
@@ -582,9 +584,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         }
         return remaining;
       });
+      return true;
     },
     [onDeleteFile, activePath, splitActivePath],
   );
+
 
   const handleDuplicateFile = useCallback(
     (path: string) => {
