@@ -18,6 +18,7 @@ import { pathToFileURL } from 'node:url';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
+import { activateRuntime } from './helpers/runtime-event-fixture.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,16 +53,9 @@ describe('CR01: Hardened WebContainer Server Events', () => {
     let serverReadyCallback = null;
     let portCallback = null;
 
-    const mockContainer = {
-      on: (event, cb) => {
-        if (event === 'server-ready') serverReadyCallback = cb;
-        if (event === 'port') portCallback = cb;
-        return () => {};
-      },
-    };
 
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
+    const a = activateRuntime(webcontainerService, 'project-a');
+    serverReadyCallback = a.ready;
 
     // 1. User starts in Project A
     webcontainerService.attachProject('project-a');
@@ -69,6 +63,7 @@ describe('CR01: Hardened WebContainer Server Events', () => {
 
     // 2. User navigates to Project B before Project A's server was ready
     webcontainerService.attachProject('project-b');
+    a.assertRetired();
     assert.equal(webcontainerService.getActiveProjectId(), 'project-b');
     assert.equal(webcontainerService.getState().serverUrl, null);
 
@@ -88,16 +83,10 @@ describe('CR01: Hardened WebContainer Server Events', () => {
     let serverReadyCallback = null;
     let portCallback = null;
 
-    const mockContainer = {
-      on: (event, cb) => {
-        if (event === 'server-ready') serverReadyCallback = cb;
-        if (event === 'port') portCallback = cb;
-        return () => {};
-      },
-    };
 
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
+    const a = activateRuntime(webcontainerService, 'project-a');
+    serverReadyCallback = a.ready;
+    portCallback = a.port;
 
     // 1. Project A is running on port 5173
     webcontainerService.attachProject('project-a');
@@ -106,12 +95,13 @@ describe('CR01: Hardened WebContainer Server Events', () => {
     assert.equal(webcontainerService.getState().serverUrl, 'http://project-a-server.local');
 
     // 2. Switch to Project B
-    webcontainerService.attachProject('project-b');
+    const b = activateRuntime(webcontainerService, 'project-b');
+    a.assertRetired();
     assert.equal(webcontainerService.getState().serverUrl, null);
 
     // Project B starts its own dev server on port 3000
     webcontainerService.setDevServerStarting(true);
-    serverReadyCallback(3000, 'http://project-b-server.local');
+    b.ready(3000, 'http://project-b-server.local');
     assert.equal(webcontainerService.getState().serverUrl, 'http://project-b-server.local');
     assert.equal(webcontainerService.getState().serverPort, 3000);
 

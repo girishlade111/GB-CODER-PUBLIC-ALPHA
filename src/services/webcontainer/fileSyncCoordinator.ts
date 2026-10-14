@@ -49,6 +49,8 @@ export class FileSyncCoordinator {
     { status: 'persisted' | 'failed' | 'canceled'; error?: Error }
   >();
   private activeProjectId: string | null = null;
+  private renamePaths = new Set<string>();
+  private fileOperations = new Set<Promise<void>>();
 
   constructor(options: SyncCoordinatorOptions) {
     this.debounceMs = options.debounceMs ?? 200;
@@ -129,9 +131,10 @@ export class FileSyncCoordinator {
     return true;
   }
 
-  private async executeWrite(cleanPath: string): Promise<void> {
+  private async executeWrite(cleanPath: string, duringRename = false): Promise<void> {
     const item = this.pendingWrites.get(cleanPath);
     if (!item) return;
+    if (!duringRename && Array.from(this.renamePaths).some((p) => cleanPath === p || cleanPath.startsWith(`${p}/`))) return;
 
     // Project scope guard
     if (item.projectId !== null && this.activeProjectId !== null && item.projectId !== this.activeProjectId) {
@@ -187,6 +190,8 @@ export class FileSyncCoordinator {
   }
 
   public async flush(): Promise<FlushResult> {
+    // A flush concurrent with rename must observe the committed path mapping.
+    await Promise.allSettled(Array.from(this.fileOperations));
     // Clear all pending debounce timers
     const entries = Array.from(this.pendingWrites.entries());
     for (const [, item] of entries) {
@@ -259,64 +264,90 @@ export class FileSyncCoordinator {
     this.pendingWrites.clear();
   }
 
-  public async handleRename(oldPath: string, newPath: string, timeoutMs = 3000): Promise<void> {
+  public handleRename(
+    oldPath: string, newPath: string, timeoutMs = 3000,
+    move?: () => Promise<void>,
+  ): Promise<void> {
+    const operation = this.performRename(oldPath, newPath, timeoutMs, move)
+      .finally(() => { this.fileOperations.delete(operation); });
+    this.fileOperations.add(operation);
+    return operation;
+  }
+
+  private async performRename(
+    oldPath: string, newPath: string, timeoutMs: number, move?: () => Promise<void>,
+  ): Promise<void> {
     const cleanOld = oldPath.replace(/^\/+/, '').replace(/\/+$/, '');
     const cleanNew = newPath.replace(/^\/+/, '').replace(/\/+$/, '');
     const oldPrefix = `${cleanOld}/`;
     const newPrefix = `${cleanNew}/`;
 
-    // 1. Direct path match
-    const oldItem = this.pendingWrites.get(cleanOld);
-    if (oldItem) {
-      if (oldItem.timer) clearTimeout(oldItem.timer);
-      this.pendingWrites.delete(cleanOld);
-    }
-
-    // 2. Directory prefix matches: remap any descendants in pendingWrites
-    const descendantsToRemap: Array<{ path: string; content: string; projectId: string | null }> = [];
-    for (const [key, item] of Array.from(this.pendingWrites.entries())) {
-      if (key.startsWith(oldPrefix)) {
+    const scope = this.activeProjectId;
+    const affected = (p: string) => p === cleanOld || p.startsWith(oldPrefix) ||
+      p === cleanNew || p.startsWith(newPrefix);
+    if (Array.from(this.renamePaths).some(affected)) throw new Error('A conflicting rename is already running');
+    this.renamePaths.add(cleanOld);
+    this.renamePaths.add(cleanNew);
+    try {
+      // Keep queued edits at their original paths until the physical move succeeds.
+      // Paused paths also capture edits arriving while the move is in progress.
+      const start = Date.now();
+      while (Array.from(this.inFlightPaths).some(affected)) {
+        if (Date.now() - start > timeoutMs) {
+          throw new Error(`Cannot rename "${cleanOld}": in-flight write did not settle within ${timeoutMs}ms`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      if (scope !== this.activeProjectId) throw new Error('Project changed during rename');
+      // Newly created files may exist only in the debounce queue. Materialize
+      // their latest queued contents before asking the filesystem to move them.
+      for (const [key, item] of move ? Array.from(this.pendingWrites.entries()) : []) {
+        if (key !== cleanOld && !key.startsWith(oldPrefix)) continue;
+        if (item.timer) clearTimeout(item.timer);
+        await this.executeWrite(key, true);
+        const result = this.lastWriteResults.get(key);
+        if (result?.status !== 'persisted') throw result?.error ?? new Error(`Could not write rename source: ${key}`);
+      }
+      if (scope !== this.activeProjectId) throw new Error('Project changed during rename');
+      await move?.();
+      if (scope !== this.activeProjectId) throw new Error('Project changed during rename');
+      for (const [key, item] of Array.from(this.pendingWrites.entries())) {
+        if (key !== cleanOld && !key.startsWith(oldPrefix)) continue;
         if (item.timer) clearTimeout(item.timer);
         this.pendingWrites.delete(key);
-        const subPath = key.slice(oldPrefix.length);
-        descendantsToRemap.push({
-          path: `${newPrefix}${subPath}`,
-          content: item.content,
-          projectId: item.projectId,
-        });
+        const destination = key === cleanOld ? cleanNew : newPrefix + key.slice(oldPrefix.length);
+        this.queueSync(destination, item.content, item.projectId);
       }
-    }
-
-    // 3. Await in-flight writes on oldPath or its descendants before proceeding (fail-closed)
-    const start = Date.now();
-    while (
-      Array.from(this.inFlightPaths).some(
-        (p) => p === cleanOld || p.startsWith(oldPrefix),
-      )
-    ) {
-      if (Date.now() - start > timeoutMs) {
-        const err = new Error(
-          `Cannot rename "${cleanOld}": in-flight write did not settle within ${timeoutMs}ms`,
-        );
-        console.error(`[FileSyncCoordinator] ${err.message}`);
-        throw err;
+    } finally {
+      this.renamePaths.delete(cleanOld);
+      this.renamePaths.delete(cleanNew);
+      // On failure restart the original-path timers, retaining the latest content.
+      for (const [key, item] of Array.from(this.pendingWrites.entries())) {
+        if (affected(key)) this.queueSync(key, item.content, item.projectId);
       }
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-
-    // 4. Queue remapped writes for new destination
-    if (oldItem) {
-      this.queueSync(cleanNew, oldItem.content, oldItem.projectId);
-    }
-    for (const desc of descendantsToRemap) {
-      this.queueSync(desc.path, desc.content, desc.projectId);
     }
   }
 
-  public async handleDelete(path: string, timeoutMs = 3000): Promise<void> {
-    this.cancelPath(path);
+  public handleDelete(
+    path: string, timeoutMs = 3000, remove: (path: string) => Promise<void> = this.rawDelete,
+  ): Promise<void> {
+    const operation = this.performDelete(path, timeoutMs, remove)
+      .finally(() => { this.fileOperations.delete(operation); });
+    this.fileOperations.add(operation);
+    return operation;
+  }
+
+  private async performDelete(
+    path: string, timeoutMs: number, remove: (path: string) => Promise<void>,
+  ): Promise<void> {
     const cleanPath = path.replace(/^\/+/, '');
     const prefix = cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`;
+    const scope = this.activeProjectId;
+    if (Array.from(this.renamePaths).some((p) => p === cleanPath || p.startsWith(prefix) || cleanPath.startsWith(`${p}/`))) {
+      throw new Error('A conflicting file operation is already running');
+    }
+    this.renamePaths.add(cleanPath);
+    try {
 
     // Await any in-flight writes on this path or its descendants before deleting (fail-closed)
     const start = Date.now();
@@ -345,7 +376,16 @@ export class FileSyncCoordinator {
     ) {
       this.onDependencyInvalidation?.(cleanPath);
     }
-    await this.rawDelete(cleanPath);
+    if (scope !== this.activeProjectId) throw new Error('Project changed during delete');
+    await remove(cleanPath);
+    if (scope !== this.activeProjectId) throw new Error('Project changed during delete');
+    this.cancelPath(cleanPath);
+    } finally {
+      this.renamePaths.delete(cleanPath);
+      for (const [key, item] of Array.from(this.pendingWrites.entries())) {
+        if (key === cleanPath || key.startsWith(prefix)) this.queueSync(key, item.content, item.projectId);
+      }
+    }
   }
 
   public hasPendingWrites(): boolean {

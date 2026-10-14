@@ -335,6 +335,8 @@ console.log(\`
 class WebContainerManager {
   private instance: WebContainer | null = null;
   private bootPromise: Promise<WebContainer> | null = null;
+  private runtimeGeneration = 0;
+  private runtimeRetirement: Promise<void> = Promise.resolve();
   private shellProcess: Awaited<ReturnType<WebContainer['spawn']>> | null = null;
   private shellWriter: WritableStreamDefaultWriter<string> | null = null;
   private serverListenersAttached = new WeakSet<WebContainer>();
@@ -365,13 +367,17 @@ class WebContainerManager {
   private fileSyncCoordinator = new FileSyncCoordinator({
     debounceMs: 200,
     rawWrite: async (cleanPath, content) => {
-      if (!this.instance) return;
+      const container = this.instance;
+      const generation = this.runtimeGeneration;
+      if (!container) throw new Error('WebContainer is not mounted');
       const dirIndex = cleanPath.lastIndexOf('/');
       if (dirIndex !== -1) {
         const dir = cleanPath.slice(0, dirIndex);
-        await this.instance.fs.mkdir(dir, { recursive: true });
+        await container.fs.mkdir(dir, { recursive: true });
       }
-      await this.instance.fs.writeFile(cleanPath, content);
+      if (generation !== this.runtimeGeneration) throw new Error('Project changed during write');
+      await container.fs.writeFile(cleanPath, content);
+      if (generation !== this.runtimeGeneration) throw new Error('Project changed during write');
     },
     rawDelete: async (cleanPath) => {
       if (!this.instance) return;
@@ -531,12 +537,37 @@ class WebContainerManager {
     return this.activeProjectId;
   }
 
+  private retireProjectRuntime(): void {
+    this.runtimeGeneration++;
+    const shared = globalThis as unknown as {
+      __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer | null;
+      __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<WebContainer> | null;
+    };
+    const container = this.instance ?? shared.__GBCODER_WEBCONTAINER_INSTANCE__;
+    const pendingBoot = this.bootPromise ?? shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__;
+    this.cleanupServerListeners();
+    this.terminateShell();
+    this.shellSpawnPromise = null;
+    this.instance = null;
+    this.bootPromise = null;
+    if (shared.__GBCODER_WEBCONTAINER_INSTANCE__ === container) shared.__GBCODER_WEBCONTAINER_INSTANCE__ = null;
+    if (shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__ === pendingBoot) shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__ = null;
+    // The public API invalidates the filesystem and all descendant processes.
+    // A pending old boot tears itself down before releasing the next boot.
+    container?.teardown();
+    this.runtimeRetirement = Promise.all([
+      this.runtimeRetirement,
+      pendingBoot?.then(() => {}, () => {}),
+    ]).then(() => {});
+    this.updateState({ status: this.isSupported() ? 'idle' : 'unsupported' });
+  }
+
   public attachProject(projectId: string): void {
     if (this.activeProjectId === projectId) return;
+    this.retireProjectRuntime();
 
     // If another project was attached, cleanly tear down its dev server and pending writes
     if (this.activeProjectId !== null) {
-      this.stopDevServer();
       this.sessionEpoch++;
       this.resetProjectStartState();
       this.fileSyncCoordinator.cancelAll();
@@ -565,9 +596,9 @@ class WebContainerManager {
     if (projectId && this.activeProjectId !== projectId) {
       return;
     }
+    this.retireProjectRuntime();
 
     if (this.activeProjectId !== null) {
-      this.stopDevServer();
       this.sessionEpoch++;
       this.resetProjectStartState();
       this.fileSyncCoordinator.cancelAll();
@@ -761,9 +792,12 @@ class WebContainerManager {
     this.serverListenersAttached.add(container);
 
     this.cleanupServerListeners();
+    const generation = this.runtimeGeneration;
+    const ownsRuntime = () => generation === this.runtimeGeneration && container === this.instance;
 
     // 1. server-ready: internal web server is listening and ready to answer requests
     const unsubServerReady = container.on('server-ready', (port, url) => {
+      if (!ownsRuntime()) return;
       if (!this.activeProjectId) {
         console.warn(`[WebContainer] Discarded late server-ready at port ${port} (no active project attached)`);
         return;
@@ -859,6 +893,7 @@ class WebContainerManager {
 
     // 2. port: emitted when a port opens or closes
     const unsubPort = container.on('port', (port, type, url) => {
+      if (!ownsRuntime()) return;
       console.log(`[WebContainer] Port ${port} ${type}: ${url}`);
       if (type === 'open') {
         if (!this.activeProjectId) return;
@@ -946,6 +981,7 @@ class WebContainerManager {
 
     // 3. error: runtime error
     const unsubError = container.on('error', (err) => {
+      if (!ownsRuntime()) return;
       console.error('[WebContainer] Runtime error:', err);
       this.setStartupStage('error', {
         phase: 'server',
@@ -964,12 +1000,14 @@ class WebContainerManager {
    * Safe to call multiple times concurrently or across Vite HMR cycles.
    */
   public async boot(): Promise<WebContainer> {
+    const generation = this.runtimeGeneration;
+    await this.runtimeRetirement;
+    if (generation !== this.runtimeGeneration) throw new Error('Project changed before boot');
     // 1. Check local instance
     if (this.instance) return this.instance;
 
     // 2. Check globally shared or static WebContainer._instance (e.g. across HMR)
     const existing =
-      (WebContainer as unknown as { _instance?: WebContainer })._instance ??
       (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
         .__GBCODER_WEBCONTAINER_INSTANCE__;
 
@@ -1009,6 +1047,10 @@ class WebContainerManager {
     const doBoot = async () => {
       try {
         const container = await WebContainer.boot();
+        if (generation !== this.runtimeGeneration) {
+          container.teardown();
+          throw new Error('Project changed during boot; runtime retired');
+        }
         this.instance = container;
         (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
           .__GBCODER_WEBCONTAINER_INSTANCE__ = container;
@@ -1016,11 +1058,11 @@ class WebContainerManager {
         this.updateState({ status: 'ready', error: null, runtimeError: null });
         return container;
       } catch (err) {
+        if (generation !== this.runtimeGeneration) throw err;
         const message = err instanceof Error ? err.message : String(err);
         // Seamlessly recover if another caller or hot-reload already booted WebContainer
         if (message.includes('Only a single WebContainer instance can be booted')) {
           const recovered =
-            (WebContainer as unknown as { _instance?: WebContainer })._instance ??
             (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
               .__GBCODER_WEBCONTAINER_INSTANCE__;
           if (recovered) {
@@ -1156,6 +1198,7 @@ class WebContainerManager {
       endMount();
       return true;
     } catch (err) {
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) return false;
       const msg = err instanceof Error ? err.message : String(err);
       this.setStartupStage('error', {
         phase: 'mount',
@@ -1328,91 +1371,118 @@ class WebContainerManager {
    * Removes a file from the WebContainer filesystem, cancelling any pending debounced writes for it.
    */
   public async deleteFile(path: string, timeoutMs?: number): Promise<void> {
-    await this.fileSyncCoordinator.handleDelete(path, timeoutMs);
+    const cleanPath = path.replace(/^\/+/, '').replace(/\/+$/, '');
+    if (!cleanPath || cleanPath.includes('\\') || cleanPath.split('/').some((part) => !part || part === '.' || part === '..')) {
+      throw new Error('Invalid delete path');
+    }
+    const project = this.activeProjectId;
+    const epoch = this.sessionEpoch;
+    const container = this.instance;
+    const assertOwner = () => {
+      if (project !== this.activeProjectId || epoch !== this.sessionEpoch || container !== this.instance) {
+        throw new Error('Project changed during delete');
+      }
+    };
+    const previousMount = this.mountQueue;
+    let release: () => void = () => {};
+    this.mountQueue = new Promise<void>((resolve) => { release = resolve; });
+    try {
+      await previousMount;
+      assertOwner();
+      await this.fileSyncCoordinator.handleDelete(cleanPath, timeoutMs, async (cleanPath) => {
+        assertOwner();
+        if (container) await container.fs.rm(cleanPath, { recursive: true });
+        assertOwner();
+      });
+    } finally {
+      release();
+    }
   }
 
   /**
    * Renames a file or directory in the WebContainer virtual filesystem.
    *
-   * Step 1: coordinator remaps any pending debounced writes from oldPath → newPath
-   *         and waits for in-flight writes on the old path to settle (fail-closed).
-   * Step 2: the physical file (or directory tree) is moved via container.fs.rename().
-   *         If the API throws (e.g. cross-device move not supported), we fall back to a
-   *         read → write → delete sequence for files, and a recursive copy+delete for dirs.
+   * Serialize against mounts, pause affected writes, and remap pending edits only
+   * after a successful physical move. Cross-device copies retain the whole source
+   * until copying completes; other native errors propagate without fallback.
    */
   public async renameFile(oldPath: string, newPath: string, timeoutMs?: number): Promise<void> {
-    // Step 1: remap pending writes in coordinator (waits for in-flight writes to settle)
-    await this.fileSyncCoordinator.handleRename(oldPath, newPath, timeoutMs);
-
-    if (!this.instance) return; // WebContainer not booted yet; coordinator-only remap is sufficient
-
-    const cleanOld = oldPath.replace(/^\/+/, '');
-    const cleanNew = newPath.replace(/^\/+/, '');
-
-    // Step 2: physical move via native rename (atomic, supports directories)
+    const cleanOld = oldPath.replace(/^\/+/, '').replace(/\/+$/, '');
+    const cleanNew = newPath.replace(/^\/+/, '').replace(/\/+$/, '');
+    const safePath = (p: string) => p.length > 0 && !p.includes('\\') &&
+      !p.split('/').some((part) => !part || part === '.' || part === '..');
+    if (!safePath(cleanOld) || !safePath(cleanNew) || cleanNew.startsWith(`${cleanOld}/`)) {
+      throw new Error('Invalid rename path');
+    }
+    if (cleanOld === cleanNew) return;
+    const project = this.activeProjectId;
+    const epoch = this.sessionEpoch;
+    const container = this.instance;
+    const assertOwner = () => {
+      if (project !== this.activeProjectId || epoch !== this.sessionEpoch || container !== this.instance) {
+        throw new Error('Project changed during rename');
+      }
+    };
+    const previousMount = this.mountQueue;
+    let release: () => void = () => {};
+    this.mountQueue = new Promise<void>((resolve) => { release = resolve; });
     try {
-      // Ensure parent directory of new path exists
-      const newDirIndex = cleanNew.lastIndexOf('/');
-      if (newDirIndex !== -1) {
-        await this.instance.fs.mkdir(cleanNew.slice(0, newDirIndex), { recursive: true });
-      }
-      await this.instance.fs.rename(cleanOld, cleanNew);
-    } catch (renameErr) {
-      // Fall back to copy+delete (handles edge cases like cross-"device" renames)
-      console.warn(
-        `[WebContainer] fs.rename failed for "${cleanOld}" → "${cleanNew}", falling back to copy+delete:`,
-        renameErr,
-      );
-      try {
-        await this.physicalCopyThenDelete(cleanOld, cleanNew);
-      } catch (copyErr) {
-        const errMsg = copyErr instanceof Error ? copyErr.message : String(copyErr);
-        throw new Error(
-          `Failed to rename "${cleanOld}" to "${cleanNew}" in virtual filesystem: ${errMsg}`,
-        );
-      }
+      await previousMount;
+      assertOwner();
+      await this.fileSyncCoordinator.handleRename(cleanOld, cleanNew, timeoutMs, container ? async () => {
+        assertOwner();
+        if (!container) return; // Unbooted editors still rename their authoritative project state.
+        const parent = cleanNew.includes('/') ? cleanNew.slice(0, cleanNew.lastIndexOf('/')) : '.';
+        if (parent !== '.') await container.fs.mkdir(parent, { recursive: true });
+        assertOwner();
+        const entries = await container.fs.readdir(parent);
+        assertOwner();
+        if (entries.some((name) => name.toLowerCase() === cleanNew.split('/').pop()!.toLowerCase())) {
+          throw new Error(`Rename destination already exists: ${cleanNew}`);
+        }
+        try {
+          await container.fs.rename(cleanOld, cleanNew);
+        } catch (error) {
+          const code = (error as { code?: string })?.code;
+          if (code !== 'EXDEV' && !(error instanceof Error && error.message.startsWith('EXDEV:'))) throw error;
+          assertOwner();
+          await this.copyRenameSource(container, cleanOld, cleanNew, assertOwner);
+          assertOwner();
+          // Only the complete source tree is removed, after every copy succeeded.
+          await container.fs.rm(cleanOld, { recursive: true });
+        }
+        assertOwner();
+      } : undefined);
+    } finally {
+      release();
     }
   }
 
   /**
-   * Fallback rename implementation: recursively copies all content from oldPath to newPath,
-   * then removes oldPath. Used when container.fs.rename() is unavailable or throws.
-   *
-   * NOTE: This is NOT atomic and may leave partial state if interrupted. It is only invoked
-   * as a last resort after the native rename() API fails.
+   * Copy without deleting any source entry. A failed copy can leave a partial
+   * destination, but the source is intact and retry cannot overwrite that destination.
    */
-  private async physicalCopyThenDelete(cleanOld: string, cleanNew: string): Promise<void> {
-    if (!this.instance) throw new Error('WebContainer not booted');
-
-    // Determine if this is a file or a directory by attempting to read it as a file first
-    let isFile = false;
-    let fileContent: Uint8Array | null = null;
+  private async copyRenameSource(
+    container: WebContainer, cleanOld: string, cleanNew: string, assertOwner: () => void,
+  ): Promise<void> {
+    assertOwner();
+    let fileContent: Uint8Array;
     try {
-      fileContent = await this.instance.fs.readFile(cleanOld);
-      isFile = true;
-    } catch {
-      // Not a file (or unreadable) — treat as directory
-    }
-
-    if (isFile && fileContent !== null) {
-      // Single file copy
-      const newDirIndex = cleanNew.lastIndexOf('/');
-      if (newDirIndex !== -1) {
-        await this.instance.fs.mkdir(cleanNew.slice(0, newDirIndex), { recursive: true });
-      }
-      await this.instance.fs.writeFile(cleanNew, fileContent);
-      await this.instance.fs.rm(cleanOld, { recursive: true });
-    } else {
-      // Directory: enumerate all entries and copy recursively
-      await this.instance.fs.mkdir(cleanNew, { recursive: true });
-      const entries = await this.instance.fs.readdir(cleanOld, { withFileTypes: true });
+      fileContent = await container.fs.readFile(cleanOld);
+    } catch (error) {
+      const code = (error as { code?: string })?.code;
+      if (code !== 'EISDIR' && !(error instanceof Error && error.message.startsWith('EISDIR:'))) throw error;
+      assertOwner();
+      const entries = await container.fs.readdir(cleanOld, { withFileTypes: true });
+      assertOwner();
+      await container.fs.mkdir(cleanNew);
       for (const entry of entries) {
-        const childOld = `${cleanOld}/${entry.name}`;
-        const childNew = `${cleanNew}/${entry.name}`;
-        await this.physicalCopyThenDelete(childOld, childNew);
+        await this.copyRenameSource(container, `${cleanOld}/${entry.name}`, `${cleanNew}/${entry.name}`, assertOwner);
       }
-      await this.instance.fs.rm(cleanOld, { recursive: true });
+      return;
     }
+    assertOwner();
+    await container.fs.writeFile(cleanNew, fileContent);
   }
 
   /**
@@ -1442,6 +1512,7 @@ class WebContainerManager {
     kill: () => void;
     disconnect: () => void;
   }> {
+    const generation = this.runtimeGeneration;
     // 1. If not forcing a restart, check if an existing shell is active and healthy
     if (!options.forceRestart && this.shellProcess && this.shellWriter) {
       this.shellDataListeners.add(options.onData);
@@ -1466,13 +1537,15 @@ class WebContainerManager {
 
       return {
         write: (data: string) => {
+          if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
           try {
-            writer.write(data);
+            void writer.write(data).catch((err) => console.error('[WebContainer] Failed to write to shell:', err));
           } catch (err) {
             console.error('[WebContainer] Failed to write to shell:', err);
           }
         },
         resize: (cols: number, rows: number) => {
+          if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
           try {
             process.resize({ cols, rows });
           } catch (err) {
@@ -1480,7 +1553,7 @@ class WebContainerManager {
           }
         },
         kill: () => {
-          this.terminateShell();
+          if (generation === this.runtimeGeneration && this.shellProcess === process) this.terminateShell();
         },
         disconnect: () => {
           this.shellDataListeners.delete(options.onData);
@@ -1491,6 +1564,7 @@ class WebContainerManager {
     // 2. If a spawn is currently in progress, await it
     if (this.shellSpawnPromise) {
       await this.shellSpawnPromise;
+      if (generation !== this.runtimeGeneration) throw new Error('Project changed while waiting for shell');
       return this.spawnInteractiveShell(options);
     }
 
@@ -1500,6 +1574,7 @@ class WebContainerManager {
 
     this.shellSpawnPromise = (async () => {
       const container = await this.boot();
+      if (generation !== this.runtimeGeneration) throw new Error('Project changed before shell spawn');
 
       // Clean up previous shell if any
       this.terminateShell();
@@ -1510,6 +1585,10 @@ class WebContainerManager {
           rows: options.rows,
         },
       });
+      if (generation !== this.runtimeGeneration) {
+        process.kill();
+        throw new Error('Project changed during shell spawn');
+      }
 
       this.shellProcess = process;
       const writer = process.input.getWriter();
@@ -1526,6 +1605,7 @@ class WebContainerManager {
         .pipeTo(
           new WritableStream({
             write: (chunk: string) => {
+              if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
               this.shellOutputBuffer.push(chunk);
               if (this.shellOutputBuffer.length > 500) {
                 this.shellOutputBuffer.shift();
@@ -1612,6 +1692,7 @@ class WebContainerManager {
 
       // Handle process exit
       void process.exit.then((exitCode) => {
+        if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
         console.log(`[WebContainer] Shell process exited with code ${exitCode}`);
         this.shellProcess = null;
         this.shellWriter = null;
@@ -1642,13 +1723,15 @@ class WebContainerManager {
 
       return {
         write: (data: string) => {
+          if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
           try {
-            writer.write(data);
+            void writer.write(data).catch((err) => console.error('[WebContainer] Failed to write to shell:', err));
           } catch (err) {
             console.error('[WebContainer] Failed to write to shell:', err);
           }
         },
         resize: (cols: number, rows: number) => {
+          if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
           try {
             process.resize({ cols, rows });
           } catch (err) {
@@ -1656,7 +1739,7 @@ class WebContainerManager {
           }
         },
         kill: () => {
-          this.terminateShell();
+          if (generation === this.runtimeGeneration && this.shellProcess === process) this.terminateShell();
         },
         disconnect: () => {
           this.shellDataListeners.delete(options.onData);
@@ -1664,10 +1747,11 @@ class WebContainerManager {
       };
     })();
 
+    const pendingSpawn = this.shellSpawnPromise;
     try {
-      return await this.shellSpawnPromise;
+      return await pendingSpawn;
     } finally {
-      this.shellSpawnPromise = null;
+      if (this.shellSpawnPromise === pendingSpawn) this.shellSpawnPromise = null;
     }
   }
 

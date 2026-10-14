@@ -15,7 +15,7 @@
  */
 
 import { chromium } from 'playwright';
-import http from 'node:http';
+import { createPreviewServer } from './preview-combined.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
@@ -27,60 +27,8 @@ let BASE_URL = `http://localhost:${PORT}`;
 // Unified build: dashboard + editors live under /app.
 let APP_URL = `${BASE_URL}/app/`;
 
-const MIME_TYPES = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.wasm': 'application/wasm',
-  '.png': 'image/png',
-  '.ico': 'image/x-icon',
-  '.svg': 'image/svg+xml',
-};
-
 function startPreviewServer() {
-  const distDir = path.resolve('dist');
-  const server = http.createServer((req, res) => {
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-
-    let reqPath = decodeURIComponent(req.url.split('?')[0]);
-
-    // Unified-build layout (Phase 1): the IDE app (dashboard included) lives
-    // under /app. The suite predates the split and expects the dashboard at
-    // the navigated root, so route those navigations to the app shell.
-    let filePath;
-    if (reqPath === '/app' || reqPath === '/app/' || reqPath === '/ide' || reqPath === '/ide/') {
-      filePath = path.join(distDir, 'app', 'index.html');
-    } else if (reqPath.startsWith('/app/')) {
-      const sub = reqPath.replace(/^\/app\//, '');
-      const candidate = path.join(distDir, 'app', sub);
-      filePath =
-        fs.existsSync(candidate) && fs.statSync(candidate).isFile()
-          ? candidate
-          : path.join(distDir, 'app', 'index.html');
-    } else {
-      if (reqPath === '/') reqPath = '/index.html';
-      filePath = path.join(distDir, reqPath.replace(/^\//, ''));
-      if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-        filePath = path.join(distDir, 'index.html');
-      }
-    }
-
-    const ext = path.extname(filePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-    res.setHeader('Content-Type', contentType);
-
-    try {
-      const data = fs.readFileSync(filePath);
-      res.writeHead(200);
-      res.end(data);
-    } catch (err) {
-      res.writeHead(500);
-      res.end(err.message);
-    }
-  });
-
+  const server = createPreviewServer();
   return new Promise((resolve) => {
     server.listen(0, () => {
       PORT = server.address().port;

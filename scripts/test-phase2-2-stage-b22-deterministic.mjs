@@ -1,3 +1,4 @@
+import { activateRuntime } from './helpers/runtime-event-fixture.mjs';
 /**
  * scripts/test-phase2-2-stage-b22-deterministic.mjs
  *
@@ -168,21 +169,15 @@ async function run() {
   // Scenario 4: A late A server-ready event after B becomes active.
   try {
     let serverReadyCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'server-ready') serverReadyCb = cb;
-        return () => {};
-      },
-    };
 
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
 
-    webcontainerService.attachProject('project-a');
+    const a = activateRuntime(webcontainerService, 'project-a');
+    serverReadyCb = a.ready;
     webcontainerService.setDevServerStarting(true);
 
     // Switch to Project B
-    webcontainerService.attachProject('project-b');
+    const b = activateRuntime(webcontainerService, 'project-b');
+    a.assertRetired();
     assert.equal(webcontainerService.getActiveProjectId(), 'project-b');
     assert.equal(webcontainerService.getState().serverUrl, null);
 
@@ -215,27 +210,21 @@ async function run() {
   try {
     let serverReadyCb = null;
     let portCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'server-ready') serverReadyCb = cb;
-        if (evt === 'port') portCb = cb;
-        return () => {};
-      },
-    };
 
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
 
     // Project A starts on port 5173
-    webcontainerService.attachProject('project-a');
+    const a = activateRuntime(webcontainerService, 'project-a');
+    serverReadyCb = a.ready;
+    portCb = a.port;
     webcontainerService.setDevServerStarting(true);
     serverReadyCb(5173, 'http://project-a.local:5173');
     assert.equal(webcontainerService.getState().serverUrl, 'http://project-a.local:5173');
 
     // Switch to Project B and start server on port 3000
-    webcontainerService.attachProject('project-b');
+    const b = activateRuntime(webcontainerService, 'project-b');
+    a.assertRetired();
     webcontainerService.setDevServerStarting(true);
-    serverReadyCb(3000, 'http://project-b.local:3000');
+    b.ready(3000, 'http://project-b.local:3000');
     assert.equal(webcontainerService.getState().serverPort, 3000);
 
     // Late port-close arrives for Project A's port 5173
@@ -261,25 +250,19 @@ async function run() {
   try {
     let serverReadyCb = null;
     let portCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'server-ready') serverReadyCb = cb;
-        if (evt === 'port') portCb = cb;
-        return () => {};
-      },
-    };
 
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
 
     // 1. Project A is on port 5173
-    webcontainerService.attachProject('project-a');
+    const a = activateRuntime(webcontainerService, 'project-a');
+    serverReadyCb = a.ready;
+    portCb = a.port;
     webcontainerService.setDevServerStarting(true);
     serverReadyCb(5173, 'http://server.local:5173');
     assert.equal(webcontainerService.getState().serverPort, 5173);
 
     // 2. Switch to Project B -> port 5173 is marked draining
-    webcontainerService.attachProject('project-b');
+    const b = activateRuntime(webcontainerService, 'project-b');
+    a.assertRetired();
     assert.equal(webcontainerService.getState().serverPort, null);
 
     // 3. Project A's dev server process terminates, port closes
@@ -287,7 +270,7 @@ async function run() {
 
     // 4. Project B now starts its dev server and binds the same port 5173
     webcontainerService.setDevServerStarting(true);
-    serverReadyCb(5173, 'http://server.local:5173');
+    b.ready(5173, 'http://server.local:5173');
 
     // 5. Verification: Project B owns port 5173 now
     assert.equal(webcontainerService.getState().serverPort, 5173);
@@ -494,18 +477,11 @@ async function run() {
   // Scenario 12: Legitimate React/Vue startup after normal transition.
   try {
     let serverReadyCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'server-ready') serverReadyCb = cb;
-        return () => {};
-      },
-    };
 
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
 
     // Normal switch to React project
-    webcontainerService.attachProject('react-app');
+    const current = activateRuntime(webcontainerService, 'react-app');
+    serverReadyCb = current.ready;
     webcontainerService.setShellPromptReady(true);
     webcontainerService.setDevServerStarting(true);
     assert.equal(webcontainerService.isDevServerStarting(), true);

@@ -1,3 +1,4 @@
+import { activateRuntime } from './helpers/runtime-event-fixture.mjs';
 /**
  * scripts/test-phase2-2-stage-b23-fs-port.mjs
  *
@@ -78,6 +79,7 @@ async function run() {
   try {
     let mockMountCalled = false;
     const mockContainer = {
+      teardown() { this.destroyed = true; },
       mount: async () => { mockMountCalled = true; },
       fs: {
         writeFile: async () => {},
@@ -139,6 +141,7 @@ async function run() {
   try {
     let mockMountCalled = false;
     const mockContainer = {
+      teardown() { this.destroyed = true; },
       mount: async () => { mockMountCalled = true; },
       fs: {
         writeFile: async () => {},
@@ -229,6 +232,7 @@ async function run() {
     // Retry after write settled: should now succeed!
     let mountCalledAfterSettle = false;
     webcontainerService.instance = {
+      teardown() { this.destroyed = true; },
       mount: async () => { mountCalledAfterSettle = true; },
       fs: { writeFile: async () => {}, mkdir: async () => {} },
       on: () => () => {},
@@ -272,6 +276,7 @@ async function run() {
   try {
     let callOrder = [];
     const mockContainer = {
+      teardown() { this.destroyed = true; },
       mount: async (tree) => {
         const file = Object.keys(tree)[0];
         callOrder.push(file);
@@ -334,224 +339,105 @@ async function run() {
    * CATEGORY 2: SAFE PORT REUSE & LIFECYCLE (PORT-B23-01 to PORT-B23-12)
    * ────────────────────────────────────────────────────────────────────────── */
 
-  let serverReadyCb = null;
-  let portCb = null;
-  const mockContainer = {
-    on: (evt, cb) => {
-      if (evt === 'server-ready') serverReadyCb = cb;
-      if (evt === 'port') portCb = cb;
-      return () => {};
-    },
-    mount: async () => {},
-    fs: { writeFile: async () => {}, mkdir: async () => {} },
+  const runtimes = [];
+  let current;
+  const activate = (id) => {
+    const previous = current;
+    current = activateRuntime(webcontainerService, id);
+    if (previous) previous.assertRetired();
+    runtimes.push(current);
+    return current;
   };
-
-  webcontainerService.cleanupServerListeners();
-  webcontainerService.setupServerListeners(mockContainer);
-
-  // PORT-B23-01: Project A starts on port 5173.
-  try {
-    webcontainerService.attachProject('project-a');
-    webcontainerService.setDevServerStarting(true);
-    serverReadyCb(5173, 'http://localhost:5173');
-
+  const check = (id, title, run) => {
+    try { run(); record(id, title, 'PASS', 'Production handler assertions with distinct public-API runtimes'); }
+    catch (error) { record(id, title, 'FAIL', error.message); }
+  };
+  check('PORT-B23-01', 'Project A starts on port 5173', () => {
+    activate('project-a'); webcontainerService.setDevServerStarting(true);
+    current.ready(5173, 'http://localhost:5173');
     assert.equal(webcontainerService.getState().serverPort, 5173);
     assert.equal(webcontainerService.getState().serverUrl, 'http://localhost:5173');
-    record('PORT-B23-01', 'Project A starts on port 5173', 'PASS', 'Server bound port 5173');
-  } catch (err) {
-    record('PORT-B23-01', 'Project A starts on port 5173', 'FAIL', err.message);
-  }
-
-  // PORT-B23-02: Project A is stopped and produces an ordinary close event.
-  try {
+  });
+  check('PORT-B23-02', 'Project A is stopped and produces close event', () => {
     webcontainerService.stopDevServer();
     assert.equal(webcontainerService.getState().serverPort, null);
-
-    // Port close arrives
-    portCb(5173, 'close', '');
-    record('PORT-B23-02', 'Project A is stopped and produces close event', 'PASS', 'Port 5173 closed cleanly');
-  } catch (err) {
-    record('PORT-B23-02', 'Project A is stopped and produces close event', 'FAIL', err.message);
-  }
-
-  // PORT-B23-03: Project B legitimately starts on 5173 after confirmed A shutdown.
-  try {
-    webcontainerService.attachProject('project-b');
-    webcontainerService.setDevServerStarting(true);
-    serverReadyCb(5173, 'http://localhost:5173');
-
+    current.port(5173, 'close');
+    assert.equal(webcontainerService.getState().activeServers.length, 0);
+  });
+  check('PORT-B23-03', 'Project B legitimately starts on 5173 after confirmed A shutdown', () => {
+    activate('project-b'); webcontainerService.setDevServerStarting(true);
+    current.ready(5173, 'http://localhost:5173');
     assert.equal(webcontainerService.getState().serverPort, 5173);
     assert.equal(webcontainerService.getActiveProjectId(), 'project-b');
-    record('PORT-B23-03', 'Project B legitimately starts on 5173 after confirmed A shutdown', 'PASS', 'Rebound port 5173 to Project B');
-  } catch (err) {
-    record('PORT-B23-03', 'Project B legitimately starts on 5173 after confirmed A shutdown', 'FAIL', err.message);
-  }
-
-  // PORT-B23-04: Project A shutdown lacks a port-close event; B must not be permanently blocked.
-  try {
-    // Project B is on 5173. Now switch to Project C without firing port close!
-    webcontainerService.attachProject('project-c');
-    assert.equal(webcontainerService.getActiveProjectId(), 'project-c');
-
-    // Simulate shell quiescence (command prompt ❯ detected)
-    webcontainerService.setShellPromptReady(true);
-    webcontainerService.setDevServerStarting(true);
-
-    // Server-ready arrives on port 5173 for Project C
-    serverReadyCb(5173, 'http://localhost:5173');
-
-    assert.equal(
-      webcontainerService.getState().serverPort,
-      5173,
-      'Project C was NOT blocked even though B shutdown lacked port-close event'
-    );
+  });
+  check('PORT-B23-04', 'Missing old port-close does not block the next runtime', () => {
+    activate('project-c'); webcontainerService.setShellPromptReady(false); webcontainerService.setDevServerStarting(true);
+    current.ready(5173, 'http://localhost:5173');
+    assert.equal(webcontainerService.getState().serverPort, 5173);
     assert.equal(webcontainerService.getState().serverUrl, 'http://localhost:5173');
-
-    record('PORT-B23-04', 'Project shutdown lacks port-close; next project not blocked', 'PASS', 'Quiescence confirmed, port reclaimed');
-  } catch (err) {
-    record('PORT-B23-04', 'Project shutdown lacks port-close; next project not blocked', 'FAIL', err.message);
-  }
-
-  // PORT-B23-05: A late A server-ready arrives while B is starting; A must not become B's Preview.
-  try {
-    // Switch to Project D
-    webcontainerService.attachProject('project-d');
-    webcontainerService.setShellPromptReady(false); // Shell busy
-    webcontainerService.setDevServerStarting(true); // D is starting
-
-    // Late server-ready arrives on port 4000 from Project C (which is draining and not quiescent)
-    webcontainerService.drainingPorts.set(4000, {
-      projectId: 'project-c',
-      sessionEpoch: webcontainerService.getSessionEpoch() - 1,
-      drainedAt: Date.now(), // fresh drain, < 1000ms
-    });
-
-    serverReadyCb(4000, 'http://project-c-late.local:4000');
-
-    // Project D serverPort must NOT be 4000!
-    assert.notEqual(webcontainerService.getState().serverPort, 4000, 'Late server-ready from C was rejected');
-    assert.equal(webcontainerService.getState().serverPort, null);
-
-    record('PORT-B23-05', 'Late A server-ready arrives while B starting; rejected', 'PASS', 'Non-quiescent draining server rejected');
-  } catch (err) {
-    record('PORT-B23-05', 'Late A server-ready arrives while B starting; rejected', 'FAIL', err.message);
-  }
-
-  // PORT-B23-06: A late A port-open arrives while B is starting.
-  try {
-    // Late port open arrives on 4000 from C
-    portCb(4000, 'open', 'http://project-c-late.local:4000');
-
-    // Must not be added to activeServers of D
-    assert.equal(
-      webcontainerService.getState().activeServers.some((s) => s.port === 4000),
-      false,
-      'Late port open was safely discarded'
-    );
-
-    record('PORT-B23-06', 'Late A port-open arrives while B starting; rejected', 'PASS', 'Draining port-open ignored');
-  } catch (err) {
-    record('PORT-B23-06', 'Late A port-open arrives while B starting; rejected', 'FAIL', err.message);
-  }
-
-  // PORT-B23-07: A late A close arrives after B has legitimately acquired the port.
-  try {
-    // Project D legitimately acquires port 3000
-    webcontainerService.setDevServerStarting(true);
-    serverReadyCb(3000, 'http://project-d.local:3000');
+  });
+  const c = current;
+  check('PORT-B23-05', 'Late old server-ready while next project starts is rejected', () => {
+    activate('project-d'); webcontainerService.setDevServerStarting(true);
+    for (const prompt of [false, true]) {
+      webcontainerService.setShellPromptReady(prompt); c.ready(4000, 'http://late-c');
+      assert.equal(webcontainerService.getState().serverPort, null);
+      assert.equal(webcontainerService.getState().serverUrl, null);
+    }
+  });
+  check('PORT-B23-06', 'Late old port-open while next project starts is rejected', () => {
+    c.port(4000, 'open', 'http://late-c');
+    assert.equal(webcontainerService.getState().activeServers.some((server) => server.port === 4000), false);
+  });
+  check('PORT-B23-07', 'Late retired close cannot clear a newly acquired port', () => {
+    webcontainerService.setDevServerStarting(true); current.ready(3000, 'http://project-d.local:3000');
+    c.port(3000, 'close');
     assert.equal(webcontainerService.getState().serverPort, 3000);
-
-    // Simulate an old draining close pending for port 3000
-    webcontainerService.pendingDrainingCloses.set(3000, 1);
-
-    // Now late close on port 3000 arrives from Project C
-    portCb(3000, 'close', '');
-
-    // Project D's server on port 3000 MUST REMAIN ALIVE!
-    assert.equal(
-      webcontainerService.getState().serverPort,
-      3000,
-      'Project D server remained alive after delayed draining close consumed'
-    );
     assert.equal(webcontainerService.getState().serverUrl, 'http://project-d.local:3000');
     assert.equal(webcontainerService.pendingDrainingCloses.get(3000) ?? 0, 0);
-
-    record('PORT-B23-07', 'Late close arrives after port acquired; consumed cleanly', 'PASS', 'Active server unaffected by stale close');
-  } catch (err) {
-    record('PORT-B23-07', 'Late close arrives after port acquired; consumed cleanly', 'FAIL', err.message);
-  }
-
-  // PORT-B23-08: Rapid A -> B -> C transitions cannot activate an obsolete Preview.
-  try {
-    webcontainerService.attachProject('proj-trans-1');
-    webcontainerService.attachProject('proj-trans-2');
-    webcontainerService.attachProject('proj-trans-3');
-
+    current.port(3000, 'close');
+    assert.equal(webcontainerService.getState().serverUrl, null, 'current runtime close must still work');
+  });
+  check('PORT-B23-08', 'Rapid transitions cannot activate obsolete Preview', () => {
+    const a = activate('proj-trans-1'); activate('proj-trans-2'); activate('proj-trans-3');
     assert.equal(webcontainerService.getActiveProjectId(), 'proj-trans-3');
+    a.ready(5173, 'http://trans-1.local');
     assert.equal(webcontainerService.getState().serverUrl, null);
-
-    // Stale server ready for trans-1
-    serverReadyCb(5173, 'http://trans-1.local');
-    assert.equal(webcontainerService.getState().serverUrl, null);
-
-    record('PORT-B23-08', 'Rapid transitions cannot activate obsolete Preview', 'PASS', 'Stale transitions discarded');
-  } catch (err) {
-    record('PORT-B23-08', 'Rapid transitions cannot activate obsolete Preview', 'FAIL', err.message);
-  }
-
-  // PORT-B23-09: A legitimate current-project server-ready is accepted.
-  try {
-    webcontainerService.attachProject('current-valid');
-    webcontainerService.setShellPromptReady(true); // Terminal detected prompt ❯ before dispatching npm
-    webcontainerService.setDevServerStarting(true);
-    serverReadyCb(5173, 'http://current-valid.local:5173');
-
+  });
+  check('PORT-B23-09', 'Legitimate current-project server-ready is accepted', () => {
+    activate('current-valid'); webcontainerService.setDevServerStarting(true);
+    current.ready(5173, 'http://current-valid.local:5173');
     assert.equal(webcontainerService.getState().serverPort, 5173);
     assert.equal(webcontainerService.getState().serverUrl, 'http://current-valid.local:5173');
     assert.equal(webcontainerService.getState().startupStage, 'ready');
-
-    record('PORT-B23-09', 'Legitimate current-project server-ready is accepted', 'PASS', 'Valid server accepted and ready');
-  } catch (err) {
-    record('PORT-B23-09', 'Legitimate current-project server-ready is accepted', 'FAIL', err.message);
-  }
-
-  // PORT-B23-10: Repeated startup/shutdown cycles do not grow draining records indefinitely.
-  try {
+  });
+  check('PORT-B23-10', 'Repeated cycles retire resources without draining-state growth', () => {
     for (let i = 0; i < 50; i++) {
-      webcontainerService.attachProject(`cycle-proj-${i}`);
-      webcontainerService.stopDevServer();
+      activate('cycle-' + i); webcontainerService.setDevServerStarting(true);
+      current.ready(5173, 'http://cycle-' + i); webcontainerService.stopDevServer();
+      assert.ok(webcontainerService.drainingPorts.size <= 1);
     }
-
-    // Older entries should be pruned; size must remain bounded
-    assert.ok(webcontainerService.drainingPorts.size <= 10, 'Draining ports map remains bounded');
-
-    record('PORT-B23-10', 'Repeated cycles do not grow draining records indefinitely', 'PASS', 'Draining map bounded and pruned');
-  } catch (err) {
-    record('PORT-B23-10', 'Repeated cycles do not grow draining records indefinitely', 'FAIL', err.message);
-  }
-
-  // PORT-B23-11: No duplicate Vite startup occurs after a normal reconnect.
-  try {
+    assert.ok(runtimes.slice(0, -1).every((runtime) => runtime.container.destroyed));
+  });
+  check('PORT-B23-11', 'Same-project attachment preserves runtime and active server', () => {
+    activate('reconnect-proj'); webcontainerService.setDevServerStarting(true); current.ready(5173, 'http://reconnect');
+    const epoch = webcontainerService.getSessionEpoch(); const instance = webcontainerService.instance;
     webcontainerService.attachProject('reconnect-proj');
-    webcontainerService.isDevServerActive = true;
-    const initialEpoch = webcontainerService.getSessionEpoch();
-
-    // Reconnect request should not advance epoch or duplicate startup if active
-    assert.equal(webcontainerService.isDevServerActive, true);
-    assert.equal(webcontainerService.getSessionEpoch(), initialEpoch);
-
-    record('PORT-B23-11', 'No duplicate Vite startup occurs after normal reconnect', 'PASS', 'Dev server active state maintained');
-  } catch (err) {
-    record('PORT-B23-11', 'No duplicate Vite startup occurs after normal reconnect', 'FAIL', err.message);
-  }
-
-  // PORT-B23-12: React and Vue projects both render actual correct Preview content.
-  try {
-    // Verified via live WebContainer E2E script
-    record('PORT-B23-12', 'React and Vue projects render correct preview content', 'PASS', 'Verified in E2E browser tests');
-  } catch (err) {
-    record('PORT-B23-12', 'React and Vue projects render correct preview content', 'FAIL', err.message);
-  }
+    assert.equal(webcontainerService.isDevServerRunning(), true);
+    assert.equal(webcontainerService.getSessionEpoch(), epoch);
+    assert.equal(webcontainerService.instance, instance);
+    assert.equal(instance.destroyed, false);
+  });
+  check('PORT-B23-12', 'React and Vue current runtime server binding', () => {
+    for (const type of ['react', 'vue']) {
+      activate(type + '-project'); webcontainerService.setDevServerStarting(true);
+      current.ready(5173, 'http://' + type + '-project');
+      const server = webcontainerService.getState().activeServers[0];
+      assert.equal(server.projectId, type + '-project');
+      assert.equal(server.url, 'http://' + type + '-project');
+      assert.equal(webcontainerService.getState().startupStage, 'ready');
+    }
+  });
 
   cleanup();
 

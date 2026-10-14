@@ -1,3 +1,4 @@
+import { activateRuntime } from './helpers/runtime-event-fixture.mjs';
 /**
  * Phase 2.2 Final Stabilization: Mandatory Negative Tests Suite
  *
@@ -58,28 +59,20 @@ async function run() {
   try {
     let portCb = null;
     let serverReadyCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'port') portCb = cb;
-        if (evt === 'server-ready') serverReadyCb = cb;
-        return () => {};
-      },
-      mount: async () => {},
-      fs: { writeFile: async () => {} },
-    };
 
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
 
     // 1. Project A is running dev server on port 5173
-    webcontainerService.attachProject('project-a');
+    const a = activateRuntime(webcontainerService, 'project-a');
+    serverReadyCb = a.ready;
+    portCb = a.port;
     webcontainerService.setDevServerStarting(true);
     serverReadyCb(5173, 'http://project-a.local:5173');
     assert.equal(webcontainerService.getState().serverUrl, 'http://project-a.local:5173');
 
     // 2. Stop Project A and attach Project B (Project B has started, but dev server not yet dispatched)
     webcontainerService.stopDevServer();
-    webcontainerService.attachProject('project-b');
+    const b = activateRuntime(webcontainerService, 'project-b');
+    a.assertRetired();
 
     // 3. Old shell prints prompt (simulating SIGINT prompt appearance)
     webcontainerService.setShellPromptReady(true);
@@ -107,19 +100,12 @@ async function run() {
   try {
     let portCb = null;
     let serverReadyCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'port') portCb = cb;
-        if (evt === 'server-ready') serverReadyCb = cb;
-        return () => {};
-      },
-    };
 
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
 
     // 1. Project A dev server running on 5173
-    webcontainerService.attachProject('project-a');
+    const a = activateRuntime(webcontainerService, 'project-a');
+    serverReadyCb = a.ready;
+    portCb = a.port;
     webcontainerService.setDevServerStarting(true);
     serverReadyCb(5173, 'http://project-a.local:5173');
 
@@ -127,16 +113,17 @@ async function run() {
     webcontainerService.stopDevServer();
 
     // 3. Project B attaches and starts dev server on 5173
-    webcontainerService.attachProject('project-b');
+    const b = activateRuntime(webcontainerService, 'project-b');
+    a.assertRetired();
     webcontainerService.setShellPromptReady(true);
     webcontainerService.setDevServerStarting(true);
-    portCb(5173, 'open', 'http://project-b.local:5173');
-    serverReadyCb(5173, 'http://project-b.local:5173');
+    b.port(5173, 'open', 'http://project-b.local:5173');
+    b.ready(5173, 'http://project-b.local:5173');
     assert.equal(webcontainerService.getState().serverUrl, 'http://project-b.local:5173');
     assert.equal(webcontainerService.getState().activeServers.length, 1);
 
     // 4. Project B dev server closes legitimately
-    portCb(5173, 'close', '');
+    b.port(5173, 'close', '');
 
     // ASSERTION: Project B's close must NOT be swallowed by Project A's missing close!
     const activeServersAfterClose = webcontainerService.getState().activeServers;
@@ -202,6 +189,7 @@ async function run() {
   try {
     let mountedTrees = [];
     const mockContainer = {
+      teardown() { this.destroyed = true; },
       mount: async (tree) => {
         mountedTrees.push(tree);
       },
@@ -211,6 +199,7 @@ async function run() {
     webcontainerService.instance = mockContainer;
 
     webcontainerService.attachProject('project-a');
+    assert.equal(mockContainer.destroyed, true, 'the previously installed mock runtime must be retired');
 
     // Simulate slow mount for Project A
     let releaseSlowBarrier;
@@ -233,7 +222,7 @@ async function run() {
     // Switch to Project B BEFORE slow mount of Project A finishes
     webcontainerService.attachProject('project-b');
     releaseSlowBarrier();
-    await mountPromiseA;
+    assert.equal(await mountPromiseA, false, 'superseded mount must report rejection');
 
     // ASSERTION: Project A's mount must have been discarded and NOT mounted into Project B!
     const hasMountedA = mountedTrees.some((tree) => Boolean(tree['src']?.directory?.['A.js']));
@@ -350,49 +339,26 @@ async function run() {
   }
 
   // --------------------------------------------------------------------
-  // TEST 8: More than ten distinct unresolved draining ports
-  // --------------------------------------------------------------------
+  // TEST 8: More than ten unresolved ports cannot leak through runtime retirement.
   try {
-    let portCb = null;
-    let serverReadyCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'port') portCb = cb;
-        if (evt === 'server-ready') serverReadyCb = cb;
-        return () => {};
-      },
-    };
-
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
-
-    // Drain 12 distinct ports (ports 5170 through 5181)
-    for (let p = 5170; p <= 5181; p++) {
-      webcontainerService.attachProject(`proj-${p}`);
-      webcontainerService.setDevServerStarting(true);
-      serverReadyCb(p, `http://server-${p}.local:${p}`);
-      webcontainerService.stopDevServer();
+    const a = activateRuntime(webcontainerService, 'many-ports');
+    for (let port = 5170; port <= 5181; port++) {
+      webcontainerService.setDevServerStarting(true); a.ready(port, 'http://server-' + port);
     }
-
-    // Now attach a new project
-    webcontainerService.attachProject('proj-active');
-    webcontainerService.setDevServerStarting(true);
-
-    // Stale server-ready arrives for the very first port (5170)
-    serverReadyCb(5170, 'http://stale-5170.local:5170');
-
-    // ASSERTION: Port 5170 must NOT have been evicted and must NOT be accepted for proj-active!
-    const activeUrl = webcontainerService.getState().serverUrl;
-    assert.notEqual(
-      activeUrl,
-      'http://stale-5170.local:5170',
-      'Oldest port 5170 was evicted and accepted stale event for new project',
-    );
-
-    record('NEG-8', 'More than ten distinct unresolved draining ports', 'PASS', 'Port 5170 not unsafely evicted; quarantine preserved');
-  } catch (err) {
-    record('NEG-8', 'More than ten distinct unresolved draining ports', 'FAIL', err.message);
-  }
+    assert.equal(webcontainerService.getState().activeServers.length, 12);
+    webcontainerService.stopDevServer();
+    assert.equal(webcontainerService.drainingPorts.size, 12, 'unresolved same-runtime ports must not be evicted');
+    const b = activateRuntime(webcontainerService, 'proj-active'); a.assertRetired();
+    webcontainerService.setDevServerStarting(true); webcontainerService.setShellPromptReady(true);
+    for (let port = 5170; port <= 5181; port++) {
+      a.ready(port, 'http://stale-' + port); a.port(port, 'open', 'http://stale-' + port);
+    }
+    assert.equal(webcontainerService.getState().serverUrl, null);
+    assert.equal(webcontainerService.getState().activeServers.length, 0);
+    b.ready(5170, 'http://current-5170');
+    assert.equal(webcontainerService.getState().serverUrl, 'http://current-5170');
+    record('NEG-8', 'More than ten distinct unresolved draining ports', 'PASS', '12 unresolved ports retained until teardown; all retired callbacks rejected');
+  } catch (error) { record('NEG-8', 'More than ten distinct unresolved draining ports', 'FAIL', error.message); }
 
   console.log('\n======================================================================');
   const passed = results.filter((r) => r.status === 'PASS').length;

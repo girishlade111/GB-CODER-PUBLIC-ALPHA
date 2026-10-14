@@ -1,3 +1,4 @@
+import { activateRuntime } from './helpers/runtime-event-fixture.mjs';
 /**
  * Stage B.2.4 Adversarial Port Ownership & Filesystem Safety Test Harness
  *
@@ -151,6 +152,7 @@ async function run() {
     // Mock container boot for mount
     let mountExecuted = false;
     webcontainerService.instance = {
+      teardown() { this.destroyed = true; },
       mount: async () => {
         mountExecuted = true;
       },
@@ -171,6 +173,7 @@ async function run() {
   try {
     const mountExecutionOrder = [];
     webcontainerService.instance = {
+      teardown() { this.destroyed = true; },
       mount: async (tree) => {
         const marker = Object.keys(tree)[0];
         mountExecutionOrder.push(`mount:${marker}`);
@@ -253,182 +256,51 @@ async function run() {
   // GATE C: PORT OWNERSHIP & QUIESCENCE
   // ====================================================================
 
-  // C2-A. Late Event Beyond 1 Second (1,200ms) While Project B Starting
-  try {
-    let serverReadyCb = null;
-    let portCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'server-ready') serverReadyCb = cb;
-        if (evt === 'port') portCb = cb;
-        return () => {};
-      },
-    };
-
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
-
-    // 1. Project A starts on port 5173
-    webcontainerService.attachProject('project-a');
-    webcontainerService.setDevServerStarting(true);
-    serverReadyCb(5173, 'http://project-a.local:5173');
-    assert.equal(webcontainerService.getState().serverUrl, 'http://project-a.local:5173');
-
-    // 2. Project A begins shutdown (switch to B)
-    webcontainerService.attachProject('project-b');
-    assert.equal(webcontainerService.getActiveProjectId(), 'project-b');
-    assert.equal(webcontainerService.getState().serverUrl, null);
-
-    // 3. More than 1,000ms elapses
-    await new Promise((r) => setTimeout(r, 1100));
-
-    // 4. Project B begins its own startup
-    webcontainerService.setDevServerStarting(true);
-    assert.equal(webcontainerService.isDevServerStarting(), true);
-
-    // 5. A delayed server-ready event originating from A arrives!
-    serverReadyCb(5173, 'http://project-a.local:5173');
-
-    // VERIFY: Project B must NOT adopt A's URL!
-    const adoptedUrl = webcontainerService.getState().serverUrl;
-    if (adoptedUrl === 'http://project-a.local:5173') {
-      record('C2-A', 'Late Server-Ready Beyond 1s While B Starting', 'FAIL', 'Project B adopted late A URL: ' + adoptedUrl);
-    } else {
-      record('C2-A', 'Late Server-Ready Beyond 1s While B Starting', 'PASS', 'Project B safely discarded late A URL');
-    }
-  } catch (err) {
-    record('C2-A', 'Late Server-Ready Beyond 1s While B Starting', 'FAIL', err.message);
+  // Preserve both delayed-event objectives, now with a retired event source.
+  for (const [id, delay] of [['C2-A', 1100], ['C2-B', 10100]]) {
+    try {
+      const a = activateRuntime(webcontainerService, 'late-A-' + id);
+      webcontainerService.setDevServerStarting(true); a.ready(5173, 'http://A');
+      assert.equal(webcontainerService.getState().serverUrl, 'http://A');
+      const b = activateRuntime(webcontainerService, 'late-B-' + id); a.assertRetired();
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      webcontainerService.setDevServerStarting(true);
+      for (const prompt of [false, true]) {
+        webcontainerService.setShellPromptReady(prompt);
+        a.ready(5173, 'http://late-A'); a.port(5173, 'open', 'http://late-A');
+        assert.equal(webcontainerService.getState().serverUrl, null);
+        assert.equal(webcontainerService.getState().activeServers.length, 0);
+      }
+      b.ready(5173, 'http://B'); assert.equal(webcontainerService.getState().serverUrl, 'http://B');
+      record(id, 'Delayed retired callbacks cannot acquire the current runtime port', 'PASS', delay + 'ms late; prompt false/true; genuine current event accepted');
+    } catch (error) { record(id, 'Delayed retired callbacks', 'FAIL', error.message); }
   }
-
-  // C2-B. Late Event Beyond 10s Pruning Threshold
   try {
-    let serverReadyCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'server-ready') serverReadyCb = cb;
-        return () => {};
-      },
-    };
-
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
-
-    webcontainerService.attachProject('project-a');
-    webcontainerService.setDevServerStarting(true);
-    serverReadyCb(5173, 'http://project-a.local:5173');
-
-    // Switch to Project B
-    webcontainerService.attachProject('project-b');
-
-    // Simulate time > 10,000ms by manipulating drainedAt
-    for (const [p, info] of webcontainerService.drainingPorts.entries()) {
-      info.drainedAt = Date.now() - 12000;
-    }
-
-    // Trigger pruning
-    webcontainerService.stopDevServer(); // Triggers pruning loop
-
-    // Project B begins its startup
-    webcontainerService.setDevServerStarting(true);
-
-    // Stale server-ready from A arrives on 5173
-    serverReadyCb(5173, 'http://project-a.local:5173');
-
-    const adoptedUrl = webcontainerService.getState().serverUrl;
-    if (adoptedUrl === 'http://project-a.local:5173') {
-      record('C2-B', 'Late Server-Ready Beyond 10s Pruning While B Starting', 'FAIL', 'Project B adopted pruned A URL: ' + adoptedUrl);
-    } else {
-      record('C2-B', 'Late Server-Ready Beyond 10s Pruning While B Starting', 'PASS', 'Project B safely discarded late A URL after 10s');
-    }
-  } catch (err) {
-    record('C2-B', 'Late Server-Ready Beyond 10s Pruning While B Starting', 'FAIL', err.message);
-  }
-
-  // C3. Late Port Close After Reuse
-  try {
-    let portCb = null;
-    let serverReadyCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'port') portCb = cb;
-        if (evt === 'server-ready') serverReadyCb = cb;
-        return () => {};
-      },
-    };
-
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
-
-    // 1. Project A on 5173
-    webcontainerService.attachProject('project-a');
-    webcontainerService.setDevServerStarting(true);
-    serverReadyCb(5173, 'http://server.local:5173');
-
-    // 2. Project B attaches (Project A's 5173 is marked draining with pending close = 1)
-    webcontainerService.attachProject('project-b');
-
-    // 3. Project B legitimately starts on 5173
-    webcontainerService.setDevServerStarting(true);
-    // B binds 5173
-    webcontainerService.markPortQuiescent(5173);
-    serverReadyCb(5173, 'http://project-b.local:5173');
-    assert.equal(webcontainerService.getState().serverUrl, 'http://project-b.local:5173');
-
-    // 4. Stale port close from Project A arrives
-    portCb(5173, 'close', '');
-
-    // Project B server must NOT be closed!
+    const a = activateRuntime(webcontainerService, 'close-A');
+    webcontainerService.setDevServerStarting(true); a.ready(5173, 'http://A');
+    const b = activateRuntime(webcontainerService, 'close-B'); a.assertRetired();
+    webcontainerService.setDevServerStarting(true); b.ready(5173, 'http://project-b.local:5173');
+    a.port(5173, 'close');
     assert.equal(webcontainerService.getState().serverUrl, 'http://project-b.local:5173');
     assert.equal(webcontainerService.getState().serverPort, 5173);
-
-    // 5. Legitimate Project B port close arrives
-    portCb(5173, 'close', '');
-    assert.equal(webcontainerService.getState().serverUrl, null, 'Project B legitimate close honored');
-
-    record('C3', 'Late Close After Reuse & Legitimate Close Handling', 'PASS', 'Stale close consumed; legitimate close honored');
-  } catch (err) {
-    record('C3', 'Late Close After Reuse & Legitimate Close Handling', 'FAIL', err.message);
-  }
-
-  // C5. Repeated Reuse (5 A <-> B Cycles)
+    b.port(5173, 'close');
+    assert.equal(webcontainerService.getState().serverUrl, null);
+    record('C3', 'Late Close After Reuse & Legitimate Close Handling', 'PASS', 'Retired close ignored; current close honored');
+  } catch (error) { record('C3', 'Late Close After Reuse & Legitimate Close Handling', 'FAIL', error.message); }
   try {
-    let portCb = null;
-    let serverReadyCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'port') portCb = cb;
-        if (evt === 'server-ready') serverReadyCb = cb;
-        return () => {};
-      },
-    };
-
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
-
-    for (let cycle = 1; cycle <= 5; cycle++) {
-      webcontainerService.attachProject(`proj-A-${cycle}`);
-      webcontainerService.setDevServerStarting(true);
-      serverReadyCb(5173, `http://server-a-${cycle}.local:5173`);
+    for (let cycle = 0; cycle < 5; cycle++) {
+      const a = activateRuntime(webcontainerService, 'A-' + cycle);
+      webcontainerService.setDevServerStarting(true); a.ready(5173, 'http://A');
+      const b = activateRuntime(webcontainerService, 'B-' + cycle); a.assertRetired();
+      webcontainerService.setDevServerStarting(true); b.ready(5173, 'http://B');
+      a.ready(5173, 'http://late-A'); a.port(5173, 'close');
+      assert.equal(webcontainerService.getState().serverUrl, 'http://B');
       assert.equal(webcontainerService.getState().serverPort, 5173);
-
-      // Clean close
-      portCb(5173, 'close', '');
-
-      webcontainerService.attachProject(`proj-B-${cycle}`);
-      webcontainerService.setDevServerStarting(true);
-      serverReadyCb(5173, `http://server-b-${cycle}.local:5173`);
-      assert.equal(webcontainerService.getState().serverPort, 5173);
-
-      portCb(5173, 'close', '');
+      assert.equal(webcontainerService.drainingPorts.size, 0);
+      assert.equal(webcontainerService.pendingDrainingCloses.size, 0);
     }
-
-    assert.equal(webcontainerService.drainingPorts.size, 0, 'No leaking draining ports');
-    assert.equal(webcontainerService.pendingDrainingCloses.size, 0, 'No leaking pending closes');
-
-    record('C5', 'Repeated Reuse Cycles (5x)', 'PASS', 'Zero leak of draining ports or pending close counters');
-  } catch (err) {
-    record('C5', 'Repeated Reuse Cycles (5x)', 'FAIL', err.message);
-  }
+    record('C5', 'Repeated Reuse Cycles (5x)', 'PASS', 'Fresh runtime reuse; late callbacks rejected; zero counter growth');
+  } catch (error) { record('C5', 'Repeated Reuse Cycles (5x)', 'FAIL', error.message); }
 
   console.log('\n======================================================================');
   const passed = results.filter((r) => r.status === 'PASS').length;

@@ -140,112 +140,16 @@ async function run() {
   }
 
   // --------------------------------------------------------------------
-  // SCENARIO 3: Server event ownership (both prompt-ready=true and false, same-port reuse, missing/delayed close)
-  // --------------------------------------------------------------------
+  // SCENARIO 3: Production runtime isolation, retired events, and delayed boot
   try {
-    let portCb = null;
-    let serverReadyCb = null;
-    const mockContainer = {
-      on: (evt, cb) => {
-        if (evt === 'port') portCb = cb;
-        if (evt === 'server-ready') serverReadyCb = cb;
-        return () => {};
-      },
-      mount: async () => {},
-      fs: { writeFile: async () => {} },
-    };
-
-    webcontainerService.cleanupServerListeners();
-    webcontainerService.setupServerListeners(mockContainer);
-
-    // 1. Project A is running dev server on port 3000
-    webcontainerService.attachProject('project-a');
-    webcontainerService.setDevServerStarting(true, webcontainerService.getSessionEpoch(), 'project-a');
-    serverReadyCb(3000, 'http://project-a.local:3000');
-    assert.equal(webcontainerService.getState().serverUrl, 'http://project-a.local:3000');
-
-    // 2. Project A stops and Project B attaches
-    webcontainerService.stopDevServer();
-    webcontainerService.attachProject('project-b');
-    const epochB = webcontainerService.getSessionEpoch();
-
-    // 3. Project B begins actively starting its dev server
-    webcontainerService.setDevServerStarting(true, epochB, 'project-b');
-    assert.equal(webcontainerService.isDevServerStarting(), true);
-
-    // 3A. TEST CASE 1: Shell prompt is NOT ready -> late server-ready for port 3000 from Project A arrives
-    webcontainerService.setShellPromptReady(false);
-    serverReadyCb(3000, 'http://project-a.local:3000/late-prompt-false');
-    assert.equal(
-      webcontainerService.getState().serverUrl,
-      null,
-      'Project B must not claim late server-ready when promptReady=false',
-    );
-
-    // 3B. TEST CASE 2: Shell prompt IS ready, but Project B is NOT starting dev server (unsolicited late event)
-    webcontainerService.setDevServerStarting(false);
-    webcontainerService.setShellPromptReady(true);
-    serverReadyCb(3000, 'http://project-a.local:3000/late-prompt-true-unsolicited');
-    assert.equal(
-      webcontainerService.getState().serverUrl,
-      null,
-      'Project B must not claim unsolicited late server-ready even when promptReady=true',
-    );
-
-    // Re-arm Project B starting state for subsequent tests
-    webcontainerService.setDevServerStarting(true, epochB, 'project-b');
-
-    // 3C. TEST CASE 3: Late port-open arrives from Project A
-    webcontainerService.setShellPromptReady(false);
-    portCb(3000, 'open', 'http://project-a.local:3000/late-port');
-    assert.equal(
-      webcontainerService.getState().serverUrl,
-      null,
-      'Project B must not claim late port:open from Project A while shell is not ready',
-    );
-
-    // 3D. TEST CASE 4: Clean close arrives for Project A's port 3000
-    portCb(3000, 'close');
-
-    // 3E. TEST CASE 5: Same-port reuse: Project B legitimately binds port 3000
-    portCb(3000, 'open', 'http://project-b.local:3000');
-    serverReadyCb(3000, 'http://project-b.local:3000');
-    assert.equal(
-      webcontainerService.getState().serverUrl,
-      'http://project-b.local:3000',
-      'Project B legitimately claims port 3000 after clean close and start',
-    );
-    assert.equal(webcontainerService.getState().startupStage, 'ready');
-
-    // 3F. TEST CASE 6: Repeated switches (5 cycles of Project A <-> Project B)
-    for (let i = 1; i <= 5; i++) {
-      // Stop B and switch to A
-      webcontainerService.stopDevServer();
-      portCb(3000, 'close');
-      webcontainerService.attachProject(`project-a-cycle-${i}`);
-      webcontainerService.setDevServerStarting(true, webcontainerService.getSessionEpoch(), `project-a-cycle-${i}`);
-      portCb(3000, 'open', `http://project-a-${i}.local:3000`);
-      serverReadyCb(3000, `http://project-a-${i}.local:3000`);
-      assert.equal(webcontainerService.getState().serverUrl, `http://project-a-${i}.local:3000`);
-
-      // Stop A and switch to B
-      webcontainerService.stopDevServer();
-      portCb(3000, 'close');
-      webcontainerService.attachProject(`project-b-cycle-${i}`);
-      webcontainerService.setDevServerStarting(true, webcontainerService.getSessionEpoch(), `project-b-cycle-${i}`);
-      portCb(3000, 'open', `http://project-b-${i}.local:3000`);
-      serverReadyCb(3000, `http://project-b-${i}.local:3000`);
-      assert.equal(webcontainerService.getState().serverUrl, `http://project-b-${i}.local:3000`);
-    }
-
-    record(
-      'SCENARIO_3_SERVER_OWNERSHIP_EXPANDED',
-      'Server event ownership tested with prompt-ready true/false, same-port reuse, and 5x cycle switches',
-      'PASS',
-      'Draining ports unconditionally rejected on server-ready regardless of prompt readiness; accepted only after clean lifecycle',
-    );
+    // The old fixture reused one container's callbacks for every project. That
+    // cannot represent the new public teardown/boot ownership contract.
+    const result = spawnSync(process.execPath, ['scripts/test-codex-runtime-isolation.mjs'], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /5 passed, 0 failed/);
+    record('SCENARIO_3_SERVER_OWNERSHIP_EXPANDED', 'Production runtime isolation and retired event rejection', 'PASS', result.stdout.trim());
   } catch (err) {
-    record('SCENARIO_3_SERVER_OWNERSHIP_EXPANDED', 'Server event ownership test failed', 'FAIL', err.message);
+    record('SCENARIO_3_SERVER_OWNERSHIP_EXPANDED', 'Production runtime isolation failed', 'FAIL', err.message);
   }
 
   // --------------------------------------------------------------------
@@ -414,7 +318,7 @@ async function run() {
     };
 
     // Attach mock instance to webcontainerService
-    webcontainerService.instance = { fs: mockFs };
+    webcontainerService.instance = { fs: mockFs, teardown() {} };
 
     // Rename a persisted file that has NO pending write in coordinator
     await webcontainerService.renameFile('src/persisted.ts', 'src/persisted-renamed.ts');
@@ -660,16 +564,22 @@ async function run() {
     const b24Content = fs.readFileSync(b24ScriptPath, 'utf-8');
 
     // Inject an intentional failure into B.2.4
-    const modifiedB24Content = b24Content.replace(
-      'assert.equal(webcontainerService.drainingPorts.size, 0, \'No leaking draining ports\');',
-      'assert.equal(webcontainerService.drainingPorts.size, 9999, \'Deliberate B24 assertion failure\');',
-    );
+    const assertion = 'assert.equal(webcontainerService.drainingPorts.size, 0);';
+    assert.ok(b24Content.includes(assertion), 'deliberate failure must replace an existing behavioral assertion');
+    const modifiedB24Content = b24Content.replace(assertion,
+      "assert.equal(webcontainerService.drainingPorts.size, 9999, 'Deliberate B24 assertion failure');")
+      .replace("from './helpers/runtime-event-fixture.mjs'", "from '../helpers/runtime-event-fixture.mjs'")
+      .replace("from '../src/services/webcontainer/fileSyncCoordinator.ts'", "from '../../src/services/webcontainer/fileSyncCoordinator.ts'")
+      .replace("'.tmp-stage-b24'", "'.tmp-stage-b24-deliberate'");
 
     const tmpB24FailingPath = path.join(tmpDir, 'failing-b24-runner.mjs');
     fs.writeFileSync(tmpB24FailingPath, modifiedB24Content);
 
     const child2 = spawnSync('node', [tmpB24FailingPath], { encoding: 'utf-8' });
     assert.equal(child2.status, 1, 'Stage B.2.4 adversarial runner MUST exit with code 1 when an assertion fails');
+    assert.match(child2.stdout, /\[FAIL\] C5/);
+    assert.match(child2.stdout, /Deliberate B24 assertion failure/);
+    assert.doesNotMatch(child2.stderr, /ERR_MODULE_NOT_FOUND|SyntaxError/);
 
     record(
       'SCENARIO_8_NONZERO_EXIT_STATUS',
