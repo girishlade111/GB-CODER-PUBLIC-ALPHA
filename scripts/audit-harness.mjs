@@ -41,6 +41,9 @@ await build({
       export * from './src/services/backup/backupCrypto.ts';
       export * from './src/services/backup/backupExportService.ts';
       export * from './src/services/backup/backupRestoreService.ts';
+      export * from './src/services/snapshotService.ts';
+      export * from './src/types/files.ts';
+      export * from './src/utils/workspaceCoordination.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',
@@ -97,7 +100,12 @@ function makeIndexedDB() {
           return {
             put(value, explicitKey) {
               const req = { onsuccess: null, onerror: null, result: null };
+              if (transaction) transaction._pending += 1;
               setTimeout(() => {
+                if (transaction) {
+                  transaction._pending -= 1;
+                  transaction._scheduleCheck?.();
+                }
                 if (transaction && transaction._aborted) {
                   req.onerror?.({ target: req });
                   return;
@@ -120,7 +128,12 @@ function makeIndexedDB() {
             },
             get(key) {
               const req = { onsuccess: null, onerror: null, result: null };
+              if (transaction) transaction._pending += 1;
               setTimeout(() => {
+                if (transaction) {
+                  transaction._pending -= 1;
+                  transaction._scheduleCheck?.();
+                }
                 const val = storeRecord ? storeRecord.data.get(serializeKey(key)) : undefined;
                 req.result = val ? structuredClone(val) : undefined;
                 req.onsuccess?.({ target: req });
@@ -129,7 +142,12 @@ function makeIndexedDB() {
             },
             delete(key) {
               const req = { onsuccess: null, onerror: null, result: null };
+              if (transaction) transaction._pending += 1;
               setTimeout(() => {
+                if (transaction) {
+                  transaction._pending -= 1;
+                  transaction._scheduleCheck?.();
+                }
                 if (storeRecord) {
                   storeRecord.data.delete(serializeKey(key));
                 }
@@ -145,7 +163,12 @@ function makeIndexedDB() {
               return {
                 get(keyVal) {
                   const req = { onsuccess: null, onerror: null, result: null };
+                  if (transaction) transaction._pending += 1;
                   setTimeout(() => {
+                    if (transaction) {
+                      transaction._pending -= 1;
+                      transaction._scheduleCheck?.();
+                    }
                     let found = undefined;
                     if (storeRecord) {
                       for (const val of storeRecord.data.values()) {
@@ -162,7 +185,12 @@ function makeIndexedDB() {
                 },
                 getAll(keyVal) {
                   const req = { onsuccess: null, onerror: null, result: null };
+                  if (transaction) transaction._pending += 1;
                   setTimeout(() => {
+                    if (transaction) {
+                      transaction._pending -= 1;
+                      transaction._scheduleCheck?.();
+                    }
                     const matches = [];
                     if (storeRecord) {
                       for (const val of storeRecord.data.values()) {
@@ -178,7 +206,12 @@ function makeIndexedDB() {
                 },
                 getAllKeys(keyVal) {
                   const req = { onsuccess: null, onerror: null, result: null };
+                  if (transaction) transaction._pending += 1;
                   setTimeout(() => {
+                    if (transaction) {
+                      transaction._pending -= 1;
+                      transaction._scheduleCheck?.();
+                    }
                     const keys = [];
                     if (storeRecord) {
                       for (const [sKey, val] of storeRecord.data.entries()) {
@@ -220,6 +253,12 @@ function makeIndexedDB() {
             const tx = {
               mode,
               _aborted: false,
+              // Requests in flight. Real IndexedDB keeps a transaction alive
+              // while requests are pending and commits when none remain; the
+              // fake must do the same, otherwise a fixed-delay oncomplete can
+              // fire before a multi-step transaction's chained requests finish
+              // and resolve a stale null (commit race).
+              _pending: 0,
               oncomplete: null,
               onerror: null,
               onabort: null,
@@ -231,9 +270,16 @@ function makeIndexedDB() {
                 return createIDBStore(storeName, tx);
               },
             };
-            setTimeout(() => {
-              if (!tx._aborted) tx.oncomplete?.();
-            }, 10);
+            const scheduleCheck = () => {
+              setTimeout(() => {
+                if (!tx._aborted && tx._pending === 0) tx.oncomplete?.();
+              }, 0);
+            };
+            tx._scheduleCheck = scheduleCheck;
+            // Runs after the work function's synchronous prefix, which always
+            // creates at least one request (a requestless transaction commits
+            // at once, exactly like real IndexedDB).
+            scheduleCheck();
             return tx;
           },
           close() {},

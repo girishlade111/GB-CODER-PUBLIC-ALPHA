@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-10-12T20:11:06.749Z",
-  "durationMs": 16281,
+  "timestamp": "2026-10-13T08:02:38.953Z",
+  "durationMs": 124227,
   "scenariosCount": {
     "total": 25,
     "passed": 25,
@@ -21,7 +21,7 @@
         "initialRegistrations": [],
         "hasInitialController": false
       },
-      "timestamp": "2026-10-12T20:10:51.324Z"
+      "timestamp": "2026-10-13T08:02:17.215Z"
     },
     "SCENARIO M02": {
       "id": "SCENARIO M02",
@@ -32,7 +32,7 @@
         "activeScript": "http://localhost:4179/sw.js",
         "state": "activated"
       },
-      "timestamp": "2026-10-12T20:10:52.666Z"
+      "timestamp": "2026-10-13T08:02:19.606Z"
     },
     "SCENARIO M03": {
       "id": "SCENARIO M03",
@@ -43,7 +43,7 @@
         "controllerScript": "http://localhost:4179/sw.js",
         "controllerState": "activated"
       },
-      "timestamp": "2026-10-12T20:10:52.896Z"
+      "timestamp": "2026-10-13T08:02:19.929Z"
     },
     "SCENARIO M04": {
       "id": "SCENARIO M04",
@@ -56,7 +56,7 @@
           "google-fonts-cache"
         ]
       },
-      "timestamp": "2026-10-12T20:10:52.925Z"
+      "timestamp": "2026-10-13T08:02:19.988Z"
     },
     "SCENARIO M05": {
       "id": "SCENARIO M05",
@@ -67,7 +67,7 @@
         "isAstroMarketing": true,
         "navCount": 1
       },
-      "timestamp": "2026-10-12T20:10:53.957Z"
+      "timestamp": "2026-10-13T08:02:22.749Z"
     },
     "SCENARIO M06": {
       "id": "SCENARIO M06",
@@ -76,7 +76,7 @@
       "details": {
         "navCount": 1
       },
-      "timestamp": "2026-10-12T20:10:53.957Z"
+      "timestamp": "2026-10-13T08:02:22.749Z"
     },
     "SCENARIO M07": {
       "id": "SCENARIO M07",
@@ -86,7 +86,7 @@
         "tabBMarketing": true,
         "tabCReactApp": true
       },
-      "timestamp": "2026-10-12T20:10:56.334Z"
+      "timestamp": "2026-10-13T08:02:25.408Z"
     },
     "SCENARIO M24": {
       "id": "SCENARIO M24",
@@ -98,12 +98,12 @@
           {
             "scope": "http://localhost:4179/app/",
             "activeScript": null,
-            "installing": true,
+            "installing": false,
             "waiting": false
           }
         ]
       },
-      "timestamp": "2026-10-12T20:10:56.340Z"
+      "timestamp": "2026-10-13T08:02:25.424Z"
     },
     "SCENARIO M10": {
       "id": "SCENARIO M10",
@@ -111,11 +111,10 @@
       "status": "PASS",
       "details": {
         "cacheNames": [
-          "google-fonts-cache",
-          "workbox-precache-v2-http://localhost:4179/app/"
+          "google-fonts-cache"
         ]
       },
-      "timestamp": "2026-10-12T20:10:56.352Z"
+      "timestamp": "2026-10-13T08:02:25.449Z"
     },
     "SCENARIO M16": {
       "id": "SCENARIO M16",
@@ -124,7 +123,7 @@
       "details": {
         "appMounted": true
       },
-      "timestamp": "2026-10-12T20:10:56.900Z"
+      "timestamp": "2026-10-13T08:02:26.058Z"
     },
     "SCENARIO M09": {
       "id": "SCENARIO M09",
@@ -137,7 +136,7 @@
         "appRegScope": "http://localhost:4179/app/",
         "appScript": null
       },
-      "timestamp": "2026-10-12T20:10:56.900Z"
+      "timestamp": "2026-10-13T08:02:26.058Z"
     },
     "SCENARIO M11": {
       "id": "SCENARIO M11",
@@ -145,11 +144,10 @@
       "status": "PASS",
       "details": {
         "cacheInventoryAfter": [
-          "google-fonts-cache",
-          "workbox-precache-v2-http://localhost:4179/app/"
+          "google-fonts-cache"
         ]
       },
-      "timestamp": "2026-10-12T20:10:56.900Z"
+      "timestamp": "2026-10-13T08:02:26.058Z"
     },
     "SCENARIO M08": {
       "id": "SCENARIO M08",
@@ -159,7 +157,7 @@
         "backIsMarketing": true,
         "forwardIsApp": true
       },
-      "timestamp": "2026-10-12T20:10:57.533Z"
+      "timestamp": "2026-10-13T08:02:27.059Z"
     },
     "SCENARIO M14": {
       "id": "SCENARIO M14",
@@ -168,7 +166,7 @@
       "details": {
         "reloads": 5
       },
-      "timestamp": "2026-10-12T20:10:58.365Z"
+      "timestamp": "2026-10-13T08:02:28.685Z"
     },
     "SCENARIO M15": {
       "id": "SCENARIO M15",
@@ -177,7 +175,7 @@
       "details": {
         "ideDeepLinkMounted": true
       },
-      "timestamp": "2026-10-12T20:10:58.499Z"
+      "timestamp": "2026-10-13T08:02:28.860Z"
     },
     "SCENARIO M20": {
       "id": "SCENARIO M20",
@@ -189,7 +187,7 @@
         "beforeFileCount": 122,
         "afterFileCount": 122
       },
-      "timestamp": "2026-10-12T20:10:58.647Z"
+      "timestamp": "2026-10-13T08:02:29.006Z"
     },
     "SCENARIO M21": {
       "id": "SCENARIO M21",
@@ -226,7 +224,7 @@
           }
         ]
       },
-      "timestamp": "2026-10-12T20:10:58.650Z"
+      "timestamp": "2026-10-13T08:02:29.008Z"
     },
     "SCENARIO M17": {
       "id": "SCENARIO M17",
@@ -235,7 +233,7 @@
       "details": {
         "projectCount": 4
       },
-      "timestamp": "2026-10-12T20:10:58.650Z"
+      "timestamp": "2026-10-13T08:02:29.008Z"
     },
     "SCENARIO M18": {
       "id": "SCENARIO M18",
@@ -244,7 +242,7 @@
       "details": {
         "editorStyle": "vscode"
       },
-      "timestamp": "2026-10-12T20:10:58.650Z"
+      "timestamp": "2026-10-13T08:02:29.008Z"
     },
     "SCENARIO M19": {
       "id": "SCENARIO M19",
@@ -255,7 +253,7 @@
         "expected": "proj-synthetic-d-112",
         "legacyKeyAlsoSet": true
       },
-      "timestamp": "2026-10-12T20:10:58.650Z"
+      "timestamp": "2026-10-13T08:02:29.008Z"
     },
     "SCENARIO M22": {
       "id": "SCENARIO M22",
@@ -265,7 +263,7 @@
         "projDEditorStyle": "vscode",
         "projAEditorStyle": "plain"
       },
-      "timestamp": "2026-10-12T20:10:58.650Z"
+      "timestamp": "2026-10-13T08:02:29.008Z"
     },
     "SCENARIO M23": {
       "id": "SCENARIO M23",
@@ -274,7 +272,7 @@
       "details": {
         "note": "Export archive schema compatible with IndexedDB schema version 1"
       },
-      "timestamp": "2026-10-12T20:10:58.651Z"
+      "timestamp": "2026-10-13T08:02:29.008Z"
     },
     "SCENARIO M25": {
       "id": "SCENARIO M25",
@@ -283,7 +281,7 @@
       "details": {
         "localStorageIntact": true
       },
-      "timestamp": "2026-10-12T20:10:58.651Z"
+      "timestamp": "2026-10-13T08:02:29.008Z"
     },
     "SCENARIO M13": {
       "id": "SCENARIO M13",
@@ -292,7 +290,7 @@
       "details": {
         "offlineIdbCheck": 4
       },
-      "timestamp": "2026-10-12T20:10:58.730Z"
+      "timestamp": "2026-10-13T08:02:29.122Z"
     },
     "SCENARIO M12": {
       "id": "SCENARIO M12",
@@ -303,7 +301,7 @@
         "count": 4,
         "activeProjectId": "proj-synthetic-d-112"
       },
-      "timestamp": "2026-10-12T20:11:00.112Z"
+      "timestamp": "2026-10-13T08:02:31.623Z"
     }
   },
   "acceptanceCriteria": {
@@ -314,7 +312,7 @@
       "details": {
         "sha": "8ebbc5048d4c73b5ca906b6efa9a65ca88ceb36f"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.952Z"
     },
     "AC-02": {
       "id": "AC-02",
@@ -323,7 +321,7 @@
       "details": {
         "incorrectSha": "8ebbc50fe0a91f5e8a6ebcaea7fe7d1f50c05562"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.952Z"
     },
     "AC-03": {
       "id": "AC-03",
@@ -333,7 +331,7 @@
         "id": 7014429958,
         "status": "success"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.952Z"
     },
     "AC-04": {
       "id": "AC-04",
@@ -342,7 +340,7 @@
       "details": {
         "reason": "VERCEL_DEPLOYMENT_METADATA_BLOCKED"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.952Z"
     },
     "AC-05": {
       "id": "AC-05",
@@ -352,14 +350,14 @@
         "targetSha": "8ebbc5048d4c73b5ca906b6efa9a65ca88ceb36f",
         "deploymentId": 7014429958
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-06": {
       "id": "AC-06",
       "title": "Rollback procedure documented",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-07": {
       "id": "AC-07",
@@ -368,7 +366,7 @@
       "details": {
         "status": "BUILT_IN_ISOLATION"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-08": {
       "id": "AC-08",
@@ -377,7 +375,7 @@
       "details": {
         "status": "BUILT_IN_ISOLATION"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-09": {
       "id": "AC-09",
@@ -386,28 +384,28 @@
       "details": {
         "origin": "http://localhost:4179"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-10": {
       "id": "AC-10",
       "title": "Real legacy root worker installed",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-11": {
       "id": "AC-11",
       "title": "Legacy root worker activated",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-12": {
       "id": "AC-12",
       "title": "Legacy root worker controls page",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-13": {
       "id": "AC-13",
@@ -416,119 +414,119 @@
       "details": {
         "count": 4
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-14": {
       "id": "AC-14",
       "title": "Pre-upgrade storage snapshot captured",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-15": {
       "id": "AC-15",
       "title": "Old-to-new artifact switch succeeds",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-16": {
       "id": "AC-16",
       "title": "Migration worker lifecycle observed",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-17": {
       "id": "AC-17",
       "title": "Legacy root worker retires safely",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-18": {
       "id": "AC-18",
       "title": "Astro homepage loads after migration",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-19": {
       "id": "AC-19",
       "title": "New React app opens at /app",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-20": {
       "id": "AC-20",
       "title": "New /app scoped worker works",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-21": {
       "id": "AC-21",
       "title": "Legacy caches handled safely",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-22": {
       "id": "AC-22",
       "title": "New /app caches preserved",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-23": {
       "id": "AC-23",
       "title": "No infinite reload loop",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-24": {
       "id": "AC-24",
       "title": "Multi-tab migration safe",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-25": {
       "id": "AC-25",
       "title": "Offline interruption recoverable",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-26": {
       "id": "AC-26",
       "title": "IndexedDB schemas preserved",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-27": {
       "id": "AC-27",
       "title": "Project records preserved",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-28": {
       "id": "AC-28",
       "title": "112-file hashes match",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-29": {
       "id": "AC-29",
       "title": "Editor preference preserved",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-30": {
       "id": "AC-30",
@@ -541,42 +539,42 @@
         "rollbackOld": "proj-synthetic-d-112",
         "recoveredNew": "proj-synthetic-d-112"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-31": {
       "id": "AC-31",
       "title": "Backup/Restore compatible",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-32": {
       "id": "AC-32",
       "title": "Legacy deep links remain compatible",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-33": {
       "id": "AC-33",
       "title": "Old-new-old rollback simulated",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-34": {
       "id": "AC-34",
       "title": "No LocalStorage deletion",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-35": {
       "id": "AC-35",
       "title": "No unrelated Cache Storage deletion",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-36": {
       "id": "AC-36",
@@ -585,7 +583,7 @@
       "details": {
         "verified": "LOCAL_DISPOSABLE_ONLY"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-37": {
       "id": "AC-37",
@@ -594,7 +592,7 @@
       "details": {
         "verified": "NONE_EXECUTED"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-38": {
       "id": "AC-38",
@@ -603,7 +601,7 @@
       "details": {
         "verified": "NONE_EXECUTED"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-39": {
       "id": "AC-39",
@@ -612,18 +610,18 @@
       "details": {
         "verified": "NONE_EXECUTED"
       },
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     },
     "AC-40": {
       "id": "AC-40",
       "title": "Final report completed",
       "status": "PASS",
       "details": {},
-      "timestamp": "2026-10-12T20:11:06.749Z"
+      "timestamp": "2026-10-13T08:02:38.953Z"
     }
   },
   "diagnostics": {
-    "totalConsoleLogs": 11,
+    "totalConsoleLogs": 12,
     "errorLogs": [
       {
         "type": "error",
@@ -673,12 +671,17 @@
       {
         "type": "error",
         "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
-        "url": "http://localhost:4179/app/ide"
+        "url": "http://localhost:4179/ide"
       },
       {
         "type": "error",
-        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "text": "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
         "url": "http://localhost:4179/ide"
+      },
+      {
+        "type": "pageerror",
+        "text": "Event",
+        "stack": ""
       }
     ]
   }

@@ -24,6 +24,50 @@ export interface StorageUsage {
   percentage: number;
 }
 
+/**
+ * Shape guard for autosave recovery records.
+ *
+ * Autosave is a single global localStorage slot written across project
+ * switches, so a record can be truncated (quota), hand-edited, or belong to a
+ * stale schema. Restoration (`App.tsx` session recovery) must never receive
+ * such a record unchecked. Malformed input is rejected WITHOUT erasing the
+ * raw slot, so the bytes stay available for inspection.
+ */
+export function isValidSnapshotState(value: unknown): value is SnapshotProjectState {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  const state = value as Record<string, unknown>;
+
+  const project = state.project;
+  if (typeof project !== 'object' || project === null || Array.isArray(project)) return false;
+  const files = (project as Record<string, unknown>).files;
+  if (!Array.isArray(files)) return false;
+  for (const file of files) {
+    if (typeof file !== 'object' || file === null) return false;
+    const entry = file as Record<string, unknown>;
+    if (typeof entry.path !== 'string' || entry.path.trim().length === 0) return false;
+    if (typeof entry.content !== 'string') return false;
+  }
+
+  if (!Array.isArray(state.openPaths)) return false;
+  for (const p of state.openPaths as unknown[]) {
+    if (typeof p !== 'string') return false;
+  }
+  if (state.activePath !== null && typeof state.activePath !== 'string') return false;
+
+  if (!Array.isArray(state.externalLibraries)) return false;
+  for (const lib of state.externalLibraries as unknown[]) {
+    if (typeof lib !== 'object' || lib === null) return false;
+  }
+
+  if (state.settings !== undefined && (typeof state.settings !== 'object' || state.settings === null)) {
+    return false;
+  }
+  // The recovery modal renders this unconditionally; typeless timestamps must
+  // not reach it (saveAutoSave always stamps a string).
+  if (typeof (state as Record<string, unknown>).lastModified !== 'string') return false;
+  return true;
+}
+
 export interface ProjectExport {
   version: 1;
   exportDate: string;
@@ -43,15 +87,20 @@ class SnapshotService {
    * Auto-Save Management
    */
 
-  public saveAutoSave(state: SnapshotProjectState): void {
+  public saveAutoSave(state: SnapshotProjectState): { ok: boolean; quotaExceeded: boolean } {
     try {
       const data = JSON.stringify({
         ...state,
         lastModified: new Date().toISOString(),
       });
       localStorage.setItem(AUTOSAVE_KEY, data);
+      return { ok: true, quotaExceeded: false };
     } catch (e) {
+      // The write failed (quota, blocked storage): report it so the hook does
+      // not advance its saved hash, timestamp or success event on a mirage.
+      const quotaExceeded = (e as Error)?.name === 'QuotaExceededError';
       console.error('Failed to save auto-save:', e);
+      return { ok: false, quotaExceeded };
     }
   }
 
@@ -59,24 +108,57 @@ class SnapshotService {
     try {
       const data = localStorage.getItem(AUTOSAVE_KEY);
       if (!data) return null;
-      return JSON.parse(data);
+      const parsed: unknown = JSON.parse(data);
+      if (!isValidSnapshotState(parsed)) {
+        // Retain the raw bytes for diagnosis; surface nothing unchecked.
+        console.error('Ignoring malformed auto-save record; raw value retained.');
+        return null;
+      }
+      return parsed as SnapshotProjectState & { lastModified: string };
     } catch (e) {
       console.error('Failed to parse auto-save:', e);
       return null;
     }
   }
 
-  public clearAutoSave(): void {
-    localStorage.removeItem(AUTOSAVE_KEY);
+  public clearAutoSave(): boolean {
+    try {
+      localStorage.removeItem(AUTOSAVE_KEY);
+      return true;
+    } catch (e) {
+      // Blocked storage (private mode, denied access) must never wedge the
+      // recovery modal's dismiss path. The autosave is retained; report failure.
+      console.error('Failed to clear auto-save:', e);
+      return false;
+    }
   }
 
-  public backupAutoSave(): void {
-    const data = localStorage.getItem(AUTOSAVE_KEY);
-    if (data) {
+  /**
+   * Copies the current autosave aside before discarding it.
+   *
+   * Never clears the live slot before the backup write has succeeded: on any
+   * storage failure the original autosave is preserved and `false` is returned
+   * so the caller can say so instead of claiming a successful cleanup.
+   */
+  public backupAutoSave(): boolean {
+    let data: string | null;
+    try {
+      data = localStorage.getItem(AUTOSAVE_KEY);
+    } catch (e) {
+      console.error('Failed to read auto-save for backup:', e);
+      return false;
+    }
+    if (!data) return true; // Nothing to back up.
+    try {
       const timestamp = new Date().getTime();
       localStorage.setItem(`${AUTOSAVE_BACKUP_KEY_PREFIX}${timestamp}`, data);
-      this.clearAutoSave();
+    } catch (e) {
+      console.error('Failed to back up auto-save:', e);
+      return false;
     }
+    // Backup persisted — only now is clearing safe. A clear failure still
+    // leaves the backup copy behind, so nothing is lost either way.
+    return this.clearAutoSave();
   }
 
   /**

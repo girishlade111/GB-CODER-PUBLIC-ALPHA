@@ -49,9 +49,9 @@ export interface FileTreeViewProps {
   onOpen: (path: string) => void;
   /** Opens the target file directly into the secondary split editor pane */
   onOpenToSide?: (path: string) => void;
-  onCreateFile?: (path: string, content?: string) => void;
-  onCreateFolder?: (path: string) => void;
-  onRename?: (oldPath: string, newPath: string) => void;
+  onCreateFile?: (path: string, content?: string) => boolean | void;
+  onCreateFolder?: (path: string) => boolean | void;
+  onRename?: (oldPath: string, newPath: string) => boolean | void;
   onDelete?: (path: string) => void;
   onDuplicate?: (path: string) => void;
 }
@@ -589,11 +589,13 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
       }
 
       if (draft.type === 'folder') {
-        onCreateFolder?.(fullPath);
+        // A `false` return means the owner rejected the path (collision,
+        // traversal, …): keep the draft open for correction, no success toast.
+        if (onCreateFolder?.(fullPath) === false) return;
         setExpanded((prev) => new Set([...prev, fullPath]));
         toast.success(`Created folder ${trimmed}`);
       } else {
-        onCreateFile?.(fullPath, '');
+        if (onCreateFile?.(fullPath, '') === false) return;
         onOpen(fullPath);
         toast.success(`Created ${trimmed}`);
       }
@@ -623,7 +625,9 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
         return;
       }
 
-      onRename?.(oldPath, newPath);
+      // Rejected by the owner (strict validation): keep the row as-is; the
+      // owner has already explained why. Success toast only on acceptance.
+      if (onRename?.(oldPath, newPath) === false) return;
       toast.success(`Renamed to ${trimmed}`);
     };
 

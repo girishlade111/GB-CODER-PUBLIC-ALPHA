@@ -44,17 +44,27 @@ after(async () => {
 
 async function ensureEditorOpen(page) {
   await page.goto(`${TARGET_URL}/`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(500);
+  // Event-based readiness (not a fixed sleep): the dashboard renders
+  // asynchronously, and a too-short sleep skips project creation entirely.
+  // Unified-build note: `/` serves the IDE shell whose dashboard owns the
+  // New Project flow (marketing lives at dist/index.html, not here).
+  await page.waitForFunction(
+    () =>
+      document.body.innerText.includes('Your projects') ||
+      document.querySelector('.monaco-editor') !== null,
+    undefined,
+    { timeout: 30000, polling: 500 },
+  );
 
   const newProjBtn = page.locator('button', { hasText: 'New Project' }).first();
   if (await newProjBtn.isVisible()) {
     await newProjBtn.click();
-    await page.waitForTimeout(300);
+    await page.waitForSelector('[data-testid="new-project-modal"]', { timeout: 15000 });
     const createBtn = page.locator('button', { hasText: 'Create project' }).first();
     await createBtn.click();
   }
 
-  await page.waitForSelector('.monaco-editor', { timeout: 15000 });
+  await page.waitForSelector('.monaco-editor', { timeout: 30000 });
 }
 
 describe('GB Coder Task 09 — Monaco Worker & Performance (15 Tests)', () => {
@@ -319,12 +329,16 @@ describe('GB Coder Task 09 — Monaco Worker & Performance (15 Tests)', () => {
     const distPath = 'dist';
     assert.ok(existsSync(distPath), 'dist/ directory must exist');
 
-    const files = readFileSync(join(distPath, 'index.html'), 'utf8');
-    assert.ok(files.includes('type="module"'), 'index.html must have module entrypoint');
+    // Unified-build layout (Phase 1): the IDE entry is dist/app/index.html;
+    // dist/index.html is the marketing homepage with no module entrypoint.
+    const entryHtml = existsSync(join(distPath, 'app', 'index.html'))
+      ? join(distPath, 'app', 'index.html')
+      : join(distPath, 'index.html');
+    const files = readFileSync(entryHtml, 'utf8');
+    assert.ok(files.includes('type="module"'), 'IDE entry must have module entrypoint');
 
     // Measure critical path via measure-initial-bundle algorithm
-    const indexPath = join(distPath, 'index.html');
-    const html = readFileSync(indexPath, 'utf8');
+    const html = files;
     const entries = [...html.matchAll(/<script[^>]+type="module"[^>]+src="([^"]+)"/g)].map(m => m[1]);
     const preloads = [...html.matchAll(/<link[^>]+rel="modulepreload"[^>]+href="([^"]+)"/g)].map(m => m[1]);
 

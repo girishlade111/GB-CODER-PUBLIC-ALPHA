@@ -24,6 +24,8 @@ import JSZip from 'jszip';
 
 let PORT = 4195;
 let BASE_URL = `http://localhost:${PORT}`;
+// Unified build: dashboard + editors live under /app.
+let APP_URL = `${BASE_URL}/app/`;
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -43,11 +45,26 @@ function startPreviewServer() {
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
 
     let reqPath = decodeURIComponent(req.url.split('?')[0]);
-    if (reqPath === '/') reqPath = '/index.html';
 
-    let filePath = path.join(distDir, reqPath.replace(/^\//, ''));
-    if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-      filePath = path.join(distDir, 'index.html');
+    // Unified-build layout (Phase 1): the IDE app (dashboard included) lives
+    // under /app. The suite predates the split and expects the dashboard at
+    // the navigated root, so route those navigations to the app shell.
+    let filePath;
+    if (reqPath === '/app' || reqPath === '/app/' || reqPath === '/ide' || reqPath === '/ide/') {
+      filePath = path.join(distDir, 'app', 'index.html');
+    } else if (reqPath.startsWith('/app/')) {
+      const sub = reqPath.replace(/^\/app\//, '');
+      const candidate = path.join(distDir, 'app', sub);
+      filePath =
+        fs.existsSync(candidate) && fs.statSync(candidate).isFile()
+          ? candidate
+          : path.join(distDir, 'app', 'index.html');
+    } else {
+      if (reqPath === '/') reqPath = '/index.html';
+      filePath = path.join(distDir, reqPath.replace(/^\//, ''));
+      if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+        filePath = path.join(distDir, 'index.html');
+      }
     }
 
     const ext = path.extname(filePath).toLowerCase();
@@ -68,6 +85,7 @@ function startPreviewServer() {
     server.listen(0, () => {
       PORT = server.address().port;
       BASE_URL = `http://localhost:${PORT}`;
+      APP_URL = `${BASE_URL}/app/`;
       resolve(server);
     });
   });
@@ -105,7 +123,7 @@ async function run() {
     });
 
 
-    await page1.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30000 });
+    await page1.goto(APP_URL, { waitUntil: 'networkidle', timeout: 30000 });
 
     // Populate IndexedDB with synthetic test projects via page evaluation
     console.log('Step 2: Injecting synthetic Project A and Project B into Profile 1...');
@@ -237,7 +255,7 @@ async function run() {
     await page2.addInitScript(() => {
       window.localStorage.setItem('gbcoder_onboarded', 'true');
     });
-    await page2.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30000 });
+    await page2.goto(APP_URL, { waitUntil: 'networkidle', timeout: 30000 });
 
     // Confirm Profile 2 starts empty
     await page2.waitForSelector('[data-testid="project-dashboard"]', { timeout: 10000 });

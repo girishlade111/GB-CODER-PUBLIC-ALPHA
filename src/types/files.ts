@@ -115,8 +115,22 @@ export const isScriptFile = (language: FileLanguage): boolean =>
 
 // ─── Path helpers ─────────────────────────────────────────────────────────────
 
-export const normalizePath = (path: string): string =>
-  path.trim().replace(/\\/g, '/').replace(/^\.?\//, '').replace(/\/+/g, '/');
+export const normalizePath = (path: string): string => {
+  const forward = path.trim().replace(/\\/g, '/');
+  // Remember a trailing slash so validateFilePath's "cannot end with /" rule
+  // keeps firing exactly as before normalization learned about '.' segments.
+  const trailingSlash = forward.endsWith('/') && forward.length > 1;
+  const out: string[] = [];
+  for (const segment of forward.split('/')) {
+    // Collapse repeats and resolve safe single-dot segments. '..' is kept
+    // verbatim — it is unsafe, and validateFilePath must keep rejecting it
+    // rather than have resolution silently launder it into a valid path.
+    if (segment === '' || segment === '.') continue;
+    out.push(segment);
+  }
+  const normalized = out.join('/');
+  return trailingSlash ? `${normalized}/` : normalized;
+};
 
 export interface PathValidationResult {
   valid: boolean;

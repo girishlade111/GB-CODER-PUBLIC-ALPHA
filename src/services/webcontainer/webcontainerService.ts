@@ -339,6 +339,7 @@ class WebContainerManager {
   private installedManifestFingerprint: string | null = null;
   private lastStartedFingerprint: string | null = null;
   private lastStartedEpoch = -1;
+  private isShellPromptReady = false;
 
   private state: WebContainerState = {
     status: typeof window !== 'undefined' && window.crossOriginIsolated ? 'idle' : 'unsupported',
@@ -503,6 +504,10 @@ class WebContainerManager {
     return Boolean(this.shellProcess);
   }
 
+  public isShellReady(): boolean {
+    return Boolean(this.shellProcess && this.isShellPromptReady);
+  }
+
   public isDevServerRunning(): boolean {
     return Boolean(this.state.serverUrl || this.isDevServerActive);
   }
@@ -561,6 +566,7 @@ class WebContainerManager {
     this.shellOutputBuffer = [];
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
+    this.isShellPromptReady = false;
   }
 
   public writeToShell(data: string): boolean {
@@ -1069,6 +1075,7 @@ class WebContainerManager {
       this.shellDataListeners.add(options.onData);
 
       endSpawnTimer({ attempt: this.spawnAttempts });
+      this.isShellPromptReady = false;
 
       // Pipe output to buffer and all active listeners
       process.output
@@ -1086,6 +1093,11 @@ class WebContainerManager {
                   // Ignored
                 }
               });
+
+              // Detect interactive shell prompt readiness (❯ prompt in jsh)
+              if (chunk.includes('❯') || /[$#❯]\s*$/.test(chunk)) {
+                this.isShellPromptReady = true;
+              }
 
               // Detect package install completion
               if (
@@ -1161,6 +1173,7 @@ class WebContainerManager {
         this.shellWriter = null;
         this.isDevServerActive = false;
         this.isDevServerStartingState = false;
+        this.isShellPromptReady = false;
         if (exitCode !== 0 && this.state.startupStage !== 'idle') {
           this.setStartupStage('error', {
             phase: 'general',
