@@ -533,28 +533,6 @@ class WebContainerManager {
   public attachProject(projectId: string): void {
     if (this.activeProjectId === projectId) return;
 
-    // Prune expired draining port records (> 10s)
-    const now = Date.now();
-    for (const [p, info] of Array.from(this.drainingPorts.entries())) {
-      if (now - info.drainedAt > 10000) {
-        this.drainingPorts.delete(p);
-        this.pendingDrainingCloses.delete(p);
-      }
-    }
-
-    // Track any existing active servers as draining so late events cannot pollute state
-    for (const server of this.state.activeServers) {
-      this.drainingPorts.set(server.port, {
-        projectId: this.activeProjectId,
-        sessionEpoch: this.sessionEpoch,
-        drainedAt: now,
-      });
-      this.pendingDrainingCloses.set(
-        server.port,
-        (this.pendingDrainingCloses.get(server.port) ?? 0) + 1,
-      );
-    }
-
     // If another project was attached, cleanly tear down its dev server and pending writes
     if (this.activeProjectId !== null) {
       this.stopDevServer();
@@ -585,19 +563,6 @@ class WebContainerManager {
   public detachProject(projectId?: string): void {
     if (projectId && this.activeProjectId !== projectId) {
       return;
-    }
-
-    const now = Date.now();
-    for (const server of this.state.activeServers) {
-      this.drainingPorts.set(server.port, {
-        projectId: this.activeProjectId,
-        sessionEpoch: this.sessionEpoch,
-        drainedAt: now,
-      });
-      this.pendingDrainingCloses.set(
-        server.port,
-        (this.pendingDrainingCloses.get(server.port) ?? 0) + 1,
-      );
     }
 
     if (this.activeProjectId !== null) {
@@ -691,13 +656,17 @@ class WebContainerManager {
         // Ignored
       }
     }
-    const now = Date.now();
-    for (const [p, info] of Array.from(this.drainingPorts.entries())) {
-      if (now - info.drainedAt > 10000) {
-        this.drainingPorts.delete(p);
-        this.pendingDrainingCloses.delete(p);
+    // Keep draining map bounded to at most 10 recent ports
+    while (this.drainingPorts.size > 10) {
+      const oldestKey = this.drainingPorts.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.drainingPorts.delete(oldestKey);
+        this.pendingDrainingCloses.delete(oldestKey);
+      } else {
+        break;
       }
     }
+    const now = Date.now();
     for (const server of this.state.activeServers) {
       this.drainingPorts.set(server.port, {
         projectId: this.activeProjectId,
@@ -745,7 +714,6 @@ class WebContainerManager {
    */
   public markPortQuiescent(port: number): void {
     this.drainingPorts.delete(port);
-    this.pendingDrainingCloses.delete(port);
   }
 
   /**
@@ -830,12 +798,7 @@ class WebContainerManager {
           draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId;
 
         if (isFromPriorSession) {
-          const drainDuration = Date.now() - draining.drainedAt;
-          const isQuiescent =
-            drainDuration > 1000 ||
-            this.isShellPromptReady;
-
-          if (!isQuiescent) {
+          if (!this.isShellPromptReady) {
             console.warn(
               `[WebContainer] Discarded late server-ready at port ${port} (draining server from project ${draining.projectId}, epoch ${draining.sessionEpoch})`,
             );
@@ -843,7 +806,7 @@ class WebContainerManager {
           }
 
           console.log(
-            `[WebContainer] Draining port ${port} reclaimed for project "${this.activeProjectId}" (drain timeout or shell quiescence confirmed)`,
+            `[WebContainer] Draining port ${port} reclaimed for project "${this.activeProjectId}" (shell quiescence confirmed)`,
           );
           this.drainingPorts.delete(port);
         }
@@ -884,12 +847,7 @@ class WebContainerManager {
         if (this.drainingPorts.has(port)) {
           const draining = this.drainingPorts.get(port)!;
           if (draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId) {
-            const drainDuration = Date.now() - draining.drainedAt;
-            const isQuiescent =
-              drainDuration > 1000 ||
-              this.isShellPromptReady;
-
-            if (!isQuiescent) {
+            if (!this.isShellPromptReady) {
               return;
             }
             this.drainingPorts.delete(port);
