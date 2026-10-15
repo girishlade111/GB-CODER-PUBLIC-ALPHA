@@ -1429,6 +1429,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
         {/* Left Sidebar: Explorer / Search / Code Assist / Packages / Ports */}
         <aside
+          role="region"
+          aria-label="Sidebar"
           className={`flex ${
             activityTab === 'code-assist' || activityTab === 'packages' ? 'w-96' : 'w-60'
           } shrink-0 flex-col overflow-hidden border-r bg-[#181824] transition-[width] duration-150 ${
@@ -1642,7 +1644,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         </aside>
 
         {/* Editor column: one file at a time, or split dual panes */}
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-vsc-editor">
+        <main
+          role="region"
+          aria-label="Editor"
+          className="flex min-w-0 flex-1 flex-col overflow-hidden bg-vsc-editor"
+        >
           {isSplitActive ? (
             /* Split View: Dual Panes with Resizer */
             <div

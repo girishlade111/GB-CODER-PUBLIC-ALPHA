@@ -41,10 +41,23 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
   initialMode = 'commands',
   recentFiles: propRecentFiles,
 }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialMode === 'files' ? '' : '>');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  // Synchronously reset state during render when opened or mode changed
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  const [prevInitialMode, setPrevInitialMode] = useState(initialMode);
+
+  if (isOpen !== prevIsOpen || initialMode !== prevInitialMode) {
+    setPrevIsOpen(isOpen);
+    setPrevInitialMode(initialMode);
+    if (isOpen) {
+      setQuery(initialMode === 'files' ? '' : '>');
+      setSelectedIndex(0);
+    }
+  }
 
   const [recentCommandIds, setRecentCommandIds] = useState<string[]>(() => {
     try {
@@ -64,15 +77,9 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
     }
   });
 
-  // Reset state when opened
+  // Focus input and set selection range
   useEffect(() => {
     if (isOpen) {
-      if (initialMode === 'files') {
-        setQuery('');
-      } else {
-        setQuery('>');
-      }
-      setSelectedIndex(0);
       const timer = setTimeout(() => {
         inputRef.current?.focus();
         if (initialMode === 'commands') {
