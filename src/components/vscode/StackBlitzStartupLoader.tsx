@@ -6,10 +6,6 @@ import {
   TerminalSquare,
   RotateCcw,
   AlertCircle,
-  FolderSync,
-  PackageCheck,
-  Server,
-  Cpu,
 } from 'lucide-react';
 import {
   ProjectStartupStage,
@@ -23,6 +19,7 @@ interface StackBlitzStartupLoaderProps {
   onOpenTerminal?: () => void;
   onRestart?: () => void;
   onRetryInstall?: () => void;
+  operationPending?: boolean;
 }
 
 export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = ({
@@ -32,6 +29,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
   onOpenTerminal,
   onRestart,
   onRetryInstall,
+  operationPending = false,
 }) => {
   const isBooting = stage === 'booting';
   const isMounting = stage === 'mounting_files';
@@ -43,8 +41,10 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
   // Step state calculations
   const errorPhase = runtimeError?.phase;
 
+  const isStarted = stage !== 'idle';
+
   // Step 1: Boot WebContainer
-  const step1Done = !isBooting && !(isError && errorPhase === 'boot');
+  const step1Done = isStarted && !isBooting && !(isError && errorPhase === 'boot');
   const step1Active = isBooting;
   const step1Error = isError && errorPhase === 'boot';
 
@@ -52,7 +52,6 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
   const step2Done =
     step1Done &&
     !isMounting &&
-    stage !== 'booting' &&
     !(isError && (errorPhase === 'mount' || errorPhase === 'boot'));
   const step2Active = isMounting;
   const step2Error = isError && errorPhase === 'mount';
@@ -67,7 +66,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
   const step3Error = isError && errorPhase === 'install';
 
   // Step 4: Start dev server
-  const step4Done = isReady;
+  const step4Done = isStarted && isReady;
   const step4Active = isStarting;
   const step4Error = isError && errorPhase === 'server';
 
@@ -118,7 +117,9 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           ? 'Installing Dependencies'
           : isMounting
           ? 'Mounting Project Files'
-          : 'Starting WebContainer'}
+          : isBooting
+          ? 'Starting WebContainer'
+          : 'Development Environment Idle'}
       </h2>
 
       <p className="mt-1 max-w-sm text-xs text-slate-400">
@@ -127,12 +128,14 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           : isError
           ? runtimeError?.message || 'Check terminal output for details or retry the operation.'
           : isStarting
-          ? 'Launching Vite dev server inside WebContainer...'
+          ? 'Launching development server inside WebContainer...'
           : isInstalling
-          ? 'Running npm install with local offline cache...'
+          ? 'Installing project dependencies. This may take longer for initial setups...'
           : isMounting
           ? 'Syncing source files to virtual filesystem...'
-          : 'Booting WebAssembly Node.js runtime with zero cloud latency...'}
+          : isBooting
+          ? 'Initializing the browser-based development environment...'
+          : 'Environment is idle. Ready to initialize.'}
       </p>
 
       {/* Step Checklist matching professional IDE runtime states */}
@@ -246,6 +249,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           <button
             type="button"
             onClick={onRetryInstall}
+            disabled={operationPending}
             className="flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-950/60 px-3 py-1.5 text-xs font-medium text-cyan-300 shadow-sm transition hover:bg-cyan-900/80 hover:text-white"
             data-testid="loader-retry-install-btn"
           >
@@ -257,6 +261,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           <button
             type="button"
             onClick={onRestart}
+            disabled={operationPending}
             className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium shadow-sm transition ${
               isError
                 ? 'border-amber-500/30 bg-amber-950/60 text-amber-300 hover:bg-amber-900/80 hover:text-white'

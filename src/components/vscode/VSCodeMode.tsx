@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import Editor, { OnMount } from '@monaco-editor/react';
+import type { OnMount } from '@monaco-editor/react';
+import Editor from '../LocalMonacoEditor';
 import {
   FilePlus,
   FolderPlus,
@@ -16,7 +17,6 @@ import {
   Minimize2,
   FolderArchive,
   FolderDown,
-  Zap,
   Share2,
   Search,
   ChevronDown,
@@ -97,7 +97,7 @@ interface VSCodeModeProps {
   onChangeFile: (path: string, content: string) => void;
   onCreateFile?: (path: string, content?: string) => boolean | void;
   onRenameFile?: (oldPath: string, newPath: string) => boolean | void;
-  onDeleteFile?: (path: string) => void;
+  onDeleteFile?: (path: string) => boolean | void;
   onDuplicateFile?: (path: string) => void;
   onExit: () => void;
   fontFamily: string;
@@ -423,6 +423,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     });
   }, [persistSignal, activeProjectId, project.files]);
 
+  // Flush any pending debounced writes when leaving the mode
+  useEffect(() => {
+    return () => {
+      void webcontainerService.flushFileSync();
+    };
+  }, []);
+
   const openFile = useCallback((path: string) => {
     setOpenPaths((current) => {
       if (current.includes(path)) return current;
@@ -463,6 +470,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
   /* ── File Explorer Operations ───────────────────────────────────────────── */
   const treeRef = useRef<FileTreeViewHandle>(null);
+  const fileOperationProjectRef = useRef(activeProjectId);
+  fileOperationProjectRef.current = activeProjectId;
 
   const handleCreateFile = useCallback(
     (path: string, content = '') => {
@@ -475,10 +484,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       );
       if (!checked.valid) {
         toast.error(checked.error ?? 'Invalid file name.');
-        return;
+        return false;
       }
-      if (onCreateFile?.(checked.path, content) === false) return;
+      if (onCreateFile?.(checked.path, content) === false) return false;
       openFile(checked.path);
+      return true;
     },
     [onCreateFile, openFile, project.files, project.projectType],
   );
@@ -493,7 +503,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   );
 
   const handleRenameFile = useCallback(
-    (oldPath: string, newPath: string) => {
+    async (oldPath: string, newPath: string) => {
       // Strict pre-validation (the tree did a first pass only): traversal,
       // case-collisions and wrong extensions stop here, before tabs move.
       const existing = project.files.map((f) => f.path);
@@ -503,12 +513,26 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         : validateWorkspacePath(newPath, project.projectType, existing, oldPath);
       if (!checked.valid) {
         toast.error(checked.error ?? 'Invalid name.');
-        return;
+        return false;
       }
+      const finalNew = checked.path;
+      const operationEpoch = webcontainerService.getSessionEpoch();
+
+      // Fail-closed integration: await virtual filesystem rename before mutating tabs or notifying parent
+      try {
+        await webcontainerService.renameFile(oldPath, finalNew);
+      } catch (err) {
+        console.error('[VSCodeMode] Failed to rename file in WebContainer:', err);
+        toast.error(`Failed to rename "${oldPath}". Virtual filesystem write failed.`);
+        return false;
+      }
+
+      if (fileOperationProjectRef.current !== activeProjectId ||
+          webcontainerService.getSessionEpoch() !== operationEpoch) return false;
+
       // The owner re-validates and reports false on rejection (already
       // toasted there): local tab, focus and dirty updates must not run.
-      if (onRenameFile?.(oldPath, checked.path) === false) return;
-      const finalNew = checked.path;
+      if (onRenameFile?.(oldPath, finalNew) === false) return false;
 
       const updateList = (paths: string[]) =>
         paths.map((p) => remapPath(p, oldPath, finalNew));
@@ -531,13 +555,29 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         for (const p of current) next.add(remapPath(p, oldPath, finalNew));
         return next;
       });
+      return true;
     },
-    [onRenameFile, project.files, project.projectType],
+    [onRenameFile, project.files, project.projectType, activeProjectId],
   );
 
   const handleDeleteFile = useCallback(
-    (path: string) => {
-      onDeleteFile?.(path);
+    async (path: string): Promise<boolean | void> => {
+      const operationEpoch = webcontainerService.getSessionEpoch();
+      // Fail-closed integration: await virtual filesystem delete before mutating tabs or notifying parent
+      try {
+        await webcontainerService.deleteFile(path);
+      } catch (err) {
+        console.error('[VSCodeMode] Failed to delete file in WebContainer:', err);
+        toast.error(`Failed to delete "${path}". Virtual filesystem write failed.`);
+        // Return false to signal failure: FileTreeView will suppress the success toast
+        // and keep the confirmation dialog open so the user can retry.
+        return false;
+      }
+
+      if (fileOperationProjectRef.current !== activeProjectId ||
+          webcontainerService.getSessionEpoch() !== operationEpoch) return false;
+
+      if (onDeleteFile?.(path) === false) return false;
 
       const isTarget = (p: string) => p === path || p.startsWith(path + '/');
 
@@ -556,9 +596,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         }
         return remaining;
       });
+      return true;
     },
-    [onDeleteFile, activePath, splitActivePath],
+    [onDeleteFile, activePath, splitActivePath, activeProjectId],
   );
+
 
   const handleDuplicateFile = useCallback(
     (path: string) => {
@@ -572,7 +614,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       if (!activePath) return;
       const text = value ?? '';
       onChangeFile(activePath, text);
-      void webcontainerService.syncFile(activePath, text);
+      void webcontainerService.syncFile(activePath, text, activeProjectId ?? undefined);
       ataService.acquireTypes(text);
       setDirtyPaths((current) => {
         if (current.has(activePath)) return current;
@@ -581,7 +623,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         return next;
       });
     },
-    [activePath, onChangeFile],
+    [activePath, onChangeFile, activeProjectId],
   );
 
   const isSplitActive = Boolean(splitActivePath && splitOpenPaths.length > 0);
@@ -685,7 +727,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       if (!splitActivePath) return;
       const text = value ?? '';
       onChangeFile(splitActivePath, text);
-      void webcontainerService.syncFile(splitActivePath, text);
+      void webcontainerService.syncFile(splitActivePath, text, activeProjectId ?? undefined);
       ataService.acquireTypes(text);
       setDirtyPaths((current) => {
         if (current.has(splitActivePath)) return current;
@@ -694,7 +736,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         return next;
       });
     },
-    [splitActivePath, onChangeFile],
+    [splitActivePath, onChangeFile, activeProjectId],
   );
 
   /** Mirrors the caret into the status bar, the way VS Code reports Ln/Col. */
@@ -1065,12 +1107,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     }
     openTerminal();
     toast.success('Restarting WebContainer environment...');
-    void webcontainerService
-      .mountProject(project.files, project.dependencies, project.projectType)
-      .then(() => {
-        webcontainerService.requestRestart('Restart Dev Server');
-      });
-  }, [openTerminal, hasFiles, project.files, project.dependencies, project.projectType]);
+    webcontainerService.requestRestart('Restart Dev Server');
+  }, [openTerminal, hasFiles, project.files]);
 
   return (
     // h-full inside App's h-screen wrapper; overflow-hidden forbids page scroll.
@@ -1204,7 +1242,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             }
             void webcontainerService
               .mountProject(project.files, project.dependencies, project.projectType)
-              .then(() => {
+              .then((mounted) => {
+                if (!mounted || fileOperationProjectRef.current !== activeProjectId) return;
                 // Remounting is always safe; only the restart dispatch needs
                 // npm metadata. Without it the container stays idle.
                 if (webcontainerService.hasNpmManifest(project.files)) {
@@ -1974,6 +2013,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     isResolvingPackages={false}
                     isActive={showTerminal && bottomTab === 'terminal'}
                     autoStartProject={true}
+                    projectId={activeProjectId ?? undefined}
                   />
                 </div>
                 {bottomTab === 'problems' && (
@@ -2260,6 +2300,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             ) : (
               /* When installing dependencies or booting: SHOW STACKBLITZ STARTUP LOADER (Screenshot 3!) */
               <StackBlitzStartupLoader
+                operationPending={webcontainerService.isAutomaticStartupBusy()}
                 stage={webcontainer.startupStage}
                 serverPort={webcontainer.serverPort}
                 runtimeError={webcontainer.runtimeError}

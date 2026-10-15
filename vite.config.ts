@@ -346,9 +346,10 @@ export default defineConfig({
       output: {
         manualChunks: (id) => {
           // Monaco Editor - separate chunk (loaded lazily)
-          if (id.includes('@monaco-editor') || id.includes('monaco-editor')) {
-            return 'monaco-editor';
-          }
+          if (id.includes('@monaco-editor')) return 'monaco-react';
+          // Let Rollup keep the engine behind LocalMonacoEditor's dynamic import.
+          // Grouping worker URL wrappers or shared helpers with it makes it eager.
+          if (id.includes('monaco-editor')) return undefined;
 
           // TypeScript compiler - separate chunk (loaded lazily for TS/TSX mode only)
           if (id.includes('node_modules') && id.includes('typescript')) {

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
+import toast from 'react-hot-toast';
 import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package, RotateCcw, Laptop, ChevronDown, ZoomIn, Smartphone as MobileIcon, Sparkles, ShieldAlert, QrCode } from 'lucide-react';
 import { JSEditorMode } from '../types';
 import { MOUNT_ELEMENT_ID, ProjectType } from '../types/files';

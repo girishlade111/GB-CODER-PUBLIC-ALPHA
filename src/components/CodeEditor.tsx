@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import Editor, { type Monaco } from '@monaco-editor/react';
+import type { Monaco } from '@monaco-editor/react';
+import Editor from './LocalMonacoEditor';
 import { monacoThemeFor, defineGbCoderTheme } from '../utils/monacoTheme';
 import { useTheme } from '../hooks/useTheme';
 import { inlineCopilotService } from '../services/inlineCopilotService';

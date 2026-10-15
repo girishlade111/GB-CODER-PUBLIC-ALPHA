@@ -89,7 +89,7 @@ class AtaManager {
 
         const compilerOptions = {
           target: monaco.languages.typescript.ScriptTarget.ESNext,
-          allowNonTextExtensions: true,
+          allowNonTsExtensions: true,
           moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
           module: monaco.languages.typescript.ModuleKind.CommonJS,
           noEmit: true,

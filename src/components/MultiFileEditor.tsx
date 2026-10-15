@@ -1,5 +1,6 @@
 import React from 'react';
-import Editor, { type Monaco } from '@monaco-editor/react';
+import type { Monaco } from '@monaco-editor/react';
+import Editor from './LocalMonacoEditor';
 import { FileCode2, Loader2 } from 'lucide-react';
 import EditorTabs from './EditorTabs';
 import { FileWorkspace } from '../hooks/useFileWorkspace';

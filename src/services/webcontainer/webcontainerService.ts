@@ -10,6 +10,10 @@
 import { WebContainer, FileSystemTree } from '@webcontainer/api';
 import { ProjectFile, ProjectType } from '../../types/files';
 import { webcontainerPerf } from './webcontainerPerf';
+import { StartupDiagnostics } from './startupDiagnostics';
+import { StartupOutputParser } from './startupOutput';
+import { FileSyncCoordinator, type FlushResult } from './fileSyncCoordinator';
+export { FileSyncCoordinator, type FlushResult };
 
 /**
  * Optimized npm configuration for WebContainer:
@@ -39,63 +43,21 @@ export function computeDependencyFingerprint(
   extraDependencies?: Record<string, string>,
   projectType?: ProjectType,
 ): string {
-  let pkgContent = '';
-  let lockContent = '';
-
-  for (const f of files) {
-    if (!f.path) continue;
-    const clean = f.path.replace(/^\/+/, '');
-    if (clean === 'package.json') {
-      pkgContent = f.content || '';
-    } else if (
-      clean === 'package-lock.json' ||
-      clean === 'pnpm-lock.yaml' ||
-      clean === 'yarn.lock'
-    ) {
-      lockContent += `${clean}:${f.content?.length || 0}:${(f.content || '').slice(0, 500)};`;
-    }
+  // Full, order-stable inputs. This is an in-runtime invalidation token, not
+  // an integrity key or permission to reuse dependencies across runtimes.
+  const relevant = files
+    .filter(f => ['package.json', 'package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock', '.npmrc'].includes(f.path.replace(/^\/+/, '')))
+    .map(f => [f.path.replace(/^\/+/, ''), f.content || ''])
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  const extra = Object.entries(extraDependencies || {}).sort(([a], [b]) => a.localeCompare(b));
+  const input = JSON.stringify([relevant, extra, projectType || '']);
+  let first = 5381;
+  let second = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    first = ((first << 5) + first) ^ input.charCodeAt(i);
+    second = Math.imul(second ^ input.charCodeAt(i), 16777619);
   }
-
-  let depsKey = '';
-  if (pkgContent) {
-    try {
-      const parsed = JSON.parse(pkgContent);
-      const deps = { ...(parsed.dependencies || {}), ...(extraDependencies || {}) };
-      const devDeps = parsed.devDependencies || {};
-      const sortedDeps = Object.keys(deps)
-        .sort()
-        .map((k) => `${k}@${deps[k]}`)
-        .join(',');
-      const sortedDev = Object.keys(devDeps)
-        .sort()
-        .map((k) => `${k}@${devDeps[k]}`)
-        .join(',');
-      depsKey = `deps:[${sortedDeps}]|dev:[${sortedDev}]`;
-    } catch {
-      depsKey = pkgContent.slice(0, 500);
-    }
-  } else {
-    const isReact =
-      projectType === 'react' ||
-      files.some((f) => /\.(jsx|tsx)$/i.test(f.path) || f.content?.includes('react'));
-    const isVue =
-      projectType === 'vue' ||
-      files.some((f) => /\.vue$/i.test(f.path) || f.content?.includes('vue'));
-    const extra = extraDependencies
-      ? Object.keys(extraDependencies)
-          .sort()
-          .map((k) => `${k}@${extraDependencies[k]}`)
-          .join(',')
-      : '';
-    depsKey = `synth:${isReact ? 'react' : isVue ? 'vue' : 'plain'}|extra:[${extra}]`;
-  }
-
-  const rawString = `${depsKey}|lock:${lockContent}`;
-  let hash = 5381;
-  for (let i = 0; i < rawString.length; i++) {
-    hash = ((hash << 5) + hash) ^ rawString.charCodeAt(i);
-  }
-  return (hash >>> 0).toString(16);
+  return (first >>> 0).toString(16) + '-' + (second >>> 0).toString(16) + '-' + input.length;
 }
 
 export type WebContainerStatus =
@@ -127,9 +89,18 @@ export interface WebContainerRuntimeError {
   retryAction?: 'retry_install' | 'restart_server' | 'reload_preview' | 'reboot_container';
 }
 
+export interface StartupOwner {
+  projectId: string | null;
+  epoch: number;
+  generation: number;
+  instance: WebContainer | null;
+}
+
 export interface WebContainerServerInfo {
   port: number;
   url: string;
+  projectId?: string | null;
+  sessionEpoch?: number;
 }
 
 export interface WebContainerState {
@@ -143,6 +114,7 @@ export interface WebContainerState {
   previewStatus: PreviewStatus;
   runtimeError: WebContainerRuntimeError | null;
   sessionEpoch: number;
+  activeProjectId: string | null;
 }
 
 /** Converts a flat array of ProjectFile objects into a nested WebContainer FileSystemTree */
@@ -152,13 +124,17 @@ export function filesToFileSystemTree(
   projectType?: ProjectType,
 ): FileSystemTree {
   const root: FileSystemTree = {};
-  let hasPackageJson = false;
+  let hasRootPackageJson = false;
+  let hasNestedPackageJson = false;
 
   for (const file of files) {
     if (!file.path) continue;
     const cleanPath = file.path.replace(/^\/+/, '');
-    if (/(^|\/)package\.json$/i.test(cleanPath)) {
-      hasPackageJson = true;
+    const lower = cleanPath.toLowerCase();
+    if (lower === 'package.json') {
+      hasRootPackageJson = true;
+    } else if (lower.endsWith('/package.json')) {
+      hasNestedPackageJson = true;
     }
     const segments = cleanPath.split('/').filter(Boolean);
     if (segments.length === 0) continue;
@@ -186,8 +162,25 @@ export function filesToFileSystemTree(
     }
   }
 
-  // Ensure root package.json is present so `npm install` and Node commands always succeed
-  if (!hasPackageJson) {
+  // Root package.json handling:
+  // 1. Explicit root manifest present: preserve it and merge extraDependencies if any.
+  // 2. Nested manifest only: DO NOT synthesize root package.json (stays idle at root, no synthesis).
+  // 3. Truly empty project (files.length === 0): DO NOT synthesize root package.json (stays idle).
+  // 4. Non-empty plain project: provide fallback package.json for manual Node/npm commands in terminal.
+  if (hasRootPackageJson) {
+    if (extraDependencies && Object.keys(extraDependencies).length > 0) {
+      const pkgNode = root['package.json'] as { file?: { contents: string } } | undefined;
+      if (pkgNode?.file) {
+        try {
+          const parsed = JSON.parse(pkgNode.file.contents);
+          parsed.dependencies = { ...(parsed.dependencies || {}), ...extraDependencies };
+          pkgNode.file.contents = JSON.stringify(parsed, null, 2);
+        } catch {
+          // ignore
+        }
+      }
+    }
+  } else if (!hasNestedPackageJson && files.length > 0) {
     const isReact =
       projectType === 'react' ||
       files.some((f) => /\.(jsx|tsx)$/i.test(f.path) || f.content.includes('react'));
@@ -235,17 +228,6 @@ export function filesToFileSystemTree(
         ),
       },
     };
-  } else if (extraDependencies && Object.keys(extraDependencies).length > 0) {
-    const pkgNode = root['package.json'] as { file?: { contents: string } } | undefined;
-    if (pkgNode?.file) {
-      try {
-        const parsed = JSON.parse(pkgNode.file.contents);
-        parsed.dependencies = { ...(parsed.dependencies || {}), ...extraDependencies };
-        pkgNode.file.contents = JSON.stringify(parsed, null, 2);
-      } catch {
-        // ignore
-      }
-    }
   }
 
   // Built-in help command script for WebContainer
@@ -320,6 +302,8 @@ console.log(\`
 class WebContainerManager {
   private instance: WebContainer | null = null;
   private bootPromise: Promise<WebContainer> | null = null;
+  private runtimeGeneration = 0;
+  private runtimeRetirement: Promise<void> = Promise.resolve();
   private shellProcess: Awaited<ReturnType<WebContainer['spawn']>> | null = null;
   private shellWriter: WritableStreamDefaultWriter<string> | null = null;
   private serverListenersAttached = new WeakSet<WebContainer>();
@@ -334,12 +318,200 @@ class WebContainerManager {
   private shellOutputBuffer: string[] = [];
   private isDevServerActive = false;
   private isDevServerStartingState = false;
+  private isShellPromptReady = false;
   private sessionEpoch = 0;
   private spawnAttempts = 0;
   private installedManifestFingerprint: string | null = null;
+  private installedOwner: StartupOwner | null = null;
+  private diagnostics = new StartupDiagnostics();
+  private diagnosticAttempt: string | null = null;
+  private automaticStartup: {
+    owner: StartupOwner;
+    fingerprint: string;
+    needsInstall: boolean;
+    completionObserved: boolean;
+    dispatched: boolean;
+    startedAt: number;
+    parser: StartupOutputParser;
+    diagnosticId: string | null;
+  } | null = null;
+  private startupWatchdog: ReturnType<typeof setTimeout> | null = null;
+
+  public getStartupDiagnostics() {
+    return this.diagnostics.snapshot();
+  }
+  public captureStartupOwner(): StartupOwner {
+    return {
+      projectId: this.activeProjectId,
+      epoch: this.sessionEpoch,
+      generation: this.runtimeGeneration,
+      instance: this.instance,
+    };
+  }
+  public isStartupScope(owner: StartupOwner): boolean {
+    return (
+      owner.projectId === this.activeProjectId &&
+      owner.epoch === this.sessionEpoch &&
+      owner.generation === this.runtimeGeneration
+    );
+  }
+  public isRuntimeOwner(owner: StartupOwner): boolean {
+    return (
+      owner.projectId === this.activeProjectId &&
+      owner.generation === this.runtimeGeneration &&
+      owner.instance === this.instance
+    );
+  }
+  public isAutomaticStartupBusy(): boolean {
+    return this.automaticStartup !== null;
+  }
+  public isStartupOwner(owner: StartupOwner): boolean {
+    return (
+      owner.projectId === this.activeProjectId &&
+      owner.epoch === this.sessionEpoch &&
+      owner.generation === this.runtimeGeneration &&
+      owner.instance === this.instance
+    );
+  }
+  public beginAutomaticStartup(
+    fingerprint: string,
+    needsInstall: boolean,
+    owner = this.captureStartupOwner(),
+  ): StartupOwner | null {
+    if (!this.isStartupOwner(owner) || !owner.instance || this.automaticStartup)
+      return null;
+    this.automaticStartup = {
+      owner,
+      fingerprint,
+      needsInstall,
+      completionObserved: false,
+      dispatched: false,
+      startedAt: Date.now(),
+      parser: new StartupOutputParser(),
+      diagnosticId: this.diagnosticAttempt,
+    };
+    this.setStartupStage(needsInstall ? 'installing' : 'starting_server');
+    return owner;
+  }
+  public automaticCommandDispatched(owner: StartupOwner): boolean {
+    const op = this.automaticStartup;
+    if (!op || op.owner !== owner || !this.isStartupOwner(owner)) return false;
+    if (op.dispatched) return false;
+    op.dispatched = true;
+    op.startedAt = Date.now();
+    this.diagnostics.record(
+      op.diagnosticId,
+      op.needsInstall ? 'install' : 'server',
+      'started',
+    );
+    this.startupWatchdog = setTimeout(
+      () => this.markStartupUnknown(owner),
+      240000,
+    );
+    (this.startupWatchdog as unknown as { unref?: () => void }).unref?.();
+    return true;
+  }
+  public markStartupUnknown(owner: StartupOwner, timedOut = true): void {
+    const op = this.automaticStartup;
+    if (!op || !this.isStartupOwner(owner)) return;
+    this.diagnostics.record(
+      op.diagnosticId,
+      op.needsInstall && !op.completionObserved ? 'install' : 'server',
+      timedOut ? 'timed_out' : 'unknown',
+      { code: timedOut ? 'TIMEOUT' : 'UNKNOWN' },
+    );
+    this.diagnostics.finish(
+      op.diagnosticId,
+      timedOut ? 'timed_out' : 'unknown',
+    );
+    this.updateState({
+      startupStage: 'error',
+      runtimeError: {
+        phase: op.completionObserved ? 'server' : 'install',
+        message:
+          (timedOut
+            ? 'Startup timed out'
+            : 'The shell ended before startup completed') +
+          '; command status is unknown. Inspect the terminal, or return to Projects and reopen before retrying.',
+        timestamp: Date.now(),
+        recoverable: true,
+        retryAction: 'reboot_container',
+      },
+      error: 'Startup status unknown',
+    });
+    // Keep the operation owned/busy: a timeout is not evidence that npm exited.
+  }
+  private clearAutomaticStartup(): void {
+    if (this.startupWatchdog) clearTimeout(this.startupWatchdog);
+    this.startupWatchdog = null;
+    this.automaticStartup = null;
+  }
+  private observeStartupOutput(chunk: string): void {
+    const op = this.automaticStartup;
+    if (!op || !op.dispatched || !this.isStartupOwner(op.owner)) return;
+    const result = op.parser.push(chunk);
+    if (result.installError) {
+      op.completionObserved = false;
+      this.isDevServerStartingState = false;
+      if (this.startupWatchdog) clearTimeout(this.startupWatchdog);
+      this.startupWatchdog = null;
+      this.diagnostics.record(op.diagnosticId, 'install', 'inferred', {
+        code: result.installError,
+      });
+      this.diagnostics.finish(op.diagnosticId, 'failed');
+      this.updateState({
+        startupStage: 'error',
+        runtimeError: {
+          phase: 'install',
+          message:
+            'Installation reported an error. Inspect the terminal, or return to Projects and reopen before retrying.',
+          timestamp: Date.now(),
+          recoverable: true,
+          retryAction: 'reboot_container',
+        },
+        error: 'Dependency installation reported an error',
+      });
+      // Do not unlock automatic retries: the child process may still be active.
+    } else if (result.installComplete && op.needsInstall) {
+      op.completionObserved = true;
+      this.diagnostics.record(op.diagnosticId, 'install', 'inferred', {
+        durationMs: Date.now() - op.startedAt,
+      });
+      this.updateState({ startupStage: 'starting_server' });
+    }
+  }
+  private activeProjectId: string | null = null;
   private lastStartedFingerprint: string | null = null;
   private lastStartedEpoch = -1;
-  private isShellPromptReady = false;
+  private drainingPorts = new Map<number, { projectId: string | null; sessionEpoch: number; drainedAt: number }>();
+  private pendingDrainingCloses = new Map<number, number>();
+  private mountQueue: Promise<void> = Promise.resolve();
+  private devServerStartEpoch: number | null = null;
+  private devServerStartProjectId: string | null = null;
+
+  private fileSyncCoordinator = new FileSyncCoordinator({
+    debounceMs: 200,
+    rawWrite: async (cleanPath, content) => {
+      const container = this.instance;
+      const generation = this.runtimeGeneration;
+      if (!container) throw new Error('WebContainer is not mounted');
+      const dirIndex = cleanPath.lastIndexOf('/');
+      if (dirIndex !== -1) {
+        const dir = cleanPath.slice(0, dirIndex);
+        await container.fs.mkdir(dir, { recursive: true });
+      }
+      if (generation !== this.runtimeGeneration) throw new Error('Project changed during write');
+      await container.fs.writeFile(cleanPath, content);
+      if (generation !== this.runtimeGeneration) throw new Error('Project changed during write');
+    },
+    rawDelete: async (cleanPath) => {
+      if (!this.instance) return;
+      await this.instance.fs.rm(cleanPath, { recursive: true });
+    },
+    onDependencyInvalidation: () => {
+      this.invalidateDependencyCache();
+    },
+  });
 
   private state: WebContainerState = {
     status: typeof window !== 'undefined' && window.crossOriginIsolated ? 'idle' : 'unsupported',
@@ -352,6 +524,7 @@ class WebContainerManager {
     previewStatus: 'idle',
     runtimeError: null,
     sessionEpoch: 0,
+    activeProjectId: null,
   };
 
   private listeners = new Set<() => void>();
@@ -376,6 +549,15 @@ class WebContainerManager {
     stage: ProjectStartupStage,
     runtimeError?: WebContainerRuntimeError | null,
   ): void {
+    if (stage === 'error') {
+      this.diagnostics.record(
+        this.diagnosticAttempt,
+        runtimeError?.phase === 'install' ? 'install' : 'attempt',
+        'failed',
+        { code: 'UNKNOWN' },
+      );
+      this.diagnostics.finish(this.diagnosticAttempt, 'failed');
+    }
     const patch: Partial<WebContainerState> = { startupStage: stage };
     if (stage === 'error') {
       if (runtimeError) {
@@ -390,7 +572,14 @@ class WebContainerManager {
     this.updateState(patch);
   }
 
-  public setPreviewStatus(status: PreviewStatus, errorMsg?: string | null): void {
+  public setPreviewStatus(
+    status: PreviewStatus,
+    errorMsg?: string | null,
+  ): void {
+    if (status === 'ready') {
+      this.diagnostics.record(this.diagnosticAttempt, 'preview', 'observed');
+      this.diagnostics.finish(this.diagnosticAttempt, 'succeeded');
+    }
     const patch: Partial<WebContainerState> = { previewStatus: status };
     if (status === 'error') {
       patch.runtimeError = {
@@ -462,7 +651,20 @@ class WebContainerManager {
    * notifying all terminal listeners to execute dev server restart.
    */
   public requestRestart(reason = 'Restart request'): void {
+    if (this.automaticStartup) {
+      this.diagnostics.record(this.diagnosticAttempt, 'decision', 'observed', {
+        reason: 'active_operation',
+      });
+      return; // Explicit restart cannot duplicate an owned or unknown shell command.
+    }
+    this.diagnostics.finish(this.diagnosticAttempt, 'cancelled');
     this.sessionEpoch++;
+    if (this.activeProjectId)
+      this.diagnosticAttempt = this.diagnostics.begin(
+        this.activeProjectId,
+        this.sessionEpoch,
+        this.runtimeGeneration,
+      );
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
     this.resetProjectStartState();
@@ -482,6 +684,104 @@ class WebContainerManager {
       } catch (err) {
         console.error('[WebContainer] Restart listener error:', err);
       }
+    });
+  }
+
+  public getActiveProjectId(): string | null {
+    return this.activeProjectId;
+  }
+
+  private retireProjectRuntime(): void {
+    this.clearAutomaticStartup();
+    this.invalidateDependencyCache();
+    this.diagnostics.finish(this.diagnosticAttempt, 'cancelled');
+    this.runtimeGeneration++;
+    const shared = globalThis as unknown as {
+      __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer | null;
+      __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<WebContainer> | null;
+    };
+    const container = this.instance ?? shared.__GBCODER_WEBCONTAINER_INSTANCE__;
+    const pendingBoot = this.bootPromise ?? shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__;
+    this.cleanupServerListeners();
+    this.terminateShell();
+    this.shellSpawnPromise = null;
+    this.instance = null;
+    this.bootPromise = null;
+    if (shared.__GBCODER_WEBCONTAINER_INSTANCE__ === container) shared.__GBCODER_WEBCONTAINER_INSTANCE__ = null;
+    if (shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__ === pendingBoot) shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__ = null;
+    // The public API invalidates the filesystem and all descendant processes.
+    // A pending old boot tears itself down before releasing the next boot.
+    container?.teardown();
+    this.runtimeRetirement = Promise.all([
+      this.runtimeRetirement,
+      pendingBoot?.then(
+        () => {},
+        () => {},
+      ),
+    ]).then(() => {});
+    this.updateState({ status: this.isSupported() ? 'idle' : 'unsupported' });
+  }
+
+  public attachProject(projectId: string): void {
+    if (this.activeProjectId === projectId) return;
+    this.retireProjectRuntime();
+
+    // If another project was attached, cleanly tear down its dev server and pending writes
+    if (this.activeProjectId !== null) {
+      this.sessionEpoch++;
+      this.resetProjectStartState();
+      this.fileSyncCoordinator.cancelAll();
+    } else {
+      this.sessionEpoch++;
+    }
+
+    this.activeProjectId = projectId;
+    this.diagnosticAttempt = this.diagnostics.begin(
+      projectId,
+      this.sessionEpoch,
+      this.runtimeGeneration,
+    );
+    this.devServerStartEpoch = null;
+    this.devServerStartProjectId = null;
+    this.fileSyncCoordinator.setScope(projectId);
+    this.updateState({
+      activeProjectId: projectId,
+      serverUrl: null,
+      serverPort: null,
+      activeServers: [],
+      startupStage: 'idle',
+      previewStatus: 'idle',
+      error: null,
+      runtimeError: null,
+      sessionEpoch: this.sessionEpoch,
+    });
+  }
+
+  public detachProject(projectId?: string): void {
+    if (projectId && this.activeProjectId !== projectId) {
+      return;
+    }
+    this.retireProjectRuntime();
+
+    if (this.activeProjectId !== null) {
+      this.sessionEpoch++;
+      this.resetProjectStartState();
+      this.fileSyncCoordinator.cancelAll();
+    }
+    this.activeProjectId = null;
+    this.devServerStartEpoch = null;
+    this.devServerStartProjectId = null;
+    this.fileSyncCoordinator.setScope(null);
+    this.updateState({
+      activeProjectId: null,
+      serverUrl: null,
+      serverPort: null,
+      activeServers: [],
+      startupStage: 'idle',
+      previewStatus: 'idle',
+      error: null,
+      runtimeError: null,
+      sessionEpoch: this.sessionEpoch,
     });
   }
 
@@ -508,20 +808,48 @@ class WebContainerManager {
     return Boolean(this.shellProcess && this.isShellPromptReady);
   }
 
-  public isDevServerRunning(): boolean {
-    return Boolean(this.state.serverUrl || this.isDevServerActive);
+  public isDevServerRunning(projectId?: string): boolean {
+    if (projectId) {
+      return (
+        this.activeProjectId === projectId &&
+        Boolean(this.state.serverUrl || this.isDevServerActive)
+      );
+    }
+    return Boolean(
+      this.activeProjectId && (this.state.serverUrl || this.isDevServerActive),
+    );
   }
 
   public isDevServerStarting(): boolean {
-    return Boolean(this.state.startupStage === 'starting_server' || this.isDevServerStartingState);
+    return Boolean(
+      this.state.startupStage === 'starting_server' || this.isDevServerStartingState,
+    );
   }
 
-  public setDevServerStarting(starting: boolean): void {
+  public setDevServerStarting(
+    starting: boolean,
+    epoch?: number,
+    projectId?: string,
+  ): void {
     this.isDevServerStartingState = starting;
     if (starting) {
-      this.updateState({ startupStage: 'starting_server' });
-    } else if (this.state.startupStage === 'starting_server') {
-      this.updateState({ startupStage: this.state.serverUrl ? 'ready' : 'idle' });
+      this.devServerStartEpoch = epoch ?? this.sessionEpoch;
+      this.devServerStartProjectId = projectId ?? this.activeProjectId;
+      this.updateState({
+        startupStage:
+          this.automaticStartup?.needsInstall &&
+          !this.automaticStartup.completionObserved
+            ? 'installing'
+            : 'starting_server',
+      });
+    } else {
+      this.devServerStartEpoch = null;
+      this.devServerStartProjectId = null;
+      if (this.state.startupStage === 'starting_server') {
+        this.updateState({
+          startupStage: this.state.serverUrl ? 'ready' : 'idle',
+        });
+      }
     }
   }
 
@@ -541,8 +869,21 @@ class WebContainerManager {
         // Ignored
       }
     }
+    const now = Date.now();
+    for (const server of this.state.activeServers) {
+      this.drainingPorts.set(server.port, {
+        projectId: this.activeProjectId,
+        sessionEpoch: this.sessionEpoch,
+        drainedAt: now,
+      });
+      // Cap at 1 pending close per port to prevent unbounded counter drift
+      this.pendingDrainingCloses.set(server.port, 1);
+    }
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
+    this.isShellPromptReady = false;
+    this.devServerStartEpoch = null;
+    this.devServerStartProjectId = null;
     this.updateState({
       serverUrl: null,
       serverPort: null,
@@ -567,6 +908,22 @@ class WebContainerManager {
     this.isDevServerActive = false;
     this.isDevServerStartingState = false;
     this.isShellPromptReady = false;
+    this.drainingPorts.clear();
+    this.pendingDrainingCloses.clear();
+  }
+
+  /**
+   * Manually marks a draining port as confirmed quiescent.
+   */
+  public markPortQuiescent(port: number): void {
+    this.drainingPorts.delete(port);
+  }
+
+  /**
+   * Sets shell prompt readiness state directly (useful in testing or shell coordination).
+   */
+  public setShellPromptReady(ready: boolean): void {
+    this.isShellPromptReady = ready;
   }
 
   public writeToShell(data: string): boolean {
@@ -616,13 +973,99 @@ class WebContainerManager {
     this.serverListenersAttached.add(container);
 
     this.cleanupServerListeners();
+    const generation = this.runtimeGeneration;
+    const ownsRuntime = () => generation === this.runtimeGeneration && container === this.instance;
 
     // 1. server-ready: internal web server is listening and ready to answer requests
     const unsubServerReady = container.on('server-ready', (port, url) => {
-      console.log(`[WebContainer] Server ready at port ${port}: ${url}`);
+      if (!ownsRuntime()) return;
+      if (!this.activeProjectId) {
+        console.warn(
+          `[WebContainer] Discarded late server-ready at port ${port} (no active project attached)`,
+        );
+        return;
+      }
+
+      // Guard 1: is a dev server starting or active in the current session epoch?
+      const isExpected =
+        this.isDevServerStartingState ||
+        this.isDevServerActive ||
+        this.state.startupStage === 'starting_server';
+
+      if (!isExpected) {
+        console.warn(
+          `[WebContainer] Discarded unsolicited/late server-ready at port ${port} (no dev server starting or active for project "${this.activeProjectId}")`,
+        );
+        return;
+      }
+
+      if (
+        this.devServerStartEpoch !== null &&
+        this.devServerStartEpoch !== this.sessionEpoch
+      ) {
+        console.warn(
+          `[WebContainer] Discarded server-ready at port ${port} for mismatched epoch (started in ${this.devServerStartEpoch}, current is ${this.sessionEpoch})`,
+        );
+        return;
+      }
+
+      if (
+        this.devServerStartProjectId !== null &&
+        this.devServerStartProjectId !== this.activeProjectId
+      ) {
+        console.warn(
+          `[WebContainer] Discarded server-ready at port ${port} for mismatched project (started for ${this.devServerStartProjectId}, current is ${this.activeProjectId})`,
+        );
+        return;
+      }
+
+      // Check if this port is a draining port from a prior session/project.
+      // Note: @webcontainer/api events ('server-ready' and 'port') do NOT expose PIDs, process handles,
+      // or project tokens. Provenance is tracked via session epochs, dev server starting state, and draining ports.
+      // If a port is draining from a prior project and the shell is still busy (!isShellPromptReady),
+      // late server-ready events from the prior process are safely discarded.
+      // Once shell quiescence is established (isShellPromptReady = true), the port is eligible for
+      // reclamation by the current project's dev server to handle environments where port-close was not emitted.
+      const draining = this.drainingPorts.get(port);
+      if (draining) {
+        const isFromPriorSession =
+          draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId;
+
+        if (isFromPriorSession) {
+          if (!this.isShellPromptReady) {
+            console.warn(
+              `[WebContainer] Discarded late server-ready at port ${port} (draining server from project "${draining.projectId}", epoch ${draining.sessionEpoch})`,
+            );
+            return;
+          }
+
+          console.log(
+            `[WebContainer] Draining port ${port} reclaimed for project "${this.activeProjectId}" (shell quiescence confirmed)`,
+          );
+          this.drainingPorts.delete(port);
+          this.pendingDrainingCloses.delete(port);
+        }
+      }
+
+      console.log(
+        `[WebContainer] Server ready for project "${this.activeProjectId}" at port ${port}: ${url}`,
+      );
+      const operation = this.automaticStartup;
+      if (operation && this.isStartupOwner(operation.owner)) {
+        if (operation.completionObserved)
+          this.recordInstallComplete(operation.fingerprint, operation.owner);
+        this.clearAutomaticStartup();
+      }
       this.isDevServerActive = true;
       this.isDevServerStartingState = false;
-      const newServer: WebContainerServerInfo = { port, url };
+      this.drainingPorts.delete(port);
+
+      const newServer: WebContainerServerInfo = {
+          port,
+          url,
+          projectId: this.activeProjectId,
+          sessionEpoch: this.sessionEpoch,
+        };
       const updatedServers = [
         ...this.state.activeServers.filter((s) => s.port !== port),
         newServer,
@@ -636,14 +1079,45 @@ class WebContainerManager {
         error: null,
         runtimeError: null,
       });
-      webcontainerPerf.recordTiming('server_ready', 0, { port, url });
+      webcontainerPerf.recordTiming('server_ready', 0, {
+        port,
+        url,
+        projectId: this.activeProjectId,
+      });
+      this.diagnostics.record(this.diagnosticAttempt, 'server', 'observed');
     });
 
     // 2. port: emitted when a port opens or closes
     const unsubPort = container.on('port', (port, type, url) => {
+      if (!ownsRuntime()) return;
       console.log(`[WebContainer] Port ${port} ${type}: ${url}`);
       if (type === 'open') {
-        const newServer: WebContainerServerInfo = { port, url };
+        if (!this.activeProjectId) return;
+
+        // If this port is currently draining from a previous session, a new 'open' event
+        // indicates that the next project has successfully rebound the port.
+        // But if the shell is not ready (still busy running prior project's shutdown or command),
+        // a late 'open' from the previous process must be discarded.
+        if (this.drainingPorts.has(port)) {
+          const draining = this.drainingPorts.get(port)!;
+          if (draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId) {
+            if (!this.isShellPromptReady) {
+              return;
+            }
+            this.drainingPorts.delete(port);
+            this.pendingDrainingCloses.delete(port);
+          } else {
+            this.drainingPorts.delete(port);
+            this.pendingDrainingCloses.delete(port);
+          }
+        }
+
+        const newServer: WebContainerServerInfo = {
+          port,
+          url,
+          projectId: this.activeProjectId,
+          sessionEpoch: this.sessionEpoch,
+        };
         const updated = [
           ...this.state.activeServers.filter((s) => s.port !== port),
           newServer,
@@ -652,9 +1126,48 @@ class WebContainerManager {
           activeServers: updated,
           ...(this.state.serverUrl
             ? {}
-            : { serverUrl: url, serverPort: port, startupStage: 'ready', previewStatus: 'loading' }),
+            : {
+                serverUrl: url,
+                serverPort: port,
+                startupStage: 'ready',
+                previewStatus: 'loading',
+              }),
         });
       } else if (type === 'close') {
+        // If this port has pending draining closes from a prior session, consume it
+        const pendingCount = this.pendingDrainingCloses.get(port) ?? 0;
+        if (pendingCount > 0) {
+          if (pendingCount === 1) {
+            this.pendingDrainingCloses.delete(port);
+          } else {
+            this.pendingDrainingCloses.set(port, pendingCount - 1);
+          }
+          this.drainingPorts.delete(port);
+          console.log(
+            `[WebContainer] Draining port ${port} closed cleanly (consumed pending close)`,
+          );
+          return;
+        }
+
+        if (this.drainingPorts.has(port)) {
+          this.drainingPorts.delete(port);
+          console.log(`[WebContainer] Draining port ${port} closed cleanly`);
+          const updated = this.state.activeServers.filter(
+            (s) => s.port !== port,
+          );
+          if (updated.length !== this.state.activeServers.length) {
+            this.updateState({ activeServers: updated });
+          }
+          return;
+        }
+
+        const closingServer = this.state.activeServers.find(
+          (s) => s.port === port,
+        );
+        if (closingServer && closingServer.projectId && closingServer.projectId !== this.activeProjectId) {
+          return;
+        }
+
         const updated = this.state.activeServers.filter((s) => s.port !== port);
         const wasActive = this.state.serverPort === port;
         const nextServer = updated[updated.length - 1] ?? null;
@@ -675,6 +1188,7 @@ class WebContainerManager {
 
     // 3. error: runtime error
     const unsubError = container.on('error', (err) => {
+      if (!ownsRuntime()) return;
       console.error('[WebContainer] Runtime error:', err);
       this.setStartupStage('error', {
         phase: 'server',
@@ -693,19 +1207,26 @@ class WebContainerManager {
    * Safe to call multiple times concurrently or across Vite HMR cycles.
    */
   public async boot(): Promise<WebContainer> {
+    const generation = this.runtimeGeneration;
+    await this.runtimeRetirement;
+    if (generation !== this.runtimeGeneration) throw new Error('Project changed before boot');
     // 1. Check local instance
     if (this.instance) return this.instance;
 
     // 2. Check globally shared or static WebContainer._instance (e.g. across HMR)
-    const existing =
-      (WebContainer as unknown as { _instance?: WebContainer })._instance ??
-      (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
-        .__GBCODER_WEBCONTAINER_INSTANCE__;
+    const existing = (
+      globalThis as unknown as {
+        __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer;
+      }
+    ).__GBCODER_WEBCONTAINER_INSTANCE__;
 
     if (existing) {
       this.instance = existing;
-      (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
-        .__GBCODER_WEBCONTAINER_INSTANCE__ = existing;
+      (
+        globalThis as unknown as {
+          __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer;
+        }
+      ).__GBCODER_WEBCONTAINER_INSTANCE__ = existing;
       this.setupServerListeners(existing);
       this.updateState({ status: 'ready', error: null, runtimeError: null });
       return existing;
@@ -733,31 +1254,60 @@ class WebContainerManager {
       throw new Error(msg);
     }
 
-    this.updateState({ status: 'booting', startupStage: 'booting', error: null, runtimeError: null });
+    this.updateState({
+      status: 'booting',
+      startupStage: 'booting',
+      error: null,
+      runtimeError: null,
+    });
+    const diagnosticAttempt = this.diagnosticAttempt;
+    const bootStarted = Date.now();
+    this.diagnostics.record(diagnosticAttempt, 'boot', 'started');
 
     const doBoot = async () => {
       try {
         const container = await WebContainer.boot();
+        if (generation !== this.runtimeGeneration) {
+          container.teardown();
+          throw new Error('Project changed during boot; runtime retired');
+        }
         this.instance = container;
-        (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
-          .__GBCODER_WEBCONTAINER_INSTANCE__ = container;
+        this.diagnostics.record(diagnosticAttempt, 'boot', 'succeeded', {
+          durationMs: Date.now() - bootStarted,
+        });
+        (
+          globalThis as unknown as {
+            __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer;
+          }
+        ).__GBCODER_WEBCONTAINER_INSTANCE__ = container;
         this.setupServerListeners(container);
         this.updateState({ status: 'ready', error: null, runtimeError: null });
         return container;
       } catch (err) {
+        if (generation !== this.runtimeGeneration) throw err;
         const message = err instanceof Error ? err.message : String(err);
         // Seamlessly recover if another caller or hot-reload already booted WebContainer
-        if (message.includes('Only a single WebContainer instance can be booted')) {
-          const recovered =
-            (WebContainer as unknown as { _instance?: WebContainer })._instance ??
-            (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
-              .__GBCODER_WEBCONTAINER_INSTANCE__;
+        if (
+          message.includes('Only a single WebContainer instance can be booted')
+        ) {
+          const recovered = (
+            globalThis as unknown as {
+              __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer;
+            }
+          ).__GBCODER_WEBCONTAINER_INSTANCE__;
           if (recovered) {
             this.instance = recovered;
-            (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
-              .__GBCODER_WEBCONTAINER_INSTANCE__ = recovered;
+            (
+              globalThis as unknown as {
+                __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer;
+              }
+            ).__GBCODER_WEBCONTAINER_INSTANCE__ = recovered;
             this.setupServerListeners(recovered);
-            this.updateState({ status: 'ready', error: null, runtimeError: null });
+            this.updateState({
+              status: 'ready',
+              error: null,
+              runtimeError: null,
+            });
             return recovered;
           }
         }
@@ -793,26 +1343,107 @@ class WebContainerManager {
     files: ProjectFile[],
     dependencies?: Record<string, string>,
     projectType?: ProjectType,
-  ): Promise<void> {
-    if (!files || files.length === 0) return;
+    targetProjectId?: string,
+    targetEpoch?: number,
+  ): Promise<boolean> {
+    if (!files || files.length === 0) return false;
 
-    this.updateState({ startupStage: 'mounting_files' });
+    const targetProject = targetProjectId ?? this.activeProjectId;
+    const targetGen = targetEpoch ?? this.sessionEpoch;
+
+    // Chain onto current mount operation so concurrent mount calls are strictly serialized
+    const previousMount = this.mountQueue;
+    let releaseMountLock: () => void = () => {};
+    this.mountQueue = new Promise<void>((resolve) => {
+      releaseMountLock = resolve;
+    });
 
     try {
-      const endSerialization = webcontainerPerf.startTimer('project_serialization');
+      await previousMount.catch(() => {});
+
+      // Stale mount guard 1: verify project identity and session epoch before progressing
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+        console.warn(
+          `[WebContainer] Discarded stale mount for project "${targetProject}" (epoch ${targetGen}) - active project is now "${this.activeProjectId}" (epoch ${this.sessionEpoch})`,
+        );
+        return false;
+      }
+
+      this.updateState({ startupStage: 'mounting_files' });
+
+      // Barrier: ensure any in-flight writes have settled before mounting files
+      const settled = await this.fileSyncCoordinator.barrier();
+      if (!settled) {
+        const errMsg = 'WebContainer filesystem barrier timeout: previous writes failed to settle';
+        console.error(`[WebContainer] ${errMsg}`);
+        this.setStartupStage('error', {
+          phase: 'mount',
+          message: errMsg,
+          timestamp: Date.now(),
+          recoverable: true,
+          retryAction: 'reboot_container',
+        });
+        throw new Error(errMsg);
+      }
+
+      // Stale mount guard 2: verify project scope after barrier
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+        console.warn(
+          `[WebContainer] Discarded stale mount after barrier for project "${targetProject}"`,
+        );
+        return false;
+      }
+
+      const endSerialization = webcontainerPerf.startTimer(
+        'project_serialization',
+      );
       const tree = filesToFileSystemTree(files, dependencies, projectType);
       endSerialization({ fileCount: files.length });
 
+      // Stale mount guard 3: verify project scope before mutating container filesystem
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+        console.warn(
+          `[WebContainer] Discarded stale mount before container.mount for project "${targetProject}"`,
+        );
+        return false;
+      }
+
       const endMount = webcontainerPerf.startTimer('filesystem_mount');
       const container = await this.boot();
+
+      // Stale mount guard 4: verify project scope after boot() completes
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+        console.warn(
+          `[WebContainer] Discarded stale mount after boot() for project "${targetProject}"`,
+        );
+        return false;
+      }
+
+      const diagnosticAttempt = this.diagnosticAttempt;
+      const mountStarted = Date.now();
+      this.diagnostics.record(diagnosticAttempt, 'mount', 'started');
       await container.mount(tree);
+
+      // Stale mount guard 5: verify project scope after container.mount() completes
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+        console.warn(
+          `[WebContainer] Discarded stale mount after container.mount() for project "${targetProject}"`,
+        );
+        return false;
+      }
+
       try {
         await container.fs.writeFile('.npmrc', OPTIMIZED_NPMRC);
       } catch {
         // ignore
       }
       endMount();
+      this.diagnostics.record(diagnosticAttempt, 'mount', 'succeeded', {
+        durationMs: Date.now() - mountStarted,
+      });
+      return true;
     } catch (err) {
+      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) return false;
       const msg = err instanceof Error ? err.message : String(err);
       this.setStartupStage('error', {
         phase: 'mount',
@@ -822,6 +1453,8 @@ class WebContainerManager {
         retryAction: 'reboot_container',
       });
       throw err;
+    } finally {
+      releaseMountLock();
     }
   }
 
@@ -829,7 +1462,13 @@ class WebContainerManager {
    * Retrieves the current installed manifest fingerprint, if any.
    */
   public getInstalledFingerprint(): string | null {
-    return this.installedManifestFingerprint;
+    const owner = this.installedOwner;
+    return owner &&
+      owner.projectId === this.activeProjectId &&
+      owner.generation === this.runtimeGeneration &&
+      owner.instance === this.instance
+      ? this.installedManifestFingerprint
+      : null;
   }
 
   /**
@@ -839,24 +1478,36 @@ class WebContainerManager {
     if (!this.instance) return false;
     try {
       const entries = await this.instance.fs.readdir('node_modules');
-      return Array.isArray(entries) && entries.length > 0;
+      return (
+        Array.isArray(entries) && entries.some((name) => !name.startsWith('.'))
+      );
     } catch {
       return false;
     }
   }
 
   /**
-   * Whether the project's own files declare npm metadata.
+   * Whether the project's own files declare root npm metadata.
    *
    * Automatic install/dev-server dispatch is gated on this: a project without
-   * its own package.json stays idle (no invented manifest, no npm work), while
+   * its own root package.json stays idle (no invented manifest, no npm work), while
    * explicit manual terminal commands keep working against the booted shell.
-   * Mirrors the manifest detection in filesToFileSystemTree.
+   * Nested package.json (e.g. in packages/app/package.json) does NOT trigger root auto-start.
    */
   public hasNpmManifest(files: ProjectFile[]): boolean {
     return files.some((f) =>
-      /(^|\/)package\.json$/i.test((f.path || '').replace(/^\/+/, '')),
+      (f.path || '').replace(/^\/+/, '').toLowerCase() === 'package.json',
     );
+  }
+
+  /**
+   * Whether the project declares any nested npm manifests (e.g. in a monorepo).
+   */
+  public hasNestedNpmManifest(files: ProjectFile[]): boolean {
+    return files.some((f) => {
+      const clean = (f.path || '').replace(/^\/+/, '').toLowerCase();
+      return clean !== 'package.json' && clean.endsWith('/package.json');
+    });
   }
 
   /**
@@ -869,9 +1520,26 @@ class WebContainerManager {
     projectType?: ProjectType,
   ): Promise<{ needsInstall: boolean; reason: string; fingerprint: string }> {
     const endTimer = webcontainerPerf.startTimer('manifest_detection');
-    const fingerprint = computeDependencyFingerprint(files, extraDependencies, projectType);
+    const fingerprint = computeDependencyFingerprint(
+      files,
+      extraDependencies,
+      projectType,
+    );
+    const owner = this.captureStartupOwner();
+    const decision = (
+      reason:
+        | 'unbooted'
+        | 'missing_node_modules'
+        | 'fingerprint_mismatch'
+        | 'owner_mismatch'
+        | 'cached_verified',
+    ) =>
+      this.diagnostics.record(this.diagnosticAttempt, 'decision', 'observed', {
+        reason,
+      });
 
     if (!this.instance) {
+      decision('unbooted');
       endTimer({ needsInstall: true, reason: 'unbooted' });
       return {
         needsInstall: true,
@@ -882,7 +1550,14 @@ class WebContainerManager {
 
     // Check actual runtime presence of node_modules in virtual filesystem
     const hasNodeModules = await this.isDependenciesInstalled();
+    if (!this.isStartupOwner(owner))
+      return {
+        needsInstall: true,
+        reason: 'Project/runtime changed during dependency check',
+        fingerprint,
+      };
     if (!hasNodeModules) {
+      decision('missing_node_modules');
       endTimer({ needsInstall: true, reason: 'missing_node_modules' });
       return {
         needsInstall: true,
@@ -892,7 +1567,12 @@ class WebContainerManager {
     }
 
     // If node_modules exists, check if the installed manifest matches current project
-    if (this.installedManifestFingerprint !== fingerprint) {
+    if (this.getInstalledFingerprint() !== fingerprint) {
+      decision(
+        this.installedManifestFingerprint === fingerprint
+          ? 'owner_mismatch'
+          : 'fingerprint_mismatch',
+      );
       endTimer({ needsInstall: true, reason: 'fingerprint_mismatch' });
       return {
         needsInstall: true,
@@ -902,6 +1582,7 @@ class WebContainerManager {
     }
 
     endTimer({ needsInstall: false, reason: 'cached_and_verified' });
+    decision('cached_verified');
     return {
       needsInstall: false,
       reason: 'Dependencies already installed and verified in active container',
@@ -912,8 +1593,14 @@ class WebContainerManager {
   /**
    * Records that installation completed successfully for a given fingerprint.
    */
-  public recordInstallComplete(fingerprint: string): void {
+  public recordInstallComplete(
+    fingerprint: string,
+    owner = this.captureStartupOwner(),
+  ): boolean {
+    if (!owner.instance || !this.isStartupOwner(owner)) return false;
     this.installedManifestFingerprint = fingerprint;
+    this.installedOwner = owner;
+    return true;
   }
 
   /**
@@ -921,6 +1608,7 @@ class WebContainerManager {
    */
   public invalidateDependencyCache(): void {
     this.installedManifestFingerprint = null;
+    this.installedOwner = null;
   }
 
   /**
@@ -948,51 +1636,194 @@ class WebContainerManager {
 
   /**
    * Writes a single file to the WebContainer filesystem.
-   * Creates parent directories recursively if they don't exist.
+   * Debounced (200ms) and serialized through FileSyncCoordinator to eliminate write races.
    */
-  public async syncFile(path: string, content: string): Promise<void> {
-    if (!this.instance) return;
+  public async syncFile(
+    path: string,
+    content: string,
+    projectId?: string,
+  ): Promise<void> {
+    this.fileSyncCoordinator.queueSync(
+      path,
+      content,
+      projectId ?? this.activeProjectId,
+    );
+  }
+
+  /**
+   * Flushes all pending debounced writes immediately.
+   * Used prior to navigation, project switching, or backups.
+   */
+  public async flushFileSync(): Promise<FlushResult> {
+    return this.fileSyncCoordinator.flush();
+  }
+
+  /**
+   * Waits for any currently in-flight writes to settle to virtual disk.
+   */
+  public async barrierFileSync(timeoutMs?: number): Promise<boolean> {
+    return this.fileSyncCoordinator.barrier(timeoutMs);
+  }
+
+  /**
+   * Removes a file from the WebContainer filesystem, cancelling any pending debounced writes for it.
+   */
+  public async deleteFile(path: string, timeoutMs?: number): Promise<void> {
+    const cleanPath = path.replace(/^\/+/, '').replace(/\/+$/, '');
+    if (!cleanPath || cleanPath.includes('\\') || cleanPath.split('/').some((part) => !part || part === '.' || part === '..')) {
+      throw new Error('Invalid delete path');
+    }
+    const project = this.activeProjectId;
+    const epoch = this.sessionEpoch;
+    const container = this.instance;
+    const assertOwner = () => {
+      if (project !== this.activeProjectId || epoch !== this.sessionEpoch || container !== this.instance) {
+        throw new Error('Project changed during delete');
+      }
+    };
+    const previousMount = this.mountQueue;
+    let release: () => void = () => {};
+    this.mountQueue = new Promise<void>((resolve) => { release = resolve; });
     try {
-      const cleanPath = path.replace(/^\/+/, '');
-      if (
-        cleanPath === 'package.json' ||
-        cleanPath === 'package-lock.json' ||
-        cleanPath === 'pnpm-lock.yaml' ||
-        cleanPath === 'yarn.lock'
-      ) {
-        this.invalidateDependencyCache();
-      }
-      const dirIndex = cleanPath.lastIndexOf('/');
-      if (dirIndex !== -1) {
-        const dir = cleanPath.slice(0, dirIndex);
-        await this.instance.fs.mkdir(dir, { recursive: true });
-      }
-      await this.instance.fs.writeFile(cleanPath, content);
-    } catch (err) {
-      console.warn(`[WebContainer] Failed to sync file ${path}:`, err);
+      await previousMount;
+      assertOwner();
+      await this.fileSyncCoordinator.handleDelete(
+        cleanPath,
+        timeoutMs,
+        async (cleanPath) => {
+        assertOwner();
+        if (container) await container.fs.rm(cleanPath, { recursive: true });
+        assertOwner();
+      },
+      );
+    } finally {
+      release();
     }
   }
 
   /**
-   * Removes a file from the WebContainer filesystem.
+   * Renames a file or directory in the WebContainer virtual filesystem.
+   *
+   * Serialize against mounts, pause affected writes, and remap pending edits only
+   * after a successful physical move. Cross-device copies retain the whole source
+   * until copying completes; other native errors propagate without fallback.
    */
-  public async deleteFile(path: string): Promise<void> {
-    if (!this.instance) return;
-    try {
-      const cleanPath = path.replace(/^\/+/, '');
-      if (
-        cleanPath === 'package.json' ||
-        cleanPath === 'package-lock.json' ||
-        cleanPath === 'pnpm-lock.yaml' ||
-        cleanPath === 'yarn.lock' ||
-        cleanPath === 'node_modules' ||
-        cleanPath.startsWith('node_modules/')
-      ) {
-        this.invalidateDependencyCache();
+  public async renameFile(
+    oldPath: string,
+    newPath: string,
+    timeoutMs?: number,
+  ): Promise<void> {
+    const cleanOld = oldPath.replace(/^\/+/, '').replace(/\/+$/, '');
+    const cleanNew = newPath.replace(/^\/+/, '').replace(/\/+$/, '');
+    const safePath = (p: string) => p.length > 0 && !p.includes('\\') &&
+      !p.split('/').some((part) => !part || part === '.' || part === '..');
+    if (!safePath(cleanOld) || !safePath(cleanNew) || cleanNew.startsWith(`${cleanOld}/`)) {
+      throw new Error('Invalid rename path');
+    }
+    if (cleanOld === cleanNew) return;
+    const project = this.activeProjectId;
+    const epoch = this.sessionEpoch;
+    const container = this.instance;
+    const assertOwner = () => {
+      if (project !== this.activeProjectId || epoch !== this.sessionEpoch || container !== this.instance) {
+        throw new Error('Project changed during rename');
       }
-      await this.instance.fs.rm(cleanPath, { recursive: true });
-    } catch (err) {
-      console.warn(`[WebContainer] Failed to remove file ${path}:`, err);
+    };
+    const previousMount = this.mountQueue;
+    let release: () => void = () => {};
+    this.mountQueue = new Promise<void>((resolve) => { release = resolve; });
+    try {
+      await previousMount;
+      assertOwner();
+      await this.fileSyncCoordinator.handleRename(
+        cleanOld,
+        cleanNew,
+        timeoutMs,
+        container
+          ? async () => {
+              assertOwner();
+              if (!container) return; // Unbooted editors still rename their authoritative project state.
+              const parent = cleanNew.includes('/') ? cleanNew.slice(0, cleanNew.lastIndexOf('/')) : '.';
+              if (parent !== '.') await container.fs.mkdir(parent, { recursive: true });
+              assertOwner();
+              const entries = await container.fs.readdir(parent);
+              assertOwner();
+              if (
+                entries.some(
+                  (name) => name.toLowerCase() === cleanNew.split('/').pop()!.toLowerCase(),
+                )
+              ) {
+                throw new Error(
+                  `Rename destination already exists: ${cleanNew}`,
+                );
+              }
+              try {
+          await container.fs.rename(cleanOld, cleanNew);
+        } catch (error) {
+                const code = (error as { code?: string })?.code;
+                if (code !== 'EXDEV' && !(error instanceof Error && error.message.startsWith('EXDEV:'))) throw error;
+                assertOwner();
+                await this.copyRenameSource(
+                  container,
+                  cleanOld,
+                  cleanNew,
+                  assertOwner,
+                );
+                assertOwner();
+                // Only the complete source tree is removed, after every copy succeeded.
+                await container.fs.rm(cleanOld, { recursive: true });
+              }
+              assertOwner();
+            }
+          : undefined,
+      );
+    } finally {
+      release();
+    }
+  }
+
+  /**
+   * Copy without deleting any source entry. A failed copy can leave a partial
+   * destination, but the source is intact and retry cannot overwrite that destination.
+   */
+  private async copyRenameSource(
+    container: WebContainer, cleanOld: string, cleanNew: string, assertOwner: () => void,
+  ): Promise<void> {
+    assertOwner();
+    let fileContent: Uint8Array;
+    try {
+      fileContent = await container.fs.readFile(cleanOld);
+    } catch (error) {
+      const code = (error as { code?: string })?.code;
+      if (code !== 'EISDIR' && !(error instanceof Error && error.message.startsWith('EISDIR:'))) throw error;
+      assertOwner();
+      const entries = await container.fs.readdir(cleanOld, {
+        withFileTypes: true,
+      });
+      assertOwner();
+      await container.fs.mkdir(cleanNew);
+      for (const entry of entries) {
+        await this.copyRenameSource(
+          container,
+          `${cleanOld}/${entry.name}`,
+          `${cleanNew}/${entry.name}`,
+          assertOwner,
+        );
+      }
+      return;
+    }
+    assertOwner();
+    await container.fs.writeFile(cleanNew, fileContent);
+  }
+
+  /**
+   * Cancels pending file syncs for a specific path or all paths.
+   */
+  public cancelPendingSync(path?: string): void {
+    if (path) {
+      this.fileSyncCoordinator.cancelPath(path);
+    } else {
+      this.fileSyncCoordinator.cancelAll();
     }
   }
 
@@ -1012,6 +1843,7 @@ class WebContainerManager {
     kill: () => void;
     disconnect: () => void;
   }> {
+    const generation = this.runtimeGeneration;
     // 1. If not forcing a restart, check if an existing shell is active and healthy
     if (!options.forceRestart && this.shellProcess && this.shellWriter) {
       this.shellDataListeners.add(options.onData);
@@ -1036,13 +1868,16 @@ class WebContainerManager {
 
       return {
         write: (data: string) => {
+          if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
           try {
-            writer.write(data);
+            void writer.write(data).catch((err) => console.error('[WebContainer] Failed to write to shell:', err),
+              );
           } catch (err) {
             console.error('[WebContainer] Failed to write to shell:', err);
           }
         },
         resize: (cols: number, rows: number) => {
+          if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
           try {
             process.resize({ cols, rows });
           } catch (err) {
@@ -1050,7 +1885,7 @@ class WebContainerManager {
           }
         },
         kill: () => {
-          this.terminateShell();
+          if (generation === this.runtimeGeneration && this.shellProcess === process) this.terminateShell();
         },
         disconnect: () => {
           this.shellDataListeners.delete(options.onData);
@@ -1061,6 +1896,7 @@ class WebContainerManager {
     // 2. If a spawn is currently in progress, await it
     if (this.shellSpawnPromise) {
       await this.shellSpawnPromise;
+      if (generation !== this.runtimeGeneration) throw new Error('Project changed while waiting for shell');
       return this.spawnInteractiveShell(options);
     }
 
@@ -1070,16 +1906,23 @@ class WebContainerManager {
 
     this.shellSpawnPromise = (async () => {
       const container = await this.boot();
+      if (generation !== this.runtimeGeneration) throw new Error('Project changed before shell spawn');
 
       // Clean up previous shell if any
       this.terminateShell();
 
+      const shellOwner = this.captureStartupOwner();
       const process = await container.spawn('jsh', {
         terminal: {
           cols: options.cols,
           rows: options.rows,
         },
       });
+      if (generation !== this.runtimeGeneration) {
+        process.kill();
+        throw new Error('Project changed during shell spawn');
+      }
+      this.diagnostics.record(this.diagnosticAttempt, 'shell', 'observed');
 
       this.shellProcess = process;
       const writer = process.input.getWriter();
@@ -1092,10 +1935,10 @@ class WebContainerManager {
       this.isShellPromptReady = false;
 
       // Pipe output to buffer and all active listeners
-      process.output
-        .pipeTo(
+      process.output.pipeTo(
           new WritableStream({
             write: (chunk: string) => {
+              if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
               this.shellOutputBuffer.push(chunk);
               if (this.shellOutputBuffer.length > 500) {
                 this.shellOutputBuffer.shift();
@@ -1113,66 +1956,7 @@ class WebContainerManager {
                 this.isShellPromptReady = true;
               }
 
-              // Detect package install completion
-              if (
-                (chunk.includes('added ') && chunk.includes('package')) ||
-                chunk.includes('up to date')
-              ) {
-                if (this.state.startupStage === 'installing') {
-                  this.updateState({ startupStage: 'starting_server' });
-                }
-              }
-
-              // Detect dev server readiness
-              if (
-                chunk.includes('ready in') ||
-                chunk.includes('VITE') ||
-                chunk.includes('Local:   http://') ||
-                chunk.includes('Network: http://')
-              ) {
-                this.isDevServerActive = true;
-                this.isDevServerStartingState = false;
-                if (this.state.serverUrl) {
-                  this.updateState({ startupStage: 'ready' });
-                }
-              }
-
-              // Detect fatal install or server errors
-              const isInstallErr =
-                chunk.includes('npm ERR!') ||
-                chunk.includes('npm error:') ||
-                chunk.includes('code ERESOLVE') ||
-                chunk.includes('code ENOENT');
-
-              const isServerErr =
-                chunk.includes('EADDRINUSE') ||
-                chunk.includes('address already in use') ||
-                chunk.includes('failed to load config') ||
-                (chunk.includes('Error: Cannot find module') &&
-                  (this.state.startupStage === 'starting_server' || this.isDevServerStartingState));
-
-              if (isInstallErr && this.state.startupStage === 'installing') {
-                this.isDevServerStartingState = false;
-                this.setStartupStage('error', {
-                  phase: 'install',
-                  message: 'npm install failed. Check terminal output for details.',
-                  timestamp: Date.now(),
-                  recoverable: true,
-                  retryAction: 'retry_install',
-                });
-              } else if (
-                isServerErr &&
-                (this.state.startupStage === 'starting_server' || this.isDevServerStartingState)
-              ) {
-                this.isDevServerStartingState = false;
-                this.setStartupStage('error', {
-                  phase: 'server',
-                  message: 'Development server startup failed. Check terminal output for details.',
-                  timestamp: Date.now(),
-                  recoverable: true,
-                  retryAction: 'restart_server',
-                });
-              }
+              this.observeStartupOutput(chunk);
             },
           }),
         )
@@ -1182,12 +1966,22 @@ class WebContainerManager {
 
       // Handle process exit
       void process.exit.then((exitCode) => {
-        console.log(`[WebContainer] Shell process exited with code ${exitCode}`);
+        if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
+        console.log(
+          `[WebContainer] Shell process exited with code ${exitCode}`,
+        );
+        this.diagnostics.record(this.diagnosticAttempt, 'shell', 'observed', {
+          exitCode,
+        });
         this.shellProcess = null;
         this.shellWriter = null;
         this.isDevServerActive = false;
         this.isDevServerStartingState = false;
         this.isShellPromptReady = false;
+        if (this.automaticStartup) {
+          this.markStartupUnknown(this.automaticStartup.owner, false);
+          return;
+        }
         if (exitCode !== 0 && this.state.startupStage !== 'idle') {
           this.setStartupStage('error', {
             phase: 'general',
@@ -1206,19 +2000,63 @@ class WebContainerManager {
             activeServers: [],
           });
         }
+      }, () => {
+        // A persistent jsh can span session restarts. Validate its runtime
+        // owner and the current operation's epoch, not its original epoch.
+        const owner = this.automaticStartup?.owner ?? this.captureStartupOwner();
+        if (
+          !this.isRuntimeOwner(shellOwner) ||
+          !this.isStartupOwner(owner) ||
+          this.shellProcess !== process
+        ) return; // Retired/superseded rejection: never mutate the next owner.
+
+        // A finished attempt is immutable; retain it and record the new event
+        // separately. Never persist the arbitrary rejection payload.
+        if (owner.projectId && this.diagnostics.snapshot().find(
+          attempt => attempt.id === this.diagnosticAttempt,
+        )?.state !== 'running') {
+          this.diagnosticAttempt = this.diagnostics.begin(
+            owner.projectId, owner.epoch, owner.generation,
+          );
+        }
+        this.diagnostics.record(this.diagnosticAttempt, 'shell', 'unknown', { code: 'UNKNOWN' });
+        this.diagnostics.finish(this.diagnosticAttempt, 'unknown');
+        if (this.startupWatchdog) clearTimeout(this.startupWatchdog);
+        this.startupWatchdog = null;
+        this.shellProcess = null;
+        this.shellWriter = null;
+        this.isDevServerActive = false;
+        this.isDevServerStartingState = false;
+        this.isShellPromptReady = false;
+        this.updateState({
+          startupStage: 'error',
+          error: 'Shell exit status unknown',
+          runtimeError: {
+            phase: 'general',
+            message: 'The shell exit promise rejected; child-process status is unknown. Inspect the terminal, or return to Projects and reopen before retrying.',
+            timestamp: Date.now(),
+            recoverable: true,
+            retryAction: 'reboot_container',
+          },
+        });
+        // Retain an owned automatic operation: rejection proves no child exit
+        // code and must not unlock a duplicate install or automatic retry.
       });
 
       this.updateState({ status: 'running' });
 
       return {
         write: (data: string) => {
+          if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
           try {
-            writer.write(data);
+            void writer.write(data).catch((err) => console.error('[WebContainer] Failed to write to shell:', err),
+              );
           } catch (err) {
             console.error('[WebContainer] Failed to write to shell:', err);
           }
         },
         resize: (cols: number, rows: number) => {
+          if (generation !== this.runtimeGeneration || this.shellProcess !== process) return;
           try {
             process.resize({ cols, rows });
           } catch (err) {
@@ -1226,7 +2064,7 @@ class WebContainerManager {
           }
         },
         kill: () => {
-          this.terminateShell();
+          if (generation === this.runtimeGeneration && this.shellProcess === process) this.terminateShell();
         },
         disconnect: () => {
           this.shellDataListeners.delete(options.onData);
@@ -1234,10 +2072,11 @@ class WebContainerManager {
       };
     })();
 
+    const pendingSpawn = this.shellSpawnPromise;
     try {
-      return await this.shellSpawnPromise;
+      return await pendingSpawn;
     } finally {
-      this.shellSpawnPromise = null;
+      if (this.shellSpawnPromise === pendingSpawn) this.shellSpawnPromise = null;
     }
   }
 

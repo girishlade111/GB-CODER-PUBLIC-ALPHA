@@ -13,7 +13,7 @@ import {
 } from '../../services/localShell';
 import {
   webcontainerService,
-  WebContainerStatus,
+  type StartupOwner,
 } from '../../services/webcontainer/webcontainerService';
 import {
   describeWebContainerUnavailableReason,
@@ -30,6 +30,7 @@ interface TerminalTabProps {
   /** Terminal is only mounted/fitted while its tab is visible. */
   isActive: boolean;
   autoStartProject?: boolean;
+  projectId?: string;
 }
 
 const PROMPT = `${ANSI.brightGreen}gb${ANSI.reset}${ANSI.gray}:${ANSI.reset}${ANSI.brightCyan}~${ANSI.reset}${ANSI.gray}$${ANSI.reset} `;
@@ -44,18 +45,19 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   isResolvingPackages,
   isActive,
   autoStartProject = true,
+  projectId,
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const hasAutoStartedRef = useRef(false);
-  const pendingFingerprintRef = useRef<string | null>(null);
   const restartDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRestartReasonRef = useRef<string | null>(null);
+  const restartHandlerRef = useRef<(reason?: string) => void>(() => {});
   const isShellPromptReadyRef = useRef(false);
   const pendingAutoStartCmdRef = useRef<{
     cmd: string;
-    epoch: number;
+    owner: StartupOwner;
     termMessage?: string;
   } | null>(null);
   const shellPromptWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -196,10 +198,11 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
    * Otherwise queues the command and arms a 15-second watchdog timer.
    */
   const dispatchWhenShellReady = useCallback(
-    (cmd: string, epoch: number, termMessage?: string) => {
+    (cmd: string, owner: StartupOwner, termMessage?: string) => {
       const term = termRef.current;
       const shell = webcontainerShellRef.current;
 
+      if (!webcontainerService.isStartupOwner(owner)) return;
       const isReady = isShellPromptReadyRef.current || webcontainerService.isShellReady();
 
       if (isReady && shell) {
@@ -210,30 +213,37 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         }
         webcontainerService.setDevServerStarting(true);
         isShellPromptReadyRef.current = false;
-        shell.write(`${cmd}\n`);
+        if (webcontainerService.automaticCommandDispatched(owner)) shell.write(`${cmd}\n`);
         return;
       }
 
       // Queue command for dispatch upon prompt detection in onData
-      pendingAutoStartCmdRef.current = { cmd, epoch, termMessage };
+      pendingAutoStartCmdRef.current = { cmd, owner, termMessage };
       clearShellPromptWatchdog();
       shellPromptWatchdogRef.current = setTimeout(() => {
-        if (pendingAutoStartCmdRef.current && pendingAutoStartCmdRef.current.epoch === epoch) {
+        if (pendingAutoStartCmdRef.current && pendingAutoStartCmdRef.current.owner === owner && webcontainerService.isStartupOwner(owner)) {
           console.warn('[WebContainer] Shell prompt readiness watchdog triggered after 15s');
-          webcontainerService.setStartupStage('error', {
-            phase: 'boot',
-            message: 'Shell initialization timed out waiting for prompt',
-            timestamp: Date.now(),
-            recoverable: true,
-            retryAction: 'reboot_container',
-          });
-          webcontainerService.setDevServerStarting(false);
+          webcontainerService.markStartupUnknown(owner);
           pendingAutoStartCmdRef.current = null;
         }
       }, 15000);
     },
     [clearShellPromptWatchdog],
   );
+
+  // One owner-bound dispatch path shared by initial startup and explicit restart.
+  const queueAutomaticStart = useCallback(async (proj: MultiFileProject, owner: StartupOwner, message: string) => {
+    if (!webcontainerService.isStartupOwner(owner)) return;
+    const fingerprint = webcontainerService.computeDependencyFingerprint(proj.files, proj.dependencies, proj.projectType);
+    if (webcontainerService.hasStartedProject(fingerprint) || webcontainerService.isDevServerRunning(owner.projectId || undefined)) return;
+    const check = await webcontainerService.needsDependencyInstall(proj.files, proj.dependencies, proj.projectType);
+    if (!webcontainerService.isStartupOwner(owner)) return;
+    const operation = webcontainerService.beginAutomaticStartup(fingerprint, check.needsInstall, owner);
+    if (!operation) return;
+    webcontainerService.markProjectStarted(fingerprint);
+    dispatchWhenShellReady(check.needsInstall ? 'npm install --prefer-offline && npm run dev' : 'npm run dev', operation,
+      '\r\n' + message + (check.needsInstall ? ': Installing dependencies & starting dev server...\r\n' : ': Dependencies verified; starting dev server...\r\n'));
+  }, [dispatchWhenShellReady]);
 
   /** Spawns or reconnects WebContainer interactive PTY shell */
   const startWebContainerShell = useCallback(async (forceRestart = false) => {
@@ -251,6 +261,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     }
 
     isStartingShellRef.current = true;
+    let startupOwner: StartupOwner | null = null;
     try {
       term.write(
         `\r\n${ANSI.brightGreen}⚡ Booting WebContainer (In-Browser Node.js runtime)...${ANSI.reset}\r\n`,
@@ -258,14 +269,28 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       webcontainerService.setStartupStage('booting');
 
       const currentProj = projectRef.current;
+      const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
+      if (effectiveProjectId) {
+        webcontainerService.attachProject(effectiveProjectId);
+      }
+
+      startupOwner = webcontainerService.captureStartupOwner();
 
       // Mount project files into virtual filesystem if files exist
       if (currentProj.files.length > 0) {
-        await webcontainerService.mountProject(
+        const mounted = await webcontainerService.mountProject(
           currentProj.files,
           currentProj.dependencies,
           currentProj.projectType,
+          effectiveProjectId,
+          webcontainerService.getSessionEpoch(),
         );
+        if (!mounted) {
+          term.write(
+            `${ANSI.brightYellow}Mount aborted — project switched or session invalidated.${ANSI.reset}\r\n`,
+          );
+          return;
+        }
         term.write(
           `${ANSI.gray}Files mounted into virtual filesystem. Starting interactive shell...${ANSI.reset}\r\n`,
         );
@@ -275,11 +300,16 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         );
       }
 
+      if (!webcontainerService.isStartupScope(startupOwner)) return;
+      const shellOwner = webcontainerService.captureStartupOwner();
+      startupOwner = shellOwner;
+
       // Spawn or reconnect interactive shell
       const shell = await webcontainerService.spawnInteractiveShell({
         cols: term.cols || 80,
         rows: term.rows || 24,
         onData: (chunk) => {
+          if (!webcontainerService.isRuntimeOwner(shellOwner)) return;
           term.write(chunk);
 
           // 0. Shell prompt readiness detection (❯ prompt in jsh)
@@ -291,7 +321,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
               const pending = pendingAutoStartCmdRef.current;
               pendingAutoStartCmdRef.current = null;
 
-              if (pending.epoch === webcontainerService.getSessionEpoch()) {
+              if (webcontainerService.isStartupOwner(pending.owner) && webcontainerService.automaticCommandDispatched(pending.owner)) {
                 if (pending.termMessage) {
                   term.write(pending.termMessage);
                 }
@@ -307,73 +337,12 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
             }
           }
 
-          // 1. Package install success confirmation
-          if (
-            (chunk.includes('added ') && chunk.includes('package')) ||
-            chunk.includes('up to date')
-          ) {
-            if (pendingFingerprintRef.current) {
-              webcontainerService.recordInstallComplete(pendingFingerprintRef.current);
-            }
-            if (webcontainerService.getState().startupStage === 'installing') {
-              webcontainerService.setStartupStage('starting_server');
-            }
-          }
 
-          // 2. Dev server ready confirmation
-          if (
-            chunk.includes('VITE') ||
-            chunk.includes('ready in') ||
-            chunk.includes('Local:   http://') ||
-            chunk.includes('Network: http://')
-          ) {
-            if (webcontainerService.getState().serverUrl) {
-              webcontainerService.setStartupStage('ready');
-            }
-          }
-
-          // 3. Process failure detection (npm ERR!, ERESOLVE, EADDRINUSE, etc.)
-          const isInstallErr =
-            chunk.includes('npm ERR!') ||
-            chunk.includes('npm error:') ||
-            chunk.includes('code ERESOLVE') ||
-            chunk.includes('code ENOENT');
-
-          const isServerErr =
-            chunk.includes('EADDRINUSE') ||
-            chunk.includes('address already in use') ||
-            chunk.includes('failed to load config') ||
-            (chunk.includes('Error: Cannot find module') &&
-              (webcontainerService.getState().startupStage === 'starting_server' ||
-                webcontainerService.isDevServerStarting()));
-
-          if (isInstallErr && webcontainerService.getState().startupStage === 'installing') {
-            webcontainerService.setDevServerStarting(false);
-            webcontainerService.setStartupStage('error', {
-              phase: 'install',
-              message: 'npm install failed with error. Check terminal output for details.',
-              timestamp: Date.now(),
-              recoverable: true,
-              retryAction: 'retry_install',
-            });
-          } else if (
-            isServerErr &&
-            (webcontainerService.getState().startupStage === 'starting_server' ||
-              webcontainerService.isDevServerStarting())
-          ) {
-            webcontainerService.setDevServerStarting(false);
-            webcontainerService.setStartupStage('error', {
-              phase: 'server',
-              message: 'Development server failed to start. Port may be in use or configuration is invalid.',
-              timestamp: Date.now(),
-              recoverable: true,
-              retryAction: 'restart_server',
-            });
-          }
         },
         forceRestart,
       });
 
+      if (!webcontainerService.isStartupOwner(shellOwner)) { shell.disconnect(); return; }
       webcontainerShellRef.current = shell;
       setWcState(webcontainerService.getState());
 
@@ -390,62 +359,10 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       } else if (autoStartProject !== false && !hasAutoStartedRef.current && projToStart.files.length > 0) {
         hasAutoStartedRef.current = true;
 
-        const fingerprint = webcontainerService.computeDependencyFingerprint(
-          projToStart.files,
-          projToStart.dependencies,
-          projToStart.projectType,
-        );
-        pendingFingerprintRef.current = fingerprint;
-
-        // Idempotency: verify if this project has already been started in this session epoch
-        if (webcontainerService.hasStartedProject(fingerprint)) {
-          return;
-        }
-
-        // Idempotency: verify if dev server is already running
-        if (webcontainerService.isDevServerRunning()) {
-          term.write(
-            `\r\n${ANSI.brightGreen}⚡ Connected to active WebContainer Dev Server (${webcontainerService.getState().serverUrl ?? 'port ready'}).${ANSI.reset}\r\n`,
-          );
-          webcontainerService.markProjectStarted(fingerprint);
-          return;
-        }
-
-        if (webcontainerService.isDevServerStarting()) {
-          term.write(
-            `\r\n${ANSI.brightYellow}⚡ Dev Server startup currently in progress...${ANSI.reset}\r\n`,
-          );
-          return;
-        }
-
-        webcontainerService.markProjectStarted(fingerprint);
-        const startEpoch = webcontainerService.getSessionEpoch();
-
-        const check = await webcontainerService.needsDependencyInstall(
-          projToStart.files,
-          projToStart.dependencies,
-          projToStart.projectType,
-        );
-
-        if (startEpoch !== webcontainerService.getSessionEpoch()) return;
-
-        if (check.needsInstall) {
-          webcontainerService.setStartupStage('installing');
-          dispatchWhenShellReady(
-            'npm install --prefer-offline && npm run dev',
-            startEpoch,
-            `\r\n${ANSI.brightCyan}⚡ StackBlitz Auto-Start: Installing dependencies & starting dev server...${ANSI.reset}\r\n`,
-          );
-        } else {
-          webcontainerService.setStartupStage('starting_server');
-          dispatchWhenShellReady(
-            'npm run dev',
-            startEpoch,
-            `\r\n${ANSI.brightGreen}⚡ Fast Start: Dependencies verified in container. Launching dev server directly...${ANSI.reset}\r\n`,
-          );
-        }
+        await queueAutomaticStart(projToStart, shellOwner, 'Auto-Start');
       }
     } catch (err) {
+      if (startupOwner && !webcontainerService.isStartupScope(startupOwner)) return;
       clearShellPromptWatchdog();
       pendingAutoStartCmdRef.current = null;
       const msg = err instanceof Error ? err.message : String(err);
@@ -463,19 +380,22 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       if (pendingRestartReasonRef.current) {
         const pendingReason = pendingRestartReasonRef.current;
         pendingRestartReasonRef.current = null;
-        triggerDevServerRestart(pendingReason);
+        restartHandlerRef.current(pendingReason);
       }
     }
-  }, [autoStartProject, dispatchWhenShellReady, clearShellPromptWatchdog]);
+  }, [autoStartProject, projectId, queueAutomaticStart, clearShellPromptWatchdog]);
 
   /** Triggers dev server restart and dependencies installation */
   const triggerDevServerRestart = useCallback(
     (reason = 'Restart request') => {
+      if (webcontainerService.isAutomaticStartupBusy()) return;
+      const requestedOwner = webcontainerService.captureStartupOwner();
       if (restartDebounceTimerRef.current) {
         clearTimeout(restartDebounceTimerRef.current);
       }
 
       restartDebounceTimerRef.current = setTimeout(() => {
+        if (!webcontainerService.isStartupOwner(requestedOwner)) return;
         const term = termRef.current;
         const shell = webcontainerShellRef.current;
 
@@ -521,51 +441,23 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
                 return;
               }
 
-              // Ensure project files are mounted before checking dependencies or starting Vite
-              await webcontainerService.mountProject(
+              const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
+              const mounted = await webcontainerService.mountProject(
                 currentProj.files,
                 currentProj.dependencies,
                 currentProj.projectType,
+                effectiveProjectId,
+                restartEpoch,
               );
-
-              if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
-
-              const fingerprint = webcontainerService.computeDependencyFingerprint(
-                currentProj.files,
-                currentProj.dependencies,
-                currentProj.projectType,
-              );
-              pendingFingerprintRef.current = fingerprint;
-              webcontainerService.markProjectStarted(fingerprint);
-
-              const check = await webcontainerService.needsDependencyInstall(
-                currentProj.files,
-                currentProj.dependencies,
-                currentProj.projectType,
-              );
-
-              if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
-
-              if (check.needsInstall) {
-                webcontainerService.setStartupStage('installing');
-                dispatchWhenShellReady(
-                  'npm install --prefer-offline && npm run dev',
-                  restartEpoch,
-                  term
-                    ? `\r\n${ANSI.brightCyan}⚡ [${reason}]: Installing dependencies & starting dev server...${ANSI.reset}\r\n`
-                    : undefined,
-                );
-              } else {
-                webcontainerService.setStartupStage('starting_server');
-                dispatchWhenShellReady(
-                  'npm run dev',
-                  restartEpoch,
-                  term
-                    ? `\r\n${ANSI.brightGreen}⚡ [${reason}]: Dependencies verified. Fast restarting dev server...${ANSI.reset}\r\n`
-                    : undefined,
-                );
+              if (!mounted) {
+                return;
               }
+
+              if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
+
+              await queueAutomaticStart(currentProj, webcontainerService.captureStartupOwner(), reason);
             } catch (err) {
+              if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
               clearShellPromptWatchdog();
               pendingAutoStartCmdRef.current = null;
               const msg = err instanceof Error ? err.message : String(err);
@@ -591,8 +483,9 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         }
       }, 150);
     },
-    [mode, startWebContainerShell, dispatchWhenShellReady, clearShellPromptWatchdog],
+    [mode, projectId, startWebContainerShell, queueAutomaticStart, clearShellPromptWatchdog],
   );
+  restartHandlerRef.current = triggerDevServerRestart;
 
   // Auto-start when project files hydrate from IndexedDB if not already started
   useEffect(() => {
@@ -607,6 +500,14 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       triggerDevServerRestart(reason || 'Restarting dev server');
     });
   }, [triggerDevServerRestart]);
+
+  // Attach project scope to webcontainerService
+  useEffect(() => {
+    const effectiveId = projectId || (project as unknown as { id?: string }).id;
+    if (effectiveId) {
+      webcontainerService.attachProject(effectiveId);
+    }
+  }, [projectId, (project as unknown as { id?: string }).id]);
 
   /** Creates the terminal once, then wires input handling. */
   useEffect(() => {
@@ -836,26 +737,38 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
   const handleQuickNpmInstall = useCallback(async () => {
     if (mode === 'webcontainer') {
+      if (webcontainerService.isAutomaticStartupBusy()) {
+        termRef.current?.write('\r\nStartup is already active or its status is unknown. Inspect the terminal before retrying.\r\n');
+        return;
+      }
       const currentProj = projectRef.current;
-      await webcontainerService.mountProject(
+      const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
+      const mounted = await webcontainerService.mountProject(
         currentProj.files,
         currentProj.dependencies,
         currentProj.projectType,
+        effectiveProjectId,
+        webcontainerService.getSessionEpoch(),
       );
+      if (!mounted) {
+        return;
+      }
       if (!webcontainerShellRef.current) {
         await startWebContainerShell();
       }
-      const fingerprint = webcontainerService.computeDependencyFingerprint(
-        currentProj.files,
-        currentProj.dependencies,
-        currentProj.projectType,
-      );
-      pendingFingerprintRef.current = fingerprint;
+      // Stale transition guard: ensure active project did not change while shell was starting
+      const activeProjId = webcontainerService.getActiveProjectId();
+      if (effectiveProjectId && activeProjId && effectiveProjectId !== activeProjId) {
+        console.warn(
+          `[TerminalTab] Aborted quick npm install: project changed during shell startup (target "${effectiveProjectId}", now "${activeProjId}")`,
+        );
+        return;
+      }
       sendCommand('npm install --prefer-offline --legacy-peer-deps');
     } else {
       sendCommand('npm install --prefer-offline --legacy-peer-deps');
     }
-  }, [mode, startWebContainerShell, sendCommand]);
+  }, [mode, projectId, startWebContainerShell, sendCommand]);
 
   const clearTerminal = () => {
     termRef.current?.clear();

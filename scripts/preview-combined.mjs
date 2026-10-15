@@ -17,7 +17,8 @@
 
 import http from 'node:http';
 import { readFileSync, existsSync, statSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { join, extname, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
@@ -49,7 +50,7 @@ const MIME_TYPES = {
   '.txt': 'text/plain; charset=utf-8',
 };
 
-const server = http.createServer(async (req, res) => {
+export const createPreviewServer = () => http.createServer(async (req, res) => {
   const urlObj = new URL(req.url, `http://localhost:${PORT}`);
   const pathname = decodeURIComponent(urlObj.pathname);
 
@@ -115,6 +116,10 @@ const server = http.createServer(async (req, res) => {
         return;
       }
     }
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: 'API route not found' }));
+    return;
   }
 
   // 2. Direct Static File Check in dist/
@@ -125,6 +130,13 @@ const server = http.createServer(async (req, res) => {
     res.statusCode = 200;
     res.setHeader('Content-Type', contentType);
     res.end(readFileSync(staticPath));
+    return;
+  }
+  // Missing executable assets are errors, never successful SPA HTML responses.
+  if (pathname.startsWith('/app/assets/') || (pathname.startsWith('/app/') && /\.(?:js|mjs|css|wasm)$/.test(pathname))) {
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.end('Asset not found');
     return;
   }
 
@@ -187,6 +199,8 @@ const server = http.createServer(async (req, res) => {
   res.end('Not Found');
 });
 
+if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
+const server = createPreviewServer();
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`\nCombined Preview Server running at: http://localhost:${PORT}`);
   console.log(`  - Marketing Homepage: http://localhost:${PORT}/`);
@@ -198,3 +212,4 @@ server.listen(PORT, '127.0.0.1', () => {
 // Graceful termination support
 process.on('SIGTERM', () => server.close());
 process.on('SIGINT', () => server.close());
+}
