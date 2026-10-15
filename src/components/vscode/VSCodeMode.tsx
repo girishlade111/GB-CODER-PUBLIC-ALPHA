@@ -32,6 +32,7 @@ import {
   Loader2,
   ChevronUp,
   Minus,
+  AlertTriangle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import FileTreeView, { FileTreeViewHandle } from './FileTreeView';
