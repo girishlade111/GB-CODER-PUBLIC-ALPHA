@@ -41,8 +41,10 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
   // Step state calculations
   const errorPhase = runtimeError?.phase;
 
+  const isStarted = stage !== 'idle';
+
   // Step 1: Boot WebContainer
-  const step1Done = !isBooting && !(isError && errorPhase === 'boot');
+  const step1Done = isStarted && !isBooting && !(isError && errorPhase === 'boot');
   const step1Active = isBooting;
   const step1Error = isError && errorPhase === 'boot';
 
@@ -64,7 +66,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
   const step3Error = isError && errorPhase === 'install';
 
   // Step 4: Start dev server
-  const step4Done = isReady;
+  const step4Done = isStarted && isReady;
   const step4Active = isStarting;
   const step4Error = isError && errorPhase === 'server';
 
@@ -115,7 +117,9 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           ? 'Installing Dependencies'
           : isMounting
           ? 'Mounting Project Files'
-          : 'Starting WebContainer'}
+          : isBooting
+          ? 'Starting WebContainer'
+          : 'Development Environment Idle'}
       </h2>
 
       <p className="mt-1 max-w-sm text-xs text-slate-400">
@@ -124,12 +128,14 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           : isError
           ? runtimeError?.message || 'Check terminal output for details or retry the operation.'
           : isStarting
-          ? 'Launching Vite dev server inside WebContainer...'
+          ? 'Launching development server inside WebContainer...'
           : isInstalling
-          ? 'Installing project dependencies...'
+          ? 'Installing project dependencies. This may take longer for initial setups...'
           : isMounting
           ? 'Syncing source files to virtual filesystem...'
-          : 'Booting WebAssembly Node.js runtime with zero cloud latency...'}
+          : isBooting
+          ? 'Initializing the browser-based development environment...'
+          : 'Environment is idle. Ready to initialize.'}
       </p>
 
       {/* Step Checklist matching professional IDE runtime states */}
