@@ -15,7 +15,7 @@
 - **Initial Branch:** `main` (synchronized with `origin/main`)
 - **Starting Base Commit:** `b1b7960d870cf1b3da37cd80181ee91609c7be6b` (`Merge pull request #40 from girishlade111/phase-2.2-webcontainer-reliability`)
 - **Working Tree Cleanliness:** Verified zero tracked file modifications prior to starting work.
-- **Dedicated Feature Branch Created:** `feature/ide-productivity-bundle`
+- **Dedicated Feature Branch:** `feature/ide-productivity-bundle`
 
 ---
 
@@ -83,7 +83,7 @@ Rather than reinventing or duplicating functionality, the implementation integra
   - Displays verified runtime state: `activePreview.url`, `localhost:${webcontainer.serverPort}/`, or `Server Offline`.
   - Copy URL pill provides immediate user feedback: copies live URL when online, or alerts user that server is offline.
 - **Preview Isolation & Security**:
-  - Back/Forward navigation buttons accurately disabled with tooltip explaining cross-origin container iframe sandboxing.
+  - Back/Forward navigation buttons accurately disabled with tooltip and accessible label explaining cross-origin container iframe sandboxing.
   - Sandbox permissions preserved (`sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"`).
   - In-flight reload lock preventing overlapping reload loops.
   - Responsive device viewport presets (Desktop 100% fluid, Tablet 768px, Mobile 375px) with visible active state toggle.
@@ -115,143 +115,132 @@ Rather than reinventing or duplicating functionality, the implementation integra
     12. Restart Development Server (preserves existing guarded action)
   - Keyboard navigation (Arrow keys, Enter, Escape, Tab).
   - Suppression of background shortcuts when modal overlays are active.
+  - Synchronous query reset during render on `isOpen` and `initialMode` transitions.
 
 ### Feature Group E — Integrated UI/UX & Accessibility Polish
 - Dark developer aesthetic matching existing theme (`#11131c`, `#181824`, `#1e2235`, indigo-500, cyan-400).
-- Standard ARIA attributes (`role="region"`, `role="dialog"`, `role="listbox"`, `role="option"`, `aria-label`, `aria-selected`, `aria-pressed`, `aria-disabled`).
+- Standard ARIA attributes (`role="region"` for Sidebar and Editor landmarks, `role="dialog"`, `role="listbox"`, `role="option"`, `aria-label`, `aria-selected`, `aria-pressed`, `aria-disabled`).
 - Visible keyboard focus rings.
 - Zero fake progress percentages or invented server readiness.
-- Static Editor design remains completely untouched.
+- Static Editor design remains completely untouched and isolated.
 
 ---
 
-## 4. Features Improved
+## 4. Defect Repairs During Verification (Targeted Cycles)
 
-1. **Top Bar Quick Open**: Replaced window `prompt('Quick Open File:')` with the integrated modal file picker.
-2. **Bottom Status Bar**: Replaced hardcoded `⊗ 0 ⚠ 0` with real reactive problem counts that toggle the Problems panel on click.
-3. **Bottom Panel Tab Badge**: Replaced static `0` badge on Problems tab with real total problem count.
-4. **StackBlitzStartupLoader**: Removed hardcoded `5173` fallback when `serverPort` is null, rendering truthful status text.
-5. **Preview URL Display**: Replaced static fallback with dynamic runtime port detection and offline handling.
+Within the mandatory maximum two targeted repair cycles:
+
+### Repair Cycle 1:
+- **Defect A (`ReferenceError: AlertTriangle is not defined`):**
+  - Discovered missing `AlertTriangle` icon import in `src/components/vscode/VSCodeMode.tsx`.
+  - Resolved by adding `AlertTriangle` to `lucide-react` import statement.
+  - Committed in `5c3a94fbf09c23f7556602257f6b55637990fde4`.
+- **Defect B (`React Error #185 - Maximum update depth exceeded`):**
+  - Discovered `diagnosticsService.getState()` returned a fresh object reference on each invocation, violating `useSyncExternalStore` immutability/memoization contract in `VSCodeMode.tsx`.
+  - Resolved by implementing cached snapshot memoization (`this.cachedState`) in `DiagnosticsService`, invalidated only upon `notify()`.
+  - Committed in `364b073b990598269393fa38950a57d7f70ac976`.
+
+### Repair Cycle 2:
+- **Defect C (`CommandPalette asynchronous state reset lag`):**
+  - Discovered `CommandPalette` query state reset only inside an asynchronous `useEffect`, causing an unmount/re-mount transition between Quick Open and Command Palette to momentarily present stale input.
+  - Resolved by implementing idiomatic React render-time state adjustment (`isOpen !== prevIsOpen || initialMode !== prevInitialMode`), synchronously resetting query and index prior to DOM paint.
+- **Defect D (`Workbench Accessibility Landmarks missing role="region"`):**
+  - Added semantic `role="region"` and accessible `aria-label` landmarks to workbench Sidebar (`<aside>`) and Editor (`<main>`), ensuring compliant accessibility traversal at all times.
+  - Committed in `b7389692f02ec6b3e3cbbbd9f6fbc6c52eac732c`.
 
 ---
 
-## 5. Any Deferred or Source-Blocked Items
+## 5. Automated Real Browser Verification Matrix
+
+Full end-to-end browser integration suite (`scripts/verify-ide-productivity-batch1-preview.mjs`) executed against deployed preview `https://gb-coder-public-alpha-f61f87ayj.vercel.app` at commit `b7389692f02ec6b3e3cbbbd9f6fbc6c52eac732c`:
+
+| Test ID | Feature Area | Description | Status | Evidence / Notes |
+|---|---|---|---|---|
+| **BATCH1-INT-01** | Deployment & Security | Preview deployment HTTP 200, COOP `same-origin`, COEP `require-corp` | **PASSED** | Verified via live HTTP response headers |
+| **BATCH1-INT-02** | Static Editor | Static editor architecture and VS Code mode isolation | **PASSED** | Static editor mounted; VS Code sidebar/search absent |
+| **BATCH1-INT-03** | Advanced IDE | Workbench mount & status bar problems counter | **PASSED** | Status bar mounted with reactive problem counts |
+| **BATCH1-INT-04** | Command Palette | Quick Open file search & Command mode (`>`) via `Ctrl+Shift+P` | **PASSED** | Dual-mode operation verified with keyboard traversal |
+| **BATCH1-INT-05** | Workspace Search | Content query matching across multiple project files | **PASSED** | 3 matches found across 3 files with snippet highlights |
+| **BATCH1-INT-06** | Search Modifiers | Match Case, Match Whole Word, and Regex resilience | **PASSED** | Case/word filters active; invalid regex displays warning |
+| **BATCH1-INT-07** | Monaco Navigation | Click search result navigates to exact line and column | **PASSED** | Monaco opened `src/utils.js` and set cursor at line 1 |
+| **BATCH1-INT-08** | Safe Replace | Single match replacement and bulk replace confirmation | **PASSED** | Replaced match; bulk replace dialog opened & cancelled |
+| **BATCH1-INT-09** | Problems Panel | Diagnostics scope, severity filtering, and error counts | **PASSED** | Problems panel open, All/Errors/Warnings tabs verified |
+| **BATCH1-INT-10** | Output Panel | Structured logging, category filters, and clear logs | **PASSED** | Channel tabs active; logs cleared with system audit entry |
+| **BATCH1-INT-11** | Preview Controls | Viewport presets, minimize/restore, sandbox back/forward | **PASSED** | Desktop/tablet/mobile toggled; back button disabled |
+| **BATCH1-INT-12** | Project Switching | Project switch cleans search/diagnostics state | **PASSED** | Switched to Project 2; search query and cache reset |
+| **BATCH1-INT-13** | Accessibility | ARIA landmarks, roles, and focus traversal | **PASSED** | 3 regions detected (Sidebar, Editor, Panels) |
+
+**Acceptance Suite Summary:**
+- **Passed:** 13 / 13 (100%)
+- **Failed:** 0 / 13 (0%)
+- **Console Errors:** 0
+- **Page Errors:** 0
+- **Evidence Artifact:** `reports/batch1-browser-acceptance.json`
+
+---
+
+## 6. Any Deferred or Source-Blocked Items
 
 - **Browser Back/Forward Navigation in Preview**:
-  - **Status:** Safely retained as disabled controls with clear tooltip and ARIA documentation.
+  - **Status:** Safely retained as disabled controls with clear tooltip and ARIA documentation (`aria-label="Back (Disabled across container sandbox origin)"`).
   - **Rationale:** The preview iframe runs inside an isolated container origin or sandboxed WebContainer environment. Direct access to `iframe.contentWindow.history` from the parent application is blocked by browser cross-origin security restrictions (`Same-Origin Policy`). Fabricating artificial history would lead to desynchronization and security violations.
 
 ---
 
-## 6. Modified and New Source Files
+## 7. Modified and New Source Files
 
 ### New Source Files:
 1. `src/services/search/workspaceSearchService.ts` (360 lines) — Workspace search engine, pattern compiler, directory/binary filters, safe replacement engine.
-2. `src/services/diagnostics/diagnosticsService.ts` (189 lines) — Monaco marker and runtime error diagnostic collection, scoping, formatting.
+2. `src/services/diagnostics/diagnosticsService.ts` (194 lines) — Monaco marker and runtime error diagnostic collection, scoping, formatting, state caching.
 3. `src/services/logging/outputLogService.ts` (96 lines) — Structured, sanitized, bounded FIFO output logging service.
 4. `src/components/vscode/WorkspaceSearchPanel.tsx` (654 lines) — Advanced search and safe replace sidebar panel with file grouping.
 5. `src/components/vscode/ProblemsPanel.tsx` (278 lines) — Problems panel with severity filters, search, copy, and file navigation.
 6. `src/components/vscode/OutputPanel.tsx` (214 lines) — Output panel with channel tabs, timestamps, sanitization, bounded buffer.
-7. `scripts/test-ide-productivity-batch1.mjs` (416 lines) — Automated test suite verifying all required behaviors.
+7. `scripts/test-ide-productivity-batch1.mjs` (416 lines) — Automated unit test suite verifying all 18 core behaviors.
+8. `scripts/verify-ide-productivity-batch1-preview.mjs` (708 lines) — Automated browser acceptance verification suite.
+9. `reports/batch1-browser-acceptance.json` — Machine-readable acceptance evidence artifact.
 
 ### Modified Source Files:
-8. `src/components/CommandPalette.tsx` (411 lines) — Upgraded dual-mode Command Palette & Quick Open.
-9. `src/components/vscode/StackBlitzStartupLoader.tsx` (4 lines diff) — Removed hardcoded 5173 port assumption.
-10. `src/components/vscode/VSCodeMode.tsx` (466 lines diff) — Full integration of search, problems, output, palette, status bar, and preview security.
+10. `src/components/CommandPalette.tsx` — Upgraded dual-mode Command Palette & Quick Open with synchronous render reset.
+11. `src/components/vscode/StackBlitzStartupLoader.tsx` — Removed hardcoded 5173 port assumption.
+12. `src/components/vscode/VSCodeMode.tsx` — Full integration of search, problems, output, palette, status bar, accessibility landmarks, and preview security.
 
 ---
 
-## 7. Test Results
+## 8. Git Commit Log on Feature Branch
 
-### Focused Test Suite (`scripts/test-ide-productivity-batch1.mjs`)
-- **[Search 1]** Filename and content matches: **PASS**
-- **[Search 2]** Case-sensitive vs case-insensitive matching: **PASS**
-- **[Search 3]** Whole-word matching: **PASS**
-- **[Search 4]** Regex correctness and invalid-regex error reporting: **PASS**
-- **[Search 5]** Unicode text handling: **PASS**
-- **[Search 6]** Exclusion of node_modules, build artifacts, and binary files: **PASS**
-- **[Search 7]** Safe single replacement and regex capture group support: **PASS**
-- **[Search 8]** Safe replace in whole file: **PASS**
-- **[Search 9]** Stale-source replacement rejection: **PASS**
-- **[Search 10]** Large project responsiveness (10,000 lines across 50 files in <100ms): **PASS**
-- **[Diagnostics 1]** Monaco model markers mapped to problems with correct severity & counts: **PASS**
-- **[Diagnostics 2]** Distinguishes editor diagnostics from runtime errors: **PASS**
-- **[Diagnostics 3]** Project-specific cleanup when switching projects: **PASS**
-- **[Output 1]** Structured output logging with categories and timestamps: **PASS**
-- **[Output 2]** Bounded retention pruning to prevent memory growth (500 limit): **PASS**
-- **[Output 3]** Sanitization of sensitive environment tokens: **PASS**
-- **[Command Palette]** Action inventory contains all 12 required workbench actions: **PASS**
-- **[Preview Security & Ports]** Truthful server info and sandbox security preserved: **PASS**
-
-**Result:** **18 passed, 0 failed.**
+- `b738969` `fix(vscode): ensure synchronous CommandPalette state reset and semantic ARIA landmarks`
+- `364b073` `fix(diagnostics): cache snapshot in DiagnosticsService to satisfy useSyncExternalStore contract`
+- `5c3a94f` `fix(vscode): import missing AlertTriangle icon in VSCodeMode`
+- `57f9f8d` `docs: add consolidated IDE productivity batch 1 engineering report`
+- `4fcf6a9` `feat(vscode): implement consolidated IDE productivity batch 1`
+- `b1b7960` `Merge pull request #40 from girishlade111/phase-2.2-webcontainer-reliability` (Base commit on `main`)
 
 ---
 
-## 8. React/Browser Integration Evidence
+## 9. Preview Deployment URL & Status
 
-- **Compilation:** `npx tsc --noEmit` completed with **0 errors**.
-- **ESLint:** Targeted linting across all modified and new source files completed with **0 errors**.
-- **Critical Path Bundle:** `node scripts/measure-initial-bundle.mjs --assert-absent` confirmed that heavy modules (Monaco editor mode, xterm terminal, prettier, compilers) remain absent from the initial bundle. Total initial JS: 596.0 kB (188.6 kB gzip).
-
----
-
-## 9. Regression Results
-
-1. **Phase B.5.1 Restart Mount Regression Suite (`scripts/test-phase-b5-1-restart-mount.mjs`)**:
-   - 12 passed, 0 failed.
-2. **Phase B.5.2 Startup Loader Regression Suite (`scripts/test-phase-b5-2-startup-loader.mjs`)**:
-   - 15 passed, 0 failed (5 deferred per established B.5.2 spec).
-
----
-
-## 10. Unified Build Status
-
-Executed `npm run build` (`node scripts/build-unified.mjs`):
-- Astro Marketing Site: 6 pages built cleanly.
-- Vite React IDE: 2,847 modules transformed, bundles emitted.
-- PWA Generation: Service Worker precache manifest generated (161 entries).
-- Asset Verification: All 6 initial Vite assets, Monaco workers, scoped SW, PWA manifest, and migration SW verified.
-- **Outcome:** `✅ UNIFIED BUILD SUCCEEDED DETERMINISTICALLY` (109,386 ms).
-
----
-
-## 11. Final Git Commit SHA
-
-- **Commit SHA:** `4fcf6a982a18f719962fc7dca5f5e56e37ffe698`
-- **Short SHA:** `4fcf6a9`
-- **Commit Message:** `feat(vscode): implement consolidated IDE productivity batch 1`
-- **Remote Branch:** `origin/feature/ide-productivity-bundle`
-
----
-
-## 12. Preview Deployment URL & Status
-
-- **Branch Pushed:** `feature/ide-productivity-bundle`
+- **Branch:** `feature/ide-productivity-bundle`
 - **GitHub Push Remote:** `origin`
-- **Vercel Integration:** Triggered preview deployment for branch `feature/ide-productivity-bundle`.
-- **Production URL:** `https://code.ladestack.in/` (remains isolated on `main`).
+- **Exact Commit Deployment URL:** `https://gb-coder-public-alpha-f61f87ayj.vercel.app`
+- **Branch Preview Alias:** `https://gb-coder-public-alpha-7gqzw9h57.vercel.app`
+- **Deployment State:** `success`
+- **Production URL:** `https://code.ladestack.in/` (remains untouched and isolated on `main`).
 
 ---
 
-## 13. Production Isolation Confirmation
+## 10. Production Isolation Confirmation
 
-- **Verification:**
-  - `git branch -a` confirms `origin/HEAD` points to `origin/main`.
-  - `main` branch remains on commit `b1b7960d870cf1b3da37cd80181ee91609c7be6b`.
-  - HTTP verification of `https://code.ladestack.in/` and `https://code.ladestack.in/app` confirms 200 OK with `Cross-Origin-Opener-Policy: same-origin`.
-  - No merge to `main` has occurred. Production is completely isolated.
-
----
-
-## 14. Remaining Critical Defects
-
-**None.** All required features have been implemented, verified, tested, and integrated.
+- `main` branch remains on commit `b1b7960d870cf1b3da37cd80181ee91609c7be6b`.
+- Live production at `https://code.ladestack.in/` and `https://code.ladestack.in/app` verified unaffected.
+- **Zero merge into `main` has occurred.**
+- **Zero deployment to Production has occurred.**
 
 ---
 
-## 15. Final Batch Acceptance Recommendation
+## 11. Final Batch Acceptance Recommendation
 
-**Recommendation:** Accept Consolidated Development Batch 1 for user review and preview testing. The feature set meets all requirements across Feature Groups A, B, C, D, and E without regressions to the WebContainer architecture or data persistence layer.
+**Recommendation:** Accept Consolidated Development Batch 1 for user review and preview testing. The feature set meets all requirements across Feature Groups A, B, C, D, and E with 100% automated test and browser acceptance passing without regressions to WebContainer architecture, startup reliability, or project persistence.
 
 **Final Verdict:**
 # `IDE_PRODUCTIVITY_BATCH_1_COMPLETE`

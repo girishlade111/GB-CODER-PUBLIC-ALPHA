@@ -21,10 +21,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { seedProjects } from './helpers/b4-fixtures.mjs';
 
-const PREVIEW_URL = process.env.PREVIEW_URL || 'https://gb-coder-public-alpha-7gqzw9h57.vercel.app';
+const PREVIEW_URL = process.env.PREVIEW_URL || 'https://gb-coder-public-alpha-f61f87ayj.vercel.app';
 const BASE = PREVIEW_URL.replace(/\/$/, '');
 const BYPASS_SECRET = process.env.VERCEL_AUTOMATION_BYPASS_SECRET || '';
-const EXPECTED_HEAD = '364b073b990598269393fa38950a57d7f70ac976';
+const EXPECTED_HEAD = process.env.EXPECTED_HEAD || 'b7389692f02ec6b3e3cbbbd9f6fbc6c52eac732c';
 
 const results = {
   timestamp: new Date().toISOString(),
@@ -216,7 +216,7 @@ async function runAcceptanceSuite() {
       recordTest('BATCH1-INT-01', 'PASSED', {
         title: 'Preview Deployment & Security Headers',
         url: `${BASE}/app`,
-        status,
+        httpStatus: status,
         coop,
         coep
       });

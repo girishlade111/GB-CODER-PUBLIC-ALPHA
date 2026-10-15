@@ -1,0 +1,96 @@
+{
+  "timestamp": "2026-10-15T20:39:27.423Z",
+  "previewUrl": "https://gb-coder-public-alpha-f61f87ayj.vercel.app",
+  "verifiedCommit": "b7389692f02ec6b3e3cbbbd9f6fbc6c52eac732c",
+  "suite": "GB_CODER_IDE_PRODUCTIVITY_BATCH_1",
+  "tests": {
+    "BATCH1-INT-01": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:28.637Z",
+      "title": "Preview Deployment & Security Headers",
+      "url": "https://gb-coder-public-alpha-f61f87ayj.vercel.app/app",
+      "httpStatus": 200,
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    "BATCH1-INT-02": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:34.280Z",
+      "title": "Static Editor Architecture & Isolation",
+      "projectId": "batch1-static-proj"
+    },
+    "BATCH1-INT-03": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:37.366Z",
+      "title": "Advanced IDE Workbench Mount & Status Bar",
+      "statusBarContent": "⊗\n0\n⚠\n0\nTerminal\nMarkdown\nLn 1, Col 1\nUTF-8\nSpaces: 2\nBooting Runtime...\nLayout: US"
+    },
+    "BATCH1-INT-04": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:37.961Z",
+      "title": "Command Palette & Quick Open Dual-Mode Operations"
+    },
+    "BATCH1-INT-05": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:39.072Z",
+      "title": "Workspace Search Query & Multi-File Match Highlighting",
+      "query": "Hello Batch1",
+      "matchesFound": 3
+    },
+    "BATCH1-INT-06": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:41.400Z",
+      "title": "Search Modifiers & Resilient Regex Error Handling"
+    },
+    "BATCH1-INT-07": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:41.885Z",
+      "title": "Direct Navigation to Monaco Line & Column from Match"
+    },
+    "BATCH1-INT-08": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:43.448Z",
+      "title": "Safe Match Replacement & Bulk Replace Guard Dialog"
+    },
+    "BATCH1-INT-09": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:43.680Z",
+      "title": "Truthful Diagnostics Problems Panel & Severity Filtering"
+    },
+    "BATCH1-INT-10": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:43.920Z",
+      "title": "Output Panel Structured Logs & Channel Filtering"
+    },
+    "BATCH1-INT-11": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:45.049Z",
+      "title": "Advanced Preview Controls, Viewport Presets & Isolation Safeguards"
+    },
+    "BATCH1-INT-12": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:48.073Z",
+      "title": "Project Switching Lifecycle & State Invalidation"
+    },
+    "BATCH1-INT-13": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T20:39:48.085Z",
+      "title": "Accessibility ARIA Landmarks & Focus Traversal",
+      "regionCount": 3,
+      "tabCount": 1
+    }
+  },
+  "summary": {
+    "passed": 13,
+    "failed": 0,
+    "total": 13
+  },
+  "diagnostics": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [
+      "[ide-main] https://stackblitz.com/headless?version=1.6.4: net::ERR_ABORTED"
+    ]
+  },
+  "verdict": "IDE_PRODUCTIVITY_BATCH_1_COMPLETE"
+}
