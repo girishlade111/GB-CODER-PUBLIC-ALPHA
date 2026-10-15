@@ -1106,15 +1106,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       return;
     }
     openTerminal();
-    const epoch = webcontainerService.getSessionEpoch();
     toast.success('Restarting WebContainer environment...');
-    void webcontainerService
-      .mountProject(project.files, project.dependencies, project.projectType, activeProjectId ?? undefined, epoch)
-      .then((mounted) => {
-        if (!mounted || fileOperationProjectRef.current !== activeProjectId || webcontainerService.getSessionEpoch() !== epoch) return;
-        webcontainerService.requestRestart('Restart Dev Server');
-      }).catch(() => toast.error('Could not restart the project runtime.'));
-  }, [openTerminal, hasFiles, project.files, project.dependencies, project.projectType, activeProjectId]);
+    webcontainerService.requestRestart('Restart Dev Server');
+  }, [openTerminal, hasFiles, project.files]);
 
   return (
     // h-full inside App's h-screen wrapper; overflow-hidden forbids page scroll.
