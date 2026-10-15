@@ -2306,6 +2306,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             ) : (
               /* When installing dependencies or booting: SHOW STACKBLITZ STARTUP LOADER (Screenshot 3!) */
               <StackBlitzStartupLoader
+                operationPending={webcontainerService.isAutomaticStartupBusy()}
                 stage={webcontainer.startupStage}
                 serverPort={webcontainer.serverPort}
                 runtimeError={webcontainer.runtimeError}

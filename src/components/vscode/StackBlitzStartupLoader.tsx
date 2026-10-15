@@ -19,6 +19,7 @@ interface StackBlitzStartupLoaderProps {
   onOpenTerminal?: () => void;
   onRestart?: () => void;
   onRetryInstall?: () => void;
+  operationPending?: boolean;
 }
 
 export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = ({
@@ -28,6 +29,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
   onOpenTerminal,
   onRestart,
   onRetryInstall,
+  operationPending = false,
 }) => {
   const isBooting = stage === 'booting';
   const isMounting = stage === 'mounting_files';
@@ -124,7 +126,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           : isStarting
           ? 'Launching Vite dev server inside WebContainer...'
           : isInstalling
-          ? 'Running npm install with local offline cache...'
+          ? 'Installing project dependencies...'
           : isMounting
           ? 'Syncing source files to virtual filesystem...'
           : 'Booting WebAssembly Node.js runtime with zero cloud latency...'}
@@ -241,6 +243,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           <button
             type="button"
             onClick={onRetryInstall}
+            disabled={operationPending}
             className="flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-950/60 px-3 py-1.5 text-xs font-medium text-cyan-300 shadow-sm transition hover:bg-cyan-900/80 hover:text-white"
             data-testid="loader-retry-install-btn"
           >
@@ -252,6 +255,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           <button
             type="button"
             onClick={onRestart}
+            disabled={operationPending}
             className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium shadow-sm transition ${
               isError
                 ? 'border-amber-500/30 bg-amber-950/60 text-amber-300 hover:bg-amber-900/80 hover:text-white'
