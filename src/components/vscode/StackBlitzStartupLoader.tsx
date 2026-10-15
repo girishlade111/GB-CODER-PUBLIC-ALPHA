@@ -124,7 +124,9 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
 
       <p className="mt-1 max-w-sm text-xs text-slate-400">
         {isReady
-          ? `Server is live and listening on port ${serverPort ?? 5173}.`
+          ? serverPort
+            ? `Server is live and listening on port ${serverPort}.`
+            : 'Server is live and listening for connections.'
           : isError
           ? runtimeError?.message || 'Check terminal output for details or retry the operation.'
           : isStarting

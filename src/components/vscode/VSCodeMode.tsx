@@ -44,6 +44,13 @@ import CodeRabbitReviewModal from '../CodeRabbitReviewModal';
 import VoiceCommandPanel from '../VoiceCommandPanel';
 import SnapshotManagerModal from '../SnapshotManagerModal';
 import TerminalTab from '../Console/TerminalTab';
+import WorkspaceSearchPanel from './WorkspaceSearchPanel';
+import ProblemsPanel from './ProblemsPanel';
+import OutputPanel from './OutputPanel';
+import CommandPalette from '../CommandPalette';
+import type * as monacoEditor from 'monaco-editor';
+import { diagnosticsService } from '../../services/diagnostics/diagnosticsService';
+import { outputLogService } from '../../services/logging/outputLogService';
 import Tooltip from '../ui/Tooltip';
 import LadeStackLogo from '../LadeStackLogo';
 import { monacoThemeFor, defineGbCoderTheme } from '../../utils/monacoTheme';
@@ -267,7 +274,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
-  const [quickSearchTerm, setQuickSearchTerm] = useState('');
   const [copiedUrl, setCopiedUrl] = useState(false);
 
   // Modals state
@@ -279,6 +285,21 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   // Live preview minimize/maximize state
   const [isPreviewMinimized, setIsPreviewMinimized] = useState(false);
   const [isPreviewMaximized, setIsPreviewMaximized] = useState(false);
+
+  // Command Palette & Quick Open state
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [commandPaletteMode, setCommandPaletteMode] = useState<'commands' | 'files'>('commands');
+
+  // Monaco editor and environment references for navigation & diagnostics
+  const editorRef = useRef<monacoEditor.editor.IStandaloneCodeEditor | null>(null);
+  const monacoRef = useRef<typeof monacoEditor | null>(null);
+
+  // Live diagnostics from Monaco and container runtime
+  const diagnostics = useSyncExternalStore(
+    (cb) => diagnosticsService.subscribe(cb),
+    () => diagnosticsService.getState(),
+    () => diagnosticsService.getState()
+  );
 
   // Code Assist service listener
   const codeAssistState = useSyncExternalStore(
@@ -742,6 +763,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   /** Mirrors the caret into the status bar, the way VS Code reports Ln/Col. */
   const handleEditorMount = useCallback<OnMount>(
     (editor, monaco) => {
+      editorRef.current = editor;
+      monacoRef.current = monaco;
+
       setCursor({
         line: editor.getPosition()?.lineNumber ?? 1,
         column: editor.getPosition()?.column ?? 1,
@@ -750,6 +774,18 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         setCursor({ line: event.position.lineNumber, column: event.position.column });
       });
 
+      // Synchronize real Monaco markers with diagnosticsService
+      const updateMarkers = () => {
+        try {
+          const markers = monaco.editor.getModelMarkers({});
+          diagnosticsService.setEditorMarkers(markers, activeProjectId);
+        } catch (err) {
+          console.warn('[VSCodeMode] Marker update warning:', err);
+        }
+      };
+      updateMarkers();
+      monaco.editor.onDidChangeMarkers(updateMarkers);
+
       // Initialize Automatic Type Acquisition
       void ataService.init(monaco).then(() => {
         if (activeFile?.content) {
@@ -757,7 +793,48 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         }
       });
     },
-    [activeFile?.content],
+    [activeFile?.content, activeProjectId],
+  );
+
+  const navigateToLocation = useCallback(
+    (path: string, line?: number, column?: number) => {
+      openFile(path);
+      if (line !== undefined) {
+        setTimeout(() => {
+          if (editorRef.current) {
+            const col = column ?? 1;
+            editorRef.current.revealPositionInCenter({ lineNumber: line, column: col }, 0);
+            editorRef.current.setPosition({ lineNumber: line, column: col });
+            editorRef.current.focus();
+          }
+        }, 80);
+      }
+    },
+    [openFile],
+  );
+
+  const openCommandPalette = useCallback(() => {
+    setCommandPaletteMode('commands');
+    setIsCommandPaletteOpen(true);
+  }, []);
+
+  const openQuickOpen = useCallback(() => {
+    setCommandPaletteMode('files');
+    setIsCommandPaletteOpen(true);
+  }, []);
+
+  const handleChangeFileContent = useCallback(
+    (path: string, content: string) => {
+      onChangeFile(path, content);
+      setDirtyPaths((current) => {
+        if (current.has(path)) return current;
+        const next = new Set(current);
+        next.add(path);
+        return next;
+      });
+      outputLogService.appendLog('fs', 'info', `Modified file ${path}`);
+    },
+    [onChangeFile],
   );
 
   useEffect(() => {
@@ -765,6 +842,37 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       ataService.acquireTypesForProject(project.files);
     }
   }, [project.files]);
+
+  useEffect(() => {
+    diagnosticsService.setProjectId(activeProjectId);
+    outputLogService.setProjectId(activeProjectId);
+    outputLogService.appendLog(
+      'system',
+      'info',
+      `Workspace active: ${projectName || activeProjectId || 'default'} (${project.files.length} files)`
+    );
+  }, [activeProjectId, projectName, project.files.length]);
+
+  useEffect(() => {
+    diagnosticsService.setRuntimeError(webcontainer.runtimeError, activeProjectId);
+    if (webcontainer.runtimeError) {
+      outputLogService.appendLog('runtime', 'error', `Runtime error: ${webcontainer.runtimeError.message}`);
+    }
+  }, [webcontainer.runtimeError, activeProjectId]);
+
+  useEffect(() => {
+    if (webcontainer.startupStage === 'ready') {
+      outputLogService.appendLog(
+        'server',
+        'success',
+        `Server ready on port ${webcontainer.serverPort ?? 'active'} (${webcontainer.serverUrl ?? 'live'})`
+      );
+    } else if (webcontainer.startupStage === 'error') {
+      outputLogService.appendLog('runtime', 'error', `Startup failed at stage: ${webcontainer.startupStage}`);
+    } else if (webcontainer.startupStage !== 'idle') {
+      outputLogService.appendLog('runtime', 'info', `WebContainer stage: ${webcontainer.startupStage}`);
+    }
+  }, [webcontainer.startupStage, webcontainer.serverPort, webcontainer.serverUrl]);
 
   const handleSplitEditorMount = useCallback<OnMount>((editor) => {
     editor.onDidChangeCursorPosition((event) => {
@@ -774,11 +882,53 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent background shortcuts when a modal is open
+      if (
+        isCommandPaletteOpen ||
+        isSettingsOpen ||
+        isCodeRabbitOpen ||
+        isVoiceCommandsOpen ||
+        isSnapshotsOpen
+      ) {
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + P or F1: Command Palette
+      if (((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'P' || e.key === 'p')) || e.key === 'F1') {
+        e.preventDefault();
+        openCommandPalette();
+        return;
+      }
+
+      // Ctrl/Cmd + P: Quick Open
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'P' || e.key === 'p')) {
+        e.preventDefault();
+        openQuickOpen();
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + F: Workspace Search
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+        e.preventDefault();
+        setActiveTab('search');
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + E: Explorer
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
+        e.preventDefault();
+        setActiveTab('explorer');
+        return;
+      }
+
+      // Ctrl/Cmd + `: Toggle Terminal
       if ((e.ctrlKey || e.metaKey) && e.key === '`') {
         e.preventDefault();
         toggleTerminal();
         return;
       }
+
+      // Ctrl/Cmd + \: Split Editor
       if ((e.ctrlKey || e.metaKey) && e.key === '\\') {
         e.preventDefault();
         if (isSplitActive) {
@@ -794,7 +944,23 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleTerminal, isSplitActive, openPaths, activePath, project.files, openToSide, closeSplitPane]);
+  }, [
+    isCommandPaletteOpen,
+    isSettingsOpen,
+    isCodeRabbitOpen,
+    isVoiceCommandsOpen,
+    isSnapshotsOpen,
+    openCommandPalette,
+    openQuickOpen,
+    setActiveTab,
+    toggleTerminal,
+    isSplitActive,
+    openPaths,
+    activePath,
+    project.files,
+    openToSide,
+    closeSplitPane,
+  ]);
 
   /* ── Terminal resize ──────────────────────────────────────────────────────
    *
@@ -1148,14 +1314,18 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
         {/* Center Section: Command Search / Quick Open Bar */}
         <div
-          onClick={() => {
-            const path = prompt('Quick Open File:', activePath || '');
-            if (path && project.files.some((f) => f.path === path)) {
-              openFile(path);
+          onClick={openQuickOpen}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openQuickOpen();
             }
           }}
-          className="flex items-center gap-2 rounded-md border border-[#22273d] bg-[#131624] px-3 py-1 text-xs text-slate-300 shadow-inner hover:border-indigo-500/40 transition-all cursor-pointer w-64 md:w-80 justify-between"
-          title="Quick Open / Command Search (Ctrl+P)"
+          className="flex items-center gap-2 rounded-md border border-[#22273d] bg-[#131624] px-3 py-1 text-xs text-slate-300 shadow-inner hover:border-indigo-500/40 transition-all cursor-pointer w-64 md:w-80 justify-between select-none"
+          title="Quick Open / Command Search (Ctrl+P / Ctrl+Shift+P)"
+          aria-label="Quick Open / Command Search"
         >
           <div className="flex items-center gap-2 truncate">
             <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
@@ -1416,30 +1586,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               </div>
             </>
           ) : activityTab === 'search' ? (
-            <div className="flex h-full flex-col p-3 text-xs">
-              <span className="font-bold tracking-wider uppercase text-slate-400 mb-2">Search</span>
-              <input
-                type="text"
-                value={quickSearchTerm}
-                onChange={(e) => setQuickSearchTerm(e.target.value)}
-                placeholder="Search files by name..."
-                className="w-full rounded border border-[#262636] bg-[#12131c] px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
-              />
-              <div className="mt-3 flex-1 overflow-y-auto space-y-1">
-                {project.files
-                  .filter((f) => !quickSearchTerm || f.path.toLowerCase().includes(quickSearchTerm.toLowerCase()))
-                  .slice(0, 30)
-                  .map((f) => (
-                    <button
-                      key={f.path}
-                      onClick={() => openFile(f.path)}
-                      className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-slate-300 hover:bg-white/10 hover:text-white truncate"
-                    >
-                      <span className="truncate">{f.path}</span>
-                    </button>
-                  ))}
-              </div>
-            </div>
+            <WorkspaceSearchPanel
+              files={project.files}
+              activePath={activePath}
+              projectId={activeProjectId}
+              onNavigateToLocation={navigateToLocation}
+              onChangeFile={handleChangeFileContent}
+            />
           ) : activityTab === 'code-assist' ? (
             <CodeAssistPanel
               project={project}
@@ -1924,7 +2077,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     }`}
                   >
                     PROBLEMS
-                    <span className="rounded-full bg-slate-800 px-1 text-[9px] text-slate-400">0</span>
+                    <span className="rounded-full bg-slate-800 px-1 text-[9px] text-slate-400">
+                      {diagnostics.totalCount}
+                    </span>
                   </button>
 
                   <button
@@ -2017,23 +2172,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   />
                 </div>
                 {bottomTab === 'problems' && (
-                  <div className="flex h-full items-center justify-center p-4 text-xs text-slate-500 font-mono">
-                    No problems have been detected in the workspace.
-                  </div>
+                  <ProblemsPanel
+                    onNavigateToLocation={navigateToLocation}
+                    activeProjectId={activeProjectId}
+                  />
                 )}
                 {bottomTab === 'output' && (
-                  <div className="flex h-full flex-col p-3 font-mono text-xs text-slate-400 overflow-y-auto">
-                    <p className="text-cyan-400">[GB Coder Output Log]</p>
-                    <p className="text-slate-500">
-                      Container virtual filesystem mounted: {project.files.length} files.
-                    </p>
-                    <p className="text-slate-500">
-                      WebContainer environment:{' '}
-                      {webcontainer.isSupported
-                        ? 'Cross-Origin Isolated (COOP/COEP verified).'
-                        : 'Not isolated — WebContainer unavailable (COOP/COEP missing).'}
-                    </p>
-                  </div>
+                  <OutputPanel activeProjectId={activeProjectId} />
                 )}
               </div>
             </div>
@@ -2103,43 +2248,74 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 >
                   <RotateCcw className={`h-3 w-3 ${isReloadingPreview ? 'animate-spin' : ''}`} />
                 </button>
-                <button
-                  type="button"
-                  disabled
-                  className="rounded p-1 text-slate-600 cursor-not-allowed"
-                >
-                  <ChevronLeft className="h-3 w-3" />
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  className="rounded p-1 text-slate-600 cursor-not-allowed"
-                >
-                  <ChevronRight className="h-3 w-3" />
-                </button>
+                <Tooltip label="Browser history navigation is disabled across container sandbox origin" side="bottom">
+                  <button
+                    type="button"
+                    disabled
+                    aria-disabled="true"
+                    aria-label="Back (Disabled across container sandbox origin)"
+                    className="rounded p-1 text-slate-600 cursor-not-allowed"
+                  >
+                    <ChevronLeft className="h-3 w-3" />
+                  </button>
+                </Tooltip>
+                <Tooltip label="Browser history navigation is disabled across container sandbox origin" side="bottom">
+                  <button
+                    type="button"
+                    disabled
+                    aria-disabled="true"
+                    aria-label="Forward (Disabled across container sandbox origin)"
+                    className="rounded p-1 text-slate-600 cursor-not-allowed"
+                  >
+                    <ChevronRight className="h-3 w-3" />
+                  </button>
+                </Tooltip>
               </div>
 
               {/* URL Address Bar Pill */}
               <div
                 className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md border border-[#22273d] bg-[#131624] px-2.5 py-1 text-[11px] text-slate-300 font-mono shadow-inner mx-1.5 group cursor-pointer hover:border-indigo-500/40 transition-all"
                 onClick={() => {
-                  const url = activePreview?.url || `http://localhost:${webcontainer.serverPort || 5173}/`;
+                  if (!activePreview?.url && !webcontainer.serverPort) {
+                    toast('Development server is offline. No URL to copy.', { icon: 'ℹ️' });
+                    return;
+                  }
+                  const url = activePreview?.url || `http://localhost:${webcontainer.serverPort}/`;
                   void navigator.clipboard?.writeText(url);
                   setCopiedUrl(true);
                   toast.success('URL copied to clipboard!');
                   setTimeout(() => setCopiedUrl(false), 2000);
                 }}
-                title="Click to copy URL"
+                title={
+                  activePreview?.url || webcontainer.serverPort
+                    ? 'Click to copy URL'
+                    : 'Development server offline'
+                }
+                role="button"
+                tabIndex={0}
+                aria-label={
+                  activePreview?.url || webcontainer.serverPort
+                    ? `Live preview URL: ${activePreview?.url || `localhost:${webcontainer.serverPort}/`}`
+                    : 'Development server offline'
+                }
               >
-                <Lock className="h-2.5 w-2.5 text-emerald-400 shrink-0" />
+                <Lock
+                  className={`h-2.5 w-2.5 shrink-0 ${
+                    activePreview?.url || webcontainer.serverPort ? 'text-emerald-400' : 'text-slate-600'
+                  }`}
+                />
                 <span className="truncate text-slate-300">
                   {activePreview?.url
                     ? activePreview.url.replace(/^https?:\/\//, '')
-                    : `localhost:${webcontainer.serverPort || 5173}/`}
+                    : webcontainer.serverPort
+                    ? `localhost:${webcontainer.serverPort}/`
+                    : 'Server Offline'}
                 </span>
-                <span className="ml-auto opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-300 shrink-0">
-                  {copiedUrl ? <Check className="h-2.5 w-2.5 text-emerald-400" /> : <Copy className="h-2.5 w-2.5" />}
-                </span>
+                {(activePreview?.url || webcontainer.serverPort) && (
+                  <span className="ml-auto opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-300 shrink-0">
+                    {copiedUrl ? <Check className="h-2.5 w-2.5 text-emerald-400" /> : <Copy className="h-2.5 w-2.5" />}
+                  </span>
+                )}
               </div>
 
               {/* Right actions: Viewport mode, Popout, Minimize, Maximize Width, Fullscreen */}
@@ -2324,10 +2500,23 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       >
         {/* Left items: diagnostics, terminal toggle */}
         <div className="flex items-center gap-2.5">
-          <span className="flex items-center gap-1.5 hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-slate-300">
-            <span className="text-rose-400">⊗ 0</span>
-            <span className="text-amber-400">⚠ 0</span>
-          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setShowTerminal(true);
+              setBottomTab('problems');
+            }}
+            title="Toggle Problems Panel"
+            aria-label={`Problems: ${diagnostics.errorCount} errors, ${diagnostics.warningCount} warnings`}
+            className="flex items-center gap-1.5 hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-slate-300"
+          >
+            <span className="text-rose-400 flex items-center gap-0.5">
+              <span className="font-bold">⊗</span> {diagnostics.errorCount}
+            </span>
+            <span className="text-amber-400 flex items-center gap-0.5">
+              <span className="font-bold">⚠</span> {diagnostics.warningCount}
+            </span>
+          </button>
 
           <button
             onClick={toggleTerminal}
@@ -2573,6 +2762,135 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         onClose={() => setIsSnapshotsOpen(false)}
         onRestore={handleRestoreSnapshot}
         onPreview={() => {}}
+      />
+
+      {/* ── Command Palette & Quick Open Modal ── */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => {
+          setIsCommandPaletteOpen(false);
+          setTimeout(() => editorRef.current?.focus(), 20);
+        }}
+        actions={[
+          {
+            id: 'workbench.action.quickOpen',
+            title: 'File: Quick Open...',
+            section: 'File',
+            shortcut: 'Ctrl+P',
+            icon: <Search className="w-4 h-4 text-indigo-400" />,
+            perform: () => openQuickOpen(),
+          },
+          {
+            id: 'workbench.action.findInFiles',
+            title: 'Search: Find in Files',
+            section: 'Search',
+            shortcut: 'Ctrl+Shift+F',
+            icon: <Search className="w-4 h-4 text-cyan-400" />,
+            perform: () => setActiveTab('search'),
+          },
+          {
+            id: 'workbench.view.explorer',
+            title: 'View: Focus Explorer',
+            section: 'View',
+            shortcut: 'Ctrl+Shift+E',
+            icon: <FilePlus className="w-4 h-4 text-slate-300" />,
+            perform: () => setActiveTab('explorer'),
+          },
+          {
+            id: 'workbench.action.terminal.toggleTerminal',
+            title: 'View: Toggle Terminal',
+            section: 'Terminal',
+            shortcut: 'Ctrl+`',
+            icon: <TerminalSquare className="w-4 h-4 text-indigo-400" />,
+            perform: () => toggleTerminal(),
+          },
+          {
+            id: 'workbench.actions.view.problems',
+            title: 'View: Show Problems',
+            section: 'View',
+            icon: <AlertTriangle className="w-4 h-4 text-amber-400" />,
+            perform: () => {
+              setShowTerminal(true);
+              setBottomTab('problems');
+            },
+          },
+          {
+            id: 'workbench.action.output.toggleOutput',
+            title: 'View: Show Output',
+            section: 'View',
+            icon: <TerminalSquare className="w-4 h-4 text-slate-300" />,
+            perform: () => {
+              setShowTerminal(true);
+              setBottomTab('output');
+            },
+          },
+          {
+            id: 'workbench.action.focusActiveEditorGroup',
+            title: 'View: Focus Editor',
+            section: 'View',
+            perform: () => {
+              editorRef.current?.focus();
+            },
+          },
+          {
+            id: 'workbench.action.splitEditor',
+            title: isSplitActive ? 'View: Close Split Editor' : 'View: Split Editor',
+            section: 'View',
+            shortcut: 'Ctrl+\\',
+            icon: <Columns className="w-4 h-4 text-slate-300" />,
+            perform: () => {
+              if (isSplitActive) {
+                closeSplitPane();
+              } else {
+                const other =
+                  openPaths.find((p) => p !== activePath) ||
+                  project.files.find((f) => f.path !== activePath)?.path ||
+                  activePath;
+                if (other) openToSide(other);
+              }
+            },
+          },
+          {
+            id: 'workbench.action.preview.refresh',
+            title: 'Preview: Refresh Live Preview',
+            section: 'Preview',
+            icon: <RefreshCw className="w-4 h-4 text-cyan-400" />,
+            disabled: !activePreview?.url,
+            perform: () => void handleReloadPreview(),
+          },
+          {
+            id: 'workbench.action.preview.openInNewTab',
+            title: 'Preview: Open in New Tab',
+            section: 'Preview',
+            icon: <ExternalLink className="w-4 h-4 text-slate-300" />,
+            disabled: !activePreview?.url,
+            perform: () => handleOpenInNewTab(),
+          },
+          {
+            id: 'workbench.action.preview.toggle',
+            title: isPreviewMinimized ? 'Preview: Restore Preview Panel' : 'Preview: Minimize Preview Panel',
+            section: 'Preview',
+            perform: () => setIsPreviewMinimized((v) => !v),
+          },
+          {
+            id: 'workbench.action.openSettings',
+            title: 'Preferences: Open IDE Settings',
+            section: 'Preferences',
+            perform: () => setIsSettingsOpen(true),
+          },
+          {
+            id: 'workbench.action.restartDevServer',
+            title: 'WebContainer: Restart Development Server',
+            section: 'Server',
+            icon: <RotateCcw className="w-4 h-4 text-amber-400" />,
+            perform: () => void handleRestartDevServer(),
+          },
+        ]}
+        files={project.files}
+        onSelectFile={(path) => {
+          navigateToLocation(path);
+        }}
+        initialMode={commandPaletteMode}
       />
     </div>
   );
