@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Command, Terminal } from 'lucide-react';
-import { useTheme } from '../hooks/useTheme';
+import { Command, Terminal, FileCode } from 'lucide-react';
 
 export interface PaletteAction {
   id: string;
@@ -9,22 +8,57 @@ export interface PaletteAction {
   icon?: React.ReactNode;
   shortcut?: string;
   keywords?: string[];
+  disabled?: boolean;
   perform: () => void;
 }
 
-interface CommandPaletteProps {
+export interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   actions: PaletteAction[];
+  files?: Array<{ path: string }>;
+  onSelectFile?: (path: string) => void;
+  initialMode?: 'commands' | 'files';
+  recentFiles?: string[];
 }
 
-const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, actions }) => {
-  const { isDark } = useTheme();
-  const [query, setQuery] = useState('');
+interface PaletteDisplayItem {
+  id: string;
+  title: string;
+  section: string;
+  icon: React.ReactNode;
+  shortcut?: string;
+  disabled?: boolean;
+  onSelect: () => void;
+}
+
+const CommandPalette: React.FC<CommandPaletteProps> = ({
+  isOpen,
+  onClose,
+  actions,
+  files = [],
+  onSelectFile,
+  initialMode = 'commands',
+  recentFiles: propRecentFiles,
+}) => {
+  const [query, setQuery] = useState(initialMode === 'files' ? '' : '>');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  
+
+  // Synchronously reset state during render when opened or mode changed
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  const [prevInitialMode, setPrevInitialMode] = useState(initialMode);
+
+  if (isOpen !== prevIsOpen || initialMode !== prevInitialMode) {
+    setPrevIsOpen(isOpen);
+    setPrevInitialMode(initialMode);
+    if (isOpen) {
+      setQuery(initialMode === 'files' ? '' : '>');
+      setSelectedIndex(0);
+    }
+  }
+
   const [recentCommandIds, setRecentCommandIds] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('gbcoder_recent_commands');
@@ -34,71 +68,222 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, action
     }
   });
 
-  // Reset state when opened
+  const [recentFilePaths, setRecentFilePaths] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('gbcoder_recent_files');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Focus input and set selection range
   useEffect(() => {
     if (isOpen) {
-      setQuery('');
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 10);
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+        if (initialMode === 'commands') {
+          inputRef.current?.setSelectionRange(1, 1);
+        }
+      }, 20);
+      return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, initialMode]);
 
-  // Handle outside click & escape
+  // Determine current search mode: command mode starts with '>'
+  const isCommandMode = query.startsWith('>') || files.length === 0;
+  const cleanQuery = query.startsWith('>') ? query.slice(1).trim() : query.trim();
+
+  // Handle outside click & global shortcuts when palette is open
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
         e.preventDefault();
+        e.stopPropagation();
+        onClose();
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setSelectedIndex(prev => prev + 1);
+        setSelectedIndex((prev) => prev + 1);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setSelectedIndex(prev => (prev > 0 ? prev - 1 : prev));
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        // Trigger action via ref or similar mechanism to avoid closure staleness,
-        // but for now we will rely on filteredActions in the render scope via a ref if needed.
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0));
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]); // We will handle Enter key in the input onKeyDown instead to access the latest filteredActions
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [isOpen, onClose]);
 
-  // Fuzzy search logic
-  const filteredActions = useMemo(() => {
-    let result = actions;
-    if (query.trim() === '') {
-      // Show recent first if empty
-      const recentActions = recentCommandIds
-        .map(id => actions.find(a => a.id === id))
-        .filter((a): a is PaletteAction => a !== undefined);
-        
-      const recentSet = new Set(recentActions.map(a => a.id));
-      const others = actions.filter(a => !recentSet.has(a.id));
-      
-      result = [...recentActions, ...others];
-    } else {
-      const lowerQuery = query.toLowerCase();
-      const terms = lowerQuery.split(' ').filter(Boolean);
-      
-      result = actions.filter(action => {
-        const searchableText = `${action.title} ${action.section} ${action.keywords?.join(' ') || ''}`.toLowerCase();
-        return terms.every(term => searchableText.includes(term));
+  // Combined items list calculation
+  const displayItems = useMemo<PaletteDisplayItem[]>(() => {
+    if (isCommandMode) {
+      // 1. Command Mode
+      const availableActions = actions.filter((a) => !a.disabled);
+
+      if (!cleanQuery) {
+        // Show recently used commands first
+        const recentActions = recentCommandIds
+          .map((id) => availableActions.find((a) => a.id === id))
+          .filter((a): a is PaletteAction => a !== undefined);
+
+        const recentSet = new Set(recentActions.map((a) => a.id));
+        const others = availableActions.filter((a) => !recentSet.has(a.id));
+
+        return [
+          ...recentActions.map((a) => ({
+            id: a.id,
+            title: a.title,
+            section: 'Recently Used',
+            icon: a.icon || <Terminal className="w-4 h-4 text-cyan-400" />,
+            shortcut: a.shortcut,
+            disabled: a.disabled,
+            onSelect: () => {
+              const next = [a.id, ...recentCommandIds.filter((id) => id !== a.id)].slice(0, 5);
+              setRecentCommandIds(next);
+              try {
+                localStorage.setItem('gbcoder_recent_commands', JSON.stringify(next));
+              } catch {
+                // Ignore
+              }
+              a.perform();
+              onClose();
+            },
+          })),
+          ...others.map((a) => ({
+            id: a.id,
+            title: a.title,
+            section: a.section || 'Commands',
+            icon: a.icon || <Terminal className="w-4 h-4 opacity-70" />,
+            shortcut: a.shortcut,
+            disabled: a.disabled,
+            onSelect: () => {
+              const next = [a.id, ...recentCommandIds.filter((id) => id !== a.id)].slice(0, 5);
+              setRecentCommandIds(next);
+              try {
+                localStorage.setItem('gbcoder_recent_commands', JSON.stringify(next));
+              } catch {
+                // Ignore
+              }
+              a.perform();
+              onClose();
+            },
+          })),
+        ];
+      }
+
+      // Fuzzy search commands
+      const lower = cleanQuery.toLowerCase();
+      const terms = lower.split(' ').filter(Boolean);
+
+      const matched = availableActions.filter((action) => {
+        const searchable = `${action.title} ${action.section} ${action.keywords?.join(' ') || ''}`.toLowerCase();
+        return terms.every((t) => searchable.includes(t));
       });
-    }
-    return result;
-  }, [query, actions, recentCommandIds]);
 
-  // Ensure selected index is valid
-  useEffect(() => {
-    if (selectedIndex >= filteredActions.length) {
-      setSelectedIndex(Math.max(0, filteredActions.length - 1));
+      return matched.map((a) => ({
+        id: a.id,
+        title: a.title,
+        section: a.section || 'Commands',
+        icon: a.icon || <Terminal className="w-4 h-4 opacity-70" />,
+        shortcut: a.shortcut,
+        disabled: a.disabled,
+        onSelect: () => {
+          const next = [a.id, ...recentCommandIds.filter((id) => id !== a.id)].slice(0, 5);
+          setRecentCommandIds(next);
+          try {
+            localStorage.setItem('gbcoder_recent_commands', JSON.stringify(next));
+          } catch {
+            // Ignore
+          }
+          a.perform();
+          onClose();
+        },
+      }));
+    } else {
+      // 2. File Picker Mode (Quick Open)
+      const allFiles = files;
+      const combinedRecent = propRecentFiles ?? recentFilePaths;
+
+      if (!cleanQuery) {
+        // Show recent files first, then rest
+        const recentFileItems = combinedRecent
+          .map((p) => allFiles.find((f) => f.path === p))
+          .filter((f): f is { path: string } => f !== undefined);
+
+        const recentSet = new Set(recentFileItems.map((f) => f.path));
+        const otherFiles = allFiles.filter((f) => !recentSet.has(f.path));
+
+        const makeFileItem = (f: { path: string }, section: string): PaletteDisplayItem => ({
+          id: `file-${f.path}`,
+          title: f.path,
+          section,
+          icon: <FileCode className="w-4 h-4 text-indigo-400" />,
+          onSelect: () => {
+            const next = [f.path, ...combinedRecent.filter((p) => p !== f.path)].slice(0, 10);
+            setRecentFilePaths(next);
+            try {
+              localStorage.setItem('gbcoder_recent_files', JSON.stringify(next));
+            } catch {
+              // Ignore
+            }
+            onSelectFile?.(f.path);
+            onClose();
+          },
+        });
+
+        return [
+          ...recentFileItems.map((f) => makeFileItem(f, 'Recently Opened')),
+          ...otherFiles.map((f) => makeFileItem(f, 'Files')),
+        ];
+      }
+
+      // Fuzzy search files
+      const lower = cleanQuery.toLowerCase();
+      const terms = lower.split(' ').filter(Boolean);
+
+      const matched = allFiles.filter((f) => {
+        const p = f.path.toLowerCase();
+        return terms.every((t) => p.includes(t));
+      });
+
+      return matched.map((f) => ({
+        id: `file-${f.path}`,
+        title: f.path,
+        section: 'Files',
+        icon: <FileCode className="w-4 h-4 text-indigo-400" />,
+        onSelect: () => {
+          const next = [f.path, ...combinedRecent.filter((p) => p !== f.path)].slice(0, 10);
+          setRecentFilePaths(next);
+          try {
+            localStorage.setItem('gbcoder_recent_files', JSON.stringify(next));
+          } catch {
+            // Ignore
+          }
+          onSelectFile?.(f.path);
+          onClose();
+        },
+      }));
     }
-  }, [filteredActions.length, selectedIndex]);
+  }, [
+    isCommandMode,
+    cleanQuery,
+    actions,
+    files,
+    recentCommandIds,
+    recentFilePaths,
+    propRecentFiles,
+    onSelectFile,
+    onClose,
+  ]);
+
+  // Clamp selected index
+  useEffect(() => {
+    if (selectedIndex >= displayItems.length) {
+      setSelectedIndex(Math.max(0, displayItems.length - 1));
+    }
+  }, [displayItems.length, selectedIndex]);
 
   // Scroll into view
   useEffect(() => {
@@ -110,94 +295,109 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, action
     }
   }, [selectedIndex, isOpen]);
 
-  const executeAction = (action: PaletteAction) => {
-    const newRecents = [action.id, ...recentCommandIds.filter(id => id !== action.id)].slice(0, 5);
-    setRecentCommandIds(newRecents);
-    try {
-      localStorage.setItem('gbcoder_recent_commands', JSON.stringify(newRecents));
-    } catch {
-      // LocalStorage quota exceeded or disabled
-    }
-    
-    action.perform();
-    onClose();
-  };
-
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (filteredActions[selectedIndex]) {
-        executeAction(filteredActions[selectedIndex]);
+      const item = displayItems[selectedIndex];
+      if (item && !item.disabled) {
+        item.onSelect();
       }
     }
   };
 
   if (!isOpen) return null;
 
-  // Group by section
-  const groupedActions = filteredActions.reduce((acc, action) => {
-    const isRecent = query.trim() === '' && recentCommandIds.includes(action.id);
-    const section = isRecent ? 'Recently Used' : action.section;
-    if (!acc[section]) acc[section] = [];
-    acc[section].push(action);
+  // Group items by section
+  const grouped = displayItems.reduce((acc, item) => {
+    if (!acc[item.section]) acc[item.section] = [];
+    acc[item.section].push(item);
     return acc;
-  }, {} as Record<string, PaletteAction[]>);
+  }, {} as Record<string, PaletteDisplayItem[]>);
 
   let flatIndex = 0;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div 
-        className={`w-full max-w-[600px] shadow-2xl rounded-xl overflow-hidden border ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}`}
-        onClick={e => e.stopPropagation()}
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center pt-[12vh] bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command Palette"
+      data-testid="command-palette-modal"
+    >
+      <div
+        className="w-full max-w-[620px] shadow-2xl rounded-xl overflow-hidden border border-[#262940] bg-[#141624] text-slate-200"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className={`flex items-center px-4 py-3 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-          <Command className={`w-5 h-5 mr-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+        {/* Input Header */}
+        <div className="flex items-center px-4 py-3 border-b border-[#222538] bg-[#11131c]">
+          {isCommandMode ? (
+            <Command className="w-5 h-5 mr-3 text-cyan-400 shrink-0" />
+          ) : (
+            <FileCode className="w-5 h-5 mr-3 text-indigo-400 shrink-0" />
+          )}
           <input
             ref={inputRef}
             type="text"
-            className={`w-full bg-transparent border-none outline-none text-lg ${isDark ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'}`}
-            placeholder="Type a command or search..."
+            className="w-full bg-transparent border-none outline-none text-sm text-white placeholder-slate-500 font-sans"
+            placeholder={
+              isCommandMode
+                ? 'Type a command or search...'
+                : 'Type file name to open... (type > for commands)'
+            }
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleInputKeyDown}
+            aria-label="Command search input"
           />
+          <kbd className="hidden sm:inline-block rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-slate-400 font-mono">
+            ESC
+          </kbd>
         </div>
 
-        <div ref={listRef} className="max-h-[50vh] overflow-y-auto py-2">
-          {Object.entries(groupedActions).map(([section, sectionActions]) => (
+        {/* Results List */}
+        <div ref={listRef} className="max-h-[50vh] overflow-y-auto py-2 font-sans">
+          {Object.entries(grouped).map(([section, items]) => (
             <div key={section} className="mb-2">
-              <div className={`px-4 py-1 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              <div className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                 {section}
               </div>
-              {sectionActions.map(action => {
+              {items.map((item) => {
                 const currentIndex = flatIndex++;
                 const isSelected = currentIndex === selectedIndex;
-                
+
                 return (
                   <div
-                    key={`${section}-${action.id}`}
+                    key={item.id}
                     data-selected={isSelected}
-                    className={`flex items-center justify-between px-4 py-2.5 mx-2 rounded-lg cursor-pointer transition-colors ${
-                      isSelected 
-                        ? isDark ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700'
-                        : isDark ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
+                    role="option"
+                    aria-selected={isSelected}
+                    className={`flex items-center justify-between px-3.5 py-2 mx-2 rounded-lg cursor-pointer transition-colors text-xs ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white font-medium'
+                        : 'text-slate-300 hover:bg-white/5'
                     }`}
-                    onClick={() => executeAction(action)}
+                    onClick={() => {
+                      if (!item.disabled) item.onSelect();
+                    }}
                     onMouseEnter={() => setSelectedIndex(currentIndex)}
                   >
-                    <div className="flex items-center gap-3">
-                      {action.icon || <Terminal className="w-4 h-4 opacity-70" />}
-                      <span className="font-medium text-sm">{action.title}</span>
+                    <div className="flex items-center gap-2.5 truncate">
+                      {item.icon}
+                      <span className="truncate">{item.title}</span>
                     </div>
-                    {action.shortcut && (
-                      <div className="flex items-center gap-1">
-                        {action.shortcut.split('+').map((key, i) => (
-                          <kbd key={i} className={`px-2 py-1 text-[10px] rounded font-sans ${
-                            isSelected
-                              ? isDark ? 'bg-blue-700/50 text-blue-100' : 'bg-blue-100 text-blue-800'
-                              : isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'
-                          }`}>
+
+                    {item.shortcut && (
+                      <div className="flex items-center gap-1 shrink-0 ml-2">
+                        {item.shortcut.split('+').map((key, i) => (
+                          <kbd
+                            key={i}
+                            className={`px-1.5 py-0.5 text-[9px] rounded font-mono ${
+                              isSelected
+                                ? 'bg-indigo-800 text-indigo-100'
+                                : 'bg-white/10 text-slate-400'
+                            }`}
+                          >
                             {key}
                           </kbd>
                         ))}
@@ -208,12 +408,22 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, action
               })}
             </div>
           ))}
-          
-          {filteredActions.length === 0 && (
-            <div className={`px-4 py-8 text-center text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              No commands found matching "{query}"
+
+          {displayItems.length === 0 && (
+            <div className="px-4 py-8 text-center text-xs text-slate-500 font-sans">
+              No matching {isCommandMode ? 'commands' : 'files'} found for "{cleanQuery}"
             </div>
           )}
+        </div>
+
+        {/* Footer Hints */}
+        <div className="px-4 py-1.5 bg-[#10121a] border-t border-[#1e2235] text-[10px] text-slate-500 flex items-center justify-between">
+          <span>{isCommandMode ? 'Commands' : 'Files (type > for commands)'}</span>
+          <span className="flex items-center gap-2 font-mono">
+            <span>↑↓ Navigate</span>
+            <span>↵ Select</span>
+            <span>ESC Close</span>
+          </span>
         </div>
       </div>
     </div>
