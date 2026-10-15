@@ -21,7 +21,7 @@
     { "source": "/ide", "destination": "/app/index.html" },
     { "source": "/app", "destination": "/app/index.html" },
     { "source": "/app/", "destination": "/app/index.html" },
-    { "source": "/app/(.*)", "destination": "/app/index.html" }
+    { "source": "/app/((?!assets(?:/|$)|.*\\.[^/]+(?:/|$)).*)", "destination": "/app/index.html" }
   ],
   "headers": [
     {
