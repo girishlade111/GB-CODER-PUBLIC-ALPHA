@@ -29,6 +29,7 @@ class DiagnosticsService {
   private runtimeDiagnostics: DiagnosticItem[] = [];
   private currentProjectId: string | null = null;
   private listeners = new Set<DiagnosticsListener>();
+  private cachedState: DiagnosticsState | null = null;
 
   /**
    * Scopes diagnostics to the given project ID.
@@ -40,6 +41,7 @@ class DiagnosticsService {
       this.currentProjectId = id;
       this.editorDiagnostics = [];
       this.runtimeDiagnostics = [];
+      this.cachedState = null;
       this.notify();
     }
   }
@@ -141,6 +143,10 @@ class DiagnosticsService {
    * Returns consolidated state.
    */
   getState(): DiagnosticsState {
+    if (this.cachedState) {
+      return this.cachedState;
+    }
+
     const items = [...this.runtimeDiagnostics, ...this.editorDiagnostics];
     let errorCount = 0;
     let warningCount = 0;
@@ -152,13 +158,14 @@ class DiagnosticsService {
       else infoCount++;
     }
 
-    return {
+    this.cachedState = {
       items,
       errorCount,
       warningCount,
       infoCount,
       totalCount: items.length,
     };
+    return this.cachedState;
   }
 
   subscribe(listener: DiagnosticsListener): () => void {
@@ -167,6 +174,7 @@ class DiagnosticsService {
   }
 
   private notify(): void {
+    this.cachedState = null;
     for (const listener of this.listeners) {
       try {
         listener();
