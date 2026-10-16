@@ -285,9 +285,18 @@ export class WebContainerWatcher {
           }
 
           case PathClassification.CONFIRMED_FILE_DELETION: {
-            // Protect dirty buffers: if user has unsaved edits in this file, do not silently delete!
+            // Protect dirty buffers: if user has unsaved edits in this file, register external deletion conflict!
             if (callbacks.isEditorDirty?.(path)) {
-              console.warn(`[WebContainerWatcher] Protected dirty buffer from external deletion: ${path}`);
+              console.warn(`[WebContainerWatcher] Protected dirty buffer from external deletion and registered conflict: ${path}`);
+              const monacoContent = callbacks.getEditorContent?.(path) ?? '';
+              const conflict = editorConflictService.registerConflict({
+                projectId: currentProjectId,
+                path,
+                monacoContent,
+                externalContent: '',
+                conflictType: 'file_deleted',
+              });
+              callbacks.onFileConflict?.(conflict);
               break;
             }
             callbacks.onFileDelete(path);
@@ -296,13 +305,31 @@ export class WebContainerWatcher {
 
           case PathClassification.CONFIRMED_DIRECTORY_DELETION: {
             // Genuine directory deletion: check for dirty descendant files
-            const dirtyDescendant = knownFiles.find(
+            const dirtyDescendants = knownFiles.filter(
               (f) => f.startsWith(`${path}/`) && callbacks.isEditorDirty?.(f),
             );
-            if (dirtyDescendant) {
+            if (dirtyDescendants.length > 0) {
               console.warn(
-                `[WebContainerWatcher] Preserved dirty buffer ${dirtyDescendant} during directory deletion of ${path}`,
+                `[WebContainerWatcher] Preserved dirty buffers [${dirtyDescendants.join(', ')}] during directory deletion of ${path}`,
               );
+              for (const dirtyPath of dirtyDescendants) {
+                const monacoContent = callbacks.getEditorContent?.(dirtyPath) ?? '';
+                const conflict = editorConflictService.registerConflict({
+                  projectId: currentProjectId,
+                  path: dirtyPath,
+                  monacoContent,
+                  externalContent: '',
+                  conflictType: 'directory_deleted',
+                });
+                callbacks.onFileConflict?.(conflict);
+              }
+              // Safely remove non-dirty files that were deleted along with the directory
+              const cleanDescendants = knownFiles.filter(
+                (f) => f.startsWith(`${path}/`) && !callbacks.isEditorDirty?.(f),
+              );
+              for (const cleanPath of cleanDescendants) {
+                callbacks.onFileDelete(cleanPath);
+              }
               break;
             }
             if (callbacks.onDirectoryDelete) {

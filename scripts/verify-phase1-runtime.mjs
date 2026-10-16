@@ -533,6 +533,170 @@ describe('GB Coder Phase 1 — WebContainer Runtime & Terminal Reliability Matri
       assert.equal(resolved?.status, 'resolved_use_external');
       assert.equal(editorConflictService.hasConflict('proj-res2', 'src/file2.ts'), false);
     });
+
+    test('4.5 External deletion of dirty file registers file_deleted conflict and preserves Monaco edits', async () => {
+      editorConflictService.clearProjectConflicts('proj-del');
+      const watcher = new WebContainerWatcher();
+      let conflictFired = false;
+      let fileDeletedFired = false;
+
+      const mockContainer = {
+        fs: {
+          watch: () => ({ close: () => {} }),
+          readFile: async () => {
+            const err = new Error('File not found');
+            (err).code = 'ENOENT';
+            throw err;
+          },
+          readdir: async () => {
+            const err = new Error('Directory not found');
+            (err).code = 'ENOENT';
+            throw err;
+          },
+        },
+      };
+
+      watcher.start(mockContainer, {
+        projectId: 'proj-del',
+        getKnownFiles: () => ['src/dirty-del.ts'],
+        isEditorDirty: (path) => path === 'src/dirty-del.ts',
+        getEditorContent: (path) => (path === 'src/dirty-del.ts' ? 'unsaved editor edits' : undefined),
+        onFileCreate: () => {},
+        onFileChange: () => {},
+        onFileDelete: () => {
+          fileDeletedFired = true;
+        },
+        onFileConflict: (conflict) => {
+          conflictFired = true;
+          assert.equal(conflict.path, 'src/dirty-del.ts');
+          assert.equal(conflict.conflictType, 'file_deleted');
+          assert.equal(conflict.externalContent, '');
+          assert.equal(conflict.monacoContent, 'unsaved editor edits');
+        },
+      });
+
+      watcher.handleRawFSEvent('change', 'src/dirty-del.ts');
+      await new Promise((r) => setTimeout(r, 350));
+
+      assert.equal(conflictFired, true, 'Conflict callback must be triggered for dirty buffer deletion');
+      assert.equal(fileDeletedFired, false, 'Dirty file must not be silently deleted');
+
+      const saved = editorConflictService.getConflict('proj-del', 'src/dirty-del.ts');
+      assert.ok(saved);
+      assert.equal(saved.conflictType, 'file_deleted');
+      assert.equal(saved.status, 'pending');
+
+      watcher.stop();
+    });
+
+    test('4.6 External directory deletion registers directory_deleted conflict for dirty descendants and removes clean files', async () => {
+      editorConflictService.clearProjectConflicts('proj-dir-del');
+      const watcher = new WebContainerWatcher();
+      const conflicts = [];
+      const deletedFiles = [];
+
+      const mockContainer = {
+        fs: {
+          watch: () => ({ close: () => {} }),
+          readFile: async () => {
+            const err = new Error('File not found');
+            (err).code = 'ENOENT';
+            throw err;
+          },
+          readdir: async () => {
+            const err = new Error('Directory not found');
+            (err).code = 'ENOENT';
+            throw err;
+          },
+        },
+      };
+
+      const knownFiles = [
+        'src/components/Button.tsx',
+        'src/components/Card.tsx',
+      ];
+
+      watcher.start(mockContainer, {
+        projectId: 'proj-dir-del',
+        getKnownFiles: () => knownFiles,
+        isEditorDirty: (path) => path === 'src/components/Button.tsx',
+        getEditorContent: (path) =>
+          path === 'src/components/Button.tsx' ? 'export const Button = () => <div />;' : undefined,
+        onFileCreate: () => {},
+        onFileChange: () => {},
+        onFileDelete: (path) => {
+          deletedFiles.push(path);
+        },
+        onFileConflict: (conflict) => {
+          conflicts.push(conflict);
+        },
+      });
+
+      // Directory deletion event for 'src/components'
+      watcher.handleRawFSEvent('change', 'src/components');
+      await new Promise((r) => setTimeout(r, 350));
+
+      assert.equal(conflicts.length, 1, 'Exactly one conflict for dirty descendant');
+      assert.equal(conflicts[0].path, 'src/components/Button.tsx');
+      assert.equal(conflicts[0].conflictType, 'directory_deleted');
+      assert.equal(conflicts[0].monacoContent, 'export const Button = () => <div />;');
+
+      assert.deepEqual(deletedFiles, ['src/components/Card.tsx'], 'Clean files must be deleted');
+
+      const saved = editorConflictService.getConflict('proj-dir-del', 'src/components/Button.tsx');
+      assert.ok(saved);
+      assert.equal(saved.conflictType, 'directory_deleted');
+
+      watcher.stop();
+    });
+
+    test('4.7 Central write safety enforcement via canWrite and assertWriteSafe', () => {
+      editorConflictService.clearProjectConflicts('proj-guard');
+      editorConflictService.registerConflict({
+        projectId: 'proj-guard',
+        path: 'src/guarded.ts',
+        monacoContent: 'dirty',
+        externalContent: 'external',
+      });
+
+      assert.equal(editorConflictService.canWrite('proj-guard', 'src/guarded.ts'), false);
+      assert.equal(editorConflictService.canWrite('proj-guard', 'src/other.ts'), true);
+
+      assert.throws(
+        () => editorConflictService.assertWriteSafe('proj-guard', 'src/guarded.ts'),
+        /Write blocked/,
+      );
+      assert.doesNotThrow(() => editorConflictService.assertWriteSafe('proj-guard', 'src/other.ts'));
+    });
+
+    test('4.8 Durable conflicts are isolated by project and persist across simulated switch', () => {
+      editorConflictService.clearProjectConflicts('proj-a');
+      editorConflictService.clearProjectConflicts('proj-b');
+
+      editorConflictService.registerConflict({
+        projectId: 'proj-a',
+        path: 'file-a.ts',
+        monacoContent: 'content a',
+        externalContent: 'external a',
+      });
+      editorConflictService.registerConflict({
+        projectId: 'proj-b',
+        path: 'file-b.ts',
+        monacoContent: 'content b',
+        externalContent: 'external b',
+      });
+
+      assert.equal(editorConflictService.hasConflict('proj-a', 'file-a.ts'), true);
+      assert.equal(editorConflictService.hasConflict('proj-b', 'file-b.ts'), true);
+      assert.equal(editorConflictService.hasConflict('proj-a', 'file-b.ts'), false);
+
+      // Delete only proj-a
+      editorConflictService.deleteProjectConflicts('proj-a');
+      assert.equal(editorConflictService.hasConflict('proj-a', 'file-a.ts'), false);
+      assert.equal(editorConflictService.hasConflict('proj-b', 'file-b.ts'), true);
+
+      editorConflictService.deleteProjectConflicts('proj-b');
+    });
   });
 
   /* ------------------------------------------------------------------------

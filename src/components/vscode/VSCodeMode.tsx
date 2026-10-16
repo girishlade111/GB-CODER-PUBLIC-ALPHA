@@ -292,10 +292,27 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const activeConflict = activePath
     ? editorConflictService.getConflict(effectiveProjectId, activePath)
     : undefined;
+  const splitConflict = splitActivePath
+    ? editorConflictService.getConflict(effectiveProjectId, splitActivePath)
+    : undefined;
   const [isDiffMode, setIsDiffMode] = useState(false);
   useEffect(() => {
     setIsDiffMode(false);
   }, [activePath]);
+
+  // Restore dirty status for any durable pending conflicts
+  useEffect(() => {
+    const conflicts = editorConflictService.listConflicts(effectiveProjectId);
+    if (conflicts.length > 0) {
+      setDirtyPaths((current) => {
+        const next = new Set(current);
+        for (const c of conflicts) {
+          next.add(c.path);
+        }
+        return next;
+      });
+    }
+  }, [effectiveProjectId]);
 
   // Modals state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -477,8 +494,27 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         if (isCancelled) return;
 
         if (project.files.length > 0) {
+          const filesToMount = project.files
+            .filter((file) => {
+              const conflict = editorConflictService.getConflict(effectiveProjectId, file.path);
+              if (
+                conflict &&
+                (conflict.conflictType === 'file_deleted' ||
+                  conflict.conflictType === 'directory_deleted')
+              ) {
+                return false;
+              }
+              return true;
+            })
+            .map((file) => {
+              const conflict = editorConflictService.getConflict(effectiveProjectId, file.path);
+              if (conflict && conflict.externalContent) {
+                return { ...file, content: conflict.externalContent };
+              }
+              return file;
+            });
           await webcontainerService.mountProject(
-            project.files,
+            filesToMount,
             project.dependencies,
             project.projectType,
             effectiveProjectId,
@@ -544,8 +580,27 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     if (project.files.length > 0 && mountedFilesCountRef.current === 0) {
       mountedFilesCountRef.current = project.files.length;
       webcontainerService.attachProject(effectiveProjectId);
+      const filesToMount = project.files
+        .filter((file) => {
+          const conflict = editorConflictService.getConflict(effectiveProjectId, file.path);
+          if (
+            conflict &&
+            (conflict.conflictType === 'file_deleted' ||
+              conflict.conflictType === 'directory_deleted')
+          ) {
+            return false;
+          }
+          return true;
+        })
+        .map((file) => {
+          const conflict = editorConflictService.getConflict(effectiveProjectId, file.path);
+          if (conflict && conflict.externalContent) {
+            return { ...file, content: conflict.externalContent };
+          }
+          return file;
+        });
       void webcontainerService.mountProject(
-        project.files,
+        filesToMount,
         project.dependencies,
         project.projectType,
         effectiveProjectId,
@@ -627,6 +682,15 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
   const handleRenameFile = useCallback(
     async (oldPath: string, newPath: string) => {
+      // Conflict guard: block rename if oldPath or any nested file has an active conflict
+      const hasConflict = !project.files.some((f) => f.path === oldPath)
+        ? editorConflictService.listConflicts(effectiveProjectId).some((c) => c.path.startsWith(`${oldPath}/`))
+        : editorConflictService.hasConflict(effectiveProjectId, oldPath);
+      if (hasConflict) {
+        toast.error('Cannot rename: path has an unresolved external conflict. Please resolve the conflict first.', { duration: 4000 });
+        return false;
+      }
+
       // Strict pre-validation (the tree did a first pass only): traversal,
       // case-collisions and wrong extensions stop here, before tabs move.
       const existing = project.files.map((f) => f.path);
@@ -680,11 +744,20 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       });
       return true;
     },
-    [onRenameFile, project.files, project.projectType, activeProjectId],
+    [onRenameFile, project.files, project.projectType, activeProjectId, effectiveProjectId],
   );
 
   const handleDeleteFile = useCallback(
     async (path: string): Promise<boolean | void> => {
+      // Conflict guard: block delete if path or any nested file has an active conflict
+      const hasConflict = editorConflictService
+        .listConflicts(effectiveProjectId)
+        .some((c) => c.path === path || c.path.startsWith(`${path}/`));
+      if (hasConflict) {
+        toast.error('Cannot delete: path has an unresolved external conflict. Please resolve the conflict first.', { duration: 4000 });
+        return false;
+      }
+
       const operationEpoch = webcontainerService.getSessionEpoch();
       // Fail-closed integration: await virtual filesystem delete before mutating tabs or notifying parent
       try {
@@ -721,7 +794,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       });
       return true;
     },
-    [onDeleteFile, activePath, splitActivePath, activeProjectId],
+    [onDeleteFile, activePath, splitActivePath, activeProjectId, effectiveProjectId],
   );
 
 
@@ -758,7 +831,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       void webcontainerService.syncFile(conflict.path, conflict.monacoContent, conflict.projectId);
       editorConflictService.resolveConflict(conflict.projectId, conflict.path, 'keep_mine');
       setIsDiffMode(false);
-      toast.success('Kept editor changes and updated terminal filesystem.');
+      if (conflict.conflictType === 'file_deleted' || conflict.conflictType === 'directory_deleted') {
+        toast.success(`Restored "${conflict.path}" to filesystem from editor buffer.`);
+      } else {
+        toast.success('Kept editor changes and updated terminal filesystem.');
+      }
     },
     [],
   );
@@ -766,17 +843,36 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const handleResolveUseExternal = useCallback(
     (conflict: ExternalFileConflict) => {
       webcontainerWatcher.markInternallySynced(conflict.path);
-      onChangeFile(conflict.path, conflict.externalContent);
-      setDirtyPaths((current) => {
-        const next = new Set(current);
-        next.delete(conflict.path);
-        return next;
-      });
+      if (
+        conflict.conflictType === 'file_deleted' ||
+        conflict.conflictType === 'directory_deleted' ||
+        conflict.externalContent === ''
+      ) {
+        // External version is deleted: remove file from workspace
+        onDeleteFile?.(conflict.path);
+        setOpenPaths((paths) => paths.filter((p) => p !== conflict.path));
+        setSplitOpenPaths((paths) => paths.filter((p) => p !== conflict.path));
+        setActivePath((current) => (current === conflict.path ? null : current));
+        setSplitActivePath((current) => (current === conflict.path ? null : current));
+        setDirtyPaths((current) => {
+          const next = new Set(current);
+          next.delete(conflict.path);
+          return next;
+        });
+        toast.success(`Removed "${conflict.path}" (accepted external deletion).`);
+      } else {
+        onChangeFile(conflict.path, conflict.externalContent);
+        setDirtyPaths((current) => {
+          const next = new Set(current);
+          next.delete(conflict.path);
+          return next;
+        });
+        toast.success('Reverted to external filesystem version.');
+      }
       editorConflictService.resolveConflict(conflict.projectId, conflict.path, 'use_external');
       setIsDiffMode(false);
-      toast.success('Reverted to external filesystem version.');
     },
-    [onChangeFile],
+    [onChangeFile, onDeleteFile],
   );
 
   const isSplitActive = Boolean(splitActivePath && splitOpenPaths.length > 0);
@@ -1952,7 +2048,14 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       <div className="flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
                         <span>
-                          <strong>File changed externally</strong> while you have unsaved edits in{' '}
+                          <strong>
+                            {activeConflict.conflictType === 'directory_deleted'
+                              ? 'Directory deleted externally'
+                              : activeConflict.conflictType === 'file_deleted'
+                              ? 'File deleted externally'
+                              : 'File changed externally'}
+                          </strong>{' '}
+                          while you have unsaved edits in{' '}
                           <code className="rounded bg-black/40 px-1 py-0.5">{activeConflict.path}</code>
                         </span>
                       </div>
@@ -1968,26 +2071,42 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            if (window.confirm('Keep your editor changes and overwrite the external terminal version?')) {
+                            const msg =
+                              activeConflict.conflictType === 'directory_deleted' ||
+                              activeConflict.conflictType === 'file_deleted'
+                                ? 'Restore this file on disk with your editor changes?'
+                                : 'Keep your editor changes and overwrite the external terminal version?';
+                            if (window.confirm(msg)) {
                               handleResolveKeepMine(activeConflict);
                             }
                           }}
                           className="rounded bg-amber-600 px-2 py-0.5 font-medium text-white hover:bg-amber-500 transition-colors"
                           data-testid="conflict-keep-mine-btn"
                         >
-                          Keep My Changes
+                          {activeConflict.conflictType === 'directory_deleted' ||
+                          activeConflict.conflictType === 'file_deleted'
+                            ? 'Restore File'
+                            : 'Keep My Changes'}
                         </button>
                         <button
                           type="button"
                           onClick={() => {
-                            if (window.confirm('Discard your unsaved editor changes and accept the external terminal version?')) {
+                            const msg =
+                              activeConflict.conflictType === 'directory_deleted' ||
+                              activeConflict.conflictType === 'file_deleted'
+                                ? 'Discard your unsaved editor changes and accept deletion of this file?'
+                                : 'Discard your unsaved editor changes and accept the external terminal version?';
+                            if (window.confirm(msg)) {
                               handleResolveUseExternal(activeConflict);
                             }
                           }}
                           className="rounded bg-zinc-700 px-2 py-0.5 hover:bg-zinc-600 text-zinc-100 transition-colors"
                           data-testid="conflict-use-external-btn"
                         >
-                          Use External Version
+                          {activeConflict.conflictType === 'directory_deleted' ||
+                          activeConflict.conflictType === 'file_deleted'
+                            ? 'Accept Deletion'
+                            : 'Use External Version'}
                         </button>
                         <button
                           type="button"
@@ -2289,7 +2408,14 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
                       <span>
-                        <strong>File changed externally</strong> while you have unsaved edits in{' '}
+                        <strong>
+                          {activeConflict.conflictType === 'directory_deleted'
+                            ? 'Directory deleted externally'
+                            : activeConflict.conflictType === 'file_deleted'
+                            ? 'File deleted externally'
+                            : 'File changed externally'}
+                        </strong>{' '}
+                        while you have unsaved edits in{' '}
                         <code className="rounded bg-black/40 px-1 py-0.5">{activeConflict.path}</code>
                       </span>
                     </div>
@@ -2305,26 +2431,42 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          if (window.confirm('Keep your editor changes and overwrite the external terminal version?')) {
+                          const msg =
+                            activeConflict.conflictType === 'directory_deleted' ||
+                            activeConflict.conflictType === 'file_deleted'
+                              ? 'Restore this file on disk with your editor changes?'
+                              : 'Keep your editor changes and overwrite the external terminal version?';
+                          if (window.confirm(msg)) {
                             handleResolveKeepMine(activeConflict);
                           }
                         }}
                         className="rounded bg-amber-600 px-2 py-0.5 font-medium text-white hover:bg-amber-500 transition-colors"
                         data-testid="conflict-keep-mine-btn"
                       >
-                        Keep My Changes
+                        {activeConflict.conflictType === 'directory_deleted' ||
+                        activeConflict.conflictType === 'file_deleted'
+                          ? 'Restore File'
+                          : 'Keep My Changes'}
                       </button>
                       <button
                         type="button"
                         onClick={() => {
-                          if (window.confirm('Discard your unsaved editor changes and accept the external terminal version?')) {
+                          const msg =
+                            activeConflict.conflictType === 'directory_deleted' ||
+                            activeConflict.conflictType === 'file_deleted'
+                              ? 'Discard your unsaved editor changes and accept deletion of this file?'
+                              : 'Discard your unsaved editor changes and accept the external terminal version?';
+                          if (window.confirm(msg)) {
                             handleResolveUseExternal(activeConflict);
                           }
                         }}
                         className="rounded bg-zinc-700 px-2 py-0.5 hover:bg-zinc-600 text-zinc-100 transition-colors"
                         data-testid="conflict-use-external-btn"
                       >
-                        Use External Version
+                        {activeConflict.conflictType === 'directory_deleted' ||
+                        activeConflict.conflictType === 'file_deleted'
+                          ? 'Accept Deletion'
+                          : 'Use External Version'}
                       </button>
                       <button
                         type="button"
