@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { OnMount } from '@monaco-editor/react';
-import Editor from '../LocalMonacoEditor';
+import Editor, { LocalDiffEditor } from '../LocalMonacoEditor';
 import {
   FilePlus,
   FolderPlus,
@@ -78,6 +78,7 @@ import { livePreviewChannel } from '../../services/preview/livePreviewChannel';
 import { previewReloadService } from '../../services/preview/previewReloadService';
 import { codeAssistService } from '../../services/ai/codeAssistService';
 import { Snapshot } from '../../services/snapshotService';
+import { editorConflictService, type ExternalFileConflict } from '../../services/editor/editorConflictService';
 
 /**
  * VS Code style editor shell.
@@ -279,6 +280,22 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const effectiveProjectId = activeProjectId || project.id || 'default-project';
+
+  // Conflict tracking for active file
+  const [, setConflictRevision] = useState(0);
+  useEffect(() => {
+    return editorConflictService.subscribe(() => {
+      setConflictRevision((r) => r + 1);
+    });
+  }, []);
+  const activeConflict = activePath
+    ? editorConflictService.getConflict(effectiveProjectId, activePath)
+    : undefined;
+  const [isDiffMode, setIsDiffMode] = useState(false);
+  useEffect(() => {
+    setIsDiffMode(false);
+  }, [activePath]);
 
   // Modals state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -472,6 +489,15 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
         // Initialize bidirectional filesystem watcher
         webcontainerWatcher.start(container, {
+          projectId: effectiveProjectId,
+          getKnownFiles: () => project.files.map((f) => f.path),
+          isEditorDirty: (filePath) => dirtyPathsMirrorRef.current.has(filePath),
+          getEditorContent: (filePath) => {
+            if (activePathMirrorRef.current === filePath && editorRef.current) {
+              return editorRef.current.getValue();
+            }
+            return project.files.find((f) => f.path === filePath)?.content;
+          },
           onFileCreate: (filePath, content) => {
             if (isCancelled) return;
             const existing = project.files.find((f) => f.path === filePath);
@@ -483,17 +509,19 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           },
           onFileChange: (filePath, content) => {
             if (isCancelled) return;
-            if (dirtyPathsMirrorRef.current.has(filePath)) {
-              console.warn(`[WebContainerWatcher] Skipping sync for dirty editor buffer: ${filePath}`);
-              return;
-            }
             onChangeFile(filePath, content);
           },
           onFileDelete: (filePath) => {
             if (isCancelled) return;
             onDeleteFile?.(filePath);
           },
-          isEditorDirty: (filePath) => dirtyPathsMirrorRef.current.has(filePath),
+          onFileConflict: (conflict) => {
+            if (isCancelled) return;
+            toast(
+              `External file conflict: ${conflict.path} modified in terminal while unsaved in editor.`,
+              { icon: '⚠️', duration: 4000 },
+            );
+          },
         });
       } catch (err) {
         console.warn('[VSCodeMode] WebContainer auto-boot or workspace mount error:', err);
@@ -709,7 +737,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       if (!activePath) return;
       const text = value ?? '';
       onChangeFile(activePath, text);
-      void webcontainerService.syncFile(activePath, text, activeProjectId ?? undefined);
+      // Save-path protection: if an external conflict is pending for activePath, do not auto-sync to WebContainer!
+      if (!editorConflictService.hasConflict(effectiveProjectId, activePath)) {
+        void webcontainerService.syncFile(activePath, text, activeProjectId ?? undefined);
+      }
       ataService.acquireTypes(text);
       setDirtyPaths((current) => {
         if (current.has(activePath)) return current;
@@ -718,7 +749,34 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         return next;
       });
     },
-    [activePath, onChangeFile, activeProjectId],
+    [activePath, onChangeFile, activeProjectId, effectiveProjectId],
+  );
+
+  const handleResolveKeepMine = useCallback(
+    (conflict: ExternalFileConflict) => {
+      webcontainerWatcher.markInternallySynced(conflict.path);
+      void webcontainerService.syncFile(conflict.path, conflict.monacoContent, conflict.projectId);
+      editorConflictService.resolveConflict(conflict.projectId, conflict.path, 'keep_mine');
+      setIsDiffMode(false);
+      toast.success('Kept editor changes and updated terminal filesystem.');
+    },
+    [],
+  );
+
+  const handleResolveUseExternal = useCallback(
+    (conflict: ExternalFileConflict) => {
+      webcontainerWatcher.markInternallySynced(conflict.path);
+      onChangeFile(conflict.path, conflict.externalContent);
+      setDirtyPaths((current) => {
+        const next = new Set(current);
+        next.delete(conflict.path);
+        return next;
+      });
+      editorConflictService.resolveConflict(conflict.projectId, conflict.path, 'use_external');
+      setIsDiffMode(false);
+      toast.success('Reverted to external filesystem version.');
+    },
+    [onChangeFile],
   );
 
   const isSplitActive = Boolean(splitActivePath && splitOpenPaths.length > 0);
@@ -860,6 +918,21 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       updateMarkers();
       monaco.editor.onDidChangeMarkers(updateMarkers);
 
+      // Save command with conflict interception
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+        const curPath = activePathMirrorRef.current;
+        if (curPath && editorConflictService.hasConflict(effectiveProjectId, curPath)) {
+          toast.error(
+            'Cannot save: file has an unresolved external conflict. Please resolve the conflict first.',
+            { duration: 4000 },
+          );
+          return;
+        }
+        if (curPath) {
+          toast.success(`Saved ${curPath}`);
+        }
+      });
+
       // Initialize Automatic Type Acquisition
       void ataService.init(monaco).then(() => {
         if (activeFile?.content) {
@@ -867,7 +940,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         }
       });
     },
-    [activeFile?.content, activeProjectId],
+    [activeFile?.content, activeProjectId, effectiveProjectId],
   );
 
   const navigateToLocation = useCallback(
@@ -978,6 +1051,23 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'P' || e.key === 'p')) {
         e.preventDefault();
         openQuickOpen();
+        return;
+      }
+
+      // Ctrl/Cmd + S: Save file with conflict protection
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        const curPath = activePathMirrorRef.current;
+        if (curPath && editorConflictService.hasConflict(effectiveProjectId, curPath)) {
+          toast.error(
+            'Cannot save: file has an unresolved external conflict. Please resolve the conflict first.',
+            { duration: 4000 },
+          );
+          return;
+        }
+        if (curPath) {
+          toast.success(`Saved ${curPath}`);
+        }
         return;
       }
 
@@ -1852,19 +1942,88 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   </div>
                 </div>
 
-                {/* Primary Monaco Editor */}
-                <div className="min-h-0 flex-1 overflow-hidden" data-testid="vscode-editor-scroll">
+                {/* Primary Monaco Editor & Conflict Resolution Shell */}
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden" data-testid="vscode-editor-scroll">
+                  {activeConflict && (
+                    <div
+                      className="flex items-center justify-between border-b border-amber-600/40 bg-amber-950/50 px-3 py-1.5 text-xs text-amber-200 z-10 shrink-0"
+                      data-testid="conflict-banner"
+                    >
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+                        <span>
+                          <strong>File changed externally</strong> while you have unsaved edits in{' '}
+                          <code className="rounded bg-black/40 px-1 py-0.5">{activeConflict.path}</code>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setIsDiffMode((prev) => !prev)}
+                          className="rounded bg-amber-900/60 px-2 py-0.5 hover:bg-amber-800 text-amber-100 transition-colors"
+                          data-testid="conflict-compare-btn"
+                        >
+                          {isDiffMode ? 'Close Diff' : 'Compare Changes'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm('Keep your editor changes and overwrite the external terminal version?')) {
+                              handleResolveKeepMine(activeConflict);
+                            }
+                          }}
+                          className="rounded bg-amber-600 px-2 py-0.5 font-medium text-white hover:bg-amber-500 transition-colors"
+                          data-testid="conflict-keep-mine-btn"
+                        >
+                          Keep My Changes
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm('Discard your unsaved editor changes and accept the external terminal version?')) {
+                              handleResolveUseExternal(activeConflict);
+                            }
+                          }}
+                          className="rounded bg-zinc-700 px-2 py-0.5 hover:bg-zinc-600 text-zinc-100 transition-colors"
+                          data-testid="conflict-use-external-btn"
+                        >
+                          Use External Version
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsDiffMode(false)}
+                          className="rounded p-0.5 text-amber-300 hover:text-white"
+                          title="Resolve Later (blocks save until resolved)"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {activeFile ? (
-                    <Editor
-                      path={activeFile.path}
-                      language={monacoLanguageForPath(activeFile.path)}
-                      value={activeFile.content}
-                      onChange={handleChange}
-                      beforeMount={defineGbCoderTheme}
-                      onMount={handleEditorMount}
-                      theme={monacoThemeFor(isDark)}
-                      options={monacoOptions}
-                    />
+                    isDiffMode && activeConflict ? (
+                      <LocalDiffEditor
+                        original={activeConflict.externalContent}
+                        modified={activeConflict.monacoContent}
+                        language={monacoLanguageForPath(activeConflict.path)}
+                        theme={monacoThemeFor(isDark)}
+                        options={{
+                          ...monacoOptions,
+                          readOnly: false,
+                        }}
+                      />
+                    ) : (
+                      <Editor
+                        path={activeFile.path}
+                        language={monacoLanguageForPath(activeFile.path)}
+                        value={activeFile.content}
+                        onChange={handleChange}
+                        beforeMount={defineGbCoderTheme}
+                        onMount={handleEditorMount}
+                        theme={monacoThemeFor(isDark)}
+                        options={monacoOptions}
+                      />
+                    )
                   ) : (
                     <div className="grid h-full place-items-center text-xs text-vsc-textMuted">
                       Select a file from the explorer.
@@ -2121,18 +2280,87 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               </div>
 
               {/* Monaco scrolls internally; this box only bounds it. */}
-              <div className="min-h-0 flex-1 overflow-hidden" data-testid="vscode-editor-scroll">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden" data-testid="vscode-editor-scroll">
+                {activeConflict && (
+                  <div
+                    className="flex items-center justify-between border-b border-amber-600/40 bg-amber-950/50 px-3 py-1.5 text-xs text-amber-200 z-10 shrink-0"
+                    data-testid="conflict-banner"
+                  >
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+                      <span>
+                        <strong>File changed externally</strong> while you have unsaved edits in{' '}
+                        <code className="rounded bg-black/40 px-1 py-0.5">{activeConflict.path}</code>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setIsDiffMode((prev) => !prev)}
+                        className="rounded bg-amber-900/60 px-2 py-0.5 hover:bg-amber-800 text-amber-100 transition-colors"
+                        data-testid="conflict-compare-btn"
+                      >
+                        {isDiffMode ? 'Close Diff' : 'Compare Changes'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm('Keep your editor changes and overwrite the external terminal version?')) {
+                            handleResolveKeepMine(activeConflict);
+                          }
+                        }}
+                        className="rounded bg-amber-600 px-2 py-0.5 font-medium text-white hover:bg-amber-500 transition-colors"
+                        data-testid="conflict-keep-mine-btn"
+                      >
+                        Keep My Changes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm('Discard your unsaved editor changes and accept the external terminal version?')) {
+                            handleResolveUseExternal(activeConflict);
+                          }
+                        }}
+                        className="rounded bg-zinc-700 px-2 py-0.5 hover:bg-zinc-600 text-zinc-100 transition-colors"
+                        data-testid="conflict-use-external-btn"
+                      >
+                        Use External Version
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsDiffMode(false)}
+                        className="rounded p-0.5 text-amber-300 hover:text-white"
+                        title="Resolve Later (blocks save until resolved)"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {activeFile ? (
-                  <Editor
-                    path={activeFile.path}
-                    language={monacoLanguageForPath(activeFile.path)}
-                    value={activeFile.content}
-                    onChange={handleChange}
-                    beforeMount={defineGbCoderTheme}
-                    onMount={handleEditorMount}
-                    theme={monacoThemeFor(isDark)}
-                    options={monacoOptions}
-                  />
+                  isDiffMode && activeConflict ? (
+                    <LocalDiffEditor
+                      original={activeConflict.externalContent}
+                      modified={activeConflict.monacoContent}
+                      language={monacoLanguageForPath(activeConflict.path)}
+                      theme={monacoThemeFor(isDark)}
+                      options={{
+                        ...monacoOptions,
+                        readOnly: false,
+                      }}
+                    />
+                  ) : (
+                    <Editor
+                      path={activeFile.path}
+                      language={monacoLanguageForPath(activeFile.path)}
+                      value={activeFile.content}
+                      onChange={handleChange}
+                      beforeMount={defineGbCoderTheme}
+                      onMount={handleEditorMount}
+                      theme={monacoThemeFor(isDark)}
+                      options={monacoOptions}
+                    />
+                  )
                 ) : hasFiles ? (
                   <div className="grid h-full place-items-center text-xs text-vsc-textMuted">
                     Select a file from the explorer.

@@ -249,7 +249,7 @@ export class TerminalSessionManager {
   }
 
   public teardownAll(): void {
-    for (const [id, session] of this.sessions) {
+    for (const session of this.sessions.values()) {
       try {
         session.writer.releaseLock();
         session.process.kill();

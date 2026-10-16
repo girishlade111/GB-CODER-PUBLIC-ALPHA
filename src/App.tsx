@@ -1873,17 +1873,20 @@ function App() {
 
   /** Deletes a file or directory in VS Code mode and removes from WebContainer VFS. */
   const handleFullStackDeleteFile = useCallback((path: string): boolean => {
+    const clean = path.replace(/\\/g, '/').replace(/^\/+/, '').trim();
+    if (!clean || clean === '.' || clean.startsWith('../')) return false;
+
     setFullStackProject((current) => {
       if (!current) return current;
-      const isExactFile = current.files.some((f) => f.path === path);
+      const isExactFile = current.files.some((f) => f.path === clean);
       if (isExactFile) {
         return {
           ...current,
-          files: current.files.filter((f) => f.path !== path),
+          files: current.files.filter((f) => f.path !== clean),
         };
       }
       // Folder delete: remove all files starting with folder prefix
-      const folderPrefix = path.endsWith('/') ? path : `${path}/`;
+      const folderPrefix = clean.endsWith('/') ? clean : `${clean}/`;
       return {
         ...current,
         files: current.files.filter((f) => !f.path.startsWith(folderPrefix)),

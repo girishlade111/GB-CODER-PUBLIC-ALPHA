@@ -78,8 +78,17 @@ function patchXTermDimensions(term: XTerm): void {
   }
 }
 
+const disposedTerminals = new WeakSet<XTerm>();
+
+/**
+ * Hardened xterm disposal.
+ * Guarantees idempotent disposal, cancels pending animation frames, and
+ * prevents unhandled exceptions during rapid tab switching or container resizing.
+ */
 function safeDisposeTerminal(term: XTerm | null): void {
-  if (!term) return;
+  if (!term || disposedTerminals.has(term)) return;
+  disposedTerminals.add(term);
+
   try {
     const core = (term as unknown as {
       _core?: {
@@ -169,8 +178,12 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
   const fit = useCallback(() => {
     try {
-      fitAddonRef.current?.fit();
-      splitFitAddonRef.current?.fit();
+      if (hostRef.current && hostRef.current.clientWidth > 0 && hostRef.current.clientHeight > 0) {
+        fitAddonRef.current?.fit();
+      }
+      if (splitHostRef.current && splitHostRef.current.clientWidth > 0 && splitHostRef.current.clientHeight > 0) {
+        splitFitAddonRef.current?.fit();
+      }
     } catch {
       // Ignore fit before render
     }
