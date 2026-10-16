@@ -1,0 +1,253 @@
+---
+import Site from '../../layouts/Site.astro';
+import Breadcrumbs from '../Breadcrumbs.astro';
+import CodeBlock from '../CodeBlock.astro';
+import { getDocsContent } from '../../i18n/docs';
+import { getNav } from '../../i18n/navigation';
+import { getCanonicalUrl } from '../../i18n/utils';
+
+interface Props {
+  lang?: string;
+}
+
+const { lang = 'en' } = Astro.props;
+const content = getDocsContent(lang);
+const nav = getNav(lang);
+
+const breadcrumbItems = [
+  { label: nav.docs, path: 'docs' },
+];
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: nav.home,
+      item: getCanonicalUrl(lang, ''),
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: nav.docs,
+      item: getCanonicalUrl(lang, 'docs'),
+    },
+  ],
+};
+---
+
+<Site
+  title={content.metaTitle}
+  description={content.metaDescription}
+  lang={lang}
+  basePath="docs"
+  structuredData={[breadcrumbJsonLd]}
+>
+  <Breadcrumbs items={breadcrumbItems} lang={lang} />
+
+  <section class="page-hero">
+    <span class="hero-tag">{content.heroTag}</span>
+    <h1>{content.heroTitle}</h1>
+    <p>{content.heroDescription}</p>
+  </section>
+
+  <div class="docs-layout-container">
+    <!-- Sticky Table of Contents Sidebar -->
+    <aside class="docs-sidebar" aria-label="Documentation Table of Contents">
+      <div class="sidebar-sticky">
+        <h3 class="toc-title">{content.tableOfContentsTitle}</h3>
+        <nav class="toc-nav">
+          <ul class="toc-list">
+            {content.sections.map((section) => (
+              <li>
+                <a href={`#${section.id}`} class="toc-link">
+                  {section.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Main Documentation Content -->
+    <article class="docs-main-content">
+      {content.sections.map((section) => (
+        <section class="doc-section" id={section.id}>
+          <div class="section-title-wrap">
+            <h2>{section.title}</h2>
+            <p class="section-desc">{section.description}</p>
+          </div>
+
+          <div class="subsections-list">
+            {section.subsections.map((sub) => (
+              <div class="doc-subsection">
+                <h3>{sub.title}</h3>
+                <p class="doc-text">{sub.content}</p>
+                {sub.codeSnippet && (
+                  <CodeBlock
+                    code={sub.codeSnippet}
+                    lang={sub.codeLang || 'text'}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <section class="docs-footer-cta">
+        <h2>{content.ctaHeading}</h2>
+        <p>{content.ctaSub}</p>
+        <div class="cta-row">
+          <a href="/app/projects" class="cta-button">{content.ctaBtn}</a>
+        </div>
+      </section>
+    </article>
+  </div>
+</Site>
+
+<style>
+  .docs-layout-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem 5rem;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 3.5rem;
+    align-items: start;
+  }
+
+  /* Table of Contents Sidebar */
+  .docs-sidebar {
+    position: relative;
+  }
+
+  .sidebar-sticky {
+    position: sticky;
+    top: 5rem;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 1.5rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+  }
+
+  .toc-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .toc-link {
+    display: block;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    transition: color 0.15s, transform 0.1s;
+  }
+
+  .toc-link:hover {
+    color: var(--accent-terracotta);
+    transform: translateX(2px);
+  }
+
+  /* Main Documentation Content */
+  .docs-main-content {
+    min-width: 0;
+  }
+
+  .doc-section {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 2.5rem;
+    margin-bottom: 2.5rem;
+    scroll-margin-top: 5.5rem;
+  }
+
+  .section-title-wrap {
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .section-title-wrap h2 {
+    font-size: 1.85rem;
+    margin-bottom: 0.4rem;
+    color: var(--text-primary);
+  }
+
+  .section-desc {
+    color: var(--text-muted);
+    font-size: 1rem;
+  }
+
+  .subsections-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2.25rem;
+  }
+
+  .doc-subsection h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.65rem;
+    color: var(--text-primary);
+  }
+
+  .doc-text {
+    color: var(--text-secondary);
+    font-size: 0.975rem;
+    line-height: 1.65;
+  }
+
+  .docs-footer-cta {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3rem 2rem;
+    text-align: center;
+    margin-top: 3rem;
+  }
+
+  .docs-footer-cta h2 {
+    font-size: 1.85rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .docs-footer-cta p {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+  }
+
+  @media (max-width: 960px) {
+    .docs-layout-container {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .sidebar-sticky {
+      position: static;
+      max-height: none;
+      margin-bottom: 2rem;
+    }
+  }
+</style>

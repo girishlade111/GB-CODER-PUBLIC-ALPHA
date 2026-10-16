@@ -1,0 +1,15 @@
+---
+// GB Coder — Localized About Route (/[lang]/about)
+import AboutPage from '../../components/pages/AboutPage.astro';
+import { NON_DEFAULT_LANGUAGES } from '../../i18n/languages';
+
+export function getStaticPaths() {
+  return NON_DEFAULT_LANGUAGES.map((lang) => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+---
+
+<AboutPage lang={lang} />

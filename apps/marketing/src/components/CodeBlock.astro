@@ -1,0 +1,136 @@
+---
+interface Props {
+  code: string;
+  lang?: string;
+  filename?: string;
+}
+
+const { code, lang = 'text', filename } = Astro.props;
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+const escapedCode = escapeHtml(code);
+---
+
+<div class="code-block-wrapper">
+  {filename && (
+    <div class="code-block-header">
+      <span class="code-filename">{filename}</span>
+      <span class="code-lang-tag">{lang}</span>
+    </div>
+  )}
+  <div class="code-container">
+    <pre class="code-pre"><code class={`language-${lang}`} set:html={escapedCode} /></pre>
+    <button class="copy-btn" aria-label="Copy code to clipboard">
+      <span class="copy-text">Copy</span>
+    </button>
+  </div>
+</div>
+
+<script is:inline>
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const code = btn.closest('.code-container')?.querySelector('code')?.textContent || '';
+      try {
+        await navigator.clipboard.writeText(code);
+        const span = btn.querySelector('.copy-text');
+        if (span) {
+          const original = span.textContent;
+          span.textContent = 'Copied!';
+          setTimeout(() => {
+            span.textContent = original;
+          }, 2000);
+        }
+      } catch {
+        // Fallback for restricted contexts
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          const span = btn.querySelector('.copy-text');
+          if (span) {
+            span.textContent = 'Copied!';
+            setTimeout(() => { span.textContent = 'Copy'; }, 2000);
+          }
+        } finally {
+          document.body.removeChild(textarea);
+        }
+      }
+    });
+  });
+</script>
+
+<style>
+  .code-block-wrapper {
+    margin: 1.25rem 0;
+    border-radius: 8px;
+    background: #1e1e1e;
+    border: 1px solid #333333;
+    overflow: hidden;
+  }
+
+  .code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: #252526;
+    border-bottom: 1px solid #333333;
+    font-size: 0.8rem;
+    color: #9cdcfe;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .code-lang-tag {
+    color: #888888;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+  }
+
+  .code-container {
+    position: relative;
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .code-pre {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: #d4d4d4;
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.3rem 0.65rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: #cccccc;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  .copy-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+  }
+</style>

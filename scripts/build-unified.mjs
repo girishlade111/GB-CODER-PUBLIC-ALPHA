@@ -127,6 +127,15 @@ const rootRobots = join(ROOT_DIR, 'public', 'robots.txt');
 if (existsSync(rootRobots)) {
   cpSync(rootRobots, join(FINAL_DIST, 'robots.txt'));
 }
+const rootSitemap = join(ROOT_DIR, 'public', 'sitemap.xml');
+try {
+  execSync('node scripts/generate-sitemap.mjs', { cwd: ROOT_DIR, stdio: 'inherit' });
+} catch (err) {
+  console.warn('  -> WARNING: generate-sitemap failed:', err.message);
+}
+if (existsSync(rootSitemap)) {
+  cpSync(rootSitemap, join(FINAL_DIST, 'sitemap.xml'));
+}
 
 // 5. Build Output Safety & Integrity Verification
 console.log('\n[5/6] Verifying build output integrity and security...');
@@ -246,6 +255,16 @@ const publicPages = [
   { route: '/contact', title: 'Contact GB Coder' },
   { route: '/privacy-policy', title: 'Privacy Policy' },
   { route: '/terms-and-conditions', title: 'Terms & Conditions' },
+  { route: '/features', title: 'Features' },
+  { route: '/docs', title: 'Documentation' },
+  { route: '/blog', title: 'Blog & Engineering Guides' },
+  { route: '/blog/html-css-javascript-live-preview', title: 'Building an HTML/CSS/JavaScript Project' },
+  { route: '/blog/react-vue-browser-ide', title: 'Starting React and Vue Projects' },
+  { route: '/blog/browser-project-backup-restore', title: 'Importing, Exporting, and Backing Up' },
+  { route: '/es/features', title: 'Funciones' },
+  { route: '/fr/docs', title: 'Documentation' },
+  { route: '/ja/blog', title: 'ブログ＆技術ガイド' },
+  { route: '/zh/about', title: '关于 GB Coder' },
 ];
 for (const { route, title } of publicPages) {
   const pagePath = join(FINAL_DIST, route.replace(/^\//, ''), 'index.html');
@@ -262,6 +281,67 @@ for (const { route, title } of publicPages) {
     fail(`Public page leaked IDE runtime marker: ${route}`);
   } else {
     pass(`Public page verified with title + canonical + isolation: ${route}`);
+  }
+}
+
+// Check 9: Robots and Sitemap integrity
+const robotsPath = join(FINAL_DIST, 'robots.txt');
+if (!existsSync(robotsPath)) {
+  fail('dist/robots.txt is missing');
+} else {
+  const robots = readFileSync(robotsPath, 'utf8');
+  const urlsInRobots = (robots.match(/https?:\/\/[^\s]+/g) || []).map(u => {
+    try { return new URL(u); } catch { return null; }
+  }).filter(Boolean);
+  const hasObsoleteHost = urlsInRobots.some(
+    u => u.hostname === 'gbcoder.com' || u.hostname.endsWith('.gbcoder.com')
+  );
+  const sitemapDirective = robots
+    .split(/\r?\n/)
+    .find(line => line.trim().toLowerCase().startsWith('sitemap:'));
+
+  if (hasObsoleteHost) {
+    fail('dist/robots.txt contains obsolete gbcoder.com references');
+  } else if (!sitemapDirective) {
+    fail('dist/robots.txt missing Sitemap declaration');
+  } else {
+    try {
+      const sitemapUrl = new URL(sitemapDirective.replace(/^sitemap:\s*/i, '').trim());
+      if (sitemapUrl.origin !== 'https://code.ladestack.in' || sitemapUrl.pathname !== '/sitemap.xml') {
+        fail(`dist/robots.txt sitemap URL is not canonical: ${sitemapUrl.href}`);
+      } else {
+        pass('dist/robots.txt verified with https://code.ladestack.in/sitemap.xml');
+      }
+    } catch {
+      fail('dist/robots.txt sitemap URL could not be parsed');
+    }
+  }
+}
+
+const sitemapPath = join(FINAL_DIST, 'sitemap.xml');
+if (!existsSync(sitemapPath)) {
+  fail('dist/sitemap.xml is missing');
+} else {
+  const sitemap = readFileSync(sitemapPath, 'utf8');
+  const locEntries = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => {
+    try { return new URL(m[1]); } catch { return null; }
+  });
+  if (locEntries.length === 0 || locEntries.some(u => !u)) {
+    fail('dist/sitemap.xml missing or contains invalid <loc> URLs');
+  } else {
+    const hasObsoleteHost = locEntries.some(
+      u => u.hostname === 'gbcoder.com' || u.hostname.endsWith('.gbcoder.com')
+    );
+    const nonCanonicalHost = locEntries.find(
+      u => u.origin !== 'https://code.ladestack.in'
+    );
+    if (hasObsoleteHost) {
+      fail('dist/sitemap.xml contains obsolete gbcoder.com references');
+    } else if (nonCanonicalHost) {
+      fail(`dist/sitemap.xml contains non-canonical URL origin: ${nonCanonicalHost.origin}`);
+    } else {
+      pass(`dist/sitemap.xml verified with ${locEntries.length} canonical origin URLs`);
+    }
   }
 }
 

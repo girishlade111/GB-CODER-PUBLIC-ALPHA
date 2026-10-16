@@ -1,0 +1,16 @@
+---
+// GB Coder — English Blog Post Page
+// Canonical URL: https://code.ladestack.in/blog/[slug]
+import BlogPostPage from '../../components/pages/BlogPostPage.astro';
+import { getAllArticleSlugs } from '../../i18n/blog';
+
+export function getStaticPaths() {
+  return getAllArticleSlugs().map((slug) => ({
+    params: { slug },
+  }));
+}
+
+const { slug } = Astro.params;
+---
+
+<BlogPostPage lang="en" slug={slug!} />

@@ -1,0 +1,156 @@
+---
+import {
+  SUPPORTED_LANGUAGES,
+  DEFAULT_LANGUAGE,
+  type SupportedLanguage,
+} from '../i18n/languages';
+import {
+  getCanonicalUrl,
+  getAlternateLinks,
+  safeJsonLd,
+  SITE_ORIGIN,
+} from '../i18n/utils';
+
+interface Props {
+  title: string;
+  description: string;
+  lang?: string;
+  basePath?: string;
+  ogType?: 'website' | 'article';
+  publishedDate?: string;
+  author?: string;
+  structuredData?: Record<string, unknown>[];
+  isLegalPage?: boolean;
+}
+
+const {
+  title,
+  description,
+  lang = DEFAULT_LANGUAGE,
+  basePath = '',
+  ogType = 'website',
+  publishedDate,
+  author = 'Girish Lade',
+  structuredData = [],
+  isLegalPage = false,
+} = Astro.props;
+
+const currentLangMeta = SUPPORTED_LANGUAGES[lang] || SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
+const canonicalUrl = getCanonicalUrl(lang, basePath);
+
+// Reciprocal hreflangs: Only emit when multilingual equivalents exist.
+// Legal pages do NOT emit hreflang as they are English-only authoritative documents.
+const alternateLinks = isLegalPage ? [] : getAlternateLinks(basePath);
+
+// Default Organization & SoftwareApplication JSON-LD
+const defaultJsonLd: Record<string, unknown>[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'GB Coder by LadeStack',
+    url: SITE_ORIGIN,
+    logo: `${SITE_ORIGIN}/tghjkl.jpeg`,
+    founder: {
+      '@type': 'Person',
+      name: 'Girish Lade',
+      sameAs: [
+        'https://github.com/girishlade111',
+        'https://www.linkedin.com/in/girish-lade-075bba201/',
+        'https://www.instagram.com/girish_lade_/',
+        'https://codepen.io/Girish-Lade-the-looper',
+      ],
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'GB Coder',
+    url: SITE_ORIGIN,
+    inLanguage: currentLangMeta.htmlLang,
+    description: description,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'GB Coder',
+    operatingSystem: 'Any (Web Browser)',
+    applicationCategory: 'DeveloperApplication',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    author: {
+      '@type': 'Person',
+      name: 'Girish Lade',
+    },
+  },
+];
+
+const allStructuredData = [...defaultJsonLd, ...structuredData];
+---
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta name="author" content={author} />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href={canonicalUrl} />
+
+{alternateLinks.map((alt) => (
+  <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
+))}
+
+<!-- Open Graph / Facebook -->
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:type" content={ogType} />
+<meta property="og:site_name" content="GB Coder" />
+<meta property="og:locale" content={currentLangMeta.ogLocale} />
+<meta property="og:image" content={`${SITE_ORIGIN}/tghjkl.jpeg`} />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={`${SITE_ORIGIN}/tghjkl.jpeg`} />
+<meta name="twitter:creator" content="@girish_lade_" />
+
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
+
+<!-- Structured Data (JSON-LD) -->
+{allStructuredData.map((schema) => (
+  <script type="application/ld+json" set:html={safeJsonLd(schema)} />
+))}
+
+<!-- Legacy Service Worker Transition & Self-Cleanup Guard -->
+<script is:inline>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+      for (var i = 0; i < registrations.length; i++) {
+        var reg = registrations[i];
+        try {
+          var scopePath = new URL(reg.scope).pathname;
+          // Clean up legacy root scope service worker registrations
+          if (scopePath === '/' || scopePath === '') {
+            reg.unregister().then(function (unregistered) {
+              if (unregistered) {
+                console.info('[GB Coder Migration] Cleanly unregistered legacy root-scoped Service Worker.');
+              }
+            });
+          }
+        } catch (err) {
+          console.warn('[GB Coder Migration] Failed checking registration scope:', err);
+        }
+      }
+    });
+  }
+</script>

@@ -1,0 +1,107 @@
+---
+import Site from '../../layouts/Site.astro';
+import Breadcrumbs from '../Breadcrumbs.astro';
+import { getAboutContent } from '../../i18n/about';
+import { getNav } from '../../i18n/navigation';
+import { getCanonicalUrl } from '../../i18n/utils';
+
+interface Props {
+  lang?: string;
+}
+
+const { lang = 'en' } = Astro.props;
+const content = getAboutContent(lang);
+const nav = getNav(lang);
+
+const breadcrumbItems = [
+  { label: nav.about, path: 'about' },
+];
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: nav.home,
+      item: getCanonicalUrl(lang, ''),
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: nav.about,
+      item: getCanonicalUrl(lang, 'about'),
+    },
+  ],
+};
+---
+
+<Site
+  title={content.metaTitle}
+  description={content.metaDescription}
+  lang={lang}
+  basePath="about"
+  structuredData={[breadcrumbJsonLd]}
+>
+  <Breadcrumbs items={breadcrumbItems} lang={lang} />
+
+  <section class="page-hero">
+    <span class="hero-tag">{content.heroTag}</span>
+    <h1>{content.heroTitle}</h1>
+    <p>{content.heroDescription}</p>
+    <div class="cta-row">
+      <a href="/app/projects" class="cta-button">{content.ctaBtn}</a>
+    </div>
+  </section>
+
+  <div class="content-wrap">
+    <div class="card">
+      <h2>{content.card1Title}</h2>
+      <p>{content.card1Sub}</p>
+      <div class="grid-2">
+        {content.card1Items.map((item) => (
+          <div class="mini-card">
+            <h3>{item.title}</h3>
+            <p>{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>{content.card2Title}</h2>
+      <p>{content.card2Sub}</p>
+      <ul>
+        {content.card2Bullets.map((bullet) => (
+          <li><strong>{bullet.split(':')[0]}</strong>{bullet.includes(':') ? `:${bullet.split(':')[1]}` : ''}</li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>{content.card3Title}</h2>
+      <p>{content.card3P1}</p>
+      <p>
+        <a href="https://ladestack.in" target="_blank" rel="noopener noreferrer">
+          {content.card3P2}
+        </a>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>{content.connectTitle}</h2>
+      <p>{content.connectSub}</p>
+      <ul>
+        <li><a href="https://www.instagram.com/girish_lade_/" target="_blank" rel="noopener noreferrer">Instagram (@girish_lade_)</a></li>
+        <li><a href="https://www.linkedin.com/in/girish-lade-075bba201/" target="_blank" rel="noopener noreferrer">LinkedIn (Girish Lade)</a></li>
+        <li><a href="https://github.com/girishlade111" target="_blank" rel="noopener noreferrer">GitHub (@girishlade111)</a></li>
+        <li><a href="https://codepen.io/Girish-Lade-the-looper" target="_blank" rel="noopener noreferrer">CodePen (@Girish-Lade-the-looper)</a></li>
+        <li><a href="mailto:girishlade111@gmail.com">girishlade111@gmail.com</a></li>
+      </ul>
+      <div class="cta-row">
+        <a href="/app/projects" class="cta-button">{content.openEditorBtn}</a>
+      </div>
+    </div>
+  </div>
+</Site>

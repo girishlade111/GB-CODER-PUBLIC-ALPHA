@@ -1,0 +1,366 @@
+---
+import Site from '../../layouts/Site.astro';
+import Breadcrumbs from '../Breadcrumbs.astro';
+import CodeBlock from '../CodeBlock.astro';
+import { getBlogContent, getAllArticleSlugs } from '../../i18n/blog';
+import { getNav } from '../../i18n/navigation';
+import { getLocalizedPath, getCanonicalUrl, calculateReadingTime } from '../../i18n/utils';
+
+interface Props {
+  lang?: string;
+  slug: string;
+}
+
+const { lang = 'en', slug } = Astro.props;
+const blogContent = getBlogContent(lang);
+const nav = getNav(lang);
+const article = blogContent.articles[slug];
+
+if (!article) {
+  throw new Error(`Article not found for slug: ${slug} in lang: ${lang}`);
+}
+
+const basePath = `blog/${slug}`;
+const blogIndexUrl = getLocalizedPath(lang, 'blog');
+
+// Calculate reading time
+const totalText = `${article.intro} ${article.sections.map(s => `${s.heading} ${s.body}`).join(' ')}`;
+const readMinutes = calculateReadingTime(totalText, lang);
+
+// Breadcrumb items & JSON-LD
+const breadcrumbItems = [
+  { label: nav.blog, path: 'blog' },
+  { label: article.title },
+];
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: nav.home,
+      item: getCanonicalUrl(lang, ''),
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: nav.blog,
+      item: getCanonicalUrl(lang, 'blog'),
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: article.title,
+      item: getCanonicalUrl(lang, basePath),
+    },
+  ],
+};
+
+const blogPostingJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: article.title,
+  description: article.description,
+  datePublished: article.date,
+  dateModified: article.date,
+  author: {
+    '@type': 'Person',
+    name: article.author,
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'GB Coder by LadeStack',
+    url: 'https://code.ladestack.in',
+  },
+  mainEntityOfPage: getCanonicalUrl(lang, basePath),
+};
+
+// Other related articles
+const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
+---
+
+<Site
+  title={`${article.title} | GB Coder Blog`}
+  description={article.description}
+  lang={lang}
+  basePath={basePath}
+  ogType="article"
+  publishedDate={article.date}
+  author={article.author}
+  structuredData={[breadcrumbJsonLd, blogPostingJsonLd]}
+>
+  <Breadcrumbs items={breadcrumbItems} lang={lang} />
+
+  <article class="blog-post-article">
+    <header class="post-header">
+      <div class="post-tags">
+        {article.tags.map((tag) => (
+          <span class="post-tag">{tag}</span>
+        ))}
+      </div>
+
+      <h1 class="post-title">{article.title}</h1>
+
+      <div class="post-meta-strip">
+        <span>{blogContent.byAuthorLabel} <strong>{article.author}</strong></span>
+        <span class="dot-sep">&bull;</span>
+        <time datetime={article.date}>{article.date}</time>
+        <span class="dot-sep">&bull;</span>
+        <span>{readMinutes} {nav.readingTimeSuffix}</span>
+      </div>
+    </header>
+
+    <div class="post-lead">
+      <p>{article.intro}</p>
+    </div>
+
+    <div class="post-body">
+      {article.sections.map((section) => (
+        <section class="post-section">
+          <h2>{section.heading}</h2>
+          <p>{section.body}</p>
+          {section.codeSnippet && (
+            <CodeBlock
+              code={section.codeSnippet}
+              lang={section.codeLang || 'text'}
+            />
+          )}
+        </section>
+      ))}
+
+      <!-- Related Documentation Link -->
+      <div class="related-docs-box">
+        <h4>Need More Implementation Details?</h4>
+        <a href={getLocalizedPath(lang, article.relatedDocsLink)} class="related-docs-anchor">
+          {article.relatedDocsLabel}
+        </a>
+      </div>
+    </div>
+
+    <!-- Related Articles Section -->
+    <footer class="post-footer">
+      <div class="related-articles-section">
+        <h3>{blogContent.relatedArticlesTitle}</h3>
+        <div class="related-grid">
+          {otherSlugs.map((otherSlug) => {
+            const otherArticle = blogContent.articles[otherSlug];
+            if (!otherArticle) return null;
+            const otherUrl = getLocalizedPath(lang, `blog/${otherSlug}`);
+            return (
+              <div class="related-card">
+                <h4><a href={otherUrl}>{otherArticle.title}</a></h4>
+                <p>{otherArticle.description}</p>
+                <a href={otherUrl} class="related-link">
+                  {blogContent.readArticleLabel} &rarr;
+                </a>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div class="post-navigation-bar">
+        <a href={blogIndexUrl} class="back-link">
+          {blogContent.backToBlogLabel}
+        </a>
+        <a href="/app/projects" class="cta-button">
+          {nav.startCoding}
+        </a>
+      </div>
+    </footer>
+  </article>
+</Site>
+
+<style>
+  .blog-post-article {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+
+  .post-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .post-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+  }
+
+  .post-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: rgba(204, 120, 92, 0.1);
+    color: var(--accent-terracotta);
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+  }
+
+  .post-title {
+    font-size: clamp(2.25rem, 4.5vw, 3.25rem);
+    line-height: 1.15;
+    margin-bottom: 1.25rem;
+    color: var(--text-primary);
+  }
+
+  .post-meta-strip {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .post-meta-strip strong {
+    color: var(--text-primary);
+  }
+
+  .dot-sep {
+    font-size: 0.8rem;
+  }
+
+  .post-lead {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin-bottom: 3rem;
+    padding: 1.5rem;
+    background: var(--surface);
+    border-left: 4px solid var(--accent-terracotta);
+    border-radius: 0 8px 8px 0;
+  }
+
+  .post-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  .post-section h2 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+
+  .post-section p {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+  }
+
+  .related-docs-box {
+    margin: 2.5rem 0 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 1.75rem;
+  }
+
+  .related-docs-box h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .related-docs-anchor {
+    color: var(--accent-terracotta);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+
+  .related-docs-anchor:hover {
+    text-decoration: underline;
+  }
+
+  /* Post Footer & Recommendations */
+  .post-footer {
+    margin-top: 4rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .related-articles-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .related-card {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .related-card h4 {
+    font-size: 1.15rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+
+  .related-card h4 a {
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  .related-card h4 a:hover {
+    color: var(--accent-terracotta);
+  }
+
+  .related-card p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    flex: 1;
+  }
+
+  .related-link {
+    color: var(--accent-terracotta);
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+  }
+
+  .post-navigation-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .back-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .back-link:hover {
+    color: var(--text-primary);
+  }
+
+  @media (max-width: 680px) {
+    .related-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

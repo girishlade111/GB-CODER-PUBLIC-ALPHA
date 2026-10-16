@@ -1,63 +1,61 @@
 ---
-// GB Coder — Shared public-site layout (Astro).
-// Same visual system as the marketing homepage: no new design language,
-// no client-side JS beyond the legacy Service Worker cleanup guard.
+// GB Coder — Unified Multilingual Marketing Layout (Astro)
+// Warm cream, restrained terracotta/coral accents, Cormorant Garamond serif headings, Inter sans-serif body.
+import SeoHead from '../components/SeoHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/languages';
+
 interface Props {
   title: string;
   description: string;
-  canonicalPath: string;
+  lang?: string;
+  basePath?: string;
+  canonicalPath?: string; // For backward compatibility with existing tests/pages
+  ogType?: 'website' | 'article';
+  publishedDate?: string;
+  author?: string;
+  structuredData?: Record<string, unknown>[];
+  isLegalPage?: boolean;
 }
-const { title, description, canonicalPath } = Astro.props;
-const canonicalUrl = `https://code.ladestack.in${canonicalPath}`;
+
+const {
+  title,
+  description,
+  lang = DEFAULT_LANGUAGE,
+  basePath: propBasePath,
+  canonicalPath,
+  ogType = 'website',
+  publishedDate,
+  author = 'Girish Lade',
+  structuredData = [],
+  isLegalPage = false,
+} = Astro.props;
+
+// Determine basePath: if canonicalPath is provided (e.g. '/about'), derive basePath ('about')
+const basePath = propBasePath !== undefined
+  ? propBasePath
+  : (canonicalPath ? canonicalPath.replace(/^\/+|\/+$/g, '') : '');
+
+const langMeta = SUPPORTED_LANGUAGES[lang] || SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={langMeta.htmlLang} dir={langMeta.dir}>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <meta name="author" content="Girish Lade" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href={canonicalUrl} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:type" content="website" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
+    <SeoHead
+      title={title}
+      description={description}
+      lang={lang}
+      basePath={basePath}
+      ogType={ogType}
+      publishedDate={publishedDate}
+      author={author}
+      structuredData={structuredData}
+      isLegalPage={isLegalPage}
     />
 
-    <!-- Legacy Service Worker Transition & Self-Cleanup Guard -->
-    <script is:inline>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function (registrations) {
-          for (var i = 0; i < registrations.length; i++) {
-            var reg = registrations[i];
-            try {
-              var scopePath = new URL(reg.scope).pathname;
-              // Clean up legacy root scope service worker registrations
-              if (scopePath === '/' || scopePath === '') {
-                reg.unregister().then(function (unregistered) {
-                  if (unregistered) {
-                    console.info('[GB Coder Migration] Cleanly unregistered legacy root-scoped Service Worker.');
-                  }
-                });
-              }
-            } catch (err) {
-              console.warn('[GB Coder Migration] Failed checking registration scope:', err);
-            }
-          }
-        });
-      }
-    </script>
-
-    <style>
+    <style is:global>
       :root {
         --canvas: #faf9f5;
         --surface: #ffffff;
@@ -69,6 +67,8 @@ const canonicalUrl = `https://code.ladestack.in${canonicalPath}`;
         --accent-terracotta: #cc785c;
         --accent-hover: #b8654a;
         --accent-dark: #1f1e1d;
+        --code-bg: #1e1e1e;
+        --code-text: #d4d4d4;
       }
 
       * {
@@ -77,117 +77,43 @@ const canonicalUrl = `https://code.ladestack.in${canonicalPath}`;
         padding: 0;
       }
 
-      body {
+      html {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         background-color: var(--canvas);
         color: var(--text-primary);
         line-height: 1.6;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-      }
-
-      header {
-        border-bottom: 1px solid var(--border);
-        background: rgba(250, 249, 245, 0.95);
-        backdrop-filter: blur(8px);
-        position: sticky;
-        top: 0;
-        z-index: 50;
-      }
-
-      .nav-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 1rem 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        text-decoration: none;
-        color: var(--text-primary);
-      }
-
-      .brand-badge {
-        width: 32px;
-        height: 32px;
-        background: var(--accent-terracotta);
-        color: #ffffff;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 700;
-        font-size: 0.9rem;
-      }
-
-      .brand-title {
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 1.5rem;
-        font-weight: 600;
-        letter-spacing: -0.02em;
-      }
-
-      .brand-sub {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-left: 0.25rem;
-      }
-
-      .nav-links {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        list-style: none;
-      }
-
-      .nav-link {
-        text-decoration: none;
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        font-weight: 500;
-        transition: color 0.2s;
-      }
-
-      .nav-link:hover {
-        color: var(--text-primary);
-      }
-
-      .cta-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--accent-terracotta);
-        color: #ffffff;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.95rem;
-        padding: 0.65rem 1.25rem;
-        border-radius: 6px;
-        transition: background-color 0.2s, transform 0.1s;
-      }
-
-      .cta-button:hover {
-        background: var(--accent-hover);
-        transform: translateY(-1px);
-      }
-
-      .cta-button:active {
-        transform: translateY(0);
       }
 
       main {
         flex: 1;
       }
 
+      /* Heading Typography */
+      h1, h2, h3, h4 {
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+
+      h1 {
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 600;
+      }
+
+      h2 {
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 600;
+      }
+
+      /* Hero Sections */
       .page-hero {
         max-width: 1200px;
         margin: 0 auto;
@@ -196,11 +122,7 @@ const canonicalUrl = `https://code.ladestack.in${canonicalPath}`;
       }
 
       .page-hero h1 {
-        font-family: 'Cormorant Garamond', serif;
         font-size: clamp(2.25rem, 4vw, 3.5rem);
-        font-weight: 600;
-        line-height: 1.1;
-        letter-spacing: -0.03em;
         margin-bottom: 1rem;
       }
 
@@ -224,6 +146,7 @@ const canonicalUrl = `https://code.ladestack.in${canonicalPath}`;
         margin-bottom: 1.25rem;
       }
 
+      /* Common Content Wrappers */
       .content-wrap {
         max-width: 960px;
         margin: 0 auto;
@@ -239,9 +162,7 @@ const canonicalUrl = `https://code.ladestack.in${canonicalPath}`;
       }
 
       .card h2 {
-        font-family: 'Cormorant Garamond', serif;
         font-size: 1.75rem;
-        font-weight: 600;
         margin-bottom: 1rem;
       }
 
@@ -268,6 +189,8 @@ const canonicalUrl = `https://code.ladestack.in${canonicalPath}`;
 
       .card a {
         color: var(--accent-terracotta);
+        text-decoration: underline;
+        text-underline-offset: 2px;
       }
 
       .card strong {
@@ -306,70 +229,55 @@ const canonicalUrl = `https://code.ladestack.in${canonicalPath}`;
         margin: 2.5rem 0 0;
       }
 
-      footer {
-        border-top: 1px solid var(--border);
-        background: var(--canvas);
-        padding: 2.5rem 1.5rem;
-        text-align: center;
-        color: var(--text-muted);
-        font-size: 0.875rem;
-      }
-
-      .footer-links {
-        display: flex;
+      .cta-button {
+        display: inline-flex;
+        align-items: center;
         justify-content: center;
-        flex-wrap: wrap;
-        gap: 0.75rem 1.5rem;
-        margin-bottom: 1rem;
-      }
-
-      .footer-links a {
-        color: var(--text-secondary);
+        background: var(--accent-terracotta);
+        color: #ffffff;
         text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 0.65rem 1.25rem;
+        border-radius: 6px;
+        transition: background-color 0.2s, transform 0.1s;
       }
 
-      .footer-links a:hover {
-        color: var(--text-primary);
+      .cta-button:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+      }
+
+      .cta-button:active {
+        transform: translateY(0);
+      }
+
+      /* Skip to content link for accessibility */
+      .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: var(--accent-terracotta);
+        color: white;
+        padding: 8px;
+        z-index: 1000;
+        transition: top 0.2s;
+        text-decoration: none;
+        font-weight: 600;
+        border-radius: 0 0 4px 0;
+      }
+
+      .skip-link:focus {
+        top: 0;
       }
     </style>
   </head>
   <body>
-    <header>
-      <nav class="nav-container" aria-label="Main Navigation">
-        <a href="/" class="brand">
-          <div class="brand-badge">GB</div>
-          <div>
-            <span class="brand-title">GB Coder</span>
-            <span class="brand-sub">LadeStack</span>
-          </div>
-        </a>
-        <ul class="nav-links">
-          <li><a href="/about" class="nav-link">About</a></li>
-          <li><a href="/contact" class="nav-link">Contact</a></li>
-          <li><a href="/app/projects" class="cta-button">Start Coding</a></li>
-        </ul>
-      </nav>
-    </header>
-
-    <main>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <Header lang={lang} basePath={basePath} isLegalPage={isLegalPage} />
+    <main id="main-content">
       <slot />
     </main>
-
-    <footer>
-      <div class="footer-links">
-        <a href="/app/projects">Application</a>
-        <span>&bull;</span>
-        <a href="/about">About</a>
-        <span>&bull;</span>
-        <a href="/contact">Contact</a>
-        <span>&bull;</span>
-        <a href="/privacy-policy">Privacy Policy</a>
-        <span>&bull;</span>
-        <a href="/terms-and-conditions">Terms &amp; Conditions</a>
-        <span>&bull;</span>
-        <a href="https://code.ladestack.in/">LadeStack</a>
-      </div>
-      <p>&copy; 2026 GB Coder by LadeStack. All rights reserved.</p>
-    </footer>
+    <Footer lang={lang} basePath={basePath} isLegalPage={isLegalPage} />
   </body>
 </html>

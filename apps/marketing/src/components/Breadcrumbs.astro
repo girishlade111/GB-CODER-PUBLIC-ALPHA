@@ -1,0 +1,88 @@
+---
+import { getLocalizedPath } from '../i18n/utils';
+import { getNav } from '../i18n/navigation';
+
+export interface BreadcrumbItem {
+  label: string;
+  path?: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+  lang?: string;
+}
+
+const { items, lang = 'en' } = Astro.props;
+const nav = getNav(lang);
+const homeUrl = getLocalizedPath(lang, '');
+---
+
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <ol class="breadcrumb-list">
+    <li class="breadcrumb-item">
+      <a href={homeUrl} class="breadcrumb-link">{nav.home}</a>
+      <span class="breadcrumb-sep" aria-hidden="true">/</span>
+    </li>
+    {items.map((item, idx) => {
+      const isLast = idx === items.length - 1;
+      const targetUrl = item.path ? getLocalizedPath(lang, item.path) : undefined;
+      return (
+        <li class="breadcrumb-item" aria-current={isLast ? 'page' : undefined}>
+          {!isLast && targetUrl ? (
+            <>
+              <a href={targetUrl} class="breadcrumb-link">{item.label}</a>
+              <span class="breadcrumb-sep" aria-hidden="true">/</span>
+            </>
+          ) : (
+            <span class="breadcrumb-current">{item.label}</span>
+          )}
+        </li>
+      );
+    })}
+  </ol>
+</nav>
+
+<style>
+  .breadcrumbs {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.25rem 1.5rem 0;
+    font-size: 0.85rem;
+  }
+
+  .breadcrumb-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .breadcrumb-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .breadcrumb-link:hover {
+    color: var(--accent-terracotta);
+  }
+
+  .breadcrumb-sep {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  .breadcrumb-current {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+</style>
