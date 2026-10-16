@@ -4740,6 +4740,17 @@ function App() {
           </Suspense>
         )}
 
+        {showTemplates && (
+          <Suspense fallback={<LazyFallback label="templates" variant="overlay" />}>
+            <TemplateSelectorModal
+              isOpen={showTemplates}
+              onClose={() => setShowTemplates(false)}
+              onLoadTemplate={handleLoadTemplate}
+              onCreateProject={handleCreateProjectFromTemplate}
+            />
+          </Suspense>
+        )}
+
         {showImport && (
           <Suspense fallback={<LazyFallback label="Import" variant="overlay" />}>
             <ImportModal

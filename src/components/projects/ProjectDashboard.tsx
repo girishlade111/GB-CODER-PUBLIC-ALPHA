@@ -653,7 +653,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
                           type="button"
                           onClick={() => setPendingDeleteId(project.id)}
                           aria-label={`Delete ${project.name}`}
-                          data-testid="dashboard-delete-project"
+                          data-testid={`dashboard-delete-btn-${project.id}`}
                           title="Delete project"
                           className="rounded-lg p-1.5 text-content-muted opacity-80 sm:opacity-0 transition-opacity hover:bg-surface-hover hover:text-danger group-hover:opacity-100"
                         >
