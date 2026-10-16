@@ -328,7 +328,7 @@ const templateMetadata: Record<string, CodeTemplate> = {
     category: 'plain',
     subcategory: 'Blog',
     tags: ['blog', 'editorial', 'content', 'magazine', 'reading'],
-    difficulty: 'intermediate',
+    difficulty: 'beginner',
     features: ['Sticky header with nav and search', 'Reading-progress bar', 'Featured hero post', 'Filterable 6-post grid', 'Category filter chips', 'Tag pills', 'Editor picks sidebar', 'Author / date / read-time meta', 'Newsletter CTA band', 'Back-to-top'],
     projectType: 'plain',
     author: 'GB Coder',
@@ -352,7 +352,7 @@ const templateMetadata: Record<string, CodeTemplate> = {
     category: 'plain',
     subcategory: 'Auth',
     tags: ['auth', 'login', 'signup', 'form', 'validation'],
-    difficulty: 'intermediate',
+    difficulty: 'beginner',
     features: ['Split brand / form layout', 'Working login + signup tabs', 'Email format validation', 'Confirm-password matching', 'Password length rules', 'Show/hide password toggles', 'Social login buttons', 'Remember me + forgot password', 'Trust badges and testimonial', 'FAQ (5)'],
     projectType: 'plain',
     author: 'GB Coder',
@@ -999,6 +999,114 @@ class EnhancedTemplateService {
     return {
       total: all.length,
       categories: Object.keys(templateRegistry).length,
+    };
+  }
+
+  /**
+   * Get favorite template IDs from localStorage
+   */
+  public getFavorites(): string[] {
+    try {
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') return [];
+      const stored = localStorage.getItem('gb-coder:favorite-templates');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Check if a template is favorited
+   */
+  public isFavorite(id: string): boolean {
+    return this.getFavorites().includes(id);
+  }
+
+  /**
+   * Toggle a template as favorite
+   */
+  public toggleFavorite(id: string): boolean {
+    try {
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') return false;
+      const favs = this.getFavorites();
+      const idx = favs.indexOf(id);
+      let next: string[];
+      let isNowFav = false;
+      if (idx >= 0) {
+        next = favs.filter((item) => item !== id);
+      } else {
+        next = [id, ...favs];
+        isNowFav = true;
+      }
+      localStorage.setItem('gb-coder:favorite-templates', JSON.stringify(next));
+      return isNowFav;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get recently used template IDs
+   */
+  public getRecentTemplateIds(): string[] {
+    try {
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') return [];
+      const stored = localStorage.getItem('gb-coder:recent-templates');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Record a template in recents
+   */
+  public recordRecentTemplate(id: string): void {
+    try {
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+      const recents = this.getRecentTemplateIds().filter((item) => item !== id);
+      const next = [id, ...recents].slice(0, 10);
+      localStorage.setItem('gb-coder:recent-templates', JSON.stringify(next));
+    } catch {
+      // Ignored
+    }
+  }
+
+  /**
+   * Validate template compatibility and runtime requirements
+   */
+  public validateTemplateCompatibility(template: CodeTemplate): {
+    compatible: boolean;
+    reason?: string;
+    recommendedEditor: 'plain' | 'vscode';
+    requiresSandbox?: boolean;
+    runtimeNote?: string;
+  } {
+    if (template.projectType === 'plain') {
+      return {
+        compatible: true,
+        recommendedEditor: 'plain',
+        runtimeNote: 'Runs directly in browser live preview without bundler overhead.',
+      };
+    }
+    if (template.category === 'nextjs' || template.projectType === 'nextjs' || template.tags?.includes('nextjs')) {
+      return {
+        compatible: true,
+        recommendedEditor: 'vscode',
+        requiresSandbox: true,
+        runtimeNote: 'Client components execute in browser preview. Full-stack server endpoints require server sandbox.',
+      };
+    }
+    if (template.projectType === 'react' || template.projectType === 'vue') {
+      return {
+        compatible: true,
+        recommendedEditor: 'vscode',
+        runtimeNote: 'Vite-ready component tree. Runs in browser bundler and Advanced IDE.',
+      };
+    }
+    return {
+      compatible: true,
+      recommendedEditor: 'plain',
     };
   }
 }

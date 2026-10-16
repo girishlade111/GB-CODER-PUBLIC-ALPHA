@@ -129,8 +129,9 @@ const LivePreviewPopoutPage = lazyWithRecovery(
   'Live preview popout',
 );
 const ImportReviewModal = lazyWithRecovery(() => import('./components/ImportReviewModal'));
+import type { ImportConfirmationPayload } from './components/ImportReviewModal';
 const NewProjectModal = lazyWithRecovery(() => import('./components/projects/NewProjectModal'));
-import type { NewProjectTemplate } from './components/projects/NewProjectModal';
+import type { NewProjectTemplate, NewProjectSubmitPayload } from './components/projects/NewProjectModal';
 
 /*
  * The full-stack feature (VS Code mode, sandbox panel, sandbox client, E2B
@@ -1580,7 +1581,12 @@ function App() {
    * run one, and asking again about something already decided is noise.
    */
   const createProjectFromImport = useCallback(
-    async (plan: ImportPlanType, kind: DetectedKind) => {
+    async (
+      plan: ImportPlanType,
+      kind: DetectedKind,
+      customName?: string,
+      customEditorStyle?: EditorStyle,
+    ) => {
       const transition = beginTransition();
 
       const flushed = await flushProjectSave();
@@ -1592,7 +1598,8 @@ function App() {
 
       const projectType: ProjectType =
         kind === 'react' ? 'react' : kind === 'vue' ? 'vue' : 'plain';
-      const editorStyle: EditorStyle = kind === 'fullstack' ? 'vscode' : 'plain';
+      const editorStyle: EditorStyle =
+        customEditorStyle ?? (kind === 'simple' ? 'plain' : 'vscode');
       /*
        * Mirrors what the existing import path does with the entry point: a forced
        * plain import has no module entry to open, while a framework or full-stack
@@ -1601,7 +1608,7 @@ function App() {
       const entry = kind === 'fullstack' || projectType !== 'plain' ? plan.result.entry : undefined;
 
       const record = await createProjectRecord({
-        name: projectNameFromImport(plan),
+        name: customName || projectNameFromImport(plan),
         editorStyle,
         projectType,
         entry,
@@ -1685,19 +1692,31 @@ function App() {
 
   /** Applies a reviewed plan, honouring any override the user chose. */
   const handleConfirmImport = useCallback(
-    (kind: DetectedKind) => {
+    (input: DetectedKind | ImportConfirmationPayload) => {
       if (!importPlan) return;
 
+      const kind: DetectedKind = typeof input === 'string' ? input : input.kind;
+      const isNewProject =
+        typeof input === 'object'
+          ? input.isNewProject
+          : importShouldCreateProject(importPlan);
+      const chosenName =
+        typeof input === 'object' && input.projectName
+          ? input.projectName
+          : projectNameFromImport(importPlan);
+      const chosenEditorStyle: EditorStyle =
+        typeof input === 'object' && input.editorStyle
+          ? input.editorStyle
+          : (kind === 'simple' ? 'plain' : 'vscode');
+
       /*
-       * A folder or archive becomes its own project, named after itself, and is
-       * opened in whichever editor its detected kind calls for. Handled before the
-       * branches below because those load files into the *current* session, which
-       * is not what importing a project means.
+       * When importing as a new project (e.g. from dashboard, or user opted for new project),
+       * create the project record, persist it in IndexedDB, and navigate to it cleanly.
        */
-      if (importShouldCreateProject(importPlan)) {
+      if (isNewProject) {
         const plan = importPlan;
         setImportPlan(null);
-        void createProjectFromImport(plan, kind);
+        void createProjectFromImport(plan, kind, chosenName, chosenEditorStyle);
         return;
       }
 
@@ -2499,11 +2518,114 @@ function App() {
       name,
       editorStyle,
       template,
-    }: {
-      name: string;
-      editorStyle: EditorStyle;
-      template: NewProjectTemplate;
-    }) => {
+      selectedTemplate,
+    }: NewProjectSubmitPayload): Promise<boolean | void> => {
+      const transition = beginTransition();
+      setIsOpeningProject(true);
+
+      const flushed = await flushProjectSave();
+      if (flushed && !flushed.ok) {
+        toast.error('Could not save the current project. Staying put so no edits are lost.');
+        setIsOpeningProject(false);
+        return false;
+      }
+      if (!isCurrentTransition(transition)) {
+        setIsOpeningProject(false);
+        return false;
+      }
+
+      let resolvedStyle: EditorStyle = editorStyle;
+      let projectType: ProjectType = 'plain';
+      let entry: string | undefined;
+      let files: ProjectFile[];
+
+      if (template === 'template' && selectedTemplate) {
+        const rawType = selectedTemplate.meta.projectType || 'plain';
+        projectType = rawType === 'nextjs' ? 'react' : rawType;
+        resolvedStyle = projectType === 'plain' ? editorStyle : 'vscode';
+        if (selectedTemplate.payload && 'files' in selectedTemplate.payload) {
+          files = selectedTemplate.payload.files.map((f) => ({
+            path: f.path,
+            content: f.content,
+            language: languageForPath(f.path),
+          }));
+          entry = files.find((f) => f.path === (projectType === 'vue' ? 'main.js' : 'main.jsx'))?.path;
+        } else if (selectedTemplate.payload && 'html' in selectedTemplate.payload) {
+          files = createPlainProject(
+            selectedTemplate.payload.html || '',
+            selectedTemplate.payload.css || '',
+            selectedTemplate.payload.javascript || '',
+          ).files;
+        } else {
+          // Dynamic import of enhancedTemplateService so it's not in initial bundle
+          const { enhancedTemplateService } = await import('./services/enhancedTemplateService');
+          const fetched = await enhancedTemplateService.getTemplateById(selectedTemplate.meta.id);
+          if (fetched && 'files' in fetched) {
+            files = fetched.files.map((f) => ({
+              path: f.path,
+              content: f.content,
+              language: languageForPath(f.path),
+            }));
+            entry = files.find((f) => f.path === (projectType === 'vue' ? 'main.js' : 'main.jsx'))?.path;
+          } else if (fetched && 'html' in fetched) {
+            files = createPlainProject(fetched.html || '', fetched.css || '', fetched.javascript || '').files;
+          } else {
+            files = createPlainProject(defaultHTML, defaultCSS, defaultJS).files;
+          }
+        }
+      } else if (template === 'react' || template === 'vue') {
+        resolvedStyle = 'vscode';
+        const scaffold = createProjectOfType(template);
+        projectType = scaffold.projectType;
+        entry = scaffold.entry;
+        files = scaffold.files;
+      } else if (template === 'empty') {
+        resolvedStyle = 'vscode';
+        files = [];
+      } else if (template === 'blank') {
+        files = createPlainProject('', '', '').files;
+      } else {
+        files = createPlainProject(defaultHTML, defaultCSS, defaultJS).files;
+      }
+
+      const record = await createProjectRecord({
+        name,
+        editorStyle: resolvedStyle,
+        projectType,
+        entry,
+        files,
+      });
+
+      if (!record) {
+        toast.error('Could not create the project. This browser may be blocking local storage.');
+        setIsOpeningProject(false);
+        return false;
+      }
+      if (!isCurrentTransition(transition)) {
+        setProjects((current) => [record, ...current]);
+        setShowNewProject(false);
+        if (parseAppRoute().kind === 'new') navigateReplace(PROJECTS_ROUTE);
+        return true;
+      }
+
+      setShowNewProject(false);
+      setProjects((current) => [record, ...current]);
+      if (parseAppRoute().kind === 'new') navigateReplace(PROJECTS_ROUTE);
+      writeActiveProjectId(record.id);
+      setActiveProjectId(record.id);
+      setActiveProject(record);
+      applyProjectToEditor(record, files, { navigate: true });
+      setIsOpeningProject(false);
+      toast.success(`Created "${record.name}".`);
+      return true;
+    },
+    [applyProjectToEditor, flushProjectSave, beginTransition, isCurrentTransition],
+  );
+
+  /** Creates a project directly from the template library without touching current project. */
+  const handleCreateProjectFromTemplate = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (meta: any, payload: any, projectName: string) => {
       const transition = beginTransition();
       setIsOpeningProject(true);
 
@@ -2518,66 +2640,49 @@ function App() {
         return;
       }
 
-      /*
-       * Starting points, resolved from the user's explicit template choice —
-       * never invented. `editorStyle` (which editor opens it) and
-       * `projectType` (what the code is) stay separate fields on the record
-       * so the project always reopens in its correct editor.
-       */
-      const resolvedStyle: EditorStyle =
-        template === 'react' || template === 'vue' ? 'vscode' : editorStyle;
-      let projectType: ProjectType = 'plain';
-      let entry: string | undefined;
+      const rawType = meta.projectType || 'plain';
+      const projectType: ProjectType = rawType === 'nextjs' ? 'react' : rawType;
+      const editorStyle: EditorStyle = projectType === 'plain' ? 'plain' : 'vscode';
       let files: ProjectFile[];
-      if (template === 'react' || template === 'vue') {
-        const scaffold = createProjectOfType(template);
-        projectType = scaffold.projectType;
-        entry = scaffold.entry;
-        files = scaffold.files;
-      } else if (template === 'empty') {
-        files = [];
-      } else if (template === 'blank') {
-        files = createPlainProject('', '', '').files;
+      let entry: string | undefined;
+
+      if ('files' in payload) {
+        files = payload.files.map((f: { path: string; content: string }) => ({
+          path: f.path,
+          content: f.content,
+          language: languageForPath(f.path),
+        }));
+        entry = files.find((f) => f.path === (projectType === 'vue' ? 'main.js' : 'main.jsx'))?.path;
       } else {
-        // 'starter': the same scaffold the editor used to open with by
-        // default — a starting point, not a landing page.
-        files = createPlainProject(defaultHTML, defaultCSS, defaultJS).files;
+        files = createPlainProject(payload.html || '', payload.css || '', payload.javascript || '').files;
       }
+
       const record = await createProjectRecord({
-        name,
-        editorStyle: resolvedStyle,
+        name: projectName,
+        editorStyle,
         projectType,
         entry,
         files,
       });
 
       if (!record) {
-        toast.error('Could not create the project. This browser may be blocking local storage.');
+        toast.error('Could not create project in storage.');
         setIsOpeningProject(false);
         return;
       }
+
       if (!isCurrentTransition(transition)) {
-        // A newer transition won while creating: the record is safely stored
-        // and listed, but this stale completion must not seize the editor.
         setProjects((current) => [record, ...current]);
-        setShowNewProject(false);
-        // A route-visited creation screen closes back to the dashboard address.
-        if (parseAppRoute().kind === 'new') navigateReplace(PROJECTS_ROUTE);
         return;
       }
 
-      setShowNewProject(false);
       setProjects((current) => [record, ...current]);
-      // Collapse a route-visited `/new` entry first: the created project's
-      // canonical URL then pushes over the dashboard, so Back lands on the
-      // dashboard instead of reopening an empty creation form.
-      if (parseAppRoute().kind === 'new') navigateReplace(PROJECTS_ROUTE);
       writeActiveProjectId(record.id);
       setActiveProjectId(record.id);
       setActiveProject(record);
       applyProjectToEditor(record, files, { navigate: true });
       setIsOpeningProject(false);
-      toast.success(`Created "${record.name}".`);
+      toast.success(`Created "${record.name}" from ${meta.name}.`);
     },
     [applyProjectToEditor, flushProjectSave, beginTransition, isCurrentTransition],
   );
@@ -4619,13 +4724,29 @@ function App() {
           <Suspense fallback={<LazyFallback label="new project" variant="overlay" />}>
             <NewProjectModal
               suggestedName={suggestProjectName(projects)}
+              existingProjects={projects}
               onCancel={() => {
                 setShowNewProject(false);
                 // A route-visited creation screen closes back to the dashboard
                 // address rather than stranding /new in history.
                 if (parseAppRoute().kind === 'new') navigateReplace(PROJECTS_ROUTE);
               }}
-              onCreate={(input) => void handleCreateProject(input)}
+              onCreate={(input) => handleCreateProject(input)}
+              onOpenTemplates={() => {
+                setShowNewProject(false);
+                setShowTemplates(true);
+              }}
+            />
+          </Suspense>
+        )}
+
+        {showTemplates && (
+          <Suspense fallback={<LazyFallback label="templates" variant="overlay" />}>
+            <TemplateSelectorModal
+              isOpen={showTemplates}
+              onClose={() => setShowTemplates(false)}
+              onLoadTemplate={handleLoadTemplate}
+              onCreateProject={handleCreateProjectFromTemplate}
             />
           </Suspense>
         )}
@@ -4684,6 +4805,7 @@ function App() {
             plan={importPlan}
             onCancel={() => setImportPlan(null)}
             onConfirm={handleConfirmImport}
+            hasActiveProject={true}
           />
         </Suspense>
       )}
@@ -5292,6 +5414,7 @@ function App() {
             isOpen={showTemplates}
             onClose={() => setShowTemplates(false)}
             onLoadTemplate={handleLoadTemplate}
+            onCreateProject={handleCreateProjectFromTemplate}
           />
         </Suspense>
       )}

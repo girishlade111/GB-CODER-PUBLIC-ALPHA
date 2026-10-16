@@ -84,6 +84,21 @@ export const isEnvFile = (path: string): boolean => {
   return base === '.env' || base.startsWith('.env.') || base.endsWith('.env');
 };
 
+/** Safety cap on total decompressed content size (100 MB) to guard against zip bombs. */
+export const MAX_DECOMPRESSED_BYTES = 100 * 1024 * 1024;
+
+/** True when a path attempts directory traversal or references root/drive paths. */
+export const isPathTraversal = (path: string): boolean => {
+  if (!path) return true;
+  const clean = path.replace(/\\/g, '/').trim();
+  // Reject absolute paths, windows drive letters, and parent segments
+  if (clean.startsWith('/') || /^[a-zA-Z]:/.test(clean)) return true;
+  for (const segment of clean.split('/')) {
+    if (segment === '..') return true;
+  }
+  return false;
+};
+
 /** Extensions we can actually open in an editor panel. */
 const EDITABLE_EXTENSIONS = new Set([
   // Front-end
@@ -234,6 +249,13 @@ const planFromZip = async (archive: File): Promise<ImportPlan> => {
 
   zip.forEach((relativePath, entry) => {
     if (entry.dir) return;
+    if (isPathTraversal(relativePath)) {
+      warnings.push({
+        file: relativePath,
+        reason: 'Skipped: unsafe path traversal detected.',
+      });
+      return;
+    }
     if (shouldSkipPath(relativePath)) {
       tally(skippedGroups, skipReasonFor(relativePath));
       return;
@@ -255,10 +277,25 @@ const planFromZip = async (archive: File): Promise<ImportPlan> => {
 
   const files: ProjectFile[] = [];
   const detectionEntries: ManifestEntry[] = [];
+  const seenPaths = new Set<string>();
   let totalBytes = 0;
+  let totalDecompressedBytes = 0;
 
   for (const { path, entry } of candidates) {
-    const normalizedPath = normalizePath(strippedByOriginal.get(path) ?? path);
+    const rawNormalized = normalizePath(strippedByOriginal.get(path) ?? path);
+    if (isPathTraversal(rawNormalized)) {
+      warnings.push({ file: rawNormalized, reason: 'Skipped: unsafe path traversal.' });
+      continue;
+    }
+
+    const pathKey = rawNormalized.toLowerCase();
+    if (seenPaths.has(pathKey)) {
+      warnings.push({ file: rawNormalized, reason: 'Skipped: duplicate or conflicting path.' });
+      continue;
+    }
+    seenPaths.add(pathKey);
+
+    const normalizedPath = rawNormalized;
     const editable = isEditable(path);
     const needsContent = editable || DETECTION_CONTENT_FILES.test(path);
 
@@ -277,6 +314,13 @@ const planFromZip = async (archive: File): Promise<ImportPlan> => {
     }
 
     const bytes = new TextEncoder().encode(content).length;
+    totalDecompressedBytes += bytes;
+    if (totalDecompressedBytes > MAX_DECOMPRESSED_BYTES) {
+      throw new Error(
+        `Archive decompression exceeded ${MAX_DECOMPRESSED_BYTES / 1024 / 1024} MB safety limit. Aborting import for security.`,
+      );
+    }
+
     detectionEntries.push({ path: normalizedPath, content });
 
     if (!editable) continue;
@@ -288,6 +332,13 @@ const planFromZip = async (archive: File): Promise<ImportPlan> => {
     if (files.length >= MAX_IMPORT_ENTRIES) {
       warnings.push({ file: normalizedPath, reason: 'Skipped: import entry limit reached.' });
       continue;
+    }
+
+    if (isEnvFile(normalizedPath)) {
+      warnings.push({
+        file: normalizedPath,
+        reason: 'Configuration file kept local in browser storage only.',
+      });
     }
 
     totalBytes += bytes;
@@ -333,6 +384,13 @@ const planFromFiles = async (
   const kept: DroppedFile[] = [];
 
   for (const item of input) {
+    if (isPathTraversal(item.path)) {
+      warnings.push({
+        file: item.path,
+        reason: 'Skipped: unsafe path traversal detected.',
+      });
+      continue;
+    }
     if (shouldSkipPath(item.path)) {
       tally(skippedGroups, skipReasonFor(item.path));
       continue;
@@ -347,10 +405,24 @@ const planFromFiles = async (
 
   const files: ProjectFile[] = [];
   const detectionEntries: ManifestEntry[] = [];
+  const seenPaths = new Set<string>();
   let totalBytes = 0;
 
   for (const [index, item] of kept.entries()) {
-    const normalizedPath = normalizePath(stripped[index]);
+    const rawNormalized = normalizePath(stripped[index]);
+    if (isPathTraversal(rawNormalized)) {
+      warnings.push({ file: rawNormalized, reason: 'Skipped: unsafe path traversal.' });
+      continue;
+    }
+
+    const pathKey = rawNormalized.toLowerCase();
+    if (seenPaths.has(pathKey)) {
+      warnings.push({ file: rawNormalized, reason: 'Skipped: duplicate or conflicting path.' });
+      continue;
+    }
+    seenPaths.add(pathKey);
+
+    const normalizedPath = rawNormalized;
     const editable = isEditable(item.path);
     const needsContent = editable || DETECTION_CONTENT_FILES.test(item.path);
 
@@ -365,9 +437,23 @@ const planFromFiles = async (
       continue;
     }
 
-    const content = await item.file.text();
+    let content: string;
+    try {
+      content = await item.file.text();
+    } catch {
+      warnings.push({ file: normalizedPath, reason: 'Could not be read.' });
+      continue;
+    }
+
     detectionEntries.push({ path: normalizedPath, content });
     if (!editable) continue;
+
+    if (isEnvFile(normalizedPath)) {
+      warnings.push({
+        file: normalizedPath,
+        reason: 'Configuration file kept local in browser storage only.',
+      });
+    }
 
     totalBytes += item.file.size;
     files.push({ path: normalizedPath, content, language: languageForPath(normalizedPath) });
