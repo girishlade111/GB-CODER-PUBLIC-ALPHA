@@ -1089,19 +1089,19 @@ class EnhancedTemplateService {
         runtimeNote: 'Runs directly in browser live preview without bundler overhead.',
       };
     }
-    if (template.projectType === 'react' || template.projectType === 'vue') {
-      return {
-        compatible: true,
-        recommendedEditor: 'vscode',
-        runtimeNote: 'Vite-ready component tree. Runs in browser bundler and Advanced IDE.',
-      };
-    }
-    if (template.projectType === 'nextjs') {
+    if (template.category === 'nextjs' || template.projectType === 'nextjs' || template.tags?.includes('nextjs')) {
       return {
         compatible: true,
         recommendedEditor: 'vscode',
         requiresSandbox: true,
         runtimeNote: 'Client components execute in browser preview. Full-stack server endpoints require server sandbox.',
+      };
+    }
+    if (template.projectType === 'react' || template.projectType === 'vue') {
+      return {
+        compatible: true,
+        recommendedEditor: 'vscode',
+        runtimeNote: 'Vite-ready component tree. Runs in browser bundler and Advanced IDE.',
       };
     }
     return {

@@ -300,6 +300,8 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
 
   const handlePreview = async (template: CodeTemplate) => {
     setPreviewTemplate(template);
+    enhancedTemplateService.recordRecentTemplate(template.id);
+    setRecentIds(enhancedTemplateService.getRecentTemplateIds());
     if (previewPayload && previewTemplate?.id === template.id) return;
     setPreviewPayload(null);
     try {

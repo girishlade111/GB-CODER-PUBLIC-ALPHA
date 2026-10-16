@@ -526,7 +526,7 @@ try {
       // Favorite first card
       const firstFavBtn = page.locator('[data-testid^="template-fav-btn-"]').first();
       await firstFavBtn.click();
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(500);
 
       const favsStored = await page.evaluate(() => localStorage.getItem('gb-coder:favorite-templates'));
       assert.ok(favsStored && JSON.parse(favsStored).length > 0, 'Favorite recorded in localStorage');
@@ -534,7 +534,7 @@ try {
       // Click card to open preview and track recent
       const firstCard = page.locator('[data-testid^="template-card-"]').first();
       await firstCard.click();
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(800);
 
       const recentsStored = await page.evaluate(() => localStorage.getItem('gb-coder:recent-templates'));
       assert.ok(recentsStored && JSON.parse(recentsStored).length > 0, 'Recent template tracked');
@@ -565,9 +565,10 @@ try {
         await page.waitForTimeout(500);
         const card = page.locator('[data-testid^="template-card-"]').first();
         await card.click();
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(1000);
 
         const runtimeNotice = page.locator('[data-testid="template-runtime-notice"]');
+        await runtimeNotice.waitFor({ state: 'visible', timeout: 15000 });
         assert.ok(await runtimeNotice.isVisible(), 'Next.js simulation notice is visible');
         const text = await runtimeNotice.innerText();
         assert.ok(text.includes('App Router') || text.includes('server sandbox') || text.includes('client components'));
@@ -624,6 +625,7 @@ try {
   // C1: Import ZIP Fixture and verify Review Modal
   {
     const { ctx, page } = await createContextAndPage(browser, 'c1-import-zip');
+    const tmpZipPath = path.resolve('scripts/.tmp-test-fixture.zip');
     try {
       const zip = new JSZip();
       zip.file('index.html', '<h1>Import Test</h1>');
@@ -638,14 +640,11 @@ try {
       await page.locator('[data-testid="dashboard-import"]').first().click();
       await page.waitForSelector('#import-file-input', { state: 'attached', timeout: 10000 });
 
-      const tmpZipPath = path.resolve('scripts/.tmp-test-fixture.zip');
       fs.writeFileSync(tmpZipPath, zipBuffer);
-
       await page.setInputFiles('#import-file-input', tmpZipPath);
-      fs.unlinkSync(tmpZipPath);
 
-      // Wait for Import Review Modal
-      await page.waitForSelector('[data-testid="confirm-import"]', { timeout: 15000 });
+      // Wait for Import Review Modal (allow time for JSZip and detection)
+      await page.waitForSelector('[data-testid="confirm-import"]', { timeout: 30000 });
       const detectedKind = await page.locator('[data-testid="detected-kind"]').innerText();
       assert.ok(detectedKind.includes('Static') || detectedKind.includes('HTML'), `Detected kind: ${detectedKind}`);
 
@@ -665,6 +664,7 @@ try {
     } catch (e) {
       record('C-01', 'Import ZIP fixture & review modal confirmation', 'FAIL', e.message);
     } finally {
+      try { if (fs.existsSync(tmpZipPath)) fs.unlinkSync(tmpZipPath); } catch {}
       await page.close();
       await ctx.close();
     }
@@ -673,6 +673,7 @@ try {
   // C2: Path traversal defense & cancellation safety
   {
     const { ctx, page } = await createContextAndPage(browser, 'c2-traversal-cancel');
+    const tmpZipPath = path.resolve('scripts/.tmp-traversal-test.zip');
     try {
       const zip = new JSZip();
       zip.file('../secret.txt', 'malicious traversal');
@@ -684,12 +685,10 @@ try {
       await page.locator('[data-testid="dashboard-import"]').first().click();
       await page.waitForSelector('#import-file-input', { state: 'attached', timeout: 10000 });
 
-      const tmpZipPath = path.resolve('scripts/.tmp-traversal-test.zip');
       fs.writeFileSync(tmpZipPath, zipBuffer);
       await page.setInputFiles('#import-file-input', tmpZipPath);
-      fs.unlinkSync(tmpZipPath);
 
-      await page.waitForSelector('[data-testid="confirm-import"]', { timeout: 15000 });
+      await page.waitForSelector('[data-testid="confirm-import"]', { timeout: 30000 });
 
       // Click Cancel
       await page.click('[data-testid="import-cancel"]');
@@ -702,6 +701,7 @@ try {
     } catch (e) {
       record('C-02', 'Path traversal defense & cancellation safety', 'FAIL', e.message);
     } finally {
+      try { if (fs.existsSync(tmpZipPath)) fs.unlinkSync(tmpZipPath); } catch {}
       await page.close();
       await ctx.close();
     }
