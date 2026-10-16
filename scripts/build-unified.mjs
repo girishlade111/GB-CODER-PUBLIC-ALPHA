@@ -127,6 +127,15 @@ const rootRobots = join(ROOT_DIR, 'public', 'robots.txt');
 if (existsSync(rootRobots)) {
   cpSync(rootRobots, join(FINAL_DIST, 'robots.txt'));
 }
+const rootSitemap = join(ROOT_DIR, 'public', 'sitemap.xml');
+try {
+  execSync('node scripts/generate-sitemap.mjs', { cwd: ROOT_DIR, stdio: 'inherit' });
+} catch (err) {
+  console.warn('  -> WARNING: generate-sitemap failed:', err.message);
+}
+if (existsSync(rootSitemap)) {
+  cpSync(rootSitemap, join(FINAL_DIST, 'sitemap.xml'));
+}
 
 // 5. Build Output Safety & Integrity Verification
 console.log('\n[5/6] Verifying build output integrity and security...');
@@ -246,6 +255,16 @@ const publicPages = [
   { route: '/contact', title: 'Contact GB Coder' },
   { route: '/privacy-policy', title: 'Privacy Policy' },
   { route: '/terms-and-conditions', title: 'Terms & Conditions' },
+  { route: '/features', title: 'Features' },
+  { route: '/docs', title: 'Documentation' },
+  { route: '/blog', title: 'Blog & Engineering Guides' },
+  { route: '/blog/html-css-javascript-live-preview', title: 'Building an HTML/CSS/JavaScript Project' },
+  { route: '/blog/react-vue-browser-ide', title: 'Starting React and Vue Projects' },
+  { route: '/blog/browser-project-backup-restore', title: 'Importing, Exporting, and Backing Up' },
+  { route: '/es/features', title: 'Funciones' },
+  { route: '/fr/docs', title: 'Documentation' },
+  { route: '/ja/blog', title: 'ブログ＆技術ガイド' },
+  { route: '/zh/about', title: '关于 GB Coder' },
 ];
 for (const { route, title } of publicPages) {
   const pagePath = join(FINAL_DIST, route.replace(/^\//, ''), 'index.html');
@@ -262,6 +281,35 @@ for (const { route, title } of publicPages) {
     fail(`Public page leaked IDE runtime marker: ${route}`);
   } else {
     pass(`Public page verified with title + canonical + isolation: ${route}`);
+  }
+}
+
+// Check 9: Robots and Sitemap integrity
+const robotsPath = join(FINAL_DIST, 'robots.txt');
+if (!existsSync(robotsPath)) {
+  fail('dist/robots.txt is missing');
+} else {
+  const robots = readFileSync(robotsPath, 'utf8');
+  if (robots.includes('gbcoder.com')) {
+    fail('dist/robots.txt contains obsolete gbcoder.com references');
+  } else if (!robots.includes('Sitemap: https://code.ladestack.in/sitemap.xml')) {
+    fail('dist/robots.txt missing primary https://code.ladestack.in/sitemap.xml declaration');
+  } else {
+    pass('dist/robots.txt verified with https://code.ladestack.in/sitemap.xml');
+  }
+}
+
+const sitemapPath = join(FINAL_DIST, 'sitemap.xml');
+if (!existsSync(sitemapPath)) {
+  fail('dist/sitemap.xml is missing');
+} else {
+  const sitemap = readFileSync(sitemapPath, 'utf8');
+  if (sitemap.includes('gbcoder.com')) {
+    fail('dist/sitemap.xml contains obsolete gbcoder.com references');
+  } else if (!sitemap.includes('https://code.ladestack.in/')) {
+    fail('dist/sitemap.xml missing canonical origin URLs');
+  } else {
+    pass('dist/sitemap.xml verified with canonical origin URLs');
   }
 }
 

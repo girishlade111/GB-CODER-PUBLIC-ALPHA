@@ -1,0 +1,435 @@
+---
+import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/languages';
+import { getLocalizedPath } from '../i18n/utils';
+import { getNav } from '../i18n/navigation';
+
+interface Props {
+  lang?: string;
+  basePath?: string;
+  isLegalPage?: boolean;
+}
+
+const { lang = DEFAULT_LANGUAGE, basePath = '', isLegalPage = false } = Astro.props;
+const nav = getNav(lang);
+const currentLangMeta = SUPPORTED_LANGUAGES[lang] || SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
+
+// Compute links for current language
+const homeUrl = getLocalizedPath(lang, '');
+const featuresUrl = getLocalizedPath(lang, 'features');
+const docsUrl = getLocalizedPath(lang, 'docs');
+const blogUrl = getLocalizedPath(lang, 'blog');
+const aboutUrl = getLocalizedPath(lang, 'about');
+const contactUrl = getLocalizedPath(lang, 'contact');
+
+// Normalize basePath for active link styling
+const cleanBase = basePath.replace(/^\/+|\/+$/g, '');
+const isFeatures = cleanBase === 'features';
+const isDocs = cleanBase.startsWith('docs');
+const isBlog = cleanBase.startsWith('blog');
+const isAbout = cleanBase === 'about';
+const isContact = cleanBase === 'contact';
+---
+
+<header class="site-header">
+  <div class="nav-container">
+    <a href={homeUrl} class="brand" aria-label="GB Coder Homepage">
+      <div class="brand-badge">GB</div>
+      <div class="brand-text">
+        <span class="brand-title">GB Coder</span>
+        <span class="brand-sub">LadeStack</span>
+      </div>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="desktop-nav" aria-label="Main Navigation">
+      <ul class="nav-links">
+        <li>
+          <a href={featuresUrl} class:list={['nav-link', { active: isFeatures }]}>
+            {nav.features}
+          </a>
+        </li>
+        <li>
+          <a href={docsUrl} class:list={['nav-link', { active: isDocs }]}>
+            {nav.docs}
+          </a>
+        </li>
+        <li>
+          <a href={blogUrl} class:list={['nav-link', { active: isBlog }]}>
+            {nav.blog}
+          </a>
+        </li>
+        <li>
+          <a href={aboutUrl} class:list={['nav-link', { active: isAbout }]}>
+            {nav.about}
+          </a>
+        </li>
+        <li>
+          <a href={contactUrl} class:list={['nav-link', { active: isContact }]}>
+            {nav.contact}
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Header Actions: Language Switcher + CTA Button -->
+    <div class="header-actions">
+      <!-- Accessible Language Switcher Dropdown (No client JS required) -->
+      <details class="lang-dropdown">
+        <summary class="lang-summary" aria-label={nav.languageSelectLabel}>
+          <span class="globe-icon" aria-hidden="true">🌐</span>
+          <span class="current-lang-code">{currentLangMeta.code.toUpperCase()}</span>
+          <span class="dropdown-chevron" aria-hidden="true">▾</span>
+        </summary>
+        <ul class="lang-menu" role="menu">
+          {Object.entries(SUPPORTED_LANGUAGES).map(([code, meta]) => {
+            const targetUrl = isLegalPage ? getLocalizedPath(code, '') : getLocalizedPath(code, basePath);
+            const isCurrent = code === lang;
+            return (
+              <li role="none">
+                <a
+                  href={targetUrl}
+                  class:list={['lang-item', { active: isCurrent }]}
+                  role="menuitem"
+                  aria-current={isCurrent ? 'true' : undefined}
+                >
+                  <span class="lang-native">{meta.nativeName}</span>
+                  <span class="lang-tag">{code.toUpperCase()}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </details>
+
+      <a href="/app/projects" class="cta-button" id="headerCta">
+        {nav.startCoding}
+      </a>
+
+      <!-- Mobile Menu Toggle Button (Using Details Disclosure for Zero-JS Accessibility) -->
+      <details class="mobile-menu-disclosure">
+        <summary class="mobile-menu-btn" aria-label={nav.mobileMenuToggle}>
+          <span class="menu-icon" aria-hidden="true">☰</span>
+        </summary>
+        <div class="mobile-drawer">
+          <ul class="mobile-nav-links">
+            <li><a href={homeUrl} class="mobile-nav-link">{nav.home}</a></li>
+            <li><a href={featuresUrl} class="mobile-nav-link">{nav.features}</a></li>
+            <li><a href={docsUrl} class="mobile-nav-link">{nav.docs}</a></li>
+            <li><a href={blogUrl} class="mobile-nav-link">{nav.blog}</a></li>
+            <li><a href={aboutUrl} class="mobile-nav-link">{nav.about}</a></li>
+            <li><a href={contactUrl} class="mobile-nav-link">{nav.contact}</a></li>
+          </ul>
+          <div class="mobile-drawer-footer">
+            <a href="/app/projects" class="cta-button mobile-cta">
+              {nav.startCoding}
+            </a>
+          </div>
+        </div>
+      </details>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    background: rgba(250, 249, 245, 0.95);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: var(--text-primary);
+  }
+
+  .brand-badge {
+    width: 32px;
+    height: 32px;
+    background: var(--accent-terracotta);
+    color: #ffffff;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+
+  .brand-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .brand-sub {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .desktop-nav {
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    list-style: none;
+  }
+
+  .nav-link {
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 0.925rem;
+    font-weight: 500;
+    padding: 0.25rem 0.1rem;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary);
+    border-color: var(--border);
+  }
+
+  .nav-link.active {
+    color: var(--accent-terracotta);
+    border-color: var(--accent-terracotta);
+    font-weight: 600;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  /* Accessible Language Dropdown */
+  .lang-dropdown {
+    position: relative;
+    user-select: none;
+  }
+
+  .lang-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.65rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    list-style: none;
+    transition: border-color 0.2s, background-color 0.2s;
+  }
+
+  .lang-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .lang-summary:hover {
+    border-color: var(--text-muted);
+    background: var(--canvas);
+  }
+
+  .globe-icon {
+    font-size: 0.9rem;
+  }
+
+  .current-lang-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .dropdown-chevron {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .lang-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    min-width: 175px;
+    padding: 0.4rem 0;
+    list-style: none;
+    z-index: 200;
+  }
+
+  .lang-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.9rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    transition: background-color 0.15s;
+  }
+
+  .lang-item:hover {
+    background: var(--canvas);
+  }
+
+  .lang-item.active {
+    font-weight: 600;
+    color: var(--accent-terracotta);
+    background: rgba(204, 120, 92, 0.08);
+  }
+
+  .lang-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .cta-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-terracotta);
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.925rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: 6px;
+    transition: background-color 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  .cta-button:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+  }
+
+  .cta-button:active {
+    transform: translateY(0);
+  }
+
+  /* Mobile Disclosure & Drawer */
+  .mobile-menu-disclosure {
+    display: none;
+    position: relative;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    list-style: none;
+    font-size: 1.25rem;
+  }
+
+  .mobile-menu-btn::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile-drawer {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 250px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    padding: 1rem;
+    z-index: 200;
+  }
+
+  .mobile-nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .mobile-nav-link {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.15s;
+  }
+
+  .mobile-nav-link:hover {
+    background: var(--canvas);
+    color: var(--accent-terracotta);
+  }
+
+  .mobile-drawer-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .mobile-cta {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Responsive Breakpoints */
+  @media (max-width: 860px) {
+    .desktop-nav {
+      display: none;
+    }
+    .mobile-menu-disclosure {
+      display: block;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .brand-sub {
+      display: none;
+    }
+    .header-actions .cta-button {
+      display: none;
+    }
+  }
+</style>

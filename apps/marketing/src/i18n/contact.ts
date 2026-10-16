@@ -1,0 +1,167 @@
+export interface ContactTranslations {
+  metaTitle: string;
+  metaDescription: string;
+  heroTag: string;
+  heroTitle: string;
+  heroDescription: string;
+  cardDirectTitle: string;
+  emailLabel: string;
+  locationLabel: string;
+  locationValue: string;
+  socialTitle: string;
+  aboutCreatorTitle: string;
+  aboutCreatorText: string;
+  startCodingBtn: string;
+  noteDirectEmail: string;
+}
+
+export const CONTACT_TRANSLATIONS: Record<string, ContactTranslations> = {
+  en: {
+    metaTitle: 'Contact GB Coder — LadeStack',
+    metaDescription: 'Get in touch with GB Coder: direct developer email, social channels, location in Mumbai, India, or launch the browser studio.',
+    heroTag: 'Direct Communication',
+    heroTitle: 'Contact GB Coder & LadeStack',
+    heroDescription: 'Have questions, technical suggestions, or partnership ideas? Connect directly with the developer through verified communication channels.',
+    cardDirectTitle: 'Direct Contact Details',
+    emailLabel: 'Email Address:',
+    locationLabel: 'Location:',
+    locationValue: 'Mumbai, India',
+    socialTitle: 'Verified Developer Channels',
+    aboutCreatorTitle: 'About the Creator',
+    aboutCreatorText: 'GB Coder is built and maintained by Girish Lade, a developer and UI/UX engineer based in Mumbai, India. Feedback, bug reports, and collaboration inquiries are always welcome.',
+    startCodingBtn: 'Start Coding Now',
+    noteDirectEmail: 'We do not operate automated contact forms. All communications are received directly via email or verified social profiles.',
+  },
+  es: {
+    metaTitle: 'Contacto — GB Coder | LadeStack',
+    metaDescription: 'Contacta con GB Coder: correo directo del desarrollador, canales sociales, ubicación en Mumbai, India, o abre el estudio web.',
+    heroTag: 'Comunicación Directa',
+    heroTitle: 'Contacto con GB Coder y LadeStack',
+    heroDescription: '¿Tienes preguntas técnicas o propuestas de colaboración? Comunícate directamente con el creador a través de los canales verificados.',
+    cardDirectTitle: 'Datos de Contacto Directo',
+    emailLabel: 'Correo Electrónico:',
+    locationLabel: 'Ubicación:',
+    locationValue: 'Mumbai, India',
+    socialTitle: 'Canales Oficiales del Desarrollador',
+    aboutCreatorTitle: 'Sobre el Creador',
+    aboutCreatorText: 'GB Coder es desarrollado y mantenido por Girish Lade, ingeniero de UI/UX y programador en Mumbai, India. Comentarios, reportes de fallos y propuestas son siempre bienvenidos.',
+    startCodingBtn: 'Empezar a Programar',
+    noteDirectEmail: 'No utilizamos formularios automatizados. Todas las consultas se gestionan de forma directa por correo electrónico o redes sociales oficiales.',
+  },
+  nl: {
+    metaTitle: 'Contact — GB Coder | LadeStack',
+    metaDescription: 'Neem contact op met GB Coder: direct e-mailadres van de ontwikkelaar, sociale kanalen en locatie in Mumbai, India.',
+    heroTag: 'Directe Communicatie',
+    heroTitle: 'Contact met GB Coder & LadeStack',
+    heroDescription: 'Heb je vragen, technische suggesties of ideeën voor samenwerking? Neem direct contact op via de geverifieerde kanalen.',
+    cardDirectTitle: 'Directe Contactgegevens',
+    emailLabel: 'E-mailadres:',
+    locationLabel: 'Locatie:',
+    locationValue: 'Mumbai, India',
+    socialTitle: 'Geverifieerde Ontwikkelaarskanalen',
+    aboutCreatorTitle: 'Over de Maker',
+    aboutCreatorText: 'GB Coder wordt onderhouden door Girish Lade, softwareontwikkelaar en UI/UX-engineer in Mumbai, India. Vragen en feedback zijn altijd welkom.',
+    startCodingBtn: 'Begin met Coderen',
+    noteDirectEmail: 'Wij gebruiken geen contactformulieren. Berichten worden direct via e-mail of geverifieerde profielen ontvangen.',
+  },
+  fr: {
+    metaTitle: 'Contact — GB Coder | LadeStack',
+    metaDescription: 'Contactez GB Coder : e-mail direct du développeur, réseaux sociaux, localisation à Mumbai, Inde, ou lancez l’éditeur en ligne.',
+    heroTag: 'Communication Directe',
+    heroTitle: 'Contacter GB Coder & LadeStack',
+    heroDescription: 'Vous avez des questions techniques ou des suggestions ? Échangez directement avec le créateur via nos canaux vérifiés.',
+    cardDirectTitle: 'Coordonnées Directes',
+    emailLabel: 'Adresse E-mail :',
+    locationLabel: 'Localisation :',
+    locationValue: 'Mumbai, Inde',
+    socialTitle: 'Canaux Officiels du Développeur',
+    aboutCreatorTitle: 'À Propos du Créateur',
+    aboutCreatorText: 'GB Coder est développé par Girish Lade, ingénieur UI/UX et programmeur à Mumbai, en Inde. Vos remarques et retours d’expérience sont les bienvenus.',
+    startCodingBtn: 'Commencer à Coder',
+    noteDirectEmail: 'Nous n’utilisons aucun formulaire automatisé. Vos messages sont traités directement par e-mail ou sur nos réseaux officiels.',
+  },
+  ja: {
+    metaTitle: 'お問い合わせ — GB Coder | LadeStack',
+    metaDescription: 'GB Coderへのお問い合わせ：開発者直通メール、公式SNS、拠点情報（インド・ムンバイ）、またはWebスタジオの起動。',
+    heroTag: '直接のお問い合わせ',
+    heroTitle: 'GB Coder＆LadeStackへのお問い合わせ',
+    heroDescription: '機能に関するご質問や技術的なご提案、コラボレーションのご相談など、公式窓口よりお気軽にお問い合わせください。',
+    cardDirectTitle: '直接のお問い合わせ先',
+    emailLabel: 'メールアドレス:',
+    locationLabel: '拠点:',
+    locationValue: 'インド・ムンバイ',
+    socialTitle: '公式開発者アカウント',
+    aboutCreatorTitle: '開発者について',
+    aboutCreatorText: 'GB Coderはインド・ムンバイ在住のUI/UXエンジニア・プログラマーであるGirish Ladeによって開発されています。機能改善の要望やフィードバックをいつでも歓迎しています。',
+    startCodingBtn: '今すぐコードを書く',
+    noteDirectEmail: '自動送信フォームは設置しておりません。すべてメールまたは公式SNSを通じて直接丁寧に対応いたします。',
+  },
+  ko: {
+    metaTitle: '문의하기 — GB Coder | LadeStack',
+    metaDescription: 'GB Coder 공식 문의: 개발자 직통 이메일, 공식 소셜 채널, 인도 뭄바이 소재지 정보 및 웹 에디터 바로가기.',
+    heroTag: '직통 소통 창구',
+    heroTitle: 'GB Coder 및 LadeStack 문의하기',
+    heroDescription: '기술적인 질문, 개선 제안, 협업 아이디어가 있으신가요? 인증된 공식 채널을 통해 제작자와 직접 소통할 수 있습니다.',
+    cardDirectTitle: '직통 연락처',
+    emailLabel: '이메일 주소:',
+    locationLabel: '소재지:',
+    locationValue: '인도 뭄바이 (Mumbai, India)',
+    socialTitle: '공식 개발자 채널',
+    aboutCreatorTitle: '제작자 소개',
+    aboutCreatorText: 'GB Coder는 인도 뭄바이에서 활동하는 소프트웨어 및 UI/UX 엔지니어 Girish Lade가 개발하고 유지관리합니다. 버그 제보와 피드백은 언제나 환영합니다.',
+    startCodingBtn: '지금 코딩 시작하기',
+    noteDirectEmail: '자동 문의 폼을 운영하지 않으며 모든 문의는 이메일과 공식 소셜 프로필을 통해 직접 확인합니다.',
+  },
+  zh: {
+    metaTitle: '联系我们 — GB Coder | LadeStack',
+    metaDescription: '联系 GB Coder 研发团队：开发者直接电子邮箱、官方认证社交媒体、印度孟买驻地信息，或直接开启在线开发。',
+    heroTag: '直面开发者',
+    heroTitle: '联系 GB Coder 与 LadeStack',
+    heroDescription: '如有产品功能疑问、架构建议或技术合作意向，欢迎通过官方认证渠道直接与开发者沟通。',
+    cardDirectTitle: '直联通讯方式',
+    emailLabel: '电子邮箱：',
+    locationLabel: '常驻地点：',
+    locationValue: '印度 · 孟买 (Mumbai, India)',
+    socialTitle: '开发者认证社交主页',
+    aboutCreatorTitle: '创作者简介',
+    aboutCreatorText: 'GB Coder 由常驻印度孟买的软件工程师与 UI/UX 设计师 Girish Lade 独立设计并持续迭代。真诚欢迎各种技术探讨、问题反馈与合作提议。',
+    startCodingBtn: '立即开始编码',
+    noteDirectEmail: '为保障沟通效率，本平台不设自动化留言表单。所有来信均由开发者在直联邮箱或官方认证社交账号亲自阅读与回复。',
+  },
+  ru: {
+    metaTitle: 'Контакты — GB Coder | LadeStack',
+    metaDescription: 'Связаться с разработчиком GB Coder: прямая электронная почта, социальные сети, локация в Мумбаи (Индия) или запуск онлайн-студии.',
+    heroTag: 'Прямая Связь',
+    heroTitle: 'Контакты GB Coder и LadeStack',
+    heroDescription: 'Есть вопросы по работе редактора, предложения по улучшению или идеи сотрудничества? Напишите разработчику напрямую.',
+    cardDirectTitle: 'Прямые Контактные Данные',
+    emailLabel: 'Электронная почта:',
+    locationLabel: 'Локация:',
+    locationValue: 'Мумбаи, Индия',
+    socialTitle: 'Официальные Профили Разработчика',
+    aboutCreatorTitle: 'О Создателе Проекта',
+    aboutCreatorText: 'GB Coder разрабатывается и поддерживается Girish Lade — программистом и UI/UX инженером из Мумбаи (Индия). Ваши отзывы и отчеты об ошибках всегда приветствуются.',
+    startCodingBtn: 'Начать Кодить',
+    noteDirectEmail: 'Мы не используем формы обратной связи. Все сообщения принимаются напрямую на электронную почту или в социальных сетях.',
+  },
+  pt: {
+    metaTitle: 'Contato — GB Coder | LadeStack',
+    metaDescription: 'Entre em contato com o GB Coder: e-mail direto do desenvolvedor, canais sociais, localização em Mumbai, Índia, ou abra o estúdio.',
+    heroTag: 'Comunicação Direta',
+    heroTitle: 'Contato com o GB Coder & LadeStack',
+    heroDescription: 'Tem dúvidas técnicas ou sugestões de melhoria? Conecte-se diretamente com o criador por meio dos canais oficiais verificados.',
+    cardDirectTitle: 'Dados de Contato Direto',
+    emailLabel: 'Endereço de E-mail:',
+    locationLabel: 'Localização:',
+    locationValue: 'Mumbai, Índia',
+    socialTitle: 'Canais Oficiais do Desenvolvedor',
+    aboutCreatorTitle: 'Sobre o Criador',
+    aboutCreatorText: 'O GB Coder é desenvolvido e mantido por Girish Lade, programador e engenheiro de UI/UX em Mumbai, Índia. Sugestões e feedbacks são sempre bem-vindos.',
+    startCodingBtn: 'Começar a Codificar',
+    noteDirectEmail: 'Não utilizamos formulários de contato automatizados. Todas as mensagens são recebidas diretamente por e-mail ou redes sociais.',
+  },
+};
+
+export function getContactContent(lang: string): ContactTranslations {
+  return CONTACT_TRANSLATIONS[lang] || CONTACT_TRANSLATIONS.en;
+}

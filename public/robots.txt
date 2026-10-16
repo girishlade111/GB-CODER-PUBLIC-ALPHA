@@ -1,44 +1,28 @@
-# robots.txt for GB Coder
-# https://www.robotstxt.org/robotstxt.html
-# Last updated: 2025-03-05
+# robots.txt for GB Coder — LadeStack
+# https://code.ladestack.in/
+# Last updated: 2026-10-15
 
-# Allow all search engines to crawl
 User-agent: *
 Allow: /
+Allow: /app
+Allow: /features
+Allow: /docs
+Allow: /blog
+Allow: /about
+Allow: /contact
+Allow: /privacy-policy
+Allow: /terms-and-conditions
 
-# Specific rules for major search engines
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 0.5
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 0.5
-
-User-agent: Slurp
-Allow: /
-Crawl-delay: 1
-
-# Block sensitive paths
+# Disallow internal APIs and temporary preview popouts
+Disallow: /api/
+Disallow: /preview/
+Disallow: /mpreview/
+Disallow: /preview-popout
 Disallow: /node_modules/
 Disallow: /src/
-Disallow: /api/
-Disallow: /server/
 
-# Allow important assets
-Allow: /public/
-Allow: /dist/
-Allow: /*.js$
-Allow: /*.css$
-Allow: /*.png$
-Allow: /*.jpg$
-Allow: /*.jpeg$
-Allow: /*.svg$
-Allow: /*.ico$
-
-# Sitemap locations (primary and backup)
-Sitemap: https://gbcoder.com/sitemap.xml
+# Primary Sitemap Declaration
 Sitemap: https://code.ladestack.in/sitemap.xml
 
 # Host
-Host: https://gbcoder.com
+Host: https://code.ladestack.in

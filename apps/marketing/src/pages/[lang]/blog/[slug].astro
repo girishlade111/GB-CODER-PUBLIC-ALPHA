@@ -1,0 +1,21 @@
+---
+// GB Coder — Localized Blog Article Route (/[lang]/blog/[slug])
+import BlogPostPage from '../../../components/pages/BlogPostPage.astro';
+import { NON_DEFAULT_LANGUAGES } from '../../../i18n/languages';
+import { getAllArticleSlugs } from '../../../i18n/blog';
+
+export function getStaticPaths() {
+  const slugs = getAllArticleSlugs();
+  const paths: { params: { lang: string; slug: string } }[] = [];
+  for (const lang of NON_DEFAULT_LANGUAGES) {
+    for (const slug of slugs) {
+      paths.push({ params: { lang, slug } });
+    }
+  }
+  return paths;
+}
+
+const { lang, slug } = Astro.params;
+---
+
+<BlogPostPage lang={lang} slug={slug!} />

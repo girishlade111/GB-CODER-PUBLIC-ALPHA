@@ -1,0 +1,15 @@
+---
+// GB Coder — Localized Features Route (/[lang]/features)
+import FeaturesPage from '../../components/pages/FeaturesPage.astro';
+import { NON_DEFAULT_LANGUAGES } from '../../i18n/languages';
+
+export function getStaticPaths() {
+  return NON_DEFAULT_LANGUAGES.map((lang) => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+---
+
+<FeaturesPage lang={lang} />

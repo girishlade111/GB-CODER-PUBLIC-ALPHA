@@ -1,0 +1,448 @@
+---
+import Site from '../../layouts/Site.astro';
+import { getHomeContent } from '../../i18n/home';
+import { getLocalizedPath } from '../../i18n/utils';
+
+interface Props {
+  lang?: string;
+}
+
+const { lang = 'en' } = Astro.props;
+const content = getHomeContent(lang);
+
+const featuresUrl = getLocalizedPath(lang, 'features');
+const docsUrl = getLocalizedPath(lang, 'docs');
+const blogUrl = getLocalizedPath(lang, 'blog');
+---
+
+<Site
+  title={content.metaTitle}
+  description={content.metaDescription}
+  lang={lang}
+  basePath=""
+>
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-container">
+      <span class="hero-tag">{content.heroTag}</span>
+      <h1 class="hero-title">{content.heroTitle}</h1>
+      <p class="hero-description">{content.heroDescription}</p>
+
+      <div class="hero-actions">
+        <a href="/app/projects" class="cta-button cta-primary" id="heroStartBtn">
+          {content.ctaPrimary}
+        </a>
+        <a href={featuresUrl} class="cta-secondary" id="heroFeaturesBtn">
+          {content.ctaSecondary} &rarr;
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture Comparison: Static vs Advanced -->
+  <section class="arch-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>{content.architectureHeading}</h2>
+        <p>{content.architectureSub}</p>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <div class="arch-badge">Static Prototyping</div>
+          <h3>{content.staticCardTitle}</h3>
+          <p>{content.staticCardDesc}</p>
+          <div class="arch-footer">
+            <a href={`${docsUrl}#static-workflow`} class="card-link">
+              Read Static Workflow Docs &rarr;
+            </a>
+          </div>
+        </div>
+
+        <div class="arch-card highlighted">
+          <div class="arch-badge accent">Full-Stack Micro-OS</div>
+          <h3>{content.advancedCardTitle}</h3>
+          <p>{content.advancedCardDesc}</p>
+          <div class="arch-footer">
+            <a href={`${docsUrl}#webcontainer-terminal`} class="card-link">
+              Explore WebContainer Architecture &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Highlights Grid -->
+  <section class="features-highlight-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>{content.featuresHeading}</h2>
+        <p>{content.featuresSub}</p>
+      </div>
+
+      <div class="feature-grid">
+        {content.features.map((feat) => (
+          <div class="feature-card">
+            <h3>{feat.title}</h3>
+            <p>{feat.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      <div class="features-nav-link-row">
+        <a href={featuresUrl} class="view-all-features-btn">
+          View All Platform Features &amp; Technical Capabilities &rarr;
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Runtime & Browser Compatibility -->
+  <section class="runtime-section">
+    <div class="section-container">
+      <div class="runtime-box">
+        <div class="runtime-content">
+          <h2>{content.runtimeHeading}</h2>
+          <p class="runtime-sub">{content.runtimeSub}</p>
+          <p class="runtime-text">{content.runtimeP1}</p>
+          <p class="runtime-text">{content.runtimeP2}</p>
+        </div>
+        <div class="runtime-sidebar">
+          <h4>Supported Modern Browsers</h4>
+          <ul class="browser-list">
+            <li><strong>Google Chrome</strong> (v92+)</li>
+            <li><strong>Microsoft Edge</strong> (v92+)</li>
+            <li><strong>Brave Browser</strong> (Hardware-Accelerated)</li>
+            <li><strong>Mozilla Firefox</strong> (v79+ with SharedArrayBuffer)</li>
+            <li><strong>Apple Safari</strong> (Static Editor Universal Support)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final Launch CTA -->
+  <section class="final-cta-section">
+    <div class="section-container text-center">
+      <h2>{content.ctaFinalHeading}</h2>
+      <p class="cta-final-sub">{content.ctaFinalSub}</p>
+      <div class="cta-row">
+        <a href="/app/projects" class="cta-button cta-lg">
+          {content.ctaFinalBtn}
+        </a>
+      </div>
+    </div>
+  </section>
+</Site>
+
+<style>
+  .hero-section {
+    padding: 5rem 1.5rem 4rem;
+    text-align: center;
+  }
+
+  .hero-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .hero-title {
+    font-size: clamp(2.5rem, 5.5vw, 4.25rem);
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+  }
+
+  .hero-description {
+    font-size: clamp(1.05rem, 2vw, 1.25rem);
+    color: var(--text-secondary);
+    max-width: 720px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .cta-primary {
+    padding: 0.85rem 2rem;
+    font-size: 1.05rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(204, 120, 92, 0.25);
+  }
+
+  .cta-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.05rem;
+    padding: 0.85rem 1.75rem;
+    border-radius: 8px;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .cta-secondary:hover {
+    background: var(--surface);
+    border-color: var(--text-muted);
+  }
+
+  .section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+  }
+
+  .section-header h2 {
+    font-size: 2.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+  }
+
+  /* Architecture Section */
+  .arch-section {
+    padding: 4.5rem 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .arch-card {
+    background: var(--canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 2.25rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .arch-card.highlighted {
+    border-color: rgba(204, 120, 92, 0.4);
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  }
+
+  .arch-badge {
+    align-self: flex-start;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+    background: var(--border-subtle);
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+  }
+
+  .arch-badge.accent {
+    background: rgba(204, 120, 92, 0.12);
+    color: var(--accent-terracotta);
+  }
+
+  .arch-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .arch-card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    flex: 1;
+  }
+
+  .arch-footer {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .card-link {
+    color: var(--accent-terracotta);
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .card-link:hover {
+    color: var(--accent-hover);
+  }
+
+  /* Feature Highlight Grid */
+  .features-highlight-section {
+    padding: 5rem 0 4.5rem;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 2rem;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--border);
+  }
+
+  .feature-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .feature-card p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .features-nav-link-row {
+    margin-top: 2.5rem;
+    text-align: center;
+  }
+
+  .view-all-features-btn {
+    display: inline-block;
+    color: var(--accent-terracotta);
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(204, 120, 92, 0.25);
+    border-radius: 6px;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .view-all-features-btn:hover {
+    background: rgba(204, 120, 92, 0.08);
+    border-color: var(--accent-terracotta);
+  }
+
+  /* Runtime Section */
+  .runtime-section {
+    padding: 4rem 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+
+  .runtime-box {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 3rem;
+    background: var(--canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 2.5rem;
+  }
+
+  .runtime-content h2 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .runtime-sub {
+    font-weight: 500;
+    color: var(--accent-terracotta);
+    margin-bottom: 1rem;
+  }
+
+  .runtime-text {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .runtime-sidebar {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 1.5rem;
+  }
+
+  .runtime-sidebar h4 {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+  }
+
+  .browser-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  .browser-list strong {
+    color: var(--text-primary);
+  }
+
+  /* Final CTA Section */
+  .final-cta-section {
+    padding: 5rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  .final-cta-section h2 {
+    font-size: 2.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .cta-final-sub {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  .cta-lg {
+    padding: 0.9rem 2.5rem;
+    font-size: 1.1rem;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 860px) {
+    .arch-grid, .runtime-box {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+  }
+</style>

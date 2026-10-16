@@ -1,0 +1,15 @@
+---
+// GB Coder — Localized Documentation Route (/[lang]/docs)
+import DocsPage from '../../components/pages/DocsPage.astro';
+import { NON_DEFAULT_LANGUAGES } from '../../i18n/languages';
+
+export function getStaticPaths() {
+  return NON_DEFAULT_LANGUAGES.map((lang) => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+---
+
+<DocsPage lang={lang} />

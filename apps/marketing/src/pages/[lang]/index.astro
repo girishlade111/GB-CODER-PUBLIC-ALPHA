@@ -1,0 +1,16 @@
+---
+// GB Coder — Localized Homepage Route (/[lang])
+// Validates and prerenders non-default languages: es, nl, fr, ja, ko, zh, ru, pt
+import HomePage from '../../components/pages/HomePage.astro';
+import { NON_DEFAULT_LANGUAGES } from '../../i18n/languages';
+
+export function getStaticPaths() {
+  return NON_DEFAULT_LANGUAGES.map((lang) => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+---
+
+<HomePage lang={lang} />
