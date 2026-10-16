@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
-import { Play, RotateCcw, Trash2, HelpCircle } from 'lucide-react';
+import { Play, Square, RotateCcw, Trash2, HelpCircle, Plus, Columns, X, TerminalSquare } from 'lucide-react';
 import { MultiFileProject } from '../../types/files';
 import {
   ANSI,
@@ -15,6 +15,11 @@ import {
   webcontainerService,
   type StartupOwner,
 } from '../../services/webcontainer/webcontainerService';
+import {
+  terminalSessionManager,
+  type TerminalSessionSummary,
+} from '../../services/webcontainer/terminalSessionManager';
+import { devServerManager } from '../../services/webcontainer/devServerManager';
 import {
   describeWebContainerUnavailableReason,
   getWebContainerUnavailableReason,
@@ -34,9 +39,76 @@ interface TerminalTabProps {
 }
 
 const PROMPT = `${ANSI.brightGreen}gb${ANSI.reset}${ANSI.gray}:${ANSI.reset}${ANSI.brightCyan}~${ANSI.reset}${ANSI.gray}$${ANSI.reset} `;
-
 const FONT_SIZE = 13;
 const FONT_FAMILY = 'JetBrains Mono, Menlo, Consolas, "Courier New", monospace';
+
+function patchXTermDimensions(term: XTerm): void {
+  try {
+    const core = (term as unknown as {
+      _core?: {
+        viewport?: {
+          _refreshAnimationFrame?: number | null;
+          _innerRefresh?: () => void;
+          syncScrollArea?: () => void;
+        };
+        _renderService?: {
+          dimensions?: unknown;
+          _renderer?: { value?: { dimensions?: unknown } };
+        };
+      };
+    })._core;
+
+    if (core?._renderService) {
+      const renderService = core._renderService;
+      Object.defineProperty(renderService, 'dimensions', {
+        get() {
+          return (
+            this._renderer?.value?.dimensions ?? {
+              css: { cell: { width: 9, height: 17 }, canvas: { width: 0, height: 0 } },
+              device: { cell: { width: 9, height: 17 }, canvas: { width: 0, height: 0 } },
+            }
+          );
+        },
+        configurable: true,
+        enumerable: true,
+      });
+    }
+  } catch {
+    // Non-fatal safety guard
+  }
+}
+
+function safeDisposeTerminal(term: XTerm | null): void {
+  if (!term) return;
+  try {
+    const core = (term as unknown as {
+      _core?: {
+        viewport?: {
+          _refreshAnimationFrame?: number | null;
+          _innerRefresh?: () => void;
+          syncScrollArea?: () => void;
+        };
+      };
+    })._core;
+
+    if (core?.viewport) {
+      if (core.viewport._refreshAnimationFrame) {
+        window.cancelAnimationFrame(core.viewport._refreshAnimationFrame);
+        core.viewport._refreshAnimationFrame = null;
+      }
+      core.viewport._innerRefresh = () => {};
+      core.viewport.syncScrollArea = () => {};
+    }
+  } catch {
+    // Non-fatal cleanup guard
+  }
+
+  try {
+    term.dispose();
+  } catch {
+    // Non-fatal disposal guard
+  }
+}
 
 const TerminalTab: React.FC<TerminalTabProps> = ({
   project,
@@ -44,23 +116,15 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   unresolvedPackages,
   isResolvingPackages,
   isActive,
-  autoStartProject = true,
   projectId,
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const hasAutoStartedRef = useRef(false);
-  const restartDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingRestartReasonRef = useRef<string | null>(null);
-  const restartHandlerRef = useRef<(reason?: string) => void>(() => {});
-  const isShellPromptReadyRef = useRef(false);
-  const pendingAutoStartCmdRef = useRef<{
-    cmd: string;
-    owner: StartupOwner;
-    termMessage?: string;
-  } | null>(null);
-  const shellPromptWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const splitHostRef = useRef<HTMLDivElement>(null);
+  const splitTermRef = useRef<XTerm | null>(null);
+  const splitFitAddonRef = useRef<FitAddon | null>(null);
 
   /** Active execution mode */
   const [mode, setMode] = useState<TerminalExecutionMode>(() => {
@@ -69,13 +133,20 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   });
 
   const [wcState, setWcState] = useState(() => webcontainerService.getState());
-  const webcontainerStatus = wcState.status;
-  const webcontainerShellRef = useRef<{
-    write: (data: string) => void;
-    resize: (cols: number, rows: number) => void;
-    kill: () => void;
-    disconnect?: () => void;
-  } | null>(null);
+  const devServerState = useSyncExternalStore(
+    (cb) => devServerManager.subscribe(cb),
+    () => devServerManager.getState(),
+    () => devServerManager.getState(),
+  );
+
+  const sessions = useSyncExternalStore(
+    (cb) => terminalSessionManager.subscribe(cb),
+    () => terminalSessionManager.listSessions(),
+    () => terminalSessionManager.listSessions(),
+  );
+
+  const activeSessionId = terminalSessionManager.getActiveSessionId();
+  const splitSessionId = terminalSessionManager.getSplitSessionId();
 
   /** Current input line and cursor offset within it (Local mode only). */
   const lineRef = useRef('');
@@ -84,422 +155,66 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   const historyIndexRef = useRef(-1);
 
   const [termReady, setTermReady] = useState(false);
-
   const projectRef = useRef(project);
   projectRef.current = project;
   const isStartingShellRef = useRef(false);
 
-  const contextRef = useRef<LocalShellContext>({
-    project,
-    resolvedPackages,
-    unresolvedPackages,
-    isResolvingPackages,
-    history: [],
-  });
-  contextRef.current = {
-    project,
-    resolvedPackages,
-    unresolvedPackages,
-    isResolvingPackages,
-    history: historyRef.current,
-  };
-
   const isWebContainerSupported = webcontainerService.isSupported();
-
-  /**
-   * Specific reason the WebContainer option is unavailable, if it is.
-   *
-   * The option stays rendered in all cases (see the mode-switch pill below):
-   * a capability gap must never look like a missing feature. Deriving this
-   * value never boots the runtime — boot happens only in the mode effect
-   * when `mode === 'webcontainer'`, which is unreachable while unsupported
-   * because the control is disabled and the initial mode falls back to
-   * `'local'`.
-   */
   const webContainerUnavailableReason = isWebContainerSupported
     ? null
-    : getWebContainerUnavailableReason({
-        crossOriginIsolated:
-          typeof window !== 'undefined' && Boolean(window.crossOriginIsolated),
-        isSecureContext:
-          typeof window === 'undefined' ? true : Boolean(window.isSecureContext),
-        sharedArrayBufferAvailable: typeof SharedArrayBuffer !== 'undefined',
-        status: webcontainerStatus,
-      });
-  const webContainerUnavailableMessage = webContainerUnavailableReason
-    ? describeWebContainerUnavailableReason(webContainerUnavailableReason)
-    : null;
+    : getWebContainerUnavailableReason(wcState.status);
+  const webContainerUnavailableMessage = isWebContainerSupported
+    ? null
+    : describeWebContainerUnavailableReason(webContainerUnavailableReason);
 
-  const writePrompt = useCallback((term: XTerm) => {
-    term.write(`\r\n${PROMPT}`);
+  const fit = useCallback(() => {
+    try {
+      fitAddonRef.current?.fit();
+      splitFitAddonRef.current?.fit();
+    } catch {
+      // Ignore fit before render
+    }
   }, []);
 
   const redrawLine = useCallback((term: XTerm) => {
-    term.write(`\r\x1b[2K${PROMPT}${lineRef.current}`);
-    const back = lineRef.current.length - cursorRef.current;
-    if (back > 0) term.write(`\x1b[${back}D`);
+    term.write(`\r\x1b[K${PROMPT}${lineRef.current}`);
+    const offset = lineRef.current.length - cursorRef.current;
+    if (offset > 0) term.write(`\x1b[${offset}D`);
+  }, []);
+
+  const writePrompt = useCallback((term: XTerm) => {
+    term.write(PROMPT);
   }, []);
 
   const submitLocal = useCallback(
     (term: XTerm, input: string) => {
       const trimmed = input.trim();
       term.write('\r\n');
-
-      if (trimmed.length > 0) {
-        if (historyRef.current[historyRef.current.length - 1] !== trimmed) {
-          historyRef.current = [...historyRef.current, trimmed].slice(-200);
+      if (trimmed) {
+        historyRef.current.push(trimmed);
+        const ctx: LocalShellContext = {
+          project: projectRef.current,
+          resolvedPackages,
+          unresolvedPackages,
+          isResolvingPackages,
+          history: historyRef.current,
+        };
+        const result = runLocalCommand(trimmed, ctx);
+        if (result.output) {
+          term.write(`${result.output}\r\n`);
         }
       }
-
-      if (trimmed.length === 0) {
-        term.write(PROMPT);
-        return;
-      }
-
-      const result = runLocalCommand(trimmed, contextRef.current);
-
-      if (result.clear) {
-        term.clear();
-        term.write(`\x1b[2K\r${PROMPT}`);
-        return;
-      }
-
-      for (const line of result.output) term.write(`${line}\r\n`);
-      term.write(PROMPT);
+      writePrompt(term);
     },
-    [],
+    [resolvedPackages, unresolvedPackages, isResolvingPackages, writePrompt],
   );
 
-  /** Fits the grid to the container, and mirrors the size to live PTY sessions. */
-  const fit = useCallback(() => {
-    const term = termRef.current;
-    const fitAddon = fitAddonRef.current;
-    if (!term || !fitAddon || !hostRef.current) return;
-
-    try {
-      fitAddon.fit();
-      webcontainerShellRef.current?.resize(term.cols, term.rows);
-    } catch {
-      // Fit error on zero dimension container is safe to ignore
-    }
-  }, []);
-
-  /** Clears the shell prompt readiness watchdog timer. */
-  const clearShellPromptWatchdog = useCallback(() => {
-    if (shellPromptWatchdogRef.current) {
-      clearTimeout(shellPromptWatchdogRef.current);
-      shellPromptWatchdogRef.current = null;
-    }
-  }, []);
-
-  /**
-   * Dispatches a shell command once the interactive prompt (❯) is confirmed ready.
-   * If the prompt has already appeared, dispatches immediately without delay.
-   * Otherwise queues the command and arms a 15-second watchdog timer.
-   */
-  const dispatchWhenShellReady = useCallback(
-    (cmd: string, owner: StartupOwner, termMessage?: string) => {
-      const term = termRef.current;
-      const shell = webcontainerShellRef.current;
-
-      if (!webcontainerService.isStartupOwner(owner)) return;
-      const isReady = isShellPromptReadyRef.current || webcontainerService.isShellReady();
-
-      if (isReady && shell) {
-        clearShellPromptWatchdog();
-        pendingAutoStartCmdRef.current = null;
-        if (termMessage && term) {
-          term.write(termMessage);
-        }
-        webcontainerService.setDevServerStarting(true);
-        isShellPromptReadyRef.current = false;
-        if (webcontainerService.automaticCommandDispatched(owner)) shell.write(`${cmd}\n`);
-        return;
-      }
-
-      // Queue command for dispatch upon prompt detection in onData
-      pendingAutoStartCmdRef.current = { cmd, owner, termMessage };
-      clearShellPromptWatchdog();
-      shellPromptWatchdogRef.current = setTimeout(() => {
-        if (pendingAutoStartCmdRef.current && pendingAutoStartCmdRef.current.owner === owner && webcontainerService.isStartupOwner(owner)) {
-          console.warn('[WebContainer] Shell prompt readiness watchdog triggered after 15s');
-          webcontainerService.markStartupUnknown(owner);
-          pendingAutoStartCmdRef.current = null;
-        }
-      }, 15000);
-    },
-    [clearShellPromptWatchdog],
-  );
-
-  // One owner-bound dispatch path shared by initial startup and explicit restart.
-  const queueAutomaticStart = useCallback(async (proj: MultiFileProject, owner: StartupOwner, message: string) => {
-    if (!webcontainerService.isStartupOwner(owner)) return;
-    const fingerprint = webcontainerService.computeDependencyFingerprint(proj.files, proj.dependencies, proj.projectType);
-    if (webcontainerService.hasStartedProject(fingerprint) || webcontainerService.isDevServerRunning(owner.projectId || undefined)) return;
-    const check = await webcontainerService.needsDependencyInstall(proj.files, proj.dependencies, proj.projectType);
-    if (!webcontainerService.isStartupOwner(owner)) return;
-    const operation = webcontainerService.beginAutomaticStartup(fingerprint, check.needsInstall, owner);
-    if (!operation) return;
-    webcontainerService.markProjectStarted(fingerprint);
-    dispatchWhenShellReady(check.needsInstall ? 'npm install --prefer-offline && npm run dev' : 'npm run dev', operation,
-      '\r\n' + message + (check.needsInstall ? ': Installing dependencies & starting dev server...\r\n' : ': Dependencies verified; starting dev server...\r\n'));
-  }, [dispatchWhenShellReady]);
-
-  /** Spawns or reconnects WebContainer interactive PTY shell */
-  const startWebContainerShell = useCallback(async (forceRestart = false) => {
-    const term = termRef.current;
-    if (!term) return;
-
-    if (isStartingShellRef.current) {
-      if (forceRestart) {
-        pendingRestartReasonRef.current = 'Forced restart request';
-      }
-      return;
-    }
-    if (!forceRestart && webcontainerShellRef.current) {
-      return;
-    }
-
-    isStartingShellRef.current = true;
-    let startupOwner: StartupOwner | null = null;
-    try {
-      term.write(
-        `\r\n${ANSI.brightGreen}⚡ Booting WebContainer (In-Browser Node.js runtime)...${ANSI.reset}\r\n`,
-      );
-      webcontainerService.setStartupStage('booting');
-
-      const currentProj = projectRef.current;
-      const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
-      if (effectiveProjectId) {
-        webcontainerService.attachProject(effectiveProjectId);
-      }
-
-      startupOwner = webcontainerService.captureStartupOwner();
-
-      // Mount project files into virtual filesystem if files exist
-      if (currentProj.files.length > 0) {
-        const mounted = await webcontainerService.mountProject(
-          currentProj.files,
-          currentProj.dependencies,
-          currentProj.projectType,
-          effectiveProjectId,
-          webcontainerService.getSessionEpoch(),
-        );
-        if (!mounted) {
-          term.write(
-            `${ANSI.brightYellow}Mount aborted — project switched or session invalidated.${ANSI.reset}\r\n`,
-          );
-          return;
-        }
-        term.write(
-          `${ANSI.gray}Files mounted into virtual filesystem. Starting interactive shell...${ANSI.reset}\r\n`,
-        );
-      } else {
-        term.write(
-          `${ANSI.gray}Starting interactive shell...${ANSI.reset}\r\n`,
-        );
-      }
-
-      if (!webcontainerService.isStartupScope(startupOwner)) return;
-      const shellOwner = webcontainerService.captureStartupOwner();
-      startupOwner = shellOwner;
-
-      // Spawn or reconnect interactive shell
-      const shell = await webcontainerService.spawnInteractiveShell({
-        cols: term.cols || 80,
-        rows: term.rows || 24,
-        onData: (chunk) => {
-          if (!webcontainerService.isRuntimeOwner(shellOwner)) return;
-          term.write(chunk);
-
-          // 0. Shell prompt readiness detection (❯ prompt in jsh)
-          if (chunk.includes('❯') || /[$#❯]\s*$/.test(chunk)) {
-            isShellPromptReadyRef.current = true;
-            clearShellPromptWatchdog();
-
-            if (pendingAutoStartCmdRef.current) {
-              const pending = pendingAutoStartCmdRef.current;
-              pendingAutoStartCmdRef.current = null;
-
-              if (webcontainerService.isStartupOwner(pending.owner) && webcontainerService.automaticCommandDispatched(pending.owner)) {
-                if (pending.termMessage) {
-                  term.write(pending.termMessage);
-                }
-                webcontainerService.setDevServerStarting(true);
-                isShellPromptReadyRef.current = false;
-                const activeShell = webcontainerShellRef.current;
-                if (activeShell) {
-                  activeShell.write(`${pending.cmd}\n`);
-                } else {
-                  webcontainerService.writeToShell(`${pending.cmd}\n`);
-                }
-              }
-            }
-          }
-
-
-        },
-        forceRestart,
-      });
-
-      if (!webcontainerService.isStartupOwner(shellOwner)) { shell.disconnect(); return; }
-      webcontainerShellRef.current = shell;
+  // Setup WebContainer subscription
+  useEffect(() => {
+    return webcontainerService.subscribe(() => {
       setWcState(webcontainerService.getState());
-
-      // StackBlitz auto-start: install dependencies and boot dev server.
-      // Only auto-start when the project itself declares npm metadata: a
-      // manifest-less project stays idle on a ready shell (no invented
-      // package.json, no phantom install), per project-first lifecycle.
-      const projToStart = projectRef.current;
-      if (!webcontainerService.hasNpmManifest(projToStart.files)) {
-        hasAutoStartedRef.current = true;
-        term.write(
-          `${ANSI.gray}No package.json in this project — staying idle. Load an npm project or run commands manually.${ANSI.reset}\r\n`,
-        );
-      } else if (autoStartProject !== false && !hasAutoStartedRef.current && projToStart.files.length > 0) {
-        hasAutoStartedRef.current = true;
-
-        await queueAutomaticStart(projToStart, shellOwner, 'Auto-Start');
-      }
-    } catch (err) {
-      if (startupOwner && !webcontainerService.isStartupScope(startupOwner)) return;
-      clearShellPromptWatchdog();
-      pendingAutoStartCmdRef.current = null;
-      const msg = err instanceof Error ? err.message : String(err);
-      term.write(`\r\n${ANSI.red}✖ Failed to start WebContainer: ${msg}${ANSI.reset}\r\n`);
-      webcontainerService.setStartupStage('error', {
-        phase: 'boot',
-        message: msg,
-        timestamp: Date.now(),
-        recoverable: true,
-        retryAction: 'reboot_container',
-      });
-      webcontainerService.setDevServerStarting(false);
-    } finally {
-      isStartingShellRef.current = false;
-      if (pendingRestartReasonRef.current) {
-        const pendingReason = pendingRestartReasonRef.current;
-        pendingRestartReasonRef.current = null;
-        restartHandlerRef.current(pendingReason);
-      }
-    }
-  }, [autoStartProject, projectId, queueAutomaticStart, clearShellPromptWatchdog]);
-
-  /** Triggers dev server restart and dependencies installation */
-  const triggerDevServerRestart = useCallback(
-    (reason = 'Restart request') => {
-      if (webcontainerService.isAutomaticStartupBusy()) return;
-      const requestedOwner = webcontainerService.captureStartupOwner();
-      if (restartDebounceTimerRef.current) {
-        clearTimeout(restartDebounceTimerRef.current);
-      }
-
-      restartDebounceTimerRef.current = setTimeout(() => {
-        if (!webcontainerService.isStartupOwner(requestedOwner)) return;
-        const term = termRef.current;
-        const shell = webcontainerShellRef.current;
-
-        if (mode !== 'webcontainer') {
-          if (webcontainerService.isSupported()) {
-            setMode('webcontainer');
-          }
-        }
-
-        const restartEpoch = webcontainerService.getSessionEpoch();
-
-        if (shell) {
-          // Send Ctrl+C to terminate any running process (e.g. Vite or node dev server)
-          isShellPromptReadyRef.current = false;
-          clearShellPromptWatchdog();
-          pendingAutoStartCmdRef.current = null;
-          shell.write('\x03\r');
-          webcontainerService.setDevServerStarting(true);
-          const currentProj = projectRef.current;
-
-          void (async () => {
-            try {
-              // Idle means idle: a restart with no project files must not
-              // dispatch npm work. Manual shell commands still work.
-              if (currentProj.files.length === 0) {
-                if (term) {
-                  term.write(
-                    `\r\n${ANSI.brightYellow}⚡ [${reason}]: No project files loaded — staying idle. Load or create files, then restart.${ANSI.reset}\r\n`,
-                  );
-                }
-                return;
-              }
-
-              // No npm metadata, no npm work: without its own package.json the
-              // project can neither install nor serve, so restarting would only
-              // invent commands against a manifest the user never wrote.
-              if (!webcontainerService.hasNpmManifest(currentProj.files)) {
-                if (term) {
-                  term.write(
-                    `\r\n${ANSI.brightYellow}⚡ [${reason}]: No package.json in this project — staying idle. Load an npm project or run commands manually.${ANSI.reset}\r\n`,
-                  );
-                }
-                return;
-              }
-
-              const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
-              const mounted = await webcontainerService.mountProject(
-                currentProj.files,
-                currentProj.dependencies,
-                currentProj.projectType,
-                effectiveProjectId,
-                restartEpoch,
-              );
-              if (!mounted) {
-                return;
-              }
-
-              if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
-
-              await queueAutomaticStart(currentProj, webcontainerService.captureStartupOwner(), reason);
-            } catch (err) {
-              if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
-              clearShellPromptWatchdog();
-              pendingAutoStartCmdRef.current = null;
-              const msg = err instanceof Error ? err.message : String(err);
-              if (term) {
-                term.write(`\r\n${ANSI.red}✖ Failed during restart: ${msg}${ANSI.reset}\r\n`);
-              }
-              webcontainerService.setStartupStage('error', {
-                phase: 'server',
-                message: msg,
-                timestamp: Date.now(),
-                recoverable: true,
-                retryAction: 'restart_server',
-              });
-            }
-          })();
-        } else {
-          if (isStartingShellRef.current) {
-            pendingRestartReasonRef.current = reason || 'Pending restart';
-          } else {
-            hasAutoStartedRef.current = false;
-            void startWebContainerShell(true);
-          }
-        }
-      }, 150);
-    },
-    [mode, projectId, startWebContainerShell, queueAutomaticStart, clearShellPromptWatchdog],
-  );
-  restartHandlerRef.current = triggerDevServerRestart;
-
-  // Auto-start when project files hydrate from IndexedDB if not already started
-  useEffect(() => {
-    if (project.files.length > 0 && !hasAutoStartedRef.current && webcontainerShellRef.current) {
-      triggerDevServerRestart('Workspace files ready');
-    }
-  }, [project.files.length, triggerDevServerRestart]);
-
-  // Subscribe to external restart requests (e.g. new local folder loaded or user restart)
-  useEffect(() => {
-    return webcontainerService.onRestartRequest((reason) => {
-      triggerDevServerRestart(reason || 'Restarting dev server');
     });
-  }, [triggerDevServerRestart]);
+  }, []);
 
   // Attach project scope to webcontainerService
   useEffect(() => {
@@ -509,10 +224,124 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     }
   }, [projectId, (project as unknown as { id?: string }).id]);
 
-  /** Creates the terminal once, then wires input handling. */
+  /** Spawns or connects initial WebContainer interactive PTY shell without auto-running commands */
+  const initWebContainerSession = useCallback(async () => {
+    if (!isWebContainerSupported || isStartingShellRef.current) return;
+    isStartingShellRef.current = true;
+
+    try {
+      const container = await webcontainerService.boot();
+      const currentProj = projectRef.current;
+      const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
+
+      if (effectiveProjectId) {
+        webcontainerService.attachProject(effectiveProjectId);
+      }
+
+      if (currentProj.files.length > 0) {
+        await webcontainerService.mountProject(
+          currentProj.files,
+          currentProj.dependencies,
+          currentProj.projectType,
+          effectiveProjectId,
+          webcontainerService.getSessionEpoch(),
+        );
+      }
+
+      // Check if session already exists
+      let session = terminalSessionManager.getSession(terminalSessionManager.getActiveSessionId() || '');
+      if (!session) {
+        session = await terminalSessionManager.createSession(container, {
+          title: 'Terminal 1',
+          cols: termRef.current?.cols || 80,
+          rows: termRef.current?.rows || 24,
+        });
+      }
+
+      terminalSessionManager.setActiveSessionId(session.id);
+      webcontainerService.setStartupStage('runtime_ready');
+    } catch (err) {
+      console.error('[TerminalTab] Session init failed:', err);
+    } finally {
+      isStartingShellRef.current = false;
+    }
+  }, [isWebContainerSupported, projectId]);
+
+  // Stable data handler ref to avoid tearing down xterm on render
+  const onDataHandlerRef = useRef<(data: string) => void>();
+  useEffect(() => {
+    onDataHandlerRef.current = (data: string) => {
+      if (mode === 'webcontainer') {
+        const activeId = terminalSessionManager.getActiveSessionId();
+        if (activeId) {
+          terminalSessionManager.writeToSession(activeId, data);
+        }
+        return;
+      }
+
+      // Local Mode handling
+      const term = termRef.current;
+      if (!term) return;
+
+      if (data === '\u0003') {
+        term.write('^C');
+        lineRef.current = '';
+        cursorRef.current = 0;
+        historyIndexRef.current = -1;
+        writePrompt(term);
+        return;
+      }
+
+      if (data === '\u000c') {
+        term.clear();
+        term.write(`\x1b[2K\r${PROMPT}${lineRef.current}`);
+        return;
+      }
+
+      switch (data) {
+        case '\r': {
+          const input = lineRef.current;
+          lineRef.current = '';
+          cursorRef.current = 0;
+          historyIndexRef.current = -1;
+          submitLocal(term, input);
+          return;
+        }
+        case '\u007f': {
+          if (cursorRef.current === 0) return;
+          lineRef.current =
+            lineRef.current.slice(0, cursorRef.current - 1) +
+            lineRef.current.slice(cursorRef.current);
+          cursorRef.current -= 1;
+          redrawLine(term);
+          return;
+        }
+        default:
+          break;
+      }
+
+      let printable = '';
+      for (const character of data) {
+        const code = character.codePointAt(0) ?? 0;
+        if (code >= 0x20 && code !== 0x7f) printable += character;
+      }
+      if (!printable) return;
+
+      lineRef.current =
+        lineRef.current.slice(0, cursorRef.current) +
+        printable +
+        lineRef.current.slice(cursorRef.current);
+      cursorRef.current += printable.length;
+
+      if (cursorRef.current === lineRef.current.length) term.write(printable);
+      else redrawLine(term);
+    };
+  }, [mode, redrawLine, submitLocal, writePrompt]);
+
+  // Primary XTerm setup: only opens when component is active and mounted
   useEffect(() => {
     const host = hostRef.current;
-    if (!host || termRef.current) return;
+    if (!host || termRef.current || !isActive) return;
 
     const term = new XTerm({
       cursorBlink: true,
@@ -548,129 +377,135 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     term.loadAddon(fitAddon);
     fitAddonRef.current = fitAddon;
 
-    term.open(host);
-    termRef.current = term;
-    setTermReady(true);
+    try {
+      term.open(host);
+      patchXTermDimensions(term);
+      termRef.current = term;
+      setTermReady(true);
+    } catch (err) {
+      console.warn('[TerminalTab] term.open deferred:', err);
+      safeDisposeTerminal(term);
+      return;
+    }
 
     const disposable = term.onData((data: string) => {
-      // 1. WebContainer Mode: pass raw data to in-browser PTY
-      if (mode === 'webcontainer' && webcontainerShellRef.current) {
-        webcontainerShellRef.current.write(data);
-        return;
-      }
-
-      // 2. Local Mode: simulated line editor
-      if (data === '\u0003') {
-        term.write('^C');
-        lineRef.current = '';
-        cursorRef.current = 0;
-        historyIndexRef.current = -1;
-        writePrompt(term);
-        return;
-      }
-
-      if (data === '\u000c') {
-        term.clear();
-        term.write(`\x1b[2K\r${PROMPT}${lineRef.current}`);
-        return;
-      }
-
-      switch (data) {
-        case '\r': {
-          const input = lineRef.current;
-          lineRef.current = '';
-          cursorRef.current = 0;
-          historyIndexRef.current = -1;
-          submitLocal(term, input);
-          return;
-        }
-        case '\u007f': {
-          if (cursorRef.current === 0) return;
-          lineRef.current =
-            lineRef.current.slice(0, cursorRef.current - 1) +
-            lineRef.current.slice(cursorRef.current);
-          cursorRef.current -= 1;
-          redrawLine(term);
-          return;
-        }
-        case '\u001b[A': {
-          if (historyRef.current.length === 0) return;
-          historyIndexRef.current =
-            historyIndexRef.current === -1
-              ? historyRef.current.length - 1
-              : Math.max(0, historyIndexRef.current - 1);
-          lineRef.current = historyRef.current[historyIndexRef.current] ?? '';
-          cursorRef.current = lineRef.current.length;
-          redrawLine(term);
-          return;
-        }
-        case '\u001b[B': {
-          if (historyIndexRef.current === -1) return;
-          historyIndexRef.current += 1;
-          if (historyIndexRef.current >= historyRef.current.length) {
-            historyIndexRef.current = -1;
-            lineRef.current = '';
-          } else {
-            lineRef.current = historyRef.current[historyIndexRef.current] ?? '';
-          }
-          cursorRef.current = lineRef.current.length;
-          redrawLine(term);
-          return;
-        }
-        case '\u001b[C': {
-          if (cursorRef.current >= lineRef.current.length) return;
-          cursorRef.current += 1;
-          term.write('\x1b[C');
-          return;
-        }
-        case '\u001b[D': {
-          if (cursorRef.current === 0) return;
-          cursorRef.current -= 1;
-          term.write('\x1b[D');
-          return;
-        }
-        default:
-          break;
-      }
-
-      let printable = '';
-      for (const character of data) {
-        const code = character.codePointAt(0) ?? 0;
-        if (code >= 0x20 && code !== 0x7f) printable += character;
-      }
-      if (!printable) return;
-
-      lineRef.current =
-        lineRef.current.slice(0, cursorRef.current) +
-        printable +
-        lineRef.current.slice(cursorRef.current);
-      cursorRef.current += printable.length;
-
-      if (cursorRef.current === lineRef.current.length) term.write(printable);
-      else redrawLine(term);
+      onDataHandlerRef.current?.(data);
     });
+
+    // Replay active session output if available
+    const activeId = terminalSessionManager.getActiveSessionId();
+    if (activeId) {
+      const session = terminalSessionManager.getSession(activeId);
+      if (session && session.outputBuffer.length > 0) {
+        term.write(session.outputBuffer.join(''));
+      }
+    }
 
     return () => {
       disposable.dispose();
-      term.dispose();
+      safeDisposeTerminal(term);
       termRef.current = null;
       fitAddonRef.current = null;
       setTermReady(false);
-      webcontainerShellRef.current?.disconnect?.();
-      webcontainerShellRef.current = null;
-      if (restartDebounceTimerRef.current) {
-        clearTimeout(restartDebounceTimerRef.current);
-      }
-      clearShellPromptWatchdog();
     };
-  }, [mode, redrawLine, submitLocal, writePrompt, clearShellPromptWatchdog]);
+  }, [isActive]);
 
-  // Setup WebContainer subscription
+  // Connect active WebContainer session to primary term
   useEffect(() => {
-    return webcontainerService.subscribe(() => {
-      setWcState(webcontainerService.getState());
+    const term = termRef.current;
+    if (!term || mode !== 'webcontainer' || !activeSessionId || !isActive) return;
+
+    term.clear();
+    const session = terminalSessionManager.getSession(activeSessionId);
+    if (session && session.outputBuffer.length > 0) {
+      term.write(session.outputBuffer.join(''));
+    }
+    const unsub = terminalSessionManager.subscribeSession(activeSessionId, (chunk) => {
+      term.write(chunk);
     });
-  }, []);
+
+    if (fitAddonRef.current) {
+      requestAnimationFrame(() => {
+        try {
+          if (hostRef.current && hostRef.current.clientWidth > 0) {
+            fitAddonRef.current?.fit();
+            terminalSessionManager.resizeSession(activeSessionId, term.cols, term.rows);
+          }
+        } catch {
+          // Ignored
+        }
+      });
+    }
+
+    return () => {
+      unsub();
+    };
+  }, [mode, activeSessionId, isActive]);
+
+  // Split XTerm setup when splitSessionId is set and panel is active
+  useEffect(() => {
+    const splitHost = splitHostRef.current;
+    if (!splitHost || !splitSessionId || splitTermRef.current || !isActive) return;
+
+    const term = new XTerm({
+      cursorBlink: true,
+      fontSize: FONT_SIZE,
+      fontFamily: FONT_FAMILY,
+      convertEol: false,
+      scrollback: 3000,
+      theme: {
+        background: '#090a0f',
+        foreground: '#f8fafc',
+        cursor: '#818cf8',
+      },
+    });
+
+    const fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+    splitFitAddonRef.current = fitAddon;
+
+    try {
+      term.open(splitHost);
+      patchXTermDimensions(term);
+      splitTermRef.current = term;
+    } catch (err) {
+      console.warn('[TerminalTab] split term.open deferred:', err);
+      safeDisposeTerminal(term);
+      return;
+    }
+
+    const session = terminalSessionManager.getSession(splitSessionId);
+    if (session && session.outputBuffer.length > 0) {
+      term.write(session.outputBuffer.join(''));
+    }
+
+    const unsubData = terminalSessionManager.subscribeSession(splitSessionId, (chunk) => {
+      term.write(chunk);
+    });
+
+    const disposable = term.onData((data) => {
+      terminalSessionManager.writeToSession(splitSessionId, data);
+    });
+
+    requestAnimationFrame(() => {
+      try {
+        if (splitHostRef.current && splitHostRef.current.clientWidth > 0) {
+          fitAddon.fit();
+          terminalSessionManager.resizeSession(splitSessionId, term.cols, term.rows);
+        }
+      } catch {
+        // Ignored
+      }
+    });
+
+    return () => {
+      unsubData();
+      disposable.dispose();
+      safeDisposeTerminal(term);
+      splitTermRef.current = null;
+      splitFitAddonRef.current = null;
+    };
+  }, [splitSessionId, isActive]);
 
   // Mode change effect: boot WebContainer or local prompt
   useEffect(() => {
@@ -679,7 +514,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
     if (mode === 'webcontainer') {
       if (webcontainerService.isSupported()) {
-        void startWebContainerShell();
+        void initWebContainerSession();
       } else {
         term.write(
           `\r\n${ANSI.yellow}⚠ WebContainers require Cross-Origin Isolation headers. Falling back to Local mode.${ANSI.reset}\r\n`,
@@ -687,8 +522,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         setMode('local');
       }
     } else if (mode === 'local') {
-      webcontainerShellRef.current?.disconnect?.();
-      webcontainerShellRef.current = null;
       term.write(
         [
           '',
@@ -699,16 +532,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       );
       term.write(PROMPT);
     }
-  }, [mode, termReady, startWebContainerShell]);
-
-  // ResizeObserver for terminal fitting
-  useEffect(() => {
-    const host = hostRef.current;
-    if (!host) return;
-    const observer = new ResizeObserver(() => fit());
-    observer.observe(host);
-    return () => observer.disconnect();
-  }, [fit]);
+  }, [mode, termReady, initWebContainerSession]);
 
   // Refit when tab becomes active
   useEffect(() => {
@@ -723,186 +547,183 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   // Helper to send shortcut commands
   const sendCommand = useCallback(
     (cmd: string) => {
-      const term = termRef.current;
-      if (!term) return;
-
-      if (mode === 'webcontainer' && webcontainerShellRef.current) {
-        webcontainerShellRef.current.write(`${cmd}\n`);
+      if (mode === 'webcontainer') {
+        const id = activeSessionId || terminalSessionManager.getActiveSessionId();
+        if (id) {
+          terminalSessionManager.writeToSession(id, `${cmd}\n`);
+        }
       } else {
-        submitLocal(term, cmd);
+        const term = termRef.current;
+        if (term) submitLocal(term, cmd);
       }
     },
-    [mode, submitLocal],
+    [mode, activeSessionId, submitLocal],
   );
 
-  const handleQuickNpmInstall = useCallback(async () => {
-    if (mode === 'webcontainer') {
-      if (webcontainerService.isAutomaticStartupBusy()) {
-        termRef.current?.write('\r\nStartup is already active or its status is unknown. Inspect the terminal before retrying.\r\n');
-        return;
-      }
-      const currentProj = projectRef.current;
-      const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
-      const mounted = await webcontainerService.mountProject(
-        currentProj.files,
-        currentProj.dependencies,
-        currentProj.projectType,
-        effectiveProjectId,
-        webcontainerService.getSessionEpoch(),
-      );
-      if (!mounted) {
-        return;
-      }
-      if (!webcontainerShellRef.current) {
-        await startWebContainerShell();
-      }
-      // Stale transition guard: ensure active project did not change while shell was starting
-      const activeProjId = webcontainerService.getActiveProjectId();
-      if (effectiveProjectId && activeProjId && effectiveProjectId !== activeProjId) {
-        console.warn(
-          `[TerminalTab] Aborted quick npm install: project changed during shell startup (target "${effectiveProjectId}", now "${activeProjId}")`,
-        );
-        return;
-      }
-      sendCommand('npm install --prefer-offline --legacy-peer-deps');
-    } else {
-      sendCommand('npm install --prefer-offline --legacy-peer-deps');
-    }
-  }, [mode, projectId, startWebContainerShell, sendCommand]);
-
-  const clearTerminal = () => {
-    termRef.current?.clear();
-    if (mode === 'local' && termRef.current) {
-      termRef.current.write(`\x1b[2K\r${PROMPT}`);
+  const handleNewTerminal = async () => {
+    try {
+      const container = await webcontainerService.boot();
+      const newSession = await terminalSessionManager.createSession(container, {
+        cols: termRef.current?.cols || 80,
+        rows: termRef.current?.rows || 24,
+      });
+      terminalSessionManager.setActiveSessionId(newSession.id);
+    } catch (err) {
+      console.error('[TerminalTab] Failed to create terminal session:', err);
     }
   };
 
+  const handleToggleSplit = async () => {
+    if (splitSessionId) {
+      terminalSessionManager.setSplitSessionId(null);
+    } else {
+      try {
+        const container = await webcontainerService.boot();
+        const otherSessions = sessions.filter((s) => s.id !== activeSessionId);
+        if (otherSessions.length > 0) {
+          terminalSessionManager.setSplitSessionId(otherSessions[0].id);
+        } else {
+          const split = await terminalSessionManager.createSession(container, {
+            title: `Terminal ${sessions.length + 1} (Split)`,
+          });
+          terminalSessionManager.setSplitSessionId(split.id);
+        }
+      } catch (err) {
+        console.error('[TerminalTab] Failed to toggle split terminal:', err);
+      }
+    }
+    requestAnimationFrame(fit);
+  };
+
+  const clearTerminal = () => {
+    if (activeSessionId) {
+      terminalSessionManager.clearSession(activeSessionId);
+    }
+    termRef.current?.clear();
+  };
+
   return (
-    <div className="flex flex-col h-full min-h-0 bg-product">
-      {/* Enhanced StackBlitz Header Bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-stroke-dark bg-product-soft flex-shrink-0">
-        <div className="flex items-center gap-3">
-          {/* Status Indicator */}
-          <div className="flex items-center gap-1.5">
+    <div className="flex flex-col h-full min-h-0 bg-[#0d0f17] text-slate-300">
+      {/* Multi-Terminal Header Bar */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#1e2235] bg-[#090a0f] flex-shrink-0 select-none">
+        <div className="flex items-center gap-2 overflow-x-auto min-w-0">
+          {/* Mode Badge */}
+          <div className="flex items-center gap-1.5 mr-2 shrink-0">
             <span
               className={`w-2 h-2 rounded-full ${
                 mode === 'webcontainer'
-                  ? wcState.startupStage === 'error'
-                    ? 'bg-rose-500 animate-pulse'
-                    : wcState.startupStage === 'ready'
+                  ? devServerState.status === 'running'
                     ? 'bg-emerald-400 animate-pulse'
-                    : wcState.startupStage === 'installing' || wcState.startupStage === 'mounting_files' || wcState.startupStage === 'booting'
-                    ? 'bg-cyan-400 animate-pulse'
-                    : wcState.startupStage === 'starting_server'
+                    : devServerState.status === 'starting'
                     ? 'bg-amber-400 animate-pulse'
-                    : webcontainerStatus === 'running'
-                    ? 'bg-emerald-400 animate-pulse'
-                    : 'bg-amber-400 animate-pulse'
-                  : 'bg-gray-400'
+                    : 'bg-cyan-400'
+                  : 'bg-slate-400'
               }`}
               aria-hidden="true"
             />
-            <span className="text-xs font-semibold text-content-on-dark flex items-center gap-1">
-              {mode === 'webcontainer' && (
-                wcState.startupStage === 'error'
-                  ? `✖ ${wcState.runtimeError?.phase === 'install' ? 'Install Failed' : wcState.runtimeError?.phase === 'server' ? 'Server Failed' : 'Runtime Error'}`
-                  : wcState.startupStage === 'ready'
-                  ? `⚡ Ready (:${wcState.serverPort ?? 5173})`
-                  : wcState.startupStage === 'installing'
-                  ? '⚡ Installing Dependencies...'
-                  : wcState.startupStage === 'starting_server'
-                  ? '⚡ Starting Dev Server...'
-                  : wcState.startupStage === 'mounting_files'
-                  ? '⚡ Mounting Files...'
-                  : wcState.startupStage === 'booting'
-                  ? '⚡ Booting Runtime...'
-                  : '⚡ WebContainer'
-              )}
-              {mode === 'local' && '💻 Local Simulated Shell'}
+            <span className="text-xs font-semibold text-white flex items-center gap-1">
+              {mode === 'webcontainer' ? 'WebContainer' : 'Local Shell'}
             </span>
           </div>
 
-          {/* Mode Switcher Pill — the WebContainer option stays visible even
-              when unsupported so a capability gap never looks like a missing
-              feature. Disabled state carries the specific reason as a tooltip
-              and via aria; it cannot be activated while disabled. */}
-          <div className="flex items-center bg-product border border-stroke-dark rounded-md p-0.5 text-[10px]">
-            <button
-              onClick={() => setMode('webcontainer')}
-              disabled={!isWebContainerSupported}
-              aria-disabled={!isWebContainerSupported}
-              className={`px-2 py-0.5 rounded font-medium transition-colors ${
-                mode === 'webcontainer'
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'text-content-on-dark-soft hover:text-white'
-              }${isWebContainerSupported ? '' : ' opacity-50 cursor-not-allowed'}`}
-              title={
-                isWebContainerSupported
-                  ? 'Zero-cost in-browser Node.js runtime powered by WebAssembly'
-                  : (webContainerUnavailableMessage ?? 'WebContainer unavailable')
-              }
-            >
-              WebContainer
-            </button>
-            <button
-              onClick={() => setMode('local')}
-              className={`px-2 py-0.5 rounded font-medium transition-colors ${
-                mode === 'local'
-                  ? 'bg-neutral-700 text-white shadow-sm'
-                  : 'text-content-on-dark-soft hover:text-white'
-              }`}
-              title="Built-in simulated lightweight shell"
-            >
-              Local
-            </button>
-          </div>
+          {/* Session Tabs */}
+          {mode === 'webcontainer' && (
+            <div className="flex items-center gap-1 min-w-0">
+              {sessions.map((s, idx) => (
+                <button
+                  key={s.id}
+                  onClick={() => terminalSessionManager.setActiveSessionId(s.id)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border transition-colors shrink-0 ${
+                    activeSessionId === s.id
+                      ? 'bg-[#1e2235] text-cyan-300 border-cyan-500/40 shadow-sm'
+                      : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-white/5'
+                  }`}
+                  data-testid={`terminal-session-tab-${s.id}`}
+                >
+                  <TerminalSquare className="h-3 w-3 text-cyan-400" />
+                  <span className="truncate max-w-[120px]">{s.title || `Terminal ${idx + 1}`}</span>
+                  {sessions.length > 1 && (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        terminalSessionManager.closeSession(s.id);
+                      }}
+                      className="ml-0.5 hover:text-rose-400 rounded p-0.5"
+                      title="Close terminal session"
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </span>
+                  )}
+                </button>
+              ))}
+
+              <button
+                onClick={() => void handleNewTerminal()}
+                className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                title="Create New Terminal Session (+)"
+                data-testid="terminal-new-session-btn"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+
+              <button
+                onClick={() => void handleToggleSplit()}
+                className={`p-1 rounded transition-colors ${
+                  splitSessionId
+                    ? 'bg-cyan-950/60 text-cyan-300 border border-cyan-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-white/10'
+                }`}
+                title={splitSessionId ? 'Close Split View' : 'Split Terminal Side-by-Side'}
+                data-testid="terminal-split-view-btn"
+              >
+                <Columns className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Quick Dev Action Buttons */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
           {mode === 'webcontainer' && (
             <>
-              {wcState.startupStage === 'error' && (
-                <button
-                  onClick={() => triggerDevServerRestart('Error Recovery Retry')}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 text-rose-200 transition-colors"
-                  title={wcState.runtimeError?.message || 'Retry operation'}
-                  data-testid="terminal-retry-error-btn"
-                >
-                  <RotateCcw className="h-2.5 w-2.5 text-rose-400" />
-                  Retry
-                </button>
-              )}
               <button
-                onClick={() => void handleQuickNpmInstall()}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-product hover:bg-product-active text-content-on-dark border border-stroke-dark transition-colors"
-                title="Run 'npm install' in WebContainer"
+                onClick={() => sendCommand('npm install --prefer-offline')}
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-[#161926] hover:bg-[#222638] text-slate-200 border border-[#2a2f45] transition-colors"
+                title="Run 'npm install' in active terminal"
+                data-testid="terminal-quick-install-btn"
               >
                 <Play className="h-2.5 w-2.5 text-emerald-400" />
-                npm i
+                npm install
               </button>
-              <button
-                onClick={() => sendCommand('npm run dev')}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-accent/20 hover:bg-accent/30 text-accent-light border border-accent/30 transition-colors"
-                title="Run 'npm run dev' to start live server"
-              >
-                <Play className="h-2.5 w-2.5 text-accent" />
-                npm run dev
-              </button>
-              <button
-                onClick={() => triggerDevServerRestart('Terminal Restart')}
-                className="p-1 rounded text-content-on-dark-soft hover:text-content-on-dark hover:bg-product"
-                title="Restart Environment & Dev Server"
-              >
-                <RotateCcw className="h-3 w-3" />
-              </button>
+
+              {devServerState.status === 'running' ? (
+                <button
+                  onClick={() => void devServerManager.stop()}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-500/30 transition-colors"
+                  title="Stop Development Server"
+                  data-testid="terminal-stop-server-btn"
+                >
+                  <Square className="h-2.5 w-2.5 text-rose-400" />
+                  Stop Server
+                </button>
+              ) : (
+                <button
+                  onClick={() => void devServerManager.start('npm run dev', activeSessionId || undefined)}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/30 transition-colors"
+                  title="Run 'npm run dev' to start development server"
+                  data-testid="terminal-start-server-btn"
+                >
+                  <Play className="h-2.5 w-2.5 text-cyan-400" />
+                  npm run dev
+                </button>
+              )}
             </>
           )}
 
           <button
             onClick={() => sendCommand('help')}
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-product hover:bg-product-active text-content-on-dark border border-stroke-dark transition-colors"
-            title="Display commands help cheat sheet (Runs 'help' command)"
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-[#161926] hover:bg-[#222638] text-slate-300 border border-[#2a2f45] transition-colors"
+            title="Display commands help cheat sheet"
           >
             <HelpCircle className="h-2.5 w-2.5 text-cyan-400" />
             help
@@ -910,16 +731,35 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
           <button
             onClick={clearTerminal}
-            className="p-1 rounded text-content-on-dark-soft hover:text-content-on-dark hover:bg-product"
+            className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
             title="Clear Terminal (Ctrl+L)"
+            data-testid="terminal-clear-btn"
           >
             <Trash2 className="h-3 w-3" />
           </button>
         </div>
       </div>
 
-      {/* xterm Container */}
-      <div ref={hostRef} className="flex-1 min-h-0 overflow-hidden px-2 py-1" />
+      {/* Terminal Viewport(s) */}
+      <div className="flex-1 min-h-0 flex overflow-hidden">
+        {/* Primary Terminal */}
+        <div
+          ref={hostRef}
+          className={`h-full min-h-0 overflow-hidden px-2 py-1 ${
+            splitSessionId ? 'w-1/2 border-r border-[#1e2235]' : 'w-full'
+          }`}
+          data-testid="terminal-primary-viewport"
+        />
+
+        {/* Split Terminal Pane */}
+        {splitSessionId && (
+          <div
+            ref={splitHostRef}
+            className="w-1/2 h-full min-h-0 overflow-hidden px-2 py-1 bg-[#090a0f]"
+            data-testid="terminal-split-viewport"
+          />
+        )}
+      </div>
     </div>
   );
 };

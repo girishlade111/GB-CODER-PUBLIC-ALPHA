@@ -13,6 +13,9 @@ import { webcontainerPerf } from './webcontainerPerf';
 import { StartupDiagnostics } from './startupDiagnostics';
 import { StartupOutputParser } from './startupOutput';
 import { FileSyncCoordinator, type FlushResult } from './fileSyncCoordinator';
+import { webcontainerWatcher } from './webcontainerWatcher';
+import { devServerManager } from './devServerManager';
+import { terminalSessionManager, type TerminalSessionSummary } from './terminalSessionManager';
 export { FileSyncCoordinator, type FlushResult };
 
 /**
@@ -704,6 +707,8 @@ class WebContainerManager {
     const pendingBoot = this.bootPromise ?? shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__;
     this.cleanupServerListeners();
     this.terminateShell();
+    terminalSessionManager.teardownAll();
+    webcontainerWatcher.stop();
     this.shellSpawnPromise = null;
     this.instance = null;
     this.bootPromise = null;
@@ -1079,6 +1084,7 @@ class WebContainerManager {
         error: null,
         runtimeError: null,
       });
+      devServerManager.handleServerReady(port, url);
       webcontainerPerf.recordTiming('server_ready', 0, {
         port,
         url,
@@ -1180,6 +1186,7 @@ class WebContainerManager {
             startupStage: nextServer ? 'ready' : 'idle',
             previewStatus: nextServer ? 'loading' : 'idle',
           });
+          devServerManager.handlePortClose(port);
         } else {
           this.updateState({ activeServers: updated });
         }
@@ -1441,6 +1448,12 @@ class WebContainerManager {
       this.diagnostics.record(diagnosticAttempt, 'mount', 'succeeded', {
         durationMs: Date.now() - mountStarted,
       });
+      this.updateState({
+        startupStage: 'runtime_ready',
+        status: 'ready',
+        error: null,
+        runtimeError: null,
+      });
       return true;
     } catch (err) {
       if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) return false;
@@ -1643,6 +1656,7 @@ class WebContainerManager {
     content: string,
     projectId?: string,
   ): Promise<void> {
+    webcontainerWatcher.markInternallySynced(path);
     this.fileSyncCoordinator.queueSync(
       path,
       content,
@@ -2103,6 +2117,45 @@ class WebContainerManager {
 
     const exitCode = await process.exit;
     return { exitCode };
+  }
+
+  /** Multi-terminal session management */
+  public async createTerminalSession(options?: {
+    title?: string;
+    cols?: number;
+    rows?: number;
+    onData?: (data: string) => void;
+  }) {
+    const container = await this.boot();
+    return terminalSessionManager.createSession(container, options);
+  }
+
+  public getTerminalSession(id: string) {
+    return terminalSessionManager.getSession(id);
+  }
+
+  public listTerminalSessions(): TerminalSessionSummary[] {
+    return terminalSessionManager.listSessions();
+  }
+
+  public closeTerminalSession(id: string): void {
+    terminalSessionManager.closeSession(id);
+  }
+
+  public writeToTerminalSession(id: string, data: string): boolean {
+    return terminalSessionManager.writeToSession(id, data);
+  }
+
+  public resizeTerminalSession(id: string, cols: number, rows: number): void {
+    terminalSessionManager.resizeSession(id, cols, rows);
+  }
+
+  public onTerminalSessionData(id: string, onData: (chunk: string) => void): () => void {
+    return terminalSessionManager.subscribeSession(id, onData);
+  }
+
+  public subscribeTerminalSessions(listener: () => void): () => void {
+    return terminalSessionManager.subscribe(listener);
   }
 }
 

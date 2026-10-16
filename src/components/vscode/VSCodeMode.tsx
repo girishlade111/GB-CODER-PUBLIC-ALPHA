@@ -70,6 +70,9 @@ import {
   writeViewState,
 } from '../../services/vscodeWorkspaceStore';
 import { webcontainerService } from '../../services/webcontainer/webcontainerService';
+import { webcontainerWatcher } from '../../services/webcontainer/webcontainerWatcher';
+import { terminalSessionManager } from '../../services/webcontainer/terminalSessionManager';
+import { devServerManager } from '../../services/webcontainer/devServerManager';
 import { ataService } from '../../services/ata/ataService';
 import { livePreviewChannel } from '../../services/preview/livePreviewChannel';
 import { previewReloadService } from '../../services/preview/previewReloadService';
@@ -445,12 +448,82 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     });
   }, [persistSignal, activeProjectId, project.files]);
 
-  // Flush any pending debounced writes when leaving the mode
+  // Auto-boot WebContainer and mount project workspace on IDE load
   useEffect(() => {
+    let isCancelled = false;
+    const effectiveProjectId = activeProjectId || project.id || 'default-project';
+
+    const bootAndMount = async () => {
+      try {
+        webcontainerService.attachProject(effectiveProjectId);
+        const container = await webcontainerService.boot();
+        if (isCancelled) return;
+
+        if (project.files.length > 0) {
+          await webcontainerService.mountProject(
+            project.files,
+            project.dependencies,
+            project.projectType,
+            effectiveProjectId,
+          );
+        }
+
+        if (isCancelled) return;
+
+        // Initialize bidirectional filesystem watcher
+        webcontainerWatcher.start(container, {
+          onFileCreate: (filePath, content) => {
+            if (isCancelled) return;
+            const existing = project.files.find((f) => f.path === filePath);
+            if (!existing) {
+              onCreateFile?.(filePath, content);
+            } else {
+              onChangeFile(filePath, content);
+            }
+          },
+          onFileChange: (filePath, content) => {
+            if (isCancelled) return;
+            if (dirtyPathsMirrorRef.current.has(filePath)) {
+              console.warn(`[WebContainerWatcher] Skipping sync for dirty editor buffer: ${filePath}`);
+              return;
+            }
+            onChangeFile(filePath, content);
+          },
+          onFileDelete: (filePath) => {
+            if (isCancelled) return;
+            onDeleteFile?.(filePath);
+          },
+          isEditorDirty: (filePath) => dirtyPathsMirrorRef.current.has(filePath),
+        });
+      } catch (err) {
+        console.warn('[VSCodeMode] WebContainer auto-boot or workspace mount error:', err);
+      }
+    };
+
+    void bootAndMount();
+
     return () => {
+      isCancelled = true;
+      webcontainerWatcher.stop();
       void webcontainerService.flushFileSync();
     };
-  }, []);
+  }, [activeProjectId]);
+
+  // Mount files when hydrated if not yet mounted
+  const mountedFilesCountRef = useRef(0);
+  useEffect(() => {
+    const effectiveProjectId = activeProjectId || project.id || 'default-project';
+    if (project.files.length > 0 && mountedFilesCountRef.current === 0) {
+      mountedFilesCountRef.current = project.files.length;
+      webcontainerService.attachProject(effectiveProjectId);
+      void webcontainerService.mountProject(
+        project.files,
+        project.dependencies,
+        project.projectType,
+        effectiveProjectId,
+      );
+    }
+  }, [project.files, project.dependencies, project.projectType, activeProjectId, project.id]);
 
   const openFile = useCallback((path: string) => {
     setOpenPaths((current) => {
@@ -1259,7 +1332,32 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
    */
   const hasFiles = project.files.length > 0;
 
-  const handleRestartDevServer = useCallback(() => {
+  const handleStartDevServer = useCallback(async () => {
+    if (!hasFiles) {
+      toast('Nothing to serve — load or create project files first.');
+      return;
+    }
+    openTerminal();
+    toast.success('Starting development server...');
+    const started = await devServerManager.start('npm run dev');
+    if (!started) {
+      toast.error('Dev server is already starting or running.');
+    }
+  }, [hasFiles, openTerminal]);
+
+  const handleInstallDependencies = useCallback(async () => {
+    if (!hasFiles) {
+      toast('Nothing to install — load or create project files first.');
+      return;
+    }
+    openTerminal();
+    toast.success('Running npm install...');
+    const container = await webcontainerService.boot();
+    const session = await terminalSessionManager.getOrCreateSession(container);
+    terminalSessionManager.writeToSession(session.id, 'npm install\r');
+  }, [hasFiles, openTerminal]);
+
+  const handleRestartDevServer = useCallback(async () => {
     // Idle means idle: restarting with no project loaded must not invent
     // npm work. The user asked for a restart, not for a project.
     if (!hasFiles) {
@@ -1273,9 +1371,33 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       return;
     }
     openTerminal();
-    toast.success('Restarting WebContainer environment...');
-    webcontainerService.requestRestart('Restart Dev Server');
+    toast.success('Restarting development server...');
+    await devServerManager.restart('npm run dev');
   }, [openTerminal, hasFiles, project.files]);
+
+  const handleNewTerminal = useCallback(() => {
+    openTerminal();
+    void webcontainerService.createTerminalSession();
+  }, [openTerminal]);
+
+  const handleToggleSplitTerminal = useCallback(() => {
+    openTerminal();
+    const splitId = terminalSessionManager.getSplitSessionId();
+    if (splitId) {
+      terminalSessionManager.setSplitSessionId(null);
+    } else {
+      const sessions = terminalSessionManager.listSessions();
+      const activeId = terminalSessionManager.getActiveSessionId();
+      const other = sessions.find((s) => s.id !== activeId);
+      if (other) {
+        terminalSessionManager.setSplitSessionId(other.id);
+      } else {
+        void webcontainerService.createTerminalSession().then((session) => {
+          terminalSessionManager.setSplitSessionId(session.id);
+        });
+      }
+    }
+  }, [openTerminal]);
 
   return (
     // h-full inside App's h-screen wrapper; overflow-hidden forbids page scroll.
@@ -2117,11 +2239,12 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
                 {/* Right toolbar controls matching StackBlitz Screenshot 2 & 3: +, Split, Clear, Maximize, Close */}
                 <div className="flex items-center gap-0.5">
-                  <Tooltip label="New Terminal / Restart" side="top">
+                  <Tooltip label="New Terminal" side="top">
                     <button
                       type="button"
-                      onClick={() => handleRestartDevServer()}
+                      onClick={handleNewTerminal}
                       className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                      data-testid="terminal-new-btn"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
@@ -2130,8 +2253,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   <Tooltip label="Split Terminal" side="top">
                     <button
                       type="button"
-                      onClick={() => toast('Split terminal ready', { icon: '⚡' })}
+                      onClick={handleToggleSplitTerminal}
                       className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                      data-testid="terminal-split-btn"
                     >
                       <Columns className="h-3 w-3" />
                     </button>
@@ -2488,6 +2612,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 serverPort={webcontainer.serverPort}
                 runtimeError={webcontainer.runtimeError}
                 onOpenTerminal={openTerminal}
+                onStartDevServer={handleStartDevServer}
+                onInstallDependencies={handleInstallDependencies}
                 onRestart={() => void handleRestartDevServer()}
                 onRetryInstall={() => {
                   openTerminal();

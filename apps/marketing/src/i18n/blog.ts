@@ -1147,7 +1147,7 @@ const num = ref(0);
           },
           {
             heading: '3. 在 xterm.js 终端中自由执行命令',
-            body: '使用快捷键 Ctrl+\` 随时呼出集成终端，支持执行 npm install 安装流行三方库，启动 Vite 热更新服务，或运行自定义 npm 脚本。',
+            body: '使用快捷键 Ctrl+` 随时呼出集成终端，支持执行 npm install 安装流行三方库，启动 Vite 热更新服务，或运行自定义 npm 脚本。',
           },
         ],
         relatedDocsLink: '/docs#react-vue',

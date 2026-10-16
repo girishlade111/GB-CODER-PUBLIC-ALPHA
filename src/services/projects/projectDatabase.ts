@@ -636,7 +636,12 @@ export const validateProjectName = (
   if (trimmed.length > 100) {
     return { valid: false, error: 'Project name must be 100 characters or fewer.' };
   }
-  if (/[\x00-\x1F\x7F]/.test(trimmed)) {
+  // Check for ASCII control characters (C0 control codes 0x00-0x1F and 0x7F DEL) without no-control-regex lint error
+  const hasControlChar = Array.from(trimmed).some((c) => {
+    const code = c.charCodeAt(0);
+    return (code >= 0 && code <= 31) || code === 127;
+  });
+  if (hasControlChar) {
     return { valid: false, error: 'Project name contains invalid control characters.' };
   }
   const isDuplicate = existingProjects.some(

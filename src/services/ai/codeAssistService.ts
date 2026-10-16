@@ -345,27 +345,54 @@ class CodeAssistService {
           reasoningOutput = `Code Assist evaluated the workspace and produced the following implementation guidance.`;
         }
       } else {
-        // Fallback simulation / intelligent mock response when backend API key is missing or offline.
-        //
-        // This branch used to parse the error body into `errJson` and derive an
-        // `isOffline` flag from it, then use neither. Both are gone: the response is
-        // already known to be non-OK here, and nothing downstream consulted the
-        // parsed body, so leaving the `json()` call in place only cost a promise and
-        // a token of confusion about what this path decides.
+        let errorDetails = `AI service returned error HTTP ${response.status}.`;
+        try {
+          const errBody = await response.json();
+          if (errBody?.error) {
+            errorDetails = typeof errBody.error === 'string' ? errBody.error : JSON.stringify(errBody.error);
+          } else if (errBody?.message) {
+            errorDetails = errBody.message;
+          }
+        } catch {
+          // Response body was not JSON
+        }
 
-        reasoningOutput = `The user wants to implement: "${prompt}".\n\n1. Analyze current workspace files (${project.files.length} files detected).\n2. Construct modular components, state management and modern styles.\n3. Verify compatibility with WebContainer runtime.`;
+        const classifiedError =
+          response.status === 401 || response.status === 403
+            ? `Authentication Error (${response.status}): The AI backend API key is invalid or unconfigured.`
+            : response.status === 429
+            ? `Rate Limit Exceeded (${response.status}): The AI provider rate limit was reached. Please wait a moment and try again.`
+            : `AI Service Error (${response.status}): ${errorDetails}`;
 
-        assistantText = `Here is the solution for: **${prompt}**\n\nI have generated the necessary code updates for your fullstack application. All components have been structured with best practices and TypeScript support.\n\n### Changes applied:\n1. Configured core application logic\n2. Enhanced UI with responsive styles\n3. Integrated reactive state management`;
+        const errorMsg: CodeAssistMessage = {
+          id: `msg-${Date.now() + 1}`,
+          role: 'assistant',
+          content: `⚠️ **AI Request Failed**\n\n${classifiedError}\n\nPlease check your configuration and try again.`,
+          timestamp: Date.now(),
+          reasoning: `API request to /api/ai failed with status ${response.status}. Silent mock fallback is disabled.`,
+        };
 
-        // Generate a sample enhancement on active file or App.tsx
-        const targetPath = project.files.find((f) => /(^|\/)(App|main)\.(tsx|jsx|js|ts)$/.test(f.path))?.path || project.files[0]?.path || 'src/App.tsx';
-        const existingContent = project.files.find((f) => f.path === targetPath)?.content || '';
-        
-        generatedFiles.push({
-          path: targetPath,
-          action: 'modified',
-          content: existingContent || `// Generated for: ${prompt}\nexport default function App() {\n  return (\n    <div className="p-8 text-center">\n      <h1 className="text-3xl font-bold">${prompt}</h1>\n      <p className="mt-2 text-slate-500">Built with Code Assist</p>\n    </div>\n  );\n}\n`,
+        const finalizedSessions = this.state.sessions.map((s) => {
+          if (s.id === sessionId) {
+            return {
+              ...s,
+              messages: [...s.messages, errorMsg],
+            };
+          }
+          return s;
         });
+
+        this.state = {
+          ...this.state,
+          sessions: finalizedSessions,
+          isGenerating: false,
+          generatingSessionId: null,
+          progressStep: 'Error occurred',
+          currentReasoning: '',
+        };
+        this.persistSessions();
+        this.notify();
+        return;
       }
 
       // Automatically apply files if callback provided

@@ -1250,7 +1250,7 @@ node -v`,
         subsections: [
           {
             title: '经典 VS Code 键盘快捷键',
-            content: '支持 Ctrl+S (保存)、Ctrl+P (快速文件跳转)、Ctrl+F (局部查找替换) 以及 Ctrl+\` (展开/收起终端)。',
+            content: '支持 Ctrl+S (保存)、Ctrl+P (快速文件跳转)、Ctrl+F (局部查找替换) 以及 Ctrl+` (展开/收起终端)。',
           },
           {
             title: '跨文件全局文本检索',

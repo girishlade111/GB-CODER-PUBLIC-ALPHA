@@ -6,6 +6,8 @@ import {
   TerminalSquare,
   RotateCcw,
   AlertCircle,
+  Play,
+  Download,
 } from 'lucide-react';
 import {
   ProjectStartupStage,
@@ -19,6 +21,8 @@ interface StackBlitzStartupLoaderProps {
   onOpenTerminal?: () => void;
   onRestart?: () => void;
   onRetryInstall?: () => void;
+  onStartDevServer?: () => void;
+  onInstallDependencies?: () => void;
   operationPending?: boolean;
 }
 
@@ -29,10 +33,13 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
   onOpenTerminal,
   onRestart,
   onRetryInstall,
+  onStartDevServer,
+  onInstallDependencies,
   operationPending = false,
 }) => {
   const isBooting = stage === 'booting';
   const isMounting = stage === 'mounting_files';
+  const isRuntimeReady = stage === 'runtime_ready';
   const isInstalling = stage === 'installing';
   const isStarting = stage === 'starting_server';
   const isReady = stage === 'ready';
@@ -119,6 +126,8 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           ? 'Mounting Project Files'
           : isBooting
           ? 'Starting WebContainer'
+          : isRuntimeReady
+          ? 'Runtime Environment Ready'
           : 'Development Environment Idle'}
       </h2>
 
@@ -137,6 +146,8 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           ? 'Syncing source files to virtual filesystem...'
           : isBooting
           ? 'Initializing the browser-based development environment...'
+          : isRuntimeReady
+          ? 'WebContainer runtime is ready and project workspace is mounted. Start the dev server when ready.'
           : 'Environment is idle. Ready to initialize.'}
       </p>
 
@@ -247,6 +258,30 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
 
       {/* Action buttons */}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+        {onStartDevServer && !isReady && !isStarting && !isInstalling && (
+          <button
+            type="button"
+            onClick={onStartDevServer}
+            disabled={operationPending || isBooting || isMounting}
+            className="flex items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-cyan-600/30 px-3.5 py-1.5 text-xs font-semibold text-cyan-200 shadow-md transition hover:bg-cyan-600/50 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            data-testid="loader-start-server-btn"
+          >
+            <Play className="h-3.5 w-3.5 text-cyan-300 fill-current" />
+            Start Dev Server
+          </button>
+        )}
+        {onInstallDependencies && !isReady && !isStarting && !isInstalling && (
+          <button
+            type="button"
+            onClick={onInstallDependencies}
+            disabled={operationPending || isBooting || isMounting}
+            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1e2030] px-3 py-1.5 text-xs font-medium text-slate-300 shadow-sm transition hover:bg-[#282a3f] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            data-testid="loader-install-deps-btn"
+          >
+            <Download className="h-3.5 w-3.5 text-slate-300" />
+            Install Dependencies
+          </button>
+        )}
         {onRetryInstall && isError && errorPhase === 'install' && (
           <button
             type="button"
