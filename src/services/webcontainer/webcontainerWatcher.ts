@@ -53,6 +53,7 @@ export class WebContainerWatcher {
   private pendingChanges = new Map<string, 'change' | 'delete'>();
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private internallySyncedPaths = new Map<string, number>();
+  private internallySyncedContents = new Map<string, string>();
   private currentProjectId: string | null = null;
   private isDisposed = false;
 
@@ -88,6 +89,7 @@ export class WebContainerWatcher {
       this.debounceTimer = null;
     }
     this.pendingChanges.clear();
+    this.internallySyncedContents.clear();
     if (this.watcher) {
       try {
         this.watcher.close();
@@ -104,9 +106,12 @@ export class WebContainerWatcher {
    * Registers a path that was written by the IDE (Monaco or FileExplorer)
    * so that the watcher ignores the immediate file-system echo event.
    */
-  public markInternallySynced(path: string): void {
+  public markInternallySynced(path: string, content?: string): void {
     const clean = path.replace(/\\/g, '/').replace(/^\/+/, '');
-    this.internallySyncedPaths.set(clean, Date.now() + 1500);
+    if (content !== undefined) {
+      this.internallySyncedContents.set(clean, content);
+    }
+    this.internallySyncedPaths.set(clean, Date.now() + 2500);
   }
 
   public isPathInternallySynced(path: string): boolean {
@@ -128,15 +133,6 @@ export class WebContainerWatcher {
 
   public handleRawFSEvent(event: 'rename' | 'change', path: string): void {
     if (this.isIgnored(path)) return;
-
-    // Check if this path was recently synced by the IDE itself
-    const expiry = this.internallySyncedPaths.get(path);
-    if (expiry) {
-      if (Date.now() < expiry) {
-        return; // Suppress echo from IDE-to-WebContainer write
-      }
-      this.internallySyncedPaths.delete(path);
-    }
 
     this.pendingChanges.set(path, event === 'rename' ? 'change' : 'change');
 
@@ -250,7 +246,6 @@ export class WebContainerWatcher {
               const monacoContent = callbacks.getEditorContent?.(path);
               // If contents are identical, this is an echo or same content; suppress
               if (monacoContent !== undefined && monacoContent === content) {
-                this.internallySyncedPaths.set(path, Date.now() + 1000);
                 break;
               }
 
@@ -266,8 +261,12 @@ export class WebContainerWatcher {
               break;
             }
 
-            // Normal clean file sync
-            this.internallySyncedPaths.set(path, Date.now() + 1000);
+            // Normal clean file sync: if editor already holds identical content, skip redundant update
+            const currentEditorContent = callbacks.getEditorContent?.(path);
+            if (currentEditorContent !== undefined && currentEditorContent === content && knownFiles.includes(path)) {
+              break;
+            }
+
             const isNewFile = !knownFiles.includes(path);
             if (isNewFile) {
               callbacks.onFileCreate(path, content);

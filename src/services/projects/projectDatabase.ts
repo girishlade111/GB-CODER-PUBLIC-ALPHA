@@ -387,13 +387,14 @@ export const readProjectFiles = (projectId: string): Promise<ProjectFile[]> =>
 export const saveProjectFiles = (
   projectId: string,
   files: ProjectFile[],
-  previous: FileSnapshot | null,
+  previous: FileSnapshot | null = null,
 ): Promise<{ snapshot: FileSnapshot; persisted: boolean }> => {
+  const isDiff = Boolean(previous);
   const changed = files.filter(
-    (file) => previous === null || previous.get(file.path) !== file.content,
+    (file) => !isDiff || previous!.get(file.path) !== file.content,
   );
   const currentPaths = new Set(files.map((file) => file.path));
-  const removed = previous === null ? [] : [...previous.keys()].filter((path) => !currentPaths.has(path));
+  const removed = !isDiff ? [] : [...previous!.keys()].filter((path) => !currentPaths.has(path));
   const next = snapshotOf(files);
 
   // Nothing to do — avoids opening a transaction on every debounce tick when the

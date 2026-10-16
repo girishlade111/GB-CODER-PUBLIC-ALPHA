@@ -1786,10 +1786,12 @@ function App() {
   const handleFullStackFileChange = useCallback((path: string, content: string) => {
     setFullStackProject((current) => {
       if (!current) return current;
-      return {
+      const next = {
         ...current,
         files: current.files.map((file) => (file.path === path ? { ...file, content } : file)),
       };
+      fullStackProjectRef.current = next;
+      return next;
     });
   }, []);
 
@@ -1813,11 +1815,20 @@ function App() {
     const safePath = checked.path;
     setFullStackProject((prev) => {
       if (!prev) return prev;
-      if (prev.files.some((f) => f.path === safePath)) return prev;
-      return {
+      if (prev.files.some((f) => f.path === safePath)) {
+        const next = {
+          ...prev,
+          files: prev.files.map((f) => (f.path === safePath ? { ...f, content } : f)),
+        };
+        fullStackProjectRef.current = next;
+        return next;
+      }
+      const next = {
         ...prev,
         files: [...prev.files, { path: safePath, content, language: languageForPath(safePath) }],
       };
+      fullStackProjectRef.current = next;
+      return next;
     });
     syncWebContainerFile(safePath, content);
     return true;
@@ -1880,17 +1891,21 @@ function App() {
       if (!current) return current;
       const isExactFile = current.files.some((f) => f.path === clean);
       if (isExactFile) {
-        return {
+        const next = {
           ...current,
           files: current.files.filter((f) => f.path !== clean),
         };
+        fullStackProjectRef.current = next;
+        return next;
       }
       // Folder delete: remove all files starting with folder prefix
       const folderPrefix = clean.endsWith('/') ? clean : `${clean}/`;
-      return {
+      const next = {
         ...current,
         files: current.files.filter((f) => !f.path.startsWith(folderPrefix)),
       };
+      fullStackProjectRef.current = next;
+      return next;
     });
     return true;
   }, []);
@@ -2896,7 +2911,7 @@ function App() {
   const projectFilesToPersist = fullStackProject?.files ?? fileProject.files;
 
   useEffect(() => {
-    if (!activeProjectId || isOpeningProject) return;
+    if (!autoSaveEnabled || !activeProjectId || isOpeningProject) return;
     // A recovered-empty seed is a draft: never auto-persist the scaffold
     // itself. The first real edit swaps the array identity and persists.
     if (seededFilesRef.current && projectFilesToPersist === seededFilesRef.current) return;
@@ -2921,7 +2936,7 @@ function App() {
     }, PROJECT_SAVE_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [activeProjectId, isOpeningProject, projectFilesToPersist, flushProjectSave, markFlushedSaved]);
+  }, [autoSaveEnabled, activeProjectId, isOpeningProject, projectFilesToPersist, flushProjectSave, markFlushedSaved]);
 
   /*
    * Flush when the tab stops being visible.
@@ -3189,8 +3204,17 @@ function App() {
   };
 
   const saveSnippet = (name: string, htmlCode: string, cssCode: string, jsCode: string, description?: string, tags?: string[], category?: string, type?: SnippetType, scope?: SnippetScope) => {
+    const snippetId = (() => {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+          return crypto.randomUUID();
+        }
+      } catch {}
+      return `snip-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    })();
+
     const snippet: CodeSnippet = {
-      id: crypto.randomUUID(),
+      id: snippetId,
       name,
       description,
       html: htmlCode,

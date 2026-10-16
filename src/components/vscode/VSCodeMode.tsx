@@ -79,6 +79,7 @@ import { previewReloadService } from '../../services/preview/previewReloadServic
 import { codeAssistService } from '../../services/ai/codeAssistService';
 import { Snapshot } from '../../services/snapshotService';
 import { editorConflictService, type ExternalFileConflict } from '../../services/editor/editorConflictService';
+import { saveProjectFiles } from '../../services/projects/projectDatabase';
 
 /**
  * VS Code style editor shell.
@@ -270,6 +271,15 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   splitActivePathMirrorRef.current = splitActivePath;
   const dirtyPathsMirrorRef = useRef<Set<string>>(dirtyPaths);
   dirtyPathsMirrorRef.current = dirtyPaths;
+  const projectFilesMirrorRef = useRef<ProjectFile[]>(project.files);
+  projectFilesMirrorRef.current = project.files;
+  const onCreateFileRef = useRef(onCreateFile);
+  onCreateFileRef.current = onCreateFile;
+  const onChangeFileRef = useRef(onChangeFile);
+  onChangeFileRef.current = onChangeFile;
+  const onDeleteFileRef = useRef(onDeleteFile);
+  onDeleteFileRef.current = onDeleteFile;
+  const isExternalUpdateRef = useRef(false);
   const [showTerminal, setShowTerminal] = useState(true);
   const [hasOpenedTerminal, setHasOpenedTerminal] = useState(true);
   const [activityTab, setActiveTab] = useState<ActivityTab>('explorer');
@@ -526,30 +536,74 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         // Initialize bidirectional filesystem watcher
         webcontainerWatcher.start(container, {
           projectId: effectiveProjectId,
-          getKnownFiles: () => project.files.map((f) => f.path),
-          isEditorDirty: (filePath) => dirtyPathsMirrorRef.current.has(filePath),
+          getKnownFiles: () => projectFilesMirrorRef.current.map((f) => f.path),
+          isEditorDirty: (filePath) => {
+            const clean = filePath.replace(/\\/g, '/').replace(/^\/+/, '');
+            return dirtyPathsMirrorRef.current.has(clean) || dirtyPathsMirrorRef.current.has(filePath);
+          },
           getEditorContent: (filePath) => {
             if (activePathMirrorRef.current === filePath && editorRef.current) {
               return editorRef.current.getValue();
             }
-            return project.files.find((f) => f.path === filePath)?.content;
+            return projectFilesMirrorRef.current.find((f) => f.path === filePath)?.content;
           },
           onFileCreate: (filePath, content) => {
             if (isCancelled) return;
-            const existing = project.files.find((f) => f.path === filePath);
+            const existing = projectFilesMirrorRef.current.find((f) => f.path === filePath);
             if (!existing) {
-              onCreateFile?.(filePath, content);
+              projectFilesMirrorRef.current = [
+                ...projectFilesMirrorRef.current,
+                { path: filePath, content, language: monacoLanguageForPath(filePath) },
+              ];
+              onCreateFileRef.current?.(filePath, content);
             } else {
-              onChangeFile(filePath, content);
+              projectFilesMirrorRef.current = projectFilesMirrorRef.current.map((f) =>
+                f.path === filePath ? { ...f, content } : f,
+              );
+              if (activePathMirrorRef.current === filePath && editorRef.current) {
+                const model = editorRef.current.getModel();
+                if (model && model.getValue() !== content) {
+                  try {
+                    isExternalUpdateRef.current = true;
+                    const pos = editorRef.current.getPosition();
+                    model.setValue(content);
+                    if (pos) editorRef.current.setPosition(pos);
+                  } finally {
+                    setTimeout(() => {
+                      isExternalUpdateRef.current = false;
+                    }, 50);
+                  }
+                }
+              }
+              onChangeFileRef.current(filePath, content);
             }
           },
           onFileChange: (filePath, content) => {
             if (isCancelled) return;
-            onChangeFile(filePath, content);
+            projectFilesMirrorRef.current = projectFilesMirrorRef.current.map((f) =>
+              f.path === filePath ? { ...f, content } : f,
+            );
+            if (activePathMirrorRef.current === filePath && editorRef.current) {
+              const model = editorRef.current.getModel();
+              if (model && model.getValue() !== content) {
+                try {
+                  isExternalUpdateRef.current = true;
+                  const pos = editorRef.current.getPosition();
+                  model.setValue(content);
+                  if (pos) editorRef.current.setPosition(pos);
+                } finally {
+                  setTimeout(() => {
+                    isExternalUpdateRef.current = false;
+                  }, 50);
+                }
+              }
+            }
+            onChangeFileRef.current(filePath, content);
           },
           onFileDelete: (filePath) => {
             if (isCancelled) return;
-            onDeleteFile?.(filePath);
+            projectFilesMirrorRef.current = projectFilesMirrorRef.current.filter((f) => f.path !== filePath);
+            onDeleteFileRef.current?.(filePath);
           },
           onFileConflict: (conflict) => {
             if (isCancelled) return;
@@ -807,6 +861,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
   const handleChange = useCallback(
     (value: string | undefined) => {
+      if (isExternalUpdateRef.current) return;
       if (!activePath) return;
       const text = value ?? '';
       onChangeFile(activePath, text);
@@ -815,6 +870,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         void webcontainerService.syncFile(activePath, text, activeProjectId ?? undefined);
       }
       ataService.acquireTypes(text);
+      dirtyPathsMirrorRef.current.add(activePath);
       setDirtyPaths((current) => {
         if (current.has(activePath)) return current;
         const next = new Set(current);
@@ -826,9 +882,46 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   );
 
   const handleResolveKeepMine = useCallback(
-    (conflict: ExternalFileConflict) => {
-      webcontainerWatcher.markInternallySynced(conflict.path);
-      void webcontainerService.syncFile(conflict.path, conflict.monacoContent, conflict.projectId);
+    async (conflict: ExternalFileConflict) => {
+      console.log('[VSCodeMode] handleResolveKeepMine called for:', conflict.path);
+      webcontainerWatcher.markInternallySynced(conflict.path, conflict.monacoContent);
+      const updatedFiles = projectFilesMirrorRef.current.map((f) =>
+        f.path === conflict.path ? { ...f, content: conflict.monacoContent } : f,
+      );
+      projectFilesMirrorRef.current = updatedFiles;
+      onChangeFile(conflict.path, conflict.monacoContent);
+      void saveProjectFiles(conflict.projectId || effectiveProjectId, updatedFiles);
+
+      dirtyPathsMirrorRef.current.delete(conflict.path);
+      setDirtyPaths((prev) => {
+        const next = new Set(prev);
+        next.delete(conflict.path);
+        return next;
+      });
+      if (activePathMirrorRef.current === conflict.path && editorRef.current) {
+        const model = editorRef.current.getModel();
+        if (model && model.getValue() !== conflict.monacoContent) {
+          try {
+            isExternalUpdateRef.current = true;
+            model.setValue(conflict.monacoContent);
+          } finally {
+            setTimeout(() => {
+              isExternalUpdateRef.current = false;
+            }, 50);
+          }
+        }
+      }
+      try {
+        await webcontainerService.writeFile(conflict.path, conflict.monacoContent);
+        await webcontainerService.syncFile(
+          conflict.path,
+          conflict.monacoContent,
+          conflict.projectId || effectiveProjectId,
+        );
+        await webcontainerService.flushFileSync();
+      } catch (err) {
+        console.warn('[VSCodeMode] Failed to sync resolved content to WebContainer:', err);
+      }
       editorConflictService.resolveConflict(conflict.projectId, conflict.path, 'keep_mine');
       setIsDiffMode(false);
       if (conflict.conflictType === 'file_deleted' || conflict.conflictType === 'directory_deleted') {
@@ -837,18 +930,21 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         toast.success('Kept editor changes and updated terminal filesystem.');
       }
     },
-    [],
+    [onChangeFile, effectiveProjectId],
   );
 
   const handleResolveUseExternal = useCallback(
     (conflict: ExternalFileConflict) => {
-      webcontainerWatcher.markInternallySynced(conflict.path);
+      webcontainerWatcher.markInternallySynced(conflict.path, conflict.externalContent);
       if (
         conflict.conflictType === 'file_deleted' ||
         conflict.conflictType === 'directory_deleted' ||
         conflict.externalContent === ''
       ) {
         // External version is deleted: remove file from workspace
+        const updatedFiles = projectFilesMirrorRef.current.filter((f) => f.path !== conflict.path);
+        projectFilesMirrorRef.current = updatedFiles;
+        void saveProjectFiles(conflict.projectId || effectiveProjectId, updatedFiles);
         onDeleteFile?.(conflict.path);
         setOpenPaths((paths) => paths.filter((p) => p !== conflict.path));
         setSplitOpenPaths((paths) => paths.filter((p) => p !== conflict.path));
@@ -861,6 +957,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         });
         toast.success(`Removed "${conflict.path}" (accepted external deletion).`);
       } else {
+        const updatedFiles = projectFilesMirrorRef.current.map((f) =>
+          f.path === conflict.path ? { ...f, content: conflict.externalContent } : f,
+        );
+        projectFilesMirrorRef.current = updatedFiles;
+        void saveProjectFiles(conflict.projectId || effectiveProjectId, updatedFiles);
         onChangeFile(conflict.path, conflict.externalContent);
         setDirtyPaths((current) => {
           const next = new Set(current);
@@ -872,7 +973,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       editorConflictService.resolveConflict(conflict.projectId, conflict.path, 'use_external');
       setIsDiffMode(false);
     },
-    [onChangeFile, onDeleteFile],
+    [onChangeFile, onDeleteFile, effectiveProjectId],
   );
 
   const isSplitActive = Boolean(splitActivePath && splitOpenPaths.length > 0);

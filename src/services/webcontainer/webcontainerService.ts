@@ -1656,12 +1656,38 @@ class WebContainerManager {
     content: string,
     projectId?: string,
   ): Promise<void> {
-    webcontainerWatcher.markInternallySynced(path);
+    console.warn(`[webcontainerService] syncFile path=${path} projectId=${projectId} activeProjectId=${this.activeProjectId}`);
+    webcontainerWatcher.markInternallySynced(path, content);
     this.fileSyncCoordinator.queueSync(
       path,
       content,
       projectId ?? this.activeProjectId,
     );
+  }
+
+  /**
+   * Writes directly to the WebContainer filesystem immediately.
+   */
+  public async writeFile(path: string, content: string): Promise<void> {
+    const cleanPath = path.replace(/\\/g, '/').replace(/^\/+/, '');
+    const container =
+      this.instance ??
+      (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
+        .__GBCODER_WEBCONTAINER_INSTANCE__ ??
+      null;
+    console.log('[webcontainerService] writeFile path:', cleanPath, 'hasContainer:', Boolean(container));
+    if (!container) return;
+    const dirIndex = cleanPath.lastIndexOf('/');
+    if (dirIndex !== -1) {
+      const dir = cleanPath.slice(0, dirIndex);
+      try {
+        await container.fs.mkdir(dir, { recursive: true });
+      } catch {
+        // directory may already exist
+      }
+    }
+    await container.fs.writeFile(cleanPath, content);
+    console.log('[webcontainerService] writeFile finished for:', cleanPath);
   }
 
   /**
