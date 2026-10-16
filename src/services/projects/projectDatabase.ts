@@ -314,7 +314,10 @@ export const createProject = (input: NewProjectInput): Promise<ProjectRecord | n
         return record;
       },
     ),
-  );
+  ).then((res) => {
+    if (res) notifyProjectsUpdated();
+    return res;
+  });
 };
 
 /**
@@ -508,7 +511,10 @@ export const deleteProject = (id: string): Promise<void> =>
   ).then((res) => {
     // withTransaction resolves its work value (undefined) on commit and null
     // on any failure — never treat failure as a successful deletion.
-    if (res !== null && readActiveProjectId() === id) writeActiveProjectId(null);
+    if (res !== null) {
+      if (readActiveProjectId() === id) writeActiveProjectId(null);
+      notifyProjectsUpdated();
+    }
   });
 
 /**
@@ -597,5 +603,64 @@ export const duplicateProject = (
         return duplicatedRecord;
       },
     ),
-  ).then((record) => record ?? null);
+  ).then((record) => {
+    if (record) notifyProjectsUpdated();
+    return record ?? null;
+  });
+
+/**
+ * Dispatches a projects-updated event across the window so all listeners refresh.
+ */
+export const notifyProjectsUpdated = (): void => {
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('gb-coder:projects-updated'));
+    } catch {
+      // Ignored in non-window / test environments
+    }
+  }
+};
+
+/**
+ * Validates a project name.
+ */
+export const validateProjectName = (
+  name: string,
+  existingProjects: ProjectRecord[] = [],
+  currentProjectId?: string,
+): { valid: boolean; error?: string; isDuplicate?: boolean } => {
+  const trimmed = (name ?? '').trim();
+  if (!trimmed) {
+    return { valid: false, error: 'Project name cannot be empty.' };
+  }
+  if (trimmed.length > 100) {
+    return { valid: false, error: 'Project name must be 100 characters or fewer.' };
+  }
+  if (/[\x00-\x1F\x7F]/.test(trimmed)) {
+    return { valid: false, error: 'Project name contains invalid control characters.' };
+  }
+  const isDuplicate = existingProjects.some(
+    (p) => p.id !== currentProjectId && p.name.trim().toLowerCase() === trimmed.toLowerCase(),
+  );
+  if (isDuplicate) {
+    return { valid: true, isDuplicate: true, error: 'A project with this name already exists.' };
+  }
+  return { valid: true };
+};
+
+/**
+ * Safely renames an existing project and notifies listeners.
+ */
+export const renameProject = async (
+  id: string,
+  newName: string,
+): Promise<ProjectRecord | null> => {
+  const trimmed = (newName ?? '').trim();
+  if (!trimmed) return null;
+  const updated = await updateProject(id, { name: trimmed });
+  if (updated) {
+    notifyProjectsUpdated();
+  }
+  return updated;
+};
 

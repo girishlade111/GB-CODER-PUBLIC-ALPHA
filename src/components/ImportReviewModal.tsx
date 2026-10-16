@@ -6,26 +6,45 @@ import {
   FolderTree,
   Info,
   Layers,
+  PanelsTopLeft,
+  Code2,
+  Search,
+  ShieldCheck,
   X,
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { formatBytes } from '../services/projectArchiveService';
 import type { ImportPlan } from '../services/import/importEngine';
 import type { DetectedProjectKind } from '../services/import/projectDetection';
+import type { EditorStyle } from '../services/projects/projectDatabase';
 
 /**
- * Confirmation step for an import.
+ * Confirmation and configuration step for an import.
  *
- * Lazy-loaded alongside the import engine. Shows what was detected and *why*,
- * lets the user correct a wrong guess, and reports what was skipped — a silent
- * import that guessed wrong is much harder to recover from than one that asked.
+ * Lazy-loaded alongside the import engine. Displays:
+ * 1. Source name & file counts
+ * 2. Original and retained byte sizes
+ * 3. Detected framework & reasoning signals
+ * 4. Recommended editor style (Static Editor vs Advanced IDE)
+ * 5. Destination choice (New Project vs Overwrite Active Editor)
+ * 6. Searchable file tree preview
+ * 7. Skipped folders and warnings
+ * 8. Explicit confirmation before creating or overwriting
  */
+
+export interface ImportConfirmationPayload {
+  kind: DetectedProjectKind;
+  editorStyle: EditorStyle;
+  isNewProject: boolean;
+  projectName: string;
+}
 
 interface ImportReviewModalProps {
   plan: ImportPlan;
   onCancel: () => void;
-  /** Applies the import using the (possibly overridden) kind. */
-  onConfirm: (kind: DetectedProjectKind) => void;
+  /** Applies the import using either the structured payload or legacy kind. */
+  onConfirm: (payload: ImportConfirmationPayload | DetectedProjectKind) => void;
+  hasActiveProject?: boolean;
 }
 
 const KIND_LABEL: Record<DetectedProjectKind, string> = {
@@ -35,13 +54,40 @@ const KIND_LABEL: Record<DetectedProjectKind, string> = {
   fullstack: 'Full-stack project',
 };
 
-/** Overridable targets. Full-stack is not offered: there is no mode for it yet. */
-const OVERRIDE_KINDS: DetectedProjectKind[] = ['simple', 'react', 'vue'];
+const OVERRIDE_KINDS: DetectedProjectKind[] = ['simple', 'react', 'vue', 'fullstack'];
 
-const ImportReviewModal: React.FC<ImportReviewModalProps> = ({ plan, onCancel, onConfirm }) => {
+const sanitizeImportName = (rawName: string): string => {
+  const withoutZip = rawName.replace(/\.zip$/i, '');
+  const trimmed = withoutZip.trim();
+  return trimmed || 'Imported Project';
+};
+
+const ImportReviewModal: React.FC<ImportReviewModalProps> = ({
+  plan,
+  onCancel,
+  onConfirm,
+  hasActiveProject = false,
+}) => {
   const { isDark } = useTheme();
   const [kind, setKind] = useState<DetectedProjectKind>(plan.detection.kind);
+  const [projectName, setProjectName] = useState(() => sanitizeImportName(plan.sourceName));
+  const [isNewProject, setIsNewProject] = useState(true);
+  const [fileSearchQuery, setFileSearchQuery] = useState('');
   const [showAllFiles, setShowAllFiles] = useState(false);
+
+  // Recommended editor: React/Vue/Full-stack -> vscode; Simple -> plain
+  const defaultEditorForKind = (k: DetectedProjectKind): EditorStyle =>
+    k === 'simple' ? 'plain' : 'vscode';
+
+  const [editorStyle, setEditorStyle] = useState<EditorStyle>(() =>
+    defaultEditorForKind(plan.detection.kind),
+  );
+
+  // Update editor recommendation when kind is overridden
+  const handleKindChange = (newKind: DetectedProjectKind) => {
+    setKind(newKind);
+    setEditorStyle(defaultEditorForKind(newKind));
+  };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -53,7 +99,15 @@ const ImportReviewModal: React.FC<ImportReviewModalProps> = ({ plan, onCancel, o
 
   const isFullStack = kind === 'fullstack';
   const files = plan.result.files;
-  const visibleFiles = showAllFiles ? files : files.slice(0, 12);
+
+  // Filtered file preview
+  const filteredFiles = useMemo(() => {
+    if (!fileSearchQuery.trim()) return files;
+    const q = fileSearchQuery.toLowerCase();
+    return files.filter((f) => f.path.toLowerCase().includes(q));
+  }, [files, fileSearchQuery]);
+
+  const visibleFiles = showAllFiles ? filteredFiles : filteredFiles.slice(0, 15);
 
   const skippedSummary = useMemo(
     () =>
@@ -63,74 +117,169 @@ const ImportReviewModal: React.FC<ImportReviewModalProps> = ({ plan, onCancel, o
     [plan.skipped],
   );
 
+  const hasEnvFiles = useMemo(() => {
+    return files.some((f) => {
+      const base = f.path.split('/').pop()?.toLowerCase() ?? '';
+      return base === '.env' || base.startsWith('.env.');
+    });
+  }, [files]);
+
   const surface = isDark ? 'bg-surface-raised border-stroke-subtle' : 'bg-white border-gray-200';
 
+  const handleConfirmClick = () => {
+    // Deliver structured payload with fallback to kind for legacy callers
+    const payload: ImportConfirmationPayload = {
+      kind,
+      editorStyle: isFullStack ? 'vscode' : editorStyle,
+      isNewProject,
+      projectName: projectName.trim() || sanitizeImportName(plan.sourceName),
+    };
+
+    onConfirm(payload);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="import-review-title"
+      data-testid="import-review"
+    >
       <div
-        className={`flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border shadow-2xl ${surface}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Review import"
-        data-testid="import-review"
+        className={`flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border shadow-2xl my-6 ${surface}`}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 border-b border-stroke-subtle px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-stroke-subtle px-6 py-4 shrink-0">
           <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-accent/15 p-2.5">
-              <FileArchive className="h-5 w-5 text-accent" />
+            <div className="rounded-xl bg-accent/15 p-2.5 text-accent">
+              <FileArchive className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="font-sans text-base font-medium text-content-primary">Import project</h2>
+              <h2
+                id="import-review-title"
+                className="font-sans text-base font-semibold text-content-primary"
+              >
+                Review Import
+              </h2>
               <p className="mt-0.5 text-xs text-content-muted">
-                {plan.sourceName} · {formatBytes(plan.sourceBytes)} · {files.length} file
-                {files.length === 1 ? '' : 's'} ready
+                {plan.sourceName} · {files.length} file{files.length === 1 ? '' : 's'} ready
               </p>
             </div>
           </div>
           <button
             onClick={onCancel}
-            className="rounded-lg p-1.5 text-content-muted hover:bg-white/10 hover:text-content-primary"
+            className="rounded-lg p-1.5 text-content-muted hover:bg-surface-hover hover:text-content-primary transition-colors"
             aria-label="Cancel import"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          {/* Detection + override */}
+        {/* Scrollable Body */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          {/* File size & Summary Metric Card */}
+          <div className="grid grid-cols-3 gap-2.5 rounded-xl border border-stroke-subtle bg-surface-base p-3 text-xs">
+            <div>
+              <span className="block text-[11px] text-content-muted">Source Size</span>
+              <span className="font-semibold text-content-primary">
+                {formatBytes(plan.sourceBytes)}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[11px] text-content-muted">Imported Code</span>
+              <span className="font-semibold text-content-primary">
+                {formatBytes(plan.totalBytes)}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[11px] text-content-muted">Total Files</span>
+              <span className="font-semibold text-content-primary" data-testid="import-file-count">
+                {files.length}
+              </span>
+            </div>
+          </div>
+
+          {/* Project Name and Destination Options */}
+          <div className="rounded-xl border border-stroke-subtle bg-surface-base p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label htmlFor="import-project-name" className="text-xs font-semibold text-content-primary">
+                Project Name
+              </label>
+              {hasActiveProject && (
+                <div className="flex items-center gap-3 text-xs">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-content-secondary">
+                    <input
+                      type="radio"
+                      name="import-destination"
+                      checked={isNewProject}
+                      onChange={() => setIsNewProject(true)}
+                      className="accent-accent"
+                    />
+                    New Project
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-content-secondary">
+                    <input
+                      type="radio"
+                      name="import-destination"
+                      checked={!isNewProject}
+                      onChange={() => setIsNewProject(false)}
+                      className="accent-accent"
+                    />
+                    Current Editor
+                  </label>
+                </div>
+              )}
+            </div>
+
+            {isNewProject && (
+              <input
+                id="import-project-name"
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                data-testid="import-project-name-input"
+                className="w-full rounded-lg border border-stroke-subtle bg-surface-base px-3 py-1.5 text-xs text-content-primary outline-none focus:border-accent"
+                placeholder="Name for this project..."
+              />
+            )}
+
+            {!isNewProject && (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-300 flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
+                <span>
+                  Warning: Loading into current editor will replace open files. Choose &quot;New Project&quot;
+                  to preserve your active project.
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Detection + Reasoning */}
           <div className="rounded-xl border border-stroke-subtle bg-surface-base p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Layers className="h-4 w-4 text-accent" />
-                <span className="text-sm text-content-secondary">Detected as:</span>
+                <span className="text-xs text-content-secondary">Detected as:</span>
                 <span
-                  className="text-sm font-semibold text-content-primary"
+                  className="text-xs font-bold text-content-primary"
                   data-testid="detected-kind"
                 >
                   {KIND_LABEL[plan.detection.kind]}
                 </span>
-                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-content-muted">
+                <span className="rounded-full bg-surface-hover px-2 py-0.5 text-[10px] uppercase tracking-wide text-content-muted border border-stroke-subtle">
                   {plan.detection.confidence} confidence
                 </span>
               </div>
 
-              <label className="flex items-center gap-2 text-xs text-content-secondary">
-                Change?
+              <label className="flex items-center gap-1.5 text-xs text-content-secondary">
+                Override?
                 <select
                   value={kind}
-                  onChange={(event) => setKind(event.target.value as DetectedProjectKind)}
+                  onChange={(event) => handleKindChange(event.target.value as DetectedProjectKind)}
                   data-testid="kind-override"
-                  className={`rounded-lg border px-2 py-1 text-xs outline-none ${
-                    isDark
-                      ? 'border-white/10 bg-white/5 text-content-primary'
-                      : 'border-gray-200 bg-white text-gray-800'
-                  }`}
+                  className="rounded-lg border border-stroke-subtle bg-surface-base px-2 py-1 text-xs text-content-primary outline-none focus:border-accent"
                 >
-                  {/* The detected kind stays selectable even when full-stack. */}
-                  {plan.detection.kind === 'fullstack' && (
-                    <option value="fullstack">{KIND_LABEL.fullstack}</option>
-                  )}
                   {OVERRIDE_KINDS.map((option) => (
                     <option key={option} value={option}>
                       {KIND_LABEL[option]}
@@ -140,8 +289,8 @@ const ImportReviewModal: React.FC<ImportReviewModalProps> = ({ plan, onCancel, o
               </label>
             </div>
 
-            {/* Why we guessed that. */}
-            <ul className="mt-3 space-y-1.5">
+            {/* Signals / Evidence */}
+            <ul className="mt-3 space-y-1.5 border-t border-stroke-subtle pt-2.5">
               {plan.detection.signals.map((signal) => (
                 <li key={signal.label} className="flex items-start gap-2 text-xs">
                   <Info className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-content-muted" />
@@ -154,53 +303,104 @@ const ImportReviewModal: React.FC<ImportReviewModalProps> = ({ plan, onCancel, o
             </ul>
 
             {kind !== plan.detection.kind && (
-              <p className="mt-3 rounded-lg bg-sky-500/10 px-3 py-2 text-xs text-sky-300">
-                Overriding to <strong>{KIND_LABEL[kind]}</strong>. The detection above will be
-                ignored.
+              <p className="mt-2.5 rounded-lg bg-sky-500/10 px-3 py-1.5 text-xs text-sky-300 border border-sky-500/20">
+                Overriding to <strong>{KIND_LABEL[kind]}</strong>.
               </p>
             )}
           </div>
 
-          {/* Full-stack: detect and inform only. */}
+          {/* Editor Recommendation Selection */}
+          <div className="rounded-xl border border-stroke-subtle bg-surface-base p-4">
+            <span className="block text-xs font-semibold text-content-primary mb-2">
+              Recommended Editor
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setEditorStyle('plain')}
+                disabled={isFullStack || kind === 'react' || kind === 'vue'}
+                data-testid="import-editor-plain"
+                className={`flex items-center gap-2 p-2.5 rounded-lg border text-left text-xs transition-colors ${
+                  editorStyle === 'plain'
+                    ? 'border-accent bg-accent-subtle/30 text-content-primary ring-1 ring-accent'
+                    : isFullStack || kind === 'react' || kind === 'vue'
+                      ? 'border-stroke-subtle opacity-40 cursor-not-allowed bg-surface-base text-content-muted'
+                      : 'border-stroke-subtle bg-surface-base text-content-secondary hover:bg-surface-hover'
+                }`}
+              >
+                <Code2 className="h-4 w-4 shrink-0 text-accent" />
+                <div>
+                  <span className="font-medium block">Static Editor</span>
+                  <span className="text-[10px] text-content-muted">HTML/CSS/JS panels</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setEditorStyle('vscode')}
+                data-testid="import-editor-vscode"
+                className={`flex items-center gap-2 p-2.5 rounded-lg border text-left text-xs transition-colors ${
+                  editorStyle === 'vscode'
+                    ? 'border-accent bg-accent-subtle/30 text-content-primary ring-1 ring-accent'
+                    : 'border-stroke-subtle bg-surface-base text-content-secondary hover:bg-surface-hover'
+                }`}
+              >
+                <PanelsTopLeft className="h-4 w-4 shrink-0 text-accent" />
+                <div>
+                  <span className="font-medium block">Advanced IDE</span>
+                  <span className="text-[10px] text-content-muted">File tree, tabs, terminal</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Full-stack Notice */}
           {isFullStack && (
             <div
-              className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4"
+              className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4"
               data-testid="fullstack-notice"
             >
               <div className="flex items-start gap-2.5">
                 <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400" />
                 <div className="text-xs text-amber-100">
                   <p className="text-sm font-semibold">Full-stack project detected</p>
-                  <p className="mt-1 opacity-90">
-                    This opens in VS Code mode: a full file tree with one file editable at a time.
-                    The server side cannot run in the browser, so the preview asks you to connect a
-                    Sandbox.
-                  </p>
-                  <p className="mt-2 opacity-90">
-                    If this is really a front-end project — for example React with a small local
-                    mock server — change the type above and import it as that instead.
+                  <p className="mt-1 opacity-90 leading-relaxed text-[11px]">
+                    This project contains backend server code or container manifests. Client files
+                    render in the browser, but server routes cannot execute natively without a backend
+                    sandbox.
                   </p>
                 </div>
               </div>
             </div>
           )}
 
+          {/* Environment variables reassurance */}
+          {hasEnvFiles && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-300">
+              <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
+              <span>
+                Environment configuration file detected (.env). Its contents stay strictly in your
+                browser&apos;s local storage and are never transmitted to external services.
+              </span>
+            </div>
+          )}
+
           {/* Skipped folders */}
           {plan.skipped.length > 0 && (
-            <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-stroke-subtle bg-surface-base p-3">
+            <div className="flex items-start gap-2.5 rounded-xl border border-stroke-subtle bg-surface-base p-3">
               <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
               <p className="text-xs text-content-secondary">
-                <span className="font-medium text-content-primary">Skipped:</span> {skippedSummary}.
-                Dependencies are reinstalled rather than imported.
+                <span className="font-medium text-content-primary">Skipped dependencies/caches:</span>{' '}
+                {skippedSummary}.
               </p>
             </div>
           )}
 
           {/* Warnings */}
           {plan.warnings.length > 0 && (
-            <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3">
-              <p className="mb-1.5 text-xs font-medium text-amber-300">
-                {plan.warnings.length} warning{plan.warnings.length === 1 ? '' : 's'}
+            <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-3">
+              <p className="mb-1.5 text-xs font-semibold text-amber-300">
+                {plan.warnings.length} notice{plan.warnings.length === 1 ? '' : 's'}
               </p>
               <ul className="space-y-1">
                 {plan.warnings.slice(0, 5).map((warning) => (
@@ -212,28 +412,41 @@ const ImportReviewModal: React.FC<ImportReviewModalProps> = ({ plan, onCancel, o
             </div>
           )}
 
-          {/* File preview */}
+          {/* File list preview */}
           {files.length > 0 && (
-            <div className="mt-4">
-              <div className="mb-2 flex items-center gap-2">
-                <FolderTree className="h-4 w-4 text-content-muted" />
-                <span className="text-xs font-medium text-content-secondary">
-                  Files to import ({files.length})
-                </span>
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-content-secondary">
+                  <FolderTree className="h-4 w-4 text-content-muted" />
+                  <span>Files to import ({files.length})</span>
+                </div>
+                {files.length > 10 && (
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1.5 h-3 w-3 text-content-muted" />
+                    <input
+                      type="text"
+                      placeholder="Filter files..."
+                      value={fileSearchQuery}
+                      onChange={(e) => setFileSearchQuery(e.target.value)}
+                      className="rounded-lg border border-stroke-subtle bg-surface-base pl-6 pr-2 py-1 text-[11px] text-content-primary outline-none focus:border-accent"
+                    />
+                  </div>
+                )}
               </div>
-              <ul className="rounded-xl border border-stroke-subtle bg-surface-base p-2 font-mono text-[11px]">
+              <ul className="max-h-40 overflow-y-auto rounded-xl border border-stroke-subtle bg-surface-base p-2.5 font-mono text-[11px] space-y-0.5">
                 {visibleFiles.map((file) => (
-                  <li key={file.path} className="truncate py-0.5 text-content-secondary">
+                  <li key={file.path} className="truncate text-content-secondary py-0.5">
                     {file.path}
                   </li>
                 ))}
               </ul>
-              {files.length > visibleFiles.length && (
+              {filteredFiles.length > visibleFiles.length && (
                 <button
+                  type="button"
                   onClick={() => setShowAllFiles(true)}
-                  className="mt-1.5 text-[11px] text-accent hover:underline"
+                  className="mt-1 text-[11px] text-accent hover:underline"
                 >
-                  Show {files.length - visibleFiles.length} more
+                  Show {filteredFiles.length - visibleFiles.length} more files
                 </button>
               )}
             </div>
@@ -241,24 +454,29 @@ const ImportReviewModal: React.FC<ImportReviewModalProps> = ({ plan, onCancel, o
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-stroke-subtle px-5 py-4">
+        <div className="flex items-center justify-end gap-2.5 border-t border-stroke-subtle px-6 py-4 shrink-0">
           <button
+            type="button"
             onClick={onCancel}
-            className="rounded-lg px-3 py-2 text-sm text-content-secondary hover:bg-white/10"
+            data-testid="import-cancel"
+            className="rounded-xl border border-stroke-subtle px-3.5 py-2 text-xs font-medium text-content-secondary hover:bg-surface-hover hover:text-content-primary transition-colors"
           >
             Cancel
           </button>
           <button
-            onClick={() => onConfirm(kind)}
+            type="button"
+            onClick={handleConfirmClick}
             disabled={files.length === 0}
             data-testid="confirm-import"
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+            className={`rounded-xl px-4 py-2 text-xs font-semibold transition-colors shadow-md ${
               files.length === 0
-                ? 'cursor-not-allowed bg-white/5 text-content-muted'
+                ? 'cursor-not-allowed bg-surface-hover text-content-muted'
                 : 'bg-accent text-accent-fg hover:bg-accent-hover'
             }`}
           >
-            {isFullStack ? 'Open in VS Code mode' : `Import as ${KIND_LABEL[kind]}`}
+            {isNewProject
+              ? `Create "${projectName.trim() || 'Project'}"`
+              : 'Overwrite & Load into Editor'}
           </button>
         </div>
       </div>
