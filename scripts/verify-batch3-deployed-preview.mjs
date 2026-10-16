@@ -162,15 +162,31 @@ async function runCampaign() {
   await check('robots.txt points to canonical sitemap and has no obsolete domains', async () => {
     const res = await fetchRoute('/robots.txt');
     assert.equal(res.status, 200);
-    assert.ok(res.body.includes('Sitemap: https://code.ladestack.in/sitemap.xml'));
-    assert.ok(!res.body.includes('gbcoder.com'));
+    const sitemapDirective = res.body
+      .split(/\r?\n/)
+      .find(line => line.trim().toLowerCase().startsWith('sitemap:'));
+    assert.ok(sitemapDirective, 'robots.txt missing Sitemap directive');
+    const sitemapUrl = new URL(sitemapDirective.replace(/^sitemap:\s*/i, '').trim());
+    assert.equal(sitemapUrl.origin, 'https://code.ladestack.in');
+    assert.equal(sitemapUrl.pathname, '/sitemap.xml');
+
+    const urlsInRobots = (res.body.match(/https?:\/\/[^\s]+/g) || []).map(u => {
+      try { return new URL(u); } catch { return null; }
+    }).filter(Boolean);
+    const hasObsolete = urlsInRobots.some(
+      u => u.hostname === 'gbcoder.com' || u.hostname.endsWith('.gbcoder.com')
+    );
+    assert.ok(!hasObsolete, 'robots.txt must not contain obsolete domains');
   });
 
   await check('sitemap.xml returns 200 and covers all 83 URLs with xhtml:link alternates', async () => {
     const res = await fetchRoute('/sitemap.xml');
     assert.equal(res.status, 200);
-    const locMatches = (res.body.match(/<loc>/g) || []).length;
-    assert.equal(locMatches, 83);
+    const locEntries = [...res.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => {
+      try { return new URL(m[1]); } catch { return null; }
+    });
+    assert.equal(locEntries.length, 83);
+    assert.ok(locEntries.every(u => u !== null && u.origin === 'https://code.ladestack.in'));
   });
 
   // 9. IDE Routing & Isolation

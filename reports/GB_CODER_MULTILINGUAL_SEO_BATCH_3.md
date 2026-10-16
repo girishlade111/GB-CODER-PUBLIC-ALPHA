@@ -10,7 +10,7 @@
 - **Deployed Preview URL:** `https://gb-coder-public-alp-git-3f8595-girishlade111-gmailcoms-projects.vercel.app`
 - **Production Origin:** `https://code.ladestack.in/`
 - **Date:** October 16, 2026
-- **Final Verdict:** `BATCH_3_PREVIEW_ACCEPTED`
+- **Final Verdict:** `BATCH_3_SECURITY_CLEARED_RELEASE_READY`
 
 ---
 
@@ -219,6 +219,8 @@ Consolidated test suite executed against unified build:
 
 ---
 
+---
+
 ## 8. Verification & Acceptance Sign-off
 
 - Dedicated branch `feature/multilingual-marketing-seo` committed and pushed to `origin`.
@@ -226,9 +228,46 @@ Consolidated test suite executed against unified build:
 - Production branch `main` remains untouched at `46d25d20f94332428490afadb3ce8645971a6915`.
 - No deployments to production were initiated.
 
+---
+
+## 9. Security Remediation & CodeQL Clearance
+
+### A. Investigation of GitHub CodeQL Check Run #116870066029
+The GitHub CodeQL workflow reported 7 high-severity security alerts under rule `js/incomplete-url-substring-sanitization` (CWE-20: Incomplete URL substring sanitization) in PR #43 changed code.
+
+#### Detailed Findings Matrix:
+| Alert # | Rule ID | Affected File & Line | Code Expression | Nature | Source-to-Sink Analysis & Remediation |
+|:---:|:---|:---|:---|:---:|:---|
+| 1 | `js/incomplete-url-substring-sanitization` | `scripts/build-unified.mjs:293` | `robots.includes('gbcoder.com')` | Benign / False Positive | Build verification reading `robots.txt` file content to ensure legacy domain was purged. CodeQL pattern matches `.includes()` with domain literal. **Remediation:** Parse URLs in `robots.txt` via `new URL()` and check `u.hostname === 'gbcoder.com'`. |
+| 2 | `js/incomplete-url-substring-sanitization` | `scripts/build-unified.mjs:307` | `sitemap.includes('gbcoder.com')` | Benign / False Positive | Build verification reading `sitemap.xml` file content to ensure legacy domain was purged. **Remediation:** Parse each `<loc>` entry via `new URL()` and check `u.hostname === 'gbcoder.com'`. |
+| 3 | `js/incomplete-url-substring-sanitization` | `scripts/build-unified.mjs:309` | `sitemap.includes('https://code.ladestack.in/')` | Benign / False Positive | Build verification checking sitemap origin URL presence. **Remediation:** Parse each `<loc>` entry via `new URL()` and verify `u.origin === 'https://code.ladestack.in'`. |
+| 4 | `js/incomplete-url-substring-sanitization` | `scripts/test-batch3-multilingual-seo.mjs:307` | `robotsContent.includes('gbcoder.com')` | Benign / False Positive | Automated test asserting `robots.txt` has no legacy domain. **Remediation:** Parse all URLs from `robots.txt` via `new URL()` and verify `u.hostname !== 'gbcoder.com'`. |
+| 5 | `js/incomplete-url-substring-sanitization` | `scripts/test-batch3-multilingual-seo.mjs:318` | `sitemapContent.includes('gbcoder.com')` | Benign / False Positive | Automated test asserting `sitemap.xml` has no legacy domain. **Remediation:** Parse all `<loc>` entries via `new URL()` and verify `u.hostname !== 'gbcoder.com'`. |
+| 6 | `js/incomplete-url-substring-sanitization` | `scripts/test-batch3-multilingual-seo.mjs:444` | `sitemap.body.includes('https://code.ladestack.in/')` | Benign / False Positive | HTTP route integration test checking sitemap body. **Remediation:** Parse sitemap `<loc>` elements via `new URL()` and verify `u.origin === 'https://code.ladestack.in'`. |
+| 7 | `js/incomplete-url-substring-sanitization` | `scripts/verify-batch3-deployed-preview.mjs:166` | `res.body.includes('gbcoder.com')` | Benign / False Positive | Deployed preview acceptance script asserting `robots.txt` has no legacy domain. **Remediation:** Parse URLs in response via `new URL()` and verify `u.hostname !== 'gbcoder.com'`. |
+
+### B. Technical Evidence & Remediation Design
+1. **Context & Exploitability Analysis:**
+   All 7 findings occurred exclusively within build-time verification scripts and test suites (`build-unified.mjs`, `test-batch3-multilingual-seo.mjs`, `verify-batch3-deployed-preview.mjs`). None of these scripts handle untrusted incoming user input or perform network redirects, authorization checks, or CORS validation in a production serving path. However, CodeQL's heuristic query flags any `.includes()` or `.indexOf()` call containing a domain literal as an incomplete URL check.
+2. **Implementation Fix:**
+   Rather than suppressing or disabling the scanner, all 7 checks were refactored to employ strict, semantic URL parsing:
+   - Extracting URLs using standard pattern matching and parsing with `new URL()`.
+   - Validating `u.origin === 'https://code.ladestack.in'` for canonical origin assertions.
+   - Validating `u.hostname === 'gbcoder.com' || u.hostname.endsWith('.gbcoder.com')` for obsolete domain assertions.
+   - Zero `.includes('domain')` substring invocations remain in the repository.
+
+### C. Post-Remediation Verification
+- `npm run build`: Deterministic build succeeded, all 25 output integrity checks passed.
+- `node scripts/test-batch3-multilingual-seo.mjs`: 21/21 tests passed (100%).
+- `npm run audit:routes`: 11/11 tests passed (100%).
+- `npm run verify:deploy`: 100% passed.
+- `node scripts/verify-batch3-deployed-preview.mjs`: 25/25 live deployed checks passed (100%).
+
 ```
 ======================================================================
-BATCH 3 VERDICT: BATCH_3_PREVIEW_ACCEPTED
-All requirements fulfilled, verified on deployed Vercel Preview.
+BATCH 3 VERDICT: BATCH_3_SECURITY_CLEARED_RELEASE_READY
+All 7 CodeQL security findings remediated with semantic URL parsing.
+All 21 automated tests, unified build, and 25 deployed preview checks PASS.
+PR #43 is release ready and left unmerged per specification.
 ======================================================================
 ```

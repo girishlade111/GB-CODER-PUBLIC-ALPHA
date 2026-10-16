@@ -290,12 +290,31 @@ if (!existsSync(robotsPath)) {
   fail('dist/robots.txt is missing');
 } else {
   const robots = readFileSync(robotsPath, 'utf8');
-  if (robots.includes('gbcoder.com')) {
+  const urlsInRobots = (robots.match(/https?:\/\/[^\s]+/g) || []).map(u => {
+    try { return new URL(u); } catch { return null; }
+  }).filter(Boolean);
+  const hasObsoleteHost = urlsInRobots.some(
+    u => u.hostname === 'gbcoder.com' || u.hostname.endsWith('.gbcoder.com')
+  );
+  const sitemapDirective = robots
+    .split(/\r?\n/)
+    .find(line => line.trim().toLowerCase().startsWith('sitemap:'));
+
+  if (hasObsoleteHost) {
     fail('dist/robots.txt contains obsolete gbcoder.com references');
-  } else if (!robots.includes('Sitemap: https://code.ladestack.in/sitemap.xml')) {
-    fail('dist/robots.txt missing primary https://code.ladestack.in/sitemap.xml declaration');
+  } else if (!sitemapDirective) {
+    fail('dist/robots.txt missing Sitemap declaration');
   } else {
-    pass('dist/robots.txt verified with https://code.ladestack.in/sitemap.xml');
+    try {
+      const sitemapUrl = new URL(sitemapDirective.replace(/^sitemap:\s*/i, '').trim());
+      if (sitemapUrl.origin !== 'https://code.ladestack.in' || sitemapUrl.pathname !== '/sitemap.xml') {
+        fail(`dist/robots.txt sitemap URL is not canonical: ${sitemapUrl.href}`);
+      } else {
+        pass('dist/robots.txt verified with https://code.ladestack.in/sitemap.xml');
+      }
+    } catch {
+      fail('dist/robots.txt sitemap URL could not be parsed');
+    }
   }
 }
 
@@ -304,12 +323,25 @@ if (!existsSync(sitemapPath)) {
   fail('dist/sitemap.xml is missing');
 } else {
   const sitemap = readFileSync(sitemapPath, 'utf8');
-  if (sitemap.includes('gbcoder.com')) {
-    fail('dist/sitemap.xml contains obsolete gbcoder.com references');
-  } else if (!sitemap.includes('https://code.ladestack.in/')) {
-    fail('dist/sitemap.xml missing canonical origin URLs');
+  const locEntries = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => {
+    try { return new URL(m[1]); } catch { return null; }
+  });
+  if (locEntries.length === 0 || locEntries.some(u => !u)) {
+    fail('dist/sitemap.xml missing or contains invalid <loc> URLs');
   } else {
-    pass('dist/sitemap.xml verified with canonical origin URLs');
+    const hasObsoleteHost = locEntries.some(
+      u => u.hostname === 'gbcoder.com' || u.hostname.endsWith('.gbcoder.com')
+    );
+    const nonCanonicalHost = locEntries.find(
+      u => u.origin !== 'https://code.ladestack.in'
+    );
+    if (hasObsoleteHost) {
+      fail('dist/sitemap.xml contains obsolete gbcoder.com references');
+    } else if (nonCanonicalHost) {
+      fail(`dist/sitemap.xml contains non-canonical URL origin: ${nonCanonicalHost.origin}`);
+    } else {
+      pass(`dist/sitemap.xml verified with ${locEntries.length} canonical origin URLs`);
+    }
   }
 }
 

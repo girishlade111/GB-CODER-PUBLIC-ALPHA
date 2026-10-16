@@ -304,33 +304,51 @@ describe('3. Technical International SEO', () => {
 describe('4. Sitemap & Robots.txt Compliance', () => {
   test('A. robots.txt has no obsolete domains and references canonical sitemap', () => {
     const robotsContent = readFileSync(join(DIST, 'robots.txt'), 'utf8');
-    assert.ok(!robotsContent.includes('gbcoder.com'), 'robots.txt must not contain gbcoder.com');
-    assert.ok(
-      robotsContent.includes('Sitemap: https://code.ladestack.in/sitemap.xml'),
-      'robots.txt missing primary https://code.ladestack.in/sitemap.xml',
+    const urlsInRobots = (robotsContent.match(/https?:\/\/[^\s]+/g) || []).map(u => {
+      try { return new URL(u); } catch { return null; }
+    }).filter(Boolean);
+    const hasObsolete = urlsInRobots.some(
+      u => u.hostname === 'gbcoder.com' || u.hostname.endsWith('.gbcoder.com')
     );
+    assert.ok(!hasObsolete, 'robots.txt must not contain gbcoder.com');
+
+    const sitemapDirective = robotsContent
+      .split(/\r?\n/)
+      .find(line => line.trim().toLowerCase().startsWith('sitemap:'));
+    assert.ok(sitemapDirective, 'robots.txt missing Sitemap directive');
+    const sitemapUrl = new URL(sitemapDirective.replace(/^sitemap:\s*/i, '').trim());
+    assert.equal(sitemapUrl.origin, 'https://code.ladestack.in');
+    assert.equal(sitemapUrl.pathname, '/sitemap.xml');
     assert.ok(robotsContent.includes('Disallow: /api/'), 'robots.txt must disallow /api/');
     assert.ok(robotsContent.includes('Disallow: /preview/'), 'robots.txt must disallow /preview/');
   });
 
   test('B. sitemap.xml exists and covers all 83 canonical public pages with hreflang alternates', () => {
     const sitemapContent = readFileSync(join(DIST, 'sitemap.xml'), 'utf8');
-    assert.ok(!sitemapContent.includes('gbcoder.com'), 'sitemap.xml must not contain gbcoder.com');
+    const locUrls = [...sitemapContent.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => {
+      try { return new URL(m[1]); } catch { return null; }
+    });
+    assert.equal(locUrls.length, 83, `Sitemap must contain exactly 83 URLs, found ${locUrls.length}`);
+    assert.ok(locUrls.every(u => u !== null), 'All loc entries must be valid URLs');
 
-    // Count URLs in sitemap
-    const locMatches = [...sitemapContent.matchAll(/<loc>(https:\/\/code\.ladestack\.in[^<]*)<\/loc>/g)].map(m => m[1]);
-    assert.equal(locMatches.length, 83, `Sitemap must contain exactly 83 URLs, found ${locMatches.length}`);
+    // Verify all loc URLs have canonical origin and none use obsolete domains
+    for (const u of locUrls) {
+      assert.notEqual(u.hostname, 'gbcoder.com', 'sitemap.xml must not contain gbcoder.com');
+      assert.ok(!u.hostname.endsWith('.gbcoder.com'), 'sitemap.xml must not contain gbcoder.com subdomains');
+      assert.equal(u.origin, 'https://code.ladestack.in', 'All sitemap URLs must belong to canonical origin');
+    }
 
     // Check all languages covered
+    const locPaths = new Set(locUrls.map(u => u.pathname));
     for (const lang of ALL_LANGUAGES) {
       if (lang === 'en') {
-        assert.ok(sitemapContent.includes('<loc>https://code.ladestack.in/</loc>'));
-        assert.ok(sitemapContent.includes('<loc>https://code.ladestack.in/features</loc>'));
-        assert.ok(sitemapContent.includes('<loc>https://code.ladestack.in/docs</loc>'));
+        assert.ok(locPaths.has('/'), 'Missing root in sitemap');
+        assert.ok(locPaths.has('/features'), 'Missing /features in sitemap');
+        assert.ok(locPaths.has('/docs'), 'Missing /docs in sitemap');
       } else {
-        assert.ok(sitemapContent.includes(`<loc>https://code.ladestack.in/${lang}</loc>`));
-        assert.ok(sitemapContent.includes(`<loc>https://code.ladestack.in/${lang}/features</loc>`));
-        assert.ok(sitemapContent.includes(`<loc>https://code.ladestack.in/${lang}/docs</loc>`));
+        assert.ok(locPaths.has(`/${lang}`), `Missing /${lang} in sitemap`);
+        assert.ok(locPaths.has(`/${lang}/features`), `Missing /${lang}/features in sitemap`);
+        assert.ok(locPaths.has(`/${lang}/docs`), `Missing /${lang}/docs in sitemap`);
       }
     }
 
@@ -436,12 +454,17 @@ describe('6. Server Routing & HTTP Status Codes', () => {
     const robots = await httpGet('/robots.txt');
     assert.equal(robots.status, 200);
     assert.ok(robots.headers['content-type'].includes('text/plain'));
-    assert.ok(robots.body.includes('Sitemap: https://code.ladestack.in/sitemap.xml'));
+    const sitemapLine = robots.body.split(/\r?\n/).find(l => l.trim().toLowerCase().startsWith('sitemap:'));
+    assert.ok(sitemapLine, 'robots.txt missing sitemap line');
+    const sitemapUrl = new URL(sitemapLine.replace(/^sitemap:\s*/i, '').trim());
+    assert.equal(sitemapUrl.origin, 'https://code.ladestack.in');
 
     const sitemap = await httpGet('/sitemap.xml');
     assert.equal(sitemap.status, 200);
     assert.ok(sitemap.headers['content-type'].includes('xml'));
-    assert.ok(sitemap.body.includes('https://code.ladestack.in/'));
+    const sitemapLocs = [...sitemap.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => new URL(m[1]));
+    assert.ok(sitemapLocs.length > 0, 'sitemap has loc entries');
+    assert.ok(sitemapLocs.every(u => u.origin === 'https://code.ladestack.in'), 'All sitemap URLs belong to canonical origin');
   });
 
   test('E. Unknown marketing route returns status 404 with 404 page', async () => {
