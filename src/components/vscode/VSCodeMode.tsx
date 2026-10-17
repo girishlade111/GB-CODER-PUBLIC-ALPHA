@@ -69,7 +69,7 @@ import {
   reconcileViewState,
   writeViewState,
 } from '../../services/vscodeWorkspaceStore';
-import { webcontainerService } from '../../services/webcontainer/webcontainerService';
+import { webcontainerService, WebContainerWriteError } from '../../services/webcontainer/webcontainerService';
 import { webcontainerWatcher } from '../../services/webcontainer/webcontainerWatcher';
 import { terminalSessionManager } from '../../services/webcontainer/terminalSessionManager';
 import { devServerManager } from '../../services/webcontainer/devServerManager';
@@ -280,6 +280,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const onDeleteFileRef = useRef(onDeleteFile);
   onDeleteFileRef.current = onDeleteFile;
   const isExternalUpdateRef = useRef(false);
+  const resolvingConflictsRef = useRef<Set<string>>(new Set());
   const [showTerminal, setShowTerminal] = useState(true);
   const [hasOpenedTerminal, setHasOpenedTerminal] = useState(true);
   const [activityTab, setActiveTab] = useState<ActivityTab>('explorer');
@@ -884,94 +885,239 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const handleResolveKeepMine = useCallback(
     async (conflict: ExternalFileConflict) => {
       console.log('[VSCodeMode] handleResolveKeepMine called for:', conflict.path);
-      webcontainerWatcher.markInternallySynced(conflict.path, conflict.monacoContent);
-      const updatedFiles = projectFilesMirrorRef.current.map((f) =>
-        f.path === conflict.path ? { ...f, content: conflict.monacoContent } : f,
-      );
-      projectFilesMirrorRef.current = updatedFiles;
-      onChangeFile(conflict.path, conflict.monacoContent);
-      void saveProjectFiles(conflict.projectId || effectiveProjectId, updatedFiles);
+      const targetProjectId = conflict.projectId || effectiveProjectId;
+      if (!targetProjectId) {
+        toast.error('Cannot resolve conflict without an active project.');
+        return;
+      }
 
-      dirtyPathsMirrorRef.current.delete(conflict.path);
-      setDirtyPaths((prev) => {
-        const next = new Set(prev);
-        next.delete(conflict.path);
-        return next;
-      });
-      if (activePathMirrorRef.current === conflict.path && editorRef.current) {
-        const model = editorRef.current.getModel();
-        if (model && model.getValue() !== conflict.monacoContent) {
-          try {
-            isExternalUpdateRef.current = true;
-            model.setValue(conflict.monacoContent);
-          } finally {
-            setTimeout(() => {
-              isExternalUpdateRef.current = false;
-            }, 50);
+      const conflictKey = `${targetProjectId}:${conflict.path}`;
+      if (resolvingConflictsRef.current.has(conflictKey)) {
+        console.warn('[VSCodeMode] Resolution already in progress for:', conflictKey);
+        return;
+      }
+
+      resolvingConflictsRef.current.add(conflictKey);
+      editorConflictService.setConflictStatus(targetProjectId, conflict.path, 'resolving');
+
+      try {
+        // Invariant 1: Re-verify conflict still exists and is recoverable
+        const activeConflict = editorConflictService.getConflict(targetProjectId, conflict.path);
+        if (!activeConflict) {
+          throw new Error('Conflict record is no longer active.');
+        }
+
+        // Invariant 2: Revalidate External Runtime State
+        let container = webcontainerService.getInstance();
+        if (!container) {
+          const pending = (
+            globalThis as unknown as { __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<unknown> }
+          ).__GBCODER_WEBCONTAINER_BOOT_PROMISE__;
+          if (pending) {
+            try {
+              await pending;
+              container = webcontainerService.getInstance();
+            } catch {
+              container = null;
+            }
           }
         }
-      }
-      try {
-        await webcontainerService.writeFile(conflict.path, conflict.monacoContent);
-        await webcontainerService.syncFile(
-          conflict.path,
-          conflict.monacoContent,
-          conflict.projectId || effectiveProjectId,
+        if (!container) {
+          throw new WebContainerWriteError(
+            'RUNTIME_UNAVAILABLE',
+            'Development runtime is unavailable. Please wait for WebContainer to be ready.',
+            conflict.path,
+            targetProjectId,
+          );
+        }
+
+        // Invariant 3: Execute Required Writes
+        webcontainerWatcher.markInternallySynced(conflict.path, conflict.monacoContent);
+
+        // Step 3a: Write to WebContainer VFS directly
+        await webcontainerService.writeFile(conflict.path, conflict.monacoContent, targetProjectId);
+
+        // Step 3b: Save to IndexedDB (projectFiles store)
+        const updatedFiles = projectFilesMirrorRef.current.map((f) =>
+          f.path === conflict.path ? { ...f, content: conflict.monacoContent } : f,
         );
+        projectFilesMirrorRef.current = updatedFiles;
+        await saveProjectFiles(targetProjectId, updatedFiles);
+
+        // Step 3c: Update React state and fileSyncCoordinator
+        onChangeFile(conflict.path, conflict.monacoContent);
+        await webcontainerService.syncFile(conflict.path, conflict.monacoContent, targetProjectId);
         await webcontainerService.flushFileSync();
-      } catch (err) {
-        console.warn('[VSCodeMode] Failed to sync resolved content to WebContainer:', err);
-      }
-      editorConflictService.resolveConflict(conflict.projectId, conflict.path, 'keep_mine');
-      setIsDiffMode(false);
-      if (conflict.conflictType === 'file_deleted' || conflict.conflictType === 'directory_deleted') {
-        toast.success(`Restored "${conflict.path}" to filesystem from editor buffer.`);
-      } else {
-        toast.success('Kept editor changes and updated terminal filesystem.');
+
+        // Step 3d: Update Monaco model if active
+        if (activePathMirrorRef.current === conflict.path && editorRef.current) {
+          const model = editorRef.current.getModel();
+          if (model && model.getValue() !== conflict.monacoContent) {
+            try {
+              isExternalUpdateRef.current = true;
+              model.setValue(conflict.monacoContent);
+            } finally {
+              setTimeout(() => {
+                isExternalUpdateRef.current = false;
+              }, 50);
+            }
+          }
+        }
+
+        // Invariant 4 & 5: Finalize Last
+        dirtyPathsMirrorRef.current.delete(conflict.path);
+        setDirtyPaths((prev) => {
+          const next = new Set(prev);
+          next.delete(conflict.path);
+          return next;
+        });
+
+        editorConflictService.resolveConflict(targetProjectId, conflict.path, 'keep_mine');
+        setIsDiffMode(false);
+
+        if (conflict.conflictType === 'file_deleted' || conflict.conflictType === 'directory_deleted') {
+          toast.success(`Restored "${conflict.path}" to filesystem from editor buffer.`);
+        } else {
+          toast.success('Kept editor changes and updated terminal filesystem.');
+        }
+      } catch (err: unknown) {
+        console.error('[VSCodeMode] Failed to resolve conflict (Keep Mine):', err);
+        editorConflictService.setConflictStatus(
+          targetProjectId,
+          conflict.path,
+          'recovery_required',
+          (err as Error)?.message,
+        );
+
+        const isRuntimeUnavailable =
+          err instanceof WebContainerWriteError && err.code === 'RUNTIME_UNAVAILABLE';
+        if (isRuntimeUnavailable) {
+          toast.error(
+            'Cannot finish conflict resolution because the development runtime is unavailable. Your changes are preserved. Reconnect the runtime and retry.',
+          );
+        } else {
+          toast.error(
+            `Failed to save resolved changes: ${(err as Error)?.message || 'Storage error'}. Both versions remain preserved for recovery.`,
+          );
+        }
+      } finally {
+        resolvingConflictsRef.current.delete(conflictKey);
       }
     },
     [onChangeFile, effectiveProjectId],
   );
 
   const handleResolveUseExternal = useCallback(
-    (conflict: ExternalFileConflict) => {
-      webcontainerWatcher.markInternallySynced(conflict.path, conflict.externalContent);
-      if (
-        conflict.conflictType === 'file_deleted' ||
-        conflict.conflictType === 'directory_deleted' ||
-        conflict.externalContent === ''
-      ) {
-        // External version is deleted: remove file from workspace
-        const updatedFiles = projectFilesMirrorRef.current.filter((f) => f.path !== conflict.path);
-        projectFilesMirrorRef.current = updatedFiles;
-        void saveProjectFiles(conflict.projectId || effectiveProjectId, updatedFiles);
-        onDeleteFile?.(conflict.path);
-        setOpenPaths((paths) => paths.filter((p) => p !== conflict.path));
-        setSplitOpenPaths((paths) => paths.filter((p) => p !== conflict.path));
-        setActivePath((current) => (current === conflict.path ? null : current));
-        setSplitActivePath((current) => (current === conflict.path ? null : current));
-        setDirtyPaths((current) => {
-          const next = new Set(current);
-          next.delete(conflict.path);
-          return next;
-        });
-        toast.success(`Removed "${conflict.path}" (accepted external deletion).`);
-      } else {
-        const updatedFiles = projectFilesMirrorRef.current.map((f) =>
-          f.path === conflict.path ? { ...f, content: conflict.externalContent } : f,
-        );
-        projectFilesMirrorRef.current = updatedFiles;
-        void saveProjectFiles(conflict.projectId || effectiveProjectId, updatedFiles);
-        onChangeFile(conflict.path, conflict.externalContent);
-        setDirtyPaths((current) => {
-          const next = new Set(current);
-          next.delete(conflict.path);
-          return next;
-        });
-        toast.success('Reverted to external filesystem version.');
+    async (conflict: ExternalFileConflict) => {
+      console.log('[VSCodeMode] handleResolveUseExternal called for:', conflict.path);
+      const targetProjectId = conflict.projectId || effectiveProjectId;
+      if (!targetProjectId) {
+        toast.error('Cannot resolve conflict without an active project.');
+        return;
       }
-      editorConflictService.resolveConflict(conflict.projectId, conflict.path, 'use_external');
-      setIsDiffMode(false);
+
+      const conflictKey = `${targetProjectId}:${conflict.path}`;
+      if (resolvingConflictsRef.current.has(conflictKey)) {
+        console.warn('[VSCodeMode] Resolution already in progress for:', conflictKey);
+        return;
+      }
+
+      resolvingConflictsRef.current.add(conflictKey);
+      editorConflictService.setConflictStatus(targetProjectId, conflict.path, 'resolving');
+
+      try {
+        const isDeletion =
+          conflict.conflictType === 'file_deleted' ||
+          conflict.conflictType === 'directory_deleted' ||
+          conflict.externalContent === '';
+
+        webcontainerWatcher.markInternallySynced(conflict.path, conflict.externalContent);
+
+        if (isDeletion) {
+          // 1. Delete from IndexedDB
+          const updatedFiles = projectFilesMirrorRef.current.filter((f) => f.path !== conflict.path);
+          projectFilesMirrorRef.current = updatedFiles;
+          await saveProjectFiles(targetProjectId, updatedFiles);
+
+          // 2. Ensure removed from WebContainer VFS if runtime is available
+          const container = webcontainerService.getInstance();
+          if (container) {
+            const cleanPath = conflict.path.replace(/\\/g, '/').replace(/^\/+/, '').trim();
+            try {
+              await container.fs.rm(cleanPath, { force: true });
+            } catch {
+              // file already removed
+            }
+          }
+
+          // 3. Update React / UI state
+          onDeleteFile?.(conflict.path);
+          setOpenPaths((paths) => paths.filter((p) => p !== conflict.path));
+          setSplitOpenPaths((paths) => paths.filter((p) => p !== conflict.path));
+          setActivePath((current) => (current === conflict.path ? null : current));
+          setSplitActivePath((current) => (current === conflict.path ? null : current));
+          dirtyPathsMirrorRef.current.delete(conflict.path);
+          setDirtyPaths((current) => {
+            const next = new Set(current);
+            next.delete(conflict.path);
+            return next;
+          });
+
+          // 4. Finalize conflict record last
+          editorConflictService.resolveConflict(targetProjectId, conflict.path, 'use_external');
+          setIsDiffMode(false);
+          toast.success(`Removed "${conflict.path}" (accepted external deletion).`);
+        } else {
+          // User chose to accept external content
+          // 1. Persist external content to IndexedDB
+          const updatedFiles = projectFilesMirrorRef.current.map((f) =>
+            f.path === conflict.path ? { ...f, content: conflict.externalContent } : f,
+          );
+          projectFilesMirrorRef.current = updatedFiles;
+          await saveProjectFiles(targetProjectId, updatedFiles);
+
+          // 2. Update Monaco model
+          if (activePathMirrorRef.current === conflict.path && editorRef.current) {
+            const model = editorRef.current.getModel();
+            if (model && model.getValue() !== conflict.externalContent) {
+              try {
+                isExternalUpdateRef.current = true;
+                model.setValue(conflict.externalContent);
+              } finally {
+                setTimeout(() => {
+                  isExternalUpdateRef.current = false;
+                }, 50);
+              }
+            }
+          }
+
+          onChangeFile(conflict.path, conflict.externalContent);
+          dirtyPathsMirrorRef.current.delete(conflict.path);
+          setDirtyPaths((current) => {
+            const next = new Set(current);
+            next.delete(conflict.path);
+            return next;
+          });
+
+          // 3. Finalize conflict record last
+          editorConflictService.resolveConflict(targetProjectId, conflict.path, 'use_external');
+          setIsDiffMode(false);
+          toast.success('Reverted to external filesystem version.');
+        }
+      } catch (err: unknown) {
+        console.error('[VSCodeMode] Failed to resolve conflict (Use External):', err);
+        editorConflictService.setConflictStatus(
+          targetProjectId,
+          conflict.path,
+          'recovery_required',
+          (err as Error)?.message,
+        );
+        toast.error(
+          `Could not safely apply external changes: ${(err as Error)?.message || 'Storage error'}. Both versions remain preserved for recovery.`,
+        );
+      } finally {
+        resolvingConflictsRef.current.delete(conflictKey);
+      }
     },
     [onChangeFile, onDeleteFile, effectiveProjectId],
   );
@@ -2150,7 +2296,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                         <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
                         <span>
                           <strong>
-                            {activeConflict.conflictType === 'directory_deleted'
+                            {activeConflict.status === 'recovery_required'
+                              ? 'Resolution incomplete / recovery needed'
+                              : activeConflict.conflictType === 'directory_deleted'
                               ? 'Directory deleted externally'
                               : activeConflict.conflictType === 'file_deleted'
                               ? 'File deleted externally'
@@ -2158,6 +2306,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                           </strong>{' '}
                           while you have unsaved edits in{' '}
                           <code className="rounded bg-black/40 px-1 py-0.5">{activeConflict.path}</code>
+                          {activeConflict.status === 'recovery_required' && (
+                            <span className="ml-1.5 rounded bg-red-950 px-1.5 py-0.5 text-[10px] font-semibold text-red-300 border border-red-800/50">
+                              Retry Required
+                            </span>
+                          )}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
@@ -2184,8 +2337,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                           className="rounded bg-amber-600 px-2 py-0.5 font-medium text-white hover:bg-amber-500 transition-colors"
                           data-testid="conflict-keep-mine-btn"
                         >
-                          {activeConflict.conflictType === 'directory_deleted' ||
-                          activeConflict.conflictType === 'file_deleted'
+                          {activeConflict.status === 'recovery_required'
+                            ? 'Retry Keep Mine'
+                            : activeConflict.conflictType === 'directory_deleted' ||
+                              activeConflict.conflictType === 'file_deleted'
                             ? 'Restore File'
                             : 'Keep My Changes'}
                         </button>
@@ -2204,8 +2359,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                           className="rounded bg-zinc-700 px-2 py-0.5 hover:bg-zinc-600 text-zinc-100 transition-colors"
                           data-testid="conflict-use-external-btn"
                         >
-                          {activeConflict.conflictType === 'directory_deleted' ||
-                          activeConflict.conflictType === 'file_deleted'
+                          {activeConflict.status === 'recovery_required'
+                            ? 'Retry Use External'
+                            : activeConflict.conflictType === 'directory_deleted' ||
+                              activeConflict.conflictType === 'file_deleted'
                             ? 'Accept Deletion'
                             : 'Use External Version'}
                         </button>
@@ -2510,7 +2667,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
                       <span>
                         <strong>
-                          {activeConflict.conflictType === 'directory_deleted'
+                          {activeConflict.status === 'recovery_required'
+                            ? 'Resolution incomplete / recovery needed'
+                            : activeConflict.conflictType === 'directory_deleted'
                             ? 'Directory deleted externally'
                             : activeConflict.conflictType === 'file_deleted'
                             ? 'File deleted externally'
@@ -2518,6 +2677,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                         </strong>{' '}
                         while you have unsaved edits in{' '}
                         <code className="rounded bg-black/40 px-1 py-0.5">{activeConflict.path}</code>
+                        {activeConflict.status === 'recovery_required' && (
+                          <span className="ml-1.5 rounded bg-red-950 px-1.5 py-0.5 text-[10px] font-semibold text-red-300 border border-red-800/50">
+                            Retry Required
+                          </span>
+                        )}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -2544,8 +2708,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                         className="rounded bg-amber-600 px-2 py-0.5 font-medium text-white hover:bg-amber-500 transition-colors"
                         data-testid="conflict-keep-mine-btn"
                       >
-                        {activeConflict.conflictType === 'directory_deleted' ||
-                        activeConflict.conflictType === 'file_deleted'
+                        {activeConflict.status === 'recovery_required'
+                          ? 'Retry Keep Mine'
+                          : activeConflict.conflictType === 'directory_deleted' ||
+                            activeConflict.conflictType === 'file_deleted'
                           ? 'Restore File'
                           : 'Keep My Changes'}
                       </button>
@@ -2564,8 +2730,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                         className="rounded bg-zinc-700 px-2 py-0.5 hover:bg-zinc-600 text-zinc-100 transition-colors"
                         data-testid="conflict-use-external-btn"
                       >
-                        {activeConflict.conflictType === 'directory_deleted' ||
-                        activeConflict.conflictType === 'file_deleted'
+                        {activeConflict.status === 'recovery_required'
+                          ? 'Retry Use External'
+                          : activeConflict.conflictType === 'directory_deleted' ||
+                            activeConflict.conflictType === 'file_deleted'
                           ? 'Accept Deletion'
                           : 'Use External Version'}
                       </button>

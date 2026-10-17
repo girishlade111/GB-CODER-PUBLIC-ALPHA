@@ -10,7 +10,8 @@ import { TerminalSessionManager } from '../src/services/webcontainer/terminalSes
 import { WebContainerWatcher, PathClassification } from '../src/services/webcontainer/webcontainerWatcher.ts';
 import { DevServerManager } from '../src/services/webcontainer/devServerManager.ts';
 import { previewReloadService } from '../src/services/preview/previewReloadService.ts';
-import { editorConflictService } from '../src/services/editor/editorConflictService.ts';
+import { editorConflictService, isActiveConflictStatus } from '../src/services/editor/editorConflictService.ts';
+import { webcontainerService, WebContainerWriteError } from '../src/services/webcontainer/webcontainerService.ts';
 
 const TEST_PORT = 4188;
 const BASE_URL = `http://127.0.0.1:${TEST_PORT}`;
@@ -696,6 +697,70 @@ describe('GB Coder Phase 1 — WebContainer Runtime & Terminal Reliability Matri
       assert.equal(editorConflictService.hasConflict('proj-b', 'file-b.ts'), true);
 
       editorConflictService.deleteProjectConflicts('proj-b');
+    });
+
+    test('4.9 setConflictStatus transitions to recovery_required on partial failure and retains active conflict guard', () => {
+      editorConflictService.clearProjectConflicts('proj-recovery');
+      editorConflictService.registerConflict({
+        projectId: 'proj-recovery',
+        path: 'src/app.ts',
+        monacoContent: 'editor-v1',
+        externalContent: 'disk-v1',
+      });
+
+      // Transition to recovery_required with error message
+      editorConflictService.setConflictStatus('proj-recovery', 'src/app.ts', 'recovery_required', 'Virtual filesystem write failed');
+
+      const conflict = editorConflictService.getConflict('proj-recovery', 'src/app.ts');
+      assert.ok(conflict, 'Conflict must exist');
+      assert.equal(conflict.status, 'recovery_required');
+      assert.equal(conflict.lastError, 'Virtual filesystem write failed');
+
+      // Crucial invariants: recovery_required MUST be active and block unsafe writes
+      assert.equal(editorConflictService.hasConflict('proj-recovery', 'src/app.ts'), true);
+      assert.equal(editorConflictService.canWrite('proj-recovery', 'src/app.ts'), false);
+      assert.equal(isActiveConflictStatus('recovery_required'), true);
+      assert.throws(
+        () => editorConflictService.assertWriteSafe('proj-recovery', 'src/app.ts'),
+        /Write blocked/,
+      );
+
+      // Clean up
+      editorConflictService.deleteProjectConflicts('proj-recovery');
+    });
+
+    test('4.10 webcontainerService.writeFile throws typed WebContainerWriteError on invalid arguments or unmounted runtime', async () => {
+      // 1. Invalid path
+      await assert.rejects(
+        () => webcontainerService.writeFile('', 'test'),
+        (err) => err instanceof WebContainerWriteError && err.code === 'INVALID_PATH',
+      );
+
+      // 2. Unmounted runtime
+      await assert.rejects(
+        () => webcontainerService.writeFile('valid-path.txt', 'test-content', 'proj-test'),
+        (err) => err instanceof WebContainerWriteError && err.code === 'RUNTIME_UNAVAILABLE',
+      );
+    });
+
+    test('4.11 recovery_required conflicts are cleared only on final successful resolveConflict', () => {
+      editorConflictService.clearProjectConflicts('proj-recovery-resolve');
+      editorConflictService.registerConflict({
+        projectId: 'proj-recovery-resolve',
+        path: 'src/main.ts',
+        monacoContent: 'editor-content',
+        externalContent: 'disk-content',
+      });
+
+      editorConflictService.setConflictStatus('proj-recovery-resolve', 'src/main.ts', 'recovery_required', 'Transient network error');
+      assert.equal(editorConflictService.hasConflict('proj-recovery-resolve', 'src/main.ts'), true);
+
+      // Simulate successful retry resolution
+      editorConflictService.resolveConflict('proj-recovery-resolve', 'src/main.ts', 'keep_mine');
+      assert.equal(editorConflictService.hasConflict('proj-recovery-resolve', 'src/main.ts'), false);
+      assert.equal(editorConflictService.canWrite('proj-recovery-resolve', 'src/main.ts'), true);
+
+      editorConflictService.deleteProjectConflicts('proj-recovery-resolve');
     });
   });
 

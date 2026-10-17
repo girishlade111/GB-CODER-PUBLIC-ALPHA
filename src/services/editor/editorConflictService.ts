@@ -18,6 +18,8 @@ export type ConflictType = 'content_modified' | 'directory_deleted' | 'file_dele
 
 export type ConflictStatus =
   | 'pending'
+  | 'resolving'
+  | 'recovery_required'
   | 'resolved_keep_mine'
   | 'resolved_use_external'
   | 'dismissed';
@@ -37,6 +39,11 @@ export interface ExternalFileConflict {
   updatedAt: number;
   status: ConflictStatus;
   externalHash?: string;
+  lastError?: string;
+}
+
+export function isActiveConflictStatus(status: ConflictStatus): boolean {
+  return status === 'pending' || status === 'resolving' || status === 'recovery_required';
 }
 
 const DB_NAME = 'gb-coder-editor-conflicts';
@@ -118,7 +125,7 @@ export class EditorConflictService {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
         for (const item of parsed) {
-          if (item && item.id && item.projectId && item.path && item.status === 'pending') {
+          if (item && item.id && item.projectId && item.path && isActiveConflictStatus(item.status)) {
             const key = this.makeKey(item.projectId, item.path);
             this.conflicts.set(key, item);
           }
@@ -132,7 +139,7 @@ export class EditorConflictService {
   private syncToLocalStorage(): void {
     if (typeof localStorage === 'undefined') return;
     try {
-      const active = Array.from(this.conflicts.values()).filter((c) => c.status === 'pending');
+      const active = Array.from(this.conflicts.values()).filter((c) => isActiveConflictStatus(c.status));
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(active));
     } catch {
       // Non-fatal if localStorage quota is exceeded; IndexedDB retains full records
@@ -158,7 +165,7 @@ export class EditorConflictService {
             const records: ExternalFileConflict[] = req.result ?? [];
             let updated = false;
             for (const item of records) {
-              if (item && item.status === 'pending') {
+              if (item && isActiveConflictStatus(item.status)) {
                 const key = this.makeKey(item.projectId, item.path);
                 if (!this.conflicts.has(key)) {
                   this.conflicts.set(key, item);
@@ -180,7 +187,7 @@ export class EditorConflictService {
             const cursor = req.result;
             if (cursor) {
               const item = cursor.value as ExternalFileConflict;
-              if (item && item.status === 'pending') {
+              if (item && isActiveConflictStatus(item.status)) {
                 const key = this.makeKey(item.projectId, item.path);
                 if (!this.conflicts.has(key)) {
                   this.conflicts.set(key, item);
@@ -274,27 +281,59 @@ export class EditorConflictService {
   }
 
   /**
-   * Retrieves an active pending conflict for a project and path.
+   * Retrieves an active pending or in-recovery conflict for a project and path.
    */
   public getConflict(projectId: string, path: string): ExternalFileConflict | undefined {
     const key = this.makeKey(projectId, path);
     const c = this.conflicts.get(key);
-    return c && c.status === 'pending' ? c : undefined;
+    return c && isActiveConflictStatus(c.status) ? c : undefined;
   }
 
   /**
-   * Checks whether a pending conflict exists for the specified file.
+   * Updates conflict status (e.g. 'resolving' or 'recovery_required') with durable persistence.
+   */
+  public setConflictStatus(
+    projectId: string,
+    path: string,
+    status: ConflictStatus,
+    error?: string,
+  ): ExternalFileConflict | undefined {
+    const key = this.makeKey(projectId, path);
+    const conflict = this.conflicts.get(key);
+    if (!conflict) return undefined;
+
+    conflict.status = status;
+    conflict.updatedAt = Date.now();
+    if (error !== undefined) {
+      conflict.lastError = error;
+    }
+
+    if (isActiveConflictStatus(status)) {
+      this.syncToLocalStorage();
+      void this.persistConflict(conflict);
+    } else {
+      this.conflicts.delete(key);
+      this.syncToLocalStorage();
+      void this.removeConflictFromStorage(conflict);
+    }
+
+    this.notify();
+    return conflict;
+  }
+
+  /**
+   * Checks whether a pending or in-recovery conflict exists for the specified file.
    */
   public hasConflict(projectId: string, path: string): boolean {
     return Boolean(this.getConflict(projectId, path));
   }
 
   /**
-   * Checks whether any pending conflicts exist in the given project.
+   * Checks whether any pending or in-recovery conflicts exist in the given project.
    */
   public hasAnyConflict(projectId: string): boolean {
     for (const [key, conflict] of this.conflicts.entries()) {
-      if (key.startsWith(`${projectId}:`) && conflict.status === 'pending') {
+      if (key.startsWith(`${projectId}:`) && isActiveConflictStatus(conflict.status)) {
         return true;
       }
     }
@@ -302,12 +341,12 @@ export class EditorConflictService {
   }
 
   /**
-   * Lists all pending conflicts for the specified project.
+   * Lists all active conflicts for the specified project.
    */
   public listConflicts(projectId: string): ExternalFileConflict[] {
     const results: ExternalFileConflict[] = [];
     for (const [key, conflict] of this.conflicts.entries()) {
-      if (key.startsWith(`${projectId}:`) && conflict.status === 'pending') {
+      if (key.startsWith(`${projectId}:`) && isActiveConflictStatus(conflict.status)) {
         results.push(conflict);
       }
     }

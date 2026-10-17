@@ -18,6 +18,36 @@ import { devServerManager } from './devServerManager';
 import { terminalSessionManager, type TerminalSessionSummary } from './terminalSessionManager';
 export { FileSyncCoordinator, type FlushResult };
 
+export type WebContainerWriteErrorCode =
+  | 'RUNTIME_UNAVAILABLE'
+  | 'WRONG_PROJECT'
+  | 'INVALID_PATH'
+  | 'FILESYSTEM_WRITE_FAILED'
+  | 'PERSISTENCE_FAILED'
+  | 'STALE_REVISION'
+  | 'RECOVERY_REQUIRED';
+
+export class WebContainerWriteError extends Error {
+  public readonly code: WebContainerWriteErrorCode;
+  public readonly path: string;
+  public readonly projectId?: string;
+
+  constructor(
+    code: WebContainerWriteErrorCode,
+    message: string,
+    path: string,
+    projectId?: string,
+    cause?: unknown,
+  ) {
+    super(message);
+    this.name = 'WebContainerWriteError';
+    this.code = code;
+    this.path = path;
+    this.projectId = projectId;
+    if (cause) (this as any).cause = cause;
+  }
+}
+
 /**
  * Optimized npm configuration for WebContainer:
  * - legacy-peer-deps: avoids ERESOLVE halts on modern packages
@@ -495,7 +525,7 @@ class WebContainerManager {
   private fileSyncCoordinator = new FileSyncCoordinator({
     debounceMs: 200,
     rawWrite: async (cleanPath, content) => {
-      const container = this.instance;
+      const container = this.getInstance();
       const generation = this.runtimeGeneration;
       if (!container) throw new Error('WebContainer is not mounted');
       const dirIndex = cleanPath.lastIndexOf('/');
@@ -1665,29 +1695,133 @@ class WebContainerManager {
     );
   }
 
-  /**
-   * Writes directly to the WebContainer filesystem immediately.
-   */
-  public async writeFile(path: string, content: string): Promise<void> {
-    const cleanPath = path.replace(/\\/g, '/').replace(/^\/+/, '');
-    const container =
+  public getInstance(): WebContainer | null {
+    return (
       this.instance ??
       (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
         .__GBCODER_WEBCONTAINER_INSTANCE__ ??
-      null;
-    console.log('[webcontainerService] writeFile path:', cleanPath, 'hasContainer:', Boolean(container));
-    if (!container) return;
+      null
+    );
+  }
+
+  /**
+   * Reads a file directly from the WebContainer filesystem.
+   */
+  public async readFile(path: string): Promise<string> {
+    const cleanPath = path.replace(/\\/g, '/').replace(/^\/+/, '').trim();
+    let container = this.getInstance();
+    if (!container) {
+      const pendingBoot =
+        this.bootPromise ??
+        (globalThis as unknown as { __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<WebContainer> })
+          .__GBCODER_WEBCONTAINER_BOOT_PROMISE__;
+      if (pendingBoot) {
+        try {
+          container = await pendingBoot;
+        } catch {
+          container = null;
+        }
+      }
+    }
+
+    if (!container) {
+      throw new WebContainerWriteError(
+        'RUNTIME_UNAVAILABLE',
+        'WebContainer runtime is not booted or unavailable. Read cannot be completed.',
+        cleanPath,
+      );
+    }
+    return await container.fs.readFile(cleanPath, 'utf-8');
+  }
+
+  /**
+   * Writes directly to the WebContainer filesystem immediately.
+   * Enforces strict failure semantics: throws WebContainerWriteError if
+   * runtime is unavailable, project is mismatched, path is invalid, or VFS write fails.
+   */
+  public async writeFile(path: string, content: string, projectId?: string): Promise<void> {
+    if (!path || typeof path !== 'string' || path.trim() === '') {
+      throw new WebContainerWriteError(
+        'INVALID_PATH',
+        'Cannot write to empty or invalid path',
+        path || '',
+        projectId,
+      );
+    }
+
+    const cleanPath = path.replace(/\\/g, '/').replace(/^\/+/, '').trim();
+    if (cleanPath.startsWith('../') || cleanPath.includes('/../')) {
+      throw new WebContainerWriteError(
+        'INVALID_PATH',
+        `Path traversal forbidden: "${cleanPath}"`,
+        cleanPath,
+        projectId,
+      );
+    }
+
+    if (projectId && this.activeProjectId && projectId !== this.activeProjectId) {
+      throw new WebContainerWriteError(
+        'WRONG_PROJECT',
+        `Write rejected: target projectId "${projectId}" does not match active projectId "${this.activeProjectId}"`,
+        cleanPath,
+        projectId,
+      );
+    }
+
+    let container = this.getInstance();
+    if (!container) {
+      const pendingBoot =
+        this.bootPromise ??
+        (globalThis as unknown as { __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<WebContainer> })
+          .__GBCODER_WEBCONTAINER_BOOT_PROMISE__;
+      if (pendingBoot) {
+        try {
+          container = await pendingBoot;
+        } catch {
+          container = null;
+        }
+      }
+    }
+
+    if (!container) {
+      throw new WebContainerWriteError(
+        'RUNTIME_UNAVAILABLE',
+        'WebContainer runtime is not booted or unavailable. Write cannot be completed.',
+        cleanPath,
+        projectId,
+      );
+    }
+
     const dirIndex = cleanPath.lastIndexOf('/');
     if (dirIndex !== -1) {
       const dir = cleanPath.slice(0, dirIndex);
       try {
         await container.fs.mkdir(dir, { recursive: true });
-      } catch {
-        // directory may already exist
+      } catch (err: unknown) {
+        if ((err as { code?: string })?.code !== 'EEXIST') {
+          throw new WebContainerWriteError(
+            'FILESYSTEM_WRITE_FAILED',
+            `Failed to create directory "${dir}": ${(err as Error)?.message || 'unknown error'}`,
+            cleanPath,
+            projectId,
+            err,
+          );
+        }
       }
     }
-    await container.fs.writeFile(cleanPath, content);
-    console.log('[webcontainerService] writeFile finished for:', cleanPath);
+
+    try {
+      await container.fs.writeFile(cleanPath, content);
+      console.log('[webcontainerService] writeFile finished for:', cleanPath);
+    } catch (err: unknown) {
+      throw new WebContainerWriteError(
+        'FILESYSTEM_WRITE_FAILED',
+        `Failed to write file "${cleanPath}" to WebContainer: ${(err as Error)?.message || 'unknown error'}`,
+        cleanPath,
+        projectId,
+        err,
+      );
+    }
   }
 
   /**
