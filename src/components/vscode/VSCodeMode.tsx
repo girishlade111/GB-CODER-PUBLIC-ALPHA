@@ -1535,6 +1535,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           return (
             <CodeAssistPanel
               project={project}
+              activePath={activePath}
+              isEditorDirty={(filePath) => {
+                const clean = filePath.replace(/\\/g, '/').replace(/^\/+/, '');
+                return dirtyPathsMirrorRef.current.has(clean) || dirtyPathsMirrorRef.current.has(filePath);
+              }}
               onApplyFiles={handleApplyCodeAssistFiles}
               onClose={() => {
                 setWorkbenchLayout((prev) => ({

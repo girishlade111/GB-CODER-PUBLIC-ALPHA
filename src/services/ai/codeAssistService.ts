@@ -1,492 +1,86 @@
-import { MultiFileProject } from '../../types/files';
-import { SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS, AppSettings, AIProviderId } from '../../hooks/useSettings';
-import { webcontainerService } from '../webcontainer/webcontainerService';
+/**
+ * Bridge service for CodeAssistPanel and VSCodeMode.
+ *
+ * Delegates state and actions to the new modular AssistAgentService (Phase 3A),
+ * ensuring complete backwards compatibility with existing workbench listeners and tests.
+ */
 
-export interface CodeAssistMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: number;
-  reasoning?: string;
-  diffStats?: {
-    added: number;
-    removed: number;
-  };
-  modifiedFiles?: Array<{
-    path: string;
-    action: 'created' | 'modified' | 'deleted';
-    content?: string;
-  }>;
-}
+import { MultiFileProject } from '../../types/files.ts';
+import { assistAgentService } from './assistAgentService.ts';
+import {
+  CodeAssistMessage,
+  CodeAssistSession,
+  CodeAssistMode,
+  CodeAssistState,
+  AiProviderId,
+} from './types.ts';
 
-export interface CodeAssistSession {
-  id: string;
-  title: string;
-  createdAt: number;
-  messages: CodeAssistMessage[];
-}
+export type {
+  CodeAssistMessage,
+  CodeAssistSession,
+  CodeAssistMode,
+  CodeAssistState,
+  AiProviderId,
+};
 
-export type CodeAssistMode = 'Code' | 'Ask' | 'Debug' | 'Plan';
-
-export interface CodeAssistState {
-  sessions: CodeAssistSession[];
-  activeSessionId: string;
-  isGenerating: boolean;
-  generatingSessionId: string | null;
-  progressStep: string;
-  currentReasoning: string;
-  selectedMode: CodeAssistMode;
-  selectedProvider: AIProviderId;
-  selectedModel: string;
-  tokenCount: {
-    input: number;
-    output: number;
-    total: number;
-    max: number;
-  };
-}
-
-const STORAGE_KEY = 'gbcoder_code_assist_sessions_v1';
-
-class CodeAssistService {
-  private state: CodeAssistState;
-  private listeners = new Set<() => void>();
-  private abortController: AbortController | null = null;
-
-  constructor() {
-    this.state = this.loadInitialState();
-  }
-
-  private loadInitialState(): CodeAssistState {
-    const defaultSessionId = `session-${Date.now()}`;
-    const defaultSession: CodeAssistSession = {
-      id: defaultSessionId,
-      title: `New session - ${new Date().toISOString()}`,
-      createdAt: Date.now(),
-      messages: [],
-    };
-
-    let sessions = [defaultSession];
-    let activeSessionId = defaultSessionId;
-
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            sessions = parsed;
-            activeSessionId = sessions[0].id;
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to load code assist sessions from storage:', err);
-      }
-    }
-
-    return {
-      sessions,
-      activeSessionId,
-      isGenerating: false,
-      generatingSessionId: null,
-      progressStep: '',
-      currentReasoning: '',
-      selectedMode: 'Code',
-      selectedProvider: 'inception',
-      selectedModel: 'Mercury 2.5 (Fast)',
-      tokenCount: {
-        input: 129500,
-        output: 70,
-        total: 129570,
-        max: 1000000,
-      },
-    };
-  }
-
-  private persistSessions() {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state.sessions));
-    } catch (err) {
-      console.warn('Failed to persist code assist sessions:', err);
-    }
-  }
-
+class CodeAssistServiceBridge {
   public subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-
-  private notify() {
-    this.listeners.forEach((listener) => {
-      try {
-        listener();
-      } catch (err) {
-        console.error('Error in code assist listener:', err);
-      }
-    });
+    return assistAgentService.subscribe(listener);
   }
 
   public getState(): CodeAssistState {
-    return this.state;
+    return assistAgentService.getState();
   }
 
   public getActiveSession(): CodeAssistSession {
-    return (
-      this.state.sessions.find((s) => s.id === this.state.activeSessionId) ||
-      this.state.sessions[0]
-    );
+    return assistAgentService.getActiveSession();
   }
 
   public createNewSession(): string {
-    const newId = `session-${Date.now()}`;
-    const newSession: CodeAssistSession = {
-      id: newId,
-      title: `New session - ${new Date().toISOString()}`,
-      createdAt: Date.now(),
-      messages: [],
-    };
-
-    this.state = {
-      ...this.state,
-      sessions: [newSession, ...this.state.sessions],
-      activeSessionId: newId,
-    };
-    this.persistSessions();
-    this.notify();
-    return newId;
+    return assistAgentService.createNewSession();
   }
 
-  public switchSession(sessionId: string) {
-    if (this.state.activeSessionId === sessionId) return;
-    this.state = {
-      ...this.state,
-      activeSessionId: sessionId,
-    };
-    this.notify();
+  public switchSession(sessionId: string): void {
+    assistAgentService.switchSession(sessionId);
   }
 
-  public deleteSession(sessionId: string) {
-    const remaining = this.state.sessions.filter((s) => s.id !== sessionId);
-    if (remaining.length === 0) {
-      this.createNewSession();
-      return;
-    }
-    this.state = {
-      ...this.state,
-      sessions: remaining,
-      activeSessionId:
-        this.state.activeSessionId === sessionId ? remaining[0].id : this.state.activeSessionId,
-    };
-    this.persistSessions();
-    this.notify();
+  public deleteSession(sessionId: string): void {
+    assistAgentService.deleteSession(sessionId);
   }
 
-  public setMode(mode: CodeAssistMode) {
-    this.state = { ...this.state, selectedMode: mode };
-    this.notify();
+  public setMode(mode: CodeAssistMode): void {
+    assistAgentService.setMode(mode);
   }
 
-  public setModel(model: string, provider?: AIProviderId) {
-    this.state = {
-      ...this.state,
-      selectedModel: model,
-      selectedProvider: provider || this.state.selectedProvider,
-    };
-    this.notify();
+  public setModel(model: string, provider?: AiProviderId): void {
+    assistAgentService.setModel(model, provider);
   }
 
-  public cancelGeneration() {
-    if (this.abortController) {
-      this.abortController.abort();
-      this.abortController = null;
-    }
-    this.state = {
-      ...this.state,
-      isGenerating: false,
-      generatingSessionId: null,
-      progressStep: 'Generation cancelled',
-    };
-    this.notify();
+  public cancelGeneration(): void {
+    assistAgentService.cancelGeneration();
   }
 
-  /**
-   * Main background code generation pipeline.
-   * Runs asynchronously in the background. Even if the user switches sidebar tabs
-   * to Explorer or Packages, this execution continues and notifies listeners.
-   */
   public async submitPrompt(
     prompt: string,
     project: MultiFileProject,
-    onApplyFileUpdates?: (files: Array<{ path: string; content: string }>) => void
+    onApplyFileUpdates?: (files: Array<{ path: string; content: string }>) => void,
+    activePath?: string | null
   ): Promise<void> {
-    if (!prompt.trim() || this.state.isGenerating) return;
+    assistAgentService.setProject(project.id);
+    await assistAgentService.submitPrompt(prompt, project, activePath);
 
-    const sessionId = this.state.activeSessionId;
-    const userMsg: CodeAssistMessage = {
-      id: `msg-${Date.now()}`,
-      role: 'user',
-      content: prompt.trim(),
-      timestamp: Date.now(),
-    };
-
-    // Append user message immediately
-    const updatedSessions = this.state.sessions.map((s) => {
-      if (s.id === sessionId) {
-        return {
-          ...s,
-          title: s.messages.length === 0 ? prompt.slice(0, 36) : s.title,
-          messages: [...s.messages, userMsg],
-        };
+    // If caller requested automatic apply for legacy behavior
+    if (onApplyFileUpdates) {
+      const activeSession = assistAgentService.getActiveSession();
+      const lastMsg = activeSession.messages[activeSession.messages.length - 1];
+      if (lastMsg?.proposedEdits && lastMsg.proposedEdits.length > 0) {
+        onApplyFileUpdates(
+          lastMsg.proposedEdits.map((e) => ({ path: e.path, content: e.newContent }))
+        );
       }
-      return s;
-    });
-
-    this.state = {
-      ...this.state,
-      sessions: updatedSessions,
-      isGenerating: true,
-      generatingSessionId: sessionId,
-      progressStep: 'Analyzing project codebase & prompt...',
-      currentReasoning: `User requested: "${prompt}". Identifying required architecture, dependencies, and file mutations...`,
-    };
-    this.persistSessions();
-    this.notify();
-
-    this.abortController = new AbortController();
-
-    try {
-      // Step 1: Read settings for provider & api keys
-      let savedSettings: AppSettings = DEFAULT_SETTINGS;
-      if (typeof window !== 'undefined') {
-        try {
-          const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-          if (raw) savedSettings = JSON.parse(raw);
-        } catch {
-          // fallback to defaults
-        }
-      }
-
-      const activeProvider = this.state.selectedProvider || savedSettings.aiProvider || 'inception';
-      const customKey =
-        activeProvider === 'inception'
-          ? savedSettings.inceptionApiKey
-          : activeProvider === 'atria'
-          ? savedSettings.atriaApiKey
-          : savedSettings.nvidiaApiKey;
-
-      // Update reasoning step
-      this.state.progressStep = `Connecting to ${this.state.selectedModel} (${activeProvider})...`;
-      this.state.currentReasoning += `\nSynthesizing fullstack implementation for ${project.files.length} workspace files...`;
-      this.notify();
-
-      // Step 2: Make request to /api/ai
-      const payload = {
-        feature: 'generate',
-        prompt: `[Mode: ${this.state.selectedMode}] ${prompt}`,
-        provider: activeProvider,
-        apiKey: customKey || undefined,
-        projectContext: {
-          html: project.files.find((f) => f.path.endsWith('.html'))?.content || '',
-          css: project.files.find((f) => f.path.endsWith('.css'))?.content || '',
-          javascript:
-            project.files.find((f) => f.path.endsWith('.ts') || f.path.endsWith('.js') || f.path.endsWith('.tsx'))?.content || '',
-          files: project.files.slice(0, 25).map((f) => ({
-            path: f.path,
-            language: f.language,
-            content: f.content.slice(0, 4000),
-          })),
-          projectType: (project.projectType === 'plain' ? 'plain' : 'react') as 'plain' | 'react' | 'vue',
-        },
-      };
-
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: this.abortController.signal,
-      });
-
-      let assistantText = '';
-      let reasoningOutput = '';
-      const generatedFiles: Array<{ path: string; action: 'created' | 'modified' | 'deleted'; content: string }> = [];
-
-      if (response.ok) {
-        const json = await response.json();
-        const rawResult = json.result || '';
-
-        // If returned valid JSON with html/css/js or files
-        try {
-          const parsed = typeof rawResult === 'string' ? JSON.parse(rawResult) : rawResult;
-          if (parsed.html || parsed.css || parsed.js) {
-            assistantText = `I have generated the code changes based on your request:\n\n- Updated HTML structure\n- Updated Styling with modern CSS\n- Implemented dynamic logic`;
-            reasoningOutput = `The user wants to implement: ${prompt}.\nExamined the project structure. Created modern responsive layouts with accessible interactive controls.`;
-
-            if (parsed.js) {
-              const mainFile = project.files.find((f) => /(^|\/)(App|main|index)\.(tsx|jsx|js|ts)$/.test(f.path))?.path || 'src/App.tsx';
-              generatedFiles.push({ path: mainFile, action: 'modified', content: parsed.js });
-            }
-            if (parsed.css) {
-              const cssFile = project.files.find((f) => /(^|\/)(index|style|app)\.css$/.test(f.path))?.path || 'src/index.css';
-              generatedFiles.push({ path: cssFile, action: 'modified', content: parsed.css });
-            }
-            if (parsed.html) {
-              const htmlFile = project.files.find((f) => /(^|\/)index\.html$/.test(f.path))?.path || 'index.html';
-              generatedFiles.push({ path: htmlFile, action: 'modified', content: parsed.html });
-            }
-          } else {
-            assistantText = typeof rawResult === 'string' ? rawResult : JSON.stringify(rawResult, null, 2);
-            reasoningOutput = `Processed prompt through ${this.state.selectedModel}. Successfully generated response.`;
-          }
-        } catch {
-          assistantText = rawResult || 'Execution completed successfully.';
-          reasoningOutput = `Code Assist evaluated the workspace and produced the following implementation guidance.`;
-        }
-      } else {
-        let errorDetails = `AI service returned error HTTP ${response.status}.`;
-        try {
-          const errBody = await response.json();
-          if (errBody?.error) {
-            errorDetails = typeof errBody.error === 'string' ? errBody.error : JSON.stringify(errBody.error);
-          } else if (errBody?.message) {
-            errorDetails = errBody.message;
-          }
-        } catch {
-          // Response body was not JSON
-        }
-
-        const classifiedError =
-          response.status === 401 || response.status === 403
-            ? `Authentication Error (${response.status}): The AI backend API key is invalid or unconfigured.`
-            : response.status === 429
-            ? `Rate Limit Exceeded (${response.status}): The AI provider rate limit was reached. Please wait a moment and try again.`
-            : `AI Service Error (${response.status}): ${errorDetails}`;
-
-        const errorMsg: CodeAssistMessage = {
-          id: `msg-${Date.now() + 1}`,
-          role: 'assistant',
-          content: `⚠️ **AI Request Failed**\n\n${classifiedError}\n\nPlease check your configuration and try again.`,
-          timestamp: Date.now(),
-          reasoning: `API request to /api/ai failed with status ${response.status}. Silent mock fallback is disabled.`,
-        };
-
-        const finalizedSessions = this.state.sessions.map((s) => {
-          if (s.id === sessionId) {
-            return {
-              ...s,
-              messages: [...s.messages, errorMsg],
-            };
-          }
-          return s;
-        });
-
-        this.state = {
-          ...this.state,
-          sessions: finalizedSessions,
-          isGenerating: false,
-          generatingSessionId: null,
-          progressStep: 'Error occurred',
-          currentReasoning: '',
-        };
-        this.persistSessions();
-        this.notify();
-        return;
-      }
-
-      // Automatically apply files if callback provided
-      if (generatedFiles.length > 0 && onApplyFileUpdates) {
-        onApplyFileUpdates(generatedFiles.map((f) => ({ path: f.path, content: f.content })));
-        // Sync each file to in-browser WebContainer
-        for (const file of generatedFiles) {
-          void webcontainerService.syncFile(file.path, file.content);
-        }
-      }
-
-      const totalLines = generatedFiles.reduce((acc, f) => acc + (f.content ? f.content.split('\n').length : 20), 0);
-      const addedLines = totalLines + 42;
-      const removedLines = Math.max(0, Math.floor(totalLines * 0.4));
-
-      const assistantMsg: CodeAssistMessage = {
-        id: `msg-${Date.now() + 1}`,
-        role: 'assistant',
-        content: assistantText,
-        timestamp: Date.now(),
-        reasoning: reasoningOutput,
-        diffStats: {
-          added: addedLines,
-          removed: removedLines,
-        },
-        modifiedFiles: generatedFiles,
-      };
-
-      // Append assistant message
-      const finalizedSessions = this.state.sessions.map((s) => {
-        if (s.id === sessionId) {
-          return {
-            ...s,
-            messages: [...s.messages, assistantMsg],
-          };
-        }
-        return s;
-      });
-
-      this.state = {
-        ...this.state,
-        sessions: finalizedSessions,
-        isGenerating: false,
-        generatingSessionId: null,
-        progressStep: 'Ready',
-        currentReasoning: '',
-        tokenCount: {
-          input: this.state.tokenCount.input + 320,
-          output: this.state.tokenCount.output + assistantText.length,
-          total: this.state.tokenCount.total + 320 + assistantText.length,
-          max: 1000000,
-        },
-      };
-
-      this.persistSessions();
-      this.notify();
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      console.error('Code assist generation failed:', err);
-
-      const errorMsg: CodeAssistMessage = {
-        id: `msg-${Date.now() + 1}`,
-        role: 'assistant',
-        content: `I encountered an issue processing your request: ${err instanceof Error ? err.message : 'Network error'}. Please check your API settings or try again.`,
-        timestamp: Date.now(),
-        reasoning: `Encountered an exception during API request dispatch.`,
-      };
-
-      const finalizedSessions = this.state.sessions.map((s) => {
-        if (s.id === sessionId) {
-          return {
-            ...s,
-            messages: [...s.messages, errorMsg],
-          };
-        }
-        return s;
-      });
-
-      this.state = {
-        ...this.state,
-        sessions: finalizedSessions,
-        isGenerating: false,
-        generatingSessionId: null,
-        progressStep: 'Error occurred',
-        currentReasoning: '',
-      };
-      this.persistSessions();
-      this.notify();
-    } finally {
-      this.abortController = null;
     }
   }
 }
 
-export const codeAssistService = new CodeAssistService();
+export const codeAssistService = new CodeAssistServiceBridge();
+export default codeAssistService;
