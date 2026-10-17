@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import {
-  MoreHorizontal,
   X,
   ArrowRightLeft,
-  ChevronDown,
 } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
 import { ContainerId, ViewId } from '../../services/workbench/workbenchTypes';
-import {
-  WORKBENCH_VIEWS,
-  getViewDefinition,
-  isViewAllowedInContainer,
-} from '../../services/workbench/workbenchViewRegistry';
+import { getViewDefinition } from '../../services/workbench/workbenchViewRegistry';
 
 interface WorkbenchViewContainerProps {
   containerId: ContainerId;

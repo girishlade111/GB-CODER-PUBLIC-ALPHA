@@ -1,5 +1,5 @@
 import React from 'react';
-import { TerminalSquare, AlertTriangle, Radio } from 'lucide-react';
+import { TerminalSquare } from 'lucide-react';
 import { LayoutPresetId } from '../../services/workbench/workbenchTypes';
 
 interface WorkbenchStatusBarProps {

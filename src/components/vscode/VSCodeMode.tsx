@@ -3,45 +3,23 @@ import type { OnMount } from '@monaco-editor/react';
 import {
   FilePlus,
   FolderPlus,
-  LogOut,
-  Plus,
   RefreshCw,
   Columns,
-  Rows,
-  ArrowRightLeft,
   TerminalSquare,
-  X,
   ExternalLink,
-  Maximize2,
   Minimize2,
   FolderArchive,
   FolderDown,
-  Share2,
   Search,
   ChevronDown,
   ChevronRight,
-  ChevronLeft,
-  Smartphone,
-  Tablet,
-  Monitor,
-  Copy,
-  Check,
   RotateCcw,
-  Lock,
-  Loader2,
-  ChevronUp,
-  Minus,
-  AlertTriangle,
-  GitBranch,
   Sliders,
   Sparkles,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import FileTreeView, { FileTreeViewHandle } from './FileTreeView';
-import ActivityBar, { ActivityTab } from './ActivityBar';
-import StackBlitzStartupLoader from './StackBlitzStartupLoader';
 import CodeAssistPanel from './CodeAssistPanel';
-import IDESettingsModal from './IDESettingsModal';
 import DependenciesPanel from '../DependenciesPanel';
 import CodeRabbitReviewModal from '../CodeRabbitReviewModal';
 import VoiceCommandPanel from '../VoiceCommandPanel';
@@ -53,10 +31,7 @@ import OutputPanel from './OutputPanel';
 import CommandPalette from '../CommandPalette';
 import type * as monacoEditor from 'monaco-editor';
 import { diagnosticsService } from '../../services/diagnostics/diagnosticsService';
-import { outputLogService } from '../../services/logging/outputLogService';
 import Tooltip from '../ui/Tooltip';
-import LadeStackLogo from '../LadeStackLogo';
-import { monacoThemeFor, defineGbCoderTheme } from '../../utils/monacoTheme';
 import {
   chooseEvictionTab,
   remapPath,
@@ -96,10 +71,8 @@ import {
 } from '../../services/workbench/workbenchLayoutStore';
 import type {
   WorkbenchLayoutState,
-  LayoutPresetId,
   ViewId,
   ContainerId,
-  EditorLayoutState,
 } from '../../services/workbench/workbenchTypes';
 
 interface VSCodeModeProps {
@@ -132,9 +105,6 @@ const subscribeWebContainer = (onChange: () => void) => webcontainerService.subs
 const getWebContainerSnapshot = () => webcontainerService.getState();
 
 const MAX_TABS = 12;
-const TERMINAL_MIN_H = 96;
-const TERMINAL_DEFAULT_H = 240;
-const TERMINAL_MAX_FRACTION = 0.75;
 
 const MONACO_LANGUAGE_BY_EXTENSION: Record<string, string> = {
   html: 'html', htm: 'html',
@@ -172,12 +142,12 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   onExit,
   fontFamily,
   fontSize,
-  persistSignal,
+  persistSignal: _persistSignal,
   activeProjectId,
   onAddImport,
-  onOpenDependencies,
-  onOpenAIChat,
-  onOpenVoiceCommands,
+  onOpenDependencies: _onOpenDependencies,
+  onOpenAIChat: _onOpenAIChat,
+  onOpenVoiceCommands: _onOpenVoiceCommands,
   onOpenProjects,
 }) => {
   const { isDark } = useTheme();
@@ -338,7 +308,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   }, []);
 
   const [cursor, setCursor] = useState({ line: 1, column: 1 });
-  const [isExplorerDropTarget, setIsExplorerDropTarget] = useState(false);
+  const [_isExplorerDropTarget, setIsExplorerDropTarget] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
@@ -1082,10 +1052,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore when focus is inside active inputs/textareas
-      const activeTag = document.activeElement?.tagName?.toLowerCase();
-      const isInputFocused = activeTag === 'input' || activeTag === 'textarea';
-
       // Ctrl/Cmd + Shift + P: Command Palette
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
         e.preventDefault();
@@ -1204,13 +1170,14 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     [onAddImport],
   );
 
-  const activePreview = webcontainer.serverUrl
-    ? {
-        port: webcontainer.serverPort ?? 5173,
-        label: `⚡ WebContainer (Port ${webcontainer.serverPort ?? 5173})`,
-        url: webcontainer.serverUrl,
-      }
-    : null;
+  const activePreview = useMemo(() => {
+    if (!webcontainer.serverUrl) return null;
+    return {
+      port: webcontainer.serverPort ?? 5173,
+      label: `⚡ WebContainer (Port ${webcontainer.serverPort ?? 5173})`,
+      url: webcontainer.serverUrl,
+    };
+  }, [webcontainer.serverUrl, webcontainer.serverPort]);
 
   useEffect(() => {
     if (activePreview?.url) {
@@ -1410,7 +1377,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
   // Render view content for any dockable container
   const renderViewContent = useCallback(
-    (viewId: ViewId, containerId: ContainerId): React.ReactNode => {
+    (viewId: ViewId, _containerId: ContainerId): React.ReactNode => {
       switch (viewId) {
         case 'explorer':
           return (

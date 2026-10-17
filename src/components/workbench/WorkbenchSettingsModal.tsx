@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, RotateCcw, Keyboard, Sliders, Check } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { X, RotateCcw, Keyboard, Sliders } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { WorkbenchSettings } from '../../services/workbench/workbenchTypes';
 
@@ -29,15 +29,75 @@ export const WorkbenchSettingsModal: React.FC<WorkbenchSettingsModalProps> = ({
   onUpdateSettings,
   onResetLayout,
 }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      previouslyFocusedElementRef.current = document.activeElement;
+    }
+
+    const focusTimer = setTimeout(() => {
+      dialogRef.current?.focus();
+    }, 20);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+
+      // Accessible Tab / Shift+Tab focus trapping
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length > 0) {
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => {
+      clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKeyDown, true);
+      if (previouslyFocusedElementRef.current && typeof previouslyFocusedElementRef.current.focus === 'function') {
+        setTimeout(() => {
+          previouslyFocusedElementRef.current?.focus();
+        }, 10);
+      }
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
+      aria-modal="true"
+      aria-labelledby="workbench-settings-title"
       aria-label="Workbench Settings"
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') onClose();
+      data-testid="workbench-settings-dialog"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 outline-none"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
       }}
     >
       <div className="flex w-full max-w-2xl flex-col rounded-lg border border-[#343945] bg-[#20232B] shadow-2xl text-[#E5E9F1] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
@@ -45,13 +105,16 @@ export const WorkbenchSettingsModal: React.FC<WorkbenchSettingsModalProps> = ({
         <div className="flex h-12 shrink-0 items-center justify-between border-b border-[#343945] px-4 bg-[#181A20]">
           <div className="flex items-center gap-2">
             <Sliders className="h-4 w-4 text-[#6366F1]" />
-            <h2 className="text-sm font-semibold tracking-wide">Workbench Settings & Shortcuts</h2>
+            <h2 id="workbench-settings-title" className="text-sm font-semibold tracking-wide">
+              Workbench Settings & Shortcuts
+            </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="rounded p-1 text-[#697487] hover:text-[#E5E9F1] hover:bg-white/10 transition-colors"
             aria-label="Close settings"
+            data-testid="close-settings-btn"
           >
             <X className="h-4 w-4" />
           </button>

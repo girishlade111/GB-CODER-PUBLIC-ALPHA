@@ -456,27 +456,67 @@ async function main() {
     console.log('\n[Scenario 35] Testing Workbench Settings Modal...');
     const settingsBtn = page.locator('[data-testid="workbench-settings-btn"]');
     await settingsBtn.click();
+    await page.waitForSelector('[data-testid="workbench-settings-dialog"]', { state: 'visible', timeout: 5000 });
     await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, '10-settings.png') });
+
+    // Press Escape to dismiss modal and assert detachment
     await page.keyboard.press('Escape');
-    console.log('✔ PASS: Settings Modal tested and screenshot captured.');
+    await page.waitForSelector('[data-testid="workbench-settings-dialog"]', { state: 'detached', timeout: 5000 });
+    console.log('✔ PASS: Settings Modal dismissed via Escape key and verified detached.');
 
-    // [SCENARIO 36] Responsive Viewports
-    console.log('\n[Scenario 36] Testing responsive viewport behavior...');
-    // Small laptop (1024x768)
-    await page.setViewportSize({ width: 1024, height: 768 });
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, '11-small-laptop-layout.png') });
-    console.log('  Small Laptop (1024px) captured.');
+    // [SCENARIO 36] Responsive Viewports & Editor Usability
+    console.log('\n[Scenario 36] Testing responsive viewport behavior & Monaco editor usability...');
 
-    // Narrow layout (768x900)
-    await page.setViewportSize({ width: 768, height: 900 });
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, '12-narrow-layout.png') });
-    console.log('  Narrow Layout (768px) captured.');
+    // Record persisted layout before responsive testing to verify no corruption
+    const layoutBeforeResponsive = await page.evaluate(() => localStorage.getItem('gb-coder-workbench-layout-v2'));
 
-    // Restore desktop
+    // Test across 6 viewports: 1440, 1280, 1024, 900, 768, 640
+    const testBreakpoints = [1440, 1280, 1024, 900, 768, 640];
+    for (const width of testBreakpoints) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.waitForTimeout(400);
+
+      const editorBox = await page.locator('main[aria-label="Editor"]').boundingBox();
+      if (!editorBox) {
+        throw new Error(`Monaco editor element missing at viewport width ${width}px`);
+      }
+      console.log(`  Viewport ${width}px -> Editor width: ${Math.round(editorBox.width)}px, height: ${Math.round(editorBox.height)}px`);
+
+      // Fail test if Monaco editor width is unusable (< 250px)
+      if (editorBox.width < 250) {
+        throw new Error(`Editor width unusable at ${width}px: measured ${editorBox.width}px < 250px`);
+      }
+
+      if (width === 1024) {
+        await page.screenshot({ path: path.join(SCREENSHOT_DIR, '11-small-laptop-layout.png') });
+        console.log('  Captured 11-small-laptop-layout.png (1024px, editor usable).');
+      } else if (width === 768) {
+        await page.screenshot({ path: path.join(SCREENSHOT_DIR, '12-narrow-layout.png') });
+        console.log('  Captured 12-narrow-layout.png (768px, secondary sidebar collapsed, editor usable).');
+      }
+    }
+
+    // Restore desktop (1440x900)
     await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForTimeout(400);
+
+    // Verify desktop layout recovery
+    const primaryRestored = await page.locator('[data-testid="vscode-explorer"]').isVisible();
+    const secondaryRestored = await page.locator('[data-testid="vscode-right-panel"]').isVisible();
+    if (!primaryRestored || !secondaryRestored) {
+      throw new Error(`Desktop layout failed to recover after returning to 1440px (primary: ${primaryRestored}, secondary: ${secondaryRestored})`);
+    }
+
+    const restoredEditorBox = await page.locator('main[aria-label="Editor"]').boundingBox();
+    console.log(`  Restored Desktop (1440px) -> Editor width: ${Math.round(restoredEditorBox?.width ?? 0)}px (Primary & Secondary sidebars restored).`);
+
+    // Verify persisted preferences were not corrupted or overwritten by responsive collapse
+    const layoutAfterResponsive = await page.evaluate(() => localStorage.getItem('gb-coder-workbench-layout-v2'));
+    if (layoutBeforeResponsive !== layoutAfterResponsive) {
+      throw new Error('Persisted layout preferences in localStorage were mutated by responsive viewport resizing!');
+    }
+    console.log('✔ PASS: Responsive layout verified across all 6 breakpoints with full desktop recovery and uncorrupted persistence.');
 
     // [SCENARIO 37] Static Editor & Dashboard Isolation
     console.log('\n[Scenario 37] Verifying Static Editor & Dashboard isolation...');

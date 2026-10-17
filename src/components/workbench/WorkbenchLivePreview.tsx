@@ -12,7 +12,6 @@ import {
   ExternalLink,
   Columns,
   Maximize2,
-  Minus,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Tooltip from '../ui/Tooltip';

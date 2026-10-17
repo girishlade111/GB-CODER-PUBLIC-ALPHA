@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   WorkbenchLayoutState,
   LayoutPresetId,
@@ -73,25 +73,69 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
   cursor,
   activeLanguage,
 }) => {
+  // Viewport width tracking for responsive behavior
+  const [viewportWidth, setViewportWidth] = useState<number>(() => {
+    return typeof window !== 'undefined' ? window.innerWidth : 1440;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Separate persistent user layout state from temporary responsive overrides
+  const [responsiveSecondaryOverride, setResponsiveSecondaryOverride] = useState<boolean | null>(null);
+  const [responsivePrimaryOverride, setResponsivePrimaryOverride] = useState<boolean | null>(null);
+
+  // Restore desktop layout when viewport expands (> 900px for secondary, > 640px for primary)
+  useEffect(() => {
+    if (viewportWidth > 900) {
+      setResponsiveSecondaryOverride(null);
+    }
+    if (viewportWidth > 640) {
+      setResponsivePrimaryOverride(null);
+    }
+  }, [viewportWidth]);
+
+  // Determine effective visibility without mutating persisted preferences
+  const effectiveSecondaryVisible = viewportWidth <= 900
+    ? (responsiveSecondaryOverride !== null ? responsiveSecondaryOverride : false)
+    : layout.secondarySidebar.visible;
+
+  const effectivePrimaryVisible = viewportWidth <= 640
+    ? (responsivePrimaryOverride !== null ? responsivePrimaryOverride : false)
+    : layout.primarySidebar.visible;
+
   // Toggle helpers
   const handleTogglePrimarySidebar = () => {
-    onUpdateLayout((prev) => ({
-      ...prev,
-      primarySidebar: {
-        ...prev.primarySidebar,
-        visible: !prev.primarySidebar.visible,
-      },
-    }));
+    if (viewportWidth <= 640) {
+      setResponsivePrimaryOverride(!effectivePrimaryVisible);
+    } else {
+      onUpdateLayout((prev) => ({
+        ...prev,
+        primarySidebar: {
+          ...prev.primarySidebar,
+          visible: !prev.primarySidebar.visible,
+        },
+      }));
+    }
   };
 
   const handleToggleSecondarySidebar = () => {
-    onUpdateLayout((prev) => ({
-      ...prev,
-      secondarySidebar: {
-        ...prev.secondarySidebar,
-        visible: !prev.secondarySidebar.visible,
-      },
-    }));
+    if (viewportWidth <= 900) {
+      setResponsiveSecondaryOverride(!effectiveSecondaryVisible);
+    } else {
+      onUpdateLayout((prev) => ({
+        ...prev,
+        secondarySidebar: {
+          ...prev.secondarySidebar,
+          visible: !prev.secondarySidebar.visible,
+        },
+      }));
+    }
   };
 
   const handleToggleBottomPanel = () => {
@@ -152,7 +196,17 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
       {/* ── Title Bar ── */}
       <WorkbenchTitleBar
         projectName={projectName}
-        layoutState={layout}
+        layoutState={{
+          ...layout,
+          primarySidebar: {
+            ...layout.primarySidebar,
+            visible: effectivePrimaryVisible,
+          },
+          secondarySidebar: {
+            ...layout.secondarySidebar,
+            visible: effectiveSecondaryVisible,
+          },
+        }}
         onTogglePrimarySidebar={handleTogglePrimarySidebar}
         onToggleSecondarySidebar={handleToggleSecondarySidebar}
         onToggleBottomPanel={handleToggleBottomPanel}
@@ -170,8 +224,21 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
         {/* Fixed Activity Bar */}
         <WorkbenchActivityBar
           activeViewId={layout.primarySidebar.activeViewId}
-          isSidebarOpen={layout.primarySidebar.visible}
+          isSidebarOpen={effectivePrimaryVisible}
           onSelectView={(vid) => {
+            if (viewportWidth < 640) {
+              if (effectivePrimaryVisible && layout.primarySidebar.activeViewId === vid) {
+                setResponsivePrimaryOverride(false);
+              } else {
+                setResponsivePrimaryOverride(true);
+                onUpdateLayout((prev) => ({
+                  ...prev,
+                  primarySidebar: { ...prev.primarySidebar, activeViewId: vid },
+                }));
+              }
+              return;
+            }
+
             onUpdateLayout((prev) => {
               // If already visible and clicked again, toggle visibility
               if (prev.primarySidebar.visible && prev.primarySidebar.activeViewId === vid) {
@@ -207,7 +274,7 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
         {/* Primary Sidebar (Left) */}
         <WorkbenchPrimarySidebar
           width={layout.primarySidebar.width}
-          visible={layout.primarySidebar.visible}
+          visible={effectivePrimaryVisible}
           activeViewId={layout.primarySidebar.activeViewId}
           availableViews={primaryViews}
           onSelectView={(vid) => {
@@ -218,10 +285,14 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
           }}
           onMoveView={handleMoveView}
           onClose={() => {
-            onUpdateLayout((prev) => ({
-              ...prev,
-              primarySidebar: { ...prev.primarySidebar, visible: false },
-            }));
+            if (viewportWidth < 640) {
+              setResponsivePrimaryOverride(false);
+            } else {
+              onUpdateLayout((prev) => ({
+                ...prev,
+                primarySidebar: { ...prev.primarySidebar, visible: false },
+              }));
+            }
           }}
           onResize={(newWidth) => {
             onUpdateLayout((prev) => ({
@@ -279,7 +350,7 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
         {/* Secondary Sidebar (Right) */}
         <WorkbenchSecondarySidebar
           width={layout.secondarySidebar.width}
-          visible={layout.secondarySidebar.visible}
+          visible={effectiveSecondaryVisible}
           activeViewId={layout.secondarySidebar.activeViewId}
           availableViews={secondaryViews}
           onSelectView={(vid) => {
@@ -290,10 +361,14 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
           }}
           onMoveView={handleMoveView}
           onClose={() => {
-            onUpdateLayout((prev) => ({
-              ...prev,
-              secondarySidebar: { ...prev.secondarySidebar, visible: false },
-            }));
+            if (viewportWidth < 900) {
+              setResponsiveSecondaryOverride(false);
+            } else {
+              onUpdateLayout((prev) => ({
+                ...prev,
+                secondarySidebar: { ...prev.secondarySidebar, visible: false },
+              }));
+            }
           }}
           onResize={(newWidth) => {
             onUpdateLayout((prev) => ({

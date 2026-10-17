@@ -1,5 +1,5 @@
 import React from 'react';
-import { GitBranch, FileCode, AlertCircle, RefreshCw } from 'lucide-react';
+import { GitBranch, FileCode, AlertCircle } from 'lucide-react';
 import { ProjectFile } from '../../types/files';
 
 interface GitSourceControlPanelProps {

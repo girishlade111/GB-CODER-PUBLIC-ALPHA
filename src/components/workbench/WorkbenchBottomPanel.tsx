@@ -9,7 +9,6 @@ import {
   Minimize2,
   Plus,
   Columns,
-  Trash2,
 } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
 import { ViewId, ContainerId } from '../../services/workbench/workbenchTypes';
@@ -22,7 +21,7 @@ interface WorkbenchBottomPanelProps {
   activeViewId: ViewId;
   availableViews: ViewId[];
   onSelectView: (viewId: ViewId) => void;
-  onMoveView: (viewId: ViewId, targetContainer: ContainerId) => void;
+  onMoveView?: (viewId: ViewId, targetContainer: ContainerId) => void;
   onToggleMaximize: () => void;
   onClose: () => void;
   onResize: (newHeight: number) => void;
@@ -40,7 +39,7 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
   activeViewId,
   availableViews,
   onSelectView,
-  onMoveView,
+  onMoveView: _onMoveView,
   onToggleMaximize,
   onClose,
   onResize,
@@ -48,7 +47,7 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
   diagnostics = { errorCount: 0, warningCount: 0 },
   onNewTerminal,
   onToggleSplitTerminal,
-  onClearTerminal,
+  onClearTerminal: _onClearTerminal,
 }) => {
   const isDraggingRef = useRef(false);
 
