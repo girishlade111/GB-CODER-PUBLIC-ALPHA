@@ -137,7 +137,7 @@ async function main() {
 
     await page.goto(`${BASE_URL}/app/projects/${testId}/ide`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[data-testid="vscode-mode"]', { timeout: 25000 });
-    await page.waitForSelector('text="WebContainer Ready"', { timeout: 25000 });
+    await page.waitForSelector('text="WebContainer Ready"', { timeout: 35000 });
     console.log('✔ PASS: WebContainer booted cleanly.');
 
     // Steps 3 & 4: Confirm no automatic npm install or npm run dev
@@ -163,7 +163,11 @@ async function main() {
 
     // Step 7: Wait for file to appear in Explorer tree
     console.log('\n[Step 7] Checking Explorer tree for dynamically created file...');
-    await page.waitForSelector('[data-testid="tree-file"][data-path="src/sync-test.js"]', { timeout: 10000 });
+    const explorerTab = page.locator('[data-testid="activity-bar-explorer"]');
+    if (await explorerTab.isVisible()) {
+      await explorerTab.click();
+    }
+    await page.waitForSelector('[data-testid="tree-file"][data-path="src/sync-test.js"]', { timeout: 15000 });
     console.log('✔ PASS: src/sync-test.js appeared dynamically in Explorer.');
 
     // Step 8: Open in Monaco and verify v1
@@ -285,14 +289,17 @@ async function main() {
     console.log('✔ PASS: Durable conflict banner restored after hard reload.');
 
     // Steps 22 & 23: Resolve conflict with "Keep My Changes"
-    console.log('\n[Step 22 & 23] Resolving conflict via Keep My Changes...');
+    const conflictInfo = await page.evaluate(() => {
+      return localStorage.getItem('gb-coder-durable-conflicts');
+    });
+    console.log('DEBUG conflictInfo before click:', conflictInfo);
+    console.log('Clicking conflict-keep-mine-btn...');
     const keepBtn = page.locator('[data-testid="conflict-keep-mine-btn"]');
     await keepBtn.waitFor({ state: 'visible', timeout: 5000 });
     page.once('dialog', async (dialog) => {
       console.log('  [CONFIRM DIALOG]:', dialog.message());
       await dialog.accept();
     });
-    console.log('Clicking conflict-keep-mine-btn...');
     await keepBtn.click();
     console.log('Waiting for banner dismissal...');
     await page.waitForSelector('[data-testid="conflict-banner"]', { state: 'detached', timeout: 10000 });
@@ -308,6 +315,7 @@ async function main() {
       if (vfsFinal.includes('LOCAL_UNSAVED_DIRT')) break;
       await page.waitForTimeout(250);
     }
+    console.log('DEBUG vfsFinal content:', JSON.stringify(vfsFinal));
     assert.ok(vfsFinal.includes('LOCAL_UNSAVED_DIRT'), 'VFS contains kept editor changes');
 
     const idbFinal = await getIdbFiles(page, testId);

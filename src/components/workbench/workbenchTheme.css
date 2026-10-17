@@ -1,0 +1,59 @@
+/**
+ * GB Coder — Phase 2 Workbench Theme Tokens
+ * Professional dark IDE palette inspired by VS Code & Antigravity
+ */
+
+:root {
+  --wb-canvas: #181A20;
+  --wb-surface-secondary: #20232B;
+  --wb-surface-elevated: #262A33;
+  --wb-border-subtle: #343945;
+  --wb-border-focus: #6366F1;
+  --wb-text-primary: #E5E9F1;
+  --wb-text-secondary: #9AA4B5;
+  --wb-text-muted: #697487;
+  --wb-accent: #6366F1;
+  --wb-accent-hover: #4F46E5;
+  --wb-active-indicator: #6366F1;
+}
+
+.wb-canvas {
+  background-color: var(--wb-canvas);
+  color: var(--wb-text-primary);
+}
+
+.wb-surface-secondary {
+  background-color: var(--wb-surface-secondary);
+}
+
+.wb-surface-elevated {
+  background-color: var(--wb-surface-elevated);
+}
+
+.wb-border {
+  border-color: var(--wb-border-subtle);
+}
+
+.wb-text-primary {
+  color: var(--wb-text-primary);
+}
+
+.wb-text-secondary {
+  color: var(--wb-text-secondary);
+}
+
+.wb-text-muted {
+  color: var(--wb-text-muted);
+}
+
+.wb-accent {
+  color: var(--wb-accent);
+}
+
+.wb-bg-accent {
+  background-color: var(--wb-accent);
+}
+
+.wb-bg-accent:hover {
+  background-color: var(--wb-accent-hover);
+}

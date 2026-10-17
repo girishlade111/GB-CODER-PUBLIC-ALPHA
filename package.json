@@ -49,6 +49,8 @@
     "audit:build-output": "node scripts/audit-build-output.mjs",
     "audit:e2e:phase1-1": "node scripts/e2e-phase1-1-validation.mjs",
     "audit:e2e:phase1-sync": "node scripts/e2e-phase1-sync-acceptance.mjs",
+    "audit:workbench": "node scripts/verify-phase2-workbench.mjs",
+    "audit:e2e:phase2-workbench": "node scripts/e2e-phase2-workbench.mjs",
     "audit:e2e:migration": "node scripts/migration/e2e-migration-verification.mjs"
   },
   "dependencies": {
