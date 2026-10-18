@@ -52,7 +52,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
   }
 
   public async streamChat(
-    messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
+    messages: Array<import('./baseProvider.ts').ProviderChatMessage | { role: 'user' | 'assistant' | 'system'; content: string }>,
     options: StreamChatOptions,
     onChunk: (chunk: ChatCompletionChunk) => void
   ): Promise<{ fullContent: string; reasoning?: string; toolCalls?: import('../tools/types').ToolCallRecord[] }> {
@@ -63,9 +63,38 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       throw new Error(`API key required for ${this.name}. Configure your key in GB Assist settings.`);
     }
 
+    const formattedMessages = messages.map((m: any) => {
+      if (m.role === 'tool') {
+        return {
+          role: 'tool',
+          tool_call_id: m.toolCallId,
+          name: m.name,
+          content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content ?? ''),
+        };
+      }
+      if (m.role === 'assistant' && m.toolCalls && m.toolCalls.length > 0) {
+        return {
+          role: 'assistant',
+          content: m.content || null,
+          tool_calls: m.toolCalls.map((tc: any) => ({
+            id: tc.id,
+            type: 'function',
+            function: {
+              name: tc.toolName || tc.name,
+              arguments: tc.rawArgs || JSON.stringify(tc.args || {}),
+            },
+          })),
+        };
+      }
+      return {
+        role: m.role,
+        content: m.content || '',
+      };
+    });
+
     const requestBody: Record<string, unknown> = {
       model: options.model,
-      messages,
+      messages: formattedMessages,
       stream: true,
       temperature: options.temperature ?? 0.2,
       max_tokens: options.maxTokens,

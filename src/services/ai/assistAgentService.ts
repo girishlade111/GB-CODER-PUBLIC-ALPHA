@@ -26,6 +26,7 @@ import { ConversationStore } from './conversationStore.ts';
 import { ToolRegistry } from './tools/toolRegistry.ts';
 import { ToolExecutor } from './tools/toolExecutor.ts';
 import { ToolCallRecord } from './tools/types.ts';
+import { agentEngine } from './agent/agentEngine.ts';
 
 class AssistAgentService {
   private state: CodeAssistState;
@@ -105,6 +106,8 @@ class AssistAgentService {
     if (!projectId) return;
     if (this.state.currentProjectId === projectId) return;
 
+    agentEngine.setProject(projectId);
+
     // Abort active generation from previous project
     if (this.abortController) {
       try {
@@ -181,6 +184,11 @@ class AssistAgentService {
     const models = providerRegistry.getModelsForProvider(providerId);
     const resolvedModel = modelId || models[0]?.id || this.state.selectedModel;
 
+    providerRegistry.setActiveProvider(providerId);
+    if (resolvedModel) {
+      providerRegistry.setActiveModel(providerId, resolvedModel);
+    }
+
     this.state = {
       ...this.state,
       selectedProvider: providerId,
@@ -190,10 +198,14 @@ class AssistAgentService {
   }
 
   public setModel(modelId: string, providerId?: AiProviderId): void {
+    const targetProvider = providerId || this.state.selectedProvider;
+    providerRegistry.setActiveProvider(targetProvider);
+    providerRegistry.setActiveModel(targetProvider, modelId);
+
     this.state = {
       ...this.state,
       selectedModel: modelId,
-      selectedProvider: providerId || this.state.selectedProvider,
+      selectedProvider: targetProvider,
     };
     this.notify();
   }
@@ -231,10 +243,27 @@ class AssistAgentService {
   public async submitPrompt(
     prompt: string,
     project: MultiFileProject,
-    activePath?: string | null
+    activePath?: string | null,
+    options?: {
+      onChangeFile?: (path: string, content: string) => void;
+      onCreateFile?: (path: string, content: string) => void;
+      isEditorDirty?: (path: string) => boolean;
+    }
   ): Promise<void> {
     const trimmed = prompt.trim();
     if (!trimmed || this.state.isGenerating) return;
+
+    if (this.state.selectedMode === 'Agent') {
+      await this.startAgentTask(trimmed, {
+        project,
+        projectId: this.state.currentProjectId,
+        activePath,
+        onChangeFile: options?.onChangeFile,
+        onCreateFile: options?.onCreateFile,
+        isEditorDirty: options?.isEditorDirty,
+      });
+      return;
+    }
 
     const targetProjectId = this.state.currentProjectId;
     const sessionId = this.state.activeSessionId;
@@ -751,6 +780,193 @@ class AssistAgentService {
 
     ConversationStore.saveSessions(this.state.currentProjectId, nextSessions);
     this.notify();
+  }
+
+  /**
+   * Starts an autonomous multi-step agent task.
+   */
+  public async startAgentTask(
+    prompt: string,
+    options: {
+      project: MultiFileProject;
+      projectId?: string;
+      activePath?: string | null;
+      onChangeFile?: (path: string, content: string) => void;
+      onCreateFile?: (path: string, content: string) => void;
+      isEditorDirty?: (path: string) => boolean;
+    }
+  ): Promise<void> {
+    const trimmed = prompt.trim();
+    if (!trimmed) return;
+
+    const effectiveProjectId = options.projectId || this.state.currentProjectId;
+    const sessionId = this.state.activeSessionId;
+
+    // Add user prompt message
+    const userMsg: CodeAssistMessage = {
+      id: `msg-${Date.now()}`,
+      role: 'user',
+      content: trimmed,
+      timestamp: Date.now(),
+    };
+
+    // Add initial agent response message
+    const assistantMsgId = `agent-msg-${Date.now() + 1}`;
+    const initialAssistantMsg: CodeAssistMessage = {
+      id: assistantMsgId,
+      role: 'assistant',
+      content: 'Autonomous Agent initialized. Formulating plan...',
+      timestamp: Date.now(),
+      providerId: this.state.selectedProvider,
+      modelId: this.state.selectedModel,
+    };
+
+    const nextSessions = this.state.sessions.map((s) => {
+      if (s.id === sessionId) {
+        return {
+          ...s,
+          updatedAt: Date.now(),
+          messages: [...s.messages, userMsg, initialAssistantMsg],
+        };
+      }
+      return s;
+    });
+
+    this.state = {
+      ...this.state,
+      sessions: nextSessions,
+      isGenerating: true,
+      generatingSessionId: sessionId,
+      progressStep: 'Agent: planning task...',
+    };
+    this.notify();
+    ConversationStore.saveSessions(effectiveProjectId, nextSessions);
+
+    // Sync agentEngine state updates to assistantMsg
+    const unsubscribe = agentEngine.subscribe((agentTask) => {
+      if (!agentTask) return;
+
+      const currentSession = this.getActiveSession();
+      const updatedMessages = currentSession.messages.map((m) => {
+        if (m.id === assistantMsgId) {
+          const latestStep = agentTask.steps[agentTask.steps.length - 1];
+          const content =
+            agentTask.finalSummary ||
+            (agentTask.status === 'awaiting_approval'
+              ? `Action requires user approval: ${agentTask.pendingApproval?.toolCall.toolName}`
+              : latestStep?.modelResponse || `Autonomous Agent (${agentTask.status})`);
+
+          return {
+            ...m,
+            content,
+            agentTaskState: { ...agentTask },
+            plan: agentTask.plan ? { ...agentTask.plan } : undefined,
+            toolCalls: agentTask.steps.flatMap((s) => s.toolCalls),
+            error: agentTask.error,
+          };
+        }
+        return m;
+      });
+
+      const updatedSessionsList = this.state.sessions.map((s) => {
+        if (s.id === sessionId) {
+          return {
+            ...s,
+            updatedAt: Date.now(),
+            messages: updatedMessages,
+          };
+        }
+        return s;
+      });
+
+      const isStillRunning =
+        agentTask.status === 'planning' ||
+        agentTask.status === 'running' ||
+        agentTask.status === 'awaiting_approval' ||
+        agentTask.status === 'verifying';
+
+      this.state = {
+        ...this.state,
+        sessions: updatedSessionsList,
+        isGenerating: isStillRunning,
+        progressStep: `Agent: ${agentTask.status}`,
+      };
+      this.notify();
+      ConversationStore.saveSessions(effectiveProjectId, updatedSessionsList);
+
+      if (!isStillRunning) {
+        unsubscribe();
+      }
+    });
+
+    try {
+      await agentEngine.startTask(
+        trimmed,
+        {
+          project: options.project,
+          projectId: effectiveProjectId,
+          activePath: options.activePath,
+          onFileChange: options.onChangeFile,
+          onFileCreate: options.onCreateFile,
+          isEditorDirty: options.isEditorDirty,
+        },
+        {
+          onStateChange: () => {},
+          onStreamContent: (chunk) => {
+            this.state.currentStreamContent += chunk;
+            this.notify();
+          },
+          onStreamReasoning: (chunk) => {
+            this.state.currentReasoning += chunk;
+            this.notify();
+          },
+        }
+      );
+    } catch (err: unknown) {
+      console.error('[AssistAgentService] startAgentTask error:', err);
+      this.state = {
+        ...this.state,
+        isGenerating: false,
+        progressStep: 'Ready',
+      };
+      this.notify();
+    }
+  }
+
+  public stopAgent(reason?: string): void {
+    agentEngine.stopAgent(reason);
+    this.cancelGeneration();
+  }
+
+  public approveAgentAction(approvalId: string): boolean {
+    return agentEngine.approveAction(approvalId);
+  }
+
+  public denyAgentAction(approvalId: string, reason?: string): boolean {
+    return agentEngine.denyAction(approvalId, reason);
+  }
+
+  public getAgentTaskState(): import('./agent/types').AgentTaskState | null {
+    return agentEngine.getTaskState();
+  }
+
+  public async retryAgentTask(options: {
+    project: MultiFileProject;
+    projectId?: string;
+    activePath?: string | null;
+    onChangeFile?: (path: string, content: string) => void;
+    onCreateFile?: (path: string, content: string) => void;
+    isEditorDirty?: (path: string) => boolean;
+  }): Promise<import('./agent/types').AgentTaskState> {
+    const effectiveProjectId = options.projectId || this.state.currentProjectId;
+    return agentEngine.retryTask({
+      project: options.project,
+      projectId: effectiveProjectId,
+      activePath: options.activePath,
+      onFileChange: options.onChangeFile,
+      onFileCreate: options.onCreateFile,
+      isEditorDirty: options.isEditorDirty,
+    });
   }
 }
 

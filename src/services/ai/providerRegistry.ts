@@ -104,6 +104,8 @@ const CUSTOM_MODELS: AiModelInfo[] = [
 
 class ProviderRegistry {
   private providers = new Map<AiProviderId, IAiProvider>();
+  private activeProviderId: AiProviderId = 'gemini';
+  private activeModelMap = new Map<AiProviderId, string>();
 
   constructor() {
     this.registerProvider(new GeminiProvider());
@@ -136,6 +138,27 @@ class ProviderRegistry {
 
   public registerProvider(provider: IAiProvider): void {
     this.providers.set(provider.id, provider);
+  }
+
+  public setActiveProvider(id: AiProviderId): void {
+    if (this.providers.has(id)) {
+      this.activeProviderId = id;
+    }
+  }
+
+  public setActiveModel(providerId: AiProviderId, modelId: string): void {
+    this.activeModelMap.set(providerId, modelId);
+  }
+
+  public getActiveProvider(): IAiProvider {
+    return this.getProvider(this.activeProviderId);
+  }
+
+  public getActiveModel(providerId: AiProviderId = this.activeProviderId): string {
+    const custom = this.activeModelMap.get(providerId);
+    if (custom) return custom;
+    const models = this.getModelsForProvider(providerId);
+    return models[0]?.id || '';
   }
 
   public getProvider(id: AiProviderId): IAiProvider {

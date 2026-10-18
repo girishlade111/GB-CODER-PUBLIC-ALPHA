@@ -20,6 +20,14 @@ export interface StreamChatOptions {
   toolChoice?: 'auto' | 'none' | 'required' | string;
 }
 
+export interface ProviderChatMessage {
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content?: string;
+  name?: string;
+  toolCallId?: string;
+  toolCalls?: import('../tools/types').ToolCallRecord[];
+}
+
 export interface IAiProvider {
   readonly id: AiProviderId;
   readonly name: string;
@@ -28,7 +36,7 @@ export interface IAiProvider {
   getAvailableModels(): AiModelInfo[];
 
   streamChat(
-    messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
+    messages: Array<ProviderChatMessage | { role: 'user' | 'assistant' | 'system'; content: string }>,
     options: StreamChatOptions,
     onChunk: (chunk: ChatCompletionChunk) => void
   ): Promise<{ fullContent: string; reasoning?: string; toolCalls?: import('../tools/types').ToolCallRecord[] }>;

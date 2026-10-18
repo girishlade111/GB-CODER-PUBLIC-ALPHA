@@ -61,7 +61,7 @@ export class GeminiProvider implements IAiProvider {
   }
 
   public async streamChat(
-    messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
+    messages: Array<import('./baseProvider.ts').ProviderChatMessage | { role: 'user' | 'assistant' | 'system'; content: string }>,
     options: StreamChatOptions,
     onChunk: (chunk: ChatCompletionChunk) => void
   ): Promise<{ fullContent: string; reasoning?: string; toolCalls?: import('../tools/types').ToolCallRecord[] }> {
@@ -75,9 +75,23 @@ export class GeminiProvider implements IAiProvider {
     const systemMessage = messages.find((m) => m.role === 'system');
     const systemInstruction = systemMessage ? systemMessage.content : undefined;
 
+    let toolsConfig: Array<{ functionDeclarations?: Array<{ name: string; description?: string; parameters?: any }> }> | undefined = undefined;
+    if (options.tools && options.tools.length > 0) {
+      toolsConfig = [
+        {
+          functionDeclarations: options.tools.map((t) => ({
+            name: t.name,
+            description: t.description,
+            parameters: t.parameters as any,
+          })),
+        },
+      ];
+    }
+
     const model = genAI.getGenerativeModel({
       model: options.model,
       systemInstruction,
+      tools: toolsConfig as any,
       generationConfig: {
         temperature: options.temperature ?? 0.2,
         maxOutputTokens: options.maxTokens,
@@ -88,17 +102,59 @@ export class GeminiProvider implements IAiProvider {
     // Filter out system message since it was supplied via systemInstruction
     const conversationMessages = messages.filter((m) => m.role !== 'system');
 
-    // Group into Gemini history
-    const contents = conversationMessages.map((msg) => ({
-      role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }],
-    }));
+    // Group into Gemini history with proper role mapping (user, model, function)
+    const contents = conversationMessages.map((msg: any) => {
+      if (msg.role === 'tool') {
+        return {
+          role: 'function',
+          parts: [
+            {
+              functionResponse: {
+                name: msg.name || 'tool_response',
+                response: {
+                  output: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content ?? ''),
+                },
+              },
+            },
+          ],
+        };
+      }
+      if (msg.role === 'assistant') {
+        const parts: any[] = [];
+        if (msg.content) {
+          parts.push({ text: msg.content });
+        }
+        if (msg.toolCalls && msg.toolCalls.length > 0) {
+          for (const tc of msg.toolCalls) {
+            parts.push({
+              functionCall: {
+                name: tc.toolName || tc.name,
+                args: tc.args || {},
+              },
+            });
+          }
+        }
+        if (parts.length === 0) {
+          parts.push({ text: '' });
+        }
+        return {
+          role: 'model',
+          parts,
+        };
+      }
+      return {
+        role: 'user',
+        parts: [{ text: msg.content || '' }],
+      };
+    });
 
     if (options.signal?.aborted) {
       throw new Error('Request was aborted.');
     }
 
     let fullContent = '';
+    const toolCalls: import('../tools/types').ToolCallRecord[] = [];
+    const { ToolExecutor } = await import('../tools/toolExecutor.ts');
 
     try {
       const streamingResult = await model.generateContentStream({
@@ -115,6 +171,21 @@ export class GeminiProvider implements IAiProvider {
           fullContent += chunkText;
           onChunk({ contentDelta: chunkText });
         }
+
+        const funcCalls = chunk.functionCalls ? chunk.functionCalls() : undefined;
+        if (funcCalls && funcCalls.length > 0) {
+          for (const fc of funcCalls) {
+            const record = ToolExecutor.createToolCallRecord(fc.name, fc.args);
+            toolCalls.push(record);
+            onChunk({
+              toolCallDelta: {
+                id: record.id,
+                name: fc.name,
+                argumentsDelta: JSON.stringify(fc.args),
+              },
+            });
+          }
+        }
       }
 
       onChunk({ isComplete: true });
@@ -129,7 +200,7 @@ export class GeminiProvider implements IAiProvider {
       throw new Error(`Gemini Error: ${msg}`);
     }
 
-    return { fullContent };
+    return { fullContent, toolCalls: toolCalls.length > 0 ? toolCalls : undefined };
   }
 
   public async testConnection(apiKey: string): Promise<ConnectionDiagnosticResult> {

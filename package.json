@@ -54,6 +54,8 @@
     "audit:ai": "node scripts/verify-phase3a-assist.mjs",
     "audit:tools": "node scripts/verify-phase3b-tools.mjs",
     "audit:e2e:phase3b-tools": "node scripts/e2e-phase3b-tools-audit.mjs",
+    "audit:agent": "node scripts/verify-phase3c-agent.mjs",
+    "audit:e2e:phase3c-agent": "node scripts/e2e-phase3c-agent.mjs",
     "audit:e2e:migration": "node scripts/migration/e2e-migration-verification.mjs"
   },
   "dependencies": {

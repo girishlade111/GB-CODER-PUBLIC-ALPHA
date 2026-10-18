@@ -43,7 +43,7 @@ export interface ChatCompletionChunk {
   error?: string;
 }
 
-export type CodeAssistMode = 'Code' | 'Ask' | 'Debug' | 'Plan';
+export type CodeAssistMode = 'Code' | 'Ask' | 'Debug' | 'Plan' | 'Agent';
 
 export interface ContextFileReference {
   path: string;
@@ -80,16 +80,20 @@ export interface ProposedFileEdit {
 
 export interface CodeAssistMessage {
   id: string;
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   timestamp: number;
   reasoning?: string;
   providerId?: AiProviderId;
   modelId?: string;
+  name?: string;
+  toolCallId?: string;
   contextFiles?: Array<{ path: string; linesCount: number }>;
   proposedEdits?: ProposedFileEdit[];
   appliedEditsStatus?: 'unapplied' | 'applied' | 'rejected' | 'partial';
   toolCalls?: import('./tools/types').ToolCallRecord[];
+  plan?: import('./agent/types').AgentPlan;
+  agentTaskState?: import('./agent/types').AgentTaskState;
   error?: string;
 }
 

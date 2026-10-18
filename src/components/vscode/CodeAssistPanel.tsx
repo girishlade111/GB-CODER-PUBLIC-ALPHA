@@ -58,6 +58,11 @@ const getAssistSnapshot = () => assistAgentService.getState();
 
 const AVAILABLE_MODES: Array<{ id: CodeAssistMode; title: string; desc: string }> = [
   {
+    id: 'Agent',
+    title: 'Agent',
+    desc: 'Autonomous coding agent: plans, modifies files, runs approved commands, and self-corrects.',
+  },
+  {
     id: 'Code',
     title: 'Code',
     desc: 'Full assistance: writes code, proposes diffs, and solves bugs.',
@@ -135,7 +140,11 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
     if (!inputPrompt.trim() || state.isGenerating) return;
     const promptToSend = inputPrompt.trim();
     setInputPrompt('');
-    await assistAgentService.submitPrompt(promptToSend, project, activePath);
+    await assistAgentService.submitPrompt(promptToSend, project, activePath, {
+      onChangeFile: (p, c) => onApplyFiles?.([{ path: p, content: c }]),
+      onCreateFile: (p, c) => onApplyFiles?.([{ path: p, content: c }]),
+      isEditorDirty,
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -213,6 +222,15 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
 
   const handleApproveTool = async (messageId: string, toolCallId: string) => {
     const effectiveId = projectId || (project as { id?: string })?.id;
+
+    // Check if autonomous agent has a pending approval for this tool
+    const agentTask = assistAgentService.getAgentTaskState();
+    if (agentTask?.pendingApproval && agentTask.pendingApproval.toolCall.id === toolCallId) {
+      assistAgentService.approveAgentAction(agentTask.pendingApproval.id);
+      toast.success('Agent action approved');
+      return;
+    }
+
     const res = await assistAgentService.approveToolCall(messageId, toolCallId, {
       project,
       projectId: effectiveId,
@@ -226,6 +244,13 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
   };
 
   const handleDenyTool = (messageId: string, toolCallId: string) => {
+    const agentTask = assistAgentService.getAgentTaskState();
+    if (agentTask?.pendingApproval && agentTask.pendingApproval.toolCall.id === toolCallId) {
+      assistAgentService.denyAgentAction(agentTask.pendingApproval.id, 'Denied by user');
+      toast('Agent action denied');
+      return;
+    }
+
     assistAgentService.denyToolCall(messageId, toolCallId);
     toast('Tool execution denied');
   };
@@ -569,6 +594,97 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                           {msg.content}
                         </div>
 
+                        {/* Autonomous Task Plan & Progress Card (Phase 3C) */}
+                        {(msg.agentTaskState?.plan || msg.plan) && (
+                          <div
+                            className="mt-3 rounded-lg border border-[#2e3046] bg-[#12131c] p-3 space-y-2.5"
+                            data-testid="agent-plan-card"
+                          >
+                            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                              <div className="flex items-center gap-1.5 font-semibold text-slate-200">
+                                <Brain className="h-3.5 w-3.5 text-indigo-400" />
+                                <span>{(msg.agentTaskState?.plan || msg.plan)?.title}</span>
+                              </div>
+                              {msg.agentTaskState?.status && (
+                                <span
+                                  className={`text-[9px] uppercase px-1.5 py-0.5 rounded border font-semibold ${
+                                    msg.agentTaskState.status === 'completed'
+                                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                      : msg.agentTaskState.status === 'failed'
+                                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                      : msg.agentTaskState.status === 'cancelled'
+                                      ? 'bg-slate-500/20 text-slate-300 border-slate-500/40'
+                                      : msg.agentTaskState.status === 'awaiting_approval'
+                                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                      : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                                  }`}
+                                  data-testid="agent-status-badge"
+                                >
+                                  {msg.agentTaskState.status}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="space-y-1.5">
+                              {(msg.agentTaskState?.plan || msg.plan)?.steps.map((st) => (
+                                <div
+                                  key={st.id}
+                                  className="flex items-start gap-2 text-[11px] text-slate-300 p-1.5 rounded bg-white/[0.02]"
+                                >
+                                  <div className="mt-0.5">
+                                    {st.status === 'completed' && <Check className="h-3 w-3 text-emerald-400" />}
+                                    {st.status === 'running' && <Loader2 className="h-3 w-3 text-cyan-400 animate-spin" />}
+                                    {st.status === 'failed' && <X className="h-3 w-3 text-rose-400" />}
+                                    {st.status === 'pending' && <span className="h-2 w-2 rounded-full border border-slate-600 block mt-0.5" />}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-semibold text-slate-200">{st.title}</div>
+                                    <div className="text-[10px] text-slate-400">{st.description}</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {msg.agentTaskState?.status === 'completed' && msg.agentTaskState.finalSummary && (
+                              <div
+                                className="mt-2 rounded bg-emerald-950/30 border border-emerald-500/30 p-2 text-[11px] text-emerald-300 space-y-1"
+                                data-testid="agent-completed-summary"
+                              >
+                                <div className="flex items-center gap-1 font-semibold">
+                                  <Check className="h-3.5 w-3.5" />
+                                  <span>Task Verified & Completed</span>
+                                </div>
+                                <div className="text-[10px] text-emerald-200/80 whitespace-pre-wrap">
+                                  {msg.agentTaskState.finalSummary}
+                                </div>
+                              </div>
+                            )}
+
+                            {msg.agentTaskState?.status === 'failed' && (
+                              <div className="pt-2 border-t border-white/5 flex justify-end">
+                                <button
+                                  type="button"
+                                  data-testid="retry-agent-task-btn"
+                                  onClick={() => {
+                                    const effectiveId = projectId || (project as { id?: string })?.id;
+                                    assistAgentService.retryAgentTask({
+                                      project,
+                                      projectId: effectiveId,
+                                      activePath,
+                                      onChangeFile: (p, c) => onApplyFiles?.([{ path: p, content: c }]),
+                                      onCreateFile: (p, c) => onApplyFiles?.([{ path: p, content: c }]),
+                                      isEditorDirty,
+                                    });
+                                  }}
+                                  className="rounded bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 text-[10px] font-semibold transition-colors shadow"
+                                >
+                                  Retry Task
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {/* Tool Executions Card (Phase 3B) */}
                         {msg.toolCalls && msg.toolCalls.length > 0 && (
                           <div
@@ -896,11 +1012,14 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                     </div>
                     <button
                       type="button"
-                      onClick={() => assistAgentService.cancelGeneration()}
+                      onClick={() => {
+                        assistAgentService.stopAgent();
+                        assistAgentService.cancelGeneration();
+                      }}
                       data-testid="stop-generation-btn"
                       className="flex items-center gap-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 px-2 py-0.5 text-[10px] font-semibold border border-rose-500/30 transition-colors"
                     >
-                      <StopCircle className="h-3 w-3" /> Stop
+                      <StopCircle className="h-3 w-3" /> {state.selectedMode === 'Agent' ? 'Stop Agent' : 'Stop'}
                     </button>
                   </div>
 
@@ -938,6 +1057,7 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
               <div className="relative">
                 <button
                   type="button"
+                  data-testid="ai-mode-selector-pill"
                   onClick={() => {
                     setIsModeMenuOpen(!isModeMenuOpen);
                     setIsModelMenuOpen(false);
@@ -953,6 +1073,7 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                     {AVAILABLE_MODES.map((m) => (
                       <div
                         key={m.id}
+                        data-testid={`mode-option-${m.id}`}
                         onClick={() => {
                           assistAgentService.setMode(m.id);
                           setIsModeMenuOpen(false);
@@ -1032,9 +1153,16 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
               {state.isGenerating ? (
                 <button
                   type="button"
-                  onClick={() => assistAgentService.cancelGeneration()}
+                  onClick={() => {
+                    if (state.selectedMode === 'Agent') {
+                      assistAgentService.stopAgent('User stopped agent');
+                    } else {
+                      assistAgentService.cancelGeneration();
+                    }
+                  }}
+                  data-testid={state.selectedMode === 'Agent' ? 'stop-agent-btn' : 'cancel-input-btn'}
                   className="rounded p-1.5 bg-rose-600/30 text-rose-300 hover:bg-rose-600/50 transition-colors"
-                  title="Stop generation"
+                  title={state.selectedMode === 'Agent' ? 'Stop agent' : 'Stop generation'}
                 >
                   <StopCircle className="h-3.5 w-3.5" />
                 </button>
