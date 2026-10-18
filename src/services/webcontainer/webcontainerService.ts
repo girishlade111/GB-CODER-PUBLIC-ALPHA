@@ -7,7 +7,7 @@
  * to the preview pane via the 'server-ready' event.
  */
 
-import { WebContainer, FileSystemTree } from '@webcontainer/api';
+import { WebContainer, FileSystemTree, WebContainerProcess, SpawnOptions } from '@webcontainer/api';
 import { ProjectFile, ProjectType } from '../../types/files';
 import { webcontainerPerf } from './webcontainerPerf';
 import { StartupDiagnostics } from './startupDiagnostics';
@@ -2255,27 +2255,87 @@ class WebContainerManager {
   }
 
   /**
+   * Spawns an agent-owned process with lifecycle hooks and direct WebContainerProcess reference.
+   * Handles pre-spawn and mid-spawn AbortSignal cancellation to prevent orphan processes.
+   */
+  public async spawnAgentProcess(
+    command: string,
+    args: string[] = [],
+    options?: {
+      cwd?: string;
+      signal?: AbortSignal;
+      onOutput?: (chunk: string) => void;
+      onSpawn?: (process: WebContainerProcess) => void;
+    }
+  ): Promise<{
+    process: WebContainerProcess;
+    exitPromise: Promise<number>;
+  }> {
+    if (options?.signal?.aborted) {
+      throw new Error('Command execution was cancelled before start.');
+    }
+
+    const container = await this.boot();
+
+    if (options?.signal?.aborted) {
+      throw new Error('Command execution was cancelled before spawn.');
+    }
+
+    const spawnOptions: SpawnOptions = {};
+    if (options?.cwd && options.cwd !== '.' && options.cwd !== './') {
+      spawnOptions.cwd = options.cwd;
+    }
+
+    const process = await container.spawn(command, args, spawnOptions);
+
+    if (options?.signal?.aborted) {
+      try {
+        process.kill();
+      } catch {}
+      throw new Error('Command execution was cancelled before spawn completed.');
+    }
+
+    if (options?.onSpawn) {
+      options.onSpawn(process);
+    }
+
+    if (options?.onOutput) {
+      process.output.pipeTo(
+        new WritableStream({
+          write(chunk) {
+            options.onOutput!(chunk);
+          },
+        }),
+      ).catch(() => {});
+    }
+
+    return {
+      process,
+      exitPromise: process.exit,
+    };
+  }
+
+  /**
    * Runs a one-off command inside the container and waits for exit code.
    */
   public async runCommand(
     command: string,
     args: string[] = [],
     onOutput?: (chunk: string) => void,
-  ): Promise<{ exitCode: number }> {
-    const container = await this.boot();
-    const process = await container.spawn(command, args);
-
-    if (onOutput) {
-      process.output.pipeTo(
-        new WritableStream({
-          write(chunk) {
-            onOutput(chunk);
-          },
-        }),
-      ).catch(() => {});
+    options?: {
+      cwd?: string;
+      signal?: AbortSignal;
+      onSpawn?: (process: WebContainerProcess) => void;
     }
+  ): Promise<{ exitCode: number }> {
+    const { exitPromise } = await this.spawnAgentProcess(command, args, {
+      cwd: options?.cwd,
+      signal: options?.signal,
+      onOutput,
+      onSpawn: options?.onSpawn,
+    });
 
-    const exitCode = await process.exit;
+    const exitCode = await exitPromise;
     return { exitCode };
   }
 

@@ -19,6 +19,7 @@ import { keyManager } from '../keyManager';
 import { ContextBuilder } from '../contextBuilder';
 import { ToolRegistry } from '../tools/toolRegistry';
 import { ToolExecutor } from '../tools/toolExecutor';
+import { TerminalAdapter } from '../tools/terminalAdapter';
 import { PermissionController } from '../tools/permissionController';
 import { ToolCallRecord } from '../tools/types';
 import { ProviderChatMessage } from '../providers/baseProvider';
@@ -72,8 +73,16 @@ export class AgentEngine {
     if (!projectId || this.activeProjectId === projectId) return;
 
     // Project switched: cancel any running task in previous project to prevent context leakage
-    if (this.currentTask && (this.currentTask.status === 'running' || this.currentTask.status === 'planning' || this.currentTask.status === 'awaiting_approval')) {
+    if (
+      this.currentTask &&
+      (this.currentTask.status === 'running' ||
+        this.currentTask.status === 'planning' ||
+        this.currentTask.status === 'awaiting_approval' ||
+        this.currentTask.status === 'verifying')
+    ) {
       this.stopAgent('Project switched');
+    } else {
+      TerminalAdapter.terminateAllForProject(this.activeProjectId, 'Project switched').catch(() => {});
     }
 
     this.activeProjectId = projectId;
@@ -500,6 +509,7 @@ export class AgentEngine {
               projectId: task.projectId,
               project: context.project,
               activeFilePath: context.activePath || undefined,
+              signal: this.abortController?.signal,
               onOutput: (chunk) => {
                 callbacks?.onToolOutput?.(toolCall.id, chunk);
               },
@@ -508,6 +518,24 @@ export class AgentEngine {
           );
 
           if (!execRes.success) {
+            // Check if cancelled or aborted
+            if (this.abortController?.signal.aborted || execRes.errorCode === 'EXECUTION_CANCELLED') {
+              task.status = 'cancelled';
+              task.cancelledAt = Date.now();
+              task.error = execRes.error || 'Execution cancelled.';
+              toolCall.status = 'cancelled';
+              toolCall.error = execRes.error || 'Execution cancelled.';
+              if (task.plan) {
+                const stepIdx = Math.min(task.usage.stepCount - 1, task.plan.steps.length - 1);
+                if (task.plan.steps[stepIdx]) {
+                  task.plan.steps[stepIdx].status = 'failed';
+                }
+              }
+              this.notify();
+              this.persistTask(task);
+              break;
+            }
+
             hasToolFailure = true;
             conversationMessages.push({
               role: 'tool',
@@ -640,10 +668,13 @@ export class AgentEngine {
    */
   public stopAgent(reason: string = 'Stopped by user'): void {
     if (!this.currentTask) return;
+    if (this.currentTask.status === 'cancelled' || this.currentTask.status === 'completed') {
+      return;
+    }
 
     if (this.abortController) {
       try {
-        this.abortController.abort();
+        this.abortController.abort(reason);
       } catch {}
       this.abortController = null;
     }
@@ -653,10 +684,25 @@ export class AgentEngine {
       this.approvalResolver = null;
     }
 
+    if (this.currentTask.pendingApproval) {
+      this.currentTask.pendingApproval.isResolved = true;
+      this.currentTask.pendingApproval.decision = 'denied';
+      this.currentTask.pendingApproval.decisionAt = Date.now();
+      if (this.currentTask.pendingApproval.toolCall) {
+        this.currentTask.pendingApproval.toolCall.status = 'denied';
+        this.currentTask.pendingApproval.toolCall.error = reason;
+      }
+      this.currentTask.pendingApproval = undefined;
+    }
+
+    // Terminate any active agent-owned processes for the active project
+    TerminalAdapter.terminateAllForProject(this.currentTask.projectId, reason).catch((err) => {
+      console.warn('[AgentEngine] Error terminating agent processes:', err);
+    });
+
     this.currentTask.status = 'cancelled';
     this.currentTask.cancelledAt = Date.now();
     this.currentTask.error = reason;
-    this.currentTask.pendingApproval = undefined;
 
     this.notify();
     this.persistTask(this.currentTask);

@@ -268,21 +268,35 @@ async function main() {
     await safeScreenshot(page, '17-agent-task-completed.png');
     console.log('✔ PASS: Path 4 - Task completed cleanly with verified evidence summary.');
 
-    // ── PATH 5: Stop Agent Process Cancellation ──
-    console.log('\n[Path 5] Testing Stop Agent immediate cancellation...');
+    // ── PATH 5: Stop Agent Process Cancellation & Terminal Isolation ──
+    console.log('\n[Path 5] Testing Stop Agent immediate cancellation and terminal isolation...');
     await promptInput.fill('Autonomous long running task to stop');
     await sendBtn.click();
 
     const stopAgentBtn = page.locator('[data-testid="stop-agent-btn"]');
-    const stopVisible = await stopAgentBtn.waitFor({ timeout: 4000 }).then(() => true).catch(() => false);
+    const stopVisible = await stopAgentBtn.waitFor({ timeout: 5000 }).then(() => true).catch(() => false);
     if (stopVisible) {
       console.log('  Stop Agent button appeared. Clicking Stop Agent...');
       await stopAgentBtn.click({ force: true });
       await page.waitForSelector('[data-testid="stop-agent-btn"]', { state: 'detached', timeout: 10000 });
       assert.ok(await promptInput.isEnabled(), 'Prompt input must return to enabled state after stopping agent');
-      console.log('✔ PASS: Path 5 - Stop Agent aborted task cleanly.');
+
+      // Verify that the task status records cancellation
+      const assistBody = await page.locator('[data-testid="code-assist-chat-body"]').innerText();
+      assert.ok(
+        assistBody.includes('cancelled') || assistBody.includes('Stopped') || assistBody.includes('Cancelled'),
+        'Must record cancellation in agent state'
+      );
+
+      // Verify user IDE workbench and terminal container remain alive
+      const ideMounted = await page.locator('[data-testid="vscode-mode"]').isVisible();
+      assert.ok(ideMounted, 'User IDE workbench must remain alive');
+
+      await safeScreenshot(page, '18-agent-process-cancelled.png');
+      console.log('✔ PASS: Path 5 - Stop Agent aborted task cleanly with verified terminal isolation.');
     } else {
       console.log('  Notice: Task finished before stop click; verified input ready.');
+      await safeScreenshot(page, '18-agent-process-cancelled.png');
     }
 
     // ── PATH 6: Safe Browser Reload Recovery ──

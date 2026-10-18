@@ -708,6 +708,7 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                                 const isRunning = tc.status === 'running';
                                 const isCompleted = tc.status === 'completed';
                                 const isFailed = tc.status === 'failed';
+                                const isCancelled = tc.status === 'cancelled';
                                 const isDenied = tc.status === 'denied';
 
                                 const argsObj = (tc.args || {}) as Record<string, unknown>;
@@ -754,7 +755,27 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                                             <Check className="h-3 w-3" /> Completed {tc.durationMs ? `(${tc.durationMs}ms)` : ''}
                                           </span>
                                         )}
-                                        {isFailed && (
+                                        {isCancelled && (
+                                          <span className="flex items-center gap-1 text-[10px] text-amber-300 font-medium bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                                            <StopCircle className="h-3 w-3" /> Cancelled
+                                          </span>
+                                        )}
+                                        {tc.terminationStatus === 'confirmed' && (
+                                          <span className="text-[9px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1 py-0.2 rounded font-mono font-semibold" title={tc.terminationDetail}>
+                                            PROCESS TERMINATED
+                                          </span>
+                                        )}
+                                        {tc.terminationStatus === 'unconfirmed' && (
+                                          <span className="text-[9px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1 py-0.2 rounded font-mono font-semibold" title={tc.terminationDetail}>
+                                            TERMINATION UNCONFIRMED
+                                          </span>
+                                        )}
+                                        {tc.terminationStatus === 'failed' && (
+                                          <span className="text-[9px] text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1 py-0.2 rounded font-mono font-semibold" title={tc.terminationDetail}>
+                                            TERMINATION FAILED
+                                          </span>
+                                        )}
+                                        {isFailed && !isCancelled && (
                                           <span className="flex items-center gap-1 text-[10px] text-rose-400 font-medium">
                                             <X className="h-3 w-3" /> Failed
                                           </span>

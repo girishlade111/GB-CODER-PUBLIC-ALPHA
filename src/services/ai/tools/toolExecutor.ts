@@ -126,9 +126,25 @@ export class ToolExecutor {
           toolCall.exitCode = tRes.exitCode;
         }
       } else {
-        toolCall.status = 'failed';
+        toolCall.status = result.errorCode === 'EXECUTION_CANCELLED' ? 'cancelled' : 'failed';
         toolCall.error = result.error;
         toolCall.errorCode = result.errorCode;
+
+        // Preserve terminal outputs, exit codes, and termination details on failure or cancellation
+        if (result.result && typeof result.result === 'object') {
+          const tRes = result.result as {
+            stdout?: string;
+            stderr?: string;
+            exitCode?: number;
+            terminationStatus?: import('./types').ProcessTerminationStatus;
+            terminationDetail?: string;
+          };
+          if (tRes.stdout !== undefined) toolCall.stdout = tRes.stdout;
+          if (tRes.stderr !== undefined) toolCall.stderr = tRes.stderr;
+          if (tRes.exitCode !== undefined) toolCall.exitCode = tRes.exitCode;
+          if (tRes.terminationStatus !== undefined) toolCall.terminationStatus = tRes.terminationStatus;
+          if (tRes.terminationDetail !== undefined) toolCall.terminationDetail = tRes.terminationDetail;
+        }
       }
 
       return result;

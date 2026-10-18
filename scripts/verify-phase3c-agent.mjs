@@ -755,6 +755,423 @@ await runTestAsync('Suite 6', '6.2 Safe reload recovery prevents silent automati
   assert.ok(loadedState.error.includes('interrupted'));
 });
 
+// ─────────────────────────────────────────────────────────────
+// SUITE 7: REAL PROCESS CANCELLATION & TERMINATION SAFETY
+// ─────────────────────────────────────────────────────────────
+
+await runTestAsync('Suite 7', '7.1 Cancel a running long-lived command requests termination', async () => {
+  let killCalled = false;
+  const mockProcess = {
+    kill: () => { killCalled = true; },
+    exit: Promise.resolve(143),
+  };
+
+  TerminalAdapter.setMockRunner(async (_cmd, _args, onOutput, ctx) => {
+    ctx?.onSpawn?.(mockProcess);
+    onOutput?.('Process started...\n');
+    return new Promise((resolve) => {
+      setTimeout(() => resolve({ exitCode: 0, stdout: 'Done' }), 5000);
+    });
+  });
+
+  const abortController = new AbortController();
+  const execPromise = TerminalAdapter.executeCommand({
+    projectId: 'test_proj',
+    command: 'npm run long-task',
+    signal: abortController.signal,
+    timeoutMs: 10000,
+  });
+
+  await new Promise((r) => setTimeout(r, 50));
+  abortController.abort('User cancelled');
+
+  const result = await execPromise;
+  assert.equal(result.success, false, 'Cancelled execution must return success: false');
+  assert.equal(result.errorCode, 'EXECUTION_CANCELLED');
+  assert.equal(killCalled, true, 'process.kill must be invoked on cancellation');
+  assert.equal(result.result?.terminationStatus, 'confirmed');
+  assert.ok(result.error?.includes('cancelled'));
+
+  TerminalAdapter.setMockRunner(null);
+});
+
+await runTestAsync('Suite 7', '7.2 Confirm observable side effect stops after cancellation', async () => {
+  let sideEffectTicks = 0;
+  let intervalId = null;
+
+  const mockProcess = {
+    kill: () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    },
+    exit: Promise.resolve(143),
+  };
+
+  TerminalAdapter.setMockRunner(async (_cmd, _args, _onOutput, ctx) => {
+    ctx?.onSpawn?.(mockProcess);
+    intervalId = setInterval(() => {
+      sideEffectTicks++;
+    }, 20);
+    return new Promise((resolve) => {
+      setTimeout(() => resolve({ exitCode: 0 }), 5000);
+    });
+  });
+
+  const abortController = new AbortController();
+  const execPromise = TerminalAdapter.executeCommand({
+    projectId: 'test_proj',
+    command: 'node worker.js',
+    signal: abortController.signal,
+  });
+
+  await new Promise((r) => setTimeout(r, 80));
+  assert.ok(sideEffectTicks > 0, 'Side effect should have started ticking');
+
+  abortController.abort();
+  await execPromise;
+
+  const ticksAtCancel = sideEffectTicks;
+  await new Promise((r) => setTimeout(r, 100));
+  assert.equal(sideEffectTicks, ticksAtCancel, 'Side effect must completely stop after cancellation');
+
+  TerminalAdapter.setMockRunner(null);
+});
+
+await runTestAsync('Suite 7', '7.3 Cancel before process spawn completes', async () => {
+  let spawnCalled = false;
+  TerminalAdapter.setMockRunner(async () => {
+    spawnCalled = true;
+    return { exitCode: 0 };
+  });
+
+  const abortController = new AbortController();
+  abortController.abort('Pre-cancelled');
+
+  const result = await TerminalAdapter.executeCommand({
+    projectId: 'test_proj',
+    command: 'node build.js',
+    signal: abortController.signal,
+  });
+
+  assert.equal(result.success, false);
+  assert.equal(result.errorCode, 'EXECUTION_CANCELLED');
+  assert.equal(spawnCalled, false, 'Spawn must not be called when signal is pre-aborted');
+
+  TerminalAdapter.setMockRunner(null);
+});
+
+await runTestAsync('Suite 7', '7.4 Cancel after process already exits', async () => {
+  let killCount = 0;
+  const mockProcess = {
+    kill: () => { killCount++; },
+    exit: Promise.resolve(0),
+  };
+
+  TerminalAdapter.setMockRunner(async (_c, _a, _o, ctx) => {
+    ctx?.onSpawn?.(mockProcess);
+    return { exitCode: 0, stdout: 'Quick command finished' };
+  });
+
+  const execId = 'fast-exec-1';
+  const result = await TerminalAdapter.executeCommand({
+    projectId: 'test_proj',
+    command: 'ls',
+  }, execId);
+
+  assert.equal(result.success, true);
+  assert.equal(result.result?.exitCode, 0);
+
+  const termRes = await TerminalAdapter.terminateProcess(execId, 'Stop after exit');
+  assert.equal(killCount, 0, 'kill() must NOT be called on already exited process');
+
+  TerminalAdapter.setMockRunner(null);
+});
+
+await runTestAsync('Suite 7', '7.5 Timeout actually requests termination', async () => {
+  let killCalled = false;
+  const mockProcess = {
+    kill: () => { killCalled = true; },
+    exit: Promise.resolve(143),
+  };
+
+  TerminalAdapter.setMockRunner(async (_c, _a, _o, ctx) => {
+    ctx?.onSpawn?.(mockProcess);
+    return new Promise((resolve) => setTimeout(() => resolve({ exitCode: 0 }), 2000));
+  });
+
+  const result = await TerminalAdapter.executeCommand({
+    projectId: 'test_proj',
+    command: 'npm test',
+    timeoutMs: 100,
+  });
+
+  assert.equal(result.success, false);
+  assert.equal(result.errorCode, 'EXECUTION_TIMEOUT');
+  assert.equal(killCalled, true, 'process.kill must be invoked when command times out');
+  assert.equal(result.result?.terminationStatus, 'confirmed');
+
+  TerminalAdapter.setMockRunner(null);
+});
+
+await runTestAsync('Suite 7', '7.6 Project switching cancels originating task & terminates processes', async () => {
+  let killCalled = false;
+  const mockProcess = {
+    kill: () => { killCalled = true; },
+    exit: Promise.resolve(143),
+  };
+
+  TerminalAdapter.setMockRunner(async (_c, _a, _o, ctx) => {
+    ctx?.onSpawn?.(mockProcess);
+    return new Promise((resolve) => setTimeout(() => resolve({ exitCode: 0 }), 3000));
+  });
+
+  MockProvider.setScenarioHandler(async () => {
+    return {
+      fullContent: 'Running long build command.',
+      toolCalls: [
+        {
+          id: 'call_long_build',
+          toolName: 'run_terminal_command',
+          args: { command: 'npm run build' },
+        },
+      ],
+    };
+  });
+
+  const engine = new AgentEngine();
+  const projA = { id: 'proj_alpha_term', name: 'Alpha', files: [] };
+  const projB = { id: 'proj_beta_term', name: 'Beta', files: [] };
+
+  engine.setProject(projA.id);
+  providerRegistry.setActiveProvider('mock');
+
+  const task = await engine.startTask('Run task', { project: projA, projectId: projA.id });
+
+  const pending = await waitForApproval(engine, task.taskId);
+  assert.ok(pending);
+
+  engine.approveAction(pending.id);
+  await new Promise((r) => setTimeout(r, 60));
+
+  engine.setProject(projB.id);
+
+  assert.equal(task.status, 'cancelled');
+  assert.ok(killCalled, 'Active process for Project A must have kill() called on project switch');
+
+  TerminalAdapter.setMockRunner(null);
+  MockProvider.setScenarioHandler(null);
+});
+
+await runTestAsync('Suite 7', '7.7 A denied command never spawns', async () => {
+  let spawnCalled = false;
+  TerminalAdapter.setMockRunner(async (_c, _a, _o, ctx) => {
+    spawnCalled = true;
+    ctx?.onSpawn?.({ kill: () => {}, exit: Promise.resolve(0) });
+    return { exitCode: 0 };
+  });
+
+  let turn = 0;
+  MockProvider.setScenarioHandler(async () => {
+    turn++;
+    if (turn === 1) {
+      return {
+        fullContent: 'Proposing command to run.',
+        toolCalls: [
+          {
+            id: 'call_gated',
+            toolName: 'run_terminal_command',
+            args: { command: 'rm -rf dist' },
+          },
+        ],
+      };
+    }
+    return {
+      fullContent: 'Acknowledging denial.',
+      toolCalls: [],
+    };
+  });
+
+  const engine = new AgentEngine();
+  const testProject = { id: 'proj_deny', name: 'DenyProj', files: [] };
+  engine.setProject(testProject.id);
+  providerRegistry.setActiveProvider('mock');
+
+  const task = await engine.startTask('Execute a command', {
+    project: testProject,
+    projectId: testProject.id,
+  });
+
+  const pending = await waitForApproval(engine, task.taskId);
+  assert.ok(pending);
+
+  const denied = engine.denyAction(pending.id, 'User refused command');
+  assert.equal(denied, true);
+
+  await waitForCompletion(engine, task.taskId);
+
+  assert.equal(spawnCalled, false, 'Denied command must never be spawned');
+
+  TerminalAdapter.setMockRunner(null);
+  MockProvider.setScenarioHandler(null);
+});
+
+await runTestAsync('Suite 7', '7.8 Repeated Stop does not execute duplicate cleanup', async () => {
+  let killCount = 0;
+  const mockProcess = {
+    kill: () => { killCount++; },
+    exit: new Promise((resolve) => setTimeout(() => resolve(143), 50)),
+  };
+
+  TerminalAdapter.setMockRunner(async (_c, _a, _o, ctx) => {
+    ctx?.onSpawn?.(mockProcess);
+    return new Promise((resolve) => setTimeout(() => resolve({ exitCode: 0 }), 2000));
+  });
+
+  const execId = 'multi-stop-exec';
+  const execPromise = TerminalAdapter.executeCommand({
+    projectId: 'test_proj',
+    command: 'long command',
+  }, execId);
+
+  await new Promise((r) => setTimeout(r, 30));
+
+  const termPromises = [
+    TerminalAdapter.terminateProcess(execId, 'Stop 1'),
+    TerminalAdapter.terminateProcess(execId, 'Stop 2'),
+    TerminalAdapter.terminateProcess(execId, 'Stop 3'),
+    TerminalAdapter.terminateProcess(execId, 'Stop 4'),
+    TerminalAdapter.terminateProcess(execId, 'Stop 5'),
+  ];
+
+  const results = await Promise.all(termPromises);
+  assert.equal(killCount, 1, 'kill() must be called exactly once across repeated Stop calls');
+  assert.equal(results[0]?.status, 'confirmed');
+  assert.equal(results[1]?.status, 'confirmed');
+
+  await execPromise.catch(() => {});
+  TerminalAdapter.setMockRunner(null);
+});
+
+await runTestAsync('Suite 7', '7.9 User terminal and existing dev server remain alive', async () => {
+  const userTerminalSessions = new Map([
+    ['user-term-1', { id: 'user-term-1', active: true }],
+  ]);
+  const devServerState = { running: true, port: 5173 };
+
+  let agentKillCalled = false;
+  const mockAgentProcess = {
+    kill: () => { agentKillCalled = true; },
+    exit: Promise.resolve(143),
+  };
+
+  TerminalAdapter.setMockRunner(async (_c, _a, _o, ctx) => {
+    ctx?.onSpawn?.(mockAgentProcess);
+    return new Promise((resolve) => setTimeout(() => resolve({ exitCode: 0 }), 2000));
+  });
+
+  const agentExecId = 'agent-isolated-exec';
+  const execPromise = TerminalAdapter.executeCommand({
+    projectId: 'proj_isolation',
+    command: 'agent command',
+  }, agentExecId);
+
+  await new Promise((r) => setTimeout(r, 30));
+
+  await TerminalAdapter.terminateAllForProject('proj_isolation', 'Stop agent');
+
+  assert.equal(agentKillCalled, true, 'Agent process must be terminated');
+  assert.equal(userTerminalSessions.get('user-term-1')?.active, true, 'User terminal session must remain active');
+  assert.equal(devServerState.running, true, 'Dev server must remain running');
+
+  await execPromise.catch(() => {});
+  TerminalAdapter.setMockRunner(null);
+});
+
+await runTestAsync('Suite 7', '7.10 No false completed status on cancellation or timeout', async () => {
+  const mockProcess = {
+    kill: () => {},
+    exit: Promise.resolve(143),
+  };
+
+  TerminalAdapter.setMockRunner(async (_c, _a, _o, ctx) => {
+    ctx?.onSpawn?.(mockProcess);
+    return new Promise((resolve) => setTimeout(() => resolve({ exitCode: 0 }), 2000));
+  });
+
+  const abortController = new AbortController();
+  const execPromise = TerminalAdapter.executeCommand({
+    projectId: 'test_proj',
+    command: 'sleep 10',
+    signal: abortController.signal,
+  });
+
+  await new Promise((r) => setTimeout(r, 30));
+  abortController.abort();
+
+  const res = await execPromise;
+  assert.equal(res.success, false, 'Result must NOT be reported as success');
+  assert.notEqual(res.errorCode, undefined, 'Result must have an error code');
+  assert.equal(res.errorCode, 'EXECUTION_CANCELLED');
+
+  TerminalAdapter.setMockRunner(null);
+});
+
+await runTestAsync('Suite 7', '7.11 Handle unsupported and unconfirmed process termination honestly', async () => {
+  const throwingProcess = {
+    kill: () => { throw new Error('kill not supported by virtual kernel'); },
+    exit: Promise.resolve(-1),
+  };
+
+  TerminalAdapter.setMockRunner(async (_c, _a, _o, ctx) => {
+    ctx?.onSpawn?.(throwingProcess);
+    return new Promise((resolve) => setTimeout(() => resolve({ exitCode: 0 }), 2000));
+  });
+
+  const abortA = new AbortController();
+  const execA = TerminalAdapter.executeCommand({
+    projectId: 'test_proj_a',
+    command: 'long-cmd',
+    signal: abortA.signal,
+  });
+
+  await new Promise((r) => setTimeout(r, 20));
+  abortA.abort();
+
+  const resA = await execA;
+  assert.equal(resA.success, false);
+  assert.equal(resA.result?.terminationStatus, 'failed', 'Must report TERMINATION FAILED honestly');
+  assert.ok(resA.error?.includes('failed') || resA.result?.terminationDetail?.includes('kill not supported'));
+
+  const unconfirmedProcess = {
+    kill: () => {},
+    exit: new Promise(() => {}),
+  };
+
+  TerminalAdapter.setMockRunner(async (_c, _a, _o, ctx) => {
+    ctx?.onSpawn?.(unconfirmedProcess);
+    return new Promise((resolve) => setTimeout(() => resolve({ exitCode: 0 }), 2000));
+  });
+
+  const abortB = new AbortController();
+  const execB = TerminalAdapter.executeCommand({
+    projectId: 'test_proj_b',
+    command: 'stubborn-cmd',
+    signal: abortB.signal,
+  });
+
+  await new Promise((r) => setTimeout(r, 20));
+  abortB.abort();
+
+  const resB = await execB;
+  assert.equal(resB.success, false);
+  assert.equal(resB.result?.terminationStatus, 'unconfirmed', 'Must report TERMINATION UNCONFIRMED honestly');
+  assert.ok(resB.error?.includes('unconfirmed') || resB.result?.terminationDetail?.includes('unconfirmed'));
+
+  TerminalAdapter.setMockRunner(null);
+});
+
 try {
   rmSync(tempDir, { recursive: true, force: true });
 } catch {}

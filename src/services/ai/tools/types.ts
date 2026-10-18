@@ -21,6 +21,15 @@ export type ToolCallStatus =
   | 'failed'
   | 'cancelled';
 
+export type ProcessTerminationStatus = 'none' | 'confirmed' | 'unconfirmed' | 'failed';
+
+export interface ProcessTerminationResult {
+  status: ProcessTerminationStatus;
+  exitCode?: number;
+  reason?: string;
+  detail: string;
+}
+
 /**
  * JSON Schema property definition for tool inputs.
  */
@@ -124,5 +133,7 @@ export interface ToolCallRecord {
   stdout?: string;
   stderr?: string;
   exitCode?: number;
+  terminationStatus?: ProcessTerminationStatus;
+  terminationDetail?: string;
   proposedEdit?: ProposedFileEdit;
 }
