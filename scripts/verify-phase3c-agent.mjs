@@ -59,6 +59,7 @@ await build({
       export * from './src/services/ai/providers/geminiProvider.ts';
       export * from './src/services/ai/providers/openaiCompatibleProvider.ts';
       export * from './src/services/ai/providers/mockProvider.ts';
+      export * from './src/services/ai/editProposalService.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',
@@ -87,6 +88,7 @@ const {
   keyManager,
   MockProvider,
   GeminiProvider,
+  EditProposalService,
 } = agentModule;
 
 let passedTests = 0;
@@ -1170,6 +1172,227 @@ await runTestAsync('Suite 7', '7.11 Handle unsupported and unconfirmed process t
   assert.ok(resB.error?.includes('unconfirmed') || resB.result?.terminationDetail?.includes('unconfirmed'));
 
   TerminalAdapter.setMockRunner(null);
+});
+
+// ============================================================
+// SUITE 8: AGENT RELIABILITY & EXECUTION SAFETY (PHASE 3D-A)
+// ============================================================
+console.log('\nSuite 8: Agent Reliability & Execution Safety (Phase 3D-A)');
+
+await runTestAsync('Suite 8', '8.1 Stop Agent during awaiting_approval halts execution immediately without advancing turns', async () => {
+  let turnsEmitted = 0;
+  MockProvider.setScenarioHandler(async () => {
+    turnsEmitted++;
+    if (turnsEmitted === 1) {
+      return {
+        fullContent: 'Running command requiring approval...',
+        toolCalls: [
+          {
+            id: 'call_gated',
+            toolName: 'run_terminal_command',
+            args: { command: 'npm run build' },
+          },
+        ],
+      };
+    } else {
+      return {
+        fullContent: 'Turn 2 executed unexpectedly!',
+        toolCalls: [],
+      };
+    }
+  });
+
+  const engine = new AgentEngine();
+  const mockProject = createMockProject();
+  engine.setProject(mockProject.id);
+  providerRegistry.setActiveProvider('mock');
+
+  const task = await engine.startTask('Stop during approval test', {
+    project: mockProject,
+    projectId: mockProject.id,
+  });
+
+  const pending = await waitForApproval(engine, task.taskId);
+  assert.ok(pending, 'Must enter awaiting_approval');
+
+  // Issue stopAgent while awaiting approval
+  engine.stopAgent('User stopped while waiting for approval');
+
+  const finalState = await waitForCompletion(engine, task.taskId);
+  assert.equal(finalState.status, 'cancelled');
+  assert.ok(finalState.cancelledAt);
+  assert.equal(finalState.completedAt, undefined);
+  assert.equal(turnsEmitted, 1, 'Turn 2 must NEVER be invoked after stop during approval');
+});
+
+await runTestAsync('Suite 8', '8.2 Unresolved tool failure followed by 0 tool calls marks task as failed, never completed', async () => {
+  let turn = 0;
+  TerminalAdapter.setMockRunner(async () => {
+    return {
+      exitCode: 1,
+      stdout: '',
+      stderr: 'Test failed: syntax error in test suite',
+    };
+  });
+
+  MockProvider.setScenarioHandler(async () => {
+    turn++;
+    if (turn === 1) {
+      return {
+        fullContent: 'Running test suite...',
+        toolCalls: [
+          {
+            id: 'test_fail',
+            toolName: 'run_terminal_command',
+            args: { command: 'npm test' },
+          },
+        ],
+      };
+    } else {
+      // Model gives up and emits 0 tool calls
+      return {
+        fullContent: 'I see the test failed, but I will conclude now.',
+        toolCalls: [],
+      };
+    }
+  });
+
+  const engine = new AgentEngine();
+  const mockProject = createMockProject();
+  engine.setProject(mockProject.id);
+  providerRegistry.setActiveProvider('mock');
+
+  const task = await engine.startTask('Failing test with no resolution', {
+    project: mockProject,
+    projectId: mockProject.id,
+  });
+
+  // Auto-approve the terminal command
+  const pending = await waitForApproval(engine, task.taskId);
+  engine.approveAction(pending.id);
+
+  const finalState = await waitForCompletion(engine, task.taskId);
+  assert.equal(finalState.status, 'failed', 'Must report failed when model concludes with unresolved tool failure');
+  assert.ok(finalState.error?.includes('unresolved errors'), 'Must provide clear error message indicating unresolved failure');
+  TerminalAdapter.setMockRunner(null);
+});
+
+await runTestAsync('Suite 8', '8.3 Single-use and cross-project binding rejects replay and cross-project token approvals', async () => {
+  MockProvider.setScenarioHandler(async () => {
+    return {
+      fullContent: 'Requiring approval...',
+      toolCalls: [
+        {
+          id: 'gated_1',
+          toolName: 'run_terminal_command',
+          args: { command: 'ls -la' },
+        },
+      ],
+    };
+  });
+
+  const engine = new AgentEngine();
+  const projA = createMockProject();
+  engine.setProject(projA.id);
+  providerRegistry.setActiveProvider('mock');
+
+  const taskA = await engine.startTask('Approval security test', {
+    project: projA,
+    projectId: projA.id,
+  });
+
+  const pending = await waitForApproval(engine, taskA.taskId);
+  assert.ok(pending);
+
+  // Cross-project test: switch project before approval
+  const projB = createMockProject();
+  engine.setProject(projB.id);
+
+  // Attempt to approve projA's token while active project is projB
+  const crossApproved = engine.approveAction(pending.id);
+  assert.equal(crossApproved, false, 'Approval must be rejected when active project differs from token projectId');
+});
+
+await runTestAsync('Suite 8', '8.4 Dirty buffer in Monaco blocks file edit application and reports actionable failure', async () => {
+  let dirtyBufferChecked = false;
+  let turns = 0;
+  MockProvider.setScenarioHandler(async () => {
+    turns++;
+    if (turns === 1) {
+      return {
+        fullContent: 'Proposing edit to math.ts',
+        toolCalls: [
+          {
+            id: 'edit_math',
+            toolName: 'propose_file_edit',
+            args: {
+              path: 'src/math.ts',
+              newContent: 'export const x = 42;\n',
+              explanation: 'Update math file',
+            },
+          },
+        ],
+      };
+    } else {
+      return {
+        fullContent: 'Edit was blocked by unsaved changes in editor. Concluding.',
+        toolCalls: [],
+      };
+    }
+  });
+
+  const engine = new AgentEngine();
+  const mockProject = createMockProject();
+  engine.setProject(mockProject.id);
+  providerRegistry.setActiveProvider('mock');
+
+  let fileModified = false;
+  const task = await engine.startTask('Dirty buffer protection test', {
+    project: mockProject,
+    projectId: mockProject.id,
+    isEditorDirty: (path) => {
+      if (path === 'src/math.ts') {
+        dirtyBufferChecked = true;
+        return true; // Monaco buffer has unsaved changes!
+      }
+      return false;
+    },
+    onFileChange: () => {
+      fileModified = true;
+    },
+  });
+
+  const finalState = await waitForCompletion(engine, task.taskId);
+
+  assert.ok(dirtyBufferChecked, 'isEditorDirty must be consulted before applying edits');
+  assert.equal(fileModified, false, 'Target file with unsaved changes must NEVER be modified');
+  assert.equal(finalState.status, 'failed', 'Task concluding with unresolved dirty buffer error must be marked failed');
+  assert.ok(finalState.error?.includes('unresolved errors'));
+});
+
+await runTestAsync('Suite 8', '8.5 Interrupted task in verifying status is safely recovered on reload', async () => {
+  const engine = new AgentEngine();
+  const testId = `proj-reload-${Date.now()}`;
+
+  // Manually persist a task in 'verifying' state into localStorage
+  const verifyingTask = {
+    taskId: 'task-interrupted-verifying',
+    projectId: testId,
+    prompt: 'Interrupted task',
+    status: 'verifying',
+    usage: { stepCount: 2, toolCallCount: 1, retryCount: 0, durationMs: 1000, estimatedTokens: 50 },
+    startedAt: Date.now() - 5000,
+  };
+  globalThis.localStorage.setItem(`gbcoder_agent_tasks_${testId}`, JSON.stringify(verifyingTask));
+
+  // Reload task state via setProject
+  engine.setProject(testId);
+  const loaded = engine.getTaskState();
+
+  assert.ok(loaded);
+  assert.equal(loaded.status, 'failed', 'Task interrupted in verifying state must be recovered to failed');
+  assert.equal(loaded.recoveryRequired, true, 'recoveryRequired flag must be set');
+  assert.ok(loaded.error?.includes('interrupted by page reload'));
 });
 
 try {

@@ -40,6 +40,7 @@ const AGENT_TASKS_STORAGE_PREFIX = 'gbcoder_agent_tasks_';
 export class AgentEngine {
   private currentTask: AgentTaskState | null = null;
   private abortController: AbortController | null = null;
+  private isAborted: boolean = false;
   private approvalResolver: ((approved: boolean) => void) | null = null;
   private listeners = new Set<(state: AgentTaskState | null) => void>();
   private activeProjectId: string = 'default';
@@ -111,12 +112,19 @@ export class AgentEngine {
       throw new Error('Task prompt cannot be empty.');
     }
 
-    // Cancel existing task if running
-    if (this.currentTask && (this.currentTask.status === 'running' || this.currentTask.status === 'planning')) {
+    // Cancel existing task if running or in-flight
+    if (
+      this.currentTask &&
+      (this.currentTask.status === 'running' ||
+        this.currentTask.status === 'planning' ||
+        this.currentTask.status === 'awaiting_approval' ||
+        this.currentTask.status === 'verifying')
+    ) {
       this.stopAgent('Superseded by new task');
     }
 
     this.activeProjectId = context.projectId;
+    this.isAborted = false;
     this.abortController = new AbortController();
 
     const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -295,7 +303,7 @@ export class AgentEngine {
       }
 
       // Check abort signal
-      if (this.abortController?.signal.aborted) {
+      if (this.isAborted || this.abortController?.signal.aborted) {
         task.status = 'cancelled';
         task.cancelledAt = Date.now();
         break;
@@ -353,7 +361,7 @@ export class AgentEngine {
           }
         );
       } catch (err: unknown) {
-        if (this.abortController?.signal.aborted) {
+        if (this.isAborted || this.abortController?.signal.aborted) {
           task.status = 'cancelled';
           task.cancelledAt = Date.now();
           break;
@@ -379,17 +387,61 @@ export class AgentEngine {
       const toolCalls = modelResult.toolCalls || [];
 
       if (toolCalls.length === 0) {
+        // Model emitted no tool calls — check if prior tool or turn had unrecovered errors
+        if (consecutiveFailures > 0) {
+          stepRecord.status = 'failed';
+          stepRecord.error = 'Task ended with unresolved errors. Last tool execution failed.';
+          stepRecord.completedAt = Date.now();
+
+          task.status = 'failed';
+          task.error = 'Task ended with unresolved errors. Last tool execution failed.';
+          task.completedAt = Date.now();
+          if (task.plan) {
+            task.plan.steps.forEach((s) => {
+              if (s.status === 'running' || s.status === 'pending') {
+                s.status = 'failed';
+              }
+            });
+          }
+          this.notify();
+          this.persistTask(task);
+          break;
+        }
+
         // Model emitted no tool calls — task completed or final response reached
         stepRecord.status = 'completed';
         stepRecord.completedAt = Date.now();
 
         // Check if there are XML proposals in prose
         const fallbackProposals = EditProposalService.parseProposals(modelResult.fullContent, context.project.files);
+        let fallbackHasError = false;
         if (fallbackProposals.length > 0) {
-          // If model used fallback XML tags, apply them safely
+          // If model used fallback XML tags, apply them safely with dirty buffer protection
           for (const p of fallbackProposals) {
-            context.onFileChange?.(p.path, p.newContent);
+            const applyRes = await EditProposalService.applyEdit({
+              project: context.project,
+              projectId: task.projectId,
+              edit: p,
+              isEditorDirty: context.isEditorDirty,
+              onChangeFile: context.onFileChange || (() => {}),
+              onCreateFile: context.onFileCreate || context.onFileChange,
+              createRollbackCheckpoint: true,
+            });
+            if (!applyRes.success) {
+              fallbackHasError = true;
+              stepRecord.status = 'failed';
+              stepRecord.error = applyRes.error;
+              task.status = 'failed';
+              task.error = applyRes.error;
+              break;
+            }
           }
+        }
+
+        if (fallbackHasError) {
+          this.notify();
+          this.persistTask(task);
+          break;
         }
 
         task.status = 'verifying';
@@ -469,6 +521,22 @@ export class AgentEngine {
           pendingApproval.decisionAt = Date.now();
           task.pendingApproval = undefined;
 
+          // Check if task was aborted or cancelled while awaiting approval
+          if (this.isAborted || task.status === 'cancelled' || this.abortController?.signal.aborted) {
+            task.status = 'cancelled';
+            task.cancelledAt = task.cancelledAt || Date.now();
+            task.pendingApproval = undefined;
+            if (task.plan) {
+              const stepIdx = Math.min(task.usage.stepCount - 1, task.plan.steps.length - 1);
+              if (task.plan.steps[stepIdx] && task.plan.steps[stepIdx].status === 'running') {
+                task.plan.steps[stepIdx].status = 'failed';
+              }
+            }
+            this.notify();
+            this.persistTask(task);
+            break;
+          }
+
           // Revalidate project before execution
           if (this.activeProjectId !== task.projectId) {
             task.status = 'cancelled';
@@ -519,7 +587,7 @@ export class AgentEngine {
 
           if (!execRes.success) {
             // Check if cancelled or aborted
-            if (this.abortController?.signal.aborted || execRes.errorCode === 'EXECUTION_CANCELLED') {
+            if (this.isAborted || this.abortController?.signal.aborted || execRes.errorCode === 'EXECUTION_CANCELLED') {
               task.status = 'cancelled';
               task.cancelledAt = Date.now();
               task.error = execRes.error || 'Execution cancelled.';
@@ -548,7 +616,7 @@ export class AgentEngine {
               }),
             });
           } else {
-            // If edit proposal, apply it to workspace project
+            // If edit proposal, apply it safely to workspace project with dirty buffer protection
             if (
               execRes.result &&
               typeof execRes.result === 'object' &&
@@ -556,10 +624,27 @@ export class AgentEngine {
             ) {
               const prop = (execRes.result as { proposal: import('../types').ProposedFileEdit }).proposal;
               if (prop && prop.path && prop.newContent !== undefined) {
-                if (prop.action === 'create') {
-                  context.onFileCreate?.(prop.path, prop.newContent);
-                } else {
-                  context.onFileChange?.(prop.path, prop.newContent);
+                const applyRes = await EditProposalService.applyEdit({
+                  project: context.project,
+                  projectId: task.projectId,
+                  edit: prop,
+                  isEditorDirty: context.isEditorDirty,
+                  onChangeFile: context.onFileChange || (() => {}),
+                  onCreateFile: context.onFileCreate || context.onFileChange,
+                  createRollbackCheckpoint: true,
+                });
+
+                if (!applyRes.success) {
+                  hasToolFailure = true;
+                  toolCall.status = 'failed';
+                  toolCall.error = applyRes.error || 'Failed to apply proposed edit.';
+                  conversationMessages.push({
+                    role: 'tool',
+                    name: toolCall.toolName,
+                    toolCallId: toolCall.id,
+                    content: JSON.stringify({ error: toolCall.error, success: false }),
+                  });
+                  continue;
                 }
               }
             }
@@ -612,7 +697,9 @@ export class AgentEngine {
       this.persistTask(task);
     }
 
-    task.completedAt = Date.now();
+    if (task.status === 'completed' && !task.completedAt) {
+      task.completedAt = Date.now();
+    }
     this.notify();
     this.persistTask(task);
   }
@@ -626,6 +713,12 @@ export class AgentEngine {
     }
     const pending = this.currentTask.pendingApproval;
     if (!pending || pending.id !== approvalId) {
+      return false;
+    }
+    if (pending.isResolved) {
+      return false;
+    }
+    if (pending.projectId && pending.projectId !== this.activeProjectId) {
       return false;
     }
     if (Date.now() > pending.expiresAt) {
@@ -651,6 +744,12 @@ export class AgentEngine {
     if (!pending || pending.id !== approvalId) {
       return false;
     }
+    if (pending.isResolved) {
+      return false;
+    }
+    if (pending.projectId && pending.projectId !== this.activeProjectId) {
+      return false;
+    }
 
     if (pending.toolCall) {
       pending.toolCall.error = reason || 'Denied by user';
@@ -672,11 +771,13 @@ export class AgentEngine {
       return;
     }
 
+    this.isAborted = true;
+
     if (this.abortController) {
       try {
         this.abortController.abort(reason);
       } catch {}
-      this.abortController = null;
+      // Retain this.abortController so its signal remains accessible to in-flight checks
     }
 
     if (this.approvalResolver) {
@@ -756,7 +857,12 @@ export class AgentEngine {
       const task: AgentTaskState = JSON.parse(saved);
 
       // Guard: On reload, an in-flight task cannot be running without an active runner
-      if (task.status === 'running' || task.status === 'planning' || task.status === 'awaiting_approval') {
+      if (
+        task.status === 'running' ||
+        task.status === 'planning' ||
+        task.status === 'awaiting_approval' ||
+        task.status === 'verifying'
+      ) {
         task.status = 'failed';
         task.recoveryRequired = true;
         task.error = 'Task interrupted by page reload. Click Retry Task to resume.';
