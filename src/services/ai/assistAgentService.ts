@@ -311,13 +311,14 @@ class AssistAgentService {
       let streamContent = '';
       let streamReasoning = '';
 
-      // 4. Stream chat response
+      // 4. Stream chat response with registered tools
       const result = await provider.streamChat(
         apiMessages,
         {
           apiKey,
           model: this.state.selectedModel,
           signal: this.abortController.signal,
+          tools: ToolRegistry.getAllTools(),
         },
         (chunk) => {
           // If project switched while streaming, discard chunk to avoid cross-project pollution
@@ -336,8 +337,60 @@ class AssistAgentService {
         }
       );
 
-      // 5. Parse structured edit proposals from response
-      const proposedEdits = EditProposalService.parseProposals(result.fullContent, project.files);
+      // 5. Process tool calls
+      const processedToolCalls: ToolCallRecord[] = [];
+      const toolProposals: ProposedFileEdit[] = [];
+
+      if (result.toolCalls && result.toolCalls.length > 0) {
+        for (const rawCall of result.toolCalls) {
+          const toolCall = ToolExecutor.createToolCallRecord(rawCall.toolName, rawCall.args, rawCall.id);
+
+          if (toolCall.permission === 'read') {
+            // Auto-execute safe read tools in workspace context
+            try {
+              await ToolExecutor.executeToolCall(
+                toolCall,
+                {
+                  projectId: targetProjectId,
+                  project,
+                  activeFilePath: activePath || undefined,
+                },
+                true
+              );
+            } catch (err: unknown) {
+              toolCall.status = 'failed';
+              toolCall.error = err instanceof Error ? err.message : String(err);
+            }
+          } else if (toolCall.toolName === 'propose_file_edit' || toolCall.toolName === 'create_file') {
+            // Edit tool - generates a proposed file edit for Monaco diff
+            try {
+              const execRes = await ToolExecutor.executeToolCall(
+                toolCall,
+                {
+                  projectId: targetProjectId,
+                  project,
+                },
+                true
+              );
+              if (execRes.success && execRes.result && typeof execRes.result === 'object' && 'proposal' in execRes.result) {
+                toolProposals.push((execRes.result as { proposal: ProposedFileEdit }).proposal);
+              }
+            } catch (err: unknown) {
+              toolCall.status = 'failed';
+              toolCall.error = err instanceof Error ? err.message : String(err);
+            }
+          } else if (toolCall.permission === 'terminal') {
+            // Terminal commands ALWAYS require explicit user approval
+            toolCall.status = 'pending_approval';
+          }
+
+          processedToolCalls.push(toolCall);
+        }
+      }
+
+      // 6. Parse structured edit proposals from response (for XML tags and tool proposals)
+      const parsedProposals = EditProposalService.parseProposals(result.fullContent, project.files);
+      const allProposedEdits = [...parsedProposals, ...toolProposals];
 
       const assistantMsg: CodeAssistMessage = {
         id: `msg-${Date.now() + 1}`,
@@ -347,8 +400,9 @@ class AssistAgentService {
         reasoning: result.reasoning || streamReasoning || undefined,
         providerId: this.state.selectedProvider,
         modelId: this.state.selectedModel,
-        proposedEdits: proposedEdits.length > 0 ? proposedEdits : undefined,
-        appliedEditsStatus: proposedEdits.length > 0 ? 'unapplied' : undefined,
+        proposedEdits: allProposedEdits.length > 0 ? allProposedEdits : undefined,
+        appliedEditsStatus: allProposedEdits.length > 0 ? 'unapplied' : undefined,
+        toolCalls: processedToolCalls.length > 0 ? processedToolCalls : undefined,
       };
 
       // Guard against project context switch while waiting for stream response
