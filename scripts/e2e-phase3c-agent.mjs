@@ -165,6 +165,11 @@ async function main() {
     await page.goto(`${BASE_URL}/app/projects/${testId}/ide`, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.waitForSelector('[data-testid="vscode-mode"]', { timeout: 30000 });
 
+    // Wait for WebContainer readiness indicator
+    await page.waitForSelector('text="WebContainer Ready"', { timeout: 35000 }).catch(() => {
+      console.log('  (Notice: Proceeding with IDE shell mounted)');
+    });
+
     // Open GB Assist panel
     const assistPanel = page.locator('[data-testid="code-assist-panel"]');
     if (!(await assistPanel.isVisible())) {
@@ -231,15 +236,17 @@ async function main() {
     // ── PATH 3: Multi-Step Approval & Execution ──
     console.log('\n[Path 3] Approving pending action and observing execution...');
     await approveBtn.click();
+    await approveBtn.waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
 
     // Allow engine to continue loop
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(1000);
 
     // If another tool approval appears, approve it too (e.g. terminal verification)
     const nextApproveBtn = page.locator('[data-testid="approve-tool-btn"]').last();
     if (await nextApproveBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
       console.log('  Approving secondary verification step...');
       await nextApproveBtn.click();
+      await nextApproveBtn.waitFor({ state: 'detached', timeout: 15000 }).catch(() => {});
     }
 
     await safeScreenshot(page, '16-agent-test-failure-recovery.png');
