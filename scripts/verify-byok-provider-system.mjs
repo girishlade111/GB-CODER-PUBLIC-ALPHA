@@ -63,6 +63,7 @@ await build({
       export * from './src/services/ai/providers/mockProvider.ts';
       export * from './src/services/ai/providerRegistry.ts';
       export * from './src/services/ai/assistAgentService.ts';
+      export * from './src/services/ai/modelDiscoveryService.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',
@@ -88,6 +89,8 @@ const {
   validateCustomHeaders,
   OpenAiCompatibleProvider,
   assistAgentService,
+  constructModelsUrl,
+  discoverModels,
 } = byok;
 
 let passed = 0;
@@ -558,6 +561,471 @@ await test('6.1 Setting active custom provider updates assistAgentService and se
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+// ── Suite 7: Authenticated Model Discovery (discoverModels & constructModelsUrl) ──
+console.log('\nSuite 7: Authenticated Model Discovery (discoverModels & constructModelsUrl)');
+
+await test('7.1 constructModelsUrl enforces HTTPS, allows loopback HTTP, strips duplicate endpoints, and rejects 0.0.0.0', () => {
+  // Standard base URL
+  const r1 = constructModelsUrl('https://api.mistral.ai/v1');
+  assert.equal(r1.valid, true);
+  assert.equal(r1.url, 'https://api.mistral.ai/v1/models');
+
+  // Trailing slash
+  const r2 = constructModelsUrl('https://api.mistral.ai/v1/');
+  assert.equal(r2.valid, true);
+  assert.equal(r2.url, 'https://api.mistral.ai/v1/models');
+
+  // Already includes /models
+  const r3 = constructModelsUrl('https://api.mistral.ai/v1/models');
+  assert.equal(r3.valid, true);
+  assert.equal(r3.url, 'https://api.mistral.ai/v1/models');
+
+  // Includes /chat/completions
+  const r4 = constructModelsUrl('https://api.mistral.ai/v1/chat/completions');
+  assert.equal(r4.valid, true);
+  assert.equal(r4.url, 'https://api.mistral.ai/v1/models');
+
+  // Loopback HTTP allowed
+  const r5 = constructModelsUrl('http://localhost:11434/v1');
+  assert.equal(r5.valid, true);
+  assert.equal(r5.url, 'http://localhost:11434/v1/models');
+
+  const r6 = constructModelsUrl('http://127.0.0.1:8000/v1');
+  assert.equal(r6.valid, true);
+  assert.equal(r6.url, 'http://127.0.0.1:8000/v1/models');
+
+  // Insecure remote HTTP rejected
+  const r7 = constructModelsUrl('http://insecure-api.com/v1');
+  assert.equal(r7.valid, false);
+  assert.match(r7.error, /HTTPS is required/i);
+
+  // 0.0.0.0 rejected
+  const r8 = constructModelsUrl('http://0.0.0.0:8000/v1');
+  assert.equal(r8.valid, false);
+  assert.match(r8.error, /0\.0\.0\.0/);
+});
+
+await test('7.2 discoverModels sends GET to {baseUrl}/models with Bearer auth, custom headers, and zero inference probe', async () => {
+  const originalFetch = globalThis.fetch;
+  let interceptedUrl = '';
+  let interceptedMethod = '';
+  let interceptedHeaders = {};
+  let interceptedBody = undefined;
+
+  globalThis.fetch = async (url, options) => {
+    interceptedUrl = String(url);
+    interceptedMethod = options.method;
+    interceptedHeaders = options.headers;
+    interceptedBody = options.body;
+
+    return new Response(
+      JSON.stringify({
+        object: 'list',
+        data: [
+          { id: 'mistral-small-latest', name: 'Mistral Small Latest' },
+          { id: 'codestral-latest', name: 'Codestral Latest' },
+        ],
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  try {
+    const result = await discoverModels({
+      baseUrl: 'https://api.mistral.ai/v1',
+      apiKey: 'test-mistral-api-key-xyz',
+      customHeaders: {
+        'X-Custom-Project': 'alpha-ide',
+      },
+    });
+
+    assert.equal(result.success, true);
+    assert.equal(interceptedUrl, 'https://api.mistral.ai/v1/models');
+    assert.equal(interceptedMethod, 'GET');
+    assert.equal(interceptedBody, undefined); // Zero request body / probe
+    assert.equal(interceptedHeaders['Authorization'], 'Bearer test-mistral-api-key-xyz');
+    assert.equal(interceptedHeaders['X-Custom-Project'], 'alpha-ide');
+    assert.equal(result.models.length, 2);
+    assert.equal(result.models[0].id, 'mistral-small-latest');
+    assert.equal(result.models[1].id, 'codestral-latest');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('7.3 discoverModels parses standard OpenAI/Mistral format, shorthand format, and direct array format', async () => {
+  const originalFetch = globalThis.fetch;
+
+  try {
+    // 1. Shorthand { data: [{ id, ... }] }
+    globalThis.fetch = async () => {
+      return new Response(
+        JSON.stringify({
+          data: [
+            { id: 'model-a', display_name: 'Model Alpha', context_length: 64000, owned_by: 'org-a' },
+          ],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    };
+
+    const res1 = await discoverModels({ baseUrl: 'https://api.custom.ai/v1' });
+    assert.equal(res1.success, true);
+    assert.equal(res1.models.length, 1);
+    assert.equal(res1.models[0].id, 'model-a');
+    assert.equal(res1.models[0].name, 'Model Alpha');
+    assert.equal(res1.models[0].contextWindow, 64000);
+    assert.equal(res1.models[0].ownedBy, 'org-a');
+
+    // 2. Direct array [{ id, ... }]
+    globalThis.fetch = async () => {
+      return new Response(
+        JSON.stringify([
+          { id: 'model-b', max_context_tokens: 128000 },
+          'model-c',
+        ]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    };
+
+    const res2 = await discoverModels({ baseUrl: 'https://api.custom.ai/v1' });
+    assert.equal(res2.success, true);
+    assert.equal(res2.models.length, 2);
+    assert.equal(res2.models[0].id, 'model-b');
+    assert.equal(res2.models[0].contextWindow, 128000);
+    assert.equal(res2.models[1].id, 'model-c');
+    assert.equal(res2.models[1].name, 'model-c');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('7.4 discoverModels gracefully handles empty list, malformed items, and deduplicates identical IDs', async () => {
+  const originalFetch = globalThis.fetch;
+
+  try {
+    // 1. Empty list
+    globalThis.fetch = async () => {
+      return new Response(JSON.stringify({ data: [] }), { status: 200 });
+    };
+    const resEmpty = await discoverModels({ baseUrl: 'https://api.custom.ai/v1' });
+    assert.equal(resEmpty.success, false);
+    assert.equal(resEmpty.errorCategory, 'empty');
+
+    // 2. Deduplication and malformed items (null, missing id, duplicates)
+    globalThis.fetch = async () => {
+      return new Response(
+        JSON.stringify({
+          data: [
+            null,
+            { foo: 'no-id' },
+            { id: 'duplicate-model', name: 'First Instance' },
+            { id: 'duplicate-model', name: 'Second Instance' },
+            { id: 'unique-model', name: 'Unique' },
+          ],
+        }),
+        { status: 200 }
+      );
+    };
+    const resDedup = await discoverModels({ baseUrl: 'https://api.custom.ai/v1' });
+    assert.equal(resDedup.success, true);
+    assert.equal(resDedup.models.length, 2);
+    assert.equal(resDedup.models[0].id, 'duplicate-model');
+    assert.equal(resDedup.models[0].name, 'First Instance');
+    assert.equal(resDedup.models[1].id, 'unique-model');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('7.5 discoverModels correctly maps HTTP status codes: 401/403, 404, 405, 429, 500+, and redirects', async () => {
+  const originalFetch = globalThis.fetch;
+
+  try {
+    // 401 Auth
+    globalThis.fetch = async () => new Response(JSON.stringify({ error: { message: 'Bad API Key' } }), { status: 401 });
+    const r401 = await discoverModels({ baseUrl: 'https://api.custom.ai/v1', apiKey: 'sk-invalid' });
+    assert.equal(r401.success, false);
+    assert.equal(r401.httpStatus, 401);
+    assert.equal(r401.errorCategory, 'auth');
+
+    // 403 Forbidden
+    globalThis.fetch = async () => new Response('Forbidden', { status: 403 });
+    const r403 = await discoverModels({ baseUrl: 'https://api.custom.ai/v1', apiKey: 'sk-perm-denied' });
+    assert.equal(r403.success, false);
+    assert.equal(r403.httpStatus, 403);
+    assert.equal(r403.errorCategory, 'auth');
+
+    // 404 Not Found
+    globalThis.fetch = async () => new Response('Not Found', { status: 404 });
+    const r404 = await discoverModels({ baseUrl: 'https://api.custom.ai/v1' });
+    assert.equal(r404.success, false);
+    assert.equal(r404.httpStatus, 404);
+    assert.equal(r404.errorCategory, 'not_found');
+    assert.match(r404.suggestedAction, /\+ Add Model/);
+
+    // 405 Method Not Allowed
+    globalThis.fetch = async () => new Response('Method Not Allowed', { status: 405 });
+    const r405 = await discoverModels({ baseUrl: 'https://api.custom.ai/v1' });
+    assert.equal(r405.success, false);
+    assert.equal(r405.httpStatus, 405);
+    assert.equal(r405.errorCategory, 'unsupported');
+
+    // 429 Rate Limit
+    globalThis.fetch = async () => new Response('Rate limited', { status: 429 });
+    const r429 = await discoverModels({ baseUrl: 'https://api.custom.ai/v1' });
+    assert.equal(r429.success, false);
+    assert.equal(r429.httpStatus, 429);
+    assert.equal(r429.errorCategory, 'rate_limit');
+
+    // 500 Server Error
+    globalThis.fetch = async () => new Response('Internal Server Error', { status: 500 });
+    const r500 = await discoverModels({ baseUrl: 'https://api.custom.ai/v1' });
+    assert.equal(r500.success, false);
+    assert.equal(r500.httpStatus, 500);
+    assert.equal(r500.errorCategory, 'server');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('7.6 discoverModels detects browser CORS/Network failure and categorizes as cors', async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async () => {
+    throw new TypeError('Failed to fetch');
+  };
+
+  try {
+    const res = await discoverModels({ baseUrl: 'https://api.mistral.ai/v1', apiKey: 'test-key' });
+    assert.equal(res.success, false);
+    assert.equal(res.errorCategory, 'cors');
+    assert.match(res.error, /Browser CORS restriction/);
+    assert.match(res.suggestedAction, /\+ Add Model/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('7.7 discoverModels respects AbortSignal and timeout, returning timeout errorCategory', async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async (url, options) => {
+    return new Promise((resolve, reject) => {
+      options.signal?.addEventListener('abort', () => {
+        const err = new Error('The operation was aborted');
+        err.name = 'AbortError';
+        reject(err);
+      });
+    });
+  };
+
+  try {
+    const ac = new AbortController();
+    const promise = discoverModels({
+      baseUrl: 'https://api.custom.ai/v1',
+      signal: ac.signal,
+    });
+    ac.abort();
+
+    const res = await promise;
+    assert.equal(res.success, false);
+    assert.equal(res.errorCategory, 'timeout');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+// ── Suite 8: Model Propagation & Custom Model Routing Invariants ──
+console.log('\nSuite 8: Model Propagation & Custom Model Routing Invariants');
+
+await test('8.1 Test Connection sends exact model ID mistral-small-4 and never custom-model or gpt-4o-mini', async () => {
+  const originalFetch = globalThis.fetch;
+  let interceptedBody = null;
+
+  globalThis.fetch = async (url, options) => {
+    interceptedBody = JSON.parse(options.body);
+    return new Response(
+      JSON.stringify({
+        id: 'chatcmpl-test-id',
+        choices: [{ message: { role: 'assistant', content: 'hello' } }],
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  try {
+    const provider = new OpenAiCompatibleProvider(
+      'mistral',
+      'mistral',
+      'https://api.mistral.ai/v1',
+      [{ id: 'mistral-small-4', name: 'Mistral Small 4', provider: 'mistral', contextWindow: 32000, description: '', supportsStreaming: true }]
+    );
+
+    const result = await provider.testConnection(
+      'secret-key-12345',
+      'https://api.mistral.ai/v1',
+      'mistral-small-4',
+      undefined,
+      true
+    );
+
+    assert.equal(result.success, true);
+    assert.notEqual(interceptedBody.model, 'custom-model');
+    assert.notEqual(interceptedBody.model, 'gpt-4o-mini');
+    assert.equal(interceptedBody.model, 'mistral-small-4');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('8.2 Test Connection with empty or whitespace model ID returns validation error before network call', async () => {
+  const originalFetch = globalThis.fetch;
+  let fetchCalled = false;
+
+  globalThis.fetch = async () => {
+    fetchCalled = true;
+    return new Response('{}', { status: 200 });
+  };
+
+  try {
+    const provider = new OpenAiCompatibleProvider(
+      'mistral',
+      'mistral',
+      'https://api.mistral.ai/v1',
+      []
+    );
+
+    const result = await provider.testConnection(
+      'secret-key-12345',
+      'https://api.mistral.ai/v1',
+      '   ', // whitespace only
+      undefined,
+      true
+    );
+
+    assert.equal(result.success, false);
+    assert.equal(result.errorCategory, 'config');
+    assert.match(result.message, /No model selected/i);
+    assert.equal(fetchCalled, false); // No network probe was performed!
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('8.3 streamChat uses exact model ID in request body.model', async () => {
+  const originalFetch = globalThis.fetch;
+  let interceptedBody = null;
+
+  globalThis.fetch = async (url, options) => {
+    interceptedBody = JSON.parse(options.body);
+    const sse = 'data: {"id":"1","choices":[{"delta":{"content":"Hi"}}]}\n\ndata: [DONE]\n\n';
+    return new Response(sse, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+  };
+
+  try {
+    const provider = new OpenAiCompatibleProvider(
+      'mistral',
+      'mistral',
+      'https://api.mistral.ai/v1',
+      [{ id: 'mistral-small-4', name: 'Mistral Small 4', provider: 'mistral', contextWindow: 32000, description: '', supportsStreaming: true }]
+    );
+
+    let output = '';
+    await provider.streamChat(
+      [{ role: 'user', content: 'test message' }],
+      {
+        apiKey: 'test-key',
+        model: 'mistral-small-4',
+      },
+      (chunk) => {
+        if (chunk.contentDelta) output += chunk.contentDelta;
+      }
+    );
+
+    assert.equal(output, 'Hi');
+    assert.equal(interceptedBody.model, 'mistral-small-4');
+    assert.notEqual(interceptedBody.model, 'custom-model');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('8.4 assistAgentService autonomous execution propagates exact model ID', async () => {
+  // Register custom provider in registry
+  providerRegistry.registerCustomProvider({
+    id: 'mistral-work',
+    name: 'Mistral Work',
+    baseUrl: 'https://api.mistral.ai/v1',
+    models: [
+      { id: 'mistral-small-4', name: 'Mistral Small 4' },
+      { id: 'codestral-2501', name: 'Codestral 2501' },
+    ],
+  });
+  keyManager.setApiKey('mistral-work', 'sk-test-mistral-work');
+
+  // Select provider and specific model
+  assistAgentService.setProvider('mistral-work', 'codestral-2501');
+
+  const state = assistAgentService.getState();
+  assert.equal(state.selectedProvider, 'mistral-work');
+  assert.equal(state.selectedModel, 'codestral-2501');
+  assert.equal(providerRegistry.getActiveModel('mistral-work'), 'codestral-2501');
+
+  // Intercept fetch during streamChat
+  const originalFetch = globalThis.fetch;
+  let interceptedBody = null;
+
+  globalThis.fetch = async (url, options) => {
+    interceptedBody = JSON.parse(options.body);
+    const sse = 'data: {"id":"1","choices":[{"delta":{"content":"OK"}}]}\n\ndata: [DONE]\n\n';
+    return new Response(sse, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+  };
+
+  try {
+    const activeProv = providerRegistry.getActiveProvider();
+    await activeProv.streamChat(
+      [{ role: 'user', content: 'test' }],
+      {
+        apiKey: keyManager.getApiKey('mistral-work'),
+        model: state.selectedModel,
+      },
+      () => {}
+    );
+
+    assert.equal(interceptedBody.model, 'codestral-2501');
+    assert.notEqual(interceptedBody.model, 'custom-model');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('8.5 Discovered models can be selected, saved and immediately propagate to active configuration', async () => {
+  // Simulate discovered models returned by provider
+  const discoveredModels = [
+    { id: 'mistral-large-2407', name: 'Mistral Large 2407' },
+    { id: 'pixtral-12b-2409', name: 'Pixtral 12B' },
+  ];
+
+  // User selects mistral-large-2407 and saves provider
+  const def = {
+    id: 'discovered-mistral',
+    name: 'Discovered Mistral',
+    baseUrl: 'https://api.mistral.ai/v1',
+    models: discoveredModels,
+  };
+
+  const saveRes = providerRegistry.registerCustomProvider(def);
+  assert.equal(saveRes.success, true);
+
+  // Set active model to mistral-large-2407
+  providerRegistry.setActiveModel('discovered-mistral', 'mistral-large-2407');
+  assistAgentService.setProvider('discovered-mistral', 'mistral-large-2407');
+
+  assert.equal(providerRegistry.getActiveModel('discovered-mistral'), 'mistral-large-2407');
+  assert.equal(assistAgentService.getState().selectedModel, 'mistral-large-2407');
 });
 
 console.log('\n============================================================');

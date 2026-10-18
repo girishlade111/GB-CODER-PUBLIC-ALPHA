@@ -5,7 +5,14 @@
  * and connection diagnostics.
  */
 
-import { AiProviderId, AiModelInfo, ConnectionDiagnosticResult, ProviderCatalogEntry, CustomProviderDefinition } from './types.ts';
+import {
+  AiProviderId,
+  AiModelInfo,
+  ConnectionDiagnosticResult,
+  ModelDiscoveryResult,
+  ProviderCatalogEntry,
+  CustomProviderDefinition,
+} from './types.ts';
 import { IAiProvider } from './providers/baseProvider.ts';
 import { OpenAiCompatibleProvider, validateEndpointUrl } from './providers/openaiCompatibleProvider.ts';
 import { GeminiProvider } from './providers/geminiProvider.ts';
@@ -13,6 +20,7 @@ import { MockProvider } from './providers/mockProvider.ts';
 import { keyManager } from './keyManager.ts';
 import { customProviderStore } from './customProviderStore.ts';
 import { BUILT_IN_CATALOG } from './providerCatalog.ts';
+import { discoverModels } from './modelDiscoveryService.ts';
 
 const OPENROUTER_MODELS: AiModelInfo[] = [
   {
@@ -313,10 +321,53 @@ class ProviderRegistry {
     customHeaders?: Record<string, string>,
     consentToInference?: boolean
   ): Promise<ConnectionDiagnosticResult> {
-    const provider = this.getProvider(id);
-    const key = keyManager.getApiKey(id);
-    const targetModel = modelId || this.getActiveModel(id);
+    let provider = this.providers.get(id);
+    if (!provider) {
+      provider = this.providers.get('custom');
+    }
+    if (!provider) {
+      return {
+        success: false,
+        latencyMs: 0,
+        message: `Provider "${id}" is not registered.`,
+        errorCategory: 'config',
+      };
+    }
+    const key = keyManager.getApiKey(id) || keyManager.getApiKey('custom');
+    const targetModel = (modelId || '').trim() || this.getActiveModel(id);
     return provider.testConnection(key, baseUrl, targetModel, customHeaders, consentToInference);
+  }
+
+  public async fetchModelsForProvider(
+    id: AiProviderId,
+    baseUrl?: string,
+    apiKey?: string,
+    customHeaders?: Record<string, string>,
+    signal?: AbortSignal
+  ): Promise<ModelDiscoveryResult> {
+    const key = apiKey !== undefined ? apiKey : (keyManager.getApiKey(id) || keyManager.getApiKey('custom'));
+    const provider = this.providers.get(id);
+
+    if (provider && typeof provider.fetchAvailableModels === 'function') {
+      return provider.fetchAvailableModels(key, baseUrl, customHeaders, signal);
+    }
+
+    if (baseUrl) {
+      return discoverModels({
+        baseUrl,
+        apiKey: key,
+        customHeaders,
+        signal,
+      });
+    }
+
+    return {
+      success: false,
+      models: [],
+      error: `Automatic model discovery is not supported by ${provider?.name || id}. You can add models manually.`,
+      errorCategory: 'unsupported',
+      suggestedAction: 'Enter model IDs manually using the "+ Add Model" button.',
+    };
   }
 }
 

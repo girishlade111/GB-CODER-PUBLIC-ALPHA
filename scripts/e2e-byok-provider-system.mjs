@@ -98,11 +98,33 @@ async function main() {
 
     const page = await context.newPage();
 
+    let lastInterceptedModel = null;
+    let modelDiscoveryUrlCalled = null;
+
     // Mock external AI endpoint to prevent external calls or cost
     await page.route('https://api.inceptionlabs.ai/**', async (route) => {
       const request = route.request();
+      if (request.url().includes('/models') && request.method() === 'GET') {
+        modelDiscoveryUrlCalled = request.url();
+        const responseData = {
+          object: 'list',
+          data: [
+            { id: 'mercury-2-production', name: 'Mercury 2 Production', context_length: 64000 },
+            { id: 'mercury-mini-v2', name: 'Mercury Mini v2', context_length: 32000 },
+            { id: 'mercury-coder-pro', name: 'Mercury Coder Pro', context_length: 128000 },
+          ],
+        };
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(responseData),
+        });
+        return;
+      }
+
       if (request.method() === 'POST') {
         const body = request.postDataJSON() || {};
+        lastInterceptedModel = body.model || null;
         const responseData = {
           id: 'chatcmpl-mock-inception',
           object: 'chat.completion',
@@ -206,18 +228,49 @@ async function main() {
     const keyInput = page.locator('[data-testid="ai-provider-api-key-input"]');
     await keyInput.fill('sk-test-inception-secret-12345');
 
-    // 8. Add Custom Models
-    console.log('Step 8: Registering custom models...');
-    const model0Id = page.locator('[data-testid="custom-model-id-input-0"]');
-    await model0Id.fill('mercury-2');
+    // 8. Fetch Models via Authenticated Model Discovery
+    console.log('Step 8: Fetching models via authenticated model discovery...');
+    const fetchModelsBtn = page.locator('[data-testid="fetch-models-btn"]');
+    await fetchModelsBtn.waitFor({ state: 'visible' });
+    await fetchModelsBtn.click();
 
+    // Verify discovery endpoint was reached safely
+    const discoveredSearchInput = page.locator('[data-testid="discovered-models-search-input"]');
+    await discoveredSearchInput.waitFor({ state: 'visible', timeout: 5000 });
+    assert.equal(
+      modelDiscoveryUrlCalled,
+      'https://api.inceptionlabs.ai/v1/models',
+      'Model discovery URL must be safely constructed without duplicate segments'
+    );
+    console.log('  ✔ Discovered models drawer opened successfully');
+
+    // Test search filter inside drawer
+    await discoveredSearchInput.fill('coder');
+    await page.waitForTimeout(200);
+
+    // Deselect all first, then select specifically mercury-coder-pro
+    const selectAllBtn = page.locator('[data-testid="select-all-discovered-models-btn"]');
+    await selectAllBtn.click(); // Deselect all
+
+    const coderModelCheckbox = page.locator('[data-testid="discovered-model-checkbox-mercury-coder-pro"]');
+    await coderModelCheckbox.check();
+
+    // Add Selected discovered model
+    const addSelectedBtn = page.locator('[data-testid="add-selected-discovered-models-btn"]');
+    await addSelectedBtn.click();
+    console.log('  ✔ Added discovered model mercury-coder-pro to provider configuration');
+
+    // Also verify manual model addition works seamlessly alongside fetched models
     const addModelBtn = page.locator('[data-testid="add-custom-model-btn"]');
     await addModelBtn.click();
-
     const model1Id = page.locator('[data-testid="custom-model-id-input-1"]');
     const model1Name = page.locator('[data-testid="custom-model-name-input-1"]');
     await model1Id.fill('mercury-mini');
     await model1Name.fill('Mercury Mini');
+
+    // Explicitly set mercury-coder-pro as active model
+    const activeModel0Btn = page.locator('[data-testid="set-active-model-btn-0"]');
+    await activeModel0Btn.click();
 
     // 9. Add Custom Headers
     console.log('Step 9: Adding and testing custom headers...');
@@ -231,14 +284,23 @@ async function main() {
 
     await safeScreenshot(page, '22-custom-provider-builder.png');
 
-    // 10. Run Connection Test Probe
-    console.log('Step 10: Testing Connection Diagnostics probe...');
+    // 10. Run Connection Test Probe and Assert Exact Model ID Propagation
+    console.log('Step 10: Testing Connection Diagnostics probe and model routing...');
     const testBtn = page.locator('[data-testid="test-ai-connection-btn"]');
     await testBtn.click();
 
     // Wait for diagnostic result message
     await page.waitForSelector('text=Connected successfully', { timeout: 10000 });
     console.log('  ✔ Connection probe succeeded without result.split error!');
+
+    // CRITICAL INVARIANT: The network request must have used the actual configured model ID
+    assert.notEqual(lastInterceptedModel, 'custom-model', 'Request model MUST NEVER be placeholder "custom-model"');
+    assert.notEqual(lastInterceptedModel, 'gpt-4o-mini', 'Request model MUST NEVER be hardcoded "gpt-4o-mini"');
+    assert.ok(
+      lastInterceptedModel === 'mercury-coder-pro' || lastInterceptedModel === 'mercury-mini',
+      `Request model must be one of the explicitly configured models (received: "${lastInterceptedModel}")`
+    );
+    console.log(`  ✔ Model propagation verified: HTTP request body.model === "${lastInterceptedModel}"`);
 
     // 11. Save and Connect
     console.log('Step 11: Saving and activating custom provider...');

@@ -89,6 +89,23 @@ export interface ConnectionDiagnosticResult {
   suggestedAction?: string;
 }
 
+export interface DiscoveredModel {
+  id: string;
+  name: string;
+  description?: string;
+  contextWindow?: number;
+  ownedBy?: string;
+}
+
+export interface ModelDiscoveryResult {
+  success: boolean;
+  models: DiscoveredModel[];
+  httpStatus?: number;
+  error?: string;
+  errorCategory?: 'cors' | 'auth' | 'not_found' | 'unsupported' | 'rate_limit' | 'server' | 'network' | 'timeout' | 'malformed' | 'empty' | 'config';
+  suggestedAction?: string;
+}
+
 export interface ChatCompletionChunk {
   contentDelta?: string;
   reasoningDelta?: string;

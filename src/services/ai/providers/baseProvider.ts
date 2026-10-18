@@ -54,4 +54,11 @@ export interface IAiProvider {
     customHeaders?: Record<string, string>,
     consentToInference?: boolean
   ): Promise<ConnectionDiagnosticResult>;
+
+  fetchAvailableModels?(
+    apiKey?: string,
+    baseUrl?: string,
+    customHeaders?: Record<string, string>,
+    signal?: AbortSignal
+  ): Promise<import('../types.ts').ModelDiscoveryResult>;
 }

@@ -183,7 +183,16 @@ class AssistAgentService {
 
   public setProvider(providerId: AiProviderId, modelId?: string): void {
     const models = providerRegistry.getModelsForProvider(providerId);
-    const resolvedModel = modelId || models[0]?.id || this.state.selectedModel;
+    let resolvedModel = '';
+    if (modelId && models.some((m) => m.id === modelId)) {
+      resolvedModel = modelId;
+    } else if (modelId && modelId.trim()) {
+      resolvedModel = modelId.trim();
+    } else if (models.length > 0) {
+      resolvedModel = models[0].id;
+    } else {
+      resolvedModel = this.state.selectedModel;
+    }
 
     providerRegistry.setActiveProvider(providerId);
     if (resolvedModel) {
@@ -199,13 +208,15 @@ class AssistAgentService {
   }
 
   public setModel(modelId: string, providerId?: AiProviderId): void {
+    const trimmed = (modelId || '').trim();
+    if (!trimmed) return;
     const targetProvider = providerId || this.state.selectedProvider;
     providerRegistry.setActiveProvider(targetProvider);
-    providerRegistry.setActiveModel(targetProvider, modelId);
+    providerRegistry.setActiveModel(targetProvider, trimmed);
 
     this.state = {
       ...this.state,
-      selectedModel: modelId,
+      selectedModel: trimmed,
       selectedProvider: targetProvider,
     };
     this.notify();

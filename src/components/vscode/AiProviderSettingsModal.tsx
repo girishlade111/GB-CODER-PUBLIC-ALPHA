@@ -41,6 +41,7 @@ import {
   ShieldCheck,
   Check,
   ChevronRight,
+  Download,
 } from 'lucide-react';
 import {
   AiProviderId,
@@ -48,6 +49,7 @@ import {
   CustomModelConfig,
   CustomHeaderConfig,
   CustomProviderDefinition,
+  DiscoveredModel,
   ProviderCatalogEntry,
 } from '../../services/ai/types';
 import { keyManager } from '../../services/ai/keyManager';
@@ -91,7 +93,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
   const [customProviderId, setCustomProviderId] = useState('');
   const [customDisplayName, setCustomDisplayName] = useState('');
   const [customModels, setCustomModels] = useState<CustomModelConfig[]>([
-    { id: 'custom-model', name: 'Custom Model' },
+    { id: '', name: '' },
   ]);
   const [customHeaders, setCustomHeaders] = useState<CustomHeaderConfig[]>([]);
   const [isEditingExistingCustom, setIsEditingExistingCustom] = useState(false);
@@ -99,6 +101,15 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
   const [customContextWindow, setCustomContextWindow] = useState<number>(32000);
   const [customMaxTokens, setCustomMaxTokens] = useState<number>(4096);
   const [customToolCalling, setCustomToolCalling] = useState<boolean>(false);
+
+  // Model discovery state
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const [fetchModelsError, setFetchModelsError] = useState<string | null>(null);
+  const [fetchModelsSuccess, setFetchModelsSuccess] = useState<string | null>(null);
+  const [discoveredModels, setDiscoveredModels] = useState<DiscoveredModel[]>([]);
+  const [selectedDiscoveredIds, setSelectedDiscoveredIds] = useState<Set<string>>(new Set());
+  const [discoveredSearchQuery, setDiscoveredSearchQuery] = useState('');
+  const fetchAbortControllerRef = useRef<AbortController | null>(null);
 
   // Connection test diagnostics state
   const [isTesting, setIsTesting] = useState(false);
@@ -108,11 +119,26 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
   // Validation errors
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
+  const cancelInFlightFetch = useCallback(() => {
+    if (fetchAbortControllerRef.current) {
+      fetchAbortControllerRef.current.abort();
+      fetchAbortControllerRef.current = null;
+    }
+    setIsFetchingModels(false);
+  }, []);
+
   // Sync state when modal opens or provider changes
   const loadProviderConfig = useCallback((pId: AiProviderId) => {
     setSelectedProviderId(pId);
     setDiagnosticResult(null);
     setFormErrors({});
+
+    cancelInFlightFetch();
+    setFetchModelsError(null);
+    setFetchModelsSuccess(null);
+    setDiscoveredModels([]);
+    setSelectedDiscoveredIds(new Set());
+    setDiscoveredSearchQuery('');
 
     const currentKey = keyManager.getApiKey(pId);
     setApiKeyInput(currentKey);
@@ -126,12 +152,16 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
         setCustomProviderId(def.id);
         setCustomDisplayName(def.name);
         setCustomBaseUrl(def.baseUrl);
-        setCustomModels(def.models && def.models.length > 0 ? def.models : [{ id: 'model-1', name: 'Model 1' }]);
+        setCustomModels(def.models && def.models.length > 0 ? def.models : [{ id: '', name: '' }]);
         setCustomHeaders(def.headers || []);
         setCustomContextWindow(def.contextWindow || 32000);
         setCustomMaxTokens(def.maxTokens || 4096);
         setCustomToolCalling(Boolean(def.supportsToolCalling));
-        setSelectedModelId(providerRegistry.getActiveModel(pId) || def.models[0]?.id || '');
+        const activeMod = providerRegistry.getActiveModel(pId);
+        const resolvedMod = activeMod && def.models.some((m) => m.id === activeMod)
+          ? activeMod
+          : (def.models[0]?.id || '');
+        setSelectedModelId(resolvedMod);
         return;
       }
     }
@@ -146,12 +176,12 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       } catch {
         setCustomBaseUrl('http://localhost:11434/v1');
       }
-      setCustomModels([{ id: 'custom-model', name: 'Custom Model' }]);
+      setCustomModels([{ id: '', name: '' }]);
       setCustomHeaders([]);
       setCustomContextWindow(32000);
       setCustomMaxTokens(4096);
       setCustomToolCalling(false);
-      setSelectedModelId('custom-model');
+      setSelectedModelId('');
       return;
     }
 
@@ -166,7 +196,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     const currentActiveModel = providerRegistry.getActiveModel(pId);
     const availableModels = providerRegistry.getModelsForProvider(pId);
     setSelectedModelId(currentActiveModel || availableModels[0]?.id || '');
-  }, []);
+  }, [cancelInFlightFetch]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -292,7 +322,15 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
   const handleUpdateCustomModel = (index: number, field: 'id' | 'name', value: string) => {
     setCustomModels((prev) => {
       const next = [...prev];
+      const oldId = next[index]?.id;
       next[index] = { ...next[index], [field]: value };
+
+      if (field === 'id') {
+        const trimmed = value.trim();
+        if (!selectedModelId || selectedModelId === oldId || selectedModelId === 'custom-model') {
+          setSelectedModelId(trimmed);
+        }
+      }
       return next;
     });
     setFormErrors((prev) => {
@@ -304,7 +342,110 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
   };
 
   const handleRemoveCustomModel = (index: number) => {
-    setCustomModels((prev) => prev.filter((_, i) => i !== index));
+    setCustomModels((prev) => {
+      const targetToRemove = prev[index];
+      const next = prev.filter((_, i) => i !== index);
+      if (targetToRemove && targetToRemove.id === selectedModelId) {
+        setSelectedModelId(next[0]?.id || '');
+      }
+      return next;
+    });
+  };
+
+  // Model discovery actions
+  const handleFetchModels = async () => {
+    setFetchModelsError(null);
+    setFetchModelsSuccess(null);
+    setFormErrors({});
+
+    const rawUrl = customBaseUrl.trim();
+    if (!rawUrl) {
+      setFormErrors((prev) => ({ ...prev, baseUrl: 'Base URL is required to fetch models.' }));
+      return;
+    }
+
+    cancelInFlightFetch();
+    const controller = new AbortController();
+    fetchAbortControllerRef.current = controller;
+    setIsFetchingModels(true);
+
+    const headersMap: Record<string, string> = {};
+    for (const h of customHeaders) {
+      if (h.name.trim() && h.value) {
+        headersMap[h.name.trim()] = h.value;
+      }
+    }
+
+    const targetId = isEditingExistingCustom
+      ? customProviderId
+      : (customProviderId.trim().toLowerCase() || selectedProviderId);
+
+    try {
+      const result = await providerRegistry.fetchModelsForProvider(
+        targetId,
+        rawUrl,
+        apiKeyInput.trim() || undefined,
+        headersMap,
+        controller.signal
+      );
+
+      if (controller.signal.aborted) return;
+
+      if (result.success && result.models.length > 0) {
+        setDiscoveredModels(result.models);
+        setSelectedDiscoveredIds(new Set(result.models.map((m) => m.id)));
+        setFetchModelsSuccess(`Found ${result.models.length} model(s) from provider.`);
+      } else {
+        setDiscoveredModels([]);
+        setSelectedDiscoveredIds(new Set());
+        setFetchModelsError(result.error || 'Failed to fetch models from endpoint.');
+      }
+    } catch (err: unknown) {
+      if (controller.signal.aborted) return;
+      const msg = err instanceof Error ? err.message : String(err);
+      setFetchModelsError(`Error fetching models: ${msg}`);
+    } finally {
+      setIsFetchingModels(false);
+      fetchAbortControllerRef.current = null;
+    }
+  };
+
+  const handleAddSelectedDiscoveredModels = () => {
+    if (selectedDiscoveredIds.size === 0) return;
+
+    const toAdd = discoveredModels.filter((m) => selectedDiscoveredIds.has(m.id));
+    if (toAdd.length === 0) return;
+
+    let firstAddedId = '';
+
+    setCustomModels((prev) => {
+      const existingIds = new Set(prev.map((m) => m.id.trim()).filter(Boolean));
+      const baseModels = prev.length === 1 && !prev[0].id.trim() ? [] : [...prev];
+      const newConfigs: CustomModelConfig[] = [];
+
+      for (const m of toAdd) {
+        if (!existingIds.has(m.id)) {
+          existingIds.add(m.id);
+          if (!firstAddedId) firstAddedId = m.id;
+          newConfigs.push({
+            id: m.id,
+            name: m.name !== m.id ? m.name : '',
+            contextWindow: m.contextWindow,
+          });
+        }
+      }
+
+      const merged = [...baseModels, ...newConfigs];
+      return merged.length > 0 ? merged : prev;
+    });
+
+    if (firstAddedId && (!selectedModelId || !customModels.some((m) => m.id === selectedModelId))) {
+      setSelectedModelId(firstAddedId);
+    }
+
+    setFetchModelsSuccess(`Added ${toAdd.length} model(s) to configuration.`);
+    setDiscoveredModels([]);
+    setSelectedDiscoveredIds(new Set());
   };
 
   // Add / remove custom header rows
@@ -344,7 +485,26 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
 
     const isCustom = selectedProviderId === 'custom' || isEditingExistingCustom;
     const targetBaseUrl = isCustom ? customBaseUrl : customBaseUrl;
-    const targetModel = selectedModelId || (isCustom ? customModels[0]?.id : '');
+
+    // Strict model resolution
+    let targetModel = '';
+    if (isCustom) {
+      if (selectedModelId && customModels.some((m) => m.id.trim() === selectedModelId.trim())) {
+        targetModel = selectedModelId.trim();
+      } else {
+        const firstValid = customModels.find((m) => m.id && m.id.trim());
+        targetModel = firstValid ? firstValid.id.trim() : '';
+      }
+    } else {
+      const available = providerRegistry.getModelsForProvider(selectedProviderId);
+      targetModel = (selectedModelId || available[0]?.id || '').trim();
+    }
+
+    if (!targetModel) {
+      setIsTesting(false);
+      setFormErrors({ models: 'Please select or enter a valid model ID before testing connection.' });
+      return;
+    }
 
     // Map custom headers
     const headersMap: Record<string, string> = {};
@@ -356,14 +516,21 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       }
     }
 
+    const targetId = isEditingExistingCustom
+      ? customProviderId
+      : (customProviderId.trim().toLowerCase() || selectedProviderId);
+
     try {
       // Temporarily stash key in keyManager for diagnostic
       if (apiKeyInput) {
-        keyManager.setApiKey(selectedProviderId, apiKeyInput, persistInSession);
+        keyManager.setApiKey(targetId, apiKeyInput, persistInSession);
+        if (targetId !== selectedProviderId) {
+          keyManager.setApiKey(selectedProviderId, apiKeyInput, persistInSession);
+        }
       }
 
       const result = await providerRegistry.testProviderConnection(
-        selectedProviderId,
+        targetId,
         targetBaseUrl,
         targetModel,
         headersMap,
@@ -401,12 +568,16 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
         : customProviderId.trim().toLowerCase();
       const targetName = customDisplayName.trim() || targetId || 'Custom Provider';
 
+      // Filter out completely blank model rows if at least one populated model exists
+      const cleanedModels = customModels.filter((m) => m.id.trim() || m.name.trim());
+      const effectiveModels = cleanedModels.length > 0 ? cleanedModels : customModels;
+
       const validation = customProviderStore.validate(
         {
           id: targetId,
           name: targetName,
           baseUrl: customBaseUrl,
-          models: customModels,
+          models: effectiveModels,
           headers: customHeaders,
         },
         !isEditingExistingCustom
@@ -423,7 +594,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
         name: targetName,
         baseUrl: normalizeBaseUrl(customBaseUrl),
         description: `Custom endpoint (${normalizeBaseUrl(customBaseUrl)})`,
-        models: customModels.map((m) => ({
+        models: effectiveModels.map((m) => ({
           id: m.id.trim(),
           name: (m.name || m.id).trim(),
           contextWindow: customContextWindow,
@@ -452,7 +623,15 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       }
 
       // Select active model
-      const activeModel = selectedModelId || def.models[0]?.id || 'custom-model';
+      const activeModel = (selectedModelId && def.models.some((m) => m.id === selectedModelId))
+        ? selectedModelId
+        : (def.models[0]?.id || '').trim();
+
+      if (!activeModel) {
+        setFormErrors({ models: 'At least one valid model must be configured.' });
+        return;
+      }
+
       providerRegistry.setActiveModel(targetId, activeModel);
       assistAgentService.setProvider(targetId, activeModel);
       onClose();
@@ -974,72 +1153,267 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                   MODELS SECTION
                  ───────────────────────────────────────────────────────────── */}
               {selectedProviderId === 'custom' || isEditingExistingCustom ? (
-                <div className="space-y-2 border-t border-[#26283d] pt-3">
-                  <div className="flex items-center justify-between">
+                <div className="space-y-3 border-t border-[#26283d] pt-3">
+                  <div className="flex items-center justify-between gap-2">
                     <div>
                       <label className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
                         Models <span className="text-rose-400">*</span>
                       </label>
                       <p className="text-[10px] text-slate-500">
-                        Exact model IDs sent in API requests (e.g. &quot;llama-3.3-70b-instruct&quot;).
+                        Fetch available models from this provider or add one manually.
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleAddCustomModel}
-                      data-testid="add-custom-model-btn"
-                      className="flex items-center gap-1 rounded bg-white/5 hover:bg-white/10 px-2 py-1 text-[11px] text-cyan-400 transition-colors border border-white/10"
-                    >
-                      <Plus className="h-3 w-3" /> Add model
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleFetchModels}
+                        disabled={isFetchingModels}
+                        data-testid="fetch-models-btn"
+                        className="flex items-center gap-1 rounded bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-800/60 px-2.5 py-1 text-[11px] text-cyan-300 transition-colors disabled:opacity-50"
+                        title="Fetch available models from provider endpoint"
+                      >
+                        {isFetchingModels ? (
+                          <Loader2 className="h-3 w-3 animate-spin text-cyan-400" />
+                        ) : (
+                          <Download className="h-3 w-3 text-cyan-400" />
+                        )}
+                        <span>{isFetchingModels ? 'Fetching Models...' : 'Fetch Models'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAddCustomModel}
+                        data-testid="add-custom-model-btn"
+                        className="flex items-center gap-1 rounded bg-white/5 hover:bg-white/10 px-2 py-1 text-[11px] text-slate-300 transition-colors border border-white/10"
+                      >
+                        <Plus className="h-3 w-3" /> Add model
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Fetch Models Error Alert */}
+                  {fetchModelsError && (
+                    <div className="rounded-md border border-rose-900/60 bg-rose-950/30 p-2.5 text-xs text-rose-300 flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                        <div className="space-y-0.5">
+                          <p className="font-medium text-rose-200">Unable to fetch models</p>
+                          <p className="text-[11px] text-rose-300/90">{fetchModelsError}</p>
+                          <p className="text-[10px] text-slate-400 pt-0.5">You can still enter model IDs manually below.</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFetchModelsError(null)}
+                        className="text-slate-500 hover:text-slate-300 p-0.5"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Fetch Models Success Banner */}
+                  {fetchModelsSuccess && (
+                    <div className="rounded-md border border-emerald-900/60 bg-emerald-950/30 p-2 text-xs text-emerald-300 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                        <span>{fetchModelsSuccess}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFetchModelsSuccess(null)}
+                        className="text-slate-500 hover:text-slate-300 p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Discovered Models Drawer */}
+                  {discoveredModels.length > 0 && (
+                    <div className="rounded-lg border border-cyan-800/40 bg-[#141624] p-3 space-y-2.5 shadow-xl">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-white">Discovered Models</span>
+                          <span className="rounded bg-cyan-500/20 px-1.5 py-0.5 text-[10px] font-mono text-cyan-300">
+                            {discoveredModels.length}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (selectedDiscoveredIds.size === discoveredModels.length) {
+                                setSelectedDiscoveredIds(new Set());
+                              } else {
+                                setSelectedDiscoveredIds(new Set(discoveredModels.map((m) => m.id)));
+                              }
+                            }}
+                            data-testid="select-all-discovered-models-btn"
+                            className="text-[10px] text-cyan-400 hover:underline"
+                          >
+                            {selectedDiscoveredIds.size === discoveredModels.length ? 'Deselect All' : 'Select All'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleAddSelectedDiscoveredModels}
+                            disabled={selectedDiscoveredIds.size === 0}
+                            data-testid="add-selected-discovered-models-btn"
+                            className="rounded bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 px-2 py-0.5 text-[11px] font-medium text-white transition-colors"
+                          >
+                            Add Selected ({selectedDiscoveredIds.size})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDiscoveredModels([]);
+                              setSelectedDiscoveredIds(new Set());
+                            }}
+                            className="p-1 rounded text-slate-400 hover:text-white"
+                            title="Dismiss discovered models"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Search in discovered models */}
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-2 h-3 w-3 text-slate-500" />
+                        <input
+                          type="text"
+                          value={discoveredSearchQuery}
+                          onChange={(e) => setDiscoveredSearchQuery(e.target.value)}
+                          placeholder="Search fetched models (e.g. mistral, codestral)..."
+                          data-testid="discovered-models-search-input"
+                          className="w-full rounded border border-[#2e3046] bg-[#0e0f17] pl-7 pr-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+
+                      {/* Scrollable Discovered List */}
+                      <div className="max-h-48 overflow-y-auto space-y-1 pr-1 divide-y divide-white/5 border border-white/5 rounded p-1 bg-[#0f101a]">
+                        {discoveredModels
+                          .filter((m) => {
+                            const q = discoveredSearchQuery.trim().toLowerCase();
+                            if (!q) return true;
+                            return (
+                              m.id.toLowerCase().includes(q) ||
+                              m.name.toLowerCase().includes(q) ||
+                              (m.description || '').toLowerCase().includes(q)
+                            );
+                          })
+                          .map((m) => {
+                            const isChecked = selectedDiscoveredIds.has(m.id);
+                            return (
+                              <label
+                                key={m.id}
+                                className={`flex items-center justify-between p-1.5 rounded cursor-pointer transition-colors ${
+                                  isChecked ? 'bg-cyan-950/20 text-white' : 'hover:bg-white/5 text-slate-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      const next = new Set(selectedDiscoveredIds);
+                                      if (e.target.checked) next.add(m.id);
+                                      else next.delete(m.id);
+                                      setSelectedDiscoveredIds(next);
+                                    }}
+                                    data-testid={`discovered-model-checkbox-${m.id}`}
+                                    className="rounded border-[#2e3046] bg-[#12131c] text-cyan-500 focus:ring-0"
+                                  />
+                                  <div className="truncate">
+                                    <div className="font-mono text-xs font-medium text-white truncate">{m.id}</div>
+                                    {m.name && m.name !== m.id && (
+                                      <div className="text-[10px] text-slate-400 truncate">{m.name}</div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                  {m.contextWindow && (
+                                    <span className="text-[9px] font-mono text-slate-400 bg-white/5 px-1 py-0.2 rounded border border-white/10">
+                                      {Math.round(m.contextWindow / 1000)}k ctx
+                                    </span>
+                                  )}
+                                  {m.ownedBy && (
+                                    <span className="text-[9px] text-slate-500 truncate max-w-[80px]">
+                                      {m.ownedBy}
+                                    </span>
+                                  )}
+                                </div>
+                              </label>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
 
                   {formErrors.models && (
                     <p className="text-[10px] text-rose-400">{formErrors.models}</p>
                   )}
 
+                  {/* Configured Models Rows */}
                   <div className="space-y-1.5">
-                    {customModels.map((m, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            value={m.id}
-                            onChange={(e) => handleUpdateCustomModel(idx, 'id', e.target.value)}
-                            placeholder="Model ID (e.g. llama3)"
-                            data-testid={`custom-model-id-input-${idx}`}
-                            className={`w-full rounded-md border ${
-                              formErrors[`model_${idx}`] ? 'border-rose-500' : 'border-[#2e3046]'
-                            } bg-[#12131c] px-2.5 py-1.5 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500`}
-                          />
-                          {formErrors[`model_${idx}`] && (
-                            <p className="text-[9px] text-rose-400 pt-0.5">
-                              {formErrors[`model_${idx}`]}
-                            </p>
-                          )}
+                    {customModels.map((m, idx) => {
+                      const isTarget = (selectedModelId && m.id === selectedModelId) || (!selectedModelId && idx === 0 && Boolean(m.id));
+                      return (
+                        <div key={idx} className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (m.id.trim()) setSelectedModelId(m.id.trim());
+                            }}
+                            title={isTarget ? 'Active target model' : 'Set as active target model'}
+                            data-testid={`set-active-model-btn-${idx}`}
+                            className={`p-1.5 rounded transition-all shrink-0 ${
+                              isTarget
+                                ? 'text-cyan-400 bg-cyan-950/40 border border-cyan-700/50'
+                                : 'text-slate-600 hover:text-slate-400 border border-transparent'
+                            }`}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          </button>
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              value={m.id}
+                              onChange={(e) => handleUpdateCustomModel(idx, 'id', e.target.value)}
+                              placeholder="Model ID (e.g. mistral-small-latest or llama-3.3-70b)"
+                              data-testid={`custom-model-id-input-${idx}`}
+                              className={`w-full rounded-md border ${
+                                formErrors[`model_${idx}`] ? 'border-rose-500' : 'border-[#2e3046]'
+                              } bg-[#12131c] px-2.5 py-1.5 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500`}
+                            />
+                            {formErrors[`model_${idx}`] && (
+                              <p className="text-[9px] text-rose-400 pt-0.5">
+                                {formErrors[`model_${idx}`]}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              value={m.name}
+                              onChange={(e) => handleUpdateCustomModel(idx, 'name', e.target.value)}
+                              placeholder="Display Name (optional)"
+                              data-testid={`custom-model-name-input-${idx}`}
+                              className="w-full rounded-md border border-[#2e3046] bg-[#12131c] px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCustomModel(idx)}
+                            disabled={customModels.length <= 1}
+                            data-testid={`remove-custom-model-btn-${idx}`}
+                            className="p-1.5 rounded text-slate-500 hover:text-rose-400 disabled:opacity-30 disabled:hover:text-slate-500"
+                            title="Remove model"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            value={m.name}
-                            onChange={(e) => handleUpdateCustomModel(idx, 'name', e.target.value)}
-                            placeholder="Display Name (optional)"
-                            data-testid={`custom-model-name-input-${idx}`}
-                            className="w-full rounded-md border border-[#2e3046] bg-[#12131c] px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveCustomModel(idx)}
-                          disabled={customModels.length <= 1}
-                          data-testid={`remove-custom-model-btn-${idx}`}
-                          className="p-1.5 rounded text-slate-500 hover:text-rose-400 disabled:opacity-30 disabled:hover:text-slate-500"
-                          title="Remove model"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ) : (

@@ -9,8 +9,10 @@ import {
   AiModelInfo,
   ChatCompletionChunk,
   ConnectionDiagnosticResult,
+  ModelDiscoveryResult,
 } from '../types.ts';
 import { IAiProvider, StreamChatOptions } from './baseProvider.ts';
+import { discoverModels } from '../modelDiscoveryService.ts';
 
 /**
  * Redacts API keys, credentials, and tokens from error messages and URLs.
@@ -68,13 +70,16 @@ export function normalizeBaseUrl(rawUrl: string): string {
  * Validates custom HTTP headers against injection and dangerous overrides.
  */
 export function validateCustomHeaders(
-  headers: Record<string, string> | Array<{ name: string; value: string }>
+  headers?: Record<string, string> | Array<{ name: string; value: string }> | null
 ): {
   valid: boolean;
   sanitized: Record<string, string>;
   error?: string;
 } {
   const result: Record<string, string> = {};
+  if (!headers) {
+    return { valid: true, sanitized: result };
+  }
   const entries = Array.isArray(headers)
     ? headers.map((h) => [h.name, h.value] as const)
     : Object.entries(headers);
@@ -557,7 +562,18 @@ export class OpenAiCompatibleProvider implements IAiProvider {
 
     // Determine target model to test
     const availableModels = this.getAvailableModels();
-    const targetModel = modelId || availableModels[0]?.id || 'gpt-4o-mini';
+    const targetModel = (modelId || '').trim() || (availableModels[0]?.id || '').trim();
+
+    if (!targetModel) {
+      return {
+        success: false,
+        latencyMs: 0,
+        message: 'No model selected. Please select or enter a valid model ID before testing connection.',
+        errorDetails: 'Missing target model ID.',
+        errorCategory: 'config',
+        suggestedAction: 'Add at least one model ID in the Models section or fetch available models from the provider.',
+      };
+    }
 
     // If consentToInference is explicitly false, validate configuration only without billable probe
     if (consentToInference === false) {
@@ -688,5 +704,19 @@ export class OpenAiCompatibleProvider implements IAiProvider {
           : 'Check your internet connection and endpoint availability.',
       };
     }
+  }
+
+  public async fetchAvailableModels(
+    apiKey?: string,
+    baseUrl?: string,
+    customHeaders?: Record<string, string>,
+    signal?: AbortSignal
+  ): Promise<ModelDiscoveryResult> {
+    return discoverModels({
+      baseUrl: baseUrl || this.defaultBaseUrl,
+      apiKey,
+      customHeaders: customHeaders || this.customHeaders,
+      signal,
+    });
   }
 }
