@@ -1535,6 +1535,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           return (
             <CodeAssistPanel
               project={project}
+              projectId={effectiveProjectId}
               activePath={activePath}
               isEditorDirty={(filePath) => {
                 const clean = filePath.replace(/\\/g, '/').replace(/^\/+/, '');

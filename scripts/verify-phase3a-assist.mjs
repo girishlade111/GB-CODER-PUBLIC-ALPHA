@@ -73,6 +73,7 @@ const {
   EditProposalService,
   ConversationStore,
   assistAgentService,
+  isSensitiveFilePath,
 } = ai;
 
 let passedTests = 0;
@@ -367,7 +368,7 @@ export interface User {
     assert.equal(EditProposalService.normalizePath('src\\windows\\relative\\file.ts'), 'src/windows/relative/file.ts');
   });
 
-  await test('5.4 Dirty buffer detection flags uncommitted changes', async () => {
+  await test('5.4 Dirty buffer detection blocks uncommitted changes', async () => {
     const proposal = {
       id: 'prop-1',
       path: 'src/index.ts',
@@ -380,34 +381,19 @@ export interface User {
     };
 
     let writtenPath = null;
-    let writtenContent = null;
-    let warnedDirty = false;
+    const res = await EditProposalService.applyEdit({
+      project: mockProject,
+      edit: proposal,
+      isEditorDirty: (p) => p === 'src/index.ts',
+      onChangeFile: (p, c) => {
+        writtenPath = p;
+      },
+      createRollbackCheckpoint: false,
+    });
 
-    // Intercept console.warn to verify dirty buffer warning
-    const originalWarn = console.warn;
-    console.warn = (...args) => {
-      if (args[0]?.includes?.('unsaved dirty buffer')) warnedDirty = true;
-      originalWarn(...args);
-    };
-
-    try {
-      await EditProposalService.applyEdit({
-        project: mockProject,
-        edit: proposal,
-        isEditorDirty: (p) => p === 'src/index.ts',
-        onChangeFile: (p, c) => {
-          writtenPath = p;
-          writtenContent = c;
-        },
-        createRollbackCheckpoint: false,
-      });
-    } finally {
-      console.warn = originalWarn;
-    }
-
-    assert.equal(warnedDirty, true, 'Dirty buffer warning must be logged');
-    assert.equal(writtenPath, 'src/index.ts');
-    assert.equal(writtenContent, 'console.log("Updated world");\n');
+    assert.equal(res.success, false, 'Dirty buffer write must fail');
+    assert.ok(res.error?.includes('unsaved changes'), `Error message must cite unsaved changes: ${res.error}`);
+    assert.equal(writtenPath, null, 'No file write must occur when editor is dirty');
   });
 
   console.log('\nSuite 6: Project-Isolated Conversation Store');
@@ -455,6 +441,385 @@ export interface User {
     const remaining = ConversationStore.deleteSession(projectId, s1.id);
     assert.equal(remaining.length, 1);
     assert.equal(remaining[0].id, s2.id);
+  });
+
+  console.log('\nSuite 7: Targeted Safety Gates & Regression Suite');
+
+  await test('7.1 Dirty buffer blocks AI edit application with actionable error and prevents write', async () => {
+    const proposal = {
+      id: 'prop-dirty-1',
+      path: 'src/index.ts',
+      action: 'modify',
+      originalContent: 'console.log("Hello world");\n',
+      newContent: 'console.log("Overwritten world");\n',
+      addedLines: 1,
+      removedLines: 1,
+      status: 'pending',
+    };
+
+    let written = false;
+    const res = await EditProposalService.applyEdit({
+      project: mockProject,
+      edit: proposal,
+      isEditorDirty: (p) => p === 'src/index.ts',
+      onChangeFile: () => {
+        written = true;
+      },
+      createRollbackCheckpoint: false,
+    });
+
+    assert.equal(res.success, false, 'Must fail when editor is dirty');
+    assert.ok(res.error?.includes('unsaved changes'), `Error message must be actionable: ${res.error}`);
+    assert.equal(written, false, 'File write must NOT happen when editor is dirty');
+  });
+
+  await test('7.2 Clean saved buffer allows AI edit application to succeed', async () => {
+    const proposal = {
+      id: 'prop-clean-1',
+      path: 'src/index.ts',
+      action: 'modify',
+      originalContent: 'console.log("Hello world");\n',
+      newContent: 'console.log("Clean updated world");\n',
+      addedLines: 1,
+      removedLines: 1,
+      status: 'pending',
+    };
+
+    let writtenPath = null;
+    let writtenContent = null;
+
+    const res = await EditProposalService.applyEdit({
+      project: mockProject,
+      edit: proposal,
+      isEditorDirty: () => false,
+      onChangeFile: (p, c) => {
+        writtenPath = p;
+        writtenContent = c;
+      },
+      createRollbackCheckpoint: false,
+    });
+
+    assert.equal(res.success, true, 'Clean edit must succeed');
+    assert.equal(writtenPath, 'src/index.ts');
+    assert.equal(writtenContent, 'console.log("Clean updated world");\n');
+  });
+
+  await test('7.3 Stale proposal detection rejects modify proposal when underlying content changed', async () => {
+    const staleProposal = {
+      id: 'prop-stale-1',
+      path: 'src/index.ts',
+      action: 'modify',
+      originalContent: 'console.log("Old outdated content");\n',
+      newContent: 'console.log("Brand new content");\n',
+      addedLines: 1,
+      removedLines: 1,
+      status: 'pending',
+    };
+
+    let written = false;
+    const res = await EditProposalService.applyEdit({
+      project: mockProject,
+      edit: staleProposal,
+      isEditorDirty: () => false,
+      onChangeFile: () => {
+        written = true;
+      },
+      createRollbackCheckpoint: false,
+    });
+
+    assert.equal(res.success, false, 'Must fail when proposal base content is stale');
+    assert.ok(
+      res.error?.includes('Stale proposal') || res.error?.includes('modified since'),
+      res.error
+    );
+    assert.equal(written, false, 'File write must NOT happen for stale proposals');
+  });
+
+  await test('7.4 File creation proposal rejects write if target file already exists', async () => {
+    const existingFileProposal = {
+      id: 'prop-create-dup',
+      path: 'src/index.ts',
+      action: 'create',
+      newContent: 'export default {};\n',
+      addedLines: 1,
+      removedLines: 0,
+      status: 'pending',
+    };
+
+    let written = false;
+    const res = await EditProposalService.applyEdit({
+      project: mockProject,
+      edit: existingFileProposal,
+      isEditorDirty: () => false,
+      onChangeFile: () => {
+        written = true;
+      },
+      createRollbackCheckpoint: false,
+    });
+
+    assert.equal(res.success, false, 'Must fail when create target already exists');
+    assert.ok(res.error?.includes('already exists'), res.error);
+    assert.equal(written, false, 'File write must NOT overwrite existing file via create proposal');
+  });
+
+  await test('7.5 Multi-file proposal partial failure preserves recovery information', async () => {
+    const proposals = [
+      {
+        id: 'p-multi-1',
+        path: 'src/utils/math.ts',
+        action: 'modify',
+        originalContent: 'export const add = (a: number, b: number) => a + b;\n',
+        newContent: 'export const add = (a: number, b: number): number => a + b;\n',
+        addedLines: 1,
+        removedLines: 1,
+        status: 'pending',
+      },
+      {
+        id: 'p-multi-2',
+        path: 'src/index.ts',
+        action: 'modify',
+        originalContent: 'WRONG BASE CONTENT THAT TRIGGERS STALE ERROR',
+        newContent: 'console.log("Updated");\n',
+        addedLines: 1,
+        removedLines: 1,
+        status: 'pending',
+      },
+    ];
+
+    const results = [];
+    for (const edit of proposals) {
+      const res = await EditProposalService.applyEdit({
+        project: mockProject,
+        edit,
+        isEditorDirty: () => false,
+        onChangeFile: () => {},
+        createRollbackCheckpoint: false,
+      });
+      results.push({ id: edit.id, success: res.success, error: res.error });
+    }
+
+    assert.equal(results[0].success, true, 'First valid edit succeeds');
+    assert.equal(results[1].success, false, 'Second stale edit fails predictably');
+    assert.ok(results[1].error?.includes('Stale proposal'));
+  });
+
+  await test('7.6 Cross-project edit application blocked when proposal projectId does not match active', async () => {
+    assistAgentService.setProject('proj-target-alpha');
+
+    const foreignEdit = {
+      id: 'prop-foreign-1',
+      path: 'src/index.ts',
+      action: 'modify',
+      originalContent: 'console.log("Hello world");\n',
+      newContent: 'console.log("Malicious foreign edit");\n',
+      addedLines: 1,
+      removedLines: 1,
+      status: 'pending',
+    };
+
+    // 1. assistAgentService check
+    const agentRes = await assistAgentService.applyEdit(
+      'msg-arbitrary',
+      'prop-foreign-1',
+      {
+        project: mockProject,
+        isEditorDirty: () => false,
+        onChangeFile: () => {},
+        projectId: 'proj-other-beta',
+      }
+    );
+
+    assert.equal(agentRes.success, false, 'Must reject edit with mismatched projectId in agent service');
+    assert.ok(agentRes.error?.includes('switched to another project') || agentRes.error?.includes('mismatch'));
+
+    // 2. EditProposalService direct check
+    const directRes = await EditProposalService.applyEdit({
+      project: { ...mockProject, id: 'proj-target-alpha' },
+      edit: foreignEdit,
+      projectId: 'proj-other-beta',
+      isEditorDirty: () => false,
+      onChangeFile: () => {},
+      createRollbackCheckpoint: false,
+    });
+
+    assert.equal(directRes.success, false, 'Must reject edit with mismatched projectId in EditProposalService');
+    assert.ok(directRes.error?.includes('Target project mismatch'));
+  });
+
+  await test('7.7 In-flight streaming request aborted on project switch', async () => {
+    assistAgentService.setProject('proj-streaming-alpha');
+
+    const promptPromise = assistAgentService.submitPrompt('Tell me a story', mockProject, 'src/index.ts');
+
+    assistAgentService.setProject('proj-streaming-beta');
+
+    await promptPromise;
+
+    const betaSession = assistAgentService.getActiveSession();
+    assert.equal(betaSession.projectId, 'proj-streaming-beta');
+    assert.equal(betaSession.messages.length, 0, 'Beta session must remain clean and unpolluted');
+  });
+
+  await test('7.8 Rejecting an edit updates session state immutably (referential inequality)', () => {
+    assistAgentService.setProject('proj-immutable-test');
+    const session = assistAgentService.getActiveSession();
+
+    const sampleEdit = {
+      id: 'edit-immut-1',
+      path: 'src/sample.ts',
+      action: 'create',
+      newContent: 'console.log("immutable");',
+      addedLines: 1,
+      removedLines: 0,
+      status: 'pending',
+    };
+
+    const msgId = 'msg-with-edit';
+    session.messages.push({
+      id: msgId,
+      role: 'assistant',
+      content: 'Here is an edit',
+      timestamp: Date.now(),
+      proposedEdits: [sampleEdit],
+    });
+
+    const stateBefore = assistAgentService.getState();
+    const sessionsBefore = stateBefore.sessions;
+
+    assistAgentService.rejectEdit(msgId, 'edit-immut-1');
+
+    const stateAfter = assistAgentService.getState();
+    const sessionsAfter = stateAfter.sessions;
+
+    assert.notEqual(sessionsBefore, sessionsAfter, 'sessions array reference must change on reject');
+    const updatedMsg = sessionsAfter[0].messages.find((m) => m.id === msgId);
+    assert.equal(updatedMsg.proposedEdits[0].status, 'rejected');
+  });
+
+  await test('7.9 Applying an edit updates session state immutably (referential inequality)', async () => {
+    const testProjId = 'proj-immutable-apply';
+    assistAgentService.setProject(testProjId);
+    const session = assistAgentService.getActiveSession();
+
+    const sampleEdit = {
+      id: 'edit-apply-1',
+      path: 'src/index.ts',
+      action: 'modify',
+      originalContent: 'console.log("Hello world");\n',
+      newContent: 'console.log("Applied world");\n',
+      addedLines: 1,
+      removedLines: 1,
+      status: 'pending',
+    };
+
+    const msgId = 'msg-apply-edit';
+    session.messages.push({
+      id: msgId,
+      role: 'assistant',
+      content: 'Here is an edit to apply',
+      timestamp: Date.now(),
+      proposedEdits: [sampleEdit],
+    });
+
+    const stateBefore = assistAgentService.getState();
+    const sessionsBefore = stateBefore.sessions;
+
+    let appliedContent = null;
+    const res = await assistAgentService.applyEdit(
+      msgId,
+      'edit-apply-1',
+      {
+        project: { ...mockProject, id: testProjId },
+        projectId: testProjId,
+        isEditorDirty: () => false,
+        onChangeFile: (p, c) => {
+          appliedContent = c;
+        },
+        createRollbackCheckpoint: false,
+      }
+    );
+
+    assert.equal(res.success, true, `Apply must succeed: ${res.error}`);
+    assert.equal(appliedContent, 'console.log("Applied world");\n');
+
+    const stateAfter = assistAgentService.getState();
+    const sessionsAfter = stateAfter.sessions;
+
+    assert.notEqual(sessionsBefore, sessionsAfter, 'sessions array reference must change on apply');
+    const updatedMsg = sessionsAfter[0].messages.find((m) => m.id === msgId);
+    assert.equal(updatedMsg.proposedEdits[0].status, 'applied');
+  });
+
+  await test('7.10 Sensitive files (.env, keys, credentials) are excluded from active context', () => {
+    const sensitiveProject = {
+      id: 'secret-project',
+      name: 'Secret Project',
+      files: [
+        { path: '.env', content: 'DATABASE_URL="postgres://user:pass@host/db"\nSECRET_KEY="supersecret"\n' },
+        { path: '.env.production', content: 'API_KEY="prod-api-key"\n' },
+        { path: 'src/index.ts', content: 'console.log("public");\n' },
+        { path: 'credentials.json', content: '{"token": "xyz"}\n' },
+        { path: 'id_rsa', content: '-----BEGIN OPENSSH PRIVATE KEY-----\nsecret\n' },
+      ],
+    };
+
+    const assembledEnv = ContextBuilder.assembleContext(
+      sensitiveProject,
+      '.env',
+      [],
+      'Hello assistant',
+      4000
+    );
+
+    const paths = assembledEnv.files.map((f) => f.path);
+    assert.ok(!paths.includes('.env'), '.env must be excluded from active file');
+    assert.ok(assembledEnv.excludedSensitiveFiles.includes('.env'), 'Must report .env in excludedSensitiveFiles');
+
+    const prompt = ContextBuilder.buildSystemPrompt(assembledEnv);
+    assert.ok(prompt.includes('SECURITY NOTICE'), 'System prompt must warn about excluded sensitive files');
+    assert.ok(prompt.includes('.env'), 'Notice must list excluded file name');
+  });
+
+  await test('7.11 Sensitive files are excluded from @file mentions and user attachments', () => {
+    const sensitiveProject = {
+      id: 'secret-project-2',
+      name: 'Secret Project 2',
+      files: [
+        { path: '.env.local', content: 'SECRET=local-secret\n' },
+        { path: 'server.key', content: 'PRIVATE KEY\n' },
+        { path: 'src/app.ts', content: 'export const app = {};\n' },
+      ],
+    };
+
+    const assembled = ContextBuilder.assembleContext(
+      sensitiveProject,
+      'src/app.ts',
+      ['.env.local'],
+      'Can you inspect @server.key for me?',
+      4000
+    );
+
+    const paths = assembled.files.map((f) => f.path);
+    assert.ok(paths.includes('src/app.ts'), 'Safe active file must be included');
+    assert.ok(!paths.includes('.env.local'), '.env.local attachment must be excluded');
+    assert.ok(!paths.includes('server.key'), 'server.key mention must be excluded');
+    assert.ok(assembled.excludedSensitiveFiles.includes('.env.local'));
+    assert.ok(assembled.excludedSensitiveFiles.includes('server.key'));
+  });
+
+  await test('7.12 isSensitiveFilePath helper detects comprehensive list of sensitive file patterns', () => {
+    assert.equal(isSensitiveFilePath('.env'), true);
+    assert.equal(isSensitiveFilePath('.env.local'), true);
+    assert.equal(isSensitiveFilePath('.env.production'), true);
+    assert.equal(isSensitiveFilePath('config/id_rsa'), true);
+    assert.equal(isSensitiveFilePath('keys/cert.pem'), true);
+    assert.equal(isSensitiveFilePath('credentials.json'), true);
+    assert.equal(isSensitiveFilePath('firebase-adminsdk-12345.json'), true);
+    assert.equal(isSensitiveFilePath('.git/config'), true);
+    assert.equal(isSensitiveFilePath('.npmrc'), true);
+    assert.equal(isSensitiveFilePath('src/index.ts'), false);
+    assert.equal(isSensitiveFilePath('src/components/App.tsx'), false);
+    assert.equal(isSensitiveFilePath('package.json'), false);
   });
 
   console.log('\n============================================================');

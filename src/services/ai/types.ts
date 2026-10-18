@@ -61,6 +61,7 @@ export interface AssembledProjectContext {
   budgetTokens: number;
   isOverBudget: boolean;
   summary: string;
+  excludedSensitiveFiles?: string[];
 }
 
 export interface ProposedFileEdit {

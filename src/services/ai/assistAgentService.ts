@@ -95,15 +95,31 @@ class AssistAgentService {
 
   /**
    * Switches active project context, reloading sessions for that project.
+   * Cancels any in-flight streaming from the previous project to prevent context leakage.
    */
   public setProject(projectId: string): void {
+    if (!projectId) return;
     if (this.state.currentProjectId === projectId) return;
+
+    // Abort active generation from previous project
+    if (this.abortController) {
+      try {
+        this.abortController.abort();
+      } catch {}
+      this.abortController = null;
+    }
+
     const sessions = ConversationStore.loadSessions(projectId);
     this.state = {
       ...this.state,
       currentProjectId: projectId,
       sessions,
       activeSessionId: sessions[0]?.id || `session-${Date.now()}`,
+      isGenerating: false,
+      generatingSessionId: null,
+      progressStep: 'Ready',
+      currentReasoning: '',
+      currentStreamContent: '',
       attachedContextPaths: [],
     };
     this.notify();
@@ -216,6 +232,7 @@ class AssistAgentService {
     const trimmed = prompt.trim();
     if (!trimmed || this.state.isGenerating) return;
 
+    const targetProjectId = this.state.currentProjectId;
     const sessionId = this.state.activeSessionId;
     const userMsgId = `msg-${Date.now()}`;
 
@@ -299,6 +316,9 @@ class AssistAgentService {
           signal: this.abortController.signal,
         },
         (chunk) => {
+          // If project switched while streaming, discard chunk to avoid cross-project pollution
+          if (this.state.currentProjectId !== targetProjectId) return;
+
           if (chunk.contentDelta) {
             streamContent += chunk.contentDelta;
             this.state.currentStreamContent = streamContent;
@@ -326,6 +346,24 @@ class AssistAgentService {
         proposedEdits: proposedEdits.length > 0 ? proposedEdits : undefined,
         appliedEditsStatus: proposedEdits.length > 0 ? 'unapplied' : undefined,
       };
+
+      // Guard against project context switch while waiting for stream response
+      if (this.state.currentProjectId !== targetProjectId) {
+        // Project was switched: isolate response by saving to target project's store without mutating active state
+        const targetSessions = ConversationStore.loadSessions(targetProjectId);
+        const updatedTargetSessions = targetSessions.map((s) => {
+          if (s.id === sessionId) {
+            return {
+              ...s,
+              updatedAt: Date.now(),
+              messages: [...s.messages, assistantMsg],
+            };
+          }
+          return s;
+        });
+        ConversationStore.saveSessions(targetProjectId, updatedTargetSessions);
+        return;
+      }
 
       const finalSessions = this.state.sessions.map((s) => {
         if (s.id === sessionId) {
@@ -360,8 +398,12 @@ class AssistAgentService {
       ConversationStore.saveSessions(this.state.currentProjectId, finalSessions);
       this.notify();
     } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') {
+      if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('aborted'))) {
         this.cancelGeneration();
+        return;
+      }
+
+      if (this.state.currentProjectId !== targetProjectId) {
         return;
       }
 
@@ -408,17 +450,24 @@ class AssistAgentService {
 
   /**
    * Applies an edit proposal to the project files.
+   * Enforces project origin matching and immutable state updates.
    */
   public async applyEdit(
     messageId: string,
     editId: string,
     options: {
       project: MultiFileProject;
+      projectId?: string;
       isEditorDirty?: (path: string) => boolean;
       onChangeFile: (path: string, content: string) => void;
       onCreateFile?: (path: string, content: string) => void;
     }
   ): Promise<{ success: boolean; error?: string }> {
+    const originProjectId = options.projectId || this.state.currentProjectId;
+    if (originProjectId && this.state.currentProjectId !== originProjectId) {
+      return { success: false, error: 'Cannot apply proposal: workspace has switched to another project.' };
+    }
+
     const session = this.getActiveSession();
     const msg = session.messages.find((m) => m.id === messageId);
     if (!msg || !msg.proposedEdits) return { success: false, error: 'Message or edits not found' };
@@ -426,9 +475,14 @@ class AssistAgentService {
     const edit = msg.proposedEdits.find((e) => e.id === editId);
     if (!edit) return { success: false, error: 'Edit proposal not found' };
 
+    if (edit.status === 'applied') {
+      return { success: false, error: 'This proposal has already been applied.' };
+    }
+
     const res = await EditProposalService.applyEdit({
       project: options.project,
       edit,
+      projectId: originProjectId,
       isEditorDirty: options.isEditorDirty,
       onChangeFile: options.onChangeFile,
       onCreateFile: options.onCreateFile,
@@ -436,11 +490,37 @@ class AssistAgentService {
     });
 
     if (res.success) {
-      edit.status = 'applied';
-      const allApplied = msg.proposedEdits.every((e) => e.status === 'applied');
-      msg.appliedEditsStatus = allApplied ? 'applied' : 'partial';
+      // Guard against project context switch while waiting for async snapshot
+      if (originProjectId && this.state.currentProjectId !== originProjectId) {
+        return { success: false, error: 'Edit applied but project context changed.' };
+      }
 
-      ConversationStore.saveSessions(this.state.currentProjectId, this.state.sessions);
+      const nextSessions = this.state.sessions.map((s) => {
+        if (s.id !== session.id) return s;
+        return {
+          ...s,
+          updatedAt: Date.now(),
+          messages: s.messages.map((m) => {
+            if (m.id !== messageId) return m;
+            const updatedEdits = (m.proposedEdits || []).map((e) =>
+              e.id === editId ? { ...e, status: 'applied' as const, appliedAt: Date.now() } : e
+            );
+            const allApplied = updatedEdits.every((e) => e.status === 'applied');
+            return {
+              ...m,
+              proposedEdits: updatedEdits,
+              appliedEditsStatus: (allApplied ? 'applied' : 'partial') as 'applied' | 'partial',
+            };
+          }),
+        };
+      });
+
+      this.state = {
+        ...this.state,
+        sessions: nextSessions,
+      };
+
+      ConversationStore.saveSessions(this.state.currentProjectId, nextSessions);
       this.notify();
     }
 
@@ -449,6 +529,7 @@ class AssistAgentService {
 
   /**
    * Rejects an edit proposal.
+   * Produces fresh immutable state references to ensure instant UI updates.
    */
   public rejectEdit(messageId: string, editId: string): void {
     const session = this.getActiveSession();
@@ -457,11 +538,32 @@ class AssistAgentService {
 
     const edit = msg.proposedEdits.find((e) => e.id === editId);
     if (edit) {
-      edit.status = 'rejected';
-      const allRejected = msg.proposedEdits.every((e) => e.status === 'rejected');
-      msg.appliedEditsStatus = allRejected ? 'rejected' : 'partial';
+      const nextSessions = this.state.sessions.map((s) => {
+        if (s.id !== session.id) return s;
+        return {
+          ...s,
+          updatedAt: Date.now(),
+          messages: s.messages.map((m) => {
+            if (m.id !== messageId) return m;
+            const updatedEdits = (m.proposedEdits || []).map((e) =>
+              e.id === editId ? { ...e, status: 'rejected' as const } : e
+            );
+            const allRejected = updatedEdits.every((e) => e.status === 'rejected');
+            return {
+              ...m,
+              proposedEdits: updatedEdits,
+              appliedEditsStatus: (allRejected ? 'rejected' : 'partial') as 'rejected' | 'partial',
+            };
+          }),
+        };
+      });
 
-      ConversationStore.saveSessions(this.state.currentProjectId, this.state.sessions);
+      this.state = {
+        ...this.state,
+        sessions: nextSessions,
+      };
+
+      ConversationStore.saveSessions(this.state.currentProjectId, nextSessions);
       this.notify();
     }
   }

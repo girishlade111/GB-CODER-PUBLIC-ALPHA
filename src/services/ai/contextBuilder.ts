@@ -22,6 +22,30 @@ export const estimateTokens = (input: string | number): number => {
 export const DEFAULT_CONTEXT_BUDGET_TOKENS = 16000;
 const MAX_SINGLE_FILE_CHARS = 24000; // max ~6000 tokens per file before truncation
 
+/**
+ * Patterns matching sensitive secrets, credentials, environment keys, and internal stores.
+ * Excluded from automatic AI context by default.
+ */
+export const SENSITIVE_PATTERNS: RegExp[] = [
+  /(^|\/)\.env(\..+)?$/i,
+  /(^|\/)\.git(\/|$)/i,
+  /(^|\/)\.?(aws|ssh|gnupg)(\/|$)/i,
+  /\.(pem|key|pkcs12|pfx|p12|keystore|jks)$/i,
+  /(^|\/)(id_rsa|id_ed25519|id_ecdsa|id_dsa)$/i,
+  /(^|\/)(credentials|secrets|service-account|serviceAccountKey)(\.json|\.ya?ml|\.txt)?$/i,
+  /(^|\/).*adminsdk.*\.json$/i,
+  /(^|\/)\.(npmrc|netrc)$/i,
+];
+
+/**
+ * Determines whether a file path points to a sensitive secret or private configuration.
+ */
+export const isSensitiveFilePath = (filePath: string): boolean => {
+  if (!filePath) return false;
+  const normalized = filePath.replace(/\\/g, '/').trim();
+  return SENSITIVE_PATTERNS.some((pattern) => pattern.test(normalized));
+};
+
 export class ContextBuilder {
   /**
    * Extracts `@path/to/file` mentions from the user prompt text.
@@ -49,6 +73,7 @@ export class ContextBuilder {
 
   /**
    * Assembles the full project context based on active file, user attached files, and prompt mentions.
+   * Strictly excludes sensitive files (.env, credentials, secrets, private keys) by default.
    */
   public static assembleContext(
     project: MultiFileProject,
@@ -58,10 +83,21 @@ export class ContextBuilder {
     budgetTokens = DEFAULT_CONTEXT_BUDGET_TOKENS
   ): AssembledProjectContext {
     const includedMap = new Map<string, ContextFileReference>();
+    const excludedSensitiveFiles: string[] = [];
     const atMentions = this.extractAtMentions(prompt, project.files);
 
-    // Helper to add a file with budget tracking
+    // Helper to add a file with budget tracking and security exclusion
     const addFile = (filePath: string, reason: 'active_file' | 'user_attached' | 'at_mention') => {
+      if (!filePath) return;
+
+      // Sensitive file protection: exclude credentials and secrets by default
+      if (isSensitiveFilePath(filePath)) {
+        if (!excludedSensitiveFiles.includes(filePath)) {
+          excludedSensitiveFiles.push(filePath);
+        }
+        return;
+      }
+
       const file = project.files.find((f) => f.path === filePath);
       if (!file || includedMap.has(filePath)) return;
 
@@ -88,17 +124,17 @@ export class ContextBuilder {
       });
     };
 
-    // 1. Add active file first (highest priority)
+    // 1. Add active file first (highest priority, guarded by secret filter)
     if (activePath) {
       addFile(activePath, 'active_file');
     }
 
-    // 2. Add files explicitly mentioned via `@`
+    // 2. Add files explicitly mentioned via `@` (guarded by secret filter)
     for (const mention of atMentions) {
       addFile(mention, 'at_mention');
     }
 
-    // 3. Add user attached files
+    // 3. Add user attached files (guarded by secret filter)
     for (const attached of attachedPaths) {
       addFile(attached, 'user_attached');
     }
@@ -109,9 +145,13 @@ export class ContextBuilder {
     const totalEstimatedTokens = estimateTokens(totalChars);
     const isOverBudget = totalEstimatedTokens > budgetTokens;
 
-    const summary = files.length > 0
+    let summary = files.length > 0
       ? `${files.length} file(s) in context (~${totalEstimatedTokens.toLocaleString()} tokens)`
       : 'No files in context';
+
+    if (excludedSensitiveFiles.length > 0) {
+      summary += ` (${excludedSensitiveFiles.length} secret file${excludedSensitiveFiles.length > 1 ? 's' : ''} protected)`;
+    }
 
     return {
       activeFilePath: activePath || undefined,
@@ -120,6 +160,7 @@ export class ContextBuilder {
       budgetTokens,
       isOverBudget,
       summary,
+      excludedSensitiveFiles: excludedSensitiveFiles.length > 0 ? excludedSensitiveFiles : undefined,
     };
   }
 
@@ -137,6 +178,11 @@ export class ContextBuilder {
         contextBlock += file.content;
         contextBlock += '\n--- End File ---\n';
       }
+    }
+
+    let securityNotice = '';
+    if (context.excludedSensitiveFiles && context.excludedSensitiveFiles.length > 0) {
+      securityNotice = `\n[SECURITY NOTICE: ${context.excludedSensitiveFiles.length} sensitive secret/environment file(s) (${context.excludedSensitiveFiles.join(', ')}) were omitted from context to protect credentials.]\n`;
     }
 
     return `You are GB Assist, an expert AI pair programmer built directly into the GB Coder browser IDE (LadeStack).
@@ -160,6 +206,6 @@ Or for new files:
 </proposed_edit>
 
 The user will review your proposed changes with side-by-side diffs and click "Apply" to save them to their workspace.
-${contextBlock}`;
+${securityNotice}${contextBlock}`;
   }
 }

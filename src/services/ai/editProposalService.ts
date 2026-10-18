@@ -19,6 +19,7 @@ import { webcontainerService } from '../webcontainer/webcontainerService.ts';
 export interface ApplyEditOptions {
   project: MultiFileProject;
   edit: ProposedFileEdit;
+  projectId?: string;
   isEditorDirty?: (path: string) => boolean;
   onChangeFile: (path: string, content: string) => void;
   onCreateFile?: (path: string, content: string) => void;
@@ -154,30 +155,71 @@ export class EditProposalService {
 
   /**
    * Safely applies an edit proposal to the project and WebContainer.
+   * Enforces dirty buffer blocking, stale proposal rejection, and auto-rollback checkpoints.
    */
   public static async applyEdit(options: ApplyEditOptions): Promise<{ success: boolean; error?: string; checkpointId?: string }> {
-    const { project, edit, isEditorDirty, onChangeFile, onCreateFile, createRollbackCheckpoint = true } = options;
+    const { project, edit, isEditorDirty, onChangeFile, onCreateFile, createRollbackCheckpoint = true, projectId } = options;
 
-    // Safety check 1: Dirty buffer in Monaco
-    if (isEditorDirty && isEditorDirty(edit.path)) {
-      console.warn(`[EditProposalService] File ${edit.path} has unsaved dirty buffer in Monaco.`);
-      // Still allows applying, but callers can prompt or inspect
+    // Safety check 0: Prevent cross-project file writes
+    if (projectId && project.id && projectId !== project.id) {
+      return {
+        success: false,
+        error: `Cannot apply edit: Target project mismatch. Proposal was generated for "${projectId}" but active project is "${project.id}".`,
+      };
     }
 
-    // Safety check 2: Create automatic rollback checkpoint before mutation
+    // Safety check 1: Block write if target file has unsaved dirty buffer in Monaco
+    if (isEditorDirty && isEditorDirty(edit.path)) {
+      return {
+        success: false,
+        error: `Cannot apply edit: "${edit.path}" has unsaved changes in the editor. Please save your file before applying this proposal.`,
+      };
+    }
+
+    // Safety check 2: Stale proposal validation & existence checks
+    const existingFile = project.files.find((f) => f.path === edit.path);
+
+    if (edit.action === 'create') {
+      if (existingFile) {
+        return {
+          success: false,
+          error: `Cannot create file: "${edit.path}" already exists in the workspace. Please review the existing file before modifying.`,
+        };
+      }
+    } else {
+      // edit.action === 'modify'
+      if (!existingFile) {
+        return {
+          success: false,
+          error: `Cannot modify file: "${edit.path}" does not exist in the workspace.`,
+        };
+      }
+
+      const normalizeContent = (text: string) => text.replace(/\r\n/g, '\n');
+      if (normalizeContent(existingFile.content) !== normalizeContent(edit.originalContent)) {
+        return {
+          success: false,
+          error: `Stale proposal: "${edit.path}" has been modified since this proposal was generated. Please regenerate or review the updated diff.`,
+        };
+      }
+    }
+
+    // Safety check 3: Create automatic rollback checkpoint before mutation
     let checkpointId: string | undefined;
     if (createRollbackCheckpoint) {
       try {
         const snap = snapshotService.createSnapshot(
-          `Before AI Edit: ${edit.path}`,
+          `Before AI Edit: ${edit.action} ${edit.path}`,
           {
             project: {
-              id: project.id,
-              name: project.name,
               projectType: project.projectType,
               files: project.files,
               dependencies: project.dependencies,
+              entry: project.entry,
             },
+            openPaths: [edit.path],
+            activePath: edit.path,
+            externalLibraries: [],
           },
           true
         );
@@ -188,11 +230,7 @@ export class EditProposalService {
     }
 
     try {
-      const exists = project.files.some((f) => f.path === edit.path);
-
-      if (exists) {
-        onChangeFile(edit.path, edit.newContent);
-      } else if (onCreateFile) {
+      if (edit.action === 'create' && onCreateFile) {
         onCreateFile(edit.path, edit.newContent);
       } else {
         onChangeFile(edit.path, edit.newContent);

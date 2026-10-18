@@ -29,6 +29,7 @@ import {
   Plus,
   FileText,
   Copy,
+  ShieldAlert,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { MultiFileProject } from '../../types/files';
@@ -38,12 +39,13 @@ import {
 } from '../../services/ai/types';
 import { assistAgentService } from '../../services/ai/assistAgentService';
 import { providerRegistry } from '../../services/ai/providerRegistry';
-import { ContextBuilder } from '../../services/ai/contextBuilder';
+import { ContextBuilder, isSensitiveFilePath } from '../../services/ai/contextBuilder';
 import { AiProviderSettingsModal } from './AiProviderSettingsModal';
 import { AiMonacoDiffModal } from './AiMonacoDiffModal';
 
 interface CodeAssistPanelProps {
   project: MultiFileProject;
+  projectId?: string;
   activePath?: string | null;
   isEditorDirty?: (path: string) => boolean;
   onApplyFiles?: (files: Array<{ path: string; content: string }>) => void;
@@ -78,6 +80,7 @@ const AVAILABLE_MODES: Array<{ id: CodeAssistMode; title: string; desc: string }
 
 export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
   project,
+  projectId,
   activePath,
   isEditorDirty,
   onApplyFiles,
@@ -87,10 +90,11 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
 
   // Sync active project into assistAgentService
   useEffect(() => {
-    if (project?.id) {
-      assistAgentService.setProject(project.id);
+    const effectiveId = projectId || (project as { id?: string })?.id;
+    if (effectiveId) {
+      assistAgentService.setProject(effectiveId);
     }
-  }, [project?.id]);
+  }, [projectId, project]);
 
   const activeSession = assistAgentService.getActiveSession();
 
@@ -148,9 +152,11 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
   };
 
   // Apply a single proposed file edit
-  const handleApplySingleEdit = async (messageId: string, editId: string) => {
+  const handleApplySingleEdit = async (messageId: string, editId: string): Promise<boolean> => {
+    const effectiveId = projectId || (project as { id?: string })?.id;
     const res = await assistAgentService.applyEdit(messageId, editId, {
       project,
+      projectId: effectiveId,
       isEditorDirty,
       onChangeFile: (path, content) => {
         if (onApplyFiles) onApplyFiles([{ path, content }]);
@@ -162,8 +168,10 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
 
     if (res.success) {
       toast.success('Changes applied to workspace');
+      return true;
     } else {
-      toast.error(`Failed to apply edit: ${res.error}`);
+      toast.error(`Failed to apply edit: ${res.error}`, { duration: 5000 });
+      return false;
     }
   };
 
@@ -173,13 +181,23 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
     toast('Edit proposal rejected');
   };
 
-  // Apply all pending proposed edits for a message
+  // Apply all pending proposed edits for a message with partial failure tracking
   const handleApplyAllForMessage = async (messageId: string, edits: ProposedFileEdit[]) => {
     const pending = edits.filter((e) => e.status === 'pending');
+    let appliedCount = 0;
+    let failedCount = 0;
+
     for (const edit of pending) {
-      await handleApplySingleEdit(messageId, edit.id);
+      const ok = await handleApplySingleEdit(messageId, edit.id);
+      if (ok) appliedCount++;
+      else failedCount++;
     }
-    toast.success(`Applied ${pending.length} file change(s) to workspace`);
+
+    if (appliedCount > 0 && failedCount === 0) {
+      toast.success(`Applied ${appliedCount} file change(s) to workspace`);
+    } else if (appliedCount > 0 && failedCount > 0) {
+      toast(`Applied ${appliedCount} change(s), ${failedCount} failed. Check errors.`, { icon: '⚠️' });
+    }
   };
 
   // Context summary calculations
@@ -267,6 +285,15 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
             <span className="text-slate-500">
               (~{(assembledContext.totalEstimatedTokens / 1000).toFixed(1)}k tokens)
             </span>
+            {assembledContext.excludedSensitiveFiles && assembledContext.excludedSensitiveFiles.length > 0 && (
+              <span
+                className="inline-flex items-center gap-1 rounded bg-amber-500/10 border border-amber-500/20 px-1 py-0.5 text-[9px] text-amber-400 font-sans"
+                title={`Protected secret files excluded from context: ${assembledContext.excludedSensitiveFiles.join(', ')}`}
+              >
+                <ShieldAlert className="h-2.5 w-2.5" />
+                {assembledContext.excludedSensitiveFiles.length} protected
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
@@ -330,7 +357,22 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
               </button>
             </div>
             {project.files.map((f) => {
+              const isSensitive = isSensitiveFilePath(f.path);
               const isSelected = state.attachedContextPaths.includes(f.path) || f.path === activePath;
+
+              if (isSensitive) {
+                return (
+                  <div
+                    key={f.path}
+                    className="flex items-center justify-between px-2 py-1 rounded text-[10px] font-mono text-slate-500 bg-red-950/20 cursor-not-allowed opacity-60"
+                    title="Protected secret file: excluded from AI context for security"
+                  >
+                    <span className="truncate line-through">{f.path}</span>
+                    <span className="text-[8px] text-amber-500/80 uppercase font-sans">Protected</span>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={f.path}
