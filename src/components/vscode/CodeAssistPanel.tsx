@@ -30,6 +30,7 @@ import {
   FileText,
   Copy,
   ShieldAlert,
+  Terminal,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { MultiFileProject } from '../../types/files';
@@ -198,6 +199,35 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
     } else if (appliedCount > 0 && failedCount > 0) {
       toast(`Applied ${appliedCount} change(s), ${failedCount} failed. Check errors.`, { icon: '⚠️' });
     }
+  };
+
+  // Tool Execution Handlers (Phase 3B)
+  const [expandedToolOutputs, setExpandedToolOutputs] = useState<Record<string, boolean>>({});
+
+  const toggleToolOutput = (toolCallId: string) => {
+    setExpandedToolOutputs((prev) => ({
+      ...prev,
+      [toolCallId]: !prev[toolCallId],
+    }));
+  };
+
+  const handleApproveTool = async (messageId: string, toolCallId: string) => {
+    const effectiveId = projectId || (project as { id?: string })?.id;
+    const res = await assistAgentService.approveToolCall(messageId, toolCallId, {
+      project,
+      projectId: effectiveId,
+      activePath,
+    });
+    if (res.success) {
+      toast.success('Tool executed successfully');
+    } else {
+      toast.error(`Tool execution failed: ${res.error}`);
+    }
+  };
+
+  const handleDenyTool = (messageId: string, toolCallId: string) => {
+    assistAgentService.denyToolCall(messageId, toolCallId);
+    toast('Tool execution denied');
   };
 
   // Context summary calculations
@@ -538,6 +568,198 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                         <div className="whitespace-pre-wrap font-sans leading-relaxed">
                           {msg.content}
                         </div>
+
+                        {/* Tool Executions Card (Phase 3B) */}
+                        {msg.toolCalls && msg.toolCalls.length > 0 && (
+                          <div
+                            className="mt-3 rounded-lg border border-[#2e3046] bg-[#12131c] p-3 space-y-2.5"
+                            data-testid="tool-executions-container"
+                          >
+                            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                              <div className="flex items-center gap-1.5 font-semibold text-slate-200">
+                                <Terminal className="h-3.5 w-3.5 text-cyan-400" />
+                                <span>Agent Tools ({msg.toolCalls.length})</span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              {msg.toolCalls.map((tc) => {
+                                const isOutputOpen =
+                                  expandedToolOutputs[tc.id] ??
+                                  (tc.status === 'completed' || tc.status === 'failed');
+                                const isTerminal = tc.permission === 'terminal';
+                                const isPending = tc.status === 'pending_approval';
+                                const isRunning = tc.status === 'running';
+                                const isCompleted = tc.status === 'completed';
+                                const isFailed = tc.status === 'failed';
+                                const isDenied = tc.status === 'denied';
+
+                                const argsObj = (tc.args || {}) as Record<string, unknown>;
+
+                                return (
+                                  <div
+                                    key={tc.id}
+                                    data-testid={`tool-card-${tc.id}`}
+                                    className="rounded bg-[#18192c] border border-white/5 p-2.5 text-[11px] space-y-2"
+                                  >
+                                    {/* Tool Header: Name, Risk, Status */}
+                                    <div className="flex items-center justify-between gap-2">
+                                      <div className="flex items-center gap-1.5 min-w-0">
+                                        <span className="font-mono font-semibold text-cyan-300 truncate">
+                                          {tc.toolName}
+                                        </span>
+                                        <span
+                                          className={`text-[9px] uppercase px-1.5 py-0.2 rounded border font-semibold ${
+                                            tc.riskLevel === 'high'
+                                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                              : tc.riskLevel === 'moderate'
+                                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                              : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                          }`}
+                                        >
+                                          {tc.riskLevel}
+                                        </span>
+                                      </div>
+
+                                      {/* Status Pill */}
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        {isPending && (
+                                          <span className="flex items-center gap-1 text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded font-medium">
+                                            <ShieldAlert className="h-3 w-3" /> Awaiting Approval
+                                          </span>
+                                        )}
+                                        {isRunning && (
+                                          <span className="flex items-center gap-1 text-[10px] text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 px-1.5 py-0.5 rounded font-medium">
+                                            <Loader2 className="h-3 w-3 animate-spin" /> Running
+                                          </span>
+                                        )}
+                                        {isCompleted && (
+                                          <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-medium">
+                                            <Check className="h-3 w-3" /> Completed {tc.durationMs ? `(${tc.durationMs}ms)` : ''}
+                                          </span>
+                                        )}
+                                        {isFailed && (
+                                          <span className="flex items-center gap-1 text-[10px] text-rose-400 font-medium">
+                                            <X className="h-3 w-3" /> Failed
+                                          </span>
+                                        )}
+                                        {isDenied && (
+                                          <span className="text-[10px] text-slate-500 italic">
+                                            Denied by user
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Tool Explanation / Command / Args Details */}
+                                    {tc.explanation && (
+                                      <div className="text-[10px] text-slate-400 italic">
+                                        {tc.explanation}
+                                      </div>
+                                    )}
+
+                                    {isTerminal && tc.command && (
+                                      <div className="rounded bg-black/50 p-1.5 font-mono text-[10px] text-cyan-300 flex items-center justify-between">
+                                        <span>
+                                          $ {tc.command} {Array.isArray(argsObj.args) ? argsObj.args.join(' ') : ''}
+                                        </span>
+                                        {tc.cwd && <span className="text-slate-500 text-[9px]">cwd: {tc.cwd}</span>}
+                                      </div>
+                                    )}
+
+                                    {!isTerminal && tc.args && (
+                                      <div className="text-[10px] font-mono text-slate-400 truncate">
+                                        {argsObj.path
+                                          ? `path: ${String(argsObj.path)}`
+                                          : argsObj.query
+                                          ? `query: ${String(argsObj.query)}`
+                                          : argsObj.pattern
+                                          ? `pattern: ${String(argsObj.pattern)}`
+                                          : JSON.stringify(tc.args)}
+                                      </div>
+                                    )}
+
+                                    {/* Approval Action Buttons */}
+                                    {isPending && (
+                                      <div className="flex items-center justify-end gap-2 pt-1 border-t border-white/5">
+                                        <button
+                                          type="button"
+                                          data-testid="deny-tool-btn"
+                                          onClick={() => handleDenyTool(msg.id, tc.id)}
+                                          className="rounded border border-white/10 hover:bg-white/10 px-2 py-0.5 text-[10px] text-slate-400 hover:text-white transition-colors"
+                                        >
+                                          Deny
+                                        </button>
+                                        <button
+                                          type="button"
+                                          data-testid="approve-tool-btn"
+                                          onClick={() => handleApproveTool(msg.id, tc.id)}
+                                          className="rounded bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-0.5 text-[10px] font-semibold transition-colors shadow flex items-center gap-1"
+                                        >
+                                          <Check className="h-3 w-3" /> Approve & Run
+                                        </button>
+                                      </div>
+                                    )}
+
+                                    {/* Output Toggle & Viewer */}
+                                    {(tc.stdout || tc.stderr || tc.result || tc.error || tc.exitCode !== undefined) && (
+                                      <div className="pt-1 border-t border-white/5">
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleToolOutput(tc.id)}
+                                          className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-200"
+                                        >
+                                          {isOutputOpen ? (
+                                            <ChevronDown className="h-2.5 w-2.5" />
+                                          ) : (
+                                            <ChevronRight className="h-2.5 w-2.5" />
+                                          )}
+                                          <span>{isTerminal ? 'Terminal Output' : 'Output Result'}</span>
+                                          {tc.exitCode !== undefined && (
+                                            <span
+                                              className={`ml-auto font-mono ${
+                                                tc.exitCode === 0 ? 'text-emerald-400' : 'text-amber-400'
+                                              }`}
+                                            >
+                                              exit code: {tc.exitCode}
+                                            </span>
+                                          )}
+                                        </button>
+
+                                        {isOutputOpen && (
+                                          <div className="mt-1.5 space-y-1">
+                                            {tc.stdout && (
+                                              <pre className="max-h-36 overflow-auto rounded bg-black/60 p-2 font-mono text-[9px] text-slate-300 leading-tight whitespace-pre-wrap">
+                                                {tc.stdout}
+                                              </pre>
+                                            )}
+                                            {tc.stderr && (
+                                              <pre className="max-h-36 overflow-auto rounded bg-rose-950/20 border border-rose-500/20 p-2 font-mono text-[9px] text-rose-300 leading-tight whitespace-pre-wrap">
+                                                {tc.stderr}
+                                              </pre>
+                                            )}
+                                            {!tc.stdout && !tc.stderr && tc.result && (
+                                              <pre className="max-h-36 overflow-auto rounded bg-black/60 p-2 font-mono text-[9px] text-slate-300 leading-tight whitespace-pre-wrap">
+                                                {typeof tc.result === 'string'
+                                                  ? tc.result
+                                                  : JSON.stringify(tc.result, null, 2)}
+                                              </pre>
+                                            )}
+                                            {tc.error && (
+                                              <div className="rounded bg-rose-950/30 border border-rose-500/30 p-1.5 text-[10px] text-rose-300">
+                                                {tc.error}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Structured Edit Proposals Card */}
                         {msg.proposedEdits && msg.proposedEdits.length > 0 && (

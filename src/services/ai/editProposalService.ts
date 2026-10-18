@@ -130,6 +130,13 @@ export class EditProposalService {
   }
 
   /**
+   * Alias for calculateDiffStats.
+   */
+  public static calculateDiff(original: string, updated: string): { added: number; removed: number } {
+    return this.calculateDiffStats(original, updated);
+  }
+
+  /**
    * Normalizes and validates file paths, preventing traversal attacks.
    */
   public static normalizePath(filePath: string): string | null {

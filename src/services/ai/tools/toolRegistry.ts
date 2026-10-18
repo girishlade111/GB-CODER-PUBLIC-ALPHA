@@ -64,6 +64,13 @@ export class ToolRegistry {
   }
 
   /**
+   * Alias for getOpenAiToolDefinitions.
+   */
+  public static getOpenAiTools() {
+    return this.getOpenAiToolDefinitions();
+  }
+
+  /**
    * Converts registered tools to Google Gemini function declaration format.
    */
   public static getGeminiFunctionDeclarations(): Array<{
@@ -76,6 +83,16 @@ export class ToolRegistry {
       description: tool.description,
       parameters: tool.parameters,
     }));
+  }
+
+  /**
+   * Alias for validateArgs.
+   */
+  public static validateToolCall(
+    toolName: string,
+    rawArgs: unknown
+  ): { valid: boolean; error?: string; cleanArgs?: Record<string, unknown> } {
+    return this.validateArgs(toolName, rawArgs);
   }
 
   /**

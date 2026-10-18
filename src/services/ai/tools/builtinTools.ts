@@ -13,7 +13,7 @@
  * 9. run_terminal_command
  */
 
-import { AgentToolDefinition, ToolExecutionContext, ToolExecutionResult } from './types';
+import { AgentToolDefinition, ToolExecutionResult } from './types';
 import { WorkspaceAdapter } from './workspaceAdapter';
 import { TerminalAdapter } from './terminalAdapter';
 import { EditProposalService } from '../editProposalService';

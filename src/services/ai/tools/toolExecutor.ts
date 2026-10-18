@@ -12,6 +12,7 @@ import { ToolCallRecord, ToolExecutionContext, ToolExecutionResult } from './typ
 import { ToolRegistry } from './toolRegistry';
 import { PermissionController } from './permissionController';
 import { TerminalAdapter } from './terminalAdapter';
+import { ProposedFileEdit } from '../types';
 
 export class ToolExecutor {
   /**
@@ -114,7 +115,7 @@ export class ToolExecutor {
 
         // If tool returned a proposed edit, attach it
         if (result.result && typeof result.result === 'object' && 'proposal' in result.result) {
-          toolCall.proposedEdit = (result.result as { proposal: unknown }).proposal as any;
+          toolCall.proposedEdit = (result.result as { proposal: ProposedFileEdit }).proposal;
         }
 
         // If tool returned terminal stdout/stderr

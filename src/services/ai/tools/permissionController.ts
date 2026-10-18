@@ -8,8 +8,7 @@
  * - High-risk command tagging and blocking of automatic destructive executions.
  */
 
-import { ToolPermissionLevel, ToolRiskLevel, ToolCallRecord, ToolCallStatus } from './types';
-import { TerminalAdapter } from './terminalAdapter';
+import { ToolPermissionLevel, ToolRiskLevel, ToolCallRecord } from './types';
 
 export type PermissionDecision = 'approved' | 'denied' | 'pending';
 

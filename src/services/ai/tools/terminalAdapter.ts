@@ -38,10 +38,10 @@ const MAX_TERMINAL_OUTPUT_CHARS = 40000;
 
 // High-risk command patterns (destructive, irreversible, or host-threatening)
 const HIGH_RISK_PATTERNS = [
-  /\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f?|-rf|-fr)\s+(\/|\.|\*|~)\b/i,
+  /\brm\s+(-[a-zA-Z]*[rf][a-zA-Z]*\s*)+\s+(\/|\.|\*|~)(?:\s|$)/i,
   /\b(mkfs|fdisk|dd\s+if=)\b/i,
   /\bgit\s+(reset\s+--hard|clean\s+-f[a-z]*)\b/i,
-  /\bchmod\s+(-[a-zA-Z]*R[a-zA-Z]*\s+)?(777|000)\s+(\/|\.)/i,
+  /\bchmod\s+(-[a-zA-Z]*R[a-zA-Z]*\s+)?(777|000)\s+(\/|\.)(?:\s|$)/i,
   /:(\(\)\s*\{|:\s*\{)\s*:\|:&\s*\};:/, // fork bomb
   /\bkill\s+-9\s+(-1|1)\b/i,
   /\bcurl\b.*\|\s*(sh|bash|zsh)\b/i,
@@ -57,10 +57,10 @@ const MODERATE_RISK_PATTERNS = [
 
 // Secret / API key patterns for log redaction
 const SECRET_REDACTION_PATTERNS = [
-  /Bearer\s+[A-Za-z0-9_\-\.]{16,}/gi,
-  /(sk-[A-Za-z0-9_\-]{20,})/gi,
-  /(AIzaSy[A-Za-z0-9_\-]{30,})/gi,
-  /([a-zA-Z0-9_\-]{20,}):([a-zA-Z0-9_\-]{20,})@/gi,
+  /Bearer\s+[A-Za-z0-9_.-]{16,}/gi,
+  /(sk-[A-Za-z0-9_-]{20,})/gi,
+  /(AIzaSy[A-Za-z0-9_-]{30,})/gi,
+  /([a-zA-Z0-9_-]{20,}):([a-zA-Z0-9_-]{20,})@/gi,
 ];
 
 export class TerminalAdapter {
@@ -131,7 +131,7 @@ export class TerminalAdapter {
     options: TerminalExecutionOptions,
     executionId: string = `exec-${Date.now()}`
   ): Promise<ToolExecutionResult<TerminalExecutionResult>> {
-    const { projectId, command: rawCommand, args: rawArgs = [], cwd, timeoutMs = DEFAULT_COMMAND_TIMEOUT_MS, signal, onOutput } = options;
+    const { projectId: _projectId, command: rawCommand, args: rawArgs = [], cwd, timeoutMs = DEFAULT_COMMAND_TIMEOUT_MS, signal, onOutput } = options;
 
     if (!rawCommand || rawCommand.trim() === '') {
       return {
@@ -198,33 +198,29 @@ export class TerminalAdapter {
       }
 
       // Execute command in WebContainer or mockRunner with timeout race
-      const commandPromise = new Promise<{ exitCode: number }>(async (resolve, reject) => {
-        try {
-          if (this.mockRunner) {
-            const res = await this.mockRunner(finalCommand, finalArgs, (chunk) => {
-              stdoutBuffer += chunk;
-              if (onOutput) onOutput(chunk);
-            });
-            if (res.stdout && !stdoutBuffer) stdoutBuffer = res.stdout;
-            if (res.stderr) stderrBuffer = res.stderr;
-            resolve({ exitCode: res.exitCode });
-            return;
-          }
-
-          const res = await webcontainerService.runCommand(finalCommand, finalArgs, (chunk) => {
+      const runCommandAsync = async (): Promise<{ exitCode: number }> => {
+        if (this.mockRunner) {
+          const res = await this.mockRunner(finalCommand, finalArgs, (chunk) => {
             stdoutBuffer += chunk;
-            if (stdoutBuffer.length > MAX_TERMINAL_OUTPUT_CHARS) {
-              stdoutBuffer = stdoutBuffer.slice(0, MAX_TERMINAL_OUTPUT_CHARS) + '\n[Output truncated: limit reached]';
-            }
-            if (onOutput) {
-              onOutput(chunk);
-            }
+            if (onOutput) onOutput(chunk);
           });
-          resolve(res);
-        } catch (err) {
-          reject(err);
+          if (res.stdout && !stdoutBuffer) stdoutBuffer = res.stdout;
+          if (res.stderr) stderrBuffer = res.stderr;
+          return { exitCode: res.exitCode };
         }
-      });
+
+        return webcontainerService.runCommand(finalCommand, finalArgs, (chunk) => {
+          stdoutBuffer += chunk;
+          if (stdoutBuffer.length > MAX_TERMINAL_OUTPUT_CHARS) {
+            stdoutBuffer = stdoutBuffer.slice(0, MAX_TERMINAL_OUTPUT_CHARS) + '\n[Output truncated: limit reached]';
+          }
+          if (onOutput) {
+            onOutput(chunk);
+          }
+        });
+      };
+
+      const commandPromise = runCommandAsync();
 
       // Timeout promise
       let timer: NodeJS.Timeout | null = null;

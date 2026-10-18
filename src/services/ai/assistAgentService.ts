@@ -625,6 +625,133 @@ class AssistAgentService {
       this.notify();
     }
   }
+
+  /**
+   * Approves and executes a pending tool call (e.g. terminal execution).
+   */
+  public async approveToolCall(
+    messageId: string,
+    toolCallId: string,
+    context: {
+      project: MultiFileProject;
+      projectId?: string;
+      activePath?: string | null;
+      onOutput?: (chunk: string) => void;
+    }
+  ): Promise<{ success: boolean; error?: string }> {
+    const originProjectId = context.projectId || this.state.currentProjectId;
+    if (originProjectId && this.state.currentProjectId !== originProjectId) {
+      return { success: false, error: 'Cannot execute tool: workspace has switched to another project.' };
+    }
+
+    const session = this.getActiveSession();
+    const msg = session.messages.find((m) => m.id === messageId);
+    if (!msg || !msg.toolCalls) {
+      return { success: false, error: 'Message or tool calls not found.' };
+    }
+
+    const toolCall = msg.toolCalls.find((tc) => tc.id === toolCallId);
+    if (!toolCall) {
+      return { success: false, error: 'Tool call not found.' };
+    }
+
+    if (toolCall.status !== 'pending_approval') {
+      return { success: false, error: `Tool call is not pending approval (status: ${toolCall.status}).` };
+    }
+
+    // Set running state and notify UI
+    toolCall.status = 'running';
+    toolCall.startedAt = Date.now();
+    this.notify();
+
+    try {
+      const execResult = await ToolExecutor.executeToolCall(
+        toolCall,
+        {
+          projectId: originProjectId,
+          project: context.project,
+          activeFilePath: context.activePath || undefined,
+          onOutput: context.onOutput,
+        },
+        true // pre-approved by user
+      );
+
+      // If tool produced a file edit proposal, attach it to message
+      if (
+        execResult.success &&
+        execResult.result &&
+        typeof execResult.result === 'object' &&
+        'proposal' in execResult.result
+      ) {
+        const proposal = (execResult.result as { proposal: ProposedFileEdit }).proposal;
+        if (proposal) {
+          msg.proposedEdits = [...(msg.proposedEdits || []), proposal];
+          msg.appliedEditsStatus = msg.appliedEditsStatus || 'unapplied';
+        }
+      }
+
+      // Persist updated session
+      const nextSessions = this.state.sessions.map((s) => {
+        if (s.id !== session.id) return s;
+        return {
+          ...s,
+          updatedAt: Date.now(),
+          messages: s.messages.map((m) => (m.id === messageId ? { ...m } : m)),
+        };
+      });
+
+      this.state = {
+        ...this.state,
+        sessions: nextSessions,
+      };
+
+      ConversationStore.saveSessions(this.state.currentProjectId, nextSessions);
+      this.notify();
+
+      return {
+        success: execResult.success,
+        error: execResult.error,
+      };
+    } catch (err: unknown) {
+      const msgError = err instanceof Error ? err.message : String(err);
+      toolCall.status = 'failed';
+      toolCall.error = msgError;
+      this.notify();
+      return { success: false, error: msgError };
+    }
+  }
+
+  /**
+   * Denies a pending tool call.
+   */
+  public denyToolCall(messageId: string, toolCallId: string): void {
+    const session = this.getActiveSession();
+    const msg = session.messages.find((m) => m.id === messageId);
+    if (!msg || !msg.toolCalls) return;
+
+    const toolCall = msg.toolCalls.find((tc) => tc.id === toolCallId);
+    if (!toolCall) return;
+
+    toolCall.status = 'denied';
+    toolCall.error = 'Tool execution was denied by user.';
+
+    const nextSessions = this.state.sessions.map((s) => {
+      if (s.id !== session.id) return s;
+      return {
+        ...s,
+        updatedAt: Date.now(),
+        messages: s.messages.map((m) => (m.id === messageId ? { ...m } : m)),
+      };
+    });
+
+    this.state = {
+      ...this.state,
+      sessions: nextSessions,
+    };
+
+    ConversationStore.saveSessions(this.state.currentProjectId, nextSessions);
+    this.notify();
+  }
 }
 
 export const assistAgentService = new AssistAgentService();

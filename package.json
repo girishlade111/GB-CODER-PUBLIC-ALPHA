@@ -52,6 +52,7 @@
     "audit:workbench": "node scripts/verify-phase2-workbench.mjs",
     "audit:e2e:phase2-workbench": "node scripts/e2e-phase2-workbench.mjs",
     "audit:ai": "node scripts/verify-phase3a-assist.mjs",
+    "audit:tools": "node scripts/verify-phase3b-tools.mjs",
     "audit:e2e:migration": "node scripts/migration/e2e-migration-verification.mjs"
   },
   "dependencies": {
