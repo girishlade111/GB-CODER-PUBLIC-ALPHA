@@ -13,8 +13,28 @@ import {
 import { IAiProvider, StreamChatOptions } from './baseProvider.ts';
 
 /**
+ * Redacts API keys, credentials, and tokens from error messages and URLs.
+ */
+export function redactSecretsFromText(text: string, customSecret?: string): string {
+  if (!text) return '';
+  let result = text;
+  if (customSecret && customSecret.length >= 6) {
+    result = result.split(customSecret).join('[REDACTED_API_KEY]');
+  }
+  // Redact URL query parameter keys: ?key=... or &key=...
+  result = result.replace(/([?&]key=)[^&\s"'`]+/gi, '$1[REDACTED_API_KEY]');
+  // Redact Bearer tokens
+  result = result.replace(/Bearer\s+[A-Za-z0-9_.-]{16,}/gi, 'Bearer [REDACTED_SECRET]');
+  // Redact standard API key patterns
+  result = result.replace(/sk-[A-Za-z0-9_-]{20,}/gi, '[REDACTED_API_KEY]');
+  result = result.replace(/AIzaSy[A-Za-z0-9_-]{30,}/gi, '[REDACTED_API_KEY]');
+  return result;
+}
+
+/**
  * Validates custom endpoint URLs for security.
- * Enforces HTTPS for remote hosts while permitting plain HTTP for local development.
+ * Enforces HTTPS for remote hosts while permitting plain HTTP strictly for genuine loopback.
+ * Rejects 0.0.0.0 as an invalid/insecure client destination.
  */
 export function validateEndpointUrl(endpointUrl: string): { valid: boolean; error?: string } {
   if (!endpointUrl || typeof endpointUrl !== 'string') {
@@ -33,10 +53,18 @@ export function validateEndpointUrl(endpointUrl: string): { valid: boolean; erro
   }
 
   const hostname = parsed.hostname.toLowerCase();
+
+  // Never treat 0.0.0.0 as an approved browser-client loopback destination
+  if (hostname === '0.0.0.0') {
+    return {
+      valid: false,
+      error: 'Insecure destination: "0.0.0.0" is not an approved browser-client loopback destination. Use "localhost" or "127.0.0.1" for local development.',
+    };
+  }
+
   const isLocal =
     hostname === 'localhost' ||
     hostname === '127.0.0.1' ||
-    hostname === '0.0.0.0' ||
     hostname === '[::1]' ||
     hostname === '::1';
 
@@ -171,6 +199,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         headers: this.resolveHeaders(options.apiKey),
         body: JSON.stringify(requestBody),
         signal: options.signal,
+        redirect: 'manual',
       });
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') {
@@ -183,21 +212,29 @@ export class OpenAiCompatibleProvider implements IAiProvider {
           `Network/CORS error connecting to ${baseUrl}. In browser environments, direct calls to certain endpoints require CORS headers. For direct browser BYOK, OpenRouter is recommended as it officially permits browser CORS.`
         );
       }
-      throw new Error(`Connection error with ${this.name}: ${msg}`);
+      throw new Error(`Connection error with ${this.name}: ${redactSecretsFromText(msg, options.apiKey)}`);
+    }
+
+    if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
+      throw new Error(
+        `Security Exception: HTTP redirect from ${url} was rejected to prevent authorization header and credential leakage to an unauthorized destination.`
+      );
     }
 
     if (!response.ok) {
-      let errorText = `HTTP ${response.status} ${response.statusText}`;
+      let rawErrorText = `HTTP ${response.status} ${response.statusText}`;
       try {
         const errorJson = await response.json();
         if (errorJson?.error?.message) {
-          errorText = errorJson.error.message;
+          rawErrorText = errorJson.error.message;
         } else if (typeof errorJson?.error === 'string') {
-          errorText = errorJson.error;
+          rawErrorText = errorJson.error;
         }
       } catch {
         // non-json response
       }
+
+      const errorText = redactSecretsFromText(rawErrorText, options.apiKey);
 
       if (response.status === 401 || response.status === 403) {
         throw new Error(`Authentication Failed (${response.status}): Invalid API key for ${this.name}.`);
@@ -206,6 +243,9 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         const retryAfter = response.headers.get('retry-after');
         const retrySuffix = retryAfter ? ` (retry after ${retryAfter}s)` : '';
         throw new Error(`Rate Limit Exceeded (429) on ${this.name}${retrySuffix}: ${errorText}`);
+      }
+      if (response.status === 400 && (errorText.toLowerCase().includes('tool') || errorText.toLowerCase().includes('function'))) {
+        throw new Error(`Model Incompatible: Selected model "${options.model}" does not support tool calling. Error: ${errorText}`);
       }
 
       throw new Error(`${this.name} API error (${response.status}): ${errorText}`);
@@ -380,9 +420,19 @@ export class OpenAiCompatibleProvider implements IAiProvider {
           messages: [{ role: 'user', content: 'ping' }],
           max_tokens: 5,
         }),
+        redirect: 'manual',
       });
 
       const latencyMs = Math.round(performance.now() - start);
+
+      if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
+        return {
+          success: false,
+          latencyMs,
+          message: 'Connection failed: HTTP redirect rejected to prevent credential leakage.',
+          errorDetails: 'Endpoint redirected to an unauthorized destination.',
+        };
+      }
 
       if (response.ok) {
         return {
@@ -400,15 +450,18 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         }
       } catch {}
 
+      const sanitizedError = redactSecretsFromText(errorMsg, apiKey);
+
       return {
         success: false,
         latencyMs,
-        message: `Connection failed: ${errorMsg}`,
-        errorDetails: errorMsg,
+        message: `Connection failed: ${sanitizedError}`,
+        errorDetails: sanitizedError,
       };
     } catch (err: unknown) {
       const latencyMs = Math.round(performance.now() - start);
-      const msg = err instanceof Error ? err.message : String(err);
+      const rawMsg = err instanceof Error ? err.message : String(err);
+      const msg = redactSecretsFromText(rawMsg, apiKey);
       const isCors = msg.includes('Failed to fetch') || msg.includes('NetworkError');
 
       return {

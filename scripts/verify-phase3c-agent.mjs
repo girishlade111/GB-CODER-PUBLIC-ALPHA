@@ -95,6 +95,7 @@ const {
   ContextBudget,
   ContextBuilder,
   validateEndpointUrl,
+  redactSecretsFromText,
   isIgnoredBuildPath,
   isBinaryFilePath,
 } = agentModule;
@@ -1544,11 +1545,15 @@ await runTestAsync('Suite 9', '9.2 Gemini consecutive tool message grouping into
   assert.equal(contents[2].parts[1].functionResponse.name, 'read_file');
 });
 
-runTest('Suite 9', '9.3 Custom endpoint HTTPS security validation', () => {
-  // Local development endpoints permitted over plain HTTP
+runTest('Suite 9', '9.3 Custom endpoint HTTPS security validation and credential protection', () => {
+  // Local development endpoints permitted over plain HTTP strictly for genuine loopback
   assert.equal(validateEndpointUrl('http://localhost:11434').valid, true);
   assert.equal(validateEndpointUrl('http://127.0.0.1:8000/v1').valid, true);
-  assert.equal(validateEndpointUrl('http://0.0.0.0:8080').valid, true);
+
+  // Insecure 0.0.0.0 strictly rejected as an unapproved browser client destination
+  const zeroEndpoint = validateEndpointUrl('http://0.0.0.0:8080');
+  assert.equal(zeroEndpoint.valid, false);
+  assert.ok(zeroEndpoint.error?.includes('0.0.0.0'));
 
   // Secure remote HTTPS endpoints permitted
   assert.equal(validateEndpointUrl('https://api.openai.com/v1').valid, true);
@@ -1564,6 +1569,13 @@ runTest('Suite 9', '9.3 Custom endpoint HTTPS security validation', () => {
   assert.equal(validateEndpointUrl('').valid, false);
   assert.equal(validateEndpointUrl('not a url').valid, false);
   assert.equal(validateEndpointUrl('ftp://server/v1').valid, false);
+
+  // Secret redaction removes API keys and authorization tokens from errors
+  const urlWithKey = 'Error accessing https://generativelanguage.googleapis.com/v1beta/models?key=AIzaSySecretApiKey12345';
+  assert.equal(redactSecretsFromText(urlWithKey), 'Error accessing https://generativelanguage.googleapis.com/v1beta/models?key=[REDACTED_API_KEY]');
+
+  const bearerHeader = 'Failed request with Bearer sk-proj-1234567890abcdef1234567890';
+  assert.equal(redactSecretsFromText(bearerHeader), 'Failed request with Bearer [REDACTED_SECRET]');
 });
 
 runTest('Suite 9', '9.4 Atomic Tool Block preservation during history pruning', () => {

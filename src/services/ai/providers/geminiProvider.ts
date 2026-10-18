@@ -11,6 +11,7 @@ import {
   ConnectionDiagnosticResult,
 } from '../types.ts';
 import { IAiProvider, StreamChatOptions } from './baseProvider.ts';
+import { redactSecretsFromText } from './openaiCompatibleProvider.ts';
 
 export class GeminiProvider implements IAiProvider {
   public readonly id = 'gemini' as const;
@@ -227,7 +228,8 @@ export class GeminiProvider implements IAiProvider {
       if (options.signal?.aborted) {
         throw new Error('Generation aborted by user.');
       }
-      const msg = err instanceof Error ? err.message : String(err);
+      const rawMsg = err instanceof Error ? err.message : String(err);
+      const msg = redactSecretsFromText(rawMsg, options.apiKey);
       if (msg.includes('API_KEY_INVALID') || msg.includes('403') || msg.includes('401')) {
         throw new Error('Authentication Failed: Invalid Gemini API key. Please verify your key in Google AI Studio.');
       }
@@ -277,7 +279,8 @@ export class GeminiProvider implements IAiProvider {
       };
     } catch (err: unknown) {
       const latencyMs = Math.round(performance.now() - start);
-      const msg = err instanceof Error ? err.message : String(err);
+      const rawMsg = err instanceof Error ? err.message : String(err);
+      const msg = redactSecretsFromText(rawMsg, apiKey);
       return {
         success: false,
         latencyMs,

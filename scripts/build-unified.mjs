@@ -40,6 +40,7 @@ const startTime = Date.now();
 console.log('\n[1/6] Cleaning staging and output directories...');
 rmSync(FINAL_DIST, { recursive: true, force: true });
 rmSync(join(ROOT_DIR, 'dist-staging'), { recursive: true, force: true });
+rmSync(join(APPS_MARKETING_DIR, '.astro'), { recursive: true, force: true });
 mkdirSync(FINAL_DIST, { recursive: true });
 mkdirSync(STAGING_IDE, { recursive: true });
 
