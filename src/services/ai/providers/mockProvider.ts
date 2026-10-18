@@ -194,6 +194,14 @@ export class MockProvider implements IAiProvider {
       // First turn of the conversation
       if (lower.includes('hello') || lower.includes('hi')) {
         responseText = `Hello! I am GB Assist, your in-browser AI pair programmer. I can help analyze your code, plan features, and propose safe edits.`;
+      } else if (isAgentTask && lower.includes('worker') && options.tools?.some((t) => t.name === 'run_terminal_command')) {
+        responseText = `I will run the background worker process in the workspace.`;
+        toolCalls.push(
+          ToolExecutor.createToolCallRecord('run_terminal_command', {
+            command: 'node worker.js',
+            explanation: 'Run background worker process.',
+          })
+        );
       } else if (isAgentTask && options.tools?.some((t) => t.name === 'read_file')) {
         // Autonomous agent start: begin by inspecting workspace
         responseText = `I am initiating the autonomous coding task. First, I will inspect the workspace file.`;
