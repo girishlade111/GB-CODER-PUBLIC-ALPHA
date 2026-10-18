@@ -38,12 +38,51 @@ export const SENSITIVE_PATTERNS: RegExp[] = [
 ];
 
 /**
+ * Patterns matching generated build outputs, caches, and heavy package directories.
+ * Excluded from automatic AI context scanning to optimize tokens and eliminate noise.
+ */
+export const BUILD_IGNORED_PATTERNS: RegExp[] = [
+  /(^|\/)(node_modules|dist|build|out|\.next|\.nuxt|\.astro|\.cache|coverage|\.git|\.turbo|\.vscode|\.idea|\.yarn)(\/|$)/i,
+  /(^|\/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$/i,
+];
+
+/**
+ * Binary file extensions that should never be sent as plaintext AI context.
+ */
+export const BINARY_EXTENSIONS = new Set([
+  'png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'bmp', 'tiff', 'pdf',
+  'zip', 'tar', 'gz', 'rar', '7z', 'wasm', 'exe', 'dll', 'so',
+  'dylib', 'bin', 'woff', 'woff2', 'ttf', 'eot', 'mp3', 'mp4',
+  'wav', 'ogg', 'avi', 'mov', 'flac', 'mkv',
+]);
+
+/**
  * Determines whether a file path points to a sensitive secret or private configuration.
  */
 export const isSensitiveFilePath = (filePath: string): boolean => {
   if (!filePath) return false;
   const normalized = filePath.replace(/\\/g, '/').trim();
   return SENSITIVE_PATTERNS.some((pattern) => pattern.test(normalized));
+};
+
+/**
+ * Determines whether a file path points to a build output, dependency folder, or lockfile.
+ */
+export const isIgnoredBuildPath = (filePath: string): boolean => {
+  if (!filePath) return false;
+  const normalized = filePath.replace(/\\/g, '/').trim();
+  return BUILD_IGNORED_PATTERNS.some((pattern) => pattern.test(normalized));
+};
+
+/**
+ * Determines whether a file is a binary file based on its extension.
+ */
+export const isBinaryFilePath = (filePath: string): boolean => {
+  if (!filePath) return false;
+  const dotIndex = filePath.lastIndexOf('.');
+  if (dotIndex === -1) return false;
+  const ext = filePath.slice(dotIndex + 1).toLowerCase();
+  return BINARY_EXTENSIONS.has(ext);
 };
 
 export class ContextBuilder {
@@ -72,8 +111,74 @@ export class ContextBuilder {
   }
 
   /**
-   * Assembles the full project context based on active file, user attached files, and prompt mentions.
-   * Strictly excludes sensitive files (.env, credentials, secrets, private keys) by default.
+   * Scores candidate file relevance deterministically using prompt keywords,
+   * path matching, and import graph relationships with activePath.
+   */
+  public static scoreCandidateFile(
+    candidatePath: string,
+    prompt: string,
+    activePath?: string | null,
+    activeFileContent?: string
+  ): number {
+    if (!candidatePath || isSensitiveFilePath(candidatePath) || isIgnoredBuildPath(candidatePath) || isBinaryFilePath(candidatePath)) {
+      return -1;
+    }
+
+    let score = 0;
+    const lowerCandidate = candidatePath.toLowerCase();
+    const candidateParts = lowerCandidate.split(/[/\\.]+/).filter((p) => p.length >= 3);
+
+    // 1. Keyword matching from prompt
+    const promptWords = prompt
+      .toLowerCase()
+      .split(/[^a-zA-Z0-9_-]+/)
+      .filter((w) => w.length >= 3);
+
+    for (const word of promptWords) {
+      if (candidateParts.includes(word)) {
+        score += 5; // Exact file token match
+      } else if (lowerCandidate.includes(word)) {
+        score += 2; // Substring path match
+      }
+    }
+
+    // 2. Direct import graph bonus from active file
+    if (activePath && activeFileContent) {
+      const activeBasename = activePath.split('/').pop()?.replace(/\.[^.]+$/, '') || '';
+      const candidateBasename = candidatePath.split('/').pop()?.replace(/\.[^.]+$/, '') || '';
+
+      if (candidateBasename && candidateBasename.length >= 2) {
+        // Check if active file imports candidate
+        const importRegex = new RegExp(`['"](?:\\./|\\.\\./|@/)[^'"]*${candidateBasename}(?:\\.[a-zA-Z0-9]+)?['"]`, 'i');
+        if (importRegex.test(activeFileContent)) {
+          score += 10;
+        }
+      }
+
+      // Reverse check: candidate in same directory as active file
+      const activeDir = activePath.split('/').slice(0, -1).join('/');
+      const candidateDir = candidatePath.split('/').slice(0, -1).join('/');
+      if (activeDir && activeDir === candidateDir) {
+        score += 1;
+      }
+    }
+
+    // 3. Anchor configuration bonus when relevant to prompt
+    if (
+      (lowerCandidate.endsWith('package.json') || lowerCandidate.endsWith('tsconfig.json')) &&
+      promptWords.some((w) => ['install', 'dep', 'dependency', 'dependencies', 'package', 'type', 'config'].includes(w))
+    ) {
+      score += 4;
+    }
+
+    return score;
+  }
+
+  /**
+   * Assembles the full project context based on active file, user attached files,
+   * prompt mentions, and deterministic relevance scoring.
+   * Strictly excludes sensitive files (.env, credentials, secrets, private keys),
+   * build outputs, and binaries by default.
    */
   public static assembleContext(
     project: MultiFileProject,
@@ -87,26 +192,37 @@ export class ContextBuilder {
     const atMentions = this.extractAtMentions(prompt, project.files);
 
     // Helper to add a file with budget tracking and security exclusion
-    const addFile = (filePath: string, reason: 'active_file' | 'user_attached' | 'at_mention') => {
-      if (!filePath) return;
+    const addFile = (
+      filePath: string,
+      reason: 'active_file' | 'user_attached' | 'at_mention' | 'relevant_context'
+    ): boolean => {
+      if (!filePath) return false;
 
       // Sensitive file protection: exclude credentials and secrets by default
       if (isSensitiveFilePath(filePath)) {
         if (!excludedSensitiveFiles.includes(filePath)) {
           excludedSensitiveFiles.push(filePath);
         }
-        return;
+        return false;
+      }
+
+      // Ignore build artifacts and binary files
+      if (isIgnoredBuildPath(filePath) || isBinaryFilePath(filePath)) {
+        return false;
       }
 
       const file = project.files.find((f) => f.path === filePath);
-      if (!file || includedMap.has(filePath)) return;
+      if (!file || includedMap.has(filePath)) return false;
 
       const rawContent = file.content ?? '';
       let content = rawContent;
       let isTruncated = false;
 
       if (rawContent.length > MAX_SINGLE_FILE_CHARS) {
-        content = `${rawContent.slice(0, MAX_SINGLE_FILE_CHARS)}\n\n// ... [File content truncated to respect context budget] ...`;
+        const totalLines = rawContent.split('\n').length;
+        const truncatedSlice = rawContent.slice(0, MAX_SINGLE_FILE_CHARS);
+        const shownLines = truncatedSlice.split('\n').length;
+        content = `${truncatedSlice}\n\n// ... [File content truncated: showing first ${shownLines} of ${totalLines} lines to respect context budget] ...`;
         isTruncated = true;
       }
 
@@ -122,21 +238,69 @@ export class ContextBuilder {
         isTruncated,
         reason,
       });
+
+      return true;
     };
 
-    // 1. Add active file first (highest priority, guarded by secret filter)
+    // 1. Add active file first (highest priority, guarded by secret/binary filter)
     if (activePath) {
       addFile(activePath, 'active_file');
     }
 
-    // 2. Add files explicitly mentioned via `@` (guarded by secret filter)
+    // 2. Add files explicitly mentioned via `@` (guarded by secret/binary filter)
     for (const mention of atMentions) {
       addFile(mention, 'at_mention');
     }
 
-    // 3. Add user attached files (guarded by secret filter)
+    // 3. Add user attached files (guarded by secret/binary filter)
     for (const attached of attachedPaths) {
       addFile(attached, 'user_attached');
+    }
+
+    // 4. Deterministic relevance scoring for additional project files when justified
+    let currentTokens = Array.from(includedMap.values()).reduce(
+      (acc, f) => acc + estimateTokens(f.charCount),
+      0
+    );
+
+    if (currentTokens < budgetTokens && project.files && project.files.length > 0) {
+      const activeContent = activePath ? project.files.find((f) => f.path === activePath)?.content : undefined;
+      const scoredCandidates: Array<{ path: string; score: number }> = [];
+
+      for (const f of project.files) {
+        if (includedMap.has(f.path)) continue;
+        if (isSensitiveFilePath(f.path)) {
+          if (!excludedSensitiveFiles.includes(f.path)) {
+            excludedSensitiveFiles.push(f.path);
+          }
+          continue;
+        }
+        if (isIgnoredBuildPath(f.path) || isBinaryFilePath(f.path)) continue;
+
+        const score = this.scoreCandidateFile(f.path, prompt, activePath, activeContent);
+        if (score > 0) {
+          scoredCandidates.push({ path: f.path, score });
+        }
+      }
+
+      // Sort candidate files by relevance score descending
+      scoredCandidates.sort((a, b) => b.score - a.score);
+
+      for (const candidate of scoredCandidates) {
+        const file = project.files.find((f) => f.path === candidate.path);
+        if (!file) continue;
+
+        const estTokens = estimateTokens(file.content?.length || 0);
+        if (currentTokens + estTokens > budgetTokens) {
+          // File would exceed budget ceiling; stop adding
+          continue;
+        }
+
+        const added = addFile(candidate.path, 'relevant_context');
+        if (added) {
+          currentTokens += estTokens;
+        }
+      }
     }
 
     // Calculate total tokens
@@ -145,9 +309,14 @@ export class ContextBuilder {
     const totalEstimatedTokens = estimateTokens(totalChars);
     const isOverBudget = totalEstimatedTokens > budgetTokens;
 
+    const relevantCount = files.filter((f) => f.reason === 'relevant_context').length;
     let summary = files.length > 0
       ? `${files.length} file(s) in context (~${totalEstimatedTokens.toLocaleString()} tokens)`
       : 'No files in context';
+
+    if (relevantCount > 0) {
+      summary += ` (${relevantCount} relevant context)`;
+    }
 
     if (excludedSensitiveFiles.length > 0) {
       summary += ` (${excludedSensitiveFiles.length} secret file${excludedSensitiveFiles.length > 1 ? 's' : ''} protected)`;

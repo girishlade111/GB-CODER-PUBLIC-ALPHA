@@ -12,6 +12,44 @@ import {
 } from '../types.ts';
 import { IAiProvider, StreamChatOptions } from './baseProvider.ts';
 
+/**
+ * Validates custom endpoint URLs for security.
+ * Enforces HTTPS for remote hosts while permitting plain HTTP for local development.
+ */
+export function validateEndpointUrl(endpointUrl: string): { valid: boolean; error?: string } {
+  if (!endpointUrl || typeof endpointUrl !== 'string') {
+    return { valid: false, error: 'Endpoint URL cannot be empty.' };
+  }
+  const trimmed = endpointUrl.trim();
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return { valid: false, error: `Invalid URL format: "${endpointUrl}".` };
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return { valid: false, error: `Unsupported protocol "${parsed.protocol}". Only HTTP and HTTPS are supported.` };
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  const isLocal =
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '0.0.0.0' ||
+    hostname === '[::1]' ||
+    hostname === '::1';
+
+  if (parsed.protocol === 'http:' && !isLocal) {
+    return {
+      valid: false,
+      error: `Insecure HTTP endpoint detected for remote host "${parsed.hostname}". HTTPS is required to protect your API keys in transit.`,
+    };
+  }
+
+  return { valid: true };
+}
+
 export class OpenAiCompatibleProvider implements IAiProvider {
   public readonly id: AiProviderId;
   public readonly name: string;
@@ -55,19 +93,30 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     messages: Array<import('./baseProvider.ts').ProviderChatMessage | { role: 'user' | 'assistant' | 'system'; content: string }>,
     options: StreamChatOptions,
     onChunk: (chunk: ChatCompletionChunk) => void
-  ): Promise<{ fullContent: string; reasoning?: string; toolCalls?: import('../tools/types').ToolCallRecord[] }> {
-    const baseUrl = (options.baseUrl || this.defaultBaseUrl).replace(/\/+$/, '');
+  ): Promise<{
+    fullContent: string;
+    reasoning?: string;
+    toolCalls?: import('../tools/types').ToolCallRecord[];
+    usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  }> {
+    const rawBaseUrl = options.baseUrl || this.defaultBaseUrl;
+    const urlValidation = validateEndpointUrl(rawBaseUrl);
+    if (!urlValidation.valid) {
+      throw new Error(`Endpoint Configuration Error: ${urlValidation.error}`);
+    }
+
+    const baseUrl = rawBaseUrl.replace(/\/+$/, '');
     const url = `${baseUrl}/chat/completions`;
 
     if (!options.apiKey && this.id !== 'custom') {
       throw new Error(`API key required for ${this.name}. Configure your key in GB Assist settings.`);
     }
 
-    const formattedMessages = messages.map((m: any) => {
+    const formattedMessages = messages.map((m: any, mIdx: number) => {
       if (m.role === 'tool') {
         return {
           role: 'tool',
-          tool_call_id: m.toolCallId,
+          tool_call_id: m.toolCallId || m.id || `call_${mIdx}`,
           name: m.name,
           content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content ?? ''),
         };
@@ -76,12 +125,12 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         return {
           role: 'assistant',
           content: m.content || null,
-          tool_calls: m.toolCalls.map((tc: any) => ({
-            id: tc.id,
+          tool_calls: m.toolCalls.map((tc: any, tcIdx: number) => ({
+            id: tc.id || `call_${mIdx}_${tcIdx}`,
             type: 'function',
             function: {
               name: tc.toolName || tc.name,
-              arguments: tc.rawArgs || JSON.stringify(tc.args || {}),
+              arguments: tc.rawArgs || (typeof tc.args === 'string' ? tc.args : JSON.stringify(tc.args || {})),
             },
           })),
         };
@@ -96,6 +145,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       model: options.model,
       messages: formattedMessages,
       stream: true,
+      stream_options: { include_usage: true },
       temperature: options.temperature ?? 0.2,
       max_tokens: options.maxTokens,
     };
@@ -153,7 +203,9 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         throw new Error(`Authentication Failed (${response.status}): Invalid API key for ${this.name}.`);
       }
       if (response.status === 429) {
-        throw new Error(`Rate Limit Exceeded (${response.status}) on ${this.name}. Please wait a moment.`);
+        const retryAfter = response.headers.get('retry-after');
+        const retrySuffix = retryAfter ? ` (retry after ${retryAfter}s)` : '';
+        throw new Error(`Rate Limit Exceeded (429) on ${this.name}${retrySuffix}: ${errorText}`);
       }
 
       throw new Error(`${this.name} API error (${response.status}): ${errorText}`);
@@ -168,6 +220,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     let fullContent = '';
     let reasoning = '';
     let buffer = '';
+    let parsedUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined = undefined;
     const toolCallAccumulators = new Map<number, { id: string; name: string; arguments: string }>();
 
     try {
@@ -193,6 +246,17 @@ export class OpenAiCompatibleProvider implements IAiProvider {
 
             try {
               const parsed = JSON.parse(dataStr);
+
+              // Usage statistics (e.g. OpenAI stream_options or OpenRouter)
+              if (parsed.usage) {
+                parsedUsage = {
+                  promptTokens: parsed.usage.prompt_tokens,
+                  completionTokens: parsed.usage.completion_tokens,
+                  totalTokens: parsed.usage.total_tokens,
+                };
+                onChunk({ actualUsage: parsedUsage });
+              }
+
               const choice = parsed.choices?.[0];
               const delta = choice?.delta;
 
@@ -210,7 +274,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
                   onChunk({ reasoningDelta });
                 }
 
-                // Tool calls delta
+                // Tool calls delta with fragmented name and arguments accumulation
                 if (Array.isArray(delta.tool_calls)) {
                   for (const tc of delta.tool_calls) {
                     const idx = tc.index ?? 0;
@@ -218,14 +282,18 @@ export class OpenAiCompatibleProvider implements IAiProvider {
                     if (!acc) {
                       acc = {
                         id: tc.id || `call-${Date.now()}-${idx}`,
-                        name: tc.function?.name || '',
+                        name: '',
                         arguments: '',
                       };
                       toolCallAccumulators.set(idx, acc);
                     }
                     if (tc.id) acc.id = tc.id;
-                    if (tc.function?.name) acc.name = tc.function.name;
-                    if (tc.function?.arguments) acc.arguments += tc.function.arguments;
+                    if (tc.function?.name) {
+                      acc.name += tc.function.name;
+                    }
+                    if (tc.function?.arguments) {
+                      acc.arguments += tc.function.arguments;
+                    }
 
                     onChunk({
                       toolCallDelta: {
@@ -244,13 +312,34 @@ export class OpenAiCompatibleProvider implements IAiProvider {
           }
         }
       }
+
+      // Process any remaining buffered lines
+      if (buffer.trim()) {
+        const remaining = buffer.split('\n');
+        for (const rawLine of remaining) {
+          const line = rawLine.trim();
+          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+            try {
+              const parsed = JSON.parse(line.slice(6).trim());
+              if (parsed.usage) {
+                parsedUsage = {
+                  promptTokens: parsed.usage.prompt_tokens,
+                  completionTokens: parsed.usage.completion_tokens,
+                  totalTokens: parsed.usage.total_tokens,
+                };
+                onChunk({ actualUsage: parsedUsage });
+              }
+            } catch {}
+          }
+        }
+      }
     } finally {
       reader.releaseLock();
     }
 
     const toolCalls: import('../tools/types').ToolCallRecord[] = [];
     if (toolCallAccumulators.size > 0) {
-      const { ToolExecutor } = await import('../tools/toolExecutor');
+      const { ToolExecutor } = await import('../tools/toolExecutor.ts');
       for (const acc of toolCallAccumulators.values()) {
         if (acc.name) {
           toolCalls.push(ToolExecutor.createToolCallRecord(acc.name, acc.arguments, acc.id));
@@ -262,12 +351,24 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       fullContent,
       reasoning: reasoning || undefined,
       toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+      usage: parsedUsage,
     };
   }
 
   public async testConnection(apiKey: string, baseUrl?: string): Promise<ConnectionDiagnosticResult> {
     const start = performance.now();
-    const resolvedUrl = (baseUrl || this.defaultBaseUrl).replace(/\/+$/, '');
+    const rawBaseUrl = baseUrl || this.defaultBaseUrl;
+    const urlValidation = validateEndpointUrl(rawBaseUrl);
+    if (!urlValidation.valid) {
+      return {
+        success: false,
+        latencyMs: 0,
+        message: `Endpoint Configuration Error: ${urlValidation.error}`,
+        errorDetails: urlValidation.error,
+      };
+    }
+
+    const resolvedUrl = rawBaseUrl.replace(/\/+$/, '');
     const url = `${resolvedUrl}/chat/completions`;
 
     try {

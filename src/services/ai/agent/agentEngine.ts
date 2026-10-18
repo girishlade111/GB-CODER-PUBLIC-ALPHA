@@ -24,6 +24,7 @@ import { PermissionController } from '../tools/permissionController';
 import { ToolCallRecord } from '../tools/types';
 import { ProviderChatMessage } from '../providers/baseProvider';
 import { EditProposalService } from '../editProposalService';
+import { ContextBudget } from '../contextBudget';
 import {
   AgentStatus,
   AgentPlan,
@@ -341,8 +342,19 @@ export class AgentEngine {
       };
 
       try {
-        modelResult = await activeProvider.streamChat(
+        const modelLimit = providerRegistry.getModelContextLimit(activeProvider.id, activeModel);
+        const budgetBreakdown = ContextBudget.calculateBudget(modelLimit, {
+          hasTools: true,
+          maxOutputTokens: 4096,
+        });
+        const boundedMessages = ContextBudget.pruneConversationHistory(
           conversationMessages,
+          budgetBreakdown.effectiveInputBudget,
+          { preserveSystemPrompt: true, preserveInitialUserPrompt: true }
+        );
+
+        modelResult = await activeProvider.streamChat(
+          boundedMessages,
           {
             apiKey,
             model: activeModel,
@@ -360,6 +372,10 @@ export class AgentEngine {
             }
           }
         );
+
+        if (modelResult.usage?.totalTokens) {
+          task.usage.estimatedTokens = (task.usage.estimatedTokens || 0) + modelResult.usage.totalTokens;
+        }
       } catch (err: unknown) {
         if (this.isAborted || this.abortController?.signal.aborted) {
           task.status = 'cancelled';

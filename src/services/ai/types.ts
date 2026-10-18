@@ -40,6 +40,7 @@ export interface ChatCompletionChunk {
   reasoningDelta?: string;
   toolCallDelta?: { id?: string; index?: number; name?: string; argumentsDelta?: string };
   isComplete?: boolean;
+  actualUsage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
   error?: string;
 }
 
@@ -52,7 +53,7 @@ export interface ContextFileReference {
   linesCount: number;
   charCount: number;
   isTruncated?: boolean;
-  reason: 'active_file' | 'user_attached' | 'at_mention';
+  reason: 'active_file' | 'user_attached' | 'at_mention' | 'relevant_context';
 }
 
 export interface AssembledProjectContext {

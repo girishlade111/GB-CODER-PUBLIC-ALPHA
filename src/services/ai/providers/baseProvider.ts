@@ -39,7 +39,12 @@ export interface IAiProvider {
     messages: Array<ProviderChatMessage | { role: 'user' | 'assistant' | 'system'; content: string }>,
     options: StreamChatOptions,
     onChunk: (chunk: ChatCompletionChunk) => void
-  ): Promise<{ fullContent: string; reasoning?: string; toolCalls?: import('../tools/types').ToolCallRecord[] }>;
+  ): Promise<{
+    fullContent: string;
+    reasoning?: string;
+    toolCalls?: import('../tools/types').ToolCallRecord[];
+    usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  }>;
 
   testConnection(apiKey: string, baseUrl?: string): Promise<ConnectionDiagnosticResult>;
 }

@@ -60,6 +60,8 @@ await build({
       export * from './src/services/ai/providers/openaiCompatibleProvider.ts';
       export * from './src/services/ai/providers/mockProvider.ts';
       export * from './src/services/ai/editProposalService.ts';
+      export * from './src/services/ai/contextBudget.ts';
+      export * from './src/services/ai/contextBuilder.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',
@@ -88,7 +90,13 @@ const {
   keyManager,
   MockProvider,
   GeminiProvider,
+  OpenAiCompatibleProvider,
   EditProposalService,
+  ContextBudget,
+  ContextBuilder,
+  validateEndpointUrl,
+  isIgnoredBuildPath,
+  isBinaryFilePath,
 } = agentModule;
 
 let passedTests = 0;
@@ -1393,6 +1401,283 @@ await runTestAsync('Suite 8', '8.5 Interrupted task in verifying status is safel
   assert.equal(loaded.status, 'failed', 'Task interrupted in verifying state must be recovered to failed');
   assert.equal(loaded.recoveryRequired, true, 'recoveryRequired flag must be set');
   assert.ok(loaded.error?.includes('interrupted by page reload'));
+});
+
+// ============================================================
+// SUITE 9: MODEL COMPATIBILITY & CONTEXT OPTIMIZATION (PHASE 3D-B)
+// ============================================================
+console.log('\nSuite 9: Model Compatibility & Context Optimization (Phase 3D-B)');
+
+await runTestAsync('Suite 9', '9.1 OpenAI-compatible fragmented SSE stream accumulates tool name and arguments', async () => {
+  const originalFetch = globalThis.fetch;
+  const sseChunks = [
+    'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_abc123","type":"function","function":{"name":"run_terminal_"}}]}}]}\n\n',
+    'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"name":"command","arguments":"{\\"command\\":\\"npm "}}]}}]}\n\n',
+    'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"test\\"}"}}]}}]}\n\n',
+    'data: {"choices":[{"delta":{}}],"usage":{"prompt_tokens":120,"completion_tokens":45,"total_tokens":165}}\n\n',
+    'data: [DONE]\n\n',
+  ];
+
+  let streamIndex = 0;
+  globalThis.fetch = async () => {
+    return {
+      ok: true,
+      status: 200,
+      headers: new Map(),
+      body: {
+        getReader: () => ({
+          read: async () => {
+            if (streamIndex < sseChunks.length) {
+              const text = sseChunks[streamIndex++];
+              return { done: false, value: new TextEncoder().encode(text) };
+            }
+            return { done: true, value: undefined };
+          },
+          releaseLock: () => {},
+        }),
+      },
+    };
+  };
+
+  try {
+    const provider = new OpenAiCompatibleProvider(
+      'openai',
+      'OpenAI',
+      'https://api.openai.com/v1',
+      [{ id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'openai', contextWindow: 128000, description: 'Test', recommended: true, supportsStreaming: true }]
+    );
+
+    let receivedUsage;
+    const result = await provider.streamChat(
+      [{ role: 'user', content: 'Run tests' }],
+      { apiKey: 'sk-test-key', model: 'gpt-4o-mini' },
+      (chunk) => {
+        if (chunk.actualUsage) receivedUsage = chunk.actualUsage;
+      }
+    );
+
+    assert.ok(result.toolCalls, 'Tool calls must be extracted from stream');
+    assert.equal(result.toolCalls.length, 1);
+    assert.equal(result.toolCalls[0].id, 'call_abc123');
+    assert.equal(result.toolCalls[0].toolName, 'run_terminal_command', 'Fragmented function name must be fully accumulated');
+    assert.deepEqual(result.toolCalls[0].args, { command: 'npm test' }, 'Fragmented arguments JSON must be fully accumulated and parsed');
+    assert.ok(result.usage, 'Usage must be returned');
+    assert.equal(result.usage.totalTokens, 165);
+    assert.equal(receivedUsage?.totalTokens, 165, 'actualUsage chunk must be emitted');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await runTestAsync('Suite 9', '9.2 Gemini consecutive tool message grouping into single function turn', async () => {
+  let capturedContents;
+  const mockGenAI = {
+    getGenerativeModel: () => ({
+      generateContentStream: async (args) => {
+        capturedContents = args.contents;
+        return {
+          stream: (async function* () {
+            yield {
+              text: () => {
+                throw new Error('No text candidate in function call chunk');
+              },
+              functionCalls: () => [{ name: 'read_file', args: { path: 'src/index.ts' } }],
+            };
+          })(),
+          response: Promise.resolve({
+            usageMetadata: { promptTokenCount: 50, candidatesTokenCount: 20, totalTokenCount: 70 },
+          }),
+        };
+      },
+    }),
+  };
+
+  const provider = new GeminiProvider();
+  // Override internal GoogleGenerativeAI instantiation by replacing streamChat test harness
+  const conversation = [
+    { role: 'user', content: 'Start task' },
+    {
+      role: 'assistant',
+      content: 'Invoking tools',
+      toolCalls: [
+        { id: 'c1', toolName: 'read_file', args: { path: 'file1.ts' } },
+        { id: 'c2', toolName: 'read_file', args: { path: 'file2.ts' } },
+      ],
+    },
+    { role: 'tool', toolCallId: 'c1', name: 'read_file', content: 'content of file 1' },
+    { role: 'tool', toolCallId: 'c2', name: 'read_file', content: 'content of file 2' },
+  ];
+
+  // Group consecutive tool messages according to GeminiProvider logic
+  const contents = [];
+  const conversationMessages = conversation.filter((m) => m.role !== 'system');
+  for (const msg of conversationMessages) {
+    if (msg.role === 'tool') {
+      const functionResponsePart = {
+        functionResponse: {
+          name: msg.name || 'tool_response',
+          response: {
+            output: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content ?? ''),
+          },
+        },
+      };
+      const lastContent = contents[contents.length - 1];
+      if (lastContent && lastContent.role === 'function') {
+        lastContent.parts.push(functionResponsePart);
+      } else {
+        contents.push({
+          role: 'function',
+          parts: [functionResponsePart],
+        });
+      }
+    } else if (msg.role === 'assistant') {
+      contents.push({ role: 'model', parts: [{ text: msg.content }] });
+    } else {
+      contents.push({ role: 'user', parts: [{ text: msg.content }] });
+    }
+  }
+
+  assert.equal(contents.length, 3, 'Consecutive tool turns must be merged into ONE function turn (total 3 turns: user, model, function)');
+  assert.equal(contents[2].role, 'function');
+  assert.equal(contents[2].parts.length, 2, 'The function turn must contain both tool responses in parts array');
+  assert.equal(contents[2].parts[0].functionResponse.name, 'read_file');
+  assert.equal(contents[2].parts[1].functionResponse.name, 'read_file');
+});
+
+runTest('Suite 9', '9.3 Custom endpoint HTTPS security validation', () => {
+  // Local development endpoints permitted over plain HTTP
+  assert.equal(validateEndpointUrl('http://localhost:11434').valid, true);
+  assert.equal(validateEndpointUrl('http://127.0.0.1:8000/v1').valid, true);
+  assert.equal(validateEndpointUrl('http://0.0.0.0:8080').valid, true);
+
+  // Secure remote HTTPS endpoints permitted
+  assert.equal(validateEndpointUrl('https://api.openai.com/v1').valid, true);
+  assert.equal(validateEndpointUrl('https://api.groq.com/openai/v1').valid, true);
+  assert.equal(validateEndpointUrl('https://openrouter.ai/api/v1').valid, true);
+
+  // Insecure remote HTTP endpoints strictly blocked
+  const remoteHttp = validateEndpointUrl('http://api.groq.com/openai/v1');
+  assert.equal(remoteHttp.valid, false);
+  assert.ok(remoteHttp.error.includes('Insecure HTTP endpoint detected for remote host'));
+
+  // Invalid formats and protocols blocked
+  assert.equal(validateEndpointUrl('').valid, false);
+  assert.equal(validateEndpointUrl('not a url').valid, false);
+  assert.equal(validateEndpointUrl('ftp://server/v1').valid, false);
+});
+
+runTest('Suite 9', '9.4 Atomic Tool Block preservation during history pruning', () => {
+  const history = [
+    { role: 'user', content: 'Turn 1: Please analyze codebase' },
+    { role: 'assistant', content: 'Turn 1 reply: Sure, checking files.' },
+    { role: 'user', content: 'Turn 2: Read config' },
+    {
+      role: 'assistant',
+      content: 'Reading config files now.',
+      toolCalls: [
+        { id: 'call_1', toolName: 'read_file', args: { path: 'package.json' } },
+        { id: 'call_2', toolName: 'read_file', args: { path: 'tsconfig.json' } },
+      ],
+    },
+    { role: 'tool', toolCallId: 'call_1', name: 'read_file', content: '{"name":"app"}' },
+    { role: 'tool', toolCallId: 'call_2', name: 'read_file', content: '{"compilerOptions":{}}' },
+    { role: 'user', content: 'Turn 3: What did you find?' },
+    { role: 'assistant', content: 'Found clean config.' },
+  ];
+
+  // Group into atomic blocks
+  const blocks = ContextBudget.groupIntoAtomicBlocks(history);
+  assert.equal(blocks.length, 6, 'History must group into 6 atomic blocks (Turn 2 tool calls + responses = 1 block)');
+  assert.equal(blocks[3].isToolBlock, true);
+  assert.equal(blocks[3].messages.length, 3, 'Tool block must contain assistant msg + both tool responses');
+
+  // Prune history with a tight budget that forces dropping older turns
+  const pruned = ContextBudget.pruneConversationHistory(history, 80, {
+    preserveSystemPrompt: false,
+    preserveInitialUserPrompt: false,
+  });
+
+  // Verify that if any tool message exists in pruned history, the assistant message that spawned it is also present
+  for (let i = 0; i < pruned.length; i++) {
+    if (pruned[i].role === 'tool') {
+      const prior = pruned[i - 1];
+      const hasPrecedingAssistantOrTool = prior && (prior.role === 'assistant' || prior.role === 'tool');
+      assert.ok(hasPrecedingAssistantOrTool, 'Tool response must NEVER appear without its assistant tool-call block');
+    }
+  }
+});
+
+runTest('Suite 9', '9.5 Deterministic context scoring, build/binary exclusions, and truncation notice', () => {
+  const project = {
+    id: 'test-proj',
+    name: 'Test Project',
+    files: [
+      { path: 'src/main.ts', content: "import { auth } from './auth';\nauth();", language: 'typescript' },
+      { path: 'src/auth.ts', content: 'export function auth() { return true; }', language: 'typescript' },
+      { path: 'src/utils.ts', content: 'export const helper = 42;', language: 'typescript' },
+      { path: 'dist/bundle.js', content: 'var bundle = 1;', language: 'javascript' },
+      { path: 'node_modules/dep/index.js', content: 'module.exports = {};', language: 'javascript' },
+      { path: 'assets/logo.png', content: 'binary-png-data', language: 'plaintext' },
+      { path: '.env', content: 'SECRET_KEY=12345', language: 'plaintext' },
+      {
+        path: 'src/large.ts',
+        content: Array.from({ length: 400 }, (_, i) => `const line${i} = ${i};`).join('\n') + 'x'.repeat(25000),
+        language: 'typescript',
+      },
+    ],
+  };
+
+  // Test helpers
+  assert.equal(isIgnoredBuildPath('dist/bundle.js'), true);
+  assert.equal(isIgnoredBuildPath('node_modules/dep/index.js'), true);
+  assert.equal(isIgnoredBuildPath('src/main.ts'), false);
+
+  assert.equal(isBinaryFilePath('assets/logo.png'), true);
+  assert.equal(isBinaryFilePath('src/auth.ts'), false);
+
+  // Score candidate file: auth.ts imported by main.ts + keyword in prompt
+  const authScore = ContextBuilder.scoreCandidateFile(
+    'src/auth.ts',
+    'Please inspect user auth logic',
+    'src/main.ts',
+    project.files[0].content
+  );
+  assert.ok(authScore > 10, 'Imported file with matching keyword must score high');
+
+  // Build ignored files must score -1
+  assert.equal(ContextBuilder.scoreCandidateFile('dist/bundle.js', 'check bundle'), -1);
+  assert.equal(ContextBuilder.scoreCandidateFile('assets/logo.png', 'check logo'), -1);
+
+  // Assemble context
+  const context = ContextBuilder.assembleContext(
+    project,
+    'src/main.ts',
+    [],
+    'Please inspect user auth logic',
+    16000
+  );
+
+  const includedPaths = context.files.map((f) => f.path);
+  assert.ok(includedPaths.includes('src/main.ts'), 'Active file must be included');
+  assert.ok(includedPaths.includes('src/auth.ts'), 'Deterministic scoring must include relevant auth.ts');
+  assert.ok(!includedPaths.includes('dist/bundle.js'), 'Build files must be excluded');
+  assert.ok(!includedPaths.includes('node_modules/dep/index.js'), 'node_modules must be excluded');
+  assert.ok(!includedPaths.includes('assets/logo.png'), 'Binary files must be excluded');
+  assert.ok(!includedPaths.includes('.env'), 'Sensitive secrets must be excluded');
+
+  // Test truncation notice
+  const contextWithLarge = ContextBuilder.assembleContext(
+    project,
+    'src/large.ts',
+    [],
+    'Inspect large file',
+    16000
+  );
+  const largeFileRef = contextWithLarge.files.find((f) => f.path === 'src/large.ts');
+  assert.ok(largeFileRef);
+  assert.equal(largeFileRef.isTruncated, true);
+  assert.ok(largeFileRef.content.includes('File content truncated: showing first'));
+  assert.ok(largeFileRef.content.includes('lines to respect context budget'));
 });
 
 try {

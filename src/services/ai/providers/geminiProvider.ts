@@ -64,7 +64,12 @@ export class GeminiProvider implements IAiProvider {
     messages: Array<import('./baseProvider.ts').ProviderChatMessage | { role: 'user' | 'assistant' | 'system'; content: string }>,
     options: StreamChatOptions,
     onChunk: (chunk: ChatCompletionChunk) => void
-  ): Promise<{ fullContent: string; reasoning?: string; toolCalls?: import('../tools/types').ToolCallRecord[] }> {
+  ): Promise<{
+    fullContent: string;
+    reasoning?: string;
+    toolCalls?: import('../tools/types').ToolCallRecord[];
+    usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  }> {
     if (!options.apiKey) {
       throw new Error('API key required for Google Gemini. Please enter your Gemini API key in settings.');
     }
@@ -103,23 +108,28 @@ export class GeminiProvider implements IAiProvider {
     const conversationMessages = messages.filter((m) => m.role !== 'system');
 
     // Group into Gemini history with proper role mapping (user, model, function)
-    const contents = conversationMessages.map((msg: any) => {
+    // CRITICAL: Group consecutive 'tool' messages into a single 'function' turn to prevent Gemini role-alternation errors
+    const contents: any[] = [];
+    for (const msg of conversationMessages as any[]) {
       if (msg.role === 'tool') {
-        return {
-          role: 'function',
-          parts: [
-            {
-              functionResponse: {
-                name: msg.name || 'tool_response',
-                response: {
-                  output: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content ?? ''),
-                },
-              },
+        const functionResponsePart = {
+          functionResponse: {
+            name: msg.name || 'tool_response',
+            response: {
+              output: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content ?? ''),
             },
-          ],
+          },
         };
-      }
-      if (msg.role === 'assistant') {
+        const lastContent = contents[contents.length - 1];
+        if (lastContent && lastContent.role === 'function') {
+          lastContent.parts.push(functionResponsePart);
+        } else {
+          contents.push({
+            role: 'function',
+            parts: [functionResponsePart],
+          });
+        }
+      } else if (msg.role === 'assistant') {
         const parts: any[] = [];
         if (msg.content) {
           parts.push({ text: msg.content });
@@ -137,22 +147,24 @@ export class GeminiProvider implements IAiProvider {
         if (parts.length === 0) {
           parts.push({ text: '' });
         }
-        return {
+        contents.push({
           role: 'model',
           parts,
-        };
+        });
+      } else {
+        contents.push({
+          role: 'user',
+          parts: [{ text: msg.content || '' }],
+        });
       }
-      return {
-        role: 'user',
-        parts: [{ text: msg.content || '' }],
-      };
-    });
+    }
 
     if (options.signal?.aborted) {
       throw new Error('Request was aborted.');
     }
 
     let fullContent = '';
+    let parsedUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined = undefined;
     const toolCalls: import('../tools/types').ToolCallRecord[] = [];
     const { ToolExecutor } = await import('../tools/toolExecutor.ts');
 
@@ -166,7 +178,14 @@ export class GeminiProvider implements IAiProvider {
           throw new Error('Generation aborted by user.');
         }
 
-        const chunkText = chunk.text();
+        // Safe text extraction: chunk.text() throws if chunk has only functionCall parts
+        let chunkText = '';
+        try {
+          chunkText = chunk.text();
+        } catch {
+          // Chunk contains only function calls or empty text
+        }
+
         if (chunkText) {
           fullContent += chunkText;
           onChunk({ contentDelta: chunkText });
@@ -188,6 +207,21 @@ export class GeminiProvider implements IAiProvider {
         }
       }
 
+      // Try to extract usageMetadata from response if available
+      try {
+        const resp = await streamingResult.response;
+        if (resp.usageMetadata) {
+          parsedUsage = {
+            promptTokens: resp.usageMetadata.promptTokenCount,
+            completionTokens: resp.usageMetadata.candidatesTokenCount,
+            totalTokens: resp.usageMetadata.totalTokenCount,
+          };
+          onChunk({ actualUsage: parsedUsage });
+        }
+      } catch {
+        // Usage metadata not available or response already consumed
+      }
+
       onChunk({ isComplete: true });
     } catch (err: unknown) {
       if (options.signal?.aborted) {
@@ -197,10 +231,17 @@ export class GeminiProvider implements IAiProvider {
       if (msg.includes('API_KEY_INVALID') || msg.includes('403') || msg.includes('401')) {
         throw new Error('Authentication Failed: Invalid Gemini API key. Please verify your key in Google AI Studio.');
       }
+      if (msg.includes('RESOURCE_EXHAUSTED') || msg.includes('429') || msg.toLowerCase().includes('quota')) {
+        throw new Error(`Rate Limit / Quota Exceeded (429) on Google Gemini: ${msg}`);
+      }
       throw new Error(`Gemini Error: ${msg}`);
     }
 
-    return { fullContent, toolCalls: toolCalls.length > 0 ? toolCalls : undefined };
+    return {
+      fullContent,
+      toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+      usage: parsedUsage,
+    };
   }
 
   public async testConnection(apiKey: string): Promise<ConnectionDiagnosticResult> {

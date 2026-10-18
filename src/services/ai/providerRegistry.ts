@@ -7,7 +7,7 @@
 
 import { AiProviderId, AiModelInfo, ConnectionDiagnosticResult } from './types.ts';
 import { IAiProvider } from './providers/baseProvider.ts';
-import { OpenAiCompatibleProvider } from './providers/openaiCompatibleProvider.ts';
+import { OpenAiCompatibleProvider, validateEndpointUrl } from './providers/openaiCompatibleProvider.ts';
 import { GeminiProvider } from './providers/geminiProvider.ts';
 import { MockProvider } from './providers/mockProvider.ts';
 import { keyManager } from './keyManager.ts';
@@ -188,6 +188,25 @@ class ProviderRegistry {
       result.push(...provider.getAvailableModels());
     }
     return result;
+  }
+
+  public getModelContextLimit(providerId: AiProviderId, modelId?: string): number {
+    const targetModel = modelId || this.getActiveModel(providerId);
+    const models = this.getModelsForProvider(providerId);
+    const matched = models.find((m) => m.id === targetModel);
+    if (matched && matched.contextWindow) {
+      return matched.contextWindow;
+    }
+    // Fallback defaults per provider
+    if (providerId === 'gemini') return 1048576;
+    if (providerId === 'openrouter') return 128000;
+    if (providerId === 'openai') return 128000;
+    if (providerId === 'custom') return 32000;
+    return 128000;
+  }
+
+  public validateCustomEndpoint(url: string): { valid: boolean; error?: string } {
+    return validateEndpointUrl(url);
   }
 
   public async testProviderConnection(

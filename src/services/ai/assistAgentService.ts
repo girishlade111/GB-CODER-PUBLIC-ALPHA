@@ -20,7 +20,8 @@ import {
 } from './types.ts';
 import { keyManager } from './keyManager.ts';
 import { providerRegistry } from './providerRegistry.ts';
-import { ContextBuilder, estimateTokens } from './contextBuilder.ts';
+import { ContextBuilder, estimateTokens, DEFAULT_CONTEXT_BUDGET_TOKENS } from './contextBuilder.ts';
+import { ContextBudget } from './contextBudget.ts';
 import { EditProposalService } from './editProposalService.ts';
 import { ConversationStore } from './conversationStore.ts';
 import { ToolRegistry } from './tools/toolRegistry.ts';
@@ -269,12 +270,23 @@ class AssistAgentService {
     const sessionId = this.state.activeSessionId;
     const userMsgId = `msg-${Date.now()}`;
 
-    // 1. Assemble Project Context
+    // 1. Calculate model-aware context budget
+    const modelContextLimit = providerRegistry.getModelContextLimit(
+      this.state.selectedProvider,
+      this.state.selectedModel
+    );
+    const budget = ContextBudget.calculateBudget(modelContextLimit, {
+      hasTools: true,
+      maxOutputTokens: 4096,
+    });
+
+    // 2. Assemble Project Context under budget ceiling
     const assembledContext = ContextBuilder.assembleContext(
       project,
       activePath,
       this.state.attachedContextPaths,
-      trimmed
+      trimmed,
+      Math.min(Math.floor(budget.effectiveInputBudget / 2), DEFAULT_CONTEXT_BUDGET_TOKENS)
     );
 
     const userMsg: CodeAssistMessage = {
@@ -285,7 +297,7 @@ class AssistAgentService {
       contextFiles: assembledContext.files.map((f) => ({ path: f.path, linesCount: f.linesCount })),
     };
 
-    // 2. Append User Message
+    // 3. Append User Message
     const updatedSessions = this.state.sessions.map((s) => {
       if (s.id === sessionId) {
         return {
@@ -316,22 +328,32 @@ class AssistAgentService {
       const provider = providerRegistry.getProvider(this.state.selectedProvider);
       const apiKey = keyManager.getApiKey(this.state.selectedProvider);
 
-      // 3. Build messages array
+      // 4. Build system prompt
       const systemPrompt = ContextBuilder.buildSystemPrompt(
         assembledContext,
         project.projectType || 'react'
       );
 
-      // Build conversation history for provider
+      // 5. Build conversation history with Atomic Tool Block preservation
       const activeSession = this.getActiveSession();
-      const priorMessages = activeSession.messages.slice(-8).map((m) => ({
+      const rawHistory = activeSession.messages.map((m) => ({
         role: m.role,
         content: m.content,
+        toolCalls: m.toolCalls,
+        toolCallId: (m as any).toolCallId,
+        name: (m as any).name,
       }));
+
+      // Prune history to fit available budget without ever severing tool calls from tool responses
+      const prunedPrior = ContextBudget.pruneConversationHistory(
+        rawHistory,
+        budget.effectiveInputBudget,
+        { preserveSystemPrompt: false, preserveInitialUserPrompt: false }
+      );
 
       const apiMessages = [
         { role: 'system' as const, content: systemPrompt },
-        ...priorMessages,
+        ...prunedPrior,
       ];
 
       this.state.progressStep = `Streaming from ${this.state.selectedModel}...`;
@@ -340,7 +362,7 @@ class AssistAgentService {
       let streamContent = '';
       let streamReasoning = '';
 
-      // 4. Stream chat response with registered tools
+      // 6. Stream chat response with registered tools
       const result = await provider.streamChat(
         apiMessages,
         {
@@ -365,6 +387,16 @@ class AssistAgentService {
           }
         }
       );
+
+      // Update actual token metrics if returned by provider
+      if (result.usage && result.usage.totalTokens) {
+        this.state.tokenCount = {
+          input: result.usage.promptTokens ?? this.state.tokenCount.input,
+          output: result.usage.completionTokens ?? this.state.tokenCount.output,
+          total: result.usage.totalTokens,
+          max: modelContextLimit,
+        };
+      }
 
       // 5. Process tool calls
       const processedToolCalls: ToolCallRecord[] = [];
