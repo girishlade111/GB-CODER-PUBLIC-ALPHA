@@ -184,7 +184,7 @@ async function main() {
     await settingsBtn.click();
     await page.waitForSelector('[data-testid="ai-provider-settings-modal"]', { timeout: 5000 });
 
-    const mockTabBtn = page.getByRole('button', { name: 'Mock Test' });
+    const mockTabBtn = page.locator('[data-testid="provider-card-mock"]').or(page.getByRole('button', { name: 'Mock Test' }));
     await mockTabBtn.click();
 
     const saveProviderBtn = page.locator('[data-testid="save-ai-settings-btn"]');

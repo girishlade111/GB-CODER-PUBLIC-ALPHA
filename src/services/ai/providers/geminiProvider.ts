@@ -246,13 +246,29 @@ export class GeminiProvider implements IAiProvider {
     };
   }
 
-  public async testConnection(apiKey: string): Promise<ConnectionDiagnosticResult> {
+  public async testConnection(
+    apiKey: string,
+    _baseUrl?: string,
+    _modelId?: string,
+    _customHeaders?: Record<string, string>,
+    consentToInference?: boolean
+  ): Promise<ConnectionDiagnosticResult> {
     const start = performance.now();
     if (!apiKey) {
       return {
         success: false,
         latencyMs: 0,
         message: 'API key is required.',
+        errorCategory: 'auth',
+        suggestedAction: 'Please enter your Google Gemini API key.',
+      };
+    }
+
+    if (consentToInference === false) {
+      return {
+        success: true,
+        latencyMs: 0,
+        message: 'Gemini API key is configured. Authorize test probe to verify live inference.',
       };
     }
 

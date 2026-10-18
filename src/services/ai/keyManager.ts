@@ -128,6 +128,16 @@ class KeyManager {
     this.memoryKeys.clear();
     if (typeof window !== 'undefined' && window.sessionStorage) {
       try {
+        const toRemove: string[] = [];
+        for (let i = 0; i < window.sessionStorage.length; i++) {
+          const k = window.sessionStorage.key(i);
+          if (k && k.startsWith(SESSION_PREFIX)) {
+            toRemove.push(k);
+          }
+        }
+        for (const k of toRemove) {
+          window.sessionStorage.removeItem(k);
+        }
         const providers: AiProviderId[] = ['openai', 'openrouter', 'gemini', 'custom', 'mock'];
         for (const p of providers) {
           window.sessionStorage.removeItem(`${SESSION_PREFIX}${p}`);

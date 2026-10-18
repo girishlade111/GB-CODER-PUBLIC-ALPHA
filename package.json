@@ -56,7 +56,9 @@
     "audit:e2e:phase3b-tools": "node scripts/e2e-phase3b-tools-audit.mjs",
     "audit:agent": "node scripts/verify-phase3c-agent.mjs",
     "audit:e2e:phase3c-agent": "node scripts/e2e-phase3c-agent.mjs",
-    "audit:e2e:migration": "node scripts/migration/e2e-migration-verification.mjs"
+    "audit:e2e:migration": "node scripts/migration/e2e-migration-verification.mjs",
+    "audit:byok": "node scripts/verify-byok-provider-system.mjs",
+    "audit:e2e:byok": "node scripts/e2e-byok-provider-system.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

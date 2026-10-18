@@ -5,7 +5,8 @@
  * project context, edit proposals, and connection diagnostics.
  */
 
-export type AiProviderId = 'gemini' | 'openrouter' | 'openai' | 'custom' | 'mock';
+export type BuiltInAiProviderId = 'gemini' | 'openrouter' | 'openai' | 'custom' | 'mock';
+export type AiProviderId = BuiltInAiProviderId | (string & {});
 
 export interface AiModelInfo {
   id: string;
@@ -15,6 +16,55 @@ export interface AiModelInfo {
   description: string;
   recommended?: boolean;
   supportsStreaming: boolean;
+  supportsToolCalling?: boolean;
+}
+
+export interface CustomHeaderConfig {
+  id: string;
+  name: string;
+  value: string;
+  isSecret?: boolean;
+}
+
+export interface CustomModelConfig {
+  id: string;
+  name: string;
+  contextWindow?: number;
+  maxTokens?: number;
+  supportsStreaming?: boolean;
+  supportsToolCalling?: boolean;
+}
+
+export interface CustomProviderDefinition {
+  id: string;
+  name: string;
+  baseUrl: string;
+  description?: string;
+  models: CustomModelConfig[];
+  headers?: CustomHeaderConfig[];
+  contextWindow?: number;
+  maxTokens?: number;
+  supportsStreaming?: boolean;
+  supportsToolCalling?: boolean;
+  timeoutMs?: number;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface ProviderCatalogEntry {
+  id: AiProviderId;
+  name: string;
+  description: string;
+  category: 'popular' | 'other';
+  iconName?: string;
+  defaultBaseUrl?: string;
+  docUrl?: string;
+  apiKeyHelpUrl?: string;
+  browserCorsSupport: boolean;
+  toolCallingSupport: boolean | 'unknown';
+  streamingSupport: boolean;
+  defaultModels?: AiModelInfo[];
+  isCustomTemplate?: boolean;
 }
 
 export interface AiProviderConfig {
@@ -33,6 +83,10 @@ export interface ConnectionDiagnosticResult {
   corsRestricted?: boolean;
   detectedModels?: string[];
   errorDetails?: string;
+  endpointTested?: string;
+  httpStatus?: number;
+  errorCategory?: 'config' | 'auth' | 'not_found' | 'rate_limit' | 'server' | 'cors' | 'timeout' | 'network' | 'unknown';
+  suggestedAction?: string;
 }
 
 export interface ChatCompletionChunk {

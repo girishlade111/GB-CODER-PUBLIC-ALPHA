@@ -309,7 +309,13 @@ export class MockProvider implements IAiProvider {
     };
   }
 
-  public async testConnection(_apiKey: string): Promise<ConnectionDiagnosticResult> {
+  public async testConnection(
+    _apiKey: string,
+    _baseUrl?: string,
+    _modelId?: string,
+    _customHeaders?: Record<string, string>,
+    _consentToInference?: boolean
+  ): Promise<ConnectionDiagnosticResult> {
     return {
       success: true,
       latencyMs: 5,

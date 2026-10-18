@@ -5,12 +5,14 @@
  * and connection diagnostics.
  */
 
-import { AiProviderId, AiModelInfo, ConnectionDiagnosticResult } from './types.ts';
+import { AiProviderId, AiModelInfo, ConnectionDiagnosticResult, ProviderCatalogEntry, CustomProviderDefinition } from './types.ts';
 import { IAiProvider } from './providers/baseProvider.ts';
 import { OpenAiCompatibleProvider, validateEndpointUrl } from './providers/openaiCompatibleProvider.ts';
 import { GeminiProvider } from './providers/geminiProvider.ts';
 import { MockProvider } from './providers/mockProvider.ts';
 import { keyManager } from './keyManager.ts';
+import { customProviderStore } from './customProviderStore.ts';
+import { BUILT_IN_CATALOG } from './providerCatalog.ts';
 
 const OPENROUTER_MODELS: AiModelInfo[] = [
   {
@@ -106,6 +108,7 @@ class ProviderRegistry {
   private providers = new Map<AiProviderId, IAiProvider>();
   private activeProviderId: AiProviderId = 'gemini';
   private activeModelMap = new Map<AiProviderId, string>();
+  private customProviderIds = new Set<string>();
 
   constructor() {
     this.registerProvider(new GeminiProvider());
@@ -134,6 +137,100 @@ class ProviderRegistry {
       )
     );
     this.registerProvider(new MockProvider());
+    this.loadCustomProviders();
+  }
+
+  public loadCustomProviders(): void {
+    const customList = customProviderStore.getAll();
+    for (const def of customList) {
+      this.registerCustomProviderInternal(def);
+    }
+  }
+
+  private registerCustomProviderInternal(def: CustomProviderDefinition): void {
+    const models: AiModelInfo[] = (def.models || []).map((m) => ({
+      id: m.id,
+      name: m.name || m.id,
+      provider: def.id,
+      contextWindow: m.contextWindow || def.contextWindow || 32000,
+      description: `Custom model "${m.name || m.id}" on ${def.name}`,
+      recommended: false,
+      supportsStreaming: m.supportsStreaming ?? (def.supportsStreaming ?? true),
+      supportsToolCalling: m.supportsToolCalling ?? (def.supportsToolCalling ?? false),
+    }));
+
+    const headersMap: Record<string, string> = {};
+    for (const h of def.headers || []) {
+      if (h.name && h.value && !h.isSecret) {
+        headersMap[h.name] = h.value;
+      }
+    }
+
+    const provider = new OpenAiCompatibleProvider(
+      def.id,
+      def.name,
+      def.baseUrl,
+      models,
+      headersMap
+    );
+
+    this.registerProvider(provider);
+    this.customProviderIds.add(def.id);
+  }
+
+  public registerCustomProvider(def: CustomProviderDefinition): { success: boolean; error?: string } {
+    const saveResult = customProviderStore.save(def);
+    if (!saveResult.success) {
+      return saveResult;
+    }
+    this.registerCustomProviderInternal(def);
+    return { success: true };
+  }
+
+  public removeCustomProvider(id: string): boolean {
+    const deleted = customProviderStore.delete(id);
+    this.providers.delete(id);
+    this.customProviderIds.delete(id);
+    this.activeModelMap.delete(id);
+
+    if (this.activeProviderId === id) {
+      this.activeProviderId = 'gemini';
+    }
+    return deleted;
+  }
+
+  public isCustomProvider(id: AiProviderId): boolean {
+    return id === 'custom' || this.customProviderIds.has(id);
+  }
+
+  public getProviderCatalog(): ProviderCatalogEntry[] {
+    const catalog = [...BUILT_IN_CATALOG];
+    const customList = customProviderStore.getAll();
+    for (const cp of customList) {
+      if (!catalog.some((c) => c.id === cp.id)) {
+        catalog.push({
+          id: cp.id,
+          name: cp.name,
+          description: cp.description || `Custom provider at ${cp.baseUrl}`,
+          category: 'other',
+          iconName: 'Sliders',
+          defaultBaseUrl: cp.baseUrl,
+          browserCorsSupport: false,
+          toolCallingSupport: cp.supportsToolCalling ?? 'unknown',
+          streamingSupport: cp.supportsStreaming ?? true,
+          defaultModels: (cp.models || []).map((m) => ({
+            id: m.id,
+            name: m.name || m.id,
+            provider: cp.id,
+            contextWindow: m.contextWindow || cp.contextWindow || 32000,
+            description: `Model on ${cp.name}`,
+            supportsStreaming: m.supportsStreaming ?? true,
+            supportsToolCalling: m.supportsToolCalling ?? false,
+          })),
+        });
+      }
+    }
+    return catalog;
   }
 
   public registerProvider(provider: IAiProvider): void {
@@ -202,7 +299,7 @@ class ProviderRegistry {
     if (providerId === 'openrouter') return 128000;
     if (providerId === 'openai') return 128000;
     if (providerId === 'custom') return 32000;
-    return 128000;
+    return 32000;
   }
 
   public validateCustomEndpoint(url: string): { valid: boolean; error?: string } {
@@ -211,11 +308,15 @@ class ProviderRegistry {
 
   public async testProviderConnection(
     id: AiProviderId,
-    baseUrl?: string
+    baseUrl?: string,
+    modelId?: string,
+    customHeaders?: Record<string, string>,
+    consentToInference?: boolean
   ): Promise<ConnectionDiagnosticResult> {
     const provider = this.getProvider(id);
     const key = keyManager.getApiKey(id);
-    return provider.testConnection(key, baseUrl);
+    const targetModel = modelId || this.getActiveModel(id);
+    return provider.testConnection(key, baseUrl, targetModel, customHeaders, consentToInference);
   }
 }
 

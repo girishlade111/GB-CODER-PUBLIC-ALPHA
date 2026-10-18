@@ -14,13 +14,33 @@ import { IAiProvider, StreamChatOptions } from './baseProvider.ts';
 
 /**
  * Redacts API keys, credentials, and tokens from error messages and URLs.
+ * Defensive against non-string inputs (objects, arrays, errors, numbers)
+ * to completely eliminate any "TypeError: result.split is not a function".
  */
-export function redactSecretsFromText(text: string, customSecret?: string): string {
-  if (!text) return '';
-  let result = text;
-  if (customSecret && customSecret.length >= 6) {
+export function redactSecretsFromText(text: unknown, customSecret?: string): string {
+  if (text === null || text === undefined) return '';
+  let str: string;
+  if (typeof text === 'string') {
+    str = text;
+  } else if (text instanceof Error) {
+    str = text.message || String(text);
+  } else if (typeof text === 'object') {
+    try {
+      str = JSON.stringify(text);
+    } catch {
+      str = String(text);
+    }
+  } else {
+    str = String(text);
+  }
+
+  if (!str) return '';
+  let result = str;
+
+  if (typeof customSecret === 'string' && customSecret.length >= 6) {
     result = result.split(customSecret).join('[REDACTED_API_KEY]');
   }
+
   // Redact URL query parameter keys: ?key=... or &key=...
   result = result.replace(/([?&]key=)[^&\s"'`]+/gi, '$1[REDACTED_API_KEY]');
   // Redact Bearer tokens
@@ -29,6 +49,79 @@ export function redactSecretsFromText(text: string, customSecret?: string): stri
   result = result.replace(/sk-[A-Za-z0-9_-]{20,}/gi, '[REDACTED_API_KEY]');
   result = result.replace(/AIzaSy[A-Za-z0-9_-]{30,}/gi, '[REDACTED_API_KEY]');
   return result;
+}
+
+/**
+ * Normalizes user-entered base URLs, stripping trailing slashes and
+ * preventing duplicate /chat/completions suffixes.
+ */
+export function normalizeBaseUrl(rawUrl: string): string {
+  if (!rawUrl) return '';
+  let url = rawUrl.trim().replace(/\/+$/, '');
+  if (url.endsWith('/chat/completions')) {
+    url = url.slice(0, -'/chat/completions'.length);
+  }
+  return url.replace(/\/+$/, '');
+}
+
+/**
+ * Validates custom HTTP headers against injection and dangerous overrides.
+ */
+export function validateCustomHeaders(
+  headers: Record<string, string> | Array<{ name: string; value: string }>
+): {
+  valid: boolean;
+  sanitized: Record<string, string>;
+  error?: string;
+} {
+  const result: Record<string, string> = {};
+  const entries = Array.isArray(headers)
+    ? headers.map((h) => [h.name, h.value] as const)
+    : Object.entries(headers);
+
+  for (const [rawKey, rawVal] of entries) {
+    const key = (rawKey || '').trim();
+    const val = (rawVal || '').trim();
+    if (!key && !val) continue;
+    if (!key) {
+      return { valid: false, sanitized: {}, error: 'Header name cannot be empty.' };
+    }
+    // Check RFC 7230 token characters for header names: letters, digits, hyphens, underscores
+    if (!/^[A-Za-z0-9_-]+$/.test(key)) {
+      return {
+        valid: false,
+        sanitized: {},
+        error: `Invalid header name "${key}". Only alphanumeric characters, hyphens, and underscores are allowed.`,
+      };
+    }
+    // Reject newline/control character injection in name or value
+    const hasControlChar = (s: string) => {
+      for (let i = 0; i < s.length; i++) {
+        const c = s.charCodeAt(i);
+        if ((c >= 0 && c <= 31) || c === 127) return true;
+      }
+      return false;
+    };
+    if (hasControlChar(key) || hasControlChar(val)) {
+      return {
+        valid: false,
+        sanitized: {},
+        error: `Header "${key}" contains prohibited control characters or newlines.`,
+      };
+    }
+    // Disallow overriding critical browser-controlled headers
+    const lowerKey = key.toLowerCase();
+    if (['host', 'content-length', 'transfer-encoding', 'connection'].includes(lowerKey)) {
+      return {
+        valid: false,
+        sanitized: {},
+        error: `Header "${key}" cannot be overridden for browser security.`,
+      };
+    }
+    result[key] = val;
+  }
+
+  return { valid: true, sanitized: result };
 }
 
 /**
@@ -82,30 +175,56 @@ export class OpenAiCompatibleProvider implements IAiProvider {
   public readonly id: AiProviderId;
   public readonly name: string;
   public readonly defaultBaseUrl: string;
-  private readonly defaultModels: AiModelInfo[];
+  private defaultModels: AiModelInfo[];
+  private customHeaders: Record<string, string> = {};
 
   constructor(
-    id: 'openai' | 'openrouter' | 'custom',
+    id: AiProviderId,
     name: string,
     defaultBaseUrl: string,
-    defaultModels: AiModelInfo[]
+    defaultModels: AiModelInfo[],
+    customHeaders?: Record<string, string>
   ) {
     this.id = id;
     this.name = name;
     this.defaultBaseUrl = defaultBaseUrl;
     this.defaultModels = defaultModels;
+    if (customHeaders) {
+      this.customHeaders = customHeaders;
+    }
   }
 
   public getAvailableModels(): AiModelInfo[] {
     return this.defaultModels;
   }
 
-  private resolveHeaders(apiKey?: string): Record<string, string> {
+  public setModels(models: AiModelInfo[]): void {
+    this.defaultModels = models;
+  }
+
+  public setCustomHeaders(headers: Record<string, string>): void {
+    this.customHeaders = headers;
+  }
+
+  public getCustomHeaders(): Record<string, string> {
+    return { ...this.customHeaders };
+  }
+
+  private resolveHeaders(apiKey?: string, extraHeaders?: Record<string, string>): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    if (apiKey) {
+    // Apply custom headers first
+    const mergedExtra = { ...this.customHeaders, ...(extraHeaders || {}) };
+    for (const [k, v] of Object.entries(mergedExtra)) {
+      if (k && v) {
+        headers[k] = v;
+      }
+    }
+
+    // Set Authorization header if apiKey is present and not explicitly overridden
+    if (apiKey && !headers['Authorization']) {
       headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
@@ -133,10 +252,15 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       throw new Error(`Endpoint Configuration Error: ${urlValidation.error}`);
     }
 
-    const baseUrl = rawBaseUrl.replace(/\/+$/, '');
+    const baseUrl = normalizeBaseUrl(rawBaseUrl);
     const url = `${baseUrl}/chat/completions`;
 
-    if (!options.apiKey && this.id !== 'custom') {
+    const hasAuth = Boolean(
+      options.apiKey ||
+      this.customHeaders['Authorization'] ||
+      options.customHeaders?.['Authorization']
+    );
+    if (!hasAuth && this.id !== 'custom') {
       throw new Error(`API key required for ${this.name}. Configure your key in GB Assist settings.`);
     }
 
@@ -196,7 +320,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     try {
       response = await fetch(url, {
         method: 'POST',
-        headers: this.resolveHeaders(options.apiKey),
+        headers: this.resolveHeaders(options.apiKey, options.customHeaders),
         body: JSON.stringify(requestBody),
         signal: options.signal,
         redirect: 'manual',
@@ -395,7 +519,13 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     };
   }
 
-  public async testConnection(apiKey: string, baseUrl?: string): Promise<ConnectionDiagnosticResult> {
+  public async testConnection(
+    apiKey: string,
+    baseUrl?: string,
+    modelId?: string,
+    customHeaders?: Record<string, string>,
+    consentToInference?: boolean
+  ): Promise<ConnectionDiagnosticResult> {
     const start = performance.now();
     const rawBaseUrl = baseUrl || this.defaultBaseUrl;
     const urlValidation = validateEndpointUrl(rawBaseUrl);
@@ -405,18 +535,50 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         latencyMs: 0,
         message: `Endpoint Configuration Error: ${urlValidation.error}`,
         errorDetails: urlValidation.error,
+        errorCategory: 'config',
+        suggestedAction: 'Check the Base URL format. HTTPS is required for remote endpoints.',
       };
     }
 
-    const resolvedUrl = rawBaseUrl.replace(/\/+$/, '');
+    const resolvedUrl = normalizeBaseUrl(rawBaseUrl);
+
+    // Validate custom headers if provided
+    const headerValidation = validateCustomHeaders(customHeaders || this.customHeaders);
+    if (!headerValidation.valid) {
+      return {
+        success: false,
+        latencyMs: 0,
+        message: `Header Configuration Error: ${headerValidation.error}`,
+        errorDetails: headerValidation.error,
+        errorCategory: 'config',
+        suggestedAction: 'Fix or remove invalid custom headers.',
+      };
+    }
+
+    // Determine target model to test
+    const availableModels = this.getAvailableModels();
+    const targetModel = modelId || availableModels[0]?.id || 'gpt-4o-mini';
+
+    // If consentToInference is explicitly false, validate configuration only without billable probe
+    if (consentToInference === false) {
+      return {
+        success: true,
+        latencyMs: 0,
+        message: `Configuration is valid for ${this.name} (${resolvedUrl}). Test Connection probe requires explicit consent.`,
+        endpointTested: resolvedUrl,
+      };
+    }
+
     const url = `${resolvedUrl}/chat/completions`;
 
     try {
+      const mergedHeaders = this.resolveHeaders(apiKey, headerValidation.sanitized);
+
       const response = await fetch(url, {
         method: 'POST',
-        headers: this.resolveHeaders(apiKey),
+        headers: mergedHeaders,
         body: JSON.stringify({
-          model: this.defaultModels[0]?.id || 'gpt-4o-mini',
+          model: targetModel,
           messages: [{ role: 'user', content: 'ping' }],
           max_tokens: 5,
         }),
@@ -431,6 +593,10 @@ export class OpenAiCompatibleProvider implements IAiProvider {
           latencyMs,
           message: 'Connection failed: HTTP redirect rejected to prevent credential leakage.',
           errorDetails: 'Endpoint redirected to an unauthorized destination.',
+          endpointTested: url,
+          httpStatus: response.status,
+          errorCategory: 'auth',
+          suggestedAction: 'Verify that the Base URL points directly to the final API endpoint without redirects.',
         };
       }
 
@@ -438,25 +604,68 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         return {
           success: true,
           latencyMs,
-          message: `Connected successfully to ${this.name} (${latencyMs}ms).`,
+          message: `Connected successfully to ${this.name} (${latencyMs}ms, model: "${targetModel}").`,
+          endpointTested: url,
+          httpStatus: response.status,
         };
       }
 
       let errorMsg = `HTTP ${response.status} ${response.statusText}`;
       try {
         const errorJson = await response.json();
-        if (errorJson?.error?.message) {
+        if (typeof errorJson?.error?.message === 'string') {
           errorMsg = errorJson.error.message;
+        } else if (typeof errorJson?.error === 'string') {
+          errorMsg = errorJson.error;
+        } else if (typeof errorJson?.message === 'string') {
+          errorMsg = errorJson.message;
+        } else if (typeof errorJson?.detail === 'string') {
+          errorMsg = errorJson.detail;
+        } else if (errorJson?.error && typeof errorJson.error === 'object') {
+          errorMsg = JSON.stringify(errorJson.error);
+        } else if (errorJson && typeof errorJson === 'object') {
+          errorMsg = JSON.stringify(errorJson);
         }
-      } catch {}
+      } catch {
+        try {
+          const rawText = await response.text();
+          if (rawText && rawText.length < 500) {
+            errorMsg = rawText;
+          }
+        } catch {}
+      }
 
       const sanitizedError = redactSecretsFromText(errorMsg, apiKey);
+
+      let errorCategory: ConnectionDiagnosticResult['errorCategory'] = 'unknown';
+      let suggestedAction = 'Review provider configuration and credentials.';
+
+      if (response.status === 401 || response.status === 403) {
+        errorCategory = 'auth';
+        suggestedAction = 'Check that your API key is valid and has permissions for this endpoint.';
+      } else if (response.status === 404) {
+        errorCategory = 'not_found';
+        suggestedAction = `The endpoint or model "${targetModel}" was not found. Verify the model ID and Base URL.`;
+      } else if (response.status === 429) {
+        errorCategory = 'rate_limit';
+        suggestedAction = 'Provider rate limit or quota exceeded. Check your plan quota or wait before retrying.';
+      } else if (response.status === 400 || response.status === 422) {
+        errorCategory = 'config';
+        suggestedAction = `Invalid request payload or unsupported model parameters. Verify model ID "${targetModel}".`;
+      } else if (response.status >= 500) {
+        errorCategory = 'server';
+        suggestedAction = 'The remote AI provider server encountered an internal error. Try again later.';
+      }
 
       return {
         success: false,
         latencyMs,
-        message: `Connection failed: ${sanitizedError}`,
+        message: `Connection failed (${response.status}): ${sanitizedError}`,
         errorDetails: sanitizedError,
+        endpointTested: url,
+        httpStatus: response.status,
+        errorCategory,
+        suggestedAction,
       };
     } catch (err: unknown) {
       const latencyMs = Math.round(performance.now() - start);
@@ -472,6 +681,11 @@ export class OpenAiCompatibleProvider implements IAiProvider {
           : `Network error: ${msg}`,
         corsRestricted: isCors,
         errorDetails: msg,
+        endpointTested: url,
+        errorCategory: isCors ? 'cors' : 'network',
+        suggestedAction: isCors
+          ? 'Configure CORS headers on your API server (Access-Control-Allow-Origin: *), or use OpenRouter.'
+          : 'Check your internet connection and endpoint availability.',
       };
     }
   }

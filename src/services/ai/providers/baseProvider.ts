@@ -18,6 +18,7 @@ export interface StreamChatOptions {
   signal?: AbortSignal;
   tools?: import('../tools/types').AgentToolDefinition[];
   toolChoice?: 'auto' | 'none' | 'required' | string;
+  customHeaders?: Record<string, string>;
 }
 
 export interface ProviderChatMessage {
@@ -46,5 +47,11 @@ export interface IAiProvider {
     usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
   }>;
 
-  testConnection(apiKey: string, baseUrl?: string): Promise<ConnectionDiagnosticResult>;
+  testConnection(
+    apiKey: string,
+    baseUrl?: string,
+    modelId?: string,
+    customHeaders?: Record<string, string>,
+    consentToInference?: boolean
+  ): Promise<ConnectionDiagnosticResult>;
 }
