@@ -16,12 +16,16 @@ import {
   CodeAssistMessage,
   CodeAssistSession,
   CodeAssistState,
+  ProposedFileEdit,
 } from './types.ts';
 import { keyManager } from './keyManager.ts';
 import { providerRegistry } from './providerRegistry.ts';
 import { ContextBuilder, estimateTokens } from './contextBuilder.ts';
 import { EditProposalService } from './editProposalService.ts';
 import { ConversationStore } from './conversationStore.ts';
+import { ToolRegistry } from './tools/toolRegistry.ts';
+import { ToolExecutor } from './tools/toolExecutor.ts';
+import { ToolCallRecord } from './tools/types.ts';
 
 class AssistAgentService {
   private state: CodeAssistState;
