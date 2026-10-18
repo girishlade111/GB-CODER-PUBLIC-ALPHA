@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-10-14T21:32:18.897Z",
+  "results": [
+    {
+      "testId": "WC-RB-001",
+      "name": "React Project A Startup & Live Preview",
+      "status": "PASS",
+      "details": {
+        "previewUrl": "https://q4januj0s2y4swimlsootemmpojkcb-uebq--5173--2ed8f36d.local-corp.webcontainer-api.io",
+        "renderedText": "WC-PROJECT-A"
+      },
+      "timestamp": "2026-10-14T21:30:28.339Z"
+    },
+    {
+      "testId": "WC-RB-002",
+      "name": "Project A -> Dashboard Navigation & Disassociation",
+      "status": "PASS",
+      "details": {
+        "activeProjectCleared": true,
+        "previewUnmounted": true,
+        "dashboardUrl": "http://127.0.0.1:42981/app/projects"
+      },
+      "timestamp": "2026-10-14T21:30:29.977Z"
+    },
+    {
+      "testId": "WC-RB-003",
+      "name": "Dashboard -> Project B Isolation & Rendering",
+      "status": "PASS",
+      "details": {
+        "previewUrl": "https://q4januj0s2y4swimlsootemmpojkcb-uebq--5173--2ed8f36d.local-corp.webcontainer-api.io",
+        "renderedText": "WC-PROJECT-B",
+        "crossContaminationAbsent": true
+      },
+      "timestamp": "2026-10-14T21:30:45.296Z"
+    },
+    {
+      "testId": "WC-RB-004",
+      "name": "Rapid Project Switching Loop (A -> B -> A)",
+      "status": "PASS",
+      "details": {
+        "switchTextA": "WC-PROJECT-A",
+        "switchTextB": "WC-PROJECT-B",
+        "zeroPortCollision": true
+      },
+      "timestamp": "2026-10-14T21:31:45.225Z"
+    },
+    {
+      "testId": "WC-RB-007",
+      "name": "Empty Project Transition",
+      "status": "FAIL",
+      "details": {
+        "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"project-dashboard\"]') to be visible\u001b[22m\n"
+      },
+      "timestamp": "2026-10-14T21:32:15.890Z"
+    }
+  ],
+  "passed": 4,
+  "failed": 1,
+  "logs": [
+    "[2026-10-14T21:29:25.044Z] ================================================================",
+    "[2026-10-14T21:29:25.045Z] GB CODER — PHASE 2.2 STAGE B.1 REAL-BROWSER VERIFICATION HARNESS",
+    "[2026-10-14T21:29:25.045Z] ================================================================",
+    "[2026-10-14T21:29:25.056Z] Starting preview server on port 42981",
+    "[2026-10-14T21:29:26.096Z] \n--- GROUP 1: WC-001 Project-Scoped Dev Server Lifecycle ---",
+    "[2026-10-14T21:30:28.339Z] [PASS] WC-RB-001: React Project A Startup & Live Preview",
+    "[2026-10-14T21:30:29.977Z] [PASS] WC-RB-002: Project A -> Dashboard Navigation & Disassociation",
+    "[2026-10-14T21:30:45.296Z] [PASS] WC-RB-003: Dashboard -> Project B Isolation & Rendering",
+    "[2026-10-14T21:30:45.296Z] Testing rapid project switching A -> B -> A...",
+    "[2026-10-14T21:31:45.227Z] [PASS] WC-RB-004: Rapid Project Switching Loop (A -> B -> A)",
+    "[2026-10-14T21:32:15.892Z] [FAIL] WC-RB-007: Empty Project Transition",
+    "[2026-10-14T21:32:16.116Z] FATAL ERROR IN HARNESS: locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"project-dashboard\"]') to be visible\u001b[22m\n",
+    "[2026-10-14T21:32:18.897Z] \n================================================================",
+    "[2026-10-14T21:32:18.897Z] SUMMARY: 5 Scenarios Executed | 4 PASSED | 1 FAILED",
+    "[2026-10-14T21:32:18.897Z] ================================================================"
+  ]
+}

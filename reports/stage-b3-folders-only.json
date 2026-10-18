@@ -1,0 +1,14 @@
+[
+  {
+    "name": "actual App file creation reaches IndexedDB",
+    "status": "PASS"
+  },
+  {
+    "name": "folder creation persists its automatic .gitkeep record",
+    "status": "PASS"
+  },
+  {
+    "name": "folder delete removes descendant tree and IndexedDB records",
+    "status": "PASS"
+  }
+]

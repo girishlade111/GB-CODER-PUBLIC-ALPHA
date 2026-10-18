@@ -64,7 +64,7 @@ export class GeminiProvider implements IAiProvider {
     messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
     options: StreamChatOptions,
     onChunk: (chunk: ChatCompletionChunk) => void
-  ): Promise<{ fullContent: string; reasoning?: string }> {
+  ): Promise<{ fullContent: string; reasoning?: string; toolCalls?: import('../tools/types').ToolCallRecord[] }> {
     if (!options.apiKey) {
       throw new Error('API key required for Google Gemini. Please enter your Gemini API key in settings.');
     }

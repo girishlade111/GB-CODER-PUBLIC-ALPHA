@@ -1,0 +1,32 @@
+{
+  "head": "546e74c084387d007b0312b9fbd69a9f6a6b55f1",
+  "sourceHashes": [
+    {
+      "path": "src/services/webcontainer/webcontainerService.ts",
+      "sha256": "68a43f07d35717fe039aee61437983bf2c6ac67cbf45d8ff4b3b641d40b2cb7b"
+    },
+    {
+      "path": "src/services/webcontainer/startupDiagnostics.ts",
+      "sha256": "8da90c307167598c6e2da5a508dce73fc2e4a8289fc73751b189f5f206d4a967"
+    },
+    {
+      "path": "src/services/webcontainer/startupOutput.ts",
+      "sha256": "ce88e369ba1823a64adfa0a090047d5f76535e7ac6f6ef64c269567c0a04033a"
+    },
+    {
+      "path": "src/components/Console/TerminalTab.tsx",
+      "sha256": "fa75d18483a1a322ac69ab6624b8e98be8c5f3a9affaa62175aeaf3fed678bb4"
+    },
+    {
+      "path": "src/components/vscode/StackBlitzStartupLoader.tsx",
+      "sha256": "c0e5b3dd35226945335855922872d0379475e697c009c94d36b88360d4ee51ca"
+    },
+    {
+      "path": "src/components/vscode/VSCodeMode.tsx",
+      "sha256": "2be0d924aa4f31e4b3da0f4cdf760a4053181183bb824fd804bb0fc2e8ee7adc"
+    }
+  ],
+  "manifestSha256": "533ed39ff395a42c218ac02fe598961b1e87e57f32e3e478d494551c69f0cc0d",
+  "priorReportSha256": "cd4ffc957c766e1464f573e3a806843493314358aeb0e5084c3f2a2f86306a53",
+  "sourceSnapshot": "scripts/.tmp-b4-2a-service-before.ts"
+}

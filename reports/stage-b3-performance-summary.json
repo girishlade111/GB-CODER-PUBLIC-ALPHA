@@ -1,0 +1,60 @@
+{
+  "observationalSamplingMs": 50,
+  "firstEvents": {
+    "application_dom_loaded": {
+      "stage": "application_dom_loaded",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app",
+      "at": 1792018552809,
+      "navigationMs": 528.6850000023842
+    },
+    "boot_promise_observed": {
+      "stage": "boot_promise_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018553557,
+      "navigationMs": 702.2199999988079
+    },
+    "boot_promise_resolved": {
+      "stage": "boot_promise_resolved",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018557246,
+      "navigationMs": 4391.784999996424,
+      "durationMs": 3689.545000001788
+    },
+    "runtime_instance_available": {
+      "stage": "runtime_instance_available",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018557283,
+      "navigationMs": 4428.865000009537
+    },
+    "npm_install_text_observed": {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018560889,
+      "navigationMs": 8034.600000008941
+    },
+    "npm_completion_text_observed": {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018589937,
+      "navigationMs": 37082.609999999404,
+      "text": "added 61 packages in 28s"
+    },
+    "vite_ready_text_observed": {
+      "stage": "vite_ready_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594765,
+      "navigationMs": 41910.74500000477,
+      "reportedMs": 2745
+    }
+  },
+  "npmObservedIntervalMs": 29048,
+  "npmReportedCompletion": "added 61 packages in 28s",
+  "readiness": [
+    {
+      "phase": "React initial startup",
+      "readinessMs": 45406,
+      "terminal": "  VITE v5.4.21  ready in 2745 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n "
+    }
+  ],
+  "limitation": "DOM polling repeats npm completion observations while terminal text remains visible; only the first start/completion pair represents this installation. Boot promise duration starts at first 50ms observation, not a patched boot call."
+}

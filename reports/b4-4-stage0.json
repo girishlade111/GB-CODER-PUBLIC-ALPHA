@@ -1,0 +1,170 @@
+{
+  "results": [
+    {
+      "name": "binary bytes and internal .bin links inventoried",
+      "status": "PASS"
+    },
+    {
+      "name": "key ordering stable",
+      "status": "PASS"
+    },
+    {
+      "name": "key invalidates project",
+      "status": "PASS"
+    },
+    {
+      "name": "key invalidates incarnation",
+      "status": "PASS"
+    },
+    {
+      "name": "key invalidates manifestSha",
+      "status": "PASS"
+    },
+    {
+      "name": "key invalidates lockSha",
+      "status": "PASS"
+    },
+    {
+      "name": "key invalidates configSha",
+      "status": "PASS"
+    },
+    {
+      "name": "key invalidates flags",
+      "status": "PASS"
+    },
+    {
+      "name": "key invalidates runtime",
+      "status": "PASS"
+    },
+    {
+      "name": "key invalidates api",
+      "status": "PASS"
+    },
+    {
+      "name": "key invalidates policy",
+      "status": "PASS"
+    },
+    {
+      "name": "complete lockfile tail digest",
+      "status": "PASS"
+    },
+    {
+      "name": "reject unsafe entry ../escape",
+      "status": "PASS"
+    },
+    {
+      "name": "reject unsafe entry /absolute",
+      "status": "PASS"
+    },
+    {
+      "name": "reject unsafe entry bad\\path",
+      "status": "PASS"
+    },
+    {
+      "name": "reject unsafe entry __proto__",
+      "status": "PASS"
+    },
+    {
+      "name": "reject unsafe entry constructor",
+      "status": "PASS"
+    },
+    {
+      "name": "reject unsafe entry prototype",
+      "status": "PASS"
+    },
+    {
+      "name": "reject unsafe entry C:drive",
+      "status": "PASS"
+    },
+    {
+      "name": "reject escaping link",
+      "status": "PASS"
+    },
+    {
+      "name": "reject link cycle",
+      "status": "PASS"
+    },
+    {
+      "name": "reject dangling link",
+      "status": "PASS"
+    },
+    {
+      "name": "reject custom prototype",
+      "status": "PASS"
+    },
+    {
+      "name": "reject inherited file content",
+      "status": "PASS"
+    },
+    {
+      "name": "reject accessors without executing them",
+      "status": "PASS"
+    },
+    {
+      "name": "reject corrupt file representation",
+      "status": "PASS"
+    },
+    {
+      "name": "entry and depth bounds",
+      "status": "PASS"
+    },
+    {
+      "name": "payload byte admission bound",
+      "status": "PASS"
+    },
+    {
+      "name": "mutation changes digest; clone does not share binary bytes",
+      "status": "PASS"
+    },
+    {
+      "name": "same project fresh generation may reuse artifact",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong project, incarnation, digest rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "expired and quarantined records rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "retired capture never publishes",
+      "status": "PASS"
+    },
+    {
+      "name": "instance and epoch changes reject late capture",
+      "status": "PASS"
+    },
+    {
+      "name": "missing artifact is not installed proof",
+      "status": "PASS"
+    },
+    {
+      "name": "missing/stale artifacts select reference before restore",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong owner or quarantined artifact fails closed",
+      "status": "PASS"
+    },
+    {
+      "name": "corrupted artifact rejected before mount",
+      "status": "PASS"
+    },
+    {
+      "name": "two-artifact LRU and quarantine",
+      "status": "PASS"
+    },
+    {
+      "name": "timeout ignores late success without publication",
+      "status": "PASS"
+    },
+    {
+      "name": "timeout consumes late rejection",
+      "status": "PASS"
+    }
+  ],
+  "passed": 41,
+  "failed": 0
+}

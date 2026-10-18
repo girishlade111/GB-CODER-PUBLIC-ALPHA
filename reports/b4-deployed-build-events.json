@@ -1,0 +1,4206 @@
+[
+  {
+    "created": 1792059009951,
+    "date": 1792059009951,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059009951855346869800000",
+    "text": "Running build in Washington, D.C., USA (East) – iad1",
+    "type": "stdout",
+    "serial": "1792059009951855346869800000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059009952,
+    "date": 1792059009952,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059009952855346869800000",
+    "text": "Build machine configuration: 2 cores, 8 GB",
+    "type": "stdout",
+    "serial": "1792059009952855346869800000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059010188,
+    "date": 1792059010188,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059010188855346869800000",
+    "text": "Cloning github.com/girishlade111/GB-CODER-PUBLIC-ALPHA (Branch: phase-2.2-webcontainer-reliability, Commit: 30804ea)",
+    "type": "stdout",
+    "serial": "1792059010188855346869800000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059011157,
+    "date": 1792059011157,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059011157855346869800000",
+    "text": "Cloning completed: 969.000ms",
+    "type": "stdout",
+    "serial": "1792059011157855346869800000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059011369,
+    "date": 1792059011369,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059011369855346869800000",
+    "text": "Restored build cache from previous deployment (6FDZFqyKFYgzsW4sZ9FtKXNaShbK)",
+    "type": "stdout",
+    "serial": "1792059011369855346869800000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059011788,
+    "date": 1792059011788,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059011788372577200700000",
+    "text": "Running \"vercel build\"",
+    "type": "stdout",
+    "serial": "1792059011788372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059011802,
+    "date": 1792059011802,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059011802372577200700000",
+    "text": "Vercel CLI 62.7.0",
+    "type": "stderr",
+    "serial": "1792059011802372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059012608,
+    "date": 1792059012608,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059012608372577200700000",
+    "text": "Installing dependencies...",
+    "type": "stdout",
+    "serial": "1792059012608372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059013137,
+    "date": 1792059013137,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059013137372577200700000",
+    "text": "npm warn Unknown env config \"cache-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+    "type": "stderr",
+    "serial": "1792059013137372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015187,
+    "date": 1792059015187,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015187372577200700000",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059015187372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015188,
+    "date": 1792059015188,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015188372577200700000",
+    "text": "up to date in 2s",
+    "type": "stdout",
+    "serial": "1792059015188372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015188,
+    "date": 1792059015188,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015188372577200700001",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059015188372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015189,
+    "date": 1792059015189,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015189372577200700000",
+    "text": "325 packages are looking for funding",
+    "type": "stdout",
+    "serial": "1792059015189372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015189,
+    "date": 1792059015189,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015189372577200700001",
+    "text": "  run `npm fund` for details",
+    "type": "stdout",
+    "serial": "1792059015189372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015190,
+    "date": 1792059015190,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015190372577200700000",
+    "text": "npm warn install-scripts 6 packages have install scripts not yet covered by allowScripts:",
+    "type": "stderr",
+    "serial": "1792059015190372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015191,
+    "date": 1792059015191,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015191372577200700000",
+    "text": "npm warn install-scripts   esbuild@0.28.2 (postinstall: node install.js)",
+    "type": "stderr",
+    "serial": "1792059015191372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015191,
+    "date": 1792059015191,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015191372577200700001",
+    "text": "npm warn install-scripts   esbuild@0.27.7 (postinstall: node install.js)",
+    "type": "stderr",
+    "serial": "1792059015191372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015191,
+    "date": 1792059015191,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015191372577200700002",
+    "text": "npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)",
+    "type": "stderr",
+    "serial": "1792059015191372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015191,
+    "date": 1792059015191,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015191372577200700003",
+    "text": "npm warn install-scripts   esbuild@0.21.5 (postinstall: node install.js)",
+    "type": "stderr",
+    "serial": "1792059015191372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015192,
+    "date": 1792059015192,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015192372577200700000",
+    "text": "npm warn install-scripts   protobufjs@7.6.5 (postinstall: node scripts/postinstall)",
+    "type": "stderr",
+    "serial": "1792059015192372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015193,
+    "date": 1792059015193,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015193372577200700000",
+    "text": "npm warn install-scripts   sharp@0.34.5 (install: node install/check.js || npm run build)",
+    "type": "stderr",
+    "serial": "1792059015193372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015193,
+    "date": 1792059015193,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015193372577200700001",
+    "text": "npm warn install-scripts",
+    "type": "stderr",
+    "serial": "1792059015193372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015193,
+    "date": 1792059015193,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015193372577200700002",
+    "text": "npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.",
+    "type": "stderr",
+    "serial": "1792059015193372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015378,
+    "date": 1792059015378,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015378372577200700000",
+    "text": "npm warn Unknown env config \"cache-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+    "type": "stderr",
+    "serial": "1792059015378372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015406,
+    "date": 1792059015406,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015406372577200700000",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059015406372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015406,
+    "date": 1792059015406,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015406372577200700001",
+    "text": "> gb-coder@0.0.0 build",
+    "type": "stdout",
+    "serial": "1792059015406372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015406,
+    "date": 1792059015406,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015406372577200700002",
+    "text": "> node scripts/build-unified.mjs",
+    "type": "stdout",
+    "serial": "1792059015406372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015406,
+    "date": 1792059015406,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015406372577200700003",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059015406372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015463,
+    "date": 1792059015463,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015463372577200700000",
+    "text": "======================================================================",
+    "type": "stdout",
+    "serial": "1792059015463372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015463,
+    "date": 1792059015463,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015463372577200700001",
+    "text": "GB CODER — PHASE 1 UNIFIED BUILD ORCHESTRATION",
+    "type": "stdout",
+    "serial": "1792059015463372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015463,
+    "date": 1792059015463,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015463372577200700002",
+    "text": "======================================================================",
+    "type": "stdout",
+    "serial": "1792059015463372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015463,
+    "date": 1792059015463,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015463372577200700003",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059015463372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015463,
+    "date": 1792059015463,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015463372577200700004",
+    "text": "[1/6] Cleaning staging and output directories...",
+    "type": "stdout",
+    "serial": "1792059015463372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015464,
+    "date": 1792059015464,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015464372577200700000",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059015464372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015464,
+    "date": 1792059015464,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015464372577200700001",
+    "text": "[2/6] Building Astro marketing site (apps/marketing)...",
+    "type": "stdout",
+    "serial": "1792059015464372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015610,
+    "date": 1792059015610,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015610372577200700000",
+    "text": "npm warn Unknown env config \"cache-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+    "type": "stderr",
+    "serial": "1792059015610372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059015638,
+    "date": 1792059015638,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015638372577200700000",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059015638372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015638,
+    "date": 1792059015638,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015638372577200700001",
+    "text": "> gb-coder-marketing@0.0.1 build",
+    "type": "stdout",
+    "serial": "1792059015638372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015638,
+    "date": 1792059015638,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015638372577200700002",
+    "text": "> astro build",
+    "type": "stdout",
+    "serial": "1792059015638372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059015638,
+    "date": 1792059015638,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059015638372577200700003",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059015638372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059017148,
+    "date": 1792059017148,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059017148372577200700000",
+    "text": "\u001b[2m10:10:17\u001b[22m \u001b[34m[content]\u001b[39m Syncing content",
+    "type": "stdout",
+    "serial": "1792059017148372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059017152,
+    "date": 1792059017152,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059017152372577200700000",
+    "text": "\u001b[2m10:10:17\u001b[22m \u001b[34m[content]\u001b[39m Synced content",
+    "type": "stdout",
+    "serial": "1792059017152372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059017153,
+    "date": 1792059017153,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059017153372577200700000",
+    "text": "\u001b[2m10:10:17\u001b[22m \u001b[34m[types]\u001b[39m Generated \u001b[2m45ms\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059017153372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059017153,
+    "date": 1792059017153,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059017153372577200700001",
+    "text": "\u001b[2m10:10:17\u001b[22m \u001b[34m[build]\u001b[39m output: \u001b[34m\"static\"\u001b[39m",
+    "type": "stdout",
+    "serial": "1792059017153372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059017153,
+    "date": 1792059017153,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059017153372577200700002",
+    "text": "\u001b[2m10:10:17\u001b[22m \u001b[34m[build]\u001b[39m mode: \u001b[34m\"static\"\u001b[39m",
+    "type": "stdout",
+    "serial": "1792059017153372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059017153,
+    "date": 1792059017153,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059017153372577200700003",
+    "text": "\u001b[2m10:10:17\u001b[22m \u001b[34m[build]\u001b[39m directory: \u001b[34m/vercel/path0/apps/marketing/dist/\u001b[39m",
+    "type": "stdout",
+    "serial": "1792059017153372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059017154,
+    "date": 1792059017154,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059017154372577200700000",
+    "text": "\u001b[2m10:10:17\u001b[22m \u001b[34m[build]\u001b[39m Collecting build info...",
+    "type": "stdout",
+    "serial": "1792059017154372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059017154,
+    "date": 1792059017154,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059017154372577200700001",
+    "text": "\u001b[2m10:10:17\u001b[22m \u001b[34m[build]\u001b[39m \u001b[32m✓ Completed in 63ms.\u001b[39m",
+    "type": "stdout",
+    "serial": "1792059017154372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059017155,
+    "date": 1792059017155,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059017155372577200700000",
+    "text": "\u001b[2m10:10:17\u001b[22m \u001b[34m[build]\u001b[39m Building static entrypoints...",
+    "type": "stdout",
+    "serial": "1792059017155372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059018038,
+    "date": 1792059018038,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059018038372577200700000",
+    "text": "[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+    "type": "stderr",
+    "serial": "1792059018038372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059018271,
+    "date": 1792059018271,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059018271372577200700000",
+    "text": "Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:",
+    "type": "stderr",
+    "serial": "1792059018271372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059018271,
+    "date": 1792059018271,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059018271372577200700001",
+    "text": "  npx update-browserslist-db@latest",
+    "type": "stderr",
+    "serial": "1792059018271372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059018271,
+    "date": 1792059018271,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059018271372577200700002",
+    "text": "  Why you should do it regularly: https://github.com/browserslist/update-db#readme",
+    "type": "stderr",
+    "serial": "1792059018271372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059018335,
+    "date": 1792059018335,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059018335372577200700000",
+    "text": "",
+    "type": "stderr",
+    "serial": "1792059018335372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059018335,
+    "date": 1792059018335,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059018335372577200700001",
+    "text": "\u001b[1m\u001b[33mwarn\u001b[39m\u001b[22m - The `content` option in your Tailwind CSS configuration is missing or empty.",
+    "type": "stderr",
+    "serial": "1792059018335372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059018335,
+    "date": 1792059018335,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059018335372577200700002",
+    "text": "\u001b[1m\u001b[33mwarn\u001b[39m\u001b[22m - Configure your content sources or your generated CSS will be missing styles.",
+    "type": "stderr",
+    "serial": "1792059018335372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059018336,
+    "date": 1792059018336,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059018336372577200700000",
+    "text": "\u001b[1m\u001b[33mwarn\u001b[39m\u001b[22m - https://tailwindcss.com/docs/content-configuration",
+    "type": "stderr",
+    "serial": "1792059018336372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059019155,
+    "date": 1792059019155,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019155372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m \u001b[34m[vite]\u001b[39m \u001b[32m✓ built in 1.96s\u001b[39m",
+    "type": "stdout",
+    "serial": "1792059019155372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019155,
+    "date": 1792059019155,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019155372577200700001",
+    "text": "\u001b[2m10:10:19\u001b[22m \u001b[34m[build]\u001b[39m \u001b[32m✓ Completed in 2.00s.\u001b[39m",
+    "type": "stdout",
+    "serial": "1792059019155372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019165,
+    "date": 1792059019165,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019165372577200700000",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059019165372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019165,
+    "date": 1792059019165,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019165372577200700001",
+    "text": "\u001b[42m\u001b[30m generating static routes \u001b[39m\u001b[49m",
+    "type": "stdout",
+    "serial": "1792059019165372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019172,
+    "date": 1792059019172,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019172372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m \u001b[32m▶\u001b[39m src/pages/404.astro",
+    "type": "stdout",
+    "serial": "1792059019172372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019180,
+    "date": 1792059019180,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019180372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m   \u001b[34m└─\u001b[39m \u001b[2m/404.html\u001b[22m \u001b[2m(+8ms)\u001b[22m ",
+    "type": "stdout",
+    "serial": "1792059019180372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019183,
+    "date": 1792059019183,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019183372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m \u001b[32m▶\u001b[39m src/pages/about.astro",
+    "type": "stdout",
+    "serial": "1792059019183372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019187,
+    "date": 1792059019187,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019187372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m   \u001b[34m└─\u001b[39m \u001b[2m/about/index.html\u001b[22m \u001b[2m(+4ms)\u001b[22m ",
+    "type": "stdout",
+    "serial": "1792059019187372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019190,
+    "date": 1792059019190,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019190372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m \u001b[32m▶\u001b[39m src/pages/contact.astro",
+    "type": "stdout",
+    "serial": "1792059019190372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019191,
+    "date": 1792059019191,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019191372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m   \u001b[34m└─\u001b[39m \u001b[2m/contact/index.html\u001b[22m \u001b[2m(+3ms)\u001b[22m ",
+    "type": "stdout",
+    "serial": "1792059019191372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019194,
+    "date": 1792059019194,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019194372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m \u001b[32m▶\u001b[39m src/pages/index.astro",
+    "type": "stdout",
+    "serial": "1792059019194372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019196,
+    "date": 1792059019196,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019196372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m   \u001b[34m└─\u001b[39m \u001b[2m/index.html\u001b[22m \u001b[2m(+3ms)\u001b[22m ",
+    "type": "stdout",
+    "serial": "1792059019196372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019197,
+    "date": 1792059019197,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019197372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m \u001b[32m▶\u001b[39m src/pages/privacy-policy.astro",
+    "type": "stdout",
+    "serial": "1792059019197372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019199,
+    "date": 1792059019199,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019199372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m   \u001b[34m└─\u001b[39m \u001b[2m/privacy-policy/index.html\u001b[22m \u001b[2m(+2ms)\u001b[22m ",
+    "type": "stdout",
+    "serial": "1792059019199372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019201,
+    "date": 1792059019201,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019201372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m \u001b[32m▶\u001b[39m src/pages/terms-and-conditions.astro",
+    "type": "stdout",
+    "serial": "1792059019201372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019202,
+    "date": 1792059019202,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019202372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m   \u001b[34m└─\u001b[39m \u001b[2m/terms-and-conditions/index.html\u001b[22m \u001b[2m(+2ms)\u001b[22m ",
+    "type": "stdout",
+    "serial": "1792059019202372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019203,
+    "date": 1792059019203,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019203372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m \u001b[32m✓ Completed in 39ms.",
+    "type": "stdout",
+    "serial": "1792059019203372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019203,
+    "date": 1792059019203,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019203372577200700001",
+    "text": "\u001b[39m",
+    "type": "stdout",
+    "serial": "1792059019203372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019206,
+    "date": 1792059019206,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019206372577200700000",
+    "text": "\u001b[2m10:10:19\u001b[22m \u001b[34m[build]\u001b[39m 6 page(s) built in \u001b[1m2.12s\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059019206372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019206,
+    "date": 1792059019206,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019206372577200700001",
+    "text": "\u001b[2m10:10:19\u001b[22m \u001b[34m[build]\u001b[39m \u001b[1mComplete!\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059019206372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019244,
+    "date": 1792059019244,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019244372577200700000",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059019244372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019245,
+    "date": 1792059019245,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019245372577200700000",
+    "text": "[3/6] Building Vite React IDE (base: /app/)...",
+    "type": "stdout",
+    "serial": "1792059019245372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059019640,
+    "date": 1792059019640,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019640372577200700000",
+    "text": "npm warn Unknown env config \"cache-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+    "type": "stderr",
+    "serial": "1792059019640372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059019984,
+    "date": 1792059019984,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059019984372577200700000",
+    "text": "\u001b[36mvite v5.4.8 \u001b[32mbuilding for production...\u001b[36m\u001b[39m",
+    "type": "stdout",
+    "serial": "1792059019984372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059020048,
+    "date": 1792059020048,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059020048372577200700000",
+    "text": "transforming...",
+    "type": "stdout",
+    "serial": "1792059020048372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059020227,
+    "date": 1792059020227,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059020227372577200700000",
+    "text": "[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+    "type": "stderr",
+    "serial": "1792059020227372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059020326,
+    "date": 1792059020326,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059020326372577200700000",
+    "text": "Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:",
+    "type": "stderr",
+    "serial": "1792059020326372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059020326,
+    "date": 1792059020326,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059020326372577200700001",
+    "text": "  npx update-browserslist-db@latest",
+    "type": "stderr",
+    "serial": "1792059020326372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059020327,
+    "date": 1792059020327,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059020327372577200700000",
+    "text": "  Why you should do it regularly: https://github.com/browserslist/update-db#readme",
+    "type": "stderr",
+    "serial": "1792059020327372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059074753,
+    "date": 1792059074753,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059074753372577200700000",
+    "text": "\u001b[32m✓\u001b[39m 2841 modules transformed.",
+    "type": "stdout",
+    "serial": "1792059074753372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059074879,
+    "date": 1792059074879,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059074879372577200700000",
+    "text": "Circular chunk: diff-tools -> react-core -> diff-tools. Please adjust the manual chunk logic for these chunks.",
+    "type": "stderr",
+    "serial": "1792059074879372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059077163,
+    "date": 1792059077163,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059077163372577200700000",
+    "text": "rendering chunks...",
+    "type": "stdout",
+    "serial": "1792059077163372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059083301,
+    "date": 1792059083301,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059083301372577200700000",
+    "text": "computing gzip size...",
+    "type": "stdout",
+    "serial": "1792059083301372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084541,
+    "date": 1792059084541,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084541372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[32mregisterSW.js                               \u001b[39m\u001b[1m\u001b[2m     0.14 kB\u001b[22m\u001b[1m\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084541372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084541,
+    "date": 1792059084541,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084541372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[32mmanifest.webmanifest                        \u001b[39m\u001b[1m\u001b[2m     0.32 kB\u001b[22m\u001b[1m\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084541372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084542,
+    "date": 1792059084542,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084542372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[32mindex.html                                  \u001b[39m\u001b[1m\u001b[2m     4.97 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.95 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084542372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084542,
+    "date": 1792059084542,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084542372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32mfavicon-CZsOJf9v.ico                 \u001b[39m\u001b[1m\u001b[2m    15.41 kB\u001b[22m\u001b[1m\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084542372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084542,
+    "date": 1792059084542,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084542372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32mcodicon-DCmgc-ay.ttf                 \u001b[39m\u001b[1m\u001b[2m    80.34 kB\u001b[22m\u001b[1m\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084542372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084552,
+    "date": 1792059084552,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084552372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32meditor.worker-CSVMSH1C.js            \u001b[39m\u001b[1m\u001b[2m   229.85 kB\u001b[22m\u001b[1m\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084552372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084553,
+    "date": 1792059084553,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084553372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32mjson.worker-B2zfHee4.js              \u001b[39m\u001b[1m\u001b[2m   361.10 kB\u001b[22m\u001b[1m\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084553372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084553,
+    "date": 1792059084553,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084553372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32mhtml.worker-DBrQM3vp.js              \u001b[39m\u001b[1m\u001b[2m   666.93 kB\u001b[22m\u001b[1m\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084553372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084553,
+    "date": 1792059084553,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084553372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32mcss.worker-_FarIx0Q.js               \u001b[39m\u001b[1m\u001b[2m 1,008.23 kB\u001b[22m\u001b[1m\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084553372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084553,
+    "date": 1792059084553,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084553372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32mts.worker-Df1lW6KJ.js                \u001b[39m\u001b[1m\u001b[2m 6,011.74 kB\u001b[22m\u001b[1m\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084553372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084553,
+    "date": 1792059084553,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084553372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32mesbuild-CIppzZMW.wasm                \u001b[39m\u001b[1m\u001b[2m12,216.55 kB\u001b[22m\u001b[1m\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084553372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084553,
+    "date": 1792059084553,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084553372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[35mterminal-Cd7-BiPz.css                \u001b[39m\u001b[1m\u001b[2m     2.73 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.75 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084553372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084553,
+    "date": 1792059084553,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084553372577200700006",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[35mindex-CUWFNwLG.css                   \u001b[39m\u001b[1m\u001b[2m   103.48 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:    17.95 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084553372577200700006",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084554,
+    "date": 1792059084554,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084554372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[35meditor-DyBcksZr.css                  \u001b[39m\u001b[1m\u001b[2m   130.92 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:    21.05 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084554372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084554,
+    "date": 1792059084554,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084554372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mesbuild-CU5JIUUy.js                  \u001b[39m\u001b[1m\u001b[2m     0.07 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.09 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084554372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084554,
+    "date": 1792059084554,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084554372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mazcli-1IWB1ccx.js                    \u001b[39m\u001b[1m\u001b[2m     0.71 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.28 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084554372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084554,
+    "date": 1792059084554,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084554372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mjavascript-HlVPxgaa.js               \u001b[39m\u001b[1m\u001b[2m     0.94 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.51 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084554372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084560,
+    "date": 1792059084560,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084560372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mini-BvajGCUy.js                      \u001b[39m\u001b[1m\u001b[2m     0.96 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.49 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084560372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084561,
+    "date": 1792059084561,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084561372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcsp-C46ZqvIl.js                      \u001b[39m\u001b[1m\u001b[2m     1.28 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.49 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084561372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084561,
+    "date": 1792059084561,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084561372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpla-CjnFlu4u.js                      \u001b[39m\u001b[1m\u001b[2m     1.54 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.60 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084561372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084561,
+    "date": 1792059084561,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084561372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mscheme-Dhb-2j9p.js                   \u001b[39m\u001b[1m\u001b[2m     1.63 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.78 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084561372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084561,
+    "date": 1792059084561,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084561372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mflow9-Cac8vKd7.js                    \u001b[39m\u001b[1m\u001b[2m     1.67 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.81 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084561372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084561,
+    "date": 1792059084561,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084561372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36msb-BYAiYHFx.js                       \u001b[39m\u001b[1m\u001b[2m     1.69 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.78 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084561372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084561,
+    "date": 1792059084561,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084561372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mbat-DPkNLes8.js                      \u001b[39m\u001b[1m\u001b[2m     1.71 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.83 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084561372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084561,
+    "date": 1792059084561,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084561372577200700006",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mdockerfile-DLk6rpji.js               \u001b[39m\u001b[1m\u001b[2m     1.73 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.63 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084561372577200700006",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084562,
+    "date": 1792059084562,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084562372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcredentialStore-V9RoS9ZJ.js          \u001b[39m\u001b[1m\u001b[2m     1.80 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.82 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084562372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084562,
+    "date": 1792059084562,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084562372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpascaligo-5jv8CcQD.js                \u001b[39m\u001b[1m\u001b[2m     1.86 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.87 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084562372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084562,
+    "date": 1792059084562,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084562372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mlua-D28Ae8-K.js                      \u001b[39m\u001b[1m\u001b[2m     1.98 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.89 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084562372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084562,
+    "date": 1792059084562,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084562372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcameligo-CGrWLZr3.js                 \u001b[39m\u001b[1m\u001b[2m     2.05 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.92 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084562372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084564,
+    "date": 1792059084564,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084564372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mgraphql-LQdxqEYJ.js                  \u001b[39m\u001b[1m\u001b[2m     2.12 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.99 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084564372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084564,
+    "date": 1792059084564,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084564372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mobjective-c-B1aVtJYH.js              \u001b[39m\u001b[1m\u001b[2m     2.26 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.02 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084564372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084564,
+    "date": 1792059084564,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084564372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mlexon-Canl7DCW.js                    \u001b[39m\u001b[1m\u001b[2m     2.30 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.88 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084564372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084565,
+    "date": 1792059084565,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084565372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mbicep-Corcdgou.js                    \u001b[39m\u001b[1m\u001b[2m     2.40 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     0.93 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084565372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084565,
+    "date": 1792059084565,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084565372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36msparql-KEyrF7De.js                   \u001b[39m\u001b[1m\u001b[2m     2.41 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.12 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084565372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084565,
+    "date": 1792059084565,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084565372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mxml-CPiFs-mR.js                      \u001b[39m\u001b[1m\u001b[2m     2.42 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.01 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084565372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084565,
+    "date": 1792059084565,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084565372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mmips-CdjsipkG.js                     \u001b[39m\u001b[1m\u001b[2m     2.44 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.03 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084565372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084565,
+    "date": 1792059084565,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084565372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mgo-O9LJTZXk.js                       \u001b[39m\u001b[1m\u001b[2m     2.52 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.11 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084565372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084565,
+    "date": 1792059084565,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084565372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36msophia-RYC1BQQz.js                   \u001b[39m\u001b[1m\u001b[2m     2.62 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.17 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084565372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084565,
+    "date": 1792059084565,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084565372577200700006",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mtypespec-CzxlYoT_.js                 \u001b[39m\u001b[1m\u001b[2m     2.66 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.05 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084565372577200700006",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084565,
+    "date": 1792059084565,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084565372577200700007",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mm3-DPitgjJI.js                       \u001b[39m\u001b[1m\u001b[2m     2.68 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.28 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084565372577200700007",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084565,
+    "date": 1792059084565,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084565372577200700008",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mfsharp-fd1GTHhf.js                   \u001b[39m\u001b[1m\u001b[2m     2.84 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.28 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084565372577200700008",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084566,
+    "date": 1792059084566,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084566372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpascal-BhNW15KB.js                   \u001b[39m\u001b[1m\u001b[2m     2.86 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.35 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084566372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084566,
+    "date": 1792059084566,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084566372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mshell-CsDZo4DB.js                    \u001b[39m\u001b[1m\u001b[2m     2.93 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.16 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084566372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084566,
+    "date": 1792059084566,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084566372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mr-BIFz-_sK.js                        \u001b[39m\u001b[1m\u001b[2m     2.99 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.24 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084566372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084566,
+    "date": 1792059084566,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084566372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mqsharp-q7JyzKFN.js                   \u001b[39m\u001b[1m\u001b[2m     3.05 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.37 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084566372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084566,
+    "date": 1792059084566,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084566372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mjava-SYsfObOQ.js                     \u001b[39m\u001b[1m\u001b[2m     3.08 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.36 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084566372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084566,
+    "date": 1792059084566,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084566372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpowershell-Bu_VLpJB.js               \u001b[39m\u001b[1m\u001b[2m     3.13 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.34 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084566372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084566,
+    "date": 1792059084566,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084566372577200700006",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mmobilePreviewService-BrnS-qCB.js     \u001b[39m\u001b[1m\u001b[2m     3.15 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.33 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084566372577200700006",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084566,
+    "date": 1792059084566,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084566372577200700007",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcypher-D84EuPTj.js                   \u001b[39m\u001b[1m\u001b[2m     3.25 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.40 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084566372577200700007",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084567,
+    "date": 1792059084567,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084567372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mkotlin-qQ0MG-9I.js                   \u001b[39m\u001b[1m\u001b[2m     3.30 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.44 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084567372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084567,
+    "date": 1792059084567,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084567372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mredis-CHOsPHWR.js                    \u001b[39m\u001b[1m\u001b[2m     3.42 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.44 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084567372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084570,
+    "date": 1792059084570,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084570372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mtcl-PloMZuKG.js                      \u001b[39m\u001b[1m\u001b[2m     3.43 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.33 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084570372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084570,
+    "date": 1792059084570,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084570372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcoffee-B7EJu28W.js                   \u001b[39m\u001b[1m\u001b[2m     3.45 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.26 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084570372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084571,
+    "date": 1792059084571,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084571372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mhcl-DxDQ3s82.js                      \u001b[39m\u001b[1m\u001b[2m     3.45 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.45 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084571372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084571,
+    "date": 1792059084571,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084571372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mWelcomeTourModal-B_-Ds-Iy.js         \u001b[39m\u001b[1m\u001b[2m     3.48 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.48 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084571372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084571,
+    "date": 1792059084571,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084571372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mmarkdown-B811l8j2.js                 \u001b[39m\u001b[1m\u001b[2m     3.65 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.35 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084571372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084576,
+    "date": 1792059084576,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084576372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mrestructuredtext-CghPJEOS.js         \u001b[39m\u001b[1m\u001b[2m     3.75 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.33 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084576372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084576,
+    "date": 1792059084576,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084576372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mless-GGFNNJHn.js                     \u001b[39m\u001b[1m\u001b[2m     3.76 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.38 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084576372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084577,
+    "date": 1792059084577,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084577372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mapex-DnsZk_dE.js                     \u001b[39m\u001b[1m\u001b[2m     3.81 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.73 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084577372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084577,
+    "date": 1792059084577,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084577372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mCommandPalette-BGKKekJv.js           \u001b[39m\u001b[1m\u001b[2m     3.95 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.85 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084577372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084577,
+    "date": 1792059084577,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084577372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mliquid-tnT5dKDN.js                   \u001b[39m\u001b[1m\u001b[2m     3.97 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.70 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084577372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084577,
+    "date": 1792059084577,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084577372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mrust-DMDD0SHb.js                     \u001b[39m\u001b[1m\u001b[2m     4.02 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.79 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084577372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084577,
+    "date": 1792059084577,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084577372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36myaml-HTxiviW6.js                     \u001b[39m\u001b[1m\u001b[2m     4.02 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.56 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084577372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084577,
+    "date": 1792059084577,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084577372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mdart-D8lhlL1r.js                     \u001b[39m\u001b[1m\u001b[2m     4.11 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.61 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084577372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084577,
+    "date": 1792059084577,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084577372577200700006",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpython-D9p4y-g0.js                   \u001b[39m\u001b[1m\u001b[2m     4.20 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.72 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084577372577200700006",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084577,
+    "date": 1792059084577,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084577372577200700007",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcss-DQU6DXDx.js                      \u001b[39m\u001b[1m\u001b[2m     4.37 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.34 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084577372577200700007",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084577,
+    "date": 1792059084577,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084577372577200700008",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcsharp-BoL64M5l.js                   \u001b[39m\u001b[1m\u001b[2m     4.38 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.69 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084577372577200700008",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084578,
+    "date": 1792059084578,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084578372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpug-kFxLfcjb.js                      \u001b[39m\u001b[1m\u001b[2m     4.69 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.61 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084578372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084578,
+    "date": 1792059084578,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084578372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mmsdax-CYqgjx_P.js                    \u001b[39m\u001b[1m\u001b[2m     4.77 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.90 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084578372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084578,
+    "date": 1792059084578,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084578372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mswift-D7IUmUK8.js                    \u001b[39m\u001b[1m\u001b[2m     4.77 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.00 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084578372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084578,
+    "date": 1792059084578,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084578372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mFileExplorer-EQmmMiqk.js             \u001b[39m\u001b[1m\u001b[2m     4.83 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.81 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084578372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084578,
+    "date": 1792059084578,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084578372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mmdx-RFgLKktz.js                      \u001b[39m\u001b[1m\u001b[2m     4.86 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.49 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084578372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084578,
+    "date": 1792059084578,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084578372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mnpmRegistryService-D1oXsbn9.js       \u001b[39m\u001b[1m\u001b[2m     4.90 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.15 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084578372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084578,
+    "date": 1792059084578,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084578372577200700006",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mPreviewSharePage-BQq2tZm_.js         \u001b[39m\u001b[1m\u001b[2m     4.96 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.86 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084578372577200700006",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084578,
+    "date": 1792059084578,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084578372577200700007",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mhtml-BVQrCQZi.js                     \u001b[39m\u001b[1m\u001b[2m     5.02 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.44 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084578372577200700007",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084578,
+    "date": 1792059084578,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084578372577200700008",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcpp-SEyurbux.js                      \u001b[39m\u001b[1m\u001b[2m     5.16 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.05 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084578372577200700008",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084579,
+    "date": 1792059084579,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084579372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mecl-BO6FnfXk.js                      \u001b[39m\u001b[1m\u001b[2m     5.20 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.19 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084579372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084579,
+    "date": 1792059084579,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084579372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mAiDiffModal-B_7jqx4k.js              \u001b[39m\u001b[1m\u001b[2m     5.27 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.88 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084579372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084584,
+    "date": 1792059084584,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084584372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mMultiFileEditor-D8xS5CmP.js          \u001b[39m\u001b[1m\u001b[2m     5.29 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.98 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084584372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084584,
+    "date": 1792059084584,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084584372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mExtensionsMarketplace-CllLmrUK.js    \u001b[39m\u001b[1m\u001b[2m     5.30 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.59 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084584372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084585,
+    "date": 1792059084585,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084585372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mKeyboardShortcutsHelp-CIs7lX0T.js    \u001b[39m\u001b[1m\u001b[2m     5.37 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.88 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084585372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084585,
+    "date": 1792059084585,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084585372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mtypescript-Cjvw6ftv.js               \u001b[39m\u001b[1m\u001b[2m     5.41 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.21 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084585372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084585,
+    "date": 1792059084585,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084585372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mNewProjectModal-Cf05L8pA.js          \u001b[39m\u001b[1m\u001b[2m     5.60 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.83 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084585372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084585,
+    "date": 1792059084585,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084585372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mvb-BwAE3J76.js                       \u001b[39m\u001b[1m\u001b[2m     5.65 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.02 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084585372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084586,
+    "date": 1792059084586,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084586372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mtwig-BfRIq3la.js                     \u001b[39m\u001b[1m\u001b[2m     5.83 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.48 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084586372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084586,
+    "date": 1792059084586,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084586372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mImportModal-BplX2tdG.js              \u001b[39m\u001b[1m\u001b[2m     6.22 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.33 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084586372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084586,
+    "date": 1792059084586,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084586372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mscss-CTwUZ5N7.js                     \u001b[39m\u001b[1m\u001b[2m     6.27 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.71 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084586372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084586,
+    "date": 1792059084586,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084586372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mMobileStandalonePreview-BBrgHUaO.js  \u001b[39m\u001b[1m\u001b[2m     6.56 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.42 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084586372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084586,
+    "date": 1792059084586,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084586372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mhandlebars-Jsd0y75s.js               \u001b[39m\u001b[1m\u001b[2m     6.78 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     1.65 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084586372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084586,
+    "date": 1792059084586,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084586372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mImportReviewModal-BKYTCqow.js        \u001b[39m\u001b[1m\u001b[2m     6.86 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.32 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084586372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084586,
+    "date": 1792059084586,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084586372577200700006",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mjulia-DQXNmw_w.js                    \u001b[39m\u001b[1m\u001b[2m     6.96 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.62 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084586372577200700006",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084586,
+    "date": 1792059084586,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084586372577200700007",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mLivePreviewPopoutPage-CCbgO7WS.js    \u001b[39m\u001b[1m\u001b[2m     7.09 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.49 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084586372577200700007",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084586,
+    "date": 1792059084586,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084586372577200700008",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mscala-Bqvq8jcR.js                    \u001b[39m\u001b[1m\u001b[2m     7.18 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.06 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084586372577200700008",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084587,
+    "date": 1792059084587,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084587372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mwgsl-Dksx_ONF.js                     \u001b[39m\u001b[1m\u001b[2m     7.19 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.71 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084587372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084587,
+    "date": 1792059084587,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084587372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mst-C7iG7M4S.js                       \u001b[39m\u001b[1m\u001b[2m     7.26 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.21 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084587372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084587,
+    "date": 1792059084587,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084587372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36msystemverilog-DgMryOEJ.js            \u001b[39m\u001b[1m\u001b[2m     7.46 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.72 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084587372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084587,
+    "date": 1792059084587,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084587372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpostiats-CQpG440k.js                 \u001b[39m\u001b[1m\u001b[2m     7.72 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.40 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084587372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084587,
+    "date": 1792059084587,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084587372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mHistoryPanel-DTbwELnK.js             \u001b[39m\u001b[1m\u001b[2m     7.73 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.43 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084587372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084587,
+    "date": 1792059084587,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084587372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mphp-120yhfDK.js                      \u001b[39m\u001b[1m\u001b[2m     7.89 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.04 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084587372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084587,
+    "date": 1792059084587,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084587372577200700006",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mperl-DlYyT36c.js                     \u001b[39m\u001b[1m\u001b[2m     8.12 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     3.10 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084587372577200700006",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084587,
+    "date": 1792059084587,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084587372577200700007",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mruby-CYWGW-b1.js                     \u001b[39m\u001b[1m\u001b[2m     8.36 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.54 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084587372577200700007",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084587,
+    "date": 1792059084587,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084587372577200700008",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mExternalLibraryManager-C1Mz29Vu.js   \u001b[39m\u001b[1m\u001b[2m     8.51 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.41 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084587372577200700008",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084587,
+    "date": 1792059084587,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084587372577200700009",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mMobilePreviewModal-D76xA3Sr.js       \u001b[39m\u001b[1m\u001b[2m     8.77 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.99 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084587372577200700009",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084588,
+    "date": 1792059084588,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084588372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mrazor-kB7HE3aQ.js                    \u001b[39m\u001b[1m\u001b[2m     8.78 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.33 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084588372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084588,
+    "date": 1792059084588,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084588372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mprotobuf-IBS6jZEB.js                 \u001b[39m\u001b[1m\u001b[2m     8.91 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.04 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084588372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084588,
+    "date": 1792059084588,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084588372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mContactPage-BTO5CXLd.js              \u001b[39m\u001b[1m\u001b[2m     9.06 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.24 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084588372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084588,
+    "date": 1792059084588,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084588372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mclojure-D9WOWImG.js                  \u001b[39m\u001b[1m\u001b[2m     9.50 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     3.57 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084588372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084589,
+    "date": 1792059084589,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084589372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mimportEngine-C9iuQtL3.js             \u001b[39m\u001b[1m\u001b[2m    10.02 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.31 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084589372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084590,
+    "date": 1792059084590,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084590372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36melixir-BRjLKONM.js                   \u001b[39m\u001b[1m\u001b[2m    10.12 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.50 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084590372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084596,
+    "date": 1792059084596,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084596372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36msql-BdTr02Mf.js                      \u001b[39m\u001b[1m\u001b[2m    10.16 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     3.79 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084596372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084597,
+    "date": 1792059084597,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084597372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mBuildFromPromptModal-BK3LKUdQ.js     \u001b[39m\u001b[1m\u001b[2m    10.60 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     3.76 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084597372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084597,
+    "date": 1792059084597,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084597372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mVoiceCommandPanel-BHPeebVi.js        \u001b[39m\u001b[1m\u001b[2m    10.63 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     3.36 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084597372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084597,
+    "date": 1792059084597,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084597372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mTermsOfServicePage-B3T-dNkv.js       \u001b[39m\u001b[1m\u001b[2m    10.67 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.87 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084597372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084597,
+    "date": 1792059084597,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084597372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mPrivacyPolicyPage-BboIAFqH.js        \u001b[39m\u001b[1m\u001b[2m    10.77 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.79 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084597372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084597,
+    "date": 1792059084597,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084597372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mCookiePolicyPage-qtvdE0jH.js         \u001b[39m\u001b[1m\u001b[2m    10.86 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     2.51 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084597372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084597,
+    "date": 1792059084597,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084597372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mmysql-BHd6q0vd.js                    \u001b[39m\u001b[1m\u001b[2m    11.13 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.01 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084597372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084600,
+    "date": 1792059084600,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084600372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mredshift-CBifECDb.js                 \u001b[39m\u001b[1m\u001b[2m    11.66 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.30 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084600372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084600,
+    "date": 1792059084600,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084600372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mAIChatAssistant-DCOIQILW.js          \u001b[39m\u001b[1m\u001b[2m    12.27 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.31 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084600372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084600,
+    "date": 1792059084600,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084600372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mDisclaimerPage-ClHQGHB0.js           \u001b[39m\u001b[1m\u001b[2m    12.54 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     3.01 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084600372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084600,
+    "date": 1792059084600,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084600372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mExportShareModal-BkbPIv4_.js         \u001b[39m\u001b[1m\u001b[2m    13.23 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.13 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084600372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084601,
+    "date": 1792059084601,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084601372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpgsql-Dy0bjov7.js                    \u001b[39m\u001b[1m\u001b[2m    13.32 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.46 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084601372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084604,
+    "date": 1792059084604,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084604372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mScreenshotToCodeModal-BbznERq1.js    \u001b[39m\u001b[1m\u001b[2m    13.65 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.74 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084604372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084604,
+    "date": 1792059084604,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084604372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mAboutPage-7KBUZMI5.js                \u001b[39m\u001b[1m\u001b[2m    13.67 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     3.24 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084604372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084605,
+    "date": 1792059084605,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084605372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mCodeHistoryPage-wqjtkP0P.js          \u001b[39m\u001b[1m\u001b[2m    13.81 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     3.14 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084605372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084605,
+    "date": 1792059084605,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084605372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mmonaco-react-Ca62xTzh.js             \u001b[39m\u001b[1m\u001b[2m    13.87 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.77 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084605372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084605,
+    "date": 1792059084605,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084605372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mabap-CRCWOmpq.js                     \u001b[39m\u001b[1m\u001b[2m    14.02 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     5.27 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084605372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084605,
+    "date": 1792059084605,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084605372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mCodeStatsDashboard-NPE0kd0C.js       \u001b[39m\u001b[1m\u001b[2m    15.36 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.91 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084605372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084605,
+    "date": 1792059084605,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084605372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mSettingsModal-DAlONnWo.js            \u001b[39m\u001b[1m\u001b[2m    16.04 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     3.40 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084605372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084605,
+    "date": 1792059084605,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084605372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mCodeRabbitReviewModal-YjXT8y1a.js    \u001b[39m\u001b[1m\u001b[2m    16.09 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     5.16 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084605372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084605,
+    "date": 1792059084605,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084605372577200700006",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mfreemarker2-Bu4mEF-7.js              \u001b[39m\u001b[1m\u001b[2m    16.10 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.19 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084605372577200700006",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084605,
+    "date": 1792059084605,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084605372577200700007",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mindex-CPPqHR0c.js                    \u001b[39m\u001b[1m\u001b[2m    16.49 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     6.18 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084605372577200700007",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084605,
+    "date": 1792059084605,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084605372577200700008",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpowerquery-DdJtto1Z.js               \u001b[39m\u001b[1m\u001b[2m    16.80 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.81 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084605372577200700008",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084606,
+    "date": 1792059084606,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084606372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mCustomInjectionManager--c2XT839.js   \u001b[39m\u001b[1m\u001b[2m    17.58 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.25 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084606372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084606,
+    "date": 1792059084606,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084606372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mDependenciesPanel-Dq-Ovi6A.js        \u001b[39m\u001b[1m\u001b[2m    17.69 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.48 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084606372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084606,
+    "date": 1792059084606,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084606372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mdiff-tools-jL4TUV4t.js               \u001b[39m\u001b[1m\u001b[2m    17.91 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     6.76 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084606372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084606,
+    "date": 1792059084606,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084606372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36msolidity-CME5AdoB.js                 \u001b[39m\u001b[1m\u001b[2m    18.46 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.41 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084606372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084607,
+    "date": 1792059084607,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084607372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mindex-DkgW0of7.js                    \u001b[39m\u001b[1m\u001b[2m    18.52 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     5.67 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084607372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084607,
+    "date": 1792059084607,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084607372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mEnhancedConsole-BowMCjkI.js          \u001b[39m\u001b[1m\u001b[2m    20.15 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     6.11 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084607372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084607,
+    "date": 1792059084607,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084607372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mSnippetsSidebar-D8ZozBe2.js          \u001b[39m\u001b[1m\u001b[2m    20.43 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     4.60 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084607372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084607,
+    "date": 1792059084607,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084607372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mtsMode-BgHUVrPP.js                   \u001b[39m\u001b[1m\u001b[2m    22.84 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     6.40 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084607372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084607,
+    "date": 1792059084607,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084607372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mTerminalTab-JFxnNA_X.js              \u001b[39m\u001b[1m\u001b[2m    24.59 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     8.76 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084607372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084607,
+    "date": 1792059084607,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084607372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mDeployModal-Cvdp7Ajx.js              \u001b[39m\u001b[1m\u001b[2m    25.20 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     7.61 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084607372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084612,
+    "date": 1792059084612,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084612372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mBackupRestoreModal-HD8mbf8C.js       \u001b[39m\u001b[1m\u001b[2m    26.62 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     7.94 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084612372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084612,
+    "date": 1792059084612,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084612372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mDocumentationPage-CymBaTy0.js        \u001b[39m\u001b[1m\u001b[2m    30.50 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     5.77 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084612372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084612,
+    "date": 1792059084612,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084612372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcssMode-JYGl0biV.js                  \u001b[39m\u001b[1m\u001b[2m    32.10 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     8.67 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084612372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084613,
+    "date": 1792059084613,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084613372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mhtmlMode-CZ_rozo-.js                 \u001b[39m\u001b[1m\u001b[2m    32.65 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:     8.79 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084613372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084613,
+    "date": 1792059084613,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084613372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mGitHubSyncModal-C5H2xJ9_.js          \u001b[39m\u001b[1m\u001b[2m    33.86 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:    10.15 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084613372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084613,
+    "date": 1792059084613,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084613372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mjsonMode-BMIJgDwl.js                 \u001b[39m\u001b[1m\u001b[2m    41.51 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:    12.01 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084613372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084613,
+    "date": 1792059084613,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084613372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mwebcontainerService-Bw2Pb0Ah.js      \u001b[39m\u001b[1m\u001b[2m    53.47 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:    15.27 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084613372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084613,
+    "date": 1792059084613,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084613372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mbrowser-BXBBPn-6.js                  \u001b[39m\u001b[1m\u001b[2m    66.85 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:    18.74 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084613372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084616,
+    "date": 1792059084616,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084616372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mjszip.min-7l2_J1Tq.js                \u001b[39m\u001b[1m\u001b[2m    96.87 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:    29.94 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084616372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084616,
+    "date": 1792059084616,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084616372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mfullstackFeature-CrnImAL-.js         \u001b[39m\u001b[1m\u001b[2m   134.94 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:    33.39 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084616372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084616,
+    "date": 1792059084616,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084616372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mreact-core-DuNX43A_.js               \u001b[39m\u001b[1m\u001b[2m   226.02 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:    74.01 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084616372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700000",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mterminal-CjDwKBss.js                 \u001b[39m\u001b[1m\u001b[2m   282.68 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:    70.28 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084617372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700001",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mindex-C37nZEU3.js                    \u001b[39m\u001b[1m\u001b[2m   351.04 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   107.18 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084617372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700002",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mvue-compiler-CCpB70l9.js             \u001b[39m\u001b[1m\u001b[33m   794.70 kB\u001b[39m\u001b[22m\u001b[2m │ gzip:   248.74 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084617372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700003",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mformatter-h1Cz-bI7.js                \u001b[39m\u001b[1m\u001b[33m   889.18 kB\u001b[39m\u001b[22m\u001b[2m │ gzip:   257.48 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084617372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700004",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mTemplateSelectorModal-BvJXLJWL.js    \u001b[39m\u001b[1m\u001b[33m 2,677.81 kB\u001b[39m\u001b[22m\u001b[2m │ gzip:   605.79 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084617372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700005",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36meditor.main-WEPbdCb_.js              \u001b[39m\u001b[1m\u001b[33m 3,297.87 kB\u001b[39m\u001b[22m\u001b[2m │ gzip:   843.57 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084617372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700006",
+    "text": "\u001b[2mdist-staging/ide/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mtypescript-compiler-CRYeikrG.js      \u001b[39m\u001b[1m\u001b[33m 3,525.64 kB\u001b[39m\u001b[22m\u001b[2m │ gzip: 1,009.86 kB\u001b[22m",
+    "type": "stdout",
+    "serial": "1792059084617372577200700006",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700007",
+    "text": "\u001b[33m",
+    "type": "stderr",
+    "serial": "1792059084617372577200700007",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700008",
+    "text": "(!) Some chunks are larger than 500 kB after minification. Consider:",
+    "type": "stderr",
+    "serial": "1792059084617372577200700008",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700009",
+    "text": "- Using dynamic import() to code-split the application",
+    "type": "stderr",
+    "serial": "1792059084617372577200700009",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700010",
+    "text": "- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks",
+    "type": "stderr",
+    "serial": "1792059084617372577200700010",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700011",
+    "text": "- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\u001b[39m",
+    "type": "stderr",
+    "serial": "1792059084617372577200700011",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059084617,
+    "date": 1792059084617,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059084617372577200700012",
+    "text": "\u001b[32m✓ built in 1m 5s\u001b[39m",
+    "type": "stdout",
+    "serial": "1792059084617372577200700012",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088095,
+    "date": 1792059088095,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088095372577200700000",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059088095372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088095,
+    "date": 1792059088095,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088095372577200700001",
+    "text": "PWA v1.1.0",
+    "type": "stdout",
+    "serial": "1792059088095372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088095,
+    "date": 1792059088095,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088095372577200700002",
+    "text": "mode      generateSW",
+    "type": "stdout",
+    "serial": "1792059088095372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088095,
+    "date": 1792059088095,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088095372577200700003",
+    "text": "precache  161 entries (21576.78 KiB)",
+    "type": "stdout",
+    "serial": "1792059088095372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088095,
+    "date": 1792059088095,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088095372577200700004",
+    "text": "files generated",
+    "type": "stdout",
+    "serial": "1792059088095372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088095,
+    "date": 1792059088095,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088095372577200700005",
+    "text": "  dist-staging/ide/sw.js",
+    "type": "stdout",
+    "serial": "1792059088095372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088096,
+    "date": 1792059088096,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088096372577200700000",
+    "text": "  dist-staging/ide/workbox-d4f8be5c.js",
+    "type": "stdout",
+    "serial": "1792059088096372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088329,
+    "date": 1792059088329,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088329372577200700000",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059088329372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088330,
+    "date": 1792059088330,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088330372577200700000",
+    "text": "[4/6] Assembling final deployment artifact in dist/...",
+    "type": "stdout",
+    "serial": "1792059088330372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088354,
+    "date": 1792059088354,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088354372577200700000",
+    "text": "  -> Injected root Service Worker migration script (dist/sw.js)",
+    "type": "stdout",
+    "serial": "1792059088354372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088354,
+    "date": 1792059088354,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088354372577200700001",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059088354372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088354,
+    "date": 1792059088354,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088354372577200700002",
+    "text": "[5/6] Verifying build output integrity and security...",
+    "type": "stdout",
+    "serial": "1792059088354372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088354,
+    "date": 1792059088354,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088354372577200700003",
+    "text": "  PASS: Astro root index.html verified with Start Coding CTA to /app/projects",
+    "type": "stdout",
+    "serial": "1792059088354372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088355,
+    "date": 1792059088355,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088355372577200700000",
+    "text": "  PASS: dist/index.html is isolated from IDE runtime dependencies",
+    "type": "stdout",
+    "serial": "1792059088355372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088355,
+    "date": 1792059088355,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088355372577200700001",
+    "text": "  PASS: Vite app/index.html verified with React root and /app/assets/ paths",
+    "type": "stdout",
+    "serial": "1792059088355372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088355,
+    "date": 1792059088355,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088355372577200700002",
+    "text": "  PASS: All 6 initial Vite assets exist in dist/app/",
+    "type": "stdout",
+    "serial": "1792059088355372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088355,
+    "date": 1792059088355,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088355372577200700003",
+    "text": "  PASS: Monaco worker scripts verified in dist/app/assets/",
+    "type": "stdout",
+    "serial": "1792059088355372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088356,
+    "date": 1792059088356,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088356372577200700000",
+    "text": "  PASS: Scoped Service Worker exists at dist/app/sw.js",
+    "type": "stdout",
+    "serial": "1792059088356372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088356,
+    "date": 1792059088356,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088356372577200700001",
+    "text": "  PASS: PWA manifest correctly scoped to /app/",
+    "type": "stdout",
+    "serial": "1792059088356372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088356,
+    "date": 1792059088356,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088356372577200700002",
+    "text": "  PASS: Root Migration Service Worker verified at dist/sw.js",
+    "type": "stdout",
+    "serial": "1792059088356372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088356,
+    "date": 1792059088356,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088356372577200700003",
+    "text": "  PASS: No environment or secret files leaked into dist/",
+    "type": "stdout",
+    "serial": "1792059088356372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088356,
+    "date": 1792059088356,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088356372577200700004",
+    "text": "  PASS: Public page verified with title + canonical + isolation: /about",
+    "type": "stdout",
+    "serial": "1792059088356372577200700004",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088356,
+    "date": 1792059088356,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088356372577200700005",
+    "text": "  PASS: Public page verified with title + canonical + isolation: /contact",
+    "type": "stdout",
+    "serial": "1792059088356372577200700005",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088357,
+    "date": 1792059088357,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088357372577200700000",
+    "text": "  PASS: Public page verified with title + canonical + isolation: /privacy-policy",
+    "type": "stdout",
+    "serial": "1792059088357372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088357,
+    "date": 1792059088357,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088357372577200700001",
+    "text": "  PASS: Public page verified with title + canonical + isolation: /terms-and-conditions",
+    "type": "stdout",
+    "serial": "1792059088357372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088357,
+    "date": 1792059088357,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088357372577200700002",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059088357372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088357,
+    "date": 1792059088357,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088357372577200700003",
+    "text": "[6/6] Generating build manifest...",
+    "type": "stdout",
+    "serial": "1792059088357372577200700003",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088360,
+    "date": 1792059088360,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088360372577200700000",
+    "text": "Build manifest saved to dist/build-manifest.json (72893ms)",
+    "type": "stdout",
+    "serial": "1792059088360372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088360,
+    "date": 1792059088360,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088360372577200700001",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059088360372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088360,
+    "date": 1792059088360,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088360372577200700002",
+    "text": "======================================================================",
+    "type": "stdout",
+    "serial": "1792059088360372577200700002",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088361,
+    "date": 1792059088361,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088361372577200700000",
+    "text": "✅ UNIFIED BUILD SUCCEEDED DETERMINISTICALLY",
+    "type": "stdout",
+    "serial": "1792059088361372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088362,
+    "date": 1792059088362,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088362372577200700000",
+    "text": "======================================================================",
+    "type": "stdout",
+    "serial": "1792059088362372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088439,
+    "date": 1792059088439,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088439372577200700000",
+    "text": "Installing dependencies...",
+    "type": "stdout",
+    "serial": "1792059088439372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088788,
+    "date": 1792059088788,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088788372577200700000",
+    "text": "npm warn Unknown env config \"cache-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+    "type": "stderr",
+    "serial": "1792059088788372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    },
+    "level": "warning"
+  },
+  {
+    "created": 1792059088839,
+    "date": 1792059088839,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088839372577200700000",
+    "text": "",
+    "type": "stdout",
+    "serial": "1792059088839372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059088839,
+    "date": 1792059088839,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059088839372577200700001",
+    "text": "up to date in 292ms",
+    "type": "stdout",
+    "serial": "1792059088839372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059093821,
+    "date": 1792059093821,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059093821372577200700000",
+    "text": "Build Completed in /vercel/output [1m]",
+    "type": "stderr",
+    "serial": "1792059093821372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059093863,
+    "date": 1792059093863,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059093863372577200700000",
+    "text": "Deploying outputs...",
+    "type": "stdout",
+    "serial": "1792059093863372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059100805,
+    "date": 1792059100805,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059100805372577200700000",
+    "text": "Deployment completed",
+    "type": "stdout",
+    "serial": "1792059100805372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059100810,
+    "date": 1792059100810,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059100810372577200700000",
+    "text": "Creating build cache...",
+    "type": "stdout",
+    "serial": "1792059100810372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059134674,
+    "date": 1792059134674,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059134674372577200700000",
+    "text": "Created build cache: 34s",
+    "type": "stdout",
+    "serial": "1792059134674372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059134674,
+    "date": 1792059134674,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059134674372577200700001",
+    "text": "Uploading build cache [127.29 MB]",
+    "type": "stdout",
+    "serial": "1792059134674372577200700001",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  },
+  {
+    "created": 1792059137095,
+    "date": 1792059137095,
+    "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "id": "1792059137095372577200700000",
+    "text": "Build cache uploaded: 2.421s",
+    "type": "stdout",
+    "serial": "1792059137095372577200700000",
+    "info": {
+      "type": "build",
+      "name": "bld_1d675p4lb",
+      "entrypoint": "."
+    }
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "base": "https://gb-coder-public-alpha-ccyelci13.vercel.app",
+  "credential": "existing shared credential; not created or revoked",
+  "pages": [],
+  "http": [
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    }
+  ]
+}

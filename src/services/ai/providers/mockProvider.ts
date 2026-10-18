@@ -106,6 +106,43 @@ export class MockProvider implements IAiProvider {
       responseText = `I received your request: "${lastUserMsg}". Workspace context is mounted and verified.`;
     }
 
+    // Simulate tool call if prompt asks for tools and options.tools is provided
+    const toolCalls: import('../tools/types').ToolCallRecord[] = [];
+    const lower = lastUserMsg.toLowerCase();
+
+    if (options.tools && options.tools.length > 0) {
+      const { ToolExecutor } = await import('../tools/toolExecutor');
+
+      if (lower.includes('read') && options.tools.some((t) => t.name === 'read_file')) {
+        const filePath = lower.includes('.tsx') ? 'src/App.tsx' : 'package.json';
+        toolCalls.push(ToolExecutor.createToolCallRecord('read_file', { path: filePath }));
+      } else if (lower.includes('list') && options.tools.some((t) => t.name === 'list_directory')) {
+        toolCalls.push(ToolExecutor.createToolCallRecord('list_directory', { path: 'src' }));
+      } else if (lower.includes('search files') && options.tools.some((t) => t.name === 'search_files')) {
+        toolCalls.push(ToolExecutor.createToolCallRecord('search_files', { query: '*.tsx' }));
+      } else if (lower.includes('search code') && options.tools.some((t) => t.name === 'search_code')) {
+        toolCalls.push(ToolExecutor.createToolCallRecord('search_code', { pattern: 'useState' }));
+      } else if (lower.includes('structure') && options.tools.some((t) => t.name === 'get_project_structure')) {
+        toolCalls.push(ToolExecutor.createToolCallRecord('get_project_structure', { maxDepth: 3 }));
+      } else if (lower.includes('diagnostics') && options.tools.some((t) => t.name === 'get_diagnostics')) {
+        toolCalls.push(ToolExecutor.createToolCallRecord('get_diagnostics', {}));
+      } else if (
+        (lower.includes('terminal') || lower.includes('command') || lower.includes('run test') || lower.includes('npm test')) &&
+        options.tools.some((t) => t.name === 'run_terminal_command')
+      ) {
+        toolCalls.push(
+          ToolExecutor.createToolCallRecord('run_terminal_command', {
+            command: 'npm test',
+            explanation: 'Running project unit tests inside WebContainer.',
+          })
+        );
+      }
+    }
+
+    if (toolCalls.length > 0 && responseText.startsWith('I received your request')) {
+      responseText = `I will invoke tool "${toolCalls[0].toolName}" to perform this task in your project.`;
+    }
+
     // Stream out words
     const words = responseText.split(/(?<=\s)/);
     let fullContent = '';
@@ -119,8 +156,23 @@ export class MockProvider implements IAiProvider {
       await new Promise((r) => setTimeout(r, 10));
     }
 
+    // Stream tool call delta if present
+    for (const tc of toolCalls) {
+      onChunk({
+        toolCallDelta: {
+          id: tc.id,
+          name: tc.toolName,
+          argumentsDelta: JSON.stringify(tc.args),
+        },
+      });
+    }
+
     onChunk({ isComplete: true });
-    return { fullContent, reasoning: reasoning || undefined };
+    return {
+      fullContent,
+      reasoning: reasoning || undefined,
+      toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+    };
   }
 
   public async testConnection(_apiKey: string): Promise<ConnectionDiagnosticResult> {

@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-10-15T10:26:15.531Z",
+  "deployment": {
+    "checkedAt": "2026-10-15T10:26:15.531Z",
+    "id": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "url": "gb-coder-public-alpha-6l37qqpda.vercel.app",
+    "projectId": "prj_Cbyer1VtBwQwrqRVCFhNOUERJFiD",
+    "readyState": "READY",
+    "status": "READY",
+    "target": null,
+    "environment": "preview",
+    "gitSource": {
+      "ref": "phase-2.2-webcontainer-reliability",
+      "repoId": 1168293584,
+      "sha": "30804ea3e3f94814b46b7a9934fb477f91354615",
+      "type": "github",
+      "prId": null
+    },
+    "meta": {
+      "sha": "30804ea3e3f94814b46b7a9934fb477f91354615",
+      "branch": "phase-2.2-webcontainer-reliability",
+      "repo": "GB-CODER-PUBLIC-ALPHA",
+      "org": "girishlade111"
+    },
+    "createdAt": 1792059008666,
+    "buildingAt": 1792059010372,
+    "ready": 1792059100606
+  },
+  "productionBranch": "main",
+  "production": {
+    "id": "dpl_72WQ33EXbkePS6fGQSnBF4n2yBTW",
+    "url": "gb-coder-public-alpha-mdrfofrq4.vercel.app",
+    "sha": "1b954486e292436794b0764638ea454bb78fae11",
+    "target": "production"
+  },
+  "existingCredentialCount": 1,
+  "credentialCreated": false,
+  "credentialModified": false,
+  "credentialRevoked": false
+}

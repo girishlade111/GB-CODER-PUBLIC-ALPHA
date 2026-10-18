@@ -1,0 +1,1136 @@
+{
+  "results": [
+    {
+      "name": "dashboard opens",
+      "status": "PASS"
+    },
+    {
+      "name": "new Static Editor project created through UI",
+      "status": "PASS",
+      "detail": {
+        "id": "a1e98fbc-169c-4999-8e4a-380cf3e4c6e5"
+      }
+    },
+    {
+      "name": "HTML CSS and JavaScript Monaco instances mounted",
+      "status": "PASS"
+    },
+    {
+      "name": "html accepts keyboard input and exact source",
+      "status": "PASS"
+    },
+    {
+      "name": "css accepts keyboard input and exact source",
+      "status": "PASS"
+    },
+    {
+      "name": "javascript accepts keyboard input and exact source",
+      "status": "PASS"
+    },
+    {
+      "name": "real live preview reflects HTML CSS and JavaScript",
+      "status": "PASS"
+    },
+    {
+      "name": "all three exact sources saved to IndexedDB",
+      "status": "PASS"
+    },
+    {
+      "name": "reload retains exact sources",
+      "status": "PASS"
+    },
+    {
+      "name": "dashboard reopen retains edits",
+      "status": "PASS"
+    },
+    {
+      "name": "Advanced IDE switch preserves Static Editor data",
+      "status": "PASS"
+    },
+    {
+      "name": "Monaco workers execute",
+      "status": "PASS",
+      "detail": {
+        "editor": 1,
+        "json": 0,
+        "css": 1,
+        "html": 1,
+        "typescript": 1
+      }
+    }
+  ],
+  "console": [
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": [
+    {
+      "url": "https://stackblitz.com/headless?version=1.6.4",
+      "type": "document",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "responses": [
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-C-BwBr4P.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/_vercel/insights/script.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/NewProjectModal-Bv0aBq7q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/KeyboardShortcutsHelp-bLZ7QP97.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/SettingsModal-C455Vr_e.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/SnippetsSidebar-DoyrwUxK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/ExtensionsMarketplace-DRr0UYBn.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/CodeRabbitReviewModal-CRITtq0L.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor.main-BnBVRgfA.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/css-DQU6DXDx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/javascript-FnHWLvgm.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/html-B82QQ7jd.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/tsMode-CRTSiHLo.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/cssMode-av3PrDD-.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/htmlMode-CSrVhgxw.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/typescript-CmjEkl9-.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/html.worker-DBrQM3vp.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/typescript-compiler-CRYeikrG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/a1e98fbc-169c-4999-8e4a-380cf3e4c6e5/editor",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-C-BwBr4P.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/_vercel/insights/script.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor.main-BnBVRgfA.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/javascript-FnHWLvgm.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/typescript-CmjEkl9-.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/cssMode-av3PrDD-.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/css-DQU6DXDx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/tsMode-CRTSiHLo.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/html-B82QQ7jd.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/htmlMode-CSrVhgxw.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/SettingsModal-C455Vr_e.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/SnippetsSidebar-DoyrwUxK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/ExtensionsMarketplace-DRr0UYBn.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/CodeRabbitReviewModal-CRITtq0L.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/KeyboardShortcutsHelp-bLZ7QP97.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/typescript-compiler-CRYeikrG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/html.worker-DBrQM3vp.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-C-BwBr4P.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/_vercel/insights/script.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/webcontainerService-CitW6F1d.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/SettingsModal-C455Vr_e.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/CodeRabbitReviewModal-CRITtq0L.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/ExtensionsMarketplace-DRr0UYBn.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/KeyboardShortcutsHelp-bLZ7QP97.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/SnippetsSidebar-DoyrwUxK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor.main-BnBVRgfA.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/html-B82QQ7jd.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/javascript-FnHWLvgm.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/typescript-CmjEkl9-.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/css-DQU6DXDx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/cssMode-av3PrDD-.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/tsMode-CRTSiHLo.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/htmlMode-CSrVhgxw.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/typescript-compiler-CRYeikrG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/html.worker-DBrQM3vp.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-C-BwBr4P.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/_vercel/insights/script.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/NewProjectModal-Bv0aBq7q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/webcontainerService-CitW6F1d.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/terminal-Cd7-BiPz.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/CodeRabbitReviewModal-CRITtq0L.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/terminal-CjDwKBss.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/npmRegistryService-D1oXsbn9.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/TerminalTab-D4OSpQ73.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/DependenciesPanel-B5zhBuNi.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/VoiceCommandPanel-ByXo0jj4.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/fullstackFeature-BcJ-Cnb0.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/a1e98fbc-169c-4999-8e4a-380cf3e4c6e5/editor",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-C-BwBr4P.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/_vercel/insights/script.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor.main-BnBVRgfA.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/css-DQU6DXDx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/javascript-FnHWLvgm.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/typescript-CmjEkl9-.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/tsMode-CRTSiHLo.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/cssMode-av3PrDD-.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/html-B82QQ7jd.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/SnippetsSidebar-DoyrwUxK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/ExtensionsMarketplace-DRr0UYBn.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/CodeRabbitReviewModal-CRITtq0L.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/SettingsModal-C455Vr_e.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/KeyboardShortcutsHelp-bLZ7QP97.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/htmlMode-CSrVhgxw.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/typescript-compiler-CRYeikrG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    }
+  ],
+  "projectId": "a1e98fbc-169c-4999-8e4a-380cf3e4c6e5",
+  "expectedSources": {
+    "index.html": "<!doctype html><html><body><h1 id=\"closure\">STATIC_HTML_EXACT</h1></body></html>",
+    "style.css": "#closure { color: rgb(12, 34, 56); }",
+    "script.js": "document.querySelector(\"#closure\").textContent = \"STATIC_JS_EXECUTED\";"
+  },
+  "workerStats": {
+    "editor": 1,
+    "json": 0,
+    "css": 1,
+    "html": 1,
+    "typescript": 1
+  },
+  "serviceWorker": {
+    "registrations": [
+      "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/"
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "base": "https://gb-coder-public-alpha-6l37qqpda.vercel.app",
+  "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+  "sha": "30804ea3e3f94814b46b7a9934fb477f91354615",
+  "startedAt": 1792059269725,
+  "results": [
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain",
+      "bytes": 15,
+      "appShell": false
+    }
+  ],
+  "status": "FAIL",
+  "error": "Expected values to be strictly equal:\n\n307 !== 200\n",
+  "completedAt": 1792059273333
+}

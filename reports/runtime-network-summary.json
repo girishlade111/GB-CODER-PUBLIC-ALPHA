@@ -1,0 +1,158 @@
+[
+  {
+    "attempt": 1,
+    "status": "PASS",
+    "bootMs": 3228,
+    "mountMs": 7,
+    "shellSpawnMs": 4,
+    "npmInputAt": 1792039466014,
+    "npmCompletion": {
+      "at": 1792039496557,
+      "text": "added 61 packages in 30s"
+    },
+    "npmObservedMs": 30543,
+    "viteCommandOutputAt": 1792039498327,
+    "vite": {
+      "at": 1792039504410,
+      "reportedMs": 4358
+    },
+    "viteReadyFromNavigationMs": 44857,
+    "serverReadyFromNavigationMs": 44800,
+    "domReadyMs": 48312,
+    "totalAtSnapshotMs": 48358,
+    "regexObserved": true,
+    "dependencyResponses": {
+      "200": 172
+    },
+    "networkFailures": [
+      {
+        "start": 1792039466736,
+        "url": "https://t.staticblitz.com/w/v17/r/l",
+        "method": "POST",
+        "end": 1792039466855,
+        "failure": "net::ERR_ABORTED",
+        "timing": {
+          "startTime": 0,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": -1,
+          "responseEnd": -1
+        }
+      },
+      {
+        "start": 1792039505227,
+        "url": "https://u970fjwkiqycofajbvrxzfc4f65el6-dax5--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+        "method": "GET",
+        "end": 1792039505227,
+        "failure": "net::ERR_ABORTED",
+        "timing": {
+          "startTime": 0,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": -1,
+          "responseEnd": -1
+        }
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "processes": [
+      {
+        "index": 0,
+        "command": "jsh",
+        "args": null,
+        "invokedAt": 1792039465534,
+        "state": "running",
+        "spawnedAt": 1792039465538
+      }
+    ],
+    "finalTerminal": "  VITE v5.4.21  ready in 4358 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n ",
+    "plainOutput": "~/u970fjwkiqycofajbvrxzfc4f65el6-dax5\r\n❯ npm install --prefer-offline && npm run dev\r\r\n\r\nadded 61 packages in 30s\r\n\r\n> dev\r\n> vite\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n  VITE v5.4.21  ready in 4358 ms\r\n\r\n  ➜  Local:   http://localhost:5173/\r\n  ➜  Network: use --host to expose\r\n  ➜  press h + enter to show help\r\n"
+  },
+  {
+    "attempt": 2,
+    "status": "PASS",
+    "bootMs": 4588,
+    "mountMs": 21,
+    "shellSpawnMs": 25,
+    "npmInputAt": 1792039583007,
+    "npmCompletion": {
+      "at": 1792039599667,
+      "text": "added 61 packages in 16s"
+    },
+    "npmObservedMs": 16660,
+    "viteCommandOutputAt": 1792039600401,
+    "vite": {
+      "at": 1792039604429,
+      "reportedMs": 2857
+    },
+    "viteReadyFromNavigationMs": 31882,
+    "serverReadyFromNavigationMs": 31864,
+    "domReadyMs": 34305,
+    "totalAtSnapshotMs": 34381,
+    "regexObserved": true,
+    "dependencyResponses": {
+      "200": 174
+    },
+    "networkFailures": [
+      {
+        "start": 1792039584239,
+        "url": "https://t.staticblitz.com/w/v17/r/l",
+        "method": "POST",
+        "end": 1792039585004,
+        "failure": "net::ERR_ABORTED",
+        "timing": {
+          "startTime": 0,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": -1,
+          "responseEnd": -1
+        }
+      },
+      {
+        "start": 1792039605011,
+        "url": "https://u970fjwkiqycofajbvrxzfc4f65el6-dax5--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+        "method": "GET",
+        "end": 1792039605011,
+        "failure": "net::ERR_ABORTED",
+        "timing": {
+          "startTime": 0,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": -1,
+          "responseEnd": -1
+        }
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "processes": [
+      {
+        "index": 0,
+        "command": "jsh",
+        "args": null,
+        "invokedAt": 1792039580992,
+        "state": "running",
+        "spawnedAt": 1792039581017
+      }
+    ],
+    "finalTerminal": "  VITE v5.4.21  ready in 2857 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n ",
+    "plainOutput": "~/u970fjwkiqycofajbvrxzfc4f65el6-dax5\r\n❯ npm install --prefer-offline && npm run dev\r\r\n\r\nadded 61 packages in 16s\r\n\r\n> dev\r\n> vite\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n  VITE v5.4.21  ready in 2857 ms\r\n\r\n  ➜  Local:   http://localhost:5173/\r\n  ➜  Network: use --host to expose\r\n  ➜  press h + enter to show help\r\n"
+  }
+]

@@ -1,0 +1,111 @@
+{
+  "startedAt": "2026-10-17T10:58:27.401Z",
+  "browser": {
+    "name": "Chromium",
+    "version": "151.0.7922.34",
+    "executablePath": "C:\\Users\\Girish Lade\\AppData\\Local\\ms-playwright\\chromium-1234\\chrome-win64\\chrome.exe",
+    "headless": true,
+    "flags": [
+      "--no-sandbox"
+    ]
+  },
+  "environment": {
+    "coop": "same-origin",
+    "coep": "require-corp",
+    "crossOriginIsolated": true,
+    "SharedArrayBuffer": "function"
+  },
+  "tests": {
+    "TEST_A": {
+      "id": "TEST_A",
+      "name": "Real WebContainer Boot & Mounting",
+      "status": "PASS",
+      "realWebContainer": "YES",
+      "realChromium": "YES",
+      "realIndexedDB": "YES",
+      "details": {
+        "treeFiles": [
+          "package.json",
+          "readme.md",
+          "src/index.js"
+        ],
+        "fileCheck": "webcontainer-boot-verified",
+        "runtimeStatus": "WebContainer Ready",
+        "noAutoNpm": true
+      }
+    },
+    "TEST_B": {
+      "id": "TEST_B",
+      "name": "Multi-Terminal Session Controls & Split View",
+      "status": "PASS",
+      "realWebContainer": "YES",
+      "realChromium": "YES",
+      "realIndexedDB": "YES",
+      "details": {
+        "threeTabs": [
+          {
+            "testId": "terminal-session-tab-term-1792234728674-1",
+            "title": "Terminal 1"
+          },
+          {
+            "testId": "terminal-session-tab-term-1792234732879-2",
+            "title": "Terminal 2"
+          },
+          {
+            "testId": "terminal-session-tab-term-1792234734958-3",
+            "title": "Terminal 3"
+          }
+        ],
+        "hasSplitViewport": true,
+        "remainingTabs": [
+          "Terminal 1",
+          "Terminal 3"
+        ]
+      }
+    }
+  },
+  "screenshots": [
+    "reports/audit-test-a-webcontainer.png",
+    "reports/audit-test-b-terminals.png"
+  ],
+  "logs": [
+    "[2026-10-17T10:58:27.410Z] ================================================================",
+    "[2026-10-17T10:58:27.411Z] GB CODER — PHASE 1 REAL-BROWSER ACCEPTANCE GATE TEST HARNESS",
+    "[2026-10-17T10:58:27.411Z] ================================================================",
+    "[2026-10-17T10:58:27.560Z] Chromium launched: version 151.0.7922.34, path: C:\\Users\\Girish Lade\\AppData\\Local\\ms-playwright\\chromium-1234\\chrome-win64\\chrome.exe",
+    "[2026-10-17T10:58:27.702Z] \n--- TEST 0: Environment & Security Headers ---",
+    "[2026-10-17T10:58:28.293Z] COOP: same-origin",
+    "[2026-10-17T10:58:28.293Z] COEP: require-corp",
+    "[2026-10-17T10:58:28.293Z] window.crossOriginIsolated: true",
+    "[2026-10-17T10:58:28.293Z] typeof SharedArrayBuffer: function",
+    "[2026-10-17T10:58:28.293Z] \n--- TEST A: Real WebContainer Boot & Workspace Mount ---",
+    "[2026-10-17T10:58:28.833Z] Mounted files in Explorer: [\"package.json\",\"readme.md\",\"src/index.js\"]",
+    "[2026-10-17T10:58:28.835Z] Waiting for WebContainer runtime ready...",
+    "[2026-10-17T10:58:28.859Z] Found \"WebContainer Ready\" indicator!",
+    "[2026-10-17T10:58:31.872Z] Initial terminal text: \"\"",
+    "[2026-10-17T10:58:31.872Z] Executing safe command in WebContainer virtual filesystem...",
+    "[2026-10-17T10:58:48.426Z] Readback from WebContainer fs: \"webcontainer-boot-verified\"",
+    "[2026-10-17T10:58:48.473Z] Hiding terminal panel...",
+    "[2026-10-17T10:58:51.542Z] Terminal panel hidden: true",
+    "[2026-10-17T10:58:51.542Z] Reopening terminal panel...",
+    "[2026-10-17T10:58:52.664Z] Terminal panel restored: true",
+    "[2026-10-17T10:58:52.830Z] [PASS] TEST A completed successfully.",
+    "[2026-10-17T10:58:52.830Z] \n--- TEST B: Multi-Terminal Session Controls ---",
+    "[2026-10-17T10:58:52.837Z] Initial session tabs: [\"terminal-session-tab-term-1792234728674-1\"]",
+    "[2026-10-17T10:58:52.837Z] Clicking New Terminal session button (+)...",
+    "[2026-10-17T10:58:54.891Z] Clicking New Terminal session button (+) again...",
+    "[2026-10-17T10:58:56.979Z] Session tabs after adding 2 terminals: [{\"testId\":\"terminal-session-tab-term-1792234728674-1\",\"title\":\"Terminal 1\"},{\"testId\":\"terminal-session-tab-term-1792234732879-2\",\"title\":\"Terminal 2\"},{\"testId\":\"terminal-session-tab-term-1792234734958-3\",\"title\":\"Terminal 3\"}]",
+    "[2026-10-17T10:58:56.979Z] Testing split terminal view...",
+    "[2026-10-17T10:58:58.592Z] Split viewport rendered: true",
+    "[2026-10-17T10:58:59.673Z] Split viewport closed: true",
+    "[2026-10-17T10:58:59.673Z] Closing Terminal 2...",
+    "[2026-10-17T10:59:01.193Z] Remaining tabs after closing Terminal 2: [\"Terminal 1\",\"Terminal 3\"]",
+    "[2026-10-17T10:59:01.255Z] [PASS] TEST B completed successfully.",
+    "[2026-10-17T10:59:01.255Z] \n--- TEST C: Filesystem & IndexedDB Synchronization ---",
+    "[2026-10-17T10:59:02.217Z] Creating new file \"src/math.js\" via WebContainer fs...",
+    "[2026-10-17T10:59:04.576Z] Waiting for \"src/math.js\" to appear in Explorer tree...",
+    "[2026-10-17T10:59:19.579Z] [FATAL TEST FAILURE] page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"tree-file\"][data-path=\"src/math.js\"]') to be visible\u001b[22m\n\npage.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"tree-file\"][data-path=\"src/math.js\"]') to be visible\u001b[22m\n\n    at main (C:\\Users\\Girish Lade\\.gemini\\antigravity\\brain\\b7319715-3ad2-4066-9907-dc85242734ca\\scratch\\run-phase1-browser-acceptance.mjs:456:16)"
+  ],
+  "verdict": "FAIL",
+  "error": "page.waitForSelector: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"tree-file\"][data-path=\"src/math.js\"]') to be visible\u001b[22m\n"
+}

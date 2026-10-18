@@ -1,0 +1,12 @@
+{
+  "results": [
+    {
+      "name": "A retires, B owns proof/operation: old rejection is consumed without mutation",
+      "status": "FAIL",
+      "error": "Unhandled derived shell-exit rejection\n\n1 !== 0\n",
+      "unhandledRejections": 1
+    }
+  ],
+  "unhandledRejections": 1,
+  "derivedRejections": 1
+}

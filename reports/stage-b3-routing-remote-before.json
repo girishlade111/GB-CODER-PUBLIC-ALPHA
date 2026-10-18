@@ -1,0 +1,16 @@
+[
+  {
+    "path": "/app/projects",
+    "status": 200,
+    "mime": "text/html; charset=utf-8",
+    "bytes": 4974,
+    "appRoot": true
+  },
+  {
+    "path": "/app/assets/stage-b3-missing.js",
+    "status": 200,
+    "mime": "text/html; charset=utf-8",
+    "bytes": 4974,
+    "appRoot": true
+  }
+]

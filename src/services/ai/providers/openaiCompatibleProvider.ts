@@ -55,7 +55,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
     options: StreamChatOptions,
     onChunk: (chunk: ChatCompletionChunk) => void
-  ): Promise<{ fullContent: string; reasoning?: string }> {
+  ): Promise<{ fullContent: string; reasoning?: string; toolCalls?: import('../tools/types').ToolCallRecord[] }> {
     const baseUrl = (options.baseUrl || this.defaultBaseUrl).replace(/\/+$/, '');
     const url = `${baseUrl}/chat/completions`;
 
@@ -63,18 +63,34 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       throw new Error(`API key required for ${this.name}. Configure your key in GB Assist settings.`);
     }
 
+    const requestBody: Record<string, unknown> = {
+      model: options.model,
+      messages,
+      stream: true,
+      temperature: options.temperature ?? 0.2,
+      max_tokens: options.maxTokens,
+    };
+
+    if (options.tools && options.tools.length > 0) {
+      requestBody.tools = options.tools.map((t) => ({
+        type: 'function',
+        function: {
+          name: t.name,
+          description: t.description,
+          parameters: t.parameters,
+        },
+      }));
+      if (options.toolChoice) {
+        requestBody.tool_choice = options.toolChoice;
+      }
+    }
+
     let response: Response;
     try {
       response = await fetch(url, {
         method: 'POST',
         headers: this.resolveHeaders(options.apiKey),
-        body: JSON.stringify({
-          model: options.model,
-          messages,
-          stream: true,
-          temperature: options.temperature ?? 0.2,
-          max_tokens: options.maxTokens,
-        }),
+        body: JSON.stringify(requestBody),
         signal: options.signal,
       });
     } catch (err: unknown) {
@@ -123,6 +139,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     let fullContent = '';
     let reasoning = '';
     let buffer = '';
+    const toolCallAccumulators = new Map<number, { id: string; name: string; arguments: string }>();
 
     try {
       while (true) {
@@ -163,6 +180,34 @@ export class OpenAiCompatibleProvider implements IAiProvider {
                   reasoning += reasoningDelta;
                   onChunk({ reasoningDelta });
                 }
+
+                // Tool calls delta
+                if (Array.isArray(delta.tool_calls)) {
+                  for (const tc of delta.tool_calls) {
+                    const idx = tc.index ?? 0;
+                    let acc = toolCallAccumulators.get(idx);
+                    if (!acc) {
+                      acc = {
+                        id: tc.id || `call-${Date.now()}-${idx}`,
+                        name: tc.function?.name || '',
+                        arguments: '',
+                      };
+                      toolCallAccumulators.set(idx, acc);
+                    }
+                    if (tc.id) acc.id = tc.id;
+                    if (tc.function?.name) acc.name = tc.function.name;
+                    if (tc.function?.arguments) acc.arguments += tc.function.arguments;
+
+                    onChunk({
+                      toolCallDelta: {
+                        id: acc.id,
+                        index: idx,
+                        name: acc.name,
+                        argumentsDelta: tc.function?.arguments,
+                      },
+                    });
+                  }
+                }
               }
             } catch {
               // Ignore partial JSON parse errors in stream
@@ -174,7 +219,21 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       reader.releaseLock();
     }
 
-    return { fullContent, reasoning: reasoning || undefined };
+    const toolCalls: import('../tools/types').ToolCallRecord[] = [];
+    if (toolCallAccumulators.size > 0) {
+      const { ToolExecutor } = await import('../tools/toolExecutor');
+      for (const acc of toolCallAccumulators.values()) {
+        if (acc.name) {
+          toolCalls.push(ToolExecutor.createToolCallRecord(acc.name, acc.arguments, acc.id));
+        }
+      }
+    }
+
+    return {
+      fullContent,
+      reasoning: reasoning || undefined,
+      toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+    };
   }
 
   public async testConnection(apiKey: string, baseUrl?: string): Promise<ConnectionDiagnosticResult> {

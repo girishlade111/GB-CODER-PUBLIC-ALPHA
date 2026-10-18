@@ -1,0 +1,1181 @@
+{
+  "results": [
+    {
+      "name": "dashboard opens",
+      "status": "PASS"
+    },
+    {
+      "name": "new Static Editor project created through UI",
+      "status": "PASS",
+      "detail": {
+        "id": "c9edfe19-248f-46b7-93ef-d17f9ceafcb8"
+      }
+    },
+    {
+      "name": "HTML CSS and JavaScript Monaco instances mounted",
+      "status": "PASS"
+    },
+    {
+      "name": "html accepts keyboard input and exact source",
+      "status": "PASS"
+    },
+    {
+      "name": "css accepts keyboard input and exact source",
+      "status": "PASS"
+    },
+    {
+      "name": "javascript accepts keyboard input and exact source",
+      "status": "PASS"
+    },
+    {
+      "name": "real live preview reflects HTML CSS and JavaScript",
+      "status": "PASS"
+    },
+    {
+      "name": "all three exact sources saved to IndexedDB",
+      "status": "PASS"
+    },
+    {
+      "name": "reload retains exact sources",
+      "status": "PASS"
+    },
+    {
+      "name": "dashboard reopen retains edits",
+      "status": "PASS"
+    },
+    {
+      "name": "Advanced IDE switch preserves Static Editor data",
+      "status": "PASS"
+    },
+    {
+      "name": "Monaco workers execute",
+      "status": "PASS",
+      "detail": {
+        "editor": 1,
+        "json": 0,
+        "css": 1,
+        "html": 1,
+        "typescript": 1
+      }
+    }
+  ],
+  "console": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": [
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "type": "script",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "type": "script",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "type": "stylesheet",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "type": "script",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "type": "stylesheet",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "type": "script",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://stackblitz.com/headless?version=1.6.4",
+      "type": "document",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "type": "stylesheet",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "type": "script",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "responses": [
+    {
+      "url": "http://127.0.0.1:42991/app/projects",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-Ow-M93en.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "status": 404,
+      "type": "script",
+      "mime": "text/plain",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/NewProjectModal-TR5z0xmC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/CodeRabbitReviewModal-BpyZFjWW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExtensionsMarketplace-BtONgWG5.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SnippetsSidebar-BcTTqzvK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/KeyboardShortcutsHelp-BGXx7ozN.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SettingsModal-DFYAEioO.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.main-BQkSNVVC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html-yz-Rjnn5.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/htmlMode-N1sMd4fm.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/cssMode-CDiGr_IT.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/javascript-C1OnFV6l.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-CXqDy_Oa.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/tsMode-vts6d2CC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css-DQU6DXDx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html.worker-DBrQM3vp.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-compiler-CRYeikrG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/projects/c9edfe19-248f-46b7-93ef-d17f9ceafcb8/editor",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-Ow-M93en.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "status": 404,
+      "type": "script",
+      "mime": "text/plain",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.main-BQkSNVVC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html-yz-Rjnn5.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/htmlMode-N1sMd4fm.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/cssMode-CDiGr_IT.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/javascript-C1OnFV6l.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-CXqDy_Oa.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/tsMode-vts6d2CC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css-DQU6DXDx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SnippetsSidebar-BcTTqzvK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExtensionsMarketplace-BtONgWG5.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SettingsModal-DFYAEioO.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/KeyboardShortcutsHelp-BGXx7ozN.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/CodeRabbitReviewModal-BpyZFjWW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/projects",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-Ow-M93en.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "status": 404,
+      "type": "script",
+      "mime": "text/plain",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/webcontainerService-CitW6F1d.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExtensionsMarketplace-BtONgWG5.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SnippetsSidebar-BcTTqzvK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/KeyboardShortcutsHelp-BGXx7ozN.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/CodeRabbitReviewModal-BpyZFjWW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SettingsModal-DFYAEioO.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.main-BQkSNVVC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html-yz-Rjnn5.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/htmlMode-N1sMd4fm.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/cssMode-CDiGr_IT.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/javascript-C1OnFV6l.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-CXqDy_Oa.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/tsMode-vts6d2CC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css-DQU6DXDx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html.worker-DBrQM3vp.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-compiler-CRYeikrG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/projects",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-Ow-M93en.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "status": 404,
+      "type": "script",
+      "mime": "text/plain",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/NewProjectModal-TR5z0xmC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/DependenciesPanel-CFQuUAzI.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/npmRegistryService-D1oXsbn9.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/CodeRabbitReviewModal-BpyZFjWW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/webcontainerService-CitW6F1d.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/VoiceCommandPanel-YIWOFACd.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/TerminalTab-eoXZDXFS.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/terminal-Cd7-BiPz.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/fullstackFeature-CkkT8QPx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/terminal-CjDwKBss.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/projects/c9edfe19-248f-46b7-93ef-d17f9ceafcb8/editor",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-Ow-M93en.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "status": 404,
+      "type": "script",
+      "mime": "text/plain",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.main-BQkSNVVC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html-yz-Rjnn5.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/htmlMode-N1sMd4fm.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/cssMode-CDiGr_IT.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/javascript-C1OnFV6l.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-CXqDy_Oa.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/tsMode-vts6d2CC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css-DQU6DXDx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html.worker-DBrQM3vp.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SnippetsSidebar-BcTTqzvK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExtensionsMarketplace-BtONgWG5.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SettingsModal-DFYAEioO.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/KeyboardShortcutsHelp-BGXx7ozN.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/CodeRabbitReviewModal-BpyZFjWW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-compiler-CRYeikrG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript",
+      "fromServiceWorker": true
+    }
+  ],
+  "projectId": "c9edfe19-248f-46b7-93ef-d17f9ceafcb8",
+  "expectedSources": {
+    "index.html": "<!doctype html><html><body><h1 id=\"closure\">STATIC_HTML_EXACT</h1></body></html>",
+    "style.css": "#closure { color: rgb(12, 34, 56); }",
+    "script.js": "document.querySelector(\"#closure\").textContent = \"STATIC_JS_EXECUTED\";"
+  },
+  "workerStats": {
+    "editor": 1,
+    "json": 0,
+    "css": 1,
+    "html": 1,
+    "typescript": 1
+  },
+  "serviceWorker": {
+    "controller": "http://127.0.0.1:42991/app/sw.js",
+    "registrations": [
+      "http://127.0.0.1:42991/app/"
+    ]
+  }
+}

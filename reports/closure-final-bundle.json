@@ -1,0 +1,29 @@
+{
+  "criticalJsBytes": 608946,
+  "criticalJsGzip": 192735,
+  "criticalCssBytes": 103483,
+  "criticalCssGzip": 17949,
+  "chunkCount": 4,
+  "chunks": [
+    {
+      "file": "index-Ow-M93en.js",
+      "bytes": 351159,
+      "gzip": 107197
+    },
+    {
+      "file": "react-core-DuNX43A_.js",
+      "bytes": 226016,
+      "gzip": 74009
+    },
+    {
+      "file": "diff-tools-jL4TUV4t.js",
+      "bytes": 17905,
+      "gzip": 6755
+    },
+    {
+      "file": "monaco-react-Ca62xTzh.js",
+      "bytes": 13866,
+      "gzip": 4774
+    }
+  ]
+}

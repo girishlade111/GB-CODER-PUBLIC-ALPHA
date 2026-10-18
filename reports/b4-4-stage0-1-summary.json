@@ -1,0 +1,287 @@
+{
+  "verdict": "B4_4_STAGE_1_NOT_FEASIBLE",
+  "scope": "Ineligible under approved 32 MiB accounted JSON payload/inventory limit; cross-runtime portability remains untested",
+  "stage0": {
+    "results": [
+      {
+        "name": "binary bytes and internal .bin links inventoried",
+        "status": "PASS"
+      },
+      {
+        "name": "key ordering stable",
+        "status": "PASS"
+      },
+      {
+        "name": "key invalidates project",
+        "status": "PASS"
+      },
+      {
+        "name": "key invalidates incarnation",
+        "status": "PASS"
+      },
+      {
+        "name": "key invalidates manifestSha",
+        "status": "PASS"
+      },
+      {
+        "name": "key invalidates lockSha",
+        "status": "PASS"
+      },
+      {
+        "name": "key invalidates configSha",
+        "status": "PASS"
+      },
+      {
+        "name": "key invalidates flags",
+        "status": "PASS"
+      },
+      {
+        "name": "key invalidates runtime",
+        "status": "PASS"
+      },
+      {
+        "name": "key invalidates api",
+        "status": "PASS"
+      },
+      {
+        "name": "key invalidates policy",
+        "status": "PASS"
+      },
+      {
+        "name": "complete lockfile tail digest",
+        "status": "PASS"
+      },
+      {
+        "name": "reject unsafe entry ../escape",
+        "status": "PASS"
+      },
+      {
+        "name": "reject unsafe entry /absolute",
+        "status": "PASS"
+      },
+      {
+        "name": "reject unsafe entry bad\\path",
+        "status": "PASS"
+      },
+      {
+        "name": "reject unsafe entry __proto__",
+        "status": "PASS"
+      },
+      {
+        "name": "reject unsafe entry constructor",
+        "status": "PASS"
+      },
+      {
+        "name": "reject unsafe entry prototype",
+        "status": "PASS"
+      },
+      {
+        "name": "reject unsafe entry C:drive",
+        "status": "PASS"
+      },
+      {
+        "name": "reject escaping link",
+        "status": "PASS"
+      },
+      {
+        "name": "reject link cycle",
+        "status": "PASS"
+      },
+      {
+        "name": "reject dangling link",
+        "status": "PASS"
+      },
+      {
+        "name": "reject custom prototype",
+        "status": "PASS"
+      },
+      {
+        "name": "reject inherited file content",
+        "status": "PASS"
+      },
+      {
+        "name": "reject accessors without executing them",
+        "status": "PASS"
+      },
+      {
+        "name": "reject corrupt file representation",
+        "status": "PASS"
+      },
+      {
+        "name": "entry and depth bounds",
+        "status": "PASS"
+      },
+      {
+        "name": "payload byte admission bound",
+        "status": "PASS"
+      },
+      {
+        "name": "mutation changes digest; clone does not share binary bytes",
+        "status": "PASS"
+      },
+      {
+        "name": "same project fresh generation may reuse artifact",
+        "status": "PASS"
+      },
+      {
+        "name": "wrong project, incarnation, digest rejected",
+        "status": "PASS"
+      },
+      {
+        "name": "expired and quarantined records rejected",
+        "status": "PASS"
+      },
+      {
+        "name": "retired capture never publishes",
+        "status": "PASS"
+      },
+      {
+        "name": "instance and epoch changes reject late capture",
+        "status": "PASS"
+      },
+      {
+        "name": "missing artifact is not installed proof",
+        "status": "PASS"
+      },
+      {
+        "name": "missing/stale artifacts select reference before restore",
+        "status": "PASS"
+      },
+      {
+        "name": "wrong owner or quarantined artifact fails closed",
+        "status": "PASS"
+      },
+      {
+        "name": "corrupted artifact rejected before mount",
+        "status": "PASS"
+      },
+      {
+        "name": "two-artifact LRU and quarantine",
+        "status": "PASS"
+      },
+      {
+        "name": "timeout ignores late success without publication",
+        "status": "PASS"
+      },
+      {
+        "name": "timeout consumes late rejection",
+        "status": "PASS"
+      }
+    ],
+    "passed": 41,
+    "failed": 0
+  },
+  "stage1": {
+    "boots": 1,
+    "completedObservations": 0,
+    "failedObservations": 1,
+    "unexecuted": 3,
+    "failedPhase": "capture",
+    "reason": "Artifact byte admission limit",
+    "accountedBytesLowerBoundExclusive": 33554432,
+    "fullArtifactBytes": null,
+    "fullEntryCount": null,
+    "fullSerializationBytes": null,
+    "artifactPublished": false,
+    "retainedBytes": 0,
+    "bootMs": 11032.72499999404,
+    "installMs": 5914,
+    "installExit": 0,
+    "exportMs": 1021.8350000083447,
+    "failedObservationMs": 23499,
+    "campaignMs": 24929,
+    "compatibility": {
+      "versions": {
+        "node": "22.22.3",
+        "acorn": "8.16.0",
+        "ada": "2.9.2",
+        "amaro": "1.1.8",
+        "ares": "1.34.6",
+        "brotli": "1.1.0",
+        "cjs_module_lexer": "2.2.0",
+        "cldr": "48.0",
+        "icu": "78.2",
+        "llhttp": "9.3.1",
+        "modules": "127",
+        "napi": "10",
+        "nbytes": "0.1.3",
+        "ncrypto": "0.0.1",
+        "nghttp2": "1.64.0",
+        "openssl": "3.5.6",
+        "simdjson": "4.5.0",
+        "simdutf": "6.4.2",
+        "sqlite": "3.51.3",
+        "tz": "2026a",
+        "undici": "6.24.1",
+        "unicode": "17.0",
+        "uv": "1.51.0",
+        "uvwasi": "0.0.23",
+        "v8": "12.4.254.21-node.56",
+        "zlib": "1.3.1-470d3a2",
+        "zstd": "1.5.7",
+        "webcontainer": "2ed8f36d"
+      },
+      "platform": "linux",
+      "arch": "x64",
+      "npm": "10.8.2",
+      "api": "1.6.4"
+    },
+    "memoryCheckpoints": [
+      {
+        "at": 1792062478670,
+        "label": "before-boot",
+        "pageJsHeapBytes": 1883958
+      },
+      {
+        "at": 1792062500957,
+        "label": "capture-before",
+        "pageJsHeapBytes": 8265263
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "retiredRuntimeCount": 1
+  },
+  "identity": [
+    {
+      "path": "scripts/.tmp-b4-4/policy.mjs",
+      "sha256": "26fd0f1e97e7587719e873a48ef56fe6cede208e37bf148b6b5d223366cb0292"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/browser.mjs",
+      "sha256": "fe725e8e63f3d4d44a158a8c0ba9fc375834ef9bc0aee71417e384f56bfabe3a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/run.mjs",
+      "sha256": "475317ab510a6722c6b00cc12281104fc2e357fbb1b1bc814cdff8f6470a011b"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/fixtures.json",
+      "sha256": "b20447d0a8b754938271826e3d75150d0db49d2c38bf924b35d70d44036e683a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package.json",
+      "sha256": "270a46f542ce8b01523fda3f5bd7333ad28734446815c0750c980f9162503570"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package-lock.json",
+      "sha256": "2d49b9349752521c344fe0d5091f46eabfd4718c7f6c52f3df92fdf6b8f61734"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package.json",
+      "sha256": "82bb171c0deb4422bf7a259b2497127d06f8213fa25bec2fcfd464e53e404b7a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package-lock.json",
+      "sha256": "e0a32ce64578f02feea91775c0b9d56b8cae869dd41424e1b096954fa8d9bedb"
+    }
+  ],
+  "bundleSha256": "6773b7268812247490a261907d9df6832da9c6a6ff01c44545e1e97e5468e90e",
+  "stage0ScriptSha256": "4678060c9338d8a1c5d52c167b81ac8a55d5d5bd745fd2cad1d5ea2772c1b328",
+  "stage0EvidenceSha256": "7461a218047ea390df405b6832fd43ff7772ee50f962193a7f4e9d663715f90d",
+  "rawEvidenceSha256": "4dbb7d8f2a9542d0102dc38a40355c433acac80f9312b7be4ea34ad4dda1021e",
+  "head": "30804ea3e3f94814b46b7a9934fb477f91354615",
+  "trackedStatus": "",
+  "manifestSha256": "cdaacfc70ef93643ea70ef5732bedc97fdeae7d7b7390f362bf0d48afa2ae136"
+}

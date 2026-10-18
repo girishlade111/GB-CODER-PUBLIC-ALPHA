@@ -1,0 +1,63 @@
+[
+  {
+    "path": "/app/",
+    "status": 200,
+    "mime": "text/html; charset=utf-8",
+    "coop": "same-origin",
+    "coep": "require-corp",
+    "html": true,
+    "bytes": 4974
+  },
+  {
+    "path": "/app/projects",
+    "status": 200,
+    "mime": "text/html; charset=utf-8",
+    "coop": "same-origin",
+    "coep": "require-corp",
+    "html": true,
+    "bytes": 4974
+  },
+  {
+    "path": "/ide",
+    "status": 200,
+    "mime": "text/html; charset=utf-8",
+    "coop": "same-origin",
+    "coep": "require-corp",
+    "html": true,
+    "bytes": 4974
+  },
+  {
+    "path": "/app/sw.js",
+    "status": 200,
+    "mime": "application/javascript; charset=utf-8",
+    "coop": "same-origin",
+    "coep": "require-corp",
+    "html": false,
+    "bytes": 9936
+  },
+  {
+    "path": "/app/manifest.webmanifest",
+    "status": 200,
+    "mime": "application/manifest+json; charset=utf-8",
+    "coop": "same-origin",
+    "coep": "require-corp",
+    "html": false,
+    "bytes": 321
+  },
+  {
+    "path": "/app/assets/stage-b3-missing.js",
+    "status": 200,
+    "mime": "text/html; charset=utf-8",
+    "coop": "same-origin",
+    "coep": "require-corp",
+    "html": true,
+    "bytes": 4974
+  },
+  {
+    "path": "/api/stage-b3-missing",
+    "status": 404,
+    "mime": "text/plain; charset=utf-8",
+    "html": false,
+    "bytes": 79
+  }
+]

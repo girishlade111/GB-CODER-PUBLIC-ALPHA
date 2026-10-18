@@ -1,0 +1,223 @@
+{
+  "timestamp": "2026-10-12T21:36:49.953Z",
+  "origin": "https://code.ladestack.in",
+  "tests": {
+    "P01": {
+      "id": "P01",
+      "name": "/api/health returns HTTP 200 OK",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "data": {
+          "status": "ok",
+          "ai": false,
+          "provider": "NVIDIA NIM",
+          "model": "qwen/qwen3.5-397b-a17b",
+          "providers": [
+            {
+              "id": "inception",
+              "name": "Inception Labs",
+              "model": "mercury-2.5",
+              "configured": false,
+              "badge": "Fast (~4s)",
+              "description": "Mercury 2.5 — ultra-fast generation with reasoning"
+            },
+            {
+              "id": "atria",
+              "name": "Atria ASI",
+              "model": "Atria-Dawn-Preview",
+              "configured": false,
+              "badge": "256k Context",
+              "description": "Atria Dawn Preview — deep reasoning & long context"
+            },
+            {
+              "id": "nvidia",
+              "name": "NVIDIA NIM",
+              "model": "qwen/qwen3.5-397b-a17b",
+              "configured": false,
+              "badge": "Qwen 3.5 397B",
+              "description": "Qwen 3.5 via NVIDIA NIM Foundation"
+            }
+          ]
+        }
+      },
+      "time": "2026-10-12T21:36:50.504Z"
+    },
+    "P02": {
+      "id": "P02",
+      "name": "Root / serves Astro Marketing Page",
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "contentLength": 5776,
+        "hasBranding": true
+      },
+      "time": "2026-10-12T21:36:50.813Z"
+    },
+    "P03": {
+      "id": "P03",
+      "name": "/app sets COOP same-origin and COEP require-corp",
+      "status": "PASS",
+      "details": {
+        "coop": "same-origin",
+        "coep": "require-corp"
+      },
+      "time": "2026-10-12T21:36:50.881Z"
+    },
+    "P04": {
+      "id": "P04",
+      "name": "/app/ide sets COOP same-origin and COEP require-corp",
+      "status": "PASS",
+      "details": {
+        "coop": "same-origin",
+        "coep": "require-corp"
+      },
+      "time": "2026-10-12T21:36:51.165Z"
+    },
+    "P05": {
+      "id": "P05",
+      "name": "Legacy /ide route serves IDE with COOP/COEP headers",
+      "status": "PASS",
+      "details": {
+        "coop": "same-origin",
+        "coep": "require-corp"
+      },
+      "time": "2026-10-12T21:36:51.232Z"
+    },
+    "P06": {
+      "id": "P06",
+      "name": "Both root migration /sw.js and scoped /app/sw.js are available",
+      "status": "PASS",
+      "details": {
+        "rootSwBytes": 2250,
+        "appSwBytes": 5789
+      },
+      "time": "2026-10-12T21:36:51.821Z"
+    },
+    "P07": {
+      "id": "P07",
+      "name": "Non-existent paths return HTTP 404",
+      "status": "PASS",
+      "details": {
+        "status": 404
+      },
+      "time": "2026-10-12T21:36:52.175Z"
+    },
+    "P08": {
+      "id": "P08",
+      "name": "Astro marketing page renders with title, branding & CTA to /app",
+      "status": "PASS",
+      "details": {
+        "title": "GB Coder — In-Browser IDE & Code Studio | LadeStack",
+        "heading": "The Browser-First Web Development Studio",
+        "hasCta": true
+      },
+      "time": "2026-10-12T21:36:57.266Z"
+    },
+    "P09": {
+      "id": "P09",
+      "name": "React Dashboard mounts at /app with crossOriginIsolated enabled",
+      "status": "PASS",
+      "details": {
+        "isCrossOriginIsolated": true,
+        "hasDashboardContent": true
+      },
+      "time": "2026-10-12T21:37:01.091Z"
+    },
+    "P10": {
+      "id": "P10",
+      "name": "Synthetic project successfully seeded with gb-coder-active-project-id",
+      "status": "PASS",
+      "details": {
+        "success": true,
+        "activeId": "prod-smoke-1791841021091"
+      },
+      "time": "2026-10-12T21:37:01.106Z"
+    },
+    "P11": {
+      "id": "P11",
+      "name": "Project record, editorStyle and active pointer persist through page reload",
+      "status": "PASS",
+      "details": {
+        "activeIdMatches": true,
+        "activeId": "prod-smoke-1791841021091",
+        "projectFound": true,
+        "editorStyle": "vscode",
+        "name": "Live-Production-Smoke-Project"
+      },
+      "time": "2026-10-12T21:37:04.316Z"
+    },
+    "P12": {
+      "id": "P12",
+      "name": "Advanced IDE at /app/ide loads with cross-origin isolation and editor container",
+      "status": "PASS",
+      "details": {
+        "crossOriginIsolated": true,
+        "hasMonacoElement": true,
+        "url": "/app/ide"
+      },
+      "time": "2026-10-12T21:37:08.858Z"
+    },
+    "P13": {
+      "id": "P13",
+      "name": "WebContainer runtime prerequisites verified (SharedArrayBuffer & crossOriginIsolated)",
+      "status": "PASS",
+      "details": {
+        "supported": true,
+        "hasSharedArrayBuffer": true,
+        "crossOriginIsolated": true
+      },
+      "time": "2026-10-12T21:37:08.862Z"
+    },
+    "P14": {
+      "id": "P14",
+      "name": "Execution runtime command simulation passes (node -v output)",
+      "status": "PASS",
+      "details": {
+        "success": true,
+        "simulatedVersion": "v20.18.0"
+      },
+      "time": "2026-10-12T21:37:08.867Z"
+    },
+    "P15": {
+      "id": "P15",
+      "name": "Live Preview container / iframe is rendered or mounted in IDE",
+      "status": "PASS",
+      "details": {
+        "previewIframeFound": true
+      },
+      "time": "2026-10-12T21:37:08.873Z"
+    },
+    "P16": {
+      "id": "P16",
+      "name": "ZIP backup serialization conforms to schema version 1",
+      "status": "PASS",
+      "details": {
+        "backupValid": true,
+        "projectName": "Live-Production-Smoke-Project"
+      },
+      "time": "2026-10-12T21:37:08.894Z"
+    },
+    "P17": {
+      "id": "P17",
+      "name": "Synthetic test project cleanly deleted from IndexedDB & localStorage",
+      "status": "PASS",
+      "details": {},
+      "time": "2026-10-12T21:37:08.898Z"
+    },
+    "P18": {
+      "id": "P18",
+      "name": "Zero critical / fatal uncaught browser console errors",
+      "status": "PASS",
+      "details": {
+        "totalConsoleMessages": 0,
+        "errorsFound": 0
+      },
+      "time": "2026-10-12T21:37:08.898Z"
+    }
+  },
+  "passed": 18,
+  "failed": 0,
+  "total": 18,
+  "errors": []
+}

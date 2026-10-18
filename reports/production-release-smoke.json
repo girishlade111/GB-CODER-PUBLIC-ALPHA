@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-10-15T21:00:29.154Z",
+  "prodUrl": "https://code.ladestack.in",
+  "deploymentId": "7104124377",
+  "verifiedCommit": "e6949732004afdd9a9116749bf2281a145c9bbec",
+  "suite": "GB_CODER_BATCH_1_PRODUCTION_SMOKE",
+  "tests": {
+    "SMOKE_MARKETING_ROOT": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T21:00:39.099Z",
+      "title": "Root marketing page loads successfully with HTTP 200",
+      "pageTitle": "GB Coder — In-Browser IDE & Code Studio | LadeStack",
+      "serverHeader": "Vercel"
+    },
+    "SMOKE_ROUTE__ABOUT": {
+      "status": 200,
+      "timestamp": "2026-10-15T21:00:43.702Z",
+      "title": "Route /about returns HTTP 200"
+    },
+    "SMOKE_ROUTE__CONTACT": {
+      "status": 200,
+      "timestamp": "2026-10-15T21:00:43.991Z",
+      "title": "Route /contact returns HTTP 200"
+    },
+    "SMOKE_ROUTE__PRIVACY_POLICY": {
+      "status": 200,
+      "timestamp": "2026-10-15T21:00:44.363Z",
+      "title": "Route /privacy-policy returns HTTP 200"
+    },
+    "SMOKE_APP_HEADERS": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T21:00:45.116Z",
+      "title": "Cross-Origin Isolation Headers correctly configured on /app",
+      "coop": "same-origin",
+      "coep": "require-corp"
+    },
+    "SMOKE_STATIC_EDITOR_ISOLATION": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T21:00:52.212Z",
+      "title": "Static Editor mounts cleanly without WebContainer interference"
+    },
+    "SMOKE_IDE_WORKSPACE_SEARCH": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T21:01:00.570Z",
+      "title": "Workspace Search finds code content across project files in Monaco IDE"
+    },
+    "SMOKE_IDE_PROBLEMS_PANEL": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T21:01:00.694Z",
+      "title": "Problems Panel displays diagnostics filter and empty/content state"
+    },
+    "SMOKE_IDE_OUTPUT_PANEL": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T21:01:00.775Z",
+      "title": "Output Panel renders log channels and console stream"
+    },
+    "SMOKE_IDE_COMMAND_PALETTE": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T21:01:00.836Z",
+      "title": "Command Palette opens with F1 and closes with Escape"
+    },
+    "SMOKE_IDE_QUICK_OPEN": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T21:01:00.888Z",
+      "title": "Quick Open opens with Ctrl+P in file navigation mode"
+    },
+    "SMOKE_IDE_PREVIEW_CONTROLS": {
+      "status": "PASSED",
+      "timestamp": "2026-10-15T21:01:01.024Z",
+      "title": "Preview panel renders responsive viewport preset buttons and controls"
+    }
+  },
+  "summary": {
+    "passed": 12,
+    "failed": 0,
+    "total": 12
+  },
+  "diagnostics": {
+    "consoleErrors": [],
+    "pageErrors": [
+      "[StaticEditor] Mp[t.projectType] is not iterable"
+    ],
+    "failedRequests": []
+  }
+}

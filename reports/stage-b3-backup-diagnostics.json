@@ -1,0 +1,48 @@
+{
+  "base": "https://gb-coder-public-alpha-ccyelci13.vercel.app",
+  "credential": "existing shared credential; not created or revoked",
+  "pages": [
+    {
+      "console": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/",
+          "at": 1792018177133
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/",
+          "at": 1792018178555
+        }
+      ]
+    },
+    {
+      "console": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/",
+          "at": 1792018182823
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/",
+          "at": 1792018186280
+        }
+      ]
+    }
+  ],
+  "http": [
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    },
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    }
+  ]
+}

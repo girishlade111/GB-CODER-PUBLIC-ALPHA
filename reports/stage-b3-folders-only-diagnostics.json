@@ -1,0 +1,74 @@
+{
+  "base": "https://gb-coder-public-alpha-ccyelci13.vercel.app",
+  "credential": "existing shared credential; not created or revoked",
+  "pages": [
+    {
+      "console": [
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018731383
+        },
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792018732460
+        }
+      ],
+      "pageErrors": [
+        "Failed to read the 'localStorage' property from 'Window': Access is denied for this document."
+      ],
+      "failedRequests": [],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects",
+          "at": 1792018721093
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/codex-ops/ide",
+          "at": 1792018722119
+        }
+      ]
+    }
+  ],
+  "http": [
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    }
+  ],
+  "telemetry": [
+    {
+      "stage": "application_dom_loaded",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects",
+      "at": 1792018721085,
+      "navigationMs": 1343.5450000017881
+    },
+    {
+      "stage": "application_dom_loaded",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/codex-ops/ide",
+      "at": 1792018722109,
+      "navigationMs": 556.9099999964237
+    },
+    {
+      "stage": "boot_promise_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/codex-ops/ide",
+      "at": 1792018723323,
+      "navigationMs": 1771.5799999982119
+    },
+    {
+      "stage": "boot_promise_resolved",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/codex-ops/ide",
+      "at": 1792018728633,
+      "navigationMs": 7080.969999998808,
+      "durationMs": 5309.405000001192
+    },
+    {
+      "stage": "runtime_instance_available",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/codex-ops/ide",
+      "at": 1792018728638,
+      "navigationMs": 7086.484999999404
+    }
+  ]
+}

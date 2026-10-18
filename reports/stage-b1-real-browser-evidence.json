@@ -1,0 +1,160 @@
+{
+  "timestamp": "2026-10-14T21:05:54.996Z",
+  "results": [
+    {
+      "testId": "WC-RB-001",
+      "name": "React Project A Startup & Live Preview",
+      "status": "PASS",
+      "details": {
+        "previewUrl": "https://jk3m21kiws2vth9vx5qzjbetoxsoaz-bbmj--5173--2ed8f36d.local-corp.webcontainer-api.io",
+        "renderedText": "WC-PROJECT-A"
+      },
+      "timestamp": "2026-10-14T21:02:50.858Z"
+    },
+    {
+      "testId": "WC-RB-002",
+      "name": "Project A -> Dashboard Navigation & Disassociation",
+      "status": "PASS",
+      "details": {
+        "activeProjectCleared": true,
+        "previewUnmounted": true,
+        "dashboardUrl": "http://127.0.0.1:4191/app/projects"
+      },
+      "timestamp": "2026-10-14T21:02:52.515Z"
+    },
+    {
+      "testId": "WC-RB-003",
+      "name": "Dashboard -> Project B Isolation & Rendering",
+      "status": "PASS",
+      "details": {
+        "previewUrl": "https://jk3m21kiws2vth9vx5qzjbetoxsoaz-bbmj--5173--2ed8f36d.local-corp.webcontainer-api.io",
+        "renderedText": "WC-PROJECT-B",
+        "crossContaminationAbsent": true
+      },
+      "timestamp": "2026-10-14T21:03:07.829Z"
+    },
+    {
+      "testId": "WC-RB-004",
+      "name": "Rapid Project Switching Loop (A -> B -> A)",
+      "status": "PASS",
+      "details": {
+        "switchTextA": "WC-PROJECT-A",
+        "switchTextB": "WC-PROJECT-B",
+        "zeroPortCollision": true
+      },
+      "timestamp": "2026-10-14T21:03:54.263Z"
+    },
+    {
+      "testId": "WC-RB-007",
+      "name": "Empty Project Transition (0 files, 0 installs, 0 servers)",
+      "status": "PASS",
+      "details": {
+        "fileCount": 0
+      },
+      "timestamp": "2026-10-14T21:04:01.234Z"
+    },
+    {
+      "testId": "WC-RB-008",
+      "name": "Manifest-less Project Transition",
+      "status": "PASS",
+      "details": {
+        "fileCount": 2
+      },
+      "timestamp": "2026-10-14T21:04:07.996Z"
+    },
+    {
+      "testId": "WC-RB-009",
+      "name": "Browser Back / Forward Navigation",
+      "status": "PASS",
+      "details": {
+        "currentUrl": "http://127.0.0.1:4191/app/projects/wc-nav-2/ide"
+      },
+      "timestamp": "2026-10-14T21:04:10.145Z"
+    },
+    {
+      "testId": "WC-FS-001",
+      "name": "Monaco Edits (Debounce & FIFO Coordination)",
+      "status": "PASS",
+      "details": {
+        "editConfirmed": true
+      },
+      "timestamp": "2026-10-14T21:04:54.271Z"
+    },
+    {
+      "testId": "WC-FS-002",
+      "name": "Real React HMR Live Preview Hot-Update",
+      "status": "PASS",
+      "details": {
+        "hmrText": "FS-SYNC-V2"
+      },
+      "timestamp": "2026-10-14T21:04:54.271Z"
+    },
+    {
+      "testId": "WC-FS-010",
+      "name": "Refresh and Storage Consistency",
+      "status": "PASS",
+      "details": {
+        "storedPath": "src/main.jsx"
+      },
+      "timestamp": "2026-10-14T21:04:55.229Z"
+    },
+    {
+      "testId": "WC-FS-003",
+      "name": "Vue SFC Live HMR Hot-Update",
+      "status": "PASS",
+      "details": {
+        "renderedText": "VUE-HMR-V2"
+      },
+      "timestamp": "2026-10-14T21:05:30.987Z"
+    },
+    {
+      "testId": "WC-MAN-001",
+      "name": "Nested Monorepo Manifest (Zero Invalid Root Install)",
+      "status": "PASS",
+      "details": {
+        "noRootSynthesis": true,
+        "noEnoentCrash": true
+      },
+      "timestamp": "2026-10-14T21:05:42.640Z"
+    },
+    {
+      "testId": "WC-MAN-004",
+      "name": "Explicit Manifest Without Dependencies (Idle Shell)",
+      "status": "PASS",
+      "details": {
+        "isIdle": true
+      },
+      "timestamp": "2026-10-14T21:05:53.766Z"
+    }
+  ],
+  "passed": 13,
+  "failed": 0,
+  "logs": [
+    "[2026-10-14T21:02:18.104Z] ================================================================",
+    "[2026-10-14T21:02:18.108Z] GB CODER — PHASE 2.2 STAGE B.1 REAL-BROWSER VERIFICATION HARNESS",
+    "[2026-10-14T21:02:18.108Z] ================================================================",
+    "[2026-10-14T21:02:18.127Z] Reusing existing preview server on port 4191",
+    "[2026-10-14T21:02:18.264Z] \n--- GROUP 1: WC-001 Project-Scoped Dev Server Lifecycle ---",
+    "[2026-10-14T21:02:50.858Z] [PASS] WC-RB-001: React Project A Startup & Live Preview",
+    "[2026-10-14T21:02:52.515Z] [PASS] WC-RB-002: Project A -> Dashboard Navigation & Disassociation",
+    "[2026-10-14T21:03:07.829Z] [PASS] WC-RB-003: Dashboard -> Project B Isolation & Rendering",
+    "[2026-10-14T21:03:07.829Z] Testing rapid project switching A -> B -> A...",
+    "[2026-10-14T21:03:54.263Z] [PASS] WC-RB-004: Rapid Project Switching Loop (A -> B -> A)",
+    "[2026-10-14T21:04:01.234Z] [PASS] WC-RB-007: Empty Project Transition (0 files, 0 installs, 0 servers)",
+    "[2026-10-14T21:04:07.996Z] [PASS] WC-RB-008: Manifest-less Project Transition",
+    "[2026-10-14T21:04:10.145Z] [PASS] WC-RB-009: Browser Back / Forward Navigation",
+    "[2026-10-14T21:04:10.171Z] \n--- GROUP 2: WC-007 File Synchronization & HMR ---",
+    "[2026-10-14T21:04:48.018Z] Executing typing updates in Monaco editor...",
+    "[2026-10-14T21:04:51.257Z] Waiting for Vite HMR hot-update in preview frame...",
+    "[2026-10-14T21:04:54.271Z] [PASS] WC-FS-001: Monaco Edits (Debounce & FIFO Coordination)",
+    "[2026-10-14T21:04:54.271Z] [PASS] WC-FS-002: Real React HMR Live Preview Hot-Update",
+    "[2026-10-14T21:04:55.229Z] [PASS] WC-FS-010: Refresh and Storage Consistency",
+    "[2026-10-14T21:05:30.987Z] [PASS] WC-FS-003: Vue SFC Live HMR Hot-Update",
+    "[2026-10-14T21:05:31.022Z] \n--- GROUP 3: WC-002 Root Manifest Correctness ---",
+    "[2026-10-14T21:05:42.640Z] [PASS] WC-MAN-001: Nested Monorepo Manifest (Zero Invalid Root Install)",
+    "[2026-10-14T21:05:53.766Z] [PASS] WC-MAN-004: Explicit Manifest Without Dependencies (Idle Shell)",
+    "[2026-10-14T21:05:54.996Z] \n================================================================",
+    "[2026-10-14T21:05:54.996Z] SUMMARY: 13 Scenarios Executed | 13 PASSED | 0 FAILED",
+    "[2026-10-14T21:05:54.996Z] ================================================================"
+  ]
+}

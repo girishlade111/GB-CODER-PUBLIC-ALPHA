@@ -1,0 +1,1404 @@
+{
+  "scope": "Phase B.4.4 Stage 1.2.2 standalone binary dependency executable permission diagnostics and restoration experiment; no product integration",
+  "head": "30804ea3e3f94814b46b7a9934fb477f91354615",
+  "identity": [
+    {
+      "path": "scripts/.tmp-b4-4/policy.mjs",
+      "sha256": "044622a796cd19587b7a12950fce5a0ffaf71994b653bb52c8282bd93d105b82"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/browser.mjs",
+      "sha256": "c38368ac53721c7bf0940db3acfaf2a1fc7dbd0b73865695cbb4a9a64eb4d03d"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/run.mjs",
+      "sha256": "460490b563bc99014c41b7cc57aa81dcf3d5ba6b2c65ae3b4bd5572d5bbbe4b3"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/fixtures.json",
+      "sha256": "b20447d0a8b754938271826e3d75150d0db49d2c38bf924b35d70d44036e683a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-1.mjs",
+      "sha256": "4d9c2e650f243ea5c3c6642749556ed6cf8094b97c2cfa4b1850c53d96a8e57f"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-2.mjs",
+      "sha256": "d74835ea76de29f2e9255115ff3f1ec2bc9d0819ce73b956447d8cb9e69070ee"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-2-1.mjs",
+      "sha256": "b80cae69dca5ddd10b625841bc57ae918409981e5a0ef48daf94841ec5c923b5"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-2-2.mjs",
+      "sha256": "95264251ffa5eb1436c0cd5511392f3ab2cbdce4694b1f1bfe2d04ac58827ad7"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package.json",
+      "sha256": "270a46f542ce8b01523fda3f5bd7333ad28734446815c0750c980f9162503570"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package-lock.json",
+      "sha256": "2d49b9349752521c344fe0d5091f46eabfd4718c7f6c52f3df92fdf6b8f61734"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package.json",
+      "sha256": "82bb171c0deb4422bf7a259b2497127d06f8213fa25bec2fcfd464e53e404b7a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package-lock.json",
+      "sha256": "e0a32ce64578f02feea91775c0b9d56b8cae869dd41424e1b096954fa8d9bedb"
+    }
+  ],
+  "apiVersion": "1.6.4",
+  "bundleSha256": "4cb2ab8b246a367ffc74766bfe2ff913d55635581a0f7d8c84b85ae89fb0462a",
+  "status": "B4_4_EXECUTABLE_RESTORATION_PASS",
+  "startedAt": 1792068524554,
+  "budget": {
+    "maxBoots": 2,
+    "perObservationMs": 240000,
+    "campaignMs": 900000,
+    "captureMs": 10000,
+    "restoreValidationMs": 15000,
+    "retries": 0
+  },
+  "observations": [
+    {
+      "index": 1,
+      "role": "producer",
+      "project": "React A",
+      "start": 1792068525719,
+      "status": "PASS",
+      "completedAt": 1792068540266,
+      "elapsedMs": 14547
+    },
+    {
+      "index": 2,
+      "role": "consumer",
+      "project": "React A",
+      "start": 1792068540299,
+      "status": "PASS",
+      "realDomMs": 33634,
+      "marker": "B44_REACT_A",
+      "completedAt": 1792068573946,
+      "elapsedMs": 33647
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "failedRequests": [
+    {
+      "at": 1792068572126,
+      "url": "https://7i8ck62dj7zha0527l160fl0v33w0d-iedw-zfzmw6da--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "httpErrors": [],
+  "progress": [
+    {
+      "at": 1792068530727,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "compatibility",
+      "elapsedMs": 5002
+    },
+    {
+      "at": 1792068535728,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "install",
+      "elapsedMs": 10003
+    },
+    {
+      "at": 1792068540733,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "boot",
+      "elapsedMs": 426
+    },
+    {
+      "at": 1792068545740,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "boot",
+      "elapsedMs": 5434
+    },
+    {
+      "at": 1792068550747,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "boot",
+      "elapsedMs": 10441
+    },
+    {
+      "at": 1792068555762,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "compatibility",
+      "elapsedMs": 15455
+    },
+    {
+      "at": 1792068560773,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "package-execution",
+      "elapsedMs": 20465
+    },
+    {
+      "at": 1792068565776,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 25469
+    },
+    {
+      "at": 1792068570785,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "awaiting-real-dom",
+      "elapsedMs": 30478
+    }
+  ],
+  "bootCount": 2,
+  "browserVersion": "151.0.7922.34",
+  "campaignStartedAt": 1792068525718,
+  "browser": {
+    "api": "1.6.4",
+    "format": "binary",
+    "samples": [
+      {
+        "index": 1,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "producer",
+        "start": 1792068525724,
+        "status": "PASS",
+        "phase": "producer-complete",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792068530371,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react-producer\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068531033,
+            "durationMs": 662
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792068531033,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068532588,
+            "durationMs": 1555
+          },
+          {
+            "label": "clean-install",
+            "program": "npm",
+            "args": [
+              "ci",
+              "--ignore-scripts",
+              "--no-audit",
+              "--no-fund",
+              "--fetch-retries=0"
+            ],
+            "invokedAt": 1792068532596,
+            "output": "\r\nadded 14 packages in 4s\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068538020,
+            "durationMs": 5424
+          },
+          {
+            "label": "internal-symlink-probe",
+            "program": "node",
+            "args": [
+              "-e",
+              "require('fs').symlinkSync('.b4-4-byte-probe.bin','node_modules/.b4-4-internal-link')"
+            ],
+            "invokedAt": 1792068538039,
+            "output": "",
+            "exitCode": 0,
+            "exitAt": 1792068538725,
+            "durationMs": 686
+          },
+          {
+            "label": "producer-permission-diagnostics",
+            "program": "node",
+            "args": [
+              "node_modules/.b4-4-diag.cjs"
+            ],
+            "invokedAt": 1792068538727,
+            "output": "{\"symlinkInfo\":{\"exists\":true,\"path\":\"node_modules/.bin/vite\",\"isSymbolicLink\":true,\"isFile\":false,\"lstatModeOctal\":\"777\",\"target\":\"../vite/bin/vite.js\",\"statModeOctal\":\"775\",\"statIsFile\":true,\"isExecutable\":true,\"statError\":null},\"targetInfo\":{\"exists\":true,\"path\":\"node_modules/vite/bin/vite.js\",\"isSymbolicLink\":false,\"isFile\":true,\"lstatModeOctal\":\"775\",\"target\":null,\"statModeOctal\":\"775\",\"statIsFile\":true,\"isExecutable\":true,\"statError\":null},\"targetPath\":\"node_modules/vite/bin/vite.js\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068539597,
+            "durationMs": 870
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792068525726,
+            "label": "before-boot",
+            "pageJsHeapBytes": 1888843
+          },
+          {
+            "at": 1792068530370,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 7862654
+          },
+          {
+            "at": 1792068539597,
+            "label": "capture-before",
+            "pageJsHeapBytes": 8359712
+          },
+          {
+            "at": 1792068540093,
+            "label": "after-export",
+            "pageJsHeapBytes": 34656571
+          },
+          {
+            "at": 1792068540234,
+            "label": "capture-after",
+            "pageJsHeapBytes": 34662355
+          },
+          {
+            "at": 1792068540306,
+            "label": "after-cleanup",
+            "pageJsHeapBytes": 34483554
+          }
+        ],
+        "proof": false,
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 1,
+          "generation": 1,
+          "runtimeId": 1
+        },
+        "bootMs": 2848.6149999797344,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react-producer",
+        "key": "b4e9aa4411ad9d6f32a15322d83a8caa6424c1b43c5c407cedf6a15bf5022ccf",
+        "installMs": 5424,
+        "installExit": 0,
+        "probeSha256": "785b0751fc2c53dc14a4ce3d800e69ef9ce1009eb327ccf458afe09c242c26c9",
+        "producerDiagnostics": {
+          "symlinkInfo": {
+            "exists": true,
+            "path": "node_modules/.bin/vite",
+            "isSymbolicLink": true,
+            "isFile": false,
+            "lstatModeOctal": "777",
+            "target": "../vite/bin/vite.js",
+            "statModeOctal": "775",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetInfo": {
+            "exists": true,
+            "path": "node_modules/vite/bin/vite.js",
+            "isSymbolicLink": false,
+            "isFile": true,
+            "lstatModeOctal": "775",
+            "target": null,
+            "statModeOctal": "775",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetPath": "node_modules/vite/bin/vite.js"
+        },
+        "exportMs": 494.96000000834465,
+        "hashingMs": 141.65000000596046,
+        "binaryByteLength": 26269787,
+        "binarySha256": "780d5689bfeb35f19309828e98380334e9ca7997173dae988d0162631815817d",
+        "captureMs": 636.8600000143051,
+        "captureJsHeapDelta": 26302747,
+        "totalMs": 14523
+      },
+      {
+        "index": 2,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "consumer",
+        "start": 1792068540306,
+        "status": "PASS",
+        "phase": "ready",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792068554420,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react-consumer\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068555160,
+            "durationMs": 741
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792068555161,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068556423,
+            "durationMs": 1262
+          },
+          {
+            "label": "consumer-pre-correction-diagnostics",
+            "program": "node",
+            "args": [
+              "node_modules/.b4-4-diag.cjs"
+            ],
+            "invokedAt": 1792068557005,
+            "output": "{\"symlinkInfo\":{\"exists\":true,\"path\":\"node_modules/.bin/vite\",\"isSymbolicLink\":true,\"isFile\":false,\"lstatModeOctal\":\"777\",\"target\":\"../vite/bin/vite.js\",\"statModeOctal\":\"644\",\"statIsFile\":true,\"isExecutable\":false,\"statError\":null},\"targetInfo\":{\"exists\":true,\"path\":\"node_modules/vite/bin/vite.js\",\"isSymbolicLink\":false,\"isFile\":true,\"lstatModeOctal\":\"644\",\"target\":null,\"statModeOctal\":\"644\",\"statIsFile\":true,\"isExecutable\":false,\"statError\":null},\"targetPath\":\"node_modules/vite/bin/vite.js\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068557802,
+            "durationMs": 797
+          },
+          {
+            "label": "test-chmod-cli",
+            "program": "chmod",
+            "args": [
+              "+x",
+              "node_modules/vite/bin/vite.js"
+            ],
+            "invokedAt": 1792068557802,
+            "output": "",
+            "exitCode": 0,
+            "exitAt": 1792068558832,
+            "durationMs": 1030
+          },
+          {
+            "label": "consumer-post-correction-diagnostics",
+            "program": "node",
+            "args": [
+              "node_modules/.b4-4-diag.cjs"
+            ],
+            "invokedAt": 1792068558832,
+            "output": "{\"symlinkInfo\":{\"exists\":true,\"path\":\"node_modules/.bin/vite\",\"isSymbolicLink\":true,\"isFile\":false,\"lstatModeOctal\":\"777\",\"target\":\"../vite/bin/vite.js\",\"statModeOctal\":\"755\",\"statIsFile\":true,\"isExecutable\":true,\"statError\":null},\"targetInfo\":{\"exists\":true,\"path\":\"node_modules/vite/bin/vite.js\",\"isSymbolicLink\":false,\"isFile\":true,\"lstatModeOctal\":\"755\",\"target\":null,\"statModeOctal\":\"755\",\"statIsFile\":true,\"isExecutable\":true,\"statError\":null},\"targetPath\":\"node_modules/vite/bin/vite.js\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068559701,
+            "durationMs": 869
+          },
+          {
+            "label": "dependency-execution",
+            "program": "node",
+            "args": [
+              "-e",
+              "const r=require('react');console.log(r.version);const v=require('vite/package.json');console.log(v.version);"
+            ],
+            "invokedAt": 1792068559737,
+            "output": "18.3.1\r\n5.4.21\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068560625,
+            "durationMs": 888
+          },
+          {
+            "label": "vite-bin-execution",
+            "program": "node",
+            "args": [
+              "node_modules/vite/bin/vite.js",
+              "--version"
+            ],
+            "invokedAt": 1792068560625,
+            "output": "vite/5.4.21 linux-x64 node-v22.22.3\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068563432,
+            "durationMs": 2807
+          },
+          {
+            "label": "dev-server",
+            "program": "npm",
+            "args": [
+              "run",
+              "dev"
+            ],
+            "invokedAt": 1792068563433,
+            "output": "\r\n> gb-b4-4-react@1.0.0 dev\r\n> vite --host 0.0.0.0 --port 5173 --strictPort\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[1;1H\u001b[0J\r\n  \u001b[32m\u001b[1mVITE\u001b[22m v5.4.21\u001b[39m  \u001b[2mready in \u001b[0m\u001b[1m1924\u001b[22m\u001b[2m\u001b[0m ms\u001b[22m\r\n\r\n  \u001b[32m➜\u001b[39m  \u001b[1mLocal\u001b[22m:   \u001b[36mhttp://localhost:\u001b[1m5173\u001b[22m/\u001b[39m\r\n  \u001b[32m➜\u001b[39m  \u001b[1mNetwork\u001b[22m: \u001b[36mhttp://192.168.1.104:\u001b[1m5173\u001b[22m/\u001b[39m\r\n\u001b[2m\u001b[32m  ➜\u001b[39m\u001b[22m\u001b[2m  press \u001b[22m\u001b[1mh + enter\u001b[22m\u001b[2m to show help\u001b[22m\r\n"
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792068540306,
+            "label": "before-boot",
+            "pageJsHeapBytes": 34485342
+          },
+          {
+            "at": 1792068554420,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 38769506
+          },
+          {
+            "at": 1792068556435,
+            "label": "restore-before",
+            "pageJsHeapBytes": 29757679
+          },
+          {
+            "at": 1792068556965,
+            "label": "after-mount",
+            "pageJsHeapBytes": 55954314
+          },
+          {
+            "at": 1792068557005,
+            "label": "restore-after",
+            "pageJsHeapBytes": 56176575
+          },
+          {
+            "at": 1792068573935,
+            "label": "ready",
+            "pageJsHeapBytes": 34481461
+          }
+        ],
+        "proof": {
+          "project": "A",
+          "epoch": 2,
+          "generation": 2,
+          "runtimeId": 2,
+          "source": "validated-binary-restore-and-real-dom"
+        },
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 2,
+          "generation": 2,
+          "runtimeId": 2
+        },
+        "bootMs": 7641.425000011921,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react-consumer",
+        "key": "b4e9aa4411ad9d6f32a15322d83a8caa6424c1b43c5c407cedf6a15bf5022ccf",
+        "preRestoreValidationMs": 153.60000002384186,
+        "cloneMs": 34.974999994039536,
+        "mountMs": 335.80500000715256,
+        "restoredTopLevelCount": 21,
+        "postRestoreValidationMs": 40.26500001549721,
+        "restoreMs": 569.9800000190735,
+        "consumerDiagnosticsBefore": {
+          "symlinkInfo": {
+            "exists": true,
+            "path": "node_modules/.bin/vite",
+            "isSymbolicLink": true,
+            "isFile": false,
+            "lstatModeOctal": "777",
+            "target": "../vite/bin/vite.js",
+            "statModeOctal": "644",
+            "statIsFile": true,
+            "isExecutable": false,
+            "statError": null
+          },
+          "targetInfo": {
+            "exists": true,
+            "path": "node_modules/vite/bin/vite.js",
+            "isSymbolicLink": false,
+            "isFile": true,
+            "lstatModeOctal": "644",
+            "target": null,
+            "statModeOctal": "644",
+            "statIsFile": true,
+            "isExecutable": false,
+            "statError": null
+          },
+          "targetPath": "node_modules/vite/bin/vite.js"
+        },
+        "producerDiagnostics": {
+          "symlinkInfo": {
+            "exists": true,
+            "path": "node_modules/.bin/vite",
+            "isSymbolicLink": true,
+            "isFile": false,
+            "lstatModeOctal": "777",
+            "target": "../vite/bin/vite.js",
+            "statModeOctal": "775",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetInfo": {
+            "exists": true,
+            "path": "node_modules/vite/bin/vite.js",
+            "isSymbolicLink": false,
+            "isFile": true,
+            "lstatModeOctal": "775",
+            "target": null,
+            "statModeOctal": "775",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetPath": "node_modules/vite/bin/vite.js"
+        },
+        "permissionDifferences": {
+          "producerTargetMode": "775",
+          "consumerTargetModeBefore": "644",
+          "executableLost": true
+        },
+        "verifiedTarget": "node_modules/vite/bin/vite.js",
+        "chmodCliExit": 0,
+        "chmodMethod": "chmod-cli",
+        "chmodDurationMs": 1029.9150000214577,
+        "consumerDiagnosticsAfter": {
+          "symlinkInfo": {
+            "exists": true,
+            "path": "node_modules/.bin/vite",
+            "isSymbolicLink": true,
+            "isFile": false,
+            "lstatModeOctal": "777",
+            "target": "../vite/bin/vite.js",
+            "statModeOctal": "755",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetInfo": {
+            "exists": true,
+            "path": "node_modules/vite/bin/vite.js",
+            "isSymbolicLink": false,
+            "isFile": true,
+            "lstatModeOctal": "755",
+            "target": null,
+            "statModeOctal": "755",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetPath": "node_modules/vite/bin/vite.js"
+        },
+        "packageExecution": {
+          "exit": 0,
+          "output": "18.3.1\r\n5.4.21"
+        },
+        "viteExecutable": {
+          "exit": 0,
+          "output": "vite/5.4.21 linux-x64 node-v22.22.3"
+        },
+        "devInvokedAt": 1792068563433,
+        "serverReadyAt": 1792068567539,
+        "serverUrl": "https://7i8ck62dj7zha0527l160fl0v33w0d-iedw-zfzmw6da--5173--2ed8f36d.local-corp.webcontainer-api.io",
+        "serverReadyMs": 4106,
+        "domVerifiedAt": 1792068573934,
+        "totalMs": 33628,
+        "installDispatchCount": 0
+      }
+    ],
+    "events": [
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792068531033
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792068532588
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "clean-install",
+        "code": 0,
+        "at": 1792068538020
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "internal-symlink-probe",
+        "code": 0,
+        "at": 1792068538725
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "producer-permission-diagnostics",
+        "code": 0,
+        "at": 1792068539597
+      },
+      {
+        "type": "retire",
+        "sample": 1,
+        "at": 1792068540305
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792068555160
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792068556423
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "consumer-pre-correction-diagnostics",
+        "code": 0,
+        "at": 1792068557802
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "test-chmod-cli",
+        "code": 0,
+        "at": 1792068558832
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "consumer-post-correction-diagnostics",
+        "code": 0,
+        "at": 1792068559701
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "dependency-execution",
+        "code": 0,
+        "at": 1792068560625
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "vite-bin-execution",
+        "code": 0,
+        "at": 1792068563432
+      }
+    ],
+    "memoryCoverage": "performance.memory.usedJSHeapSize with precise-memory flag: page JS heap only; excludes worker/Wasm/native memory; sampled checkpoints, not a guaranteed peak",
+    "bootCount": 2,
+    "retainedBinaryArtifact": {
+      "project": "A",
+      "key": "b4e9aa4411ad9d6f32a15322d83a8caa6424c1b43c5c407cedf6a15bf5022ccf",
+      "sha256": "780d5689bfeb35f19309828e98380334e9ca7997173dae988d0162631815817d",
+      "byteLength": 26269787,
+      "createdAt": 1792068540234
+    },
+    "runtimeInstances": 2,
+    "retiredRuntimeCount": 1
+  },
+  "cleanup": {
+    "api": "1.6.4",
+    "format": "binary",
+    "samples": [
+      {
+        "index": 1,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "producer",
+        "start": 1792068525724,
+        "status": "PASS",
+        "phase": "producer-complete",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792068530371,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react-producer\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068531033,
+            "durationMs": 662
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792068531033,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068532588,
+            "durationMs": 1555
+          },
+          {
+            "label": "clean-install",
+            "program": "npm",
+            "args": [
+              "ci",
+              "--ignore-scripts",
+              "--no-audit",
+              "--no-fund",
+              "--fetch-retries=0"
+            ],
+            "invokedAt": 1792068532596,
+            "output": "\r\nadded 14 packages in 4s\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068538020,
+            "durationMs": 5424
+          },
+          {
+            "label": "internal-symlink-probe",
+            "program": "node",
+            "args": [
+              "-e",
+              "require('fs').symlinkSync('.b4-4-byte-probe.bin','node_modules/.b4-4-internal-link')"
+            ],
+            "invokedAt": 1792068538039,
+            "output": "",
+            "exitCode": 0,
+            "exitAt": 1792068538725,
+            "durationMs": 686
+          },
+          {
+            "label": "producer-permission-diagnostics",
+            "program": "node",
+            "args": [
+              "node_modules/.b4-4-diag.cjs"
+            ],
+            "invokedAt": 1792068538727,
+            "output": "{\"symlinkInfo\":{\"exists\":true,\"path\":\"node_modules/.bin/vite\",\"isSymbolicLink\":true,\"isFile\":false,\"lstatModeOctal\":\"777\",\"target\":\"../vite/bin/vite.js\",\"statModeOctal\":\"775\",\"statIsFile\":true,\"isExecutable\":true,\"statError\":null},\"targetInfo\":{\"exists\":true,\"path\":\"node_modules/vite/bin/vite.js\",\"isSymbolicLink\":false,\"isFile\":true,\"lstatModeOctal\":\"775\",\"target\":null,\"statModeOctal\":\"775\",\"statIsFile\":true,\"isExecutable\":true,\"statError\":null},\"targetPath\":\"node_modules/vite/bin/vite.js\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068539597,
+            "durationMs": 870
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792068525726,
+            "label": "before-boot",
+            "pageJsHeapBytes": 1888843
+          },
+          {
+            "at": 1792068530370,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 7862654
+          },
+          {
+            "at": 1792068539597,
+            "label": "capture-before",
+            "pageJsHeapBytes": 8359712
+          },
+          {
+            "at": 1792068540093,
+            "label": "after-export",
+            "pageJsHeapBytes": 34656571
+          },
+          {
+            "at": 1792068540234,
+            "label": "capture-after",
+            "pageJsHeapBytes": 34662355
+          },
+          {
+            "at": 1792068540306,
+            "label": "after-cleanup",
+            "pageJsHeapBytes": 34483554
+          }
+        ],
+        "proof": false,
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 1,
+          "generation": 1,
+          "runtimeId": 1
+        },
+        "bootMs": 2848.6149999797344,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react-producer",
+        "key": "b4e9aa4411ad9d6f32a15322d83a8caa6424c1b43c5c407cedf6a15bf5022ccf",
+        "installMs": 5424,
+        "installExit": 0,
+        "probeSha256": "785b0751fc2c53dc14a4ce3d800e69ef9ce1009eb327ccf458afe09c242c26c9",
+        "producerDiagnostics": {
+          "symlinkInfo": {
+            "exists": true,
+            "path": "node_modules/.bin/vite",
+            "isSymbolicLink": true,
+            "isFile": false,
+            "lstatModeOctal": "777",
+            "target": "../vite/bin/vite.js",
+            "statModeOctal": "775",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetInfo": {
+            "exists": true,
+            "path": "node_modules/vite/bin/vite.js",
+            "isSymbolicLink": false,
+            "isFile": true,
+            "lstatModeOctal": "775",
+            "target": null,
+            "statModeOctal": "775",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetPath": "node_modules/vite/bin/vite.js"
+        },
+        "exportMs": 494.96000000834465,
+        "hashingMs": 141.65000000596046,
+        "binaryByteLength": 26269787,
+        "binarySha256": "780d5689bfeb35f19309828e98380334e9ca7997173dae988d0162631815817d",
+        "captureMs": 636.8600000143051,
+        "captureJsHeapDelta": 26302747,
+        "totalMs": 14523
+      },
+      {
+        "index": 2,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "consumer",
+        "start": 1792068540306,
+        "status": "PASS",
+        "phase": "ready",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792068554420,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react-consumer\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068555160,
+            "durationMs": 741
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792068555161,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068556423,
+            "durationMs": 1262
+          },
+          {
+            "label": "consumer-pre-correction-diagnostics",
+            "program": "node",
+            "args": [
+              "node_modules/.b4-4-diag.cjs"
+            ],
+            "invokedAt": 1792068557005,
+            "output": "{\"symlinkInfo\":{\"exists\":true,\"path\":\"node_modules/.bin/vite\",\"isSymbolicLink\":true,\"isFile\":false,\"lstatModeOctal\":\"777\",\"target\":\"../vite/bin/vite.js\",\"statModeOctal\":\"644\",\"statIsFile\":true,\"isExecutable\":false,\"statError\":null},\"targetInfo\":{\"exists\":true,\"path\":\"node_modules/vite/bin/vite.js\",\"isSymbolicLink\":false,\"isFile\":true,\"lstatModeOctal\":\"644\",\"target\":null,\"statModeOctal\":\"644\",\"statIsFile\":true,\"isExecutable\":false,\"statError\":null},\"targetPath\":\"node_modules/vite/bin/vite.js\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068557802,
+            "durationMs": 797
+          },
+          {
+            "label": "test-chmod-cli",
+            "program": "chmod",
+            "args": [
+              "+x",
+              "node_modules/vite/bin/vite.js"
+            ],
+            "invokedAt": 1792068557802,
+            "output": "",
+            "exitCode": 0,
+            "exitAt": 1792068558832,
+            "durationMs": 1030
+          },
+          {
+            "label": "consumer-post-correction-diagnostics",
+            "program": "node",
+            "args": [
+              "node_modules/.b4-4-diag.cjs"
+            ],
+            "invokedAt": 1792068558832,
+            "output": "{\"symlinkInfo\":{\"exists\":true,\"path\":\"node_modules/.bin/vite\",\"isSymbolicLink\":true,\"isFile\":false,\"lstatModeOctal\":\"777\",\"target\":\"../vite/bin/vite.js\",\"statModeOctal\":\"755\",\"statIsFile\":true,\"isExecutable\":true,\"statError\":null},\"targetInfo\":{\"exists\":true,\"path\":\"node_modules/vite/bin/vite.js\",\"isSymbolicLink\":false,\"isFile\":true,\"lstatModeOctal\":\"755\",\"target\":null,\"statModeOctal\":\"755\",\"statIsFile\":true,\"isExecutable\":true,\"statError\":null},\"targetPath\":\"node_modules/vite/bin/vite.js\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068559701,
+            "durationMs": 869
+          },
+          {
+            "label": "dependency-execution",
+            "program": "node",
+            "args": [
+              "-e",
+              "const r=require('react');console.log(r.version);const v=require('vite/package.json');console.log(v.version);"
+            ],
+            "invokedAt": 1792068559737,
+            "output": "18.3.1\r\n5.4.21\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068560625,
+            "durationMs": 888
+          },
+          {
+            "label": "vite-bin-execution",
+            "program": "node",
+            "args": [
+              "node_modules/vite/bin/vite.js",
+              "--version"
+            ],
+            "invokedAt": 1792068560625,
+            "output": "vite/5.4.21 linux-x64 node-v22.22.3\r\n",
+            "exitCode": 0,
+            "exitAt": 1792068563432,
+            "durationMs": 2807
+          },
+          {
+            "label": "dev-server",
+            "program": "npm",
+            "args": [
+              "run",
+              "dev"
+            ],
+            "invokedAt": 1792068563433,
+            "output": "\r\n> gb-b4-4-react@1.0.0 dev\r\n> vite --host 0.0.0.0 --port 5173 --strictPort\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[1;1H\u001b[0J\r\n  \u001b[32m\u001b[1mVITE\u001b[22m v5.4.21\u001b[39m  \u001b[2mready in \u001b[0m\u001b[1m1924\u001b[22m\u001b[2m\u001b[0m ms\u001b[22m\r\n\r\n  \u001b[32m➜\u001b[39m  \u001b[1mLocal\u001b[22m:   \u001b[36mhttp://localhost:\u001b[1m5173\u001b[22m/\u001b[39m\r\n  \u001b[32m➜\u001b[39m  \u001b[1mNetwork\u001b[22m: \u001b[36mhttp://192.168.1.104:\u001b[1m5173\u001b[22m/\u001b[39m\r\n\u001b[2m\u001b[32m  ➜\u001b[39m\u001b[22m\u001b[2m  press \u001b[22m\u001b[1mh + enter\u001b[22m\u001b[2m to show help\u001b[22m\r\n",
+            "exitRejected": "Error: Process aborted",
+            "exitAt": 1792068573982
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792068540306,
+            "label": "before-boot",
+            "pageJsHeapBytes": 34485342
+          },
+          {
+            "at": 1792068554420,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 38769506
+          },
+          {
+            "at": 1792068556435,
+            "label": "restore-before",
+            "pageJsHeapBytes": 29757679
+          },
+          {
+            "at": 1792068556965,
+            "label": "after-mount",
+            "pageJsHeapBytes": 55954314
+          },
+          {
+            "at": 1792068557005,
+            "label": "restore-after",
+            "pageJsHeapBytes": 56176575
+          },
+          {
+            "at": 1792068573935,
+            "label": "ready",
+            "pageJsHeapBytes": 34481461
+          },
+          {
+            "at": 1792068573979,
+            "label": "after-cleanup",
+            "pageJsHeapBytes": 35526857
+          }
+        ],
+        "proof": {
+          "project": "A",
+          "epoch": 2,
+          "generation": 2,
+          "runtimeId": 2,
+          "source": "validated-binary-restore-and-real-dom"
+        },
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 2,
+          "generation": 2,
+          "runtimeId": 2
+        },
+        "bootMs": 7641.425000011921,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react-consumer",
+        "key": "b4e9aa4411ad9d6f32a15322d83a8caa6424c1b43c5c407cedf6a15bf5022ccf",
+        "preRestoreValidationMs": 153.60000002384186,
+        "cloneMs": 34.974999994039536,
+        "mountMs": 335.80500000715256,
+        "restoredTopLevelCount": 21,
+        "postRestoreValidationMs": 40.26500001549721,
+        "restoreMs": 569.9800000190735,
+        "consumerDiagnosticsBefore": {
+          "symlinkInfo": {
+            "exists": true,
+            "path": "node_modules/.bin/vite",
+            "isSymbolicLink": true,
+            "isFile": false,
+            "lstatModeOctal": "777",
+            "target": "../vite/bin/vite.js",
+            "statModeOctal": "644",
+            "statIsFile": true,
+            "isExecutable": false,
+            "statError": null
+          },
+          "targetInfo": {
+            "exists": true,
+            "path": "node_modules/vite/bin/vite.js",
+            "isSymbolicLink": false,
+            "isFile": true,
+            "lstatModeOctal": "644",
+            "target": null,
+            "statModeOctal": "644",
+            "statIsFile": true,
+            "isExecutable": false,
+            "statError": null
+          },
+          "targetPath": "node_modules/vite/bin/vite.js"
+        },
+        "producerDiagnostics": {
+          "symlinkInfo": {
+            "exists": true,
+            "path": "node_modules/.bin/vite",
+            "isSymbolicLink": true,
+            "isFile": false,
+            "lstatModeOctal": "777",
+            "target": "../vite/bin/vite.js",
+            "statModeOctal": "775",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetInfo": {
+            "exists": true,
+            "path": "node_modules/vite/bin/vite.js",
+            "isSymbolicLink": false,
+            "isFile": true,
+            "lstatModeOctal": "775",
+            "target": null,
+            "statModeOctal": "775",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetPath": "node_modules/vite/bin/vite.js"
+        },
+        "permissionDifferences": {
+          "producerTargetMode": "775",
+          "consumerTargetModeBefore": "644",
+          "executableLost": true
+        },
+        "verifiedTarget": "node_modules/vite/bin/vite.js",
+        "chmodCliExit": 0,
+        "chmodMethod": "chmod-cli",
+        "chmodDurationMs": 1029.9150000214577,
+        "consumerDiagnosticsAfter": {
+          "symlinkInfo": {
+            "exists": true,
+            "path": "node_modules/.bin/vite",
+            "isSymbolicLink": true,
+            "isFile": false,
+            "lstatModeOctal": "777",
+            "target": "../vite/bin/vite.js",
+            "statModeOctal": "755",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetInfo": {
+            "exists": true,
+            "path": "node_modules/vite/bin/vite.js",
+            "isSymbolicLink": false,
+            "isFile": true,
+            "lstatModeOctal": "755",
+            "target": null,
+            "statModeOctal": "755",
+            "statIsFile": true,
+            "isExecutable": true,
+            "statError": null
+          },
+          "targetPath": "node_modules/vite/bin/vite.js"
+        },
+        "packageExecution": {
+          "exit": 0,
+          "output": "18.3.1\r\n5.4.21"
+        },
+        "viteExecutable": {
+          "exit": 0,
+          "output": "vite/5.4.21 linux-x64 node-v22.22.3"
+        },
+        "devInvokedAt": 1792068563433,
+        "serverReadyAt": 1792068567539,
+        "serverUrl": "https://7i8ck62dj7zha0527l160fl0v33w0d-iedw-zfzmw6da--5173--2ed8f36d.local-corp.webcontainer-api.io",
+        "serverReadyMs": 4106,
+        "domVerifiedAt": 1792068573934,
+        "totalMs": 33628,
+        "installDispatchCount": 0
+      }
+    ],
+    "events": [
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792068531033
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792068532588
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "clean-install",
+        "code": 0,
+        "at": 1792068538020
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "internal-symlink-probe",
+        "code": 0,
+        "at": 1792068538725
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "producer-permission-diagnostics",
+        "code": 0,
+        "at": 1792068539597
+      },
+      {
+        "type": "retire",
+        "sample": 1,
+        "at": 1792068540305
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792068555160
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792068556423
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "consumer-pre-correction-diagnostics",
+        "code": 0,
+        "at": 1792068557802
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "test-chmod-cli",
+        "code": 0,
+        "at": 1792068558832
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "consumer-post-correction-diagnostics",
+        "code": 0,
+        "at": 1792068559701
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "dependency-execution",
+        "code": 0,
+        "at": 1792068560625
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "vite-bin-execution",
+        "code": 0,
+        "at": 1792068563432
+      },
+      {
+        "type": "retire",
+        "sample": 2,
+        "at": 1792068573977
+      },
+      {
+        "type": "process_exit_rejected",
+        "sample": 2,
+        "label": "dev-server",
+        "error": "Error: Process aborted",
+        "at": 1792068573982,
+        "retired": true
+      }
+    ],
+    "memoryCoverage": "performance.memory.usedJSHeapSize with precise-memory flag: page JS heap only; excludes worker/Wasm/native memory; sampled checkpoints, not a guaranteed peak",
+    "bootCount": 2,
+    "retainedBinaryArtifact": null,
+    "runtimeInstances": 2,
+    "retiredRuntimeCount": 2
+  },
+  "completedAt": 1792068575582,
+  "unexecutedObservations": 0,
+  "trackedStatusAfter": "",
+  "headAfter": "30804ea3e3f94814b46b7a9934fb477f91354615"
+}

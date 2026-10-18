@@ -1,0 +1,780 @@
+{
+  "results": [
+    {
+      "name": "dashboard opens",
+      "status": "PASS"
+    },
+    {
+      "name": "new Static Editor project created through UI",
+      "status": "PASS",
+      "detail": {
+        "id": "7c96891d-f493-481e-aee2-170b5aa77974"
+      }
+    },
+    {
+      "name": "HTML CSS and JavaScript Monaco instances mounted",
+      "status": "PASS"
+    },
+    {
+      "name": "html accepts keyboard input and exact source",
+      "status": "PASS"
+    },
+    {
+      "name": "css accepts keyboard input and exact source",
+      "status": "PASS"
+    },
+    {
+      "name": "javascript accepts keyboard input and exact source",
+      "status": "PASS"
+    },
+    {
+      "name": "real live preview reflects HTML CSS and JavaScript",
+      "status": "PASS"
+    },
+    {
+      "name": "all three exact sources saved to IndexedDB",
+      "status": "PASS"
+    },
+    {
+      "name": "reload retains exact sources",
+      "status": "PASS"
+    },
+    {
+      "name": "dashboard reopen retains edits",
+      "status": "PASS"
+    },
+    {
+      "name": "Monaco workers execute",
+      "status": "PASS",
+      "detail": {
+        "editor": 1,
+        "json": 0,
+        "css": 1,
+        "html": 1,
+        "typescript": 1
+      }
+    }
+  ],
+  "console": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": [
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "type": "script",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "type": "script",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "type": "script",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "responses": [
+    {
+      "url": "http://127.0.0.1:42991/app/projects",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-BhAXqGsO.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "status": 404,
+      "type": "script",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/NewProjectModal-COHAGQ_n.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SnippetsSidebar--jXJZzlP.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExtensionsMarketplace-BmMfOLf7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SettingsModal-BTA2olsi.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/CodeRabbitReviewModal-CSUL89Dr.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/KeyboardShortcutsHelp-CORN8aQO.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.main-Mo4nbTJW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html-D_mwZnAx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/htmlMode-BmFYWmZA.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/cssMode-BRq9cSMR.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/javascript-DzJ2CmhG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-BmttHvij.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/tsMode-BHnNI4PC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css-DQU6DXDx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html.worker-DBrQM3vp.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-compiler-CRYeikrG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/projects/7c96891d-f493-481e-aee2-170b5aa77974/editor",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-BhAXqGsO.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "status": 404,
+      "type": "script",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.main-Mo4nbTJW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html-D_mwZnAx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/htmlMode-BmFYWmZA.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/cssMode-BRq9cSMR.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/javascript-DzJ2CmhG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-BmttHvij.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/tsMode-BHnNI4PC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css-DQU6DXDx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExtensionsMarketplace-BmMfOLf7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SnippetsSidebar--jXJZzlP.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SettingsModal-BTA2olsi.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/CodeRabbitReviewModal-CSUL89Dr.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/KeyboardShortcutsHelp-CORN8aQO.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/projects",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-BhAXqGsO.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "status": 404,
+      "type": "script",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/webcontainerService-BftWDHx7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SnippetsSidebar--jXJZzlP.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExtensionsMarketplace-BmMfOLf7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SettingsModal-BTA2olsi.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/CodeRabbitReviewModal-CSUL89Dr.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/KeyboardShortcutsHelp-CORN8aQO.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.main-Mo4nbTJW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html-D_mwZnAx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/htmlMode-BmFYWmZA.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/cssMode-BRq9cSMR.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/javascript-DzJ2CmhG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-BmttHvij.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/tsMode-BHnNI4PC.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css-DQU6DXDx.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html.worker-DBrQM3vp.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    }
+  ],
+  "projectId": "7c96891d-f493-481e-aee2-170b5aa77974",
+  "expectedSources": {
+    "index.html": "<!doctype html><html><body><h1 id=\"closure\">STATIC_HTML_EXACT</h1></body></html>",
+    "style.css": "#closure { color: rgb(12, 34, 56); }",
+    "script.js": "document.querySelector(\"#closure\").textContent = \"STATIC_JS_EXECUTED\";"
+  },
+  "workerStats": {
+    "editor": 1,
+    "json": 0,
+    "css": 1,
+    "html": 1,
+    "typescript": 1
+  },
+  "serviceWorker": {
+    "controller": "http://127.0.0.1:42991/app/sw.js",
+    "registrations": [
+      "http://127.0.0.1:42991/app/"
+    ]
+  }
+}

@@ -1,0 +1,383 @@
+{
+  "verdict": "PHASE_B4_2A_BROWSER_ACCEPTED",
+  "startedAt": "2026-10-15T08:49:46.430Z",
+  "completedAt": "2026-10-15T08:53:16.824Z",
+  "browserVersion": "151.0.7922.34",
+  "identity": {
+    "at": 1792054186429,
+    "head": "546e74c084387d007b0312b9fbd69a9f6a6b55f1",
+    "sourceTreeSha256": "8a835512763c06d6a46a8309a19626f8e01478ed2fe2e64d1dea13c7312d6847",
+    "sourceFileCount": 265,
+    "distTreeSha256": "f3d0cc10061536808fc2308cc7bee68e4c24e7492025674314529db7aafc1de9",
+    "distFileCount": 177,
+    "manifestSha256": "cdaacfc70ef93643ea70ef5732bedc97fdeae7d7b7390f362bf0d48afa2ae136",
+    "sourceHashes": [
+      {
+        "path": "src/services/webcontainer/webcontainerService.ts",
+        "sha256": "c72d176de2e0c166714a284bfcf620556590384057253f00f3421e0d5ff5ef23",
+        "changedFromB42aStart": true
+      },
+      {
+        "path": "src/services/webcontainer/startupDiagnostics.ts",
+        "sha256": "8da90c307167598c6e2da5a508dce73fc2e4a8289fc73751b189f5f206d4a967",
+        "changedFromB42aStart": false
+      },
+      {
+        "path": "src/services/webcontainer/startupOutput.ts",
+        "sha256": "ce88e369ba1823a64adfa0a090047d5f76535e7ac6f6ef64c269567c0a04033a",
+        "changedFromB42aStart": false
+      },
+      {
+        "path": "src/components/Console/TerminalTab.tsx",
+        "sha256": "fa75d18483a1a322ac69ab6624b8e98be8c5f3a9affaa62175aeaf3fed678bb4",
+        "changedFromB42aStart": false
+      },
+      {
+        "path": "src/components/vscode/StackBlitzStartupLoader.tsx",
+        "sha256": "c0e5b3dd35226945335855922872d0379475e697c009c94d36b88360d4ee51ca",
+        "changedFromB42aStart": false
+      },
+      {
+        "path": "src/components/vscode/VSCodeMode.tsx",
+        "sha256": "2be0d924aa4f31e4b3da0f4cdf760a4053181183bb824fd804bb0fc2e8ee7adc",
+        "changedFromB42aStart": false
+      }
+    ],
+    "checkedJs": 151
+  },
+  "finalIdentity": {
+    "at": 1792054396824,
+    "head": "546e74c084387d007b0312b9fbd69a9f6a6b55f1",
+    "sourceTreeSha256": "8a835512763c06d6a46a8309a19626f8e01478ed2fe2e64d1dea13c7312d6847",
+    "sourceFileCount": 265,
+    "distTreeSha256": "f3d0cc10061536808fc2308cc7bee68e4c24e7492025674314529db7aafc1de9",
+    "distFileCount": 177,
+    "manifestSha256": "cdaacfc70ef93643ea70ef5732bedc97fdeae7d7b7390f362bf0d48afa2ae136",
+    "sourceHashes": [
+      {
+        "path": "src/services/webcontainer/webcontainerService.ts",
+        "sha256": "c72d176de2e0c166714a284bfcf620556590384057253f00f3421e0d5ff5ef23",
+        "changedFromB42aStart": true
+      },
+      {
+        "path": "src/services/webcontainer/startupDiagnostics.ts",
+        "sha256": "8da90c307167598c6e2da5a508dce73fc2e4a8289fc73751b189f5f206d4a967",
+        "changedFromB42aStart": false
+      },
+      {
+        "path": "src/services/webcontainer/startupOutput.ts",
+        "sha256": "ce88e369ba1823a64adfa0a090047d5f76535e7ac6f6ef64c269567c0a04033a",
+        "changedFromB42aStart": false
+      },
+      {
+        "path": "src/components/Console/TerminalTab.tsx",
+        "sha256": "fa75d18483a1a322ac69ab6624b8e98be8c5f3a9affaa62175aeaf3fed678bb4",
+        "changedFromB42aStart": false
+      },
+      {
+        "path": "src/components/vscode/StackBlitzStartupLoader.tsx",
+        "sha256": "c0e5b3dd35226945335855922872d0379475e697c009c94d36b88360d4ee51ca",
+        "changedFromB42aStart": false
+      },
+      {
+        "path": "src/components/vscode/VSCodeMode.tsx",
+        "sha256": "2be0d924aa4f31e4b3da0f4cdf760a4053181183bb824fd804bb0fc2e8ee7adc",
+        "changedFromB42aStart": false
+      }
+    ],
+    "checkedJs": 151
+  },
+  "artifactIntegrityChecks": 8,
+  "startupObservations": [
+    {
+      "index": 1,
+      "target": "A",
+      "status": "PASS",
+      "domMarker": "B4_REACT_A",
+      "realDomMs": 57853,
+      "bootMs": 3639,
+      "mountMs": 1525,
+      "installInferredMs": 34660,
+      "viteSelfReportedReadyMs": 3821,
+      "serverReadyFromStartMs": 48954,
+      "runtimeId": 1,
+      "epoch": 1,
+      "generation": 1,
+      "dispatchCount": 1,
+      "proofAfterServerReady": true
+    },
+    {
+      "index": 2,
+      "target": "B",
+      "status": "PASS",
+      "domMarker": "B4_VUE_B",
+      "realDomMs": 75455,
+      "bootMs": 15319,
+      "mountMs": 3431,
+      "installInferredMs": 46272,
+      "viteSelfReportedReadyMs": 4040,
+      "serverReadyFromStartMs": 72312,
+      "runtimeId": 2,
+      "epoch": 3,
+      "generation": 3,
+      "dispatchCount": 1,
+      "proofAfterServerReady": true
+    },
+    {
+      "index": 3,
+      "target": "A",
+      "status": "PASS",
+      "domMarker": "B4_REACT_A",
+      "realDomMs": 63123,
+      "bootMs": 2101,
+      "mountMs": 1230,
+      "installInferredMs": 53240,
+      "viteSelfReportedReadyMs": 2314,
+      "serverReadyFromStartMs": 61383,
+      "runtimeId": 3,
+      "epoch": 5,
+      "generation": 5,
+      "dispatchCount": 1,
+      "proofAfterServerReady": true
+    }
+  ],
+  "totalObservationMs": 196431,
+  "wallClockMs": 210394,
+  "transitions": [
+    {
+      "at": 1792054253149,
+      "outcome": "rejected",
+      "detail": "Error: Process aborted",
+      "runtimeId": 1,
+      "command": "jsh",
+      "retired": true,
+      "beforeOwner": {
+        "at": 1792054253149,
+        "projectId": null,
+        "epoch": 2,
+        "generation": 2,
+        "runtimeId": null,
+        "hasRuntime": false,
+        "ownsGlobalRuntime": false,
+        "stage": "idle",
+        "status": "idle",
+        "previewStatus": "idle",
+        "busy": false,
+        "installedProof": false,
+        "shellExists": false,
+        "operation": null
+      },
+      "afterOwner": {
+        "at": 1792054253150,
+        "projectId": null,
+        "epoch": 2,
+        "generation": 2,
+        "runtimeId": null,
+        "hasRuntime": false,
+        "ownsGlobalRuntime": false,
+        "stage": "idle",
+        "status": "idle",
+        "previewStatus": "idle",
+        "busy": false,
+        "installedProof": false,
+        "shellExists": false,
+        "operation": null
+      },
+      "changedKeys": [],
+      "replacementStateUnchanged": true,
+      "currentRuntimeIsRetiredRuntime": false,
+      "afterAt": 1792054253150,
+      "teardownToRejectionMs": 129
+    },
+    {
+      "at": 1792054330965,
+      "outcome": "rejected",
+      "detail": "Error: Process aborted",
+      "runtimeId": 2,
+      "command": "jsh",
+      "retired": true,
+      "beforeOwner": {
+        "at": 1792054330965,
+        "projectId": null,
+        "epoch": 4,
+        "generation": 4,
+        "runtimeId": null,
+        "hasRuntime": false,
+        "ownsGlobalRuntime": false,
+        "stage": "idle",
+        "status": "idle",
+        "previewStatus": "idle",
+        "busy": false,
+        "installedProof": false,
+        "shellExists": false,
+        "operation": null
+      },
+      "afterOwner": {
+        "at": 1792054330965,
+        "projectId": null,
+        "epoch": 4,
+        "generation": 4,
+        "runtimeId": null,
+        "hasRuntime": false,
+        "ownsGlobalRuntime": false,
+        "stage": "idle",
+        "status": "idle",
+        "previewStatus": "idle",
+        "busy": false,
+        "installedProof": false,
+        "shellExists": false,
+        "operation": null
+      },
+      "changedKeys": [],
+      "replacementStateUnchanged": true,
+      "currentRuntimeIsRetiredRuntime": false,
+      "afterAt": 1792054330965,
+      "teardownToRejectionMs": 80
+    }
+  ],
+  "vendorFulfillments": 0,
+  "vendorRejections": 2,
+  "uncaughtPageErrors": [],
+  "consoleErrors": [
+    {
+      "at": 1792054191277,
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "location": {
+        "url": "http://127.0.0.1:42996/_vercel/insights/script.js",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "at": 1792054191494,
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "location": {
+        "url": "http://127.0.0.1:42996/_vercel/insights/script.js",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "at": 1792054248714,
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "location": {
+        "url": "http://127.0.0.1:42996/_vercel/insights/script.js",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "at": 1792054327499,
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "location": {
+        "url": "http://127.0.0.1:42996/_vercel/insights/script.js",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "at": 1792054392796,
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "location": {
+        "url": "http://127.0.0.1:42996/_vercel/insights/script.js",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "failedRequests": [
+    {
+      "at": 1792054191279,
+      "kind": "failed",
+      "url": "http://127.0.0.1:42996/_vercel/insights/script.js",
+      "resourceType": "script",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "at": 1792054191494,
+      "kind": "failed",
+      "url": "http://127.0.0.1:42996/_vercel/insights/script.js",
+      "resourceType": "script",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "at": 1792054200336,
+      "kind": "failed",
+      "url": "https://t.staticblitz.com/w/v17/r/l",
+      "resourceType": "fetch",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "at": 1792054245688,
+      "kind": "failed",
+      "url": "https://huk2yfexjzna4glayxojlgniumhs2x-dg1p--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+      "resourceType": "document",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "at": 1792054274944,
+      "kind": "failed",
+      "url": "https://t.staticblitz.com/w/v17/r/l",
+      "resourceType": "fetch",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "at": 1792054326673,
+      "kind": "failed",
+      "url": "https://huk2yfexjzna4glayxojlgniumhs2x-dg1p-zdo135a0--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+      "resourceType": "document",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "at": 1792054335732,
+      "kind": "failed",
+      "url": "https://t.staticblitz.com/w/v17/r/l",
+      "resourceType": "fetch",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "httpErrorResponses": [
+    {
+      "at": 1792054191276,
+      "kind": "response",
+      "url": "http://127.0.0.1:42996/_vercel/insights/script.js",
+      "status": 404
+    },
+    {
+      "at": 1792054191494,
+      "kind": "response",
+      "url": "http://127.0.0.1:42996/_vercel/insights/script.js",
+      "status": 404
+    }
+  ],
+  "connectionResets": [],
+  "reconnect": {
+    "status": "PASS",
+    "durationMs": 311,
+    "assertions": {
+      "sameProject": true,
+      "sameEpoch": true,
+      "sameGeneration": true,
+      "sameRuntime": true,
+      "sameShell": true,
+      "noNewSpawn": true,
+      "noNewInstall": true,
+      "manualInputForwarded": true,
+      "installedProofPreserved": true
+    }
+  },
+  "gitStatusBeforeEqualsAfterCampaign": true,
+  "evidenceSha256": "378d9b338bc23fe387b2a02ec6e8368519e5814309cedfaa0fd9ebc4637a86bd",
+  "harnessSha256": "86870a99cabce389ae3aab67d12d7c66ceb9da786ab86376a86e3426ed5d5a67",
+  "approvedRecordSha256": "ddfde397cb9adbc878fbd2fa6f30851519b27583dfd4483f21dddc8399579943"
+}

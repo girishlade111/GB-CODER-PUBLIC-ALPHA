@@ -1,0 +1,46 @@
+[
+  {
+    "name": "actual App file creation reaches IndexedDB",
+    "status": "PASS"
+  },
+  {
+    "name": "actual App rename updates tree and persisted paths",
+    "status": "PASS"
+  },
+  {
+    "name": "case collision create rejection suppresses phantom tab and success toast",
+    "status": "PASS"
+  },
+  {
+    "name": "runtime destination collision rejects UI rename and preserves source and destination",
+    "status": "PASS"
+  },
+  {
+    "name": "physical rename rejection preserves App tree and IndexedDB paths",
+    "status": "PASS"
+  },
+  {
+    "name": "physical delete rejection preserves dialog, App tree, and IndexedDB paths",
+    "status": "PASS"
+  },
+  {
+    "name": "actual App delete updates tree and persisted paths",
+    "status": "PASS"
+  },
+  {
+    "name": "actual App folder rename preserves descendants",
+    "status": "PASS"
+  },
+  {
+    "name": "directory rename preserves exact runtime binary bytes",
+    "status": "PASS"
+  },
+  {
+    "name": "reload retains authoritative project paths",
+    "status": "PASS"
+  },
+  {
+    "name": "normal HTML/CSS/JS editor renders its saved project and live preview",
+    "status": "PASS"
+  }
+]

@@ -1,0 +1,569 @@
+{
+  "base": "https://gb-coder-public-alpha-ccyelci13.vercel.app",
+  "credential": "existing shared credential; not created or revoked",
+  "pages": [
+    {
+      "console": [
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018116269
+        },
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792018120308
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018179413
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connecting...",
+          "at": 1792018180428
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connected.",
+          "at": 1792018180446
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018183321
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018193188
+        },
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792018197416
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018230616
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018230616
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018230616
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connecting...",
+          "at": 1792018231069
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connected.",
+          "at": 1792018231122
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018237882
+        },
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792018240040
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018274598
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018274599
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018274599
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018274599
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connecting...",
+          "at": 1792018275555
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connected.",
+          "at": 1792018275560
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018285873
+        },
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792018288319
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018315375
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018315376
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018315376
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018315376
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018315376
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connecting...",
+          "at": 1792018315689
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connected.",
+          "at": 1792018315717
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018322641
+        },
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792018323551
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018351667
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018351667
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018351667
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018351667
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018351667
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018351667
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connecting...",
+          "at": 1792018352262
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connected.",
+          "at": 1792018352269
+        }
+      ],
+      "pageErrors": [
+        "Process aborted",
+        "Process aborted",
+        "Process aborted",
+        "Process aborted"
+      ],
+      "failedRequests": [
+        {
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://v1tthl7i6y5ju5dym3txp279ll6s3h-khov--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://v1tthl7i6y5ju5dym3txp279ll6s3h-khov-g5e750hs--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app",
+          "at": 1792018103658
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+          "at": 1792018104029
+        }
+      ]
+    },
+    {
+      "console": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app",
+          "at": 1792018354203
+        }
+      ]
+    },
+    {
+      "console": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app",
+          "at": 1792018362113
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-no-manifest/ide",
+          "at": 1792018362456
+        }
+      ]
+    },
+    {
+      "console": [],
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "url": "https://v1tthl7i6y5ju5dym3txp279ll6s3h-khov.w-corp-staticblitz.com/iframe.2ed8f36d.html",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://stackblitz.com/headless?version=1.6.4",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://stackblitz.com/headless?version=1.6.4",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app",
+          "at": 1792018368978
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-nav-1/ide",
+          "at": 1792018369379
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-nav-2/ide",
+          "at": 1792018371139
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-nav-1/ide",
+          "at": 1792018372478
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-nav-2/ide",
+          "at": 1792018373743
+        }
+      ]
+    },
+    {
+      "console": [
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018381382
+        },
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792018381927
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018419159
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connecting...",
+          "at": 1792018419857
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connected.",
+          "at": 1792018419865
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018422742
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connecting...",
+          "at": 1792018426344
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connected.",
+          "at": 1792018426358
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 400 ()",
+          "at": 1792018427701
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 400 ()",
+          "at": 1792018427932
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://v1tthl7i6y5ju5dym3txp279ll6s3h-khov--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://stackblitz.com/headless?version=1.6.4",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app",
+          "at": 1792018374895
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-fs-sync/ide",
+          "at": 1792018375277
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-fs-sync/ide",
+          "at": 1792018429354
+        }
+      ]
+    },
+    {
+      "console": [
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792018438093
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018438350
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018459296
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connecting...",
+          "at": 1792018459587
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connected.",
+          "at": 1792018459608
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018462573
+        },
+        {
+          "type": "debug",
+          "text": "[vite] hot updated: /src/App.vue",
+          "at": 1792018464178
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 400 ()",
+          "at": 1792018464983
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://v1tthl7i6y5ju5dym3txp279ll6s3h-khov--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app",
+          "at": 1792018430906
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-vue-hmr/ide",
+          "at": 1792018431219
+        }
+      ]
+    },
+    {
+      "console": [
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018474898
+        },
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792018475225
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app",
+          "at": 1792018468125
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-nested-mono/ide",
+          "at": 1792018468459
+        }
+      ]
+    },
+    {
+      "console": [
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018488163
+        },
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792018488163
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app",
+          "at": 1792018480724
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-no-deps/ide",
+          "at": 1792018481005
+        }
+      ]
+    }
+  ],
+  "http": [
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    },
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    },
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    },
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    },
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    },
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    },
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    },
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    }
+  ]
+}

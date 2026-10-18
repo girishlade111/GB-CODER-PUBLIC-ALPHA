@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-10-15T04:14:26.924Z",
+  "results": [
+    {
+      "testId": "WC-RB-001",
+      "name": "React Project A Startup & Live Preview",
+      "status": "PASS",
+      "details": {
+        "previewUrl": "https://h2xj4jc1t5y6dbyat8iazjzktyol4t-cu1c--5173--2ed8f36d.local-corp.webcontainer-api.io",
+        "renderedText": "WC-PROJECT-A"
+      },
+      "timestamp": "2026-10-15T04:14:24.022Z"
+    }
+  ],
+  "passed": 1,
+  "failed": 0,
+  "performanceMeasurements": [
+    {
+      "phase": "React initial startup",
+      "readinessMs": 54231,
+      "terminal": "  VITE v5.4.21  ready in 4166 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n "
+    }
+  ],
+  "logs": [
+    "[2026-10-15T04:13:28.203Z] ================================================================",
+    "[2026-10-15T04:13:28.205Z] GB CODER — PHASE 2.2 STAGE B.1 REAL-BROWSER VERIFICATION HARNESS",
+    "[2026-10-15T04:13:28.206Z] ================================================================",
+    "[2026-10-15T04:13:28.223Z] Starting preview server on port 42992",
+    "[2026-10-15T04:13:29.036Z] \n--- GROUP 1: WC-001 Project-Scoped Dev Server Lifecycle ---",
+    "[2026-10-15T04:14:24.022Z] [PASS] WC-RB-001: React Project A Startup & Live Preview",
+    "[2026-10-15T04:14:26.924Z] \n================================================================",
+    "[2026-10-15T04:14:26.924Z] SUMMARY: 1 Scenarios Executed | 1 PASSED | 0 FAILED",
+    "[2026-10-15T04:14:26.924Z] ================================================================"
+  ]
+}

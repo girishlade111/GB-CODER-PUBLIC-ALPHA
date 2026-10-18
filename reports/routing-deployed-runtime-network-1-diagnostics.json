@@ -1,0 +1,64 @@
+{
+  "base": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app",
+  "credential": "existing shared credential; not created or revoked",
+  "pages": [
+    {
+      "console": [
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792039465998
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792039466379
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792039506150
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connecting...",
+          "at": 1792039507555
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connected.",
+          "at": 1792039507585
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://u970fjwkiqycofajbvrxzfc4f65el6-dax5--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app/app/projects",
+          "at": 1792039459470
+        },
+        {
+          "url": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app/app/projects/runtime-network-1/ide",
+          "at": 1792039459913
+        }
+      ]
+    }
+  ],
+  "http": [
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    }
+  ],
+  "telemetry": []
+}

@@ -38,6 +38,7 @@ export interface ConnectionDiagnosticResult {
 export interface ChatCompletionChunk {
   contentDelta?: string;
   reasoningDelta?: string;
+  toolCallDelta?: { id?: string; index?: number; name?: string; argumentsDelta?: string };
   isComplete?: boolean;
   error?: string;
 }
@@ -88,6 +89,7 @@ export interface CodeAssistMessage {
   contextFiles?: Array<{ path: string; linesCount: number }>;
   proposedEdits?: ProposedFileEdit[];
   appliedEditsStatus?: 'unapplied' | 'applied' | 'rejected' | 'partial';
+  toolCalls?: import('./tools/types').ToolCallRecord[];
   error?: string;
 }
 

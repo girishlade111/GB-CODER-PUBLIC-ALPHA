@@ -1,0 +1,846 @@
+{
+  "scope": "Phase B.4.4 Stage 1.1 standalone diagnostic probe; no product integration",
+  "head": "30804ea3e3f94814b46b7a9934fb477f91354615",
+  "identity": [
+    {
+      "path": "scripts/.tmp-b4-4/policy.mjs",
+      "sha256": "9d76bf28cb68e4a710462af42db4af6aefb0eeac8daa88dafaf935312c516d7d"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/browser.mjs",
+      "sha256": "f25b7c5de7c015c6e3a31187ee191932f6a2345817e064518bf829790830e0f9"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/run.mjs",
+      "sha256": "365cd2521249da2958238c4c51ca1e4a30ddc048464cfd6fb070815e3365419b"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/fixtures.json",
+      "sha256": "b20447d0a8b754938271826e3d75150d0db49d2c38bf924b35d70d44036e683a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-1.mjs",
+      "sha256": "4d9c2e650f243ea5c3c6642749556ed6cf8094b97c2cfa4b1850c53d96a8e57f"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package.json",
+      "sha256": "270a46f542ce8b01523fda3f5bd7333ad28734446815c0750c980f9162503570"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package-lock.json",
+      "sha256": "2d49b9349752521c344fe0d5091f46eabfd4718c7f6c52f3df92fdf6b8f61734"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package.json",
+      "sha256": "82bb171c0deb4422bf7a259b2497127d06f8213fa25bec2fcfd464e53e404b7a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package-lock.json",
+      "sha256": "e0a32ce64578f02feea91775c0b9d56b8cae869dd41424e1b096954fa8d9bedb"
+    }
+  ],
+  "apiVersion": "1.6.4",
+  "bundleSha256": "77e4f122f77e55a39b565e98d71e85e0b30e0305992904497c222e33c5816a75",
+  "status": "B4_4_STAGE_1_1_DIAGNOSTICS_COMPLETE",
+  "startedAt": 1792065178695,
+  "budget": {
+    "maxBoots": 1,
+    "perObservationMs": 180000,
+    "campaignMs": 300000,
+    "captureMs": 10000,
+    "restoreValidationMs": 15000,
+    "retries": 0
+  },
+  "observations": [
+    {
+      "index": 1,
+      "role": "producer",
+      "project": "React A",
+      "start": 1792065180970,
+      "status": "REJECTED_AS_EXPECTED",
+      "error": "page.evaluate: Error: Artifact byte admission limit\n    at walk (http://127.0.0.1:42997/bundle.js:1132:31)\n    at async walk (http://127.0.0.1:42997/bundle.js:1070:9)\n    at async walk (http://127.0.0.1:42997/bundle.js:1070:9)\n    at async walk (http://127.0.0.1:42997/bundle.js:1070:9)\n    at async walk (http://127.0.0.1:42997/bundle.js:1070:9)\n    at async inventory (http://127.0.0.1:42997/bundle.js:1137:5)\n    at async http://127.0.0.1:42997/bundle.js:1411:19\n    at async observed (http://127.0.0.1:42997/bundle.js:1236:12)\n    at async Object.begin (http://127.0.0.1:42997/bundle.js:1403:24)\n    at async <anonymous>:337:30",
+      "elapsedMs": 21713
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "failedRequests": [],
+  "httpErrors": [],
+  "progress": [
+    {
+      "at": 1792065185944,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "boot",
+      "elapsedMs": 4920
+    },
+    {
+      "at": 1792065190942,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "boot",
+      "elapsedMs": 9919
+    },
+    {
+      "at": 1792065195961,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "install",
+      "elapsedMs": 14937
+    },
+    {
+      "at": 1792065202687,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "capture",
+      "elapsedMs": 21441
+    }
+  ],
+  "bootCount": 1,
+  "browserVersion": "151.0.7922.34",
+  "campaignStartedAt": 1792065180938,
+  "browser": {
+    "api": "1.6.4",
+    "samples": [
+      {
+        "index": 1,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "producer",
+        "start": 1792065181023,
+        "status": "FAIL",
+        "phase": "capture",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792065191039,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065192104,
+            "durationMs": 1065
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792065192104,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065193307,
+            "durationMs": 1203
+          },
+          {
+            "label": "clean-install",
+            "program": "npm",
+            "args": [
+              "ci",
+              "--ignore-scripts",
+              "--no-audit",
+              "--no-fund",
+              "--fetch-retries=0"
+            ],
+            "invokedAt": 1792065193673,
+            "output": "\r\nadded 14 packages in 5s\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065199464,
+            "durationMs": 5791
+          },
+          {
+            "label": "internal-symlink-probe",
+            "program": "node",
+            "args": [
+              "-e",
+              "require('fs').symlinkSync('.b4-4-byte-probe.bin','node_modules/.b4-4-internal-link')"
+            ],
+            "invokedAt": 1792065199514,
+            "output": "",
+            "exitCode": 0,
+            "exitAt": 1792065200176,
+            "durationMs": 662
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792065181026,
+            "label": "before-boot",
+            "pageJsHeapBytes": 1890542
+          },
+          {
+            "at": 1792065191039,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 7901413
+          },
+          {
+            "at": 1792065200176,
+            "label": "capture-before",
+            "pageJsHeapBytes": 8294435
+          },
+          {
+            "at": 1792065202037,
+            "label": "after-export",
+            "pageJsHeapBytes": 156306963
+          },
+          {
+            "at": 1792065202296,
+            "label": "at-rejection",
+            "pageJsHeapBytes": 179854513
+          }
+        ],
+        "proof": false,
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 1,
+          "generation": 1,
+          "runtimeId": 1
+        },
+        "bootMs": 7331.235000014305,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react",
+        "key": "45e71327b503fd2b8f67b218fb5da0e484acb745668c6b35ed1c9ad9b4530d4d",
+        "installMs": 5791,
+        "installExit": 0,
+        "exportMs": 1797.705000013113,
+        "validationMs": 258.60000002384186,
+        "diagnosticTelemetry": {
+          "accountedBytes": 34561518,
+          "limitBytes": 33554432,
+          "entriesVisited": 302,
+          "directoriesVisited": 46,
+          "textFilesVisited": 247,
+          "binaryFilesVisited": 3,
+          "symlinksVisited": 6,
+          "rawTextBytes": 11120547,
+          "utf16AccountedTextBytes": 22239550,
+          "typedArrayBytes": 12239736,
+          "entryOverheadBytes": 82232,
+          "maxObservedDepth": 4,
+          "fileTypeDistribution": {
+            ".bin": {
+              "count": 1,
+              "rawBytes": 1024,
+              "accountedBytes": 1316
+            },
+            "no_ext": {
+              "count": 18,
+              "rawBytes": 103062,
+              "accountedBytes": 210940
+            },
+            "dir": {
+              "count": 42,
+              "rawBytes": 0,
+              "accountedBytes": 7128
+            },
+            ".json": {
+              "count": 18,
+              "rawBytes": 29793,
+              "accountedBytes": 64780
+            },
+            ".md": {
+              "count": 17,
+              "rawBytes": 245619,
+              "accountedBytes": 495803
+            },
+            ".ts": {
+              "count": 41,
+              "rawBytes": 233548,
+              "accountedBytes": 478785
+            },
+            ".wasm": {
+              "count": 2,
+              "rawBytes": 12238712,
+              "accountedBytes": 12239325
+            },
+            ".js": {
+              "count": 145,
+              "rawBytes": 10469093,
+              "accountedBytes": 20980567
+            },
+            ".cjs": {
+              "count": 7,
+              "rawBytes": 6534,
+              "accountedBytes": 15097
+            },
+            ".cts": {
+              "count": 2,
+              "rawBytes": 3757,
+              "accountedBytes": 8052
+            },
+            ".mts": {
+              "count": 1,
+              "rawBytes": 1046,
+              "accountedBytes": 2367
+            },
+            ".mjs": {
+              "count": 3,
+              "rawBytes": 25404,
+              "accountedBytes": 51679
+            },
+            ".applescript": {
+              "count": 1,
+              "rawBytes": 2691,
+              "accountedBytes": 5679
+            }
+          },
+          "safePackageAggregates": {
+            ".b4-4-byte-probe.bin": 1316,
+            ".b4-4-internal-link": 241,
+            ".bin": 1341,
+            ".package-lock.json": 19806,
+            "@esbuild/linux-x64": 1971,
+            "@esbuild": 166,
+            "@napi-rs": 166,
+            "@rollup": 165,
+            "@types/estree": 53923,
+            "@types": 164,
+            "esbuild": 12687722,
+            "js-tokens": 31656,
+            "loose-envify": 14099,
+            "nanoid": 61829,
+            "picocolors": 14935,
+            "postcss": 457013,
+            "react": 642670,
+            "react-dom": 9036867,
+            "rollup": 6436493,
+            "scheduler": 192457,
+            "source-map-js": 291111,
+            "vite": 4615407
+          },
+          "rejectionReason": "Artifact byte admission limit",
+          "rejectionPath": "vite/dist/node/chunks/dep-BK3b2jBa.js",
+          "isPartial": true,
+          "validationElapsedMs": 257.7349999845028
+        },
+        "error": "Error: Artifact byte admission limit",
+        "failurePhase": "capture"
+      }
+    ],
+    "events": [
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792065192104
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792065193307
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "clean-install",
+        "code": 0,
+        "at": 1792065199464
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "internal-symlink-probe",
+        "code": 0,
+        "at": 1792065200176
+      }
+    ],
+    "memoryCoverage": "performance.memory.usedJSHeapSize with precise-memory flag: page JS heap only; excludes worker/Wasm/native memory; sampled checkpoints, not a guaranteed peak",
+    "bootCount": 1,
+    "retainedArtifacts": [],
+    "retainedAccountedBytes": 0,
+    "runtimeInstances": 1,
+    "retiredRuntimeCount": 0
+  },
+  "cleanup": {
+    "api": "1.6.4",
+    "samples": [
+      {
+        "index": 1,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "producer",
+        "start": 1792065181023,
+        "status": "FAIL",
+        "phase": "capture",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792065191039,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065192104,
+            "durationMs": 1065
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792065192104,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065193307,
+            "durationMs": 1203
+          },
+          {
+            "label": "clean-install",
+            "program": "npm",
+            "args": [
+              "ci",
+              "--ignore-scripts",
+              "--no-audit",
+              "--no-fund",
+              "--fetch-retries=0"
+            ],
+            "invokedAt": 1792065193673,
+            "output": "\r\nadded 14 packages in 5s\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065199464,
+            "durationMs": 5791
+          },
+          {
+            "label": "internal-symlink-probe",
+            "program": "node",
+            "args": [
+              "-e",
+              "require('fs').symlinkSync('.b4-4-byte-probe.bin','node_modules/.b4-4-internal-link')"
+            ],
+            "invokedAt": 1792065199514,
+            "output": "",
+            "exitCode": 0,
+            "exitAt": 1792065200176,
+            "durationMs": 662
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792065181026,
+            "label": "before-boot",
+            "pageJsHeapBytes": 1890542
+          },
+          {
+            "at": 1792065191039,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 7901413
+          },
+          {
+            "at": 1792065200176,
+            "label": "capture-before",
+            "pageJsHeapBytes": 8294435
+          },
+          {
+            "at": 1792065202037,
+            "label": "after-export",
+            "pageJsHeapBytes": 156306963
+          },
+          {
+            "at": 1792065202296,
+            "label": "at-rejection",
+            "pageJsHeapBytes": 179854513
+          },
+          {
+            "at": 1792065204054,
+            "label": "after-cleanup",
+            "pageJsHeapBytes": 180252244
+          }
+        ],
+        "proof": false,
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 1,
+          "generation": 1,
+          "runtimeId": 1
+        },
+        "bootMs": 7331.235000014305,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react",
+        "key": "45e71327b503fd2b8f67b218fb5da0e484acb745668c6b35ed1c9ad9b4530d4d",
+        "installMs": 5791,
+        "installExit": 0,
+        "exportMs": 1797.705000013113,
+        "validationMs": 258.60000002384186,
+        "diagnosticTelemetry": {
+          "accountedBytes": 34561518,
+          "limitBytes": 33554432,
+          "entriesVisited": 302,
+          "directoriesVisited": 46,
+          "textFilesVisited": 247,
+          "binaryFilesVisited": 3,
+          "symlinksVisited": 6,
+          "rawTextBytes": 11120547,
+          "utf16AccountedTextBytes": 22239550,
+          "typedArrayBytes": 12239736,
+          "entryOverheadBytes": 82232,
+          "maxObservedDepth": 4,
+          "fileTypeDistribution": {
+            ".bin": {
+              "count": 1,
+              "rawBytes": 1024,
+              "accountedBytes": 1316
+            },
+            "no_ext": {
+              "count": 18,
+              "rawBytes": 103062,
+              "accountedBytes": 210940
+            },
+            "dir": {
+              "count": 42,
+              "rawBytes": 0,
+              "accountedBytes": 7128
+            },
+            ".json": {
+              "count": 18,
+              "rawBytes": 29793,
+              "accountedBytes": 64780
+            },
+            ".md": {
+              "count": 17,
+              "rawBytes": 245619,
+              "accountedBytes": 495803
+            },
+            ".ts": {
+              "count": 41,
+              "rawBytes": 233548,
+              "accountedBytes": 478785
+            },
+            ".wasm": {
+              "count": 2,
+              "rawBytes": 12238712,
+              "accountedBytes": 12239325
+            },
+            ".js": {
+              "count": 145,
+              "rawBytes": 10469093,
+              "accountedBytes": 20980567
+            },
+            ".cjs": {
+              "count": 7,
+              "rawBytes": 6534,
+              "accountedBytes": 15097
+            },
+            ".cts": {
+              "count": 2,
+              "rawBytes": 3757,
+              "accountedBytes": 8052
+            },
+            ".mts": {
+              "count": 1,
+              "rawBytes": 1046,
+              "accountedBytes": 2367
+            },
+            ".mjs": {
+              "count": 3,
+              "rawBytes": 25404,
+              "accountedBytes": 51679
+            },
+            ".applescript": {
+              "count": 1,
+              "rawBytes": 2691,
+              "accountedBytes": 5679
+            }
+          },
+          "safePackageAggregates": {
+            ".b4-4-byte-probe.bin": 1316,
+            ".b4-4-internal-link": 241,
+            ".bin": 1341,
+            ".package-lock.json": 19806,
+            "@esbuild/linux-x64": 1971,
+            "@esbuild": 166,
+            "@napi-rs": 166,
+            "@rollup": 165,
+            "@types/estree": 53923,
+            "@types": 164,
+            "esbuild": 12687722,
+            "js-tokens": 31656,
+            "loose-envify": 14099,
+            "nanoid": 61829,
+            "picocolors": 14935,
+            "postcss": 457013,
+            "react": 642670,
+            "react-dom": 9036867,
+            "rollup": 6436493,
+            "scheduler": 192457,
+            "source-map-js": 291111,
+            "vite": 4615407
+          },
+          "rejectionReason": "Artifact byte admission limit",
+          "rejectionPath": "vite/dist/node/chunks/dep-BK3b2jBa.js",
+          "isPartial": true,
+          "validationElapsedMs": 257.7349999845028
+        },
+        "error": "Error: Artifact byte admission limit",
+        "failurePhase": "capture"
+      }
+    ],
+    "events": [
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792065192104
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792065193307
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "clean-install",
+        "code": 0,
+        "at": 1792065199464
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "internal-symlink-probe",
+        "code": 0,
+        "at": 1792065200176
+      },
+      {
+        "type": "retire",
+        "sample": 1,
+        "at": 1792065204027
+      }
+    ],
+    "memoryCoverage": "performance.memory.usedJSHeapSize with precise-memory flag: page JS heap only; excludes worker/Wasm/native memory; sampled checkpoints, not a guaranteed peak",
+    "bootCount": 1,
+    "retainedArtifacts": [],
+    "retainedAccountedBytes": 0,
+    "runtimeInstances": 1,
+    "retiredRuntimeCount": 1
+  },
+  "completedAt": 1792065211510,
+  "unexecutedObservations": 0,
+  "trackedStatusAfter": "",
+  "headAfter": "30804ea3e3f94814b46b7a9934fb477f91354615",
+  "diagnosticTelemetry": {
+    "accountedBytes": 34561518,
+    "limitBytes": 33554432,
+    "entriesVisited": 302,
+    "directoriesVisited": 46,
+    "textFilesVisited": 247,
+    "binaryFilesVisited": 3,
+    "symlinksVisited": 6,
+    "rawTextBytes": 11120547,
+    "utf16AccountedTextBytes": 22239550,
+    "typedArrayBytes": 12239736,
+    "entryOverheadBytes": 82232,
+    "maxObservedDepth": 4,
+    "fileTypeDistribution": {
+      ".bin": {
+        "count": 1,
+        "rawBytes": 1024,
+        "accountedBytes": 1316
+      },
+      "no_ext": {
+        "count": 18,
+        "rawBytes": 103062,
+        "accountedBytes": 210940
+      },
+      "dir": {
+        "count": 42,
+        "rawBytes": 0,
+        "accountedBytes": 7128
+      },
+      ".json": {
+        "count": 18,
+        "rawBytes": 29793,
+        "accountedBytes": 64780
+      },
+      ".md": {
+        "count": 17,
+        "rawBytes": 245619,
+        "accountedBytes": 495803
+      },
+      ".ts": {
+        "count": 41,
+        "rawBytes": 233548,
+        "accountedBytes": 478785
+      },
+      ".wasm": {
+        "count": 2,
+        "rawBytes": 12238712,
+        "accountedBytes": 12239325
+      },
+      ".js": {
+        "count": 145,
+        "rawBytes": 10469093,
+        "accountedBytes": 20980567
+      },
+      ".cjs": {
+        "count": 7,
+        "rawBytes": 6534,
+        "accountedBytes": 15097
+      },
+      ".cts": {
+        "count": 2,
+        "rawBytes": 3757,
+        "accountedBytes": 8052
+      },
+      ".mts": {
+        "count": 1,
+        "rawBytes": 1046,
+        "accountedBytes": 2367
+      },
+      ".mjs": {
+        "count": 3,
+        "rawBytes": 25404,
+        "accountedBytes": 51679
+      },
+      ".applescript": {
+        "count": 1,
+        "rawBytes": 2691,
+        "accountedBytes": 5679
+      }
+    },
+    "safePackageAggregates": {
+      ".b4-4-byte-probe.bin": 1316,
+      ".b4-4-internal-link": 241,
+      ".bin": 1341,
+      ".package-lock.json": 19806,
+      "@esbuild/linux-x64": 1971,
+      "@esbuild": 166,
+      "@napi-rs": 166,
+      "@rollup": 165,
+      "@types/estree": 53923,
+      "@types": 164,
+      "esbuild": 12687722,
+      "js-tokens": 31656,
+      "loose-envify": 14099,
+      "nanoid": 61829,
+      "picocolors": 14935,
+      "postcss": 457013,
+      "react": 642670,
+      "react-dom": 9036867,
+      "rollup": 6436493,
+      "scheduler": 192457,
+      "source-map-js": 291111,
+      "vite": 4615407
+    },
+    "rejectionReason": "Artifact byte admission limit",
+    "rejectionPath": "vite/dist/node/chunks/dep-BK3b2jBa.js",
+    "isPartial": true,
+    "validationElapsedMs": 257.7349999845028
+  },
+  "memoryCheckpoints": [
+    {
+      "at": 1792065181026,
+      "label": "before-boot",
+      "pageJsHeapBytes": 1890542
+    },
+    {
+      "at": 1792065191039,
+      "label": "after-boot-and-mount",
+      "pageJsHeapBytes": 7901413
+    },
+    {
+      "at": 1792065200176,
+      "label": "capture-before",
+      "pageJsHeapBytes": 8294435
+    },
+    {
+      "at": 1792065202037,
+      "label": "after-export",
+      "pageJsHeapBytes": 156306963
+    },
+    {
+      "at": 1792065202296,
+      "label": "at-rejection",
+      "pageJsHeapBytes": 179854513
+    }
+  ]
+}

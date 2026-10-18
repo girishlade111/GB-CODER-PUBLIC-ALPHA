@@ -1,0 +1,248 @@
+{
+  "base": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app",
+  "deploymentId": "dpl_6FDZFqyKFYgzsW4sZ9FtKXNaShbK",
+  "sha": "546e74c084387d007b0312b9fbd69a9f6a6b55f1",
+  "results": [
+    {
+      "path": "/app/projects",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/app",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/app/",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/app/projects/routing-synthetic/editor",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/app/projects/routing-synthetic/ide",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/ide",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/preview-popout",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/preview/routing-synthetic",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/mpreview/routing-synthetic",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/app/assets/stage-b3-missing.js",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/stage-b3-missing.css",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/missing.worker.js",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/workbox-missing.js",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/nested/missing.js",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/missing.js.map",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/missing.mjs",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/missing.wasm",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/extensionless",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/sw-missing.js?version=1",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/manifest-missing.webmanifest",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/favicon-CZsOJf9v.ico",
+      "status": 200,
+      "mime": "image/vnd.microsoft.icon",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 23592,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/index-C-BwBr4P.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 351159,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 17905,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 226016,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 13866,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "mime": "text/css; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 103483,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/editor.main-BQkSNVVC.js",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    }
+  ],
+  "status": "FAIL",
+  "error": "AssertionError [ERR_ASSERTION]: /app/assets/editor.main-BQkSNVVC.js\n\n404 !== 200\n\n    at file:///C:/Users/Girish%20Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/scripts/.tmp-routing-deployed-http.mjs:15:66"
+}

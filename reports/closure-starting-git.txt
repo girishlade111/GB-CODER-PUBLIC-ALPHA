@@ -1,0 +1,61 @@
+ M scripts/test-phase2-2-final-corrective.mjs
+ M scripts/test-phase2-2-stage-b21-hardened.mjs
+ M src/components/vscode/VSCodeMode.tsx
+ M src/services/webcontainer/fileSyncCoordinator.ts
+ M src/services/webcontainer/webcontainerService.ts
+?? .opencode/
+?? .tmp-kilocode/
+?? GB_CODER_AUDIT_REPORT.md
+?? GB_Coder_Final_Stabilization_Independent_Review.md
+?? project_files.zip
+?? reports/CODEX_PHASE_2_2_RELIABILITY_HANDOFF_AND_RELEASE_GATE.md
+?? reports/GB_Coder_Final_Stabilization_Independent_Review.md
+?? reports/PHASE_1_4_PRODUCTION_RELEASE_REPORT.md
+?? reports/PHASE_2_0_PROFESSIONAL_IDE_MASTER_PLAN.md
+?? reports/PHASE_2_1_STAGE_E3_PRODUCTION_RELEASE.md
+?? reports/PHASE_2_2_FINAL_CORRECTIVE_DIFF.patch
+?? reports/PHASE_2_2_FINAL_CORRECTIVE_PASS.md
+?? reports/PHASE_2_2_FINAL_RELEASE_BLOCKER_REPAIR_ACCEPTANCE.md
+?? reports/PHASE_2_2_FINAL_REPAIR_DIFF.patch
+?? reports/PHASE_2_2_FINAL_STABILIZATION_DIFF.patch
+?? reports/PHASE_2_2_FINAL_STABILIZATION_REPORT.md
+?? reports/PHASE_2_2_STAGE_A_ARCHITECTURE_AUDIT.md
+?? reports/PHASE_2_2_STAGE_B_1_REAL_BROWSER_VERIFICATION.md
+?? reports/PHASE_2_2_STAGE_B_2_1_CONCURRENCY_HARDENING.md
+?? reports/PHASE_2_2_STAGE_B_2_2_FINAL_REVIEW_AND_PREVIEW_UPDATE.md
+?? reports/PHASE_2_2_STAGE_B_2_3_FAIL_CLOSED_AND_PORT_REUSE.md
+?? reports/PHASE_2_2_STAGE_B_2_4_FINAL_SAFETY_REVIEW.md
+?? reports/PHASE_2_2_STAGE_B_2_5_EVIDENCE_PACKET.md
+?? reports/PHASE_2_2_STAGE_B_2_5_SOURCE_DIFF.patch
+?? reports/PHASE_2_2_STAGE_B_2_5_TEST_MATRIX.md
+?? reports/PHASE_2_2_STAGE_B_2_CONCURRENCY_AND_PREVIEW_GATE.md
+?? reports/PHASE_2_2_STAGE_B_RELIABILITY_IMPLEMENTATION.md
+?? reports/POST_E3_STAGE_R2_PREVIEW_ACCEPTANCE.md
+?? reports/POST_E3_STAGE_R3_1_FINAL_PR_AUDIT.md
+?? reports/POST_E3_STAGE_R4_1_PRODUCTION_EVIDENCE_CLOSURE.md
+?? reports/POST_E3_STAGE_R4_PRODUCTION_PREFLIGHT.md
+?? reports/POST_E3_STAGE_R4_PRODUCTION_RELEASE.md
+?? reports/closure-starting-git.txt
+?? reports/codex-file-operations-browser.json
+?? reports/codex-final-source-hashes.json
+?? reports/codex-final-stage-b1-browser-evidence.json
+?? reports/codex-stage-b1-real-browser-evidence.json
+?? reports/codex-stage-b2-concurrency-evidence.json
+?? reports/live-production-smoke-results.json
+?? reports/production-acceptance-results-r4.json
+?? reports/stage-b1-real-browser-evidence.json
+?? reports/stage-b2-concurrency-evidence.json
+?? scripts/.tmp-closure-fixtures.mjs
+?? scripts/.tmp-codex-browser.mjs
+?? scripts/.tmp-codex-concurrency.mjs
+?? scripts/.tmp-codex-final-browser.mjs
+?? scripts/e2e-codex-file-operations.mjs
+?? scripts/e2e-stage-b1-browser-verification.mjs
+?? scripts/helpers/
+?? scripts/test-codex-rename-recovery.mjs
+?? scripts/test-codex-runtime-isolation.mjs
+?? scripts/test-stage-b2-concurrency-closure.mjs
+?? scripts/verify-e3-production.mjs
+?? scripts/verify-live-production.mjs
+?? scripts/verify-r2-preview.mjs
+?? scripts/verify-r4-production.mjs

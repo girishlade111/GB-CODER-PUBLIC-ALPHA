@@ -1,0 +1,364 @@
+{
+  "verdict": "PHASE_B4_PREVIEW_ACCEPTED",
+  "scope": "Focused functional Preview acceptance; Production HOLD; preserve automation harness errors as separate evidence",
+  "publication": {
+    "pushCount": 1,
+    "nonForce": true,
+    "sha": "30804ea3e3f94814b46b7a9934fb477f91354615",
+    "parent": "546e74c084387d007b0312b9fbd69a9f6a6b55f1",
+    "branch": "phase-2.2-webcontainer-reliability",
+    "mainUnchanged": "1b954486e292436794b0764638ea454bb78fae11"
+  },
+  "deployment": {
+    "checkedAt": "2026-10-15T10:26:15.531Z",
+    "id": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+    "url": "gb-coder-public-alpha-6l37qqpda.vercel.app",
+    "projectId": "prj_Cbyer1VtBwQwrqRVCFhNOUERJFiD",
+    "readyState": "READY",
+    "status": "READY",
+    "target": null,
+    "environment": "preview",
+    "gitSource": {
+      "ref": "phase-2.2-webcontainer-reliability",
+      "repoId": 1168293584,
+      "sha": "30804ea3e3f94814b46b7a9934fb477f91354615",
+      "type": "github",
+      "prId": null
+    },
+    "meta": {
+      "sha": "30804ea3e3f94814b46b7a9934fb477f91354615",
+      "branch": "phase-2.2-webcontainer-reliability",
+      "repo": "GB-CODER-PUBLIC-ALPHA",
+      "org": "girishlade111"
+    },
+    "createdAt": 1792059008666,
+    "buildingAt": 1792059010372,
+    "ready": 1792059100606
+  },
+  "http": {
+    "status": "PASS",
+    "cases": 38,
+    "servicePath": "/app/assets/webcontainerService-Bw2Pb0Ah.js",
+    "serviceSha256": "5fb12a85fef46947e21c35aa8fa78955ec53a46787a4303f093040e72d21b4ee"
+  },
+  "static": {
+    "passed": 11,
+    "rawHarnessStatus": "11 PASS / 1 premature controller assertion FAIL",
+    "pageErrors": 0
+  },
+  "runtime": {
+    "samples": [
+      {
+        "index": 1,
+        "project": "React A",
+        "domMarker": "B4_REACT_A",
+        "status": "PASS",
+        "realDomMs": 69505,
+        "bootMs": 9350,
+        "mountMs": 8786,
+        "installHintMs": 41604,
+        "viteReportedMs": 3007,
+        "runtimeId": 1,
+        "epoch": 1,
+        "generation": 1,
+        "dispatchCount": 1,
+        "proofAfterObservedServer": true
+      },
+      {
+        "index": 2,
+        "project": "Vue B",
+        "domMarker": "B4_VUE_B",
+        "status": "PASS",
+        "realDomMs": 49333,
+        "bootMs": 9895,
+        "mountMs": 7909,
+        "installHintMs": 22946,
+        "viteReportedMs": 3703,
+        "runtimeId": 2,
+        "epoch": 3,
+        "generation": 3,
+        "dispatchCount": 1,
+        "proofAfterObservedServer": true
+      },
+      {
+        "index": 3,
+        "project": "React A",
+        "domMarker": "B4_REACT_A",
+        "status": "PASS",
+        "realDomMs": 56249,
+        "bootMs": 2833,
+        "mountMs": 7739,
+        "installHintMs": 34872,
+        "viteReportedMs": 3927,
+        "runtimeId": 3,
+        "epoch": 5,
+        "generation": 5,
+        "dispatchCount": 1,
+        "proofAfterObservedServer": true
+      }
+    ],
+    "totalStartupObservationMs": 175087,
+    "rawHarnessStatus": "BLOCKED",
+    "postControlHarnessError": "page.evaluate: TypeError: Cannot read properties of undefined (reading 'snapshot')\n    at eval (eval at evaluate (:311:30), <anonymous>:3:23)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+    "exitOutcomes": [
+      {
+        "at": 1792059722564,
+        "outcome": "rejected",
+        "detail": "Error: Process aborted",
+        "runtimeId": 1,
+        "command": "jsh",
+        "retired": true,
+        "beforeOwner": {
+          "at": 1792059722564,
+          "projectId": null,
+          "epoch": 2,
+          "generation": 2,
+          "runtimeId": null,
+          "hasRuntime": false,
+          "ownsGlobalRuntime": false,
+          "stage": "idle",
+          "status": "idle",
+          "previewStatus": "idle",
+          "busy": false,
+          "installedProof": false,
+          "shellExists": false,
+          "operation": null
+        },
+        "afterOwner": {
+          "at": 1792059722564,
+          "projectId": null,
+          "epoch": 2,
+          "generation": 2,
+          "runtimeId": null,
+          "hasRuntime": false,
+          "ownsGlobalRuntime": false,
+          "stage": "idle",
+          "status": "idle",
+          "previewStatus": "idle",
+          "busy": false,
+          "installedProof": false,
+          "shellExists": false,
+          "operation": null
+        },
+        "changedKeys": [],
+        "replacementStateUnchanged": true,
+        "currentRuntimeIsRetiredRuntime": false,
+        "afterAt": 1792059722564
+      },
+      {
+        "at": 1792059773642,
+        "outcome": "rejected",
+        "detail": "Error: Process aborted",
+        "runtimeId": 2,
+        "command": "jsh",
+        "retired": true,
+        "beforeOwner": {
+          "at": 1792059773642,
+          "projectId": null,
+          "epoch": 4,
+          "generation": 4,
+          "runtimeId": null,
+          "hasRuntime": false,
+          "ownsGlobalRuntime": false,
+          "stage": "idle",
+          "status": "idle",
+          "previewStatus": "idle",
+          "busy": false,
+          "installedProof": false,
+          "shellExists": false,
+          "operation": null
+        },
+        "afterOwner": {
+          "at": 1792059773642,
+          "projectId": null,
+          "epoch": 4,
+          "generation": 4,
+          "runtimeId": null,
+          "hasRuntime": false,
+          "ownsGlobalRuntime": false,
+          "stage": "idle",
+          "status": "idle",
+          "previewStatus": "idle",
+          "busy": false,
+          "installedProof": false,
+          "shellExists": false,
+          "operation": null
+        },
+        "changedKeys": [],
+        "replacementStateUnchanged": true,
+        "currentRuntimeIsRetiredRuntime": false,
+        "afterAt": 1792059773642
+      }
+    ],
+    "reconnect": {
+      "sameProject": true,
+      "sameEpoch": true,
+      "sameGeneration": true,
+      "sameRuntime": true,
+      "sameShell": true,
+      "noNewSpawn": true,
+      "noNewInstall": true,
+      "manualInputForwarded": true,
+      "installedProofPreserved": true
+    },
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [
+      {
+        "at": 1792059672194,
+        "kind": "failed",
+        "url": "https://t.staticblitz.com/w/v17/r/l",
+        "resourceType": "fetch",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "at": 1792059719309,
+        "kind": "failed",
+        "url": "https://egn8v2vpi70vumket3x4qvq95a0t6p-ih1r--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+        "resourceType": "document",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "at": 1792059741673,
+        "kind": "failed",
+        "url": "https://t.staticblitz.com/w/v17/r/l",
+        "resourceType": "fetch",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "at": 1792059770416,
+        "kind": "failed",
+        "url": "https://egn8v2vpi70vumket3x4qvq95a0t6p-ih1r-mmcdy1hx--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+        "resourceType": "document",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "at": 1792059786273,
+        "kind": "failed",
+        "url": "https://t.staticblitz.com/w/v17/r/l",
+        "resourceType": "fetch",
+        "error": "net::ERR_ABORTED"
+      }
+    ],
+    "connectionResetCount": 0,
+    "serviceWorkerActivatedAllStarts": true
+  },
+  "persistence": {
+    "method": "Captured sanitized runtime history and synthetic source fixtures seeded in a fresh disposable dashboard context; public attach/detach writes a synthetic cancelled diagnostic attempt; two measured reloads, no WebContainer startup",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "observations": [
+      {
+        "reload": 1,
+        "attempts": 4,
+        "bytes": 3211,
+        "recordsExact": true,
+        "projects": [
+          {
+            "id": "b4-a",
+            "count": 4,
+            "exact": true
+          },
+          {
+            "id": "b4-b",
+            "count": 6,
+            "exact": true
+          }
+        ],
+        "boots": 0,
+        "hasRuntime": false
+      },
+      {
+        "reload": 2,
+        "attempts": 4,
+        "bytes": 3211,
+        "recordsExact": true,
+        "projects": [
+          {
+            "id": "b4-a",
+            "count": 4,
+            "exact": true
+          },
+          {
+            "id": "b4-b",
+            "count": 6,
+            "exact": true
+          }
+        ],
+        "boots": 0,
+        "hasRuntime": false
+      }
+    ],
+    "actualCompiledWriter": {
+      "status": "PASS",
+      "newAttemptState": "cancelled",
+      "attempts": 4,
+      "rawProjectIdExcluded": true,
+      "bootCount": 0
+    },
+    "status": "PASS"
+  },
+  "credentials": {
+    "existing": 1,
+    "created": 0,
+    "modified": 0,
+    "revoked": 0
+  },
+  "production": {
+    "id": "dpl_72WQ33EXbkePS6fGQSnBF4n2yBTW",
+    "url": "gb-coder-public-alpha-mdrfofrq4.vercel.app",
+    "sha": "1b954486e292436794b0764638ea454bb78fae11",
+    "target": "production"
+  },
+  "evidence": [
+    {
+      "path": "reports/b4-deployed-deployment.json",
+      "sha256": "ee49c8e2772282ed6d15c17ce5104d344a2fa89d33b8ea9dd40c27701aa2c3ce"
+    },
+    {
+      "path": "reports/b4-deployed-final-state.json",
+      "sha256": "53cba0063874bc11008ee135dbe2c3fa815302291e34ab9e3a0a74f5181f20b3"
+    },
+    {
+      "path": "reports/b4-deployed-build-events.json",
+      "sha256": "ea755c2fe042caf4ce75d7cb1eadb73ed94e915f00953fc4912046a35b6345ba"
+    },
+    {
+      "path": "reports/b4-deployed-build.log",
+      "sha256": "b1efea834af2be7ac8f06aecb17e50e7dc7728ec929c5ad7817139aa162e6ff6"
+    },
+    {
+      "path": "reports/b4-deployed-http-harness-error.json",
+      "sha256": "9d6b74f956537bf67a30c0d7ecfbfdf7fef936d22fa8c27b57177b7fbcef8ebb"
+    },
+    {
+      "path": "reports/b4-deployed-http-auth-redirect.json",
+      "sha256": "cb89f1013a190f71215ffe50431a98b67df7adab5a8f49dbe5d3471632a0dfaa"
+    },
+    {
+      "path": "reports/b4-deployed-auth-bootstrap.json",
+      "sha256": "9d2379d6d0e2dee251a313ef63288d54a52f43a5bacaaa2c180b6e63d32263df"
+    },
+    {
+      "path": "reports/b4-deployed-http.json",
+      "sha256": "3e17bad347cc9746c5f1d68ebae8648d349cc2e64461e7c1c3a9ccd629ecb6ef"
+    },
+    {
+      "path": "reports/b4-deployed-static-focused.json",
+      "sha256": "2774428773087434fbd49cf03434a53c8e7a7d847ae0cd45166a8b60568e290e"
+    },
+    {
+      "path": "reports/b4-deployed-sw-lifecycle.json",
+      "sha256": "578fc6002e0af288108702a7f01b91c746857d41eb0e7b7a4bbc8758a03f31fc"
+    },
+    {
+      "path": "reports/b4-deployed-runtime.json",
+      "sha256": "915458d4ed147264cddc5016078224a2a9466109754cfad4a22bda2c50b7ec71"
+    },
+    {
+      "path": "reports/b4-deployed-persistence.json",
+      "sha256": "efd340b4b556ca9c25be4511fc00b584f918c2699779c0c7adcb0d9edb303406"
+    }
+  ]
+}
