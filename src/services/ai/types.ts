@@ -89,6 +89,28 @@ export interface ConnectionDiagnosticResult {
   suggestedAction?: string;
 }
 
+export interface ApiKeyVerificationResult {
+  success: boolean;
+  httpStatus?: number;
+  message: string;
+  endpointTested: string;
+  errorCategory?: 'config' | 'auth' | 'not_found' | 'rate_limit' | 'server' | 'cors' | 'timeout' | 'network' | 'unknown';
+  keyState?: 'valid' | 'invalid' | 'unverified' | 'rate_limited';
+  suggestedAction?: string;
+  latencyMs?: number;
+  diagnosticCase?: 'A' | 'B' | 'C' | 'D' | 'E';
+  keyDetails?: {
+    label?: string;
+    limit?: number | null;
+    usage?: number | null;
+    isFreeTier?: boolean;
+    rateLimit?: {
+      requests?: number;
+      interval?: string;
+    };
+  };
+}
+
 export interface DiscoveredModel {
   id: string;
   name: string;

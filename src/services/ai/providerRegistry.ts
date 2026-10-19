@@ -10,6 +10,7 @@ import {
   AiModelInfo,
   ConnectionDiagnosticResult,
   ModelDiscoveryResult,
+  ApiKeyVerificationResult,
   ProviderCatalogEntry,
   CustomProviderDefinition,
   DiscoveredModel,
@@ -389,6 +390,42 @@ class ProviderRegistry {
     const targetModel = (modelId || '').trim() || this.getActiveModel(id);
     const resolvedBaseUrl = baseUrl || this.getBaseUrlOverride(id);
     return provider.testConnection(key, resolvedBaseUrl, targetModel, customHeaders, consentToInference);
+  }
+
+  public async verifyProviderApiKey(
+    id: AiProviderId,
+    apiKey?: string,
+    baseUrl?: string,
+    customHeaders?: Record<string, string>,
+    signal?: AbortSignal
+  ): Promise<ApiKeyVerificationResult> {
+    let provider = this.providers.get(id);
+    if (!provider) {
+      provider = this.providers.get('custom');
+    }
+    if (!provider) {
+      return {
+        success: false,
+        latencyMs: 0,
+        message: `Provider "${id}" is not registered.`,
+        endpointTested: '',
+        errorCategory: 'config',
+        keyState: 'unverified',
+      };
+    }
+    const key = apiKey !== undefined ? apiKey : keyManager.getApiKey(id);
+    const resolvedBaseUrl = baseUrl || this.getBaseUrlOverride(id);
+    if (typeof provider.verifyApiKey === 'function') {
+      return provider.verifyApiKey(key, resolvedBaseUrl, customHeaders, signal);
+    }
+    return {
+      success: false,
+      latencyMs: 0,
+      message: `Direct non-inference key verification is not supported for ${provider.name}. Use "Test Connection" instead.`,
+      endpointTested: '',
+      errorCategory: 'config',
+      keyState: 'unverified',
+    };
   }
 
   public applyDiscoveredModels(id: AiProviderId, models: DiscoveredModel[], persist = true): void {

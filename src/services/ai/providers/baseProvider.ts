@@ -61,4 +61,11 @@ export interface IAiProvider {
     customHeaders?: Record<string, string>,
     signal?: AbortSignal
   ): Promise<import('../types.ts').ModelDiscoveryResult>;
+
+  verifyApiKey?(
+    apiKey?: string,
+    baseUrl?: string,
+    customHeaders?: Record<string, string>,
+    signal?: AbortSignal
+  ): Promise<import('../types.ts').ApiKeyVerificationResult>;
 }

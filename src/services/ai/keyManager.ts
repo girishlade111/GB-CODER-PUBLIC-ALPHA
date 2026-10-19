@@ -28,6 +28,30 @@ export function extractOrigin(url: string): string {
 }
 
 /**
+ * Sanitizes and cleans user-entered API keys:
+ * - Trims leading and trailing whitespace, carriage returns, tabs, and newlines.
+ * - Strips accidental enclosing single or double quotes (e.g. "sk-..." or 'sk-...').
+ * - Strips accidental leading "Bearer " prefix (e.g. copied from curl examples or header specs).
+ */
+export function cleanApiKey(rawKey?: string): string {
+  if (!rawKey) return '';
+  let cleaned = rawKey.trim();
+  if (!cleaned) return '';
+
+  // Strip enclosing double or single quotes
+  if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+    cleaned = cleaned.slice(1, -1).trim();
+  }
+
+  // Strip accidental "Bearer " or "bearer " prefix
+  if (/^bearer\s+/i.test(cleaned)) {
+    cleaned = cleaned.replace(/^bearer\s+/i, '').trim();
+  }
+
+  return cleaned.trim();
+}
+
+/**
  * Returns the default authorized destination origin for built-in providers.
  */
 export function getDefaultProviderOrigin(provider: AiProviderId): string {
@@ -63,7 +87,10 @@ class KeyManager {
       for (const p of providers) {
         const storedKey = window.sessionStorage.getItem(`${SESSION_PREFIX}${p}`);
         if (storedKey) {
-          this.memoryKeys.set(p, storedKey);
+          const cleaned = cleanApiKey(storedKey);
+          if (cleaned) {
+            this.memoryKeys.set(p, cleaned);
+          }
           const storedOrigins = window.sessionStorage.getItem(`${SESSION_PREFIX}${p}_origins`);
           const originSet = new Set<string>();
           if (storedOrigins) {
@@ -94,14 +121,15 @@ class KeyManager {
    */
   public getApiKey(provider: AiProviderId): string {
     const memKey = this.memoryKeys.get(provider);
-    if (memKey) return memKey;
+    if (memKey) return cleanApiKey(memKey);
 
     if (typeof window !== 'undefined' && window.sessionStorage) {
       try {
         const sessionKey = window.sessionStorage.getItem(`${SESSION_PREFIX}${provider}`);
         if (sessionKey) {
-          this.memoryKeys.set(provider, sessionKey);
-          return sessionKey;
+          const cleaned = cleanApiKey(sessionKey);
+          this.memoryKeys.set(provider, cleaned);
+          return cleaned;
         }
       } catch {
         // sessionStorage restricted
@@ -113,7 +141,7 @@ class KeyManager {
       const meta = import.meta as unknown as { env?: Record<string, string | undefined> };
       const envKey = meta.env?.VITE_GEMINI_API_KEY;
       if (typeof envKey === 'string' && envKey.trim()) {
-        return envKey.trim();
+        return cleanApiKey(envKey);
       }
     }
 
@@ -133,13 +161,13 @@ class KeyManager {
     persistInSession = false,
     authorizedOrigin?: string
   ): void {
-    const trimmed = key.trim();
-    if (!trimmed) {
+    const cleaned = cleanApiKey(key);
+    if (!cleaned) {
       this.clearApiKey(provider);
       return;
     }
 
-    this.memoryKeys.set(provider, trimmed);
+    this.memoryKeys.set(provider, cleaned);
 
     // Resolve authorized destination origin
     const origins = this.memoryOrigins.get(provider) || new Set<string>();
@@ -157,7 +185,7 @@ class KeyManager {
     if (typeof window !== 'undefined' && window.sessionStorage) {
       try {
         if (persistInSession) {
-          window.sessionStorage.setItem(`${SESSION_PREFIX}${provider}`, trimmed);
+          window.sessionStorage.setItem(`${SESSION_PREFIX}${provider}`, cleaned);
           if (origins.size > 0) {
             window.sessionStorage.setItem(
               `${SESSION_PREFIX}${provider}_origins`,
@@ -328,7 +356,7 @@ class KeyManager {
     // Cross-provider credential leakage check:
     // If an apiKey is supplied, verify it doesn't belong exclusively to another provider whose authorized origins do not include targetOrigin.
     if (apiKey && apiKey.trim()) {
-      const cleanKey = apiKey.trim();
+      const cleanKey = cleanApiKey(apiKey);
       for (const [otherProvider, otherKey] of this.memoryKeys.entries()) {
         if (otherProvider !== providerId && otherKey === cleanKey) {
           // Key was registered under another provider. Verify if that other provider has authorized this destination.

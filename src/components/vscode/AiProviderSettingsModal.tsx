@@ -46,6 +46,7 @@ import {
 import {
   AiProviderId,
   ConnectionDiagnosticResult,
+  ApiKeyVerificationResult,
   CustomModelConfig,
   CustomHeaderConfig,
   CustomProviderDefinition,
@@ -118,6 +119,10 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
   const [probeConsent, setProbeConsent] = useState(true);
   const [diagnosticResult, setDiagnosticResult] = useState<ConnectionDiagnosticResult | null>(null);
 
+  // Non-inference key verification diagnostics state
+  const [isVerifyingKey, setIsVerifyingKey] = useState(false);
+  const [keyVerificationResult, setKeyVerificationResult] = useState<ApiKeyVerificationResult | null>(null);
+
   // Validation errors
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -133,6 +138,8 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
   const loadProviderConfig = useCallback((pId: AiProviderId) => {
     setSelectedProviderId(pId);
     setDiagnosticResult(null);
+    setKeyVerificationResult(null);
+    setIsVerifyingKey(false);
     setFormErrors({});
 
     cancelInFlightFetch();
@@ -563,6 +570,104 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     setCustomHeaders((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Non-Inference API Key Verification Gate (GET /key)
+  const handleVerifyKey = async () => {
+    if (!apiKeyInput.trim()) {
+      setFormErrors((prev) => ({ ...prev, apiKey: 'Please enter an API key to verify.' }));
+      return;
+    }
+
+    setIsVerifyingKey(true);
+    setKeyVerificationResult(null);
+    setFormErrors((prev) => {
+      const next = { ...prev };
+      delete next.apiKey;
+      return next;
+    });
+
+    if (selectedProviderId === 'openai' && (apiKeyInput.trim().startsWith('sk-or-') || customBaseUrl.includes('openrouter.ai'))) {
+      setIsVerifyingKey(false);
+      setFormErrors({
+        apiKey: 'OpenRouter API key or endpoint detected under OpenAI provider. Switch to OpenRouter, or provide an OpenAI key.',
+      });
+      return;
+    }
+    if (selectedProviderId === 'openrouter' && (apiKeyInput.trim().startsWith('sk-proj-') || (customBaseUrl.trim() && customBaseUrl.includes('api.openai.com')))) {
+      setIsVerifyingKey(false);
+      setFormErrors({
+        apiKey: 'OpenAI API key or endpoint detected under OpenRouter provider. Switch to OpenAI, or provide an OpenRouter key.',
+      });
+      return;
+    }
+
+    if (isDestinationOverride && !isDestinationAuthorized) {
+      if (authorizedDestinationConfirmed) {
+        keyManager.authorizeOrigin(selectedProviderId, currentBaseUrlOrigin);
+      } else {
+        setIsVerifyingKey(false);
+        setFormErrors((prev) => ({
+          ...prev,
+          baseUrl: `Destination Authorization Required: Please confirm explicit authorization below to route credentials to "${currentBaseUrlOrigin}".`,
+        }));
+        return;
+      }
+    }
+
+    const isCustom = isCustomMode;
+    const defaultUrl = !isCustom ? providerRegistry.getProvider(selectedProviderId).defaultBaseUrl : '';
+    const targetBaseUrl = customBaseUrl.trim() || defaultUrl;
+    const targetId = isCustom
+      ? (isEditingExistingCustom ? customProviderId : (customProviderId.trim().toLowerCase() || selectedProviderId))
+      : selectedProviderId;
+
+    const headersMap: Record<string, string> = {};
+    if (isCustom) {
+      for (const h of customHeaders) {
+        if (h.name.trim() && h.value) {
+          headersMap[h.name.trim()] = h.value;
+        }
+      }
+    }
+
+    try {
+      if (apiKeyInput.trim()) {
+        keyManager.setApiKey(targetId, apiKeyInput, persistInSession, targetBaseUrl);
+        if (isCustom) {
+          keyManager.authorizeOrigin('custom', targetBaseUrl);
+        }
+      }
+
+      const result = await providerRegistry.verifyProviderApiKey(
+        targetId,
+        apiKeyInput,
+        targetBaseUrl,
+        headersMap
+      );
+
+      if (result.success) {
+        result.diagnosticCase = 'C';
+      } else if (result.httpStatus === 401 || result.httpStatus === 403) {
+        result.diagnosticCase = 'B';
+      } else if (result.errorCategory === 'cors' || result.errorCategory === 'network') {
+        result.diagnosticCase = 'D';
+      }
+
+      setKeyVerificationResult(result);
+    } catch (err: unknown) {
+      const rawMsg = err instanceof Error ? err.message : String(err);
+      setKeyVerificationResult({
+        success: false,
+        latencyMs: 0,
+        message: `Key verification error: ${rawMsg}`,
+        endpointTested: targetBaseUrl,
+        errorCategory: 'unknown',
+        keyState: 'unverified',
+      });
+    } finally {
+      setIsVerifyingKey(false);
+    }
+  };
+
   // Diagnostic Test Connection
   const handleRunDiagnostic = async () => {
     setIsTesting(true);
@@ -659,6 +764,22 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
 
       if (customDisplayName && result.message.includes('Connected successfully to')) {
         result.message = result.message.replace('Custom OpenAI-Compatible', customDisplayName);
+      }
+
+      // Correlate with Key Verification Diagnostic Matrix (Cases A-E)
+      if (keyVerificationResult) {
+        if (keyVerificationResult.success && !result.success && (result.httpStatus === 401 || result.httpStatus === 403)) {
+          // Case A: Key valid on GET /key, but inference returns 401
+          result.message = `[Diagnostic Case A: Valid Key, Inference 401] ${result.message}`;
+          result.suggestedAction = `Your API key was confirmed valid by ${selectedProviderId} (GET /key = 200), but inference returned 401. This indicates account credit limits, permissions restricted to specific models, or model "${targetModel}" requiring separate activation.`;
+        } else if (!keyVerificationResult.success && (keyVerificationResult.httpStatus === 401 || keyVerificationResult.httpStatus === 403) && (result.httpStatus === 401 || result.httpStatus === 403)) {
+          // Case B: Both /key and inference return 401
+          result.message = `[Diagnostic Case B: Key Rejected Upstream] ${result.message}`;
+          result.suggestedAction = `Your API key was rejected by ${selectedProviderId} on both key inspection and inference. Check for revoked keys or generate a fresh key in your OpenRouter console.`;
+        } else if (keyVerificationResult.success && result.success) {
+          // Case C: Both succeed
+          result.message = `[Diagnostic Case C: Fully Authenticated] ${result.message}`;
+        }
       }
 
       setDiagnosticResult(result);
@@ -1293,18 +1414,38 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                       <Key className="h-3 w-3 text-cyan-400" />
                       API Key {selectedProviderId !== 'custom' && !isEditingExistingCustom && <span className="text-rose-400">*</span>}
                     </label>
-                    <span className="text-[10px] text-slate-500">
-                      {isCustomMode
-                        ? 'Optional for unauthenticated local endpoints'
-                        : 'Stored in memory only'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleVerifyKey}
+                        disabled={isVerifyingKey || !apiKeyInput.trim()}
+                        data-testid="verify-api-key-btn"
+                        className="flex items-center gap-1 rounded bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-800/60 px-2 py-0.5 text-[10px] text-cyan-300 transition-colors disabled:opacity-50"
+                        title="Verify API key validity without inference cost"
+                      >
+                        {isVerifyingKey ? (
+                          <Loader2 className="h-3 w-3 animate-spin text-cyan-400" />
+                        ) : (
+                          <ShieldCheck className="h-3 w-3 text-cyan-400" />
+                        )}
+                        <span>{isVerifyingKey ? 'Verifying Key...' : 'Verify API Key'}</span>
+                      </button>
+                      <span className="text-[10px] text-slate-500">
+                        {isCustomMode
+                          ? 'Optional for unauthenticated local endpoints'
+                          : 'Stored in memory only'}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="relative flex items-center">
                     <input
                       type={showKey ? 'text' : 'password'}
                       value={apiKeyInput}
-                      onChange={(e) => setApiKeyInput(e.target.value)}
+                      onChange={(e) => {
+                        setApiKeyInput(e.target.value);
+                        setKeyVerificationResult(null);
+                      }}
                       placeholder={`Enter API key for ${customDisplayName || activeProviderObj?.name || 'provider'}...`}
                       data-testid="ai-provider-api-key-input"
                       className="w-full rounded-md border border-[#2e3046] bg-[#12131c] pl-3 pr-20 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500"
@@ -1321,7 +1462,10 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                       {apiKeyInput && (
                         <button
                           type="button"
-                          onClick={handleClearKey}
+                          onClick={() => {
+                            handleClearKey();
+                            setKeyVerificationResult(null);
+                          }}
                           className="p-1 rounded text-slate-500 hover:text-red-400"
                           title="Clear key"
                         >
@@ -1359,6 +1503,61 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                   )}
 
                   {formErrors.apiKey && <p className="text-[10px] text-rose-400">{formErrors.apiKey}</p>}
+
+                  {/* Non-Inference Key Verification Diagnostic Output */}
+                  {keyVerificationResult && (
+                    <div
+                      data-testid="key-verification-result"
+                      className={`rounded-md border p-2.5 text-xs space-y-1 mt-2 ${
+                        keyVerificationResult.success
+                          ? 'border-emerald-500/40 bg-emerald-950/25 text-emerald-300'
+                          : 'border-rose-500/40 bg-rose-950/25 text-rose-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-semibold">
+                          {keyVerificationResult.success ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                          ) : (
+                            <ShieldAlert className="h-4 w-4 text-rose-400 shrink-0" />
+                          )}
+                          <span>{keyVerificationResult.message}</span>
+                        </div>
+                        {keyVerificationResult.diagnosticCase && (
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/40 border border-white/10 text-slate-300">
+                            Case {keyVerificationResult.diagnosticCase}
+                          </span>
+                        )}
+                      </div>
+
+                      {keyVerificationResult.keyDetails && (
+                        <div className="pl-5 text-[11px] text-emerald-200/90 space-y-0.5 pt-0.5">
+                          {keyVerificationResult.keyDetails.label && (
+                            <p>Key Label: <span className="font-mono text-white font-semibold">{keyVerificationResult.keyDetails.label}</span></p>
+                          )}
+                          {typeof keyVerificationResult.keyDetails.usage === 'number' && (
+                            <p>Total Usage: <span className="font-mono text-white">${keyVerificationResult.keyDetails.usage.toFixed(4)}</span></p>
+                          )}
+                          {keyVerificationResult.keyDetails.limit !== undefined && (
+                            <p>Credit Limit: <span className="font-mono text-white">{keyVerificationResult.keyDetails.limit === null ? 'Unlimited' : '$' + keyVerificationResult.keyDetails.limit}</span></p>
+                          )}
+                          {keyVerificationResult.keyDetails.isFreeTier !== undefined && (
+                            <p>Tier: <span className="font-mono text-white">{keyVerificationResult.keyDetails.isFreeTier ? 'Free Tier' : 'Paid Tier'}</span></p>
+                          )}
+                        </div>
+                      )}
+
+                      {keyVerificationResult.suggestedAction && (
+                        <p className="text-[11px] text-slate-300 pl-5">
+                          <strong className="text-white">Action:</strong> {keyVerificationResult.suggestedAction}
+                        </p>
+                      )}
+
+                      <div className="pl-5 pt-0.5 text-[9px] text-slate-400 font-mono">
+                        Endpoint: {keyVerificationResult.endpointTested} · Latency: {keyVerificationResult.latencyMs ?? 0}ms · Non-billable verification probe
+                      </div>
+                    </div>
+                  )}
 
                   <label className="flex items-center gap-2 pt-1 text-[11px] text-slate-400 cursor-pointer">
                     <input

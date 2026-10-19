@@ -10,10 +10,11 @@ import {
   ChatCompletionChunk,
   ConnectionDiagnosticResult,
   ModelDiscoveryResult,
+  ApiKeyVerificationResult,
 } from '../types.ts';
 import { IAiProvider, StreamChatOptions } from './baseProvider.ts';
 import { discoverModels } from '../modelDiscoveryService.ts';
-import { keyManager, extractOrigin } from '../keyManager.ts';
+import { keyManager, extractOrigin, cleanApiKey } from '../keyManager.ts';
 
 /**
  * Redacts API keys, credentials, and tokens from error messages and URLs.
@@ -269,9 +270,16 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       }
     }
 
-    // Set Authorization header if apiKey is present and not explicitly overridden
-    if (apiKey && !Object.keys(headers).some((name) => name.toLowerCase() === 'authorization')) {
-      headers['Authorization'] = `Bearer ${apiKey}`;
+    // Set canonical Authorization header if apiKey is present
+    const cleanedKey = cleanApiKey(apiKey);
+    if (cleanedKey) {
+      // Remove any existing case-variant Authorization headers to prevent duplicate header fields
+      for (const headerKey of Object.keys(headers)) {
+        if (headerKey.toLowerCase() === 'authorization') {
+          delete headers[headerKey];
+        }
+      }
+      headers['Authorization'] = `Bearer ${cleanedKey}`;
     }
 
     if (this.id === 'openrouter') {
@@ -427,7 +435,8 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       const errorText = redactSecretsFromText(rawErrorText, effectiveApiKey);
 
       if (response.status === 401 || response.status === 403) {
-        throw new Error(`Authentication Failed (${response.status}): Invalid API key for ${this.name}.`);
+        const detailSuffix = errorText ? `: ${errorText}` : '';
+        throw new Error(`Authentication Failed (${response.status}): Invalid API key for ${this.name}${detailSuffix}`);
       }
       if (response.status === 429) {
         const retryAfter = response.headers.get('retry-after');
@@ -703,8 +712,9 @@ export class OpenAiCompatibleProvider implements IAiProvider {
 
       if (response.status === 401 || response.status === 403) {
         errorCategory = 'auth';
-        sanitizedError = `Authentication failed (${response.status}): Invalid API key for ${this.name}.`;
-        suggestedAction = 'Check that your API key is valid and has permissions for this endpoint.';
+        const providerDetail = sanitizedError ? ` - ${sanitizedError}` : '';
+        sanitizedError = `Authentication failed (${response.status}): Invalid API key for ${this.name}${providerDetail}`;
+        suggestedAction = 'Check that your API key is valid, active, and has permissions for this endpoint.';
       } else if (response.status === 404) {
         errorCategory = 'not_found';
         suggestedAction = `The endpoint or model "${targetModel}" was not found. Verify the model ID and Base URL.`;
@@ -765,5 +775,219 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       customHeaders: customHeaders || this.customHeaders,
       signal,
     });
+  }
+
+  /**
+   * Diagnostic Non-Inference Key Verification Gate.
+   * Directly verifies credential validity without consuming tokens or sending an inference prompt.
+   * Uses GET https://openrouter.ai/api/v1/key for OpenRouter, or GET /models for OpenAI.
+   */
+  public async verifyApiKey(
+    apiKey?: string,
+    baseUrl?: string,
+    customHeaders?: Record<string, string>,
+    signal?: AbortSignal
+  ): Promise<ApiKeyVerificationResult> {
+    const start = performance.now();
+    const effectiveApiKey = cleanApiKey(apiKey || keyManager.getApiKey(this.id));
+    if (!effectiveApiKey) {
+      return {
+        success: false,
+        latencyMs: 0,
+        message: `API key is required to verify ${this.name}.`,
+        endpointTested: '',
+        errorCategory: 'config',
+        keyState: 'invalid',
+        suggestedAction: 'Please enter your API key in the provider settings.',
+      };
+    }
+
+    const rawBaseUrl = baseUrl || this.baseUrlOverride || this.defaultBaseUrl;
+    const urlValidation = validateEndpointUrl(rawBaseUrl);
+    if (!urlValidation.valid) {
+      return {
+        success: false,
+        latencyMs: 0,
+        message: `Invalid base URL: ${urlValidation.error}`,
+        endpointTested: rawBaseUrl,
+        errorCategory: 'config',
+        keyState: 'unverified',
+        suggestedAction: 'Correct the Base URL in provider settings.',
+      };
+    }
+
+    const resolvedUrl = normalizeBaseUrl(rawBaseUrl);
+    // Security check: Outbound origin authorization
+    const isAuthorized = keyManager.isKeyOrProviderAuthorized(
+      this.id,
+      effectiveApiKey,
+      resolvedUrl,
+      this.defaultBaseUrl
+    );
+    if (!isAuthorized) {
+      return {
+        success: false,
+        latencyMs: 0,
+        message: `Destination Authorization Required: Origin "${extractOrigin(resolvedUrl)}" is not authorized for ${this.name} credentials.`,
+        endpointTested: resolvedUrl,
+        errorCategory: 'auth',
+        keyState: 'unverified',
+        suggestedAction: 'Reset the Base URL or explicitly authorize routing credentials to this origin.',
+      };
+    }
+
+    // Determine target verification URL
+    // OpenRouter has dedicated GET /key endpoint
+    // OpenAI and other OpenAI-compatible endpoints verify credentials via GET /models
+    let verifyEndpoint = `${resolvedUrl}/key`;
+    if (this.id === 'openai') {
+      verifyEndpoint = `${resolvedUrl}/models`;
+    }
+
+    const headers = this.resolveHeaders(effectiveApiKey, customHeaders);
+    // GET requests should not send Content-Type: application/json
+    delete headers['Content-Type'];
+
+    const requestSignal = AbortSignal.any([
+      ...(signal ? [signal] : []),
+      AbortSignal.timeout(15000),
+    ]);
+
+    try {
+      const response = await fetch(verifyEndpoint, {
+        method: 'GET',
+        headers,
+        signal: requestSignal,
+        redirect: 'manual',
+      });
+
+      const latencyMs = Math.round(performance.now() - start);
+
+      if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
+        return {
+          success: false,
+          latencyMs,
+          httpStatus: response.status,
+          message: `Redirect from ${verifyEndpoint} was rejected to prevent credential leakage.`,
+          endpointTested: verifyEndpoint,
+          errorCategory: 'auth',
+          keyState: 'unverified',
+          suggestedAction: 'Ensure Base URL points directly to the final API without redirects.',
+        };
+      }
+
+      if (response.ok) {
+        let keyDetails: ApiKeyVerificationResult['keyDetails'] = undefined;
+        let detailSummary = '';
+        try {
+          const json = await response.json();
+          if (json?.data) {
+            keyDetails = {
+              label: json.data.label,
+              limit: json.data.limit,
+              usage: json.data.usage,
+              isFreeTier: json.data.is_free_tier,
+              rateLimit: json.data.rate_limit,
+            };
+            const parts: string[] = [];
+            if (json.data.label) parts.push(`Label: "${json.data.label}"`);
+            if (typeof json.data.usage === 'number') parts.push(`Usage: $${json.data.usage.toFixed(4)}`);
+            if (json.data.limit !== undefined) {
+              parts.push(`Limit: ${json.data.limit === null ? 'Unlimited' : '$' + json.data.limit}`);
+            }
+            if (json.data.is_free_tier !== undefined) {
+              parts.push(json.data.is_free_tier ? 'Free tier' : 'Paid tier');
+            }
+            if (parts.length > 0) {
+              detailSummary = ` (${parts.join(', ')})`;
+            }
+          }
+        } catch {}
+
+        return {
+          success: true,
+          latencyMs,
+          httpStatus: response.status,
+          message: `API Key verified successfully with ${this.name}${detailSummary}.`,
+          endpointTested: verifyEndpoint,
+          keyState: 'valid',
+          keyDetails,
+        };
+      }
+
+      // Handle non-200 responses
+      let rawErrorText = `HTTP ${response.status} ${response.statusText}`;
+      try {
+        const errorJson = await response.json();
+        if (errorJson?.error?.message) {
+          rawErrorText = errorJson.error.message;
+        } else if (typeof errorJson?.error === 'string') {
+          rawErrorText = errorJson.error;
+        }
+      } catch {
+        try {
+          const text = await response.text();
+          if (text && text.length < 300) rawErrorText = text;
+        } catch {}
+      }
+
+      const sanitizedError = redactSecretsFromText(rawErrorText, effectiveApiKey);
+
+      if (response.status === 401 || response.status === 403) {
+        return {
+          success: false,
+          latencyMs,
+          httpStatus: response.status,
+          message: `Authentication Failed (${response.status}): ${sanitizedError || 'Invalid API key'}`,
+          endpointTested: verifyEndpoint,
+          errorCategory: 'auth',
+          keyState: 'invalid',
+          suggestedAction: 'The provider rejected your API key. Generate a new key in your OpenRouter account and paste it here.',
+        };
+      }
+
+      if (response.status === 429) {
+        return {
+          success: false,
+          latencyMs,
+          httpStatus: response.status,
+          message: `Rate Limit Exceeded (${response.status}): ${sanitizedError}`,
+          endpointTested: verifyEndpoint,
+          errorCategory: 'rate_limit',
+          keyState: 'rate_limited',
+          suggestedAction: 'Wait a moment before retrying or check your account rate limit.',
+        };
+      }
+
+      return {
+        success: false,
+        latencyMs,
+        httpStatus: response.status,
+        message: `Key verification returned HTTP ${response.status}: ${sanitizedError}`,
+        endpointTested: verifyEndpoint,
+        errorCategory: 'unknown',
+        keyState: 'unverified',
+        suggestedAction: 'Verify the Base URL and provider status.',
+      };
+    } catch (err: unknown) {
+      const latencyMs = Math.round(performance.now() - start);
+      const rawMsg = err instanceof Error ? err.message : String(err);
+      const msg = redactSecretsFromText(rawMsg, effectiveApiKey);
+      const isCors = msg.includes('Failed to fetch') || msg.includes('NetworkError');
+
+      return {
+        success: false,
+        latencyMs,
+        message: isCors
+          ? `Browser CORS restriction: Cannot reach ${extractOrigin(resolvedUrl)} directly from this browser origin.`
+          : `Network error verifying key: ${msg}`,
+        endpointTested: verifyEndpoint,
+        errorCategory: isCors ? 'cors' : 'network',
+        keyState: 'unverified',
+        suggestedAction: isCors
+          ? 'Check your network connection or verify that the provider allows direct browser requests.'
+          : 'Check your internet connection and try again.',
+      };
+    }
   }
 }

@@ -80,6 +80,7 @@ await build({
 const byok = await import(pathToFileURL(bundleFile).href);
 const {
   keyManager,
+  cleanApiKey,
   customProviderStore,
   providerRegistry,
   BUILT_IN_CATALOG,
@@ -1179,6 +1180,226 @@ await test('9.4 Real HTTP 401 Authentication Failure is surfaced accurately with
     assert.equal(testResult.httpStatus, 401);
     assert.match(testResult.message, /Authentication failed \(401\)|Invalid API key for OpenRouter/);
     assert.equal(testResult.message.includes('sk-or-v1-invalid-or-revoked-key'), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    keyManager.clearApiKey('openrouter');
+  }
+});
+
+console.log('\n--- SECTION 10: NON-INFERENCE KEY VERIFICATION & HEADER HARDENING ---');
+
+await test('10.1 cleanApiKey sanitizes whitespace, quotes, and duplicate Bearer prefixes', async () => {
+  assert.equal(cleanApiKey('  sk-or-v1-abc-123  \r\n'), 'sk-or-v1-abc-123');
+  assert.equal(cleanApiKey('"sk-or-v1-abc-123"'), 'sk-or-v1-abc-123');
+  assert.equal(cleanApiKey("'sk-or-v1-abc-123'"), 'sk-or-v1-abc-123');
+  assert.equal(cleanApiKey('Bearer sk-or-v1-abc-123'), 'sk-or-v1-abc-123');
+  assert.equal(cleanApiKey('bearer sk-or-v1-abc-123'), 'sk-or-v1-abc-123');
+  assert.equal(cleanApiKey('  "Bearer sk-or-v1-abc-123"  '), 'sk-or-v1-abc-123');
+  assert.equal(cleanApiKey(''), '');
+  assert.equal(cleanApiKey(undefined), '');
+});
+
+await test('10.2 Dedicated verifyApiKey queries GET /key and extracts metadata without inference tokens', async () => {
+  const originalFetch = globalThis.fetch;
+  let interceptedUrl = '';
+  let interceptedMethod = '';
+  let interceptedHeaders = {};
+  let interceptedBody = undefined;
+
+  globalThis.fetch = async (url, options) => {
+    interceptedUrl = String(url);
+    interceptedMethod = options.method;
+    interceptedHeaders = options.headers || {};
+    interceptedBody = options.body;
+
+    return new Response(
+      JSON.stringify({
+        data: {
+          label: 'Test Key Label',
+          usage: 0.125,
+          limit: 10.0,
+          is_free_tier: false,
+          rate_limit: { requests: 20, interval: '10s' },
+        },
+      }),
+      {
+        status: 200,
+        statusText: 'OK',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  };
+
+  try {
+    keyManager.setApiKey('openrouter', '  sk-or-v1-test-valid-key  ');
+    const result = await providerRegistry.verifyProviderApiKey('openrouter');
+
+    assert.equal(result.success, true);
+    assert.equal(result.httpStatus, 200);
+    assert.equal(result.keyState, 'valid');
+    assert.equal(interceptedMethod, 'GET');
+    assert.equal(interceptedUrl, 'https://openrouter.ai/api/v1/key');
+    assert.equal(interceptedBody, undefined, 'Must not send prompt or request body');
+    assert.equal(interceptedHeaders['Authorization'], 'Bearer sk-or-v1-test-valid-key');
+    assert.equal(interceptedHeaders['HTTP-Referer'], 'https://code.ladestack.in');
+    assert.equal(interceptedHeaders['X-Title'], 'GB Coder (LadeStack)');
+    assert.equal(result.keyDetails?.label, 'Test Key Label');
+    assert.equal(result.keyDetails?.usage, 0.125);
+    assert.equal(result.keyDetails?.limit, 10.0);
+    assert.equal(result.keyDetails?.isFreeTier, false);
+    assert.match(result.message, /verified successfully/i);
+  } finally {
+    globalThis.fetch = originalFetch;
+    keyManager.clearApiKey('openrouter');
+  }
+});
+
+await test('10.3 Invalid API key on GET /key returns structured 401 with provider error detail without secret leakage', async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async (url, options) => {
+    return new Response(
+      JSON.stringify({
+        error: {
+          message: 'User not found.',
+          code: 401,
+        },
+      }),
+      {
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  };
+
+  try {
+    keyManager.setApiKey('openrouter', 'sk-or-v1-fake-nonexistent-key-401');
+    const result = await providerRegistry.verifyProviderApiKey('openrouter');
+
+    assert.equal(result.success, false);
+    assert.equal(result.httpStatus, 401);
+    assert.equal(result.keyState, 'invalid');
+    assert.equal(result.errorCategory, 'auth');
+    assert.match(result.message, /User not found\./);
+    assert.equal(result.message.includes('sk-or-v1-fake-nonexistent-key-401'), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    keyManager.clearApiKey('openrouter');
+  }
+});
+
+await test('10.4 GET /models success (public catalog) does not guarantee inference access on 401', async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async (url, options) => {
+    const urlStr = String(url);
+    if (urlStr.includes('/models')) {
+      // OpenRouter /models is public unauthenticated
+      return new Response(
+        JSON.stringify({
+          data: [
+            { id: 'minimax/minimax-m3.1-flash:free', name: 'MiniMax M3.1 Flash' },
+          ],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (urlStr.includes('/chat/completions')) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: 'User not found.',
+            code: 401,
+          },
+        }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    return new Response('Not Found', { status: 404 });
+  };
+
+  try {
+    keyManager.setApiKey('openrouter', 'sk-or-v1-invalid-token-catalog-check');
+    const openrouter = providerRegistry.getProvider('openrouter');
+
+    // 1. Fetching models succeeds because /models is public
+    const modelsResult = await providerRegistry.fetchModelsForProvider('openrouter');
+    assert.equal(modelsResult.success, true);
+    assert.equal(modelsResult.models.length >= 1, true);
+
+    // 2. But testConnection for inference fails with 401
+    const testResult = await openrouter.testConnection(
+      'sk-or-v1-invalid-token-catalog-check',
+      'https://openrouter.ai/api/v1',
+      'minimax/minimax-m3.1-flash:free',
+      undefined,
+      true
+    );
+    assert.equal(testResult.success, false);
+    assert.equal(testResult.httpStatus, 401);
+    assert.equal(testResult.errorCategory, 'auth');
+    assert.match(testResult.message, /User not found\./);
+  } finally {
+    globalThis.fetch = originalFetch;
+    keyManager.clearApiKey('openrouter');
+  }
+});
+
+await test('10.5 Key replacement updates KeyManager and does not reuse stale key', async () => {
+  keyManager.setApiKey('openrouter', 'sk-or-v1-old-stale-key-111');
+  assert.equal(keyManager.getApiKey('openrouter'), 'sk-or-v1-old-stale-key-111');
+
+  // Replace with new key
+  keyManager.setApiKey('openrouter', '  "sk-or-v1-fresh-new-key-222"  ');
+  assert.equal(keyManager.getApiKey('openrouter'), 'sk-or-v1-fresh-new-key-222');
+  assert.notEqual(keyManager.getApiKey('openrouter'), 'sk-or-v1-old-stale-key-111');
+
+  keyManager.clearApiKey('openrouter');
+  assert.equal(keyManager.getApiKey('openrouter'), '');
+});
+
+await test('10.6 Browser CORS failure on verifyApiKey is classified as cors without false key invalidation', async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async () => {
+    throw new TypeError('Failed to fetch');
+  };
+
+  try {
+    keyManager.setApiKey('openrouter', 'sk-or-v1-any-key');
+    const result = await providerRegistry.verifyProviderApiKey('openrouter');
+
+    assert.equal(result.success, false);
+    assert.equal(result.errorCategory, 'cors');
+    assert.equal(result.keyState, 'unverified');
+    assert.match(result.message, /Browser CORS restriction/i);
+  } finally {
+    globalThis.fetch = originalFetch;
+    keyManager.clearApiKey('openrouter');
+  }
+});
+
+await test('10.7 HTTP Redirect on verifyApiKey is rejected to prevent credential leakage', async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async () => {
+    return new Response(null, {
+      status: 301,
+      statusText: 'Moved Permanently',
+      headers: { Location: 'https://evil-redirect.com/api/v1/key' },
+    });
+  };
+
+  try {
+    keyManager.setApiKey('openrouter', 'sk-or-v1-sensitive-token-333');
+    const result = await providerRegistry.verifyProviderApiKey('openrouter');
+
+    assert.equal(result.success, false);
+    assert.equal(result.httpStatus, 301);
+    assert.equal(result.errorCategory, 'auth');
+    assert.match(result.message, /Redirect from .* was rejected/);
+    assert.equal(result.message.includes('sk-or-v1-sensitive-token-333'), false);
   } finally {
     globalThis.fetch = originalFetch;
     keyManager.clearApiKey('openrouter');
