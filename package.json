@@ -57,6 +57,8 @@
     "audit:agent": "node scripts/verify-phase3c-agent.mjs",
     "audit:e2e:phase3c-agent": "node scripts/e2e-phase3c-agent.mjs",
     "audit:e2e:migration": "node scripts/migration/e2e-migration-verification.mjs",
+    "audit:assist:integration": "node scripts/verify-assist-provider-context.mjs",
+    "audit:e2e:assist:integration": "node scripts/e2e-assist-provider-context.mjs",
     "audit:byok": "node scripts/verify-byok-provider-system.mjs",
     "audit:e2e:byok": "node scripts/e2e-byok-provider-system.mjs"
   },

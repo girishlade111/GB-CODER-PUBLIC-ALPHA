@@ -308,7 +308,7 @@ async function main() {
     await modal.waitFor({ state: 'hidden', timeout: 5000 });
 
     // Verify GB Assist active provider display
-    const panelHeaderProvider = page.locator('[data-testid="code-assist-panel"] >> text=Inception');
+    const panelHeaderProvider = page.getByTestId('code-assist-panel').getByText('Inception', { exact: true });
     assert.equal(await panelHeaderProvider.isVisible(), true, 'Header must display active custom provider name');
 
     await safeScreenshot(page, '23-custom-provider-connected.png');

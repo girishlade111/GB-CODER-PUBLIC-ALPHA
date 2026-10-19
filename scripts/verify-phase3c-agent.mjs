@@ -1424,7 +1424,7 @@ await runTestAsync('Suite 9', '9.1 OpenAI-compatible fragmented SSE stream accum
     return {
       ok: true,
       status: 200,
-      headers: new Map(),
+      headers: new Map([['content-type', 'text/event-stream']]),
       body: {
         getReader: () => ({
           read: async () => {
@@ -1434,6 +1434,7 @@ await runTestAsync('Suite 9', '9.1 OpenAI-compatible fragmented SSE stream accum
             }
             return { done: true, value: undefined };
           },
+          cancel: async () => {},
           releaseLock: () => {},
         }),
       },
