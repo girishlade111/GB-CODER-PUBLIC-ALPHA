@@ -57,6 +57,7 @@ import { providerRegistry } from '../../services/ai/providerRegistry';
 import { customProviderStore } from '../../services/ai/customProviderStore';
 import { assistAgentService } from '../../services/ai/assistAgentService';
 import { normalizeBaseUrl } from '../../services/ai/providers/openaiCompatibleProvider';
+import { BUILT_IN_CATALOG } from '../../services/ai/providerCatalog';
 
 interface AiProviderSettingsModalProps {
   isOpen: boolean;
@@ -473,6 +474,10 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       ? customProviderId
       : (customProviderId.trim().toLowerCase() || selectedProviderId);
 
+    if (isCustomMode && rawUrl) {
+      keyManager.authorizeOrigin(targetId, rawUrl);
+    }
+
     try {
       const result = await providerRegistry.fetchModelsForProvider(
         targetId,
@@ -487,11 +492,6 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       if (result.success && result.models.length > 0) {
         if (builtIn) {
           providerRegistry.applyDiscoveredModels(selectedProviderId, result.models);
-          if (!result.models.some((m) => m.id === selectedModelId)) {
-            const nextModel = result.models[0].id;
-            setSelectedModelId(nextModel);
-            providerRegistry.setActiveModel(selectedProviderId, nextModel);
-          }
         }
         setDiscoveredModels(result.models);
         setSelectedDiscoveredIds(new Set(result.models.map((m) => m.id)));
@@ -639,6 +639,9 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       // Temporarily stash key in keyManager for diagnostic
       if (apiKeyInput) {
         keyManager.setApiKey(targetId, apiKeyInput, persistInSession, targetBaseUrl);
+        if (isCustom) {
+          keyManager.authorizeOrigin('custom', targetBaseUrl);
+        }
       }
 
       const result = await providerRegistry.testProviderConnection(
@@ -778,14 +781,11 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
 
     // Built-in provider
     const availableModels = providerRegistry.getModelsForProvider(selectedProviderId);
-    const activeModel = (selectedModelId && availableModels.some((m) => m.id === selectedModelId))
-      ? selectedModelId
-      : (availableModels[0]?.id || '');
-
-    if (!activeModel && selectedProviderId !== 'mock') {
+    if (!availableModels.some((m) => m.id === selectedModelId)) {
       setFormErrors({ general: 'Selected model is unavailable. Fetch models and explicitly select an available model.' });
       return;
     }
+    const activeModel = selectedModelId;
 
     // Save Base URL override if modified
     try {

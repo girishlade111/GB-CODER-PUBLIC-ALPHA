@@ -438,3 +438,4 @@ class ProviderRegistry {
 }
 
 export const providerRegistry = new ProviderRegistry();
+export { BUILT_IN_CATALOG } from './providerCatalog.ts';

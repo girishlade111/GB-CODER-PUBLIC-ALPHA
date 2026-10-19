@@ -515,3 +515,7 @@ await test('5.2 ContextBuilder parses @file and @folder mentions with bound toke
 console.log('\n============================================================');
 console.log(`  ALL ${passed} / ${total} SECURITY & INTEGRITY TESTS PASSED!`);
 console.log('============================================================\n');
+
+try {
+  rmSync(tempDir, { recursive: true, force: true });
+} catch {}
