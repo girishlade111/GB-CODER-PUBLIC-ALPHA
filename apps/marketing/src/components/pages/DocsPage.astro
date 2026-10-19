@@ -48,7 +48,6 @@ const breadcrumbJsonLd = {
   <Breadcrumbs items={breadcrumbItems} lang={lang} />
 
   <section class="page-hero">
-    <span class="hero-tag">{content.heroTag}</span>
     <h1>{content.heroTitle}</h1>
     <p>{content.heroDescription}</p>
   </section>
@@ -88,6 +87,7 @@ const breadcrumbJsonLd = {
                 <p class="doc-text">{sub.content}</p>
                 {sub.codeSnippet && (
                   <CodeBlock
+                    locale={lang}
                     code={sub.codeSnippet}
                     lang={sub.codeLang || 'text'}
                   />

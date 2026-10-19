@@ -1,0 +1,335 @@
+---
+import type { StudioContent } from '../i18n/studio';
+import '../styles/studio.css';
+
+interface Props {
+  labels: StudioContent;
+  launchLabel: string;
+}
+
+const { labels, launchLabel } = Astro.props;
+
+const examples = [
+  {
+    id: 'html',
+    title: 'HTML + CSS',
+    filename: 'index.html',
+    codeLines: [
+      '<main class="idea">',
+      '  <div class="badge">Browser Prototyping</div>',
+      `  <h1>${labels.sampleTitle}</h1>`,
+      `  <p>${labels.sampleText}</p>`,
+      `  <a href="/app/projects">${labels.sampleLink}</a>`,
+      '</main>',
+      '',
+      '<style>',
+      '  .idea {',
+      '    background: #edf3ef;',
+      '    color: #122820;',
+      '    padding: 36px;',
+      '    border-radius: 12px;',
+      '  }',
+      '  .badge {',
+      '    color: #136240;',
+      '    font-size: 11px;',
+      '    font-weight: 700;',
+      '  }',
+      '</style>',
+    ],
+    fullCode: `<main class="idea">\n  <div class="badge">Browser Prototyping</div>\n  <h1>${labels.sampleTitle}</h1>\n  <p>${labels.sampleText}</p>\n  <a href="/app/projects">${labels.sampleLink}</a>\n</main>\n\n<style>\n  .idea {\n    background: #edf3ef;\n    color: #122820;\n    padding: 36px;\n    border-radius: 12px;\n  }\n  .badge {\n    color: #136240;\n    font-size: 11px;\n    font-weight: 700;\n  }\n</style>`,
+  },
+  {
+    id: 'react',
+    title: 'React',
+    filename: 'App.jsx',
+    codeLines: [
+      "import { useState } from 'react';",
+      '',
+      'export default function App() {',
+      '  const [count, setCount] = useState(0);',
+      '',
+      '  return (',
+      '    <main className="card">',
+      '      <span className="pill">React 18</span>',
+      '      <h1>Hello, possibility.</h1>',
+      '      <div className="row">',
+      '        <button onClick={() => setCount(c => c + 1)}>',
+      '          Count: {count}',
+      '        </button>',
+      '        <button onClick={() => setCount(0)}>Reset</button>',
+      '      </div>',
+      '    </main>',
+      '  );',
+      '}',
+    ],
+    fullCode: `import { useState } from 'react';\n\nexport default function App() {\n  const [count, setCount] = useState(0);\n\n  return (\n    <main className="card">\n      <span className="pill">React 18</span>\n      <h1>Hello, possibility.</h1>\n      <div className="row">\n        <button onClick={() => setCount(c => c + 1)}>\n          Count: {count}\n        </button>\n        <button onClick={() => setCount(0)}>Reset</button>\n      </div>\n    </main>\n  );\n}`,
+  },
+  {
+    id: 'vue',
+    title: 'Vue',
+    filename: 'App.vue',
+    codeLines: [
+      '<script setup>',
+      "import { ref } from 'vue';",
+      'const count = ref(0);',
+      'const reset = () => count.value = 0;',
+      '</script>',
+      '',
+      '<template>',
+      '  <main class="card">',
+      '    <span class="pill">Vue 3</span>',
+      '    <h1>Hello, possibility.</h1>',
+      '    <div class="row">',
+      '      <button @click="count++">Count: {{ count }}</button>',
+      '      <button @click="reset">Reset</button>',
+      '    </div>',
+      '  </main>',
+      '</template>',
+    ],
+    fullCode: `<script setup>\nimport { ref } from 'vue';\nconst count = ref(0);\nconst reset = () => count.value = 0;\n</script>\n\n<template>\n  <main class="card">\n    <span class="pill">Vue 3</span>\n    <h1>Hello, possibility.</h1>\n    <div class="row">\n      <button @click="count++">Count: {{ count }}</button>\n      <button @click="reset">Reset</button>\n    </div>\n  </main>\n</template>`,
+  },
+];
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+---
+
+<div class="studio-demo" data-studio-root>
+  <!-- Window Toolbar Chrome -->
+  <div class="studio-toolbar">
+    <div class="window-dots" aria-hidden="true">
+      <span class="window-dot dot-red"></span>
+      <span class="window-dot dot-yellow"></span>
+      <span class="window-dot dot-green"></span>
+    </div>
+    <span class="studio-project">workspace /</span>
+    <div role="tablist" aria-label={labels.tabs}>
+      {examples.map((item, idx) => (
+        <button
+          type="button"
+          role="tab"
+          id={`tab-${item.id}`}
+          aria-controls={`panel-${item.id}`}
+          aria-selected={idx === 0 ? 'true' : 'false'}
+          data-tab-target={item.id}
+          data-selected={idx === 0 ? '' : undefined}
+        >
+          {item.title}
+        </button>
+      ))}
+    </div>
+    <div class="studio-demo-label">
+      <span class="preview-dot" aria-hidden="true"></span>
+      <span>{labels.demo}</span>
+    </div>
+  </div>
+
+  <!-- Tab Panels -->
+  {examples.map((item, idx) => (
+    <div
+      role="tabpanel"
+      id={`panel-${item.id}`}
+      aria-labelledby={`tab-${item.id}`}
+      data-panel-id={item.id}
+      class={`studio-panel ${idx === 0 ? 'active' : ''}`}
+      style={idx === 0 ? '' : 'display: none;'}
+    >
+      <div class="studio-stage">
+        <!-- Code Editor Half -->
+        <div class="sample-code" data-code-panel>
+          <div class="sample-code-header">
+            <span class="sample-filename">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              {item.filename}
+            </span>
+            <button
+              type="button"
+              class="ui-button-ghost studio-copy-btn"
+              data-raw-code={encodeURIComponent(item.fullCode)}
+              aria-label={`Copy ${item.filename} code`}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              <span class="copy-label-text">{labels.copy}</span>
+            </button>
+          </div>
+          <pre><code>{item.codeLines.map((line, lineIdx) => (
+            <div class="sample-line">
+              <span class="line-number">{lineIdx + 1}</span>
+              <span class="sample-code-text" set:html={escapeHtml(line)} />
+            </div>
+          ))}</code></pre>
+          <span class="sample-copy-status" role="status"></span>
+        </div>
+
+        <!-- Preview Canvas Half -->
+        <div class="sample-output">
+          <div class="output-toolbar">
+            <div class="browser-chrome">
+              <div class="output-address-bar">
+                <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <span>http://localhost:5173</span>
+              </div>
+            </div>
+            <div class="preview-status">
+              <span class="preview-dot" aria-hidden="true"></span>
+              <span>{labels.preview}</span>
+            </div>
+          </div>
+
+          <div class="output-canvas">
+            {item.id === 'html' ? (
+              <div class="idea-art">
+                <span class="idea-orbit" aria-hidden="true">
+                  <span></span>
+                </span>
+                <h2>{labels.sampleTitle}</h2>
+                <p>{labels.sampleText}</p>
+                <a href="/app/projects" class="sample-launch">
+                  {labels.sampleLink}
+                  <span aria-hidden="true">&nearr;</span>
+                </a>
+              </div>
+            ) : (
+              <div class="counter-example" data-counter-box>
+                <span class="counter-framework-pill">{item.title}</span>
+                <h2>Hello, possibility.</h2>
+                <div class="counter-controls">
+                  <button type="button" class="counter-button" data-counter-btn>
+                    Count: <span data-counter-val>0</span>
+                  </button>
+                  <button type="button" class="counter-reset-button" data-reset-btn>
+                    Reset
+                  </button>
+                </div>
+                <a href="/app/projects" class="counter-launch-link">
+                  Open full workspace &rarr;
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  ))}
+
+  <!-- Bottom Workspace Status Bar -->
+  <div class="studio-status">
+    <div class="studio-status-tags">
+      <span class="status-item">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <polyline points="16 18 22 12 16 6"/>
+          <polyline points="8 6 2 12 8 18"/>
+        </svg>
+        Monaco Editor v0.52
+      </span>
+      <span class="status-item">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        Vite v5.4
+      </span>
+      <span class="status-item">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        WebContainer API
+      </span>
+    </div>
+    <span class="status-runtime">Instant Local Execution</span>
+  </div>
+</div>
+
+<script>
+  // Vanilla interactive logic for StudioDemo: tabs, copy button, and counter
+  document.querySelectorAll<HTMLElement>('[data-studio-root]').forEach((root) => {
+    const tabs = root.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    const panels = root.querySelectorAll<HTMLElement>('[role="tabpanel"]');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const targetId = tab.dataset.tabTarget;
+        tabs.forEach((t) => {
+          t.setAttribute('aria-selected', 'false');
+          t.removeAttribute('data-selected');
+        });
+        tab.setAttribute('aria-selected', 'true');
+        tab.setAttribute('data-selected', '');
+
+        panels.forEach((p) => {
+          if (p.dataset.panelId === targetId) {
+            p.style.display = '';
+            p.classList.add('active');
+          } else {
+            p.style.display = 'none';
+            p.classList.remove('active');
+          }
+        });
+      });
+    });
+
+    // Copy button handlers
+    root.querySelectorAll<HTMLButtonElement>('.studio-copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const rawCode = decodeURIComponent(btn.dataset.rawCode || '');
+        const labelSpan = btn.querySelector<HTMLElement>('.copy-label-text');
+        const originalLabel = labelSpan ? labelSpan.textContent : 'Copy';
+
+        try {
+          await navigator.clipboard.writeText(rawCode);
+          if (labelSpan) labelSpan.textContent = 'Copied!';
+        } catch {
+          const textarea = document.createElement('textarea');
+          textarea.value = rawCode;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand('copy');
+            if (labelSpan) labelSpan.textContent = 'Copied!';
+          } finally {
+            document.body.removeChild(textarea);
+          }
+        }
+
+        window.setTimeout(() => {
+          if (labelSpan) labelSpan.textContent = originalLabel || 'Copy';
+        }, 2000);
+      });
+    });
+
+    // Counter handlers
+    root.querySelectorAll<HTMLElement>('[data-counter-box]').forEach((box) => {
+      const counterBtn = box.querySelector<HTMLButtonElement>('[data-counter-btn]');
+      const counterVal = box.querySelector<HTMLElement>('[data-counter-val]');
+      const resetBtn = box.querySelector<HTMLButtonElement>('[data-reset-btn]');
+      let count = 0;
+
+      counterBtn?.addEventListener('click', () => {
+        count += 1;
+        if (counterVal) counterVal.textContent = String(count);
+      });
+
+      resetBtn?.addEventListener('click', () => {
+        count = 0;
+        if (counterVal) counterVal.textContent = '0';
+      });
+    });
+  });
+</script>

@@ -28,13 +28,17 @@ const escapedCode = escapeHtml(code);
   )}
   <div class="code-container">
     <pre class="code-pre"><code class={`language-${lang}`} set:html={escapedCode} /></pre>
-    <button class="copy-btn" aria-label="Copy code to clipboard">
+    <button type="button" class="copy-btn" aria-label="Copy code to clipboard">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+      </svg>
       <span class="copy-text">Copy</span>
     </button>
   </div>
 </div>
 
-<script is:inline>
+<script>
   document.querySelectorAll('.copy-btn').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const code = btn.closest('.code-container')?.querySelector('code')?.textContent || '';
@@ -42,14 +46,13 @@ const escapedCode = escapeHtml(code);
         await navigator.clipboard.writeText(code);
         const span = btn.querySelector('.copy-text');
         if (span) {
-          const original = span.textContent;
           span.textContent = 'Copied!';
           setTimeout(() => {
-            span.textContent = original;
+            span.textContent = 'Copy';
           }, 2000);
         }
       } catch {
-        // Fallback for restricted contexts
+        // Fallback for headless Playwright and restricted clipboard contexts
         const textarea = document.createElement('textarea');
         textarea.value = code;
         textarea.style.position = 'fixed';
@@ -73,43 +76,49 @@ const escapedCode = escapeHtml(code);
 
 <style>
   .code-block-wrapper {
-    margin: 1.25rem 0;
-    border-radius: 8px;
-    background: #1e1e1e;
-    border: 1px solid #333333;
+    margin: 1.5rem 0;
+    border-radius: 12px;
+    background: var(--code-bg, #0e1e17);
+    border: 1px solid #1e382b;
     overflow: hidden;
+    box-shadow: var(--shadow-sm);
   }
 
   .code-block-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 1rem;
-    background: #252526;
-    border-bottom: 1px solid #333333;
-    font-size: 0.8rem;
-    color: #9cdcfe;
-    font-family: 'JetBrains Mono', monospace;
+    padding: 0.6rem 1.25rem;
+    background: rgba(14, 30, 23, 0.85);
+    border-bottom: 1px solid #1e382b;
+    font-size: 0.78rem;
+    color: #9cb8a9;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+
+  .code-filename {
+    font-weight: 600;
   }
 
   .code-lang-tag {
-    color: #888888;
+    color: #557867;
     text-transform: uppercase;
     font-size: 0.7rem;
+    font-weight: 700;
   }
 
   .code-container {
     position: relative;
-    padding: 1rem;
+    padding: 1.25rem 1.25rem;
     overflow-x: auto;
   }
 
   .code-pre {
     margin: 0;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.875rem;
-    line-height: 1.6;
-    color: #d4d4d4;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--code-text, #edf3ef);
     white-space: pre;
     tab-size: 2;
   }
@@ -118,19 +127,25 @@ const escapedCode = escapeHtml(code);
     position: absolute;
     top: 0.75rem;
     right: 0.75rem;
-    padding: 0.3rem 0.65rem;
-    background: rgba(255, 255, 255, 0.1);
-    color: #cccccc;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 30px;
+    padding: 0.25rem 0.65rem;
+    background: rgba(255, 255, 255, 0.06);
+    color: #c9e0d3;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
     font-size: 0.75rem;
     cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: background-color 0.2s, color 0.2s;
+    font-family: var(--font-display);
+    font-weight: 600;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   }
 
   .copy-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.14);
     color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.25);
   }
 </style>

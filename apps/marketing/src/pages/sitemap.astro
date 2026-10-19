@@ -1,0 +1,384 @@
+---
+import Site from '../layouts/Site.astro';
+import { SUPPORTED_LANGUAGES } from '../i18n/languages';
+import { getNav } from '../i18n/navigation';
+import { getBlogContent, getAllArticleSlugs } from '../i18n/blog';
+import { getDocsContent } from '../i18n/docs';
+import { getLocalizedPath } from '../i18n/utils';
+
+const enNav = getNav('en');
+const enBlog = getBlogContent('en');
+const enDocs = getDocsContent('en');
+const articleSlugs = getAllArticleSlugs();
+---
+
+<Site
+  title="Human-Readable Sitemap & Directory | GB Coder"
+  description="Explore the human-readable directory of every page, documentation guide, blog article, and multilingual edition of GB Coder."
+  basePath="sitemap"
+  isLegalPage
+>
+  <section class="page-hero sitemap-hero">
+    <div class="sitemap-hero-content">
+      <div class="sitemap-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+          <path d="M2 12h20" />
+        </svg>
+        <span>Platform Index</span>
+      </div>
+      <h1>Human-Readable Sitemap</h1>
+      <p>A structured, human-readable directory to help developers, learners, and search engines navigate every surface, guide, and language version of GB Coder.</p>
+
+      <div class="sitemap-search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="search"
+          id="sitemapSearch"
+          placeholder="Filter pages, guides, articles, or languages..."
+          aria-label="Filter sitemap links"
+        />
+      </div>
+    </div>
+  </section>
+
+  <div class="content-wrap sitemap-container">
+    <!-- Category 1: Core Platform Surfaces -->
+    <section class="sitemap-card sitemap-group" data-sitemap-section>
+      <div class="card-header">
+        <span class="group-icon">🚀</span>
+        <div>
+          <h2>Core Platform Surfaces</h2>
+          <p class="group-desc">Primary navigation destinations for the GB Coder development studio.</p>
+        </div>
+      </div>
+      <ul class="sitemap-links-grid">
+        <li data-search="home starting studio playground"><a href="/" class="sitemap-link"><strong>Home</strong><span>Browser-based development studio & playground</span></a></li>
+        <li data-search="features capabilities webcontainer monaco"><a href="/features" class="sitemap-link"><strong>Features & Capabilities</strong><span>Monaco editor, WebContainers, and live preview</span></a></li>
+        <li data-search="docs documentation guides api"><a href="/docs" class="sitemap-link"><strong>Documentation</strong><span>Comprehensive guides, setups, and architecture</span></a></li>
+        <li data-search="blog engineering articles tutorials"><a href="/blog" class="sitemap-link"><strong>Engineering Blog</strong><span>In-depth tutorials and developer articles</span></a></li>
+        <li data-search="about mission ladestack creator"><a href="/about" class="sitemap-link"><strong>About GB Coder</strong><span>Mission, architecture principles, and LadeStack</span></a></li>
+        <li data-search="contact support creator girish lade"><a href="/contact" class="sitemap-link"><strong>Contact & Connect</strong><span>Direct developer inquiries and social links</span></a></li>
+        <li data-search="open launch start ide app workspace"><a href="/app/projects" class="sitemap-link highlight-link"><strong>Launch GB Coder IDE ↗</strong><span>Open the in-browser workspace at /app/projects</span></a></li>
+      </ul>
+    </section>
+
+    <!-- Category 2: Technical Documentation Sections -->
+    <section class="sitemap-card sitemap-group" data-sitemap-section>
+      <div class="card-header">
+        <span class="group-icon">📖</span>
+        <div>
+          <h2>Documentation Sections</h2>
+          <p class="group-desc">Direct links to technical architecture and setup guides.</p>
+        </div>
+      </div>
+      <ul class="sitemap-links-grid">
+        {enDocs.sections.map((section) => (
+          <li data-search={`${section.title.toLowerCase()} ${section.description.toLowerCase()}`}>
+            <a href={`/docs#${section.id}`} class="sitemap-link">
+              <strong>{section.title}</strong>
+              <span>{section.description}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- Category 3: Engineering Articles & Tutorials -->
+    <section class="sitemap-card sitemap-group" data-sitemap-section>
+      <div class="card-header">
+        <span class="group-icon">✍️</span>
+        <div>
+          <h2>Engineering Articles & Guides</h2>
+          <p class="group-desc">Tutorials on web development, framework starters, and local backups.</p>
+        </div>
+      </div>
+      <ul class="sitemap-links-grid">
+        {articleSlugs.map((slug) => {
+          const art = enBlog.articles[slug];
+          return (
+            <li data-search={`${art.title.toLowerCase()} ${art.description.toLowerCase()}`}>
+              <a href={`/blog/${slug}`} class="sitemap-link">
+                <span class="art-badge">{art.tags[0]}</span>
+                <strong>{art.title}</strong>
+                <span>{art.description}</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+
+    <!-- Category 4: Multilingual Editions -->
+    <section class="sitemap-card sitemap-group" data-sitemap-section>
+      <div class="card-header">
+        <span class="group-icon">🌐</span>
+        <div>
+          <h2>Multilingual Editions (9 Languages)</h2>
+          <p class="group-desc">Fully localized editions across the studio, docs, and blogs.</p>
+        </div>
+      </div>
+      <div class="languages-grid">
+        {Object.entries(SUPPORTED_LANGUAGES).map(([code, meta]) => {
+          const nav = getNav(code);
+          return (
+            <div class="lang-box" data-search={`${meta.name.toLowerCase()} ${meta.nativeName.toLowerCase()} ${code}`}>
+              <div class="lang-box-head">
+                <strong>{meta.nativeName}</strong>
+                <span class="lang-badge">{meta.name}</span>
+              </div>
+              <ul class="lang-sublinks">
+                <li><a href={getLocalizedPath(code, '')}>{nav.home}</a></li>
+                <li><a href={getLocalizedPath(code, 'features')}>{nav.features}</a></li>
+                <li><a href={getLocalizedPath(code, 'docs')}>{nav.docs}</a></li>
+                <li><a href={getLocalizedPath(code, 'blog')}>{nav.blog}</a></li>
+                <li><a href={getLocalizedPath(code, 'about')}>{nav.about}</a></li>
+                <li><a href={getLocalizedPath(code, 'contact')}>{nav.contact}</a></li>
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+    <!-- Category 5: Legal, Governance & Machine Sitemaps -->
+    <section class="sitemap-card sitemap-group" data-sitemap-section>
+      <div class="card-header">
+        <span class="group-icon">⚖️</span>
+        <div>
+          <h2>Governance & Search Feeds</h2>
+          <p class="group-desc">Authoritative privacy policies, terms, and search engine directives.</p>
+        </div>
+      </div>
+      <ul class="sitemap-links-grid">
+        <li data-search="privacy policy local first data"><a href="/privacy-policy" class="sitemap-link"><strong>Privacy Policy</strong><span>Zero tracking, client-side persistence disclosures</span></a></li>
+        <li data-search="terms conditions agreement usage"><a href="/terms-and-conditions" class="sitemap-link"><strong>Terms & Conditions</strong><span>Software license, fair use, and disclaimers</span></a></li>
+        <li data-search="xml sitemap machine crawl search"><a href="/sitemap.xml" class="sitemap-link"><strong>XML Machine Sitemap</strong><span>Canonical XML index formatted for web crawlers</span></a></li>
+        <li data-search="robots.txt crawler rules directives"><a href="/robots.txt" class="sitemap-link"><strong>robots.txt Directives</strong><span>Search indexation policy and crawl rules</span></a></li>
+      </ul>
+    </section>
+  </div>
+</Site>
+
+<script>
+  // Real-time client-side instant filter for human-readable sitemap
+  const searchInput = document.getElementById('sitemapSearch') as HTMLInputElement | null;
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const term = searchInput.value.toLowerCase().trim();
+      const items = document.querySelectorAll<HTMLElement>('[data-search]');
+      
+      items.forEach((item) => {
+        const text = (item.dataset.search || '') + ' ' + (item.textContent || '').toLowerCase();
+        if (!term || text.includes(term)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+
+      // Hide empty groups
+      document.querySelectorAll<HTMLElement>('[data-sitemap-section]').forEach((sec) => {
+        const visibleItems = sec.querySelectorAll('[data-search]:not([style*="display: none"])');
+        sec.style.display = visibleItems.length === 0 && term ? 'none' : '';
+      });
+    });
+  }
+</script>
+
+<style>
+  .sitemap-hero {
+    padding-bottom: 2.5rem;
+  }
+  .sitemap-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.75rem;
+    background: var(--surface-soft);
+    color: var(--primary);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 650;
+    margin-bottom: 1.25rem;
+  }
+  .sitemap-search-wrap {
+    position: relative;
+    max-width: 580px;
+    margin-top: 2rem;
+  }
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  #sitemapSearch {
+    width: 100%;
+    padding: 0.85rem 1rem 0.85rem 2.75rem;
+    font-size: 0.95rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+  }
+  #sitemapSearch:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--border-subtle);
+  }
+  .sitemap-container {
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+  .sitemap-card {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .group-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+    padding: 0.6rem;
+    background: var(--surface-soft);
+    border-radius: 12px;
+  }
+  .card-header h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+  .group-desc {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    margin: 0;
+  }
+  .sitemap-links-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    padding: 0;
+    margin: 0;
+  }
+  .sitemap-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.25rem;
+    border-radius: 10px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border-subtle);
+    text-decoration: none;
+    height: 100%;
+    transition: all 0.18s ease;
+  }
+  .sitemap-link:hover {
+    background: var(--surface);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .sitemap-link strong {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 650;
+  }
+  .sitemap-link span {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+  .highlight-link {
+    background: #e4eee7;
+    border-color: var(--border);
+  }
+  .highlight-link strong {
+    color: var(--primary);
+  }
+  .art-badge {
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+  }
+  .languages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  .lang-box {
+    background: var(--surface-soft);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  .lang-box-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .lang-box-head strong {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+  }
+  .lang-badge {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .lang-sublinks {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.8rem;
+    padding: 0;
+    margin: 0;
+  }
+  .lang-sublinks a {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    text-decoration: none;
+    padding: 0.2rem 0;
+    transition: color 0.15s ease;
+  }
+  .lang-sublinks a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+
+  @media (max-width: 700px) {
+    .sitemap-card {
+      padding: 1.5rem;
+    }
+    .card-header {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+  }
+</style>

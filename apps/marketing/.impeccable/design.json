@@ -1,0 +1,411 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-18T11:26:36.873175+00:00",
+  "title": "Design System: GB Coder Marketing",
+  "extensions": {
+    "colorMeta": {
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "tonalRamp": [
+          "oklch(15% 0.00412 157.18)",
+          "oklch(26% 0.00412 157.18)",
+          "oklch(38% 0.00412 157.18)",
+          "oklch(49% 0.00412 157.18)",
+          "oklch(61% 0.00412 157.18)",
+          "oklch(72% 0.00412 157.18)",
+          "oklch(84% 0.00412 157.18)",
+          "oklch(95% 0.00412 157.18)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.00)",
+          "oklch(26% 0.00000 0.00)",
+          "oklch(38% 0.00000 0.00)",
+          "oklch(49% 0.00000 0.00)",
+          "oklch(61% 0.00000 0.00)",
+          "oklch(72% 0.00000 0.00)",
+          "oklch(84% 0.00000 0.00)",
+          "oklch(95% 0.00000 0.00)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "surface-soft": {
+        "role": "neutral",
+        "displayName": "Surface Soft",
+        "tonalRamp": [
+          "oklch(15% 0.01077 158.84)",
+          "oklch(26% 0.01077 158.84)",
+          "oklch(38% 0.01077 158.84)",
+          "oklch(49% 0.01077 158.84)",
+          "oklch(61% 0.01077 158.84)",
+          "oklch(72% 0.01077 158.84)",
+          "oklch(84% 0.01077 158.84)",
+          "oklch(95% 0.01077 158.84)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(15% 0.01773 159.07)",
+          "oklch(26% 0.01773 159.07)",
+          "oklch(38% 0.01773 159.07)",
+          "oklch(49% 0.01773 159.07)",
+          "oklch(61% 0.01773 159.07)",
+          "oklch(72% 0.01773 159.07)",
+          "oklch(84% 0.01773 159.07)",
+          "oklch(95% 0.01773 159.07)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "border-subtle": {
+        "role": "neutral",
+        "displayName": "Border Subtle",
+        "tonalRamp": [
+          "oklch(15% 0.01085 158.83)",
+          "oklch(26% 0.01085 158.83)",
+          "oklch(38% 0.01085 158.83)",
+          "oklch(49% 0.01085 158.83)",
+          "oklch(61% 0.01085 158.83)",
+          "oklch(72% 0.01085 158.83)",
+          "oklch(84% 0.01085 158.83)",
+          "oklch(95% 0.01085 158.83)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Text Primary",
+        "tonalRamp": [
+          "oklch(15% 0.03388 166.89)",
+          "oklch(26% 0.03388 166.89)",
+          "oklch(38% 0.03388 166.89)",
+          "oklch(49% 0.03388 166.89)",
+          "oklch(61% 0.03388 166.89)",
+          "oklch(72% 0.03388 166.89)",
+          "oklch(84% 0.03388 166.89)",
+          "oklch(95% 0.03388 166.89)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Text Secondary",
+        "tonalRamp": [
+          "oklch(15% 0.02714 160.87)",
+          "oklch(26% 0.02714 160.87)",
+          "oklch(38% 0.02714 160.87)",
+          "oklch(49% 0.02714 160.87)",
+          "oklch(61% 0.02714 160.87)",
+          "oklch(72% 0.02714 160.87)",
+          "oklch(84% 0.02714 160.87)",
+          "oklch(95% 0.02714 160.87)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Text Muted",
+        "tonalRamp": [
+          "oklch(15% 0.02461 158.04)",
+          "oklch(26% 0.02461 158.04)",
+          "oklch(38% 0.02461 158.04)",
+          "oklch(49% 0.02461 158.04)",
+          "oklch(61% 0.02461 158.04)",
+          "oklch(72% 0.02461 158.04)",
+          "oklch(84% 0.02461 158.04)",
+          "oklch(95% 0.02461 158.04)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Primary",
+        "tonalRamp": [
+          "oklch(15% 0.09318 159.86)",
+          "oklch(26% 0.09318 159.86)",
+          "oklch(38% 0.09318 159.86)",
+          "oklch(49% 0.09318 159.86)",
+          "oklch(61% 0.09318 159.86)",
+          "oklch(72% 0.09318 159.86)",
+          "oklch(84% 0.09318 159.86)",
+          "oklch(95% 0.09318 159.86)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Accent Hover",
+        "tonalRamp": [
+          "oklch(15% 0.07414 160.89)",
+          "oklch(26% 0.07414 160.89)",
+          "oklch(38% 0.07414 160.89)",
+          "oklch(49% 0.07414 160.89)",
+          "oklch(61% 0.07414 160.89)",
+          "oklch(72% 0.07414 160.89)",
+          "oklch(84% 0.07414 160.89)",
+          "oklch(95% 0.07414 160.89)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "code-bg": {
+        "role": "neutral",
+        "displayName": "Code Bg",
+        "tonalRamp": [
+          "oklch(15% 0.03215 168.52)",
+          "oklch(26% 0.03215 168.52)",
+          "oklch(38% 0.03215 168.52)",
+          "oklch(49% 0.03215 168.52)",
+          "oklch(61% 0.03215 168.52)",
+          "oklch(72% 0.03215 168.52)",
+          "oklch(84% 0.03215 168.52)",
+          "oklch(95% 0.03215 168.52)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "code-text": {
+        "role": "neutral",
+        "displayName": "Code Text",
+        "tonalRamp": [
+          "oklch(15% 0.01738 159.11)",
+          "oklch(26% 0.01738 159.11)",
+          "oklch(38% 0.01738 159.11)",
+          "oklch(49% 0.01738 159.11)",
+          "oklch(61% 0.01738 159.11)",
+          "oklch(72% 0.01738 159.11)",
+          "oklch(84% 0.01738 159.11)",
+          "oklch(95% 0.01738 159.11)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Home display",
+        "purpose": "Home headline; mobile has a separate clamp."
+      },
+      "headline": {
+        "displayName": "Section headline",
+        "purpose": "Marketing section titles."
+      },
+      "page-title": {
+        "displayName": "Reading page title",
+        "purpose": "General reading introductions."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Shared reading rhythm; long-form uses 1.85 line-height."
+      },
+      "button": {
+        "displayName": "Action label",
+        "purpose": "Shared CTA and button labels."
+      },
+      "code": {
+        "displayName": "Source",
+        "purpose": "Scrollable numbered source samples."
+      }
+    },
+    "shadows": [
+      {
+        "name": "language-menu",
+        "value": "0 12px 32px #172e251c",
+        "purpose": "Structural language overlay."
+      },
+      {
+        "name": "mobile-drawer",
+        "value": "0 16px 24px #172e2510",
+        "purpose": "Mobile navigation overlay."
+      }
+    ],
+    "motion": [
+      {
+        "name": "button-state",
+        "value": "background 0.18s ease-out, color 0.18s ease-out",
+        "purpose": "Shared control state changes."
+      },
+      {
+        "name": "tab-state",
+        "value": "background 0.2s ease-out",
+        "purpose": "Studio selected-state field."
+      },
+      {
+        "name": "studio-reveal",
+        "value": "0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Panel clip-path inset from 0 0 5% 0 to 0."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation: none; transition: none; scroll-behavior: auto",
+        "purpose": "Global reduced-motion preference."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide-page",
+        "value": "1500px",
+        "purpose": "Minimum width for 7rem page-hero top padding."
+      },
+      {
+        "name": "navigation-collapse",
+        "value": "1000px"
+      },
+      {
+        "name": "docs-sidebar-static",
+        "value": "960px"
+      },
+      {
+        "name": "mobile-stack",
+        "value": "700px"
+      },
+      {
+        "name": "article-related-stack",
+        "value": "680px"
+      },
+      {
+        "name": "sitemap-stack",
+        "value": "650px"
+      }
+    ],
+    "focus": {
+      "value": "2px solid var(--ring); outline-offset: 5px; border-radius: 4px",
+      "purpose": "Visible keyboard focus on interactive elements."
+    },
+    "provenance": {
+      "mode": "scan",
+      "sources": [
+        "src/styles/site.css",
+        "src/styles/studio.css",
+        "src/components/pages/HomePage.astro",
+        "src/components/StudioDemo.tsx",
+        "src/components/AssistShowcase.astro",
+        "src/components/ui/button.tsx",
+        "src/components/ui/code-sample.tsx",
+        "src/components/pages/FeaturesPage.astro",
+        "src/components/pages/DocsPage.astro",
+        "src/components/pages/BlogIndexPage.astro",
+        "src/components/pages/BlogPostPage.astro",
+        "src/components/pages/ContactPage.astro",
+        "src/pages/sitemap.astro"
+      ],
+      "conceptRoll": "Not run; no seed key, decision comp or QUALITY BAR image exists.",
+      "authority": "Final implementation; screenshots may precede final source fixes.",
+      "raster": "Existing tghjkl.jpeg retained unchanged with provenance sidecar.",
+      "inputComponent": "No marketing text input exists; none synthesized.",
+      "reviewBoundary": "CTA foreground fix, removed promotional feature badges and title-before-taxonomy article order are captured; overridden legacy styles are not canonized."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Shared primary action; disabled state uses half opacity.",
+      "html": "<button class=\"ds-button-primary\">Open GB Coder</button>",
+      "css": ".ds-button-primary{font-family:var(--font-display,\"Manrope Variable\",\"Segoe UI\",sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:.65rem;min-height:46px;padding:.7rem 1.3rem;border:1px solid transparent;border-radius:8px;font-size:.88rem;font-weight:650;line-height:1.4;cursor:pointer;text-decoration:none;transition:background .18s ease-out,color .18s ease-out;background:var(--primary,#176644);color:#fff;}.ds-button-primary:hover{background:var(--accent-hover,#104c33);color:#fff;}.ds-button-primary:focus-visible{outline:2px solid var(--ring,#176644);outline-offset:5px;border-radius:4px;}.ds-button-primary:disabled{opacity:.5;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none}}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Shared outline action; disabled state uses half opacity.",
+      "html": "<button class=\"ds-button-outline\">Open GB Coder</button>",
+      "css": ".ds-button-outline{font-family:var(--font-display,\"Manrope Variable\",\"Segoe UI\",sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:.65rem;min-height:46px;padding:.7rem 1.3rem;border:1px solid transparent;border-radius:8px;font-size:.88rem;font-weight:650;line-height:1.4;cursor:pointer;text-decoration:none;transition:background .18s ease-out,color .18s ease-out;background:transparent;border-color:var(--border,#ccd9d1);color:var(--foreground,#172e25);}.ds-button-outline:hover{background:var(--surface-soft,#e8f0eb);}.ds-button-outline:focus-visible{outline:2px solid var(--ring,#176644);outline-offset:5px;border-radius:4px;}.ds-button-outline:disabled{opacity:.5;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-button-outline{transition:none}}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Shared ghost action; disabled state uses half opacity.",
+      "html": "<button class=\"ds-button-ghost\">Open GB Coder</button>",
+      "css": ".ds-button-ghost{font-family:var(--font-display,\"Manrope Variable\",\"Segoe UI\",sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:.65rem;min-height:46px;padding:.7rem 1.3rem;border:1px solid transparent;border-radius:8px;font-size:.88rem;font-weight:650;line-height:1.4;cursor:pointer;text-decoration:none;transition:background .18s ease-out,color .18s ease-out;background:transparent;color:var(--foreground,#172e25);border:0;min-height:36px;padding:.35rem .65rem;}.ds-button-ghost:hover{background:var(--surface-soft,#e8f0eb);}.ds-button-ghost:focus-visible{outline:2px solid var(--ring,#176644);outline-offset:5px;border-radius:4px;}.ds-button-ghost:disabled{opacity:.5;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-button-ghost{transition:none}}"
+    },
+    {
+      "name": "Primary Navigation",
+      "kind": "nav",
+      "description": "Secondary links become emerald; the current page is underlined.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main\"><a href=\"#features\" aria-current=\"page\">Features</a><a href=\"#guides\">Guides</a></nav>",
+      "css": ".ds-nav{font-family:var(--font-display,\"Manrope Variable\",\"Segoe UI\",sans-serif);display:flex;gap:1.65rem}.ds-nav a{display:inline-flex;align-items:center;min-height:44px;color:var(--text-secondary,#506258);font-size:.83rem;font-weight:600;text-decoration:none}.ds-nav a:hover,.ds-nav a[aria-current]{color:var(--primary,#176644)}.ds-nav a[aria-current]{text-decoration:underline;text-underline-offset:8px}.ds-nav a:focus-visible{outline:2px solid var(--ring,#176644);outline-offset:5px;border-radius:4px;}"
+    },
+    {
+      "name": "Article Tag",
+      "kind": "chip",
+      "refersTo": "article-tag",
+      "description": "Noninteractive article taxonomy below the title.",
+      "html": "<span class=\"ds-tag\">Browser development</span>",
+      "css": ".ds-tag{font-family:var(--font-display,\"Manrope Variable\",\"Segoe UI\",sans-serif);display:inline-block;background:var(--surface-soft,#e8f0eb);color:var(--primary,#176644);border:0;border-radius:4px;padding:.2rem .55rem;font-size:.75rem;font-weight:600;text-transform:none;letter-spacing:0}"
+    },
+    {
+      "name": "Supporting Mini Card",
+      "kind": "card",
+      "refersTo": "mini-card",
+      "description": "Soft filled supporting information; reading collections use ruled rows instead.",
+      "html": "<div class=\"ds-mini\"><h3>Keep your work</h3><p>Local projects and ZIP backups.</p></div>",
+      "css": ".ds-mini{font-family:var(--font-display,\"Manrope Variable\",\"Segoe UI\",sans-serif);padding:1.5rem;background:var(--surface-soft,#e8f0eb);border-radius:12px;color:var(--text-primary,#172e25)}.ds-mini h3{font-size:1.1rem;line-height:1.14;letter-spacing:-.035em;margin:0 0 .65rem;font-weight:650}.ds-mini p{font-size:.94rem;line-height:1.65;color:var(--text-secondary,#506258);margin:0}"
+    },
+    {
+      "name": "Reading Row",
+      "kind": "card",
+      "description": "Open ruled article with title before taxonomy and a visible link state.",
+      "html": "<article class=\"ds-reading\"><h2><a href=\"#article\">From idea to browser preview</a></h2><span class=\"ds-reading-tag\">Workflow</span><p>Explore the development workflow.</p></article>",
+      "css": ".ds-reading{font-family:var(--font-display,\"Manrope Variable\",\"Segoe UI\",sans-serif);border-top:1px solid var(--border,#ccd9d1);padding:2.5rem 0;color:var(--text-primary,#172e25)}.ds-reading h2{font-size:clamp(1.6rem,3vw,2.5rem);line-height:1.25;letter-spacing:-.035em;font-weight:550;max-width:30ch;margin:0 0 .75rem}.ds-reading a{color:inherit;text-decoration:none}.ds-reading a:hover{color:var(--primary,#176644)}.ds-reading a:focus-visible{outline:2px solid var(--ring,#176644);outline-offset:5px;border-radius:4px;}.ds-reading-tag{display:inline-block;background:var(--surface-soft,#e8f0eb);color:var(--primary,#176644);padding:.2rem .55rem;border-radius:4px;font-size:.75rem;font-weight:600}.ds-reading p{max-width:70ch;color:var(--text-secondary,#506258);line-height:1.6}"
+    },
+    {
+      "name": "Studio Tabs",
+      "kind": "custom",
+      "refersTo": "tab-selected",
+      "description": "Visual specimen of React Aria selection; application tabs switch paired code and output.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\" aria-label=\"Examples\"><button role=\"tab\" aria-selected=\"true\">HTML + CSS</button><button role=\"tab\" aria-selected=\"false\" tabindex=\"-1\">React</button><button role=\"tab\" aria-selected=\"false\" tabindex=\"-1\">Vue</button></div>",
+      "css": ".ds-tabs{font-family:var(--font-display,\"Manrope Variable\",\"Segoe UI\",sans-serif);display:flex;gap:.25rem}.ds-tabs button{font:inherit;border:0;background:transparent;padding:.55rem .85rem;color:var(--text-secondary,#506258);font-size:.77rem;border-radius:6px;white-space:nowrap;cursor:pointer;transition:background .2s ease-out}.ds-tabs button[aria-selected=true]{background:var(--surface-soft,#e8f0eb);color:var(--primary,#176644);font-weight:700}.ds-tabs button:focus-visible{outline:2px solid var(--ring,#176644);outline-offset:5px;border-radius:4px;}@media(max-width:700px){.ds-tabs button{padding:.45rem .6rem}}@media(prefers-reduced-motion:reduce){.ds-tabs button{transition:none}}"
+    },
+    {
+      "name": "Code Sample",
+      "kind": "custom",
+      "refersTo": "code-sample",
+      "description": "Dark source plane with a copy affordance; runtime announces copied/error and resets after 2500ms. Preview is a visual specimen.",
+      "html": "<div class=\"ds-code\"><header><span>App.jsx</span><button>Copy code</button></header><pre tabindex=\"0\"><code><span class=\"ds-number\">1</span>export default function App() {\n<span class=\"ds-number\">2</span>  return &lt;h1&gt;Hello, possibility.&lt;/h1&gt;;\n<span class=\"ds-number\">3</span>}</code></pre><span role=\"status\"></span></div>",
+      "css": ".ds-code{background:var(--code-bg,#152b23);color:var(--code-text,#e4f1e9);min-width:0}.ds-code header{display:flex;align-items:center;justify-content:space-between;padding:.5rem 1rem;border-bottom:1px solid #355346;font:12px/1.4 ui-monospace,monospace;color:#bbd0c3}.ds-code button{font-family:var(--font-display,\"Manrope Variable\",\"Segoe UI\",sans-serif);background:transparent;color:#d7e6dd;border:0;border-radius:8px;min-height:36px;padding:.35rem .65rem;font-size:.7rem;cursor:pointer}.ds-code button:hover{background:#355346;color:#fff}.ds-code button:focus-visible,.ds-code pre:focus-visible{outline:2px solid var(--ring,#176644);outline-offset:5px;border-radius:4px;}.ds-code pre{padding:1.3rem 1rem 2rem;margin:0;overflow:auto;font:12px/1.9 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}.ds-number{display:inline-block;min-width:1.5rem;text-align:right;margin-right:1.4rem;color:#8ca999;user-select:none;font-variant-numeric:tabular-nums}@media(max-width:700px){.ds-code pre{font-size:11px;max-height:230px}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Working Canvas",
+    "overview": "A browser development studio expressed as a working canvas. Mineral mint space, forest ink and emerald actions give code and its visible result room to lead. Self-hosted Manrope keeps the presentation modern, professional and quietly artistic.\n\nThe shared visual system covers the marketing site and its reading surfaces. Library adaptations consume the same semantic palette; guides, articles and the directory use fine rules and readable measures instead of decorative card stacks. The separate editor is outside this system’s implementation boundary.",
+    "keyCharacteristics": [
+      "Code and output as visual proof",
+      "One mineral mint and emerald palette",
+      "Generous spacing with fine rules",
+      "Restrained controls and sparse icons",
+      "Responsive, localized reading surfaces"
+    ],
+    "rules": [
+      {
+        "name": "Shared Palette",
+        "body": "Adapted library components consume the marketing semantic tokens; the legacy accent-terracotta variable resolves to emerald.",
+        "section": "colors"
+      },
+      {
+        "name": "Reading Surface",
+        "body": "Use fine rules and open rows for long-form content and article lists; reserve filled rounded surfaces for examples and supporting callouts.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the shared semantic palette across Astro and React components.",
+      "Do keep white foregrounds on filled emerald calls to action, including links inside reading sections.",
+      "Do place article titles before taxonomy metadata.",
+      "Do preserve visible keyboard focus, accessible tab selection and reduced-motion behavior.",
+      "Do preserve all existing languages, articles and routes when extending this system."
+    ],
+    "donts": [
+      "Don’t reintroduce promotional feature badges into the implemented feature rows.",
+      "Don’t introduce a separate library palette or generic icon-tile decoration.",
+      "Don’t present illustrative code, terminal or Assist examples as a live editor session.",
+      "Don’t infer a visual identity for the separate application from this marketing system."
+    ]
+  }
+}

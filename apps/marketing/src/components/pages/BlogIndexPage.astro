@@ -48,7 +48,6 @@ const breadcrumbJsonLd = {
   <Breadcrumbs items={breadcrumbItems} lang={lang} />
 
   <section class="page-hero">
-    <span class="hero-tag">{content.heroTag}</span>
     <h1>{content.heroTitle}</h1>
     <p>{content.heroDescription}</p>
   </section>
@@ -66,6 +65,10 @@ const breadcrumbJsonLd = {
 
         return (
           <article class="article-card">
+            <h2 class="article-card-title">
+              <a href={articleUrl}>{article.title}</a>
+            </h2>
+
             <div class="article-card-header">
               <div class="article-tags">
                 {article.tags.map((tag) => (
@@ -77,10 +80,6 @@ const breadcrumbJsonLd = {
               </span>
             </div>
 
-            <h2 class="article-card-title">
-              <a href={articleUrl}>{article.title}</a>
-            </h2>
-
             <p class="article-card-desc">{article.description}</p>
 
             <div class="article-card-footer">
@@ -90,7 +89,10 @@ const breadcrumbJsonLd = {
                 <time datetime={article.date}>{article.date}</time>
               </div>
               <a href={articleUrl} class="read-more-link">
-                {content.readArticleLabel} &rarr;
+                <span>{content.readArticleLabel}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M5 12h14m-6-6 6 6-6 6"/>
+                </svg>
               </a>
             </div>
           </article>

@@ -1,5 +1,6 @@
 ---
 import Site from '../../layouts/Site.astro';
+import AssistShowcase from '../AssistShowcase.astro';
 import Breadcrumbs from '../Breadcrumbs.astro';
 import { getFeaturesContent } from '../../i18n/features';
 import { getNav } from '../../i18n/navigation';
@@ -47,7 +48,6 @@ const breadcrumbJsonLd = {
   <Breadcrumbs items={breadcrumbItems} lang={lang} />
 
   <section class="page-hero">
-    <span class="hero-tag">{content.heroTag}</span>
     <h1>{content.heroTitle}</h1>
     <p>{content.heroDescription}</p>
     <div class="cta-row">
@@ -65,7 +65,6 @@ const breadcrumbJsonLd = {
       {content.items.map((item) => (
         <article class="feature-detail-card" id={item.id}>
           <div class="card-top">
-            <span class="feature-badge">{item.badge}</span>
             <h2>{item.title}</h2>
           </div>
           <p class="feature-summary">{item.summary}</p>
@@ -78,6 +77,7 @@ const breadcrumbJsonLd = {
       ))}
     </div>
 
+    <AssistShowcase lang={lang} />
     <section class="features-cta-banner">
       <h2>{content.ctaHeading}</h2>
       <p>{content.ctaSub}</p>
@@ -145,7 +145,7 @@ const breadcrumbJsonLd = {
     letter-spacing: 0.08em;
     padding: 0.25rem 0.65rem;
     border-radius: 4px;
-    background: rgba(204, 120, 92, 0.1);
+    background: var(--surface-soft);
     color: var(--accent-terracotta);
     margin-bottom: 0.75rem;
   }
@@ -176,19 +176,23 @@ const breadcrumbJsonLd = {
   }
 
   .feature-bullets li {
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     color: var(--text-secondary);
     position: relative;
-    padding-left: 1.25rem;
-    line-height: 1.45;
+    padding-left: 1.5rem;
+    line-height: 1.5;
   }
 
   .feature-bullets li::before {
-    content: "✓";
+    content: "";
     position: absolute;
     left: 0;
-    color: var(--accent-terracotta);
-    font-weight: 700;
+    top: 0.25rem;
+    width: 14px;
+    height: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23136240' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
   }
 
   .features-cta-banner {

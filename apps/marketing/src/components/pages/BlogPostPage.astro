@@ -95,12 +95,6 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
 
   <article class="blog-post-article">
     <header class="post-header">
-      <div class="post-tags">
-        {article.tags.map((tag) => (
-          <span class="post-tag">{tag}</span>
-        ))}
-      </div>
-
       <h1 class="post-title">{article.title}</h1>
 
       <div class="post-meta-strip">
@@ -109,6 +103,12 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
         <time datetime={article.date}>{article.date}</time>
         <span class="dot-sep">&bull;</span>
         <span>{readMinutes} {nav.readingTimeSuffix}</span>
+      </div>
+
+      <div class="post-tags">
+        {article.tags.map((tag) => (
+          <span class="post-tag">{tag}</span>
+        ))}
       </div>
     </header>
 
@@ -123,6 +123,7 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
           <p>{section.body}</p>
           {section.codeSnippet && (
             <CodeBlock
+                    locale={lang}
               code={section.codeSnippet}
               lang={section.codeLang || 'text'}
             />
@@ -153,7 +154,10 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
                 <h4><a href={otherUrl}>{otherArticle.title}</a></h4>
                 <p>{otherArticle.description}</p>
                 <a href={otherUrl} class="related-link">
-                  {blogContent.readArticleLabel} &rarr;
+                  <span>{blogContent.readArticleLabel}</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M5 12h14m-6-6 6 6-6 6"/>
+                  </svg>
                 </a>
               </div>
             );
@@ -163,10 +167,16 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
 
       <div class="post-navigation-bar">
         <a href={blogIndexUrl} class="back-link">
-          {blogContent.backToBlogLabel}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M19 12H5m6 6-6-6 6-6"/>
+          </svg>
+          <span>{blogContent.backToBlogLabel}</span>
         </a>
         <a href="/app/projects" class="cta-button">
-          {nav.startCoding}
+          <span>{nav.startCoding}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M5 12h14m-6-6 6 6-6 6"/>
+          </svg>
         </a>
       </div>
     </footer>
@@ -198,7 +208,7 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    background: rgba(204, 120, 92, 0.1);
+    background: var(--surface-soft);
     color: var(--accent-terracotta);
     padding: 0.25rem 0.65rem;
     border-radius: 4px;
@@ -235,8 +245,8 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
     margin-bottom: 3rem;
     padding: 1.5rem;
     background: var(--surface);
-    border-left: 4px solid var(--accent-terracotta);
-    border-radius: 0 8px 8px 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
   }
 
   .post-body {
