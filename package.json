@@ -60,7 +60,8 @@
     "audit:assist:integration": "node scripts/verify-assist-provider-context.mjs",
     "audit:e2e:assist:integration": "node scripts/e2e-assist-provider-context.mjs",
     "audit:byok": "node scripts/verify-byok-provider-system.mjs",
-    "audit:e2e:byok": "node scripts/e2e-byok-provider-system.mjs"
+    "audit:e2e:byok": "node scripts/e2e-byok-provider-system.mjs",
+    "audit:security:byok": "node scripts/verify-byok-security-gate.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

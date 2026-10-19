@@ -12,6 +12,7 @@
  */
 
 import {
+  AiProviderId,
   DiscoveredModel,
   ModelDiscoveryResult,
 } from './types.ts';
@@ -21,6 +22,7 @@ import {
   validateCustomHeaders,
   redactSecretsFromText,
 } from './providers/openaiCompatibleProvider.ts';
+import { keyManager, extractOrigin } from './keyManager.ts';
 
 const MAX_DISCOVERY_MODELS = 5000;
 const MAX_RESPONSE_BYTES = 8 * 1024 * 1024; // 8MB
@@ -29,6 +31,8 @@ const DEFAULT_TIMEOUT_MS = 15000;
 export interface DiscoverModelsParams {
   baseUrl: string;
   apiKey?: string;
+  providerId?: AiProviderId;
+  authorizedOrigin?: string;
   customHeaders?: Record<string, string>;
   signal?: AbortSignal;
   timeoutMs?: number;
@@ -78,6 +82,26 @@ export async function discoverModels(params: DiscoverModelsParams): Promise<Mode
     };
   }
   const discoveryUrl = urlRes.url;
+  const destinationOrigin = extractOrigin(discoveryUrl);
+
+  if (apiKey && apiKey.trim()) {
+    const authorized = keyManager.isKeyOrProviderAuthorized(
+      params.providerId,
+      apiKey,
+      destinationOrigin,
+      params.authorizedOrigin
+    );
+    if (!authorized) {
+      return {
+        success: false,
+        models: [],
+        httpStatus: 403,
+        error: `Security Exception: Outbound request to "${destinationOrigin}" rejected. Destination origin is not authorized for this credential.`,
+        errorCategory: 'auth',
+        suggestedAction: 'Ensure your Base URL origin matches the authorized provider endpoint or authorize this destination origin in settings.',
+      };
+    }
+  }
 
   // 2. Validate and prepare custom headers
   const headerValidation = validateCustomHeaders(customHeaders);

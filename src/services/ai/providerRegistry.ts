@@ -421,6 +421,7 @@ class ProviderRegistry {
       return discoverModels({
         baseUrl,
         apiKey: key,
+        providerId: id,
         customHeaders,
         signal,
       });

@@ -52,7 +52,7 @@ import {
   DiscoveredModel,
   ProviderCatalogEntry,
 } from '../../services/ai/types';
-import { keyManager } from '../../services/ai/keyManager';
+import { keyManager, extractOrigin, getDefaultProviderOrigin } from '../../services/ai/keyManager';
 import { providerRegistry } from '../../services/ai/providerRegistry';
 import { customProviderStore } from '../../services/ai/customProviderStore';
 import { assistAgentService } from '../../services/ai/assistAgentService';
@@ -88,6 +88,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
   const [persistInSession, setPersistInSession] = useState(false);
   const [customBaseUrl, setCustomBaseUrl] = useState('');
   const [selectedModelId, setSelectedModelId] = useState('');
+  const [authorizedDestinationConfirmed, setAuthorizedDestinationConfirmed] = useState(false);
 
   // Custom provider builder state
   const [customProviderId, setCustomProviderId] = useState('');
@@ -139,6 +140,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     setDiscoveredModels([]);
     setSelectedDiscoveredIds(new Set());
     setDiscoveredSearchQuery('');
+    setAuthorizedDestinationConfirmed(false);
 
     const currentKey = keyManager.getApiKey(pId);
     setApiKeyInput(currentKey);
@@ -402,6 +404,16 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     Boolean(BUILT_IN_CATALOG.find((c) => c.id === selectedProviderId)?.isCustomTemplate) ||
     providerRegistry.isCustomProvider(selectedProviderId);
 
+  const defaultOrigin = !isCustomMode ? getDefaultProviderOrigin(selectedProviderId) : '';
+  const currentBaseUrlOrigin = extractOrigin(customBaseUrl);
+  const isDestinationOverride = Boolean(
+    !isCustomMode &&
+    currentBaseUrlOrigin &&
+    defaultOrigin &&
+    currentBaseUrlOrigin !== defaultOrigin
+  );
+  const isDestinationAuthorized = !isDestinationOverride || keyManager.isOriginAuthorized(selectedProviderId, currentBaseUrlOrigin);
+
   // Model discovery actions
   const handleFetchModels = async () => {
     setFetchModelsError(null);
@@ -424,6 +436,18 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
         apiKey: 'OpenAI API key or endpoint detected under OpenRouter provider. Select OpenAI from the provider list, or enter an OpenRouter API key.',
       }));
       return;
+    }
+
+    if (isDestinationOverride && !isDestinationAuthorized) {
+      if (authorizedDestinationConfirmed) {
+        keyManager.authorizeOrigin(selectedProviderId, currentBaseUrlOrigin);
+      } else {
+        setFormErrors((prev) => ({
+          ...prev,
+          baseUrl: `Destination Authorization Required: Please confirm explicit authorization below to route credentials to "${currentBaseUrlOrigin}".`,
+        }));
+        return;
+      }
     }
 
     const defaultUrl = builtIn ? providerRegistry.getProvider(selectedProviderId).defaultBaseUrl : '';
@@ -557,6 +581,19 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       return;
     }
 
+    if (isDestinationOverride && !isDestinationAuthorized) {
+      if (authorizedDestinationConfirmed) {
+        keyManager.authorizeOrigin(selectedProviderId, currentBaseUrlOrigin);
+      } else {
+        setIsTesting(false);
+        setFormErrors((prev) => ({
+          ...prev,
+          baseUrl: `Destination Authorization Required: Please confirm explicit authorization below to route credentials to "${currentBaseUrlOrigin}".`,
+        }));
+        return;
+      }
+    }
+
     const isCustom = isCustomMode;
     const defaultUrl = !isCustom ? providerRegistry.getProvider(selectedProviderId).defaultBaseUrl : '';
     const targetBaseUrl = customBaseUrl.trim() || defaultUrl;
@@ -601,10 +638,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     try {
       // Temporarily stash key in keyManager for diagnostic
       if (apiKeyInput) {
-        keyManager.setApiKey(targetId, apiKeyInput, persistInSession);
-        if (targetId !== selectedProviderId) {
-          keyManager.setApiKey(selectedProviderId, apiKeyInput, persistInSession);
-        }
+        keyManager.setApiKey(targetId, apiKeyInput, persistInSession, targetBaseUrl);
       }
 
       const result = await providerRegistry.testProviderConnection(
@@ -649,6 +683,18 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
         apiKey: 'OpenAI API key or endpoint detected under OpenRouter provider. Switch to OpenAI, or provide an OpenRouter key.',
       });
       return;
+    }
+
+    if (isDestinationOverride && !isDestinationAuthorized) {
+      if (authorizedDestinationConfirmed) {
+        keyManager.authorizeOrigin(selectedProviderId, currentBaseUrlOrigin);
+      } else {
+        setFormErrors((prev) => ({
+          ...prev,
+          baseUrl: `Destination Authorization Required: Please confirm explicit authorization below to route credentials to "${currentBaseUrlOrigin}".`,
+        }));
+        return;
+      }
     }
 
     const isCustom = isCustomMode;
@@ -709,7 +755,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
 
       // Store API key in KeyManager (memory-only by default)
       if (apiKeyInput.trim()) {
-        keyManager.setApiKey(targetId, apiKeyInput, persistInSession);
+        keyManager.setApiKey(targetId, apiKeyInput, persistInSession, def.baseUrl);
       } else {
         keyManager.clearApiKey(targetId);
       }
@@ -753,7 +799,12 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     } catch {}
 
     if (apiKeyInput.trim()) {
-      keyManager.setApiKey(selectedProviderId, apiKeyInput, persistInSession);
+      keyManager.setApiKey(
+        selectedProviderId,
+        apiKeyInput,
+        persistInSession,
+        customBaseUrl.trim() || undefined
+      );
     } else if (selectedProviderId !== 'mock') {
       keyManager.clearApiKey(selectedProviderId);
     }
@@ -1201,6 +1252,28 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                     <p className="text-[10px] text-slate-500">
                       Direct browser requests to api.openai.com are blocked by browser CORS. Use OpenRouter for browser BYOK or route through a CORS proxy.
                     </p>
+                  )}
+                  {isDestinationOverride && !isDestinationAuthorized && (
+                    <div className="rounded-md border border-amber-500/50 bg-amber-950/40 p-2.5 text-xs text-amber-200 mt-2 space-y-2">
+                      <div className="flex items-start gap-2">
+                        <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-amber-300">Endpoint Destination Origin Override</p>
+                          <p className="text-[11px] text-amber-200/90">
+                            This Base URL directs requests to <strong className="font-mono text-cyan-300">{currentBaseUrlOrigin}</strong> instead of the default <strong className="font-mono text-slate-300">{defaultOrigin}</strong>.
+                          </p>
+                        </div>
+                      </div>
+                      <label className="flex items-center gap-2 pt-1 text-[11px] text-amber-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={authorizedDestinationConfirmed}
+                          onChange={(e) => setAuthorizedDestinationConfirmed(e.target.checked)}
+                          className="rounded border-amber-500 bg-[#12131c] text-cyan-500 focus:ring-0"
+                        />
+                        <span>I explicitly authorize sending credentials for "{selectedProviderId}" to <strong className="font-mono">{currentBaseUrlOrigin}</strong></span>
+                      </label>
+                    </div>
                   )}
                 </div>
               )}

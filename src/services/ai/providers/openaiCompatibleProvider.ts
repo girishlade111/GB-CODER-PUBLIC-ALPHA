@@ -13,6 +13,7 @@ import {
 } from '../types.ts';
 import { IAiProvider, StreamChatOptions } from './baseProvider.ts';
 import { discoverModels } from '../modelDiscoveryService.ts';
+import { keyManager, extractOrigin } from '../keyManager.ts';
 
 /**
  * Redacts API keys, credentials, and tokens from error messages and URLs.
@@ -39,21 +40,44 @@ export function redactSecretsFromText(text: unknown, customSecret?: string): str
   if (!str) return '';
   let result = str;
 
-  if (typeof customSecret === 'string' && customSecret.length >= 6) {
-    result = result.split(customSecret).join('[REDACTED_API_KEY]');
+  const redactKeyAndPrefixes = (key: string) => {
+    if (!key || key.length < 6) return;
+    result = result.split(key).join('[REDACTED_API_KEY]');
+    if (key.length >= 8) {
+      const prefix = key.slice(0, 6);
+      const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const maskRegex = new RegExp(`${escapedPrefix}[A-Za-z0-9_.*-]{2,}`, 'gi');
+      result = result.replace(maskRegex, '[REDACTED_API_KEY]');
+    }
+  };
+
+  if (typeof customSecret === 'string') {
+    redactKeyAndPrefixes(customSecret);
   }
+
+  try {
+    const activeKeys = keyManager.getAllActiveKeys();
+    for (const k of activeKeys) {
+      redactKeyAndPrefixes(k);
+    }
+  } catch {}
+
+  // Redact words containing asterisks masking keys (e.g. token_val_***)
+  result = result.replace(/\b[A-Za-z0-9_-]{4,}\*+[A-Za-z0-9_.*-]*\b/g, '[REDACTED_API_KEY]');
 
   // Redact URL query parameter keys: ?key=... or &key=... or &api_key=...
   result = result.replace(/([?&](?:key|api_key|token)=)[^&\s"'`]+/gi, '$1[REDACTED_API_KEY]');
   // Redact Bearer tokens
   result = result.replace(/Bearer\s+[A-Za-z0-9_.*-]{6,}/gi, 'Bearer [REDACTED_SECRET]');
+  // Redact opaque and standard key parameters (e.g. api_key: "...", key: "...")
+  result = result.replace(/api[_-]?key\s*[:=]\s*['"]?[A-Za-z0-9_.*-]{4,}['"]?/gi, 'api_key: [REDACTED_API_KEY]');
   // Redact standard and partially masked API key patterns
   result = result.replace(/sk-or-v1-[A-Za-z0-9_.*-]{4,}/gi, '[REDACTED_API_KEY]');
   result = result.replace(/sk-[A-Za-z0-9_.*-]{4,}/gi, '[REDACTED_API_KEY]');
   result = result.replace(/AIzaSy[A-Za-z0-9_.*-]{4,}/gi, '[REDACTED_API_KEY]');
   result = result.replace(/gsk_[A-Za-z0-9_.*-]{4,}/gi, '[REDACTED_API_KEY]');
   // Redact "Incorrect API key provided: ..." messages
-  result = result.replace(/(?:Incorrect|Invalid) API key (?:provided:?\s*)([^\s"'\`]+)/gi, 'Invalid API key provided: [REDACTED_API_KEY]');
+  result = result.replace(/(?:Incorrect|Invalid) API key (?:provided:?\s*)([^\s"'`]+)/gi, 'Invalid API key provided: [REDACTED_API_KEY]');
   return result;
 }
 
@@ -280,6 +304,22 @@ export class OpenAiCompatibleProvider implements IAiProvider {
 
     const baseUrl = normalizeBaseUrl(rawBaseUrl);
     const url = `${baseUrl}/chat/completions`;
+    const targetOrigin = extractOrigin(url);
+
+    const effectiveApiKey = options.apiKey || keyManager.getApiKey(this.id);
+    if (effectiveApiKey && effectiveApiKey.trim()) {
+      const authorized = keyManager.isKeyOrProviderAuthorized(
+        this.id,
+        effectiveApiKey,
+        targetOrigin,
+        this.defaultBaseUrl
+      );
+      if (!authorized) {
+        throw new Error(
+          `Security Exception: Outbound request to "${targetOrigin}" rejected. Destination origin is not authorized for provider "${this.id}" credentials.`
+        );
+      }
+    }
 
     const hasAuth = Boolean(
       options.apiKey ||
@@ -475,7 +515,9 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       }
       if (!fullContent.trim() && !toolCallAccumulators.size) {
         if (reasoning.trim()) {
-          fullContent = reasoning;
+          throw new Error(
+            'Provider Compatibility Error: Model produced reasoning tokens but no assistant answer content. Ensure the selected model and provider configuration support text completions.'
+          );
         } else {
           throw new Error('Empty provider response: no assistant text or tool calls. Check the selected model and streaming support.');
         }
@@ -567,6 +609,28 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     }
 
     const url = `${resolvedUrl}/chat/completions`;
+    const targetOrigin = extractOrigin(url);
+
+    if (apiKey && apiKey.trim()) {
+      const authorized = keyManager.isKeyOrProviderAuthorized(
+        this.id,
+        apiKey,
+        targetOrigin,
+        this.defaultBaseUrl
+      );
+      if (!authorized) {
+        return {
+          success: false,
+          latencyMs: 0,
+          message: `Security Exception: Outbound request to "${targetOrigin}" rejected. Destination origin is not authorized for provider "${this.id}" credentials.`,
+          errorDetails: `Unauthorized destination origin "${targetOrigin}".`,
+          endpointTested: url,
+          httpStatus: 403,
+          errorCategory: 'auth',
+          suggestedAction: 'Explicitly authorize this endpoint destination in provider settings before testing connection.',
+        };
+      }
+    }
 
     try {
       const mergedHeaders = this.resolveHeaders(apiKey, headerValidation.sanitized);
@@ -696,7 +760,8 @@ export class OpenAiCompatibleProvider implements IAiProvider {
   ): Promise<ModelDiscoveryResult> {
     return discoverModels({
       baseUrl: baseUrl || this.baseUrlOverride || this.defaultBaseUrl,
-      apiKey,
+      apiKey: apiKey || keyManager.getApiKey(this.id),
+      providerId: this.id,
       customHeaders: customHeaders || this.customHeaders,
       signal,
     });
