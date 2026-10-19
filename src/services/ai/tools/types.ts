@@ -71,6 +71,7 @@ export interface ToolExecutionContext {
   projectId: string;
   project: MultiFileProject;
   activePath?: string | null;
+  activeFilePath?: string | null;
   signal?: AbortSignal;
   timeoutMs?: number;
   isEditorDirty?: (path: string) => boolean;

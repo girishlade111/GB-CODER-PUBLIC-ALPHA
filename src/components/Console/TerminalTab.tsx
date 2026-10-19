@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore }
 import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
-import { Play, Square, RotateCcw, Trash2, HelpCircle, Plus, Columns, X, TerminalSquare } from 'lucide-react';
+import { Play, Square, Trash2, HelpCircle, Plus, Columns, X, TerminalSquare } from 'lucide-react';
 import { MultiFileProject } from '../../types/files';
 import {
   ANSI,
@@ -13,17 +13,11 @@ import {
 } from '../../services/localShell';
 import {
   webcontainerService,
-  type StartupOwner,
 } from '../../services/webcontainer/webcontainerService';
 import {
   terminalSessionManager,
-  type TerminalSessionSummary,
 } from '../../services/webcontainer/terminalSessionManager';
 import { devServerManager } from '../../services/webcontainer/devServerManager';
-import {
-  describeWebContainerUnavailableReason,
-  getWebContainerUnavailableReason,
-} from '../../services/webcontainer/webcontainerSupport';
 
 export type TerminalExecutionMode = 'webcontainer' | 'local';
 
@@ -141,7 +135,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     return 'local';
   });
 
-  const [wcState, setWcState] = useState(() => webcontainerService.getState());
+  const [, setWcState] = useState(() => webcontainerService.getState());
   const devServerState = useSyncExternalStore(
     (cb) => devServerManager.subscribe(cb),
     () => devServerManager.getState(),
@@ -167,15 +161,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   const projectRef = useRef(project);
   projectRef.current = project;
   const isStartingShellRef = useRef(false);
-
   const isWebContainerSupported = webcontainerService.isSupported();
-  const webContainerUnavailableReason = isWebContainerSupported
-    ? null
-    : getWebContainerUnavailableReason(wcState.status);
-  const webContainerUnavailableMessage = isWebContainerSupported
-    ? null
-    : describeWebContainerUnavailableReason(webContainerUnavailableReason);
-
   const fit = useCallback(() => {
     try {
       if (hostRef.current && hostRef.current.clientWidth > 0 && hostRef.current.clientHeight > 0) {

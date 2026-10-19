@@ -34,8 +34,8 @@ interface WorkbenchEditorAreaProps {
   onMoveTabToOtherGroup: (path: string, fromGroupId: string) => void;
   onSplitResize: (newRatio: number) => void;
   onFileChange: (path: string, content: string) => void;
-  onEditorMount: (editor: monacoEditor.editor.IStandaloneCodeEditor) => void;
-  onSplitEditorMount?: (editor: monacoEditor.editor.IStandaloneCodeEditor) => void;
+  onEditorMount: (editor: monacoEditor.editor.IStandaloneCodeEditor, monaco: any) => void;
+  onSplitEditorMount?: (editor: monacoEditor.editor.IStandaloneCodeEditor, monaco: any) => void;
   monacoLanguageForPath: (path: string) => string;
   isDark?: boolean;
   monacoOptions?: monacoEditor.editor.IStandaloneEditorConstructionOptions;
@@ -353,7 +353,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
           {activeFile ? (
             isDiffMode && activeConflict && activeConflict.path === activeFile.path ? (
               <LocalDiffEditor
-                original={activeConflict.diskContent}
+                original={activeConflict.externalContent}
                 modified={activeFile.content}
                 language={monacoLanguageForPath(activeFile.path)}
                 theme={monacoThemeFor(isDark)}

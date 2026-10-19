@@ -234,6 +234,9 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
 
     // Built-in provider
     setIsEditingExistingCustom(false);
+    setCustomProviderId('');
+    setCustomDisplayName('');
+    setCustomHeaders([]);
     const savedOverride = providerRegistry.getBaseUrlOverride(pId);
     try {
       const providerObj = providerRegistry.getProvider(pId);
@@ -631,17 +634,19 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       }
     }
 
-    const targetId = isEditingExistingCustom
-      ? customProviderId
-      : (customProviderId.trim().toLowerCase() || selectedProviderId);
+    const targetId = isCustom
+      ? (isEditingExistingCustom ? customProviderId : (customProviderId.trim().toLowerCase() || selectedProviderId))
+      : selectedProviderId;
 
     try {
       // Temporarily stash key in keyManager for diagnostic
-      if (apiKeyInput) {
+      if (apiKeyInput.trim()) {
         keyManager.setApiKey(targetId, apiKeyInput, persistInSession, targetBaseUrl);
         if (isCustom) {
           keyManager.authorizeOrigin('custom', targetBaseUrl);
         }
+      } else if (targetId !== 'mock') {
+        keyManager.clearApiKey(targetId);
       }
 
       const result = await providerRegistry.testProviderConnection(

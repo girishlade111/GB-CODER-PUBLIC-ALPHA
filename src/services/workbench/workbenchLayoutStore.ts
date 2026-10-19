@@ -4,6 +4,7 @@ import type {
   ContainerId,
   ViewId,
   WorkbenchSettings,
+  EditorGroupState,
 } from './workbenchTypes.ts';
 import { WORKBENCH_VIEWS, isViewAllowedInContainer } from './workbenchViewRegistry.ts';
 import { readViewState } from '../vscodeWorkspaceStore.ts';

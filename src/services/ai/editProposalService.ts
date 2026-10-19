@@ -168,10 +168,11 @@ export class EditProposalService {
     const { project, edit, isEditorDirty, onChangeFile, onCreateFile, createRollbackCheckpoint = true, projectId } = options;
 
     // Safety check 0: Prevent cross-project file writes
-    if (projectId && project.id && projectId !== project.id) {
+    const currentProjId = (project as { id?: string }).id;
+    if (projectId && currentProjId && projectId !== currentProjId) {
       return {
         success: false,
-        error: `Cannot apply edit: Target project mismatch. Proposal was generated for "${projectId}" but active project is "${project.id}".`,
+        error: `Cannot apply edit: Target project mismatch. Proposal was generated for "${projectId}" but active project is "${currentProjId}".`,
       };
     }
 

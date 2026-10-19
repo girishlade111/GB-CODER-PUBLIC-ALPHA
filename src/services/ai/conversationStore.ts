@@ -7,7 +7,7 @@
  * - Migrates legacy global sessions gracefully without data loss.
  */
 
-import { CodeAssistSession } from './types.ts';
+import { CodeAssistSession, CodeAssistMessage } from './types.ts';
 
 const LEGACY_STORAGE_KEY = 'gbcoder_code_assist_sessions_v1';
 const PROJECT_PREFIX = 'gbcoder_ai_sessions_';

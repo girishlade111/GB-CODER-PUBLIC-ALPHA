@@ -322,7 +322,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     }
 
     const hasAuth = Boolean(
-      options.apiKey ||
+      effectiveApiKey ||
       this.customHeaders['Authorization'] ||
       options.customHeaders?.['Authorization']
     );
@@ -386,7 +386,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     try {
       response = await fetch(url, {
         method: 'POST',
-        headers: this.resolveHeaders(options.apiKey, options.customHeaders),
+        headers: this.resolveHeaders(effectiveApiKey, options.customHeaders),
         body: JSON.stringify(requestBody),
         signal: requestSignal,
         redirect: 'manual',
@@ -424,7 +424,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         // non-json response
       }
 
-      const errorText = redactSecretsFromText(rawErrorText, options.apiKey);
+      const errorText = redactSecretsFromText(rawErrorText, effectiveApiKey);
 
       if (response.status === 401 || response.status === 403) {
         throw new Error(`Authentication Failed (${response.status}): Invalid API key for ${this.name}.`);

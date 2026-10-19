@@ -204,7 +204,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
-  const effectiveProjectId = activeProjectId || project.id || 'default-project';
+  const effectiveProjectId = activeProjectId || (project as { id?: string }).id || 'default-project';
 
   // Conflict tracking for active file
   const [, setConflictRevision] = useState(0);
@@ -388,7 +388,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   // WebContainer boot & watcher
   useEffect(() => {
     let isCancelled = false;
-    const effectiveProjectId = activeProjectId || project.id || 'default-project';
+    const effectiveProjectId = activeProjectId || (project as { id?: string }).id || 'default-project';
 
     const bootAndMount = async () => {
       try {
@@ -445,7 +445,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             if (!existing) {
               projectFilesMirrorRef.current = [
                 ...projectFilesMirrorRef.current,
-                { path: filePath, content, language: monacoLanguageForPath(filePath) },
+                { path: filePath, content, language: monacoLanguageForPath(filePath) as any },
               ];
               onCreateFileRef.current?.(filePath, content);
             } else {
@@ -1649,8 +1649,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         case 'problems':
           return (
             <ProblemsPanel
-              diagnostics={diagnostics}
-              onNavigateToDiagnostic={(uri, line, col) => navigateToLocation(uri, line, col)}
+              onNavigateToLocation={(uri: string, line?: number, col?: number) => navigateToLocation(uri, line ?? 1, col ?? 1)}
+              activeProjectId={effectiveProjectId}
             />
           );
 
@@ -1745,7 +1745,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           layout: workbenchLayout.editorLayout,
           files: project.files,
           dirtyPaths,
-          activeConflict,
+          activeConflict: activeConflict ?? null,
           isDiffMode,
           onToggleDiffMode: () => setIsDiffMode((prev) => !prev),
           onResolveKeepMine: handleResolveKeepMine,

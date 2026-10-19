@@ -17,6 +17,7 @@
     "build:marketing": "npm --prefix apps/marketing run build",
     "verify:bundle": "node scripts/measure-initial-bundle.mjs --assert-absent",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "verify:deploy": "node scripts/verify-deploy-config.mjs",
     "audit:devserver": "node scripts/audit-devserver.mjs",
     "audit:tests": "node scripts/audit-run-tests.mjs",

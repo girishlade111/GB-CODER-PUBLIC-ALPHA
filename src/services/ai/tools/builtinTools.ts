@@ -315,7 +315,7 @@ export const runTerminalCommandTool: AgentToolDefinition<{ command: string; args
   },
 };
 
-export const BUILTIN_TOOLS: AgentToolDefinition[] = [
+export const BUILTIN_TOOLS: AgentToolDefinition<any, any>[] = [
   readFileTool,
   listDirectoryTool,
   searchFilesTool,

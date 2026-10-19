@@ -131,7 +131,7 @@ const LivePreviewPopoutPage = lazyWithRecovery(
 const ImportReviewModal = lazyWithRecovery(() => import('./components/ImportReviewModal'));
 import type { ImportConfirmationPayload } from './components/ImportReviewModal';
 const NewProjectModal = lazyWithRecovery(() => import('./components/projects/NewProjectModal'));
-import type { NewProjectTemplate, NewProjectSubmitPayload } from './components/projects/NewProjectModal';
+import type { NewProjectSubmitPayload } from './components/projects/NewProjectModal';
 
 /*
  * The full-stack feature (VS Code mode, sandbox panel, sandbox client, E2B

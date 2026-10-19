@@ -212,7 +212,7 @@ export class TerminalAdapter {
     const matches = trimmed.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
     if (matches.length === 0) return { command: '', args: [] };
 
-    const command = matches[0].replace(/^["']|["']$/g, '');
+    const command = (matches[0] || '').replace(/^["']|["']$/g, '');
     const args = matches.slice(1).map((arg) => arg.replace(/^["']|["']$/g, ''));
 
     return { command, args };
@@ -609,7 +609,7 @@ export class TerminalAdapter {
 
           const exitCode = await exitPromise;
 
-          if (isSettled || signal?.aborted || processStatus === 'terminating' || processStatus === 'terminated') {
+          if (isSettled || signal?.aborted || (processStatus as string) === 'terminating' || (processStatus as string) === 'terminated') {
             return;
           }
 

@@ -80,6 +80,7 @@
         var loading = document.getElementById('loading');
         if (loading) {
           loading.style.opacity = '0';
+          loading.style.pointerEvents = 'none';
           setTimeout(function () { loading.remove(); }, 400);
         }
       }
@@ -90,6 +91,7 @@
       var loading = document.getElementById('loading');
       if (loading) {
         loading.style.opacity = '0';
+        loading.style.pointerEvents = 'none';
         setTimeout(function () { loading.remove(); }, 400);
       }
     }, 5000);

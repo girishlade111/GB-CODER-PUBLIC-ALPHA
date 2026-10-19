@@ -191,11 +191,14 @@ class AssistAgentService {
     this.cancelGeneration();
     agentEngine.stopAgent('Provider changed');
     const models = providerRegistry.getModelsForProvider(providerId);
+    const activeModel = providerRegistry.getActiveModel(providerId);
     let resolvedModel = '';
     if (modelId && models.some((m) => m.id === modelId)) {
       resolvedModel = modelId;
     } else if (modelId && modelId.trim()) {
       resolvedModel = modelId.trim();
+    } else if (activeModel && models.some((m) => m.id === activeModel)) {
+      resolvedModel = activeModel;
     } else if (models.length > 0) {
       resolvedModel = models[0].id;
     } else {

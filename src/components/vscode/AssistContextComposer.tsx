@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { MultiFileProject } from '../../types/files';
 import { ContextBuilder, isSensitiveFilePath, isIgnoredBuildPath, isBinaryFilePath } from '../../services/ai/contextBuilder';
 

@@ -838,7 +838,7 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                                                 {tc.stderr}
                                               </pre>
                                             )}
-                                            {!tc.stdout && !tc.stderr && tc.result && (
+                                            {!tc.stdout && !tc.stderr && Boolean(tc.result) && (
                                               <pre className="max-h-36 overflow-auto rounded bg-black/60 p-2 font-mono text-[9px] text-slate-300 leading-tight whitespace-pre-wrap">
                                                 {typeof tc.result === 'string'
                                                   ? tc.result

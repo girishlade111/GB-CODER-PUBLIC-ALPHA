@@ -128,7 +128,9 @@ export class MockProvider implements IAiProvider {
       // We are in a subsequent turn of a tool-calling loop!
       const toolContent = String(lastToolMsg.content || '');
 
-      if (lastToolMsg.name === 'read_file') {
+      const toolName = 'name' in lastToolMsg ? (lastToolMsg as { name?: string }).name : undefined;
+
+      if (toolName === 'read_file') {
         // Step 2: After reading file, propose an edit
         responseText = `I have analyzed the workspace file. I will now propose the required code modifications.`;
         if (options.tools?.some((t) => t.name === 'propose_file_edit')) {
@@ -150,7 +152,7 @@ export class MockProvider implements IAiProvider {
             })
           );
         }
-      } else if (lastToolMsg.name === 'propose_file_edit' || toolContent.includes('proposal applied') || toolContent.includes('success')) {
+      } else if (toolName === 'propose_file_edit' || toolContent.includes('proposal applied') || toolContent.includes('success')) {
         // Step 3: After edit, run verification test
         responseText = `The code edits have been applied. Running verification tests inside WebContainer.`;
         if (options.tools?.some((t) => t.name === 'run_terminal_command')) {
@@ -161,7 +163,7 @@ export class MockProvider implements IAiProvider {
             })
           );
         }
-      } else if (lastToolMsg.name === 'run_terminal_command') {
+      } else if (toolName === 'run_terminal_command') {
         // Step 4: Analyze test output
         if (toolContent.includes('FAIL') || toolContent.includes('fail') || toolContent.includes('error') || toolContent.includes('exit code: 1')) {
           // Failure recovery turn!

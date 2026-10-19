@@ -66,7 +66,8 @@ class CodeAssistServiceBridge {
     onApplyFileUpdates?: (files: Array<{ path: string; content: string }>) => void,
     activePath?: string | null
   ): Promise<void> {
-    assistAgentService.setProject(project.id);
+    const effectiveId = (project as { id?: string }).id || 'default';
+    assistAgentService.setProject(effectiveId);
     await assistAgentService.submitPrompt(prompt, project, activePath);
 
     // If caller requested automatic apply for legacy behavior

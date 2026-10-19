@@ -168,9 +168,9 @@ async function main() {
     });
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[data-testid="ai-prompt-input"]');
+    await page.locator('#loading').waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(500);
 
-
-    // 2. Open settings button from CodeAssistPanel
     console.log('Step 2: Opening Connect Provider modal...');
     const settingsBtn = page.locator('[data-testid="open-ai-settings-btn"]');
     await settingsBtn.waitFor({ state: 'visible', timeout: 10000 });

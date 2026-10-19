@@ -16,15 +16,19 @@ import {
 import toast from 'react-hot-toast';
 import Tooltip from '../ui/Tooltip';
 import StackBlitzStartupLoader from '../vscode/StackBlitzStartupLoader';
-import { webcontainerService } from '../../services/webcontainer/webcontainerService';
+import {
+  webcontainerService,
+  ProjectStartupStage,
+  WebContainerRuntimeError,
+} from '../../services/webcontainer/webcontainerService';
 
 interface WorkbenchLivePreviewProps {
   activePreview: { url: string; port: number; label: string } | null;
   webcontainerState: {
-    startupStage: string;
+    startupStage: ProjectStartupStage;
     serverPort: number | null;
     serverUrl?: string | null;
-    runtimeError?: { message: string } | null;
+    runtimeError?: WebContainerRuntimeError | null;
   };
   deviceViewport: 'desktop' | 'tablet' | 'mobile';
   setDeviceViewport: (v: 'desktop' | 'tablet' | 'mobile') => void;
@@ -34,7 +38,7 @@ interface WorkbenchLivePreviewProps {
   previewLoadError: string | null;
   copiedUrl: boolean;
   setCopiedUrl: (v: boolean) => void;
-  previewIframeRef: React.RefObject<HTMLIFrameElement | null>;
+  previewIframeRef: any;
   onIframeLoad: () => void;
   onIframeError: () => void;
   onOpenTerminal: () => void;

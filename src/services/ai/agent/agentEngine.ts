@@ -26,9 +26,7 @@ import { ProviderChatMessage } from '../providers/baseProvider';
 import { EditProposalService } from '../editProposalService';
 import { ContextBudget } from '../contextBudget';
 import {
-  AgentStatus,
   AgentPlan,
-  AgentPlanStep,
   AgentTaskState,
   AgentBudgetConfig,
   AgentPendingApproval,
@@ -289,7 +287,7 @@ export class AgentEngine {
     let consecutiveFailures = 0;
 
     // ── MAIN EXECUTION LOOP ──
-    while (task.status === 'running' || task.status === 'planning') {
+    while ((task.status as string) === 'running' || (task.status as string) === 'planning') {
       // 1. Check budget limits and timeout
       task.usage.durationMs = Date.now() - startTime;
       if (task.usage.stepCount >= task.budget.maxSteps) {
@@ -349,6 +347,7 @@ export class AgentEngine {
         fullContent: string;
         reasoning?: string;
         toolCalls?: ToolCallRecord[];
+        usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
       };
 
       try {
@@ -549,7 +548,7 @@ export class AgentEngine {
           task.pendingApproval = undefined;
 
           // Check if task was aborted or cancelled while awaiting approval
-          if (this.isAborted || task.status === 'cancelled' || this.abortController?.signal.aborted) {
+          if (this.isAborted || (task.status as string) === 'cancelled' || this.abortController?.signal.aborted) {
             task.status = 'cancelled';
             task.cancelledAt = task.cancelledAt || Date.now();
             task.pendingApproval = undefined;

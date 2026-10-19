@@ -167,7 +167,6 @@ export class ContextBuilder {
 
     // 2. Direct import graph bonus from active file
     if (activePath && activeFileContent) {
-      const activeBasename = activePath.split('/').pop()?.replace(/\.[^.]+$/, '') || '';
       const candidateBasename = candidatePath.split('/').pop()?.replace(/\.[^.]+$/, '') || '';
 
       if (candidateBasename && candidateBasename.length >= 2) {

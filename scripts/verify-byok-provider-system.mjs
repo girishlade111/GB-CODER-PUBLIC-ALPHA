@@ -1028,6 +1028,163 @@ await test('8.5 Discovered models can be selected, saved and immediately propaga
   assert.equal(assistAgentService.getState().selectedModel, 'mistral-large-2407');
 });
 
+// ============================================================================
+// 9. OPENROUTER KEY REPLACEMENT, PROVIDER SWITCHING & AUTH REGRESSION TESTS
+// ============================================================================
+
+await test('9.1 Replacing an old key with a new one updates KeyManager and retains origin binding', () => {
+  // Set initial key for openrouter
+  keyManager.setApiKey('openrouter', 'sk-or-v1-old-11111111111111111111111111111111', false);
+  assert.equal(keyManager.hasApiKey('openrouter'), true);
+  assert.equal(keyManager.getApiKey('openrouter'), 'sk-or-v1-old-11111111111111111111111111111111');
+  assert.equal(keyManager.isKeyOrProviderAuthorized('openrouter', 'sk-or-v1-old-11111111111111111111111111111111', 'https://openrouter.ai/api/v1'), true);
+
+  // Replace with new key
+  keyManager.setApiKey('openrouter', 'sk-or-v1-new-22222222222222222222222222222222', false);
+  assert.equal(keyManager.getApiKey('openrouter'), 'sk-or-v1-new-22222222222222222222222222222222');
+  assert.equal(keyManager.isKeyOrProviderAuthorized('openrouter', 'sk-or-v1-new-22222222222222222222222222222222', 'https://openrouter.ai/api/v1'), true);
+
+  // Clear key cleanly
+  keyManager.clearApiKey('openrouter');
+  assert.equal(keyManager.hasApiKey('openrouter'), false);
+  assert.equal(keyManager.getApiKey('openrouter'), '');
+});
+
+await test('9.2 Switching from custom provider to OpenRouter retains model selection and built-in isolation', () => {
+  // 1. Set up custom provider
+  providerRegistry.registerCustomProvider({
+    id: 'custom-ollama',
+    name: 'Custom Ollama',
+    baseUrl: 'http://localhost:11434/v1',
+    models: [{ id: 'llama3:latest', name: 'Llama 3' }],
+    customHeaders: [{ key: 'X-Custom-Env', value: 'testing' }],
+  });
+  keyManager.setApiKey('custom-ollama', 'ollama-secret');
+  assistAgentService.setProvider('custom-ollama', 'llama3:latest');
+
+  assert.equal(assistAgentService.getState().selectedProvider, 'custom-ollama');
+  assert.equal(assistAgentService.getState().selectedModel, 'llama3:latest');
+
+  // 2. Switch to OpenRouter with specific model minimax/minimax-m3.1-flash:free
+  providerRegistry.setActiveModel('openrouter', 'minimax/minimax-m3.1-flash:free');
+  assistAgentService.setProvider('openrouter', 'minimax/minimax-m3.1-flash:free');
+
+  const state = assistAgentService.getState();
+  assert.equal(state.selectedProvider, 'openrouter');
+  assert.equal(state.selectedModel, 'minimax/minimax-m3.1-flash:free');
+
+  const activeProvider = providerRegistry.getActiveProvider();
+  assert.equal(activeProvider.id, 'openrouter');
+  assert.equal(activeProvider.getBaseUrl(), 'https://openrouter.ai/api/v1');
+});
+
+await test('9.3 OpenRouter Chat targets https://openrouter.ai/api/v1/chat/completions with effective Authorization header and exact model ID', async () => {
+  const originalFetch = globalThis.fetch;
+  let interceptedUrl = null;
+  let interceptedHeaders = null;
+  let interceptedBody = null;
+
+  globalThis.fetch = async (url, options) => {
+    interceptedUrl = url;
+    interceptedHeaders = options.headers;
+    interceptedBody = JSON.parse(options.body);
+    const sse = 'data: {"id":"1","choices":[{"delta":{"content":"Hello from OpenRouter"}}]}\n\ndata: [DONE]\n\n';
+    return new Response(sse, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+  };
+
+  try {
+    keyManager.setApiKey('openrouter', 'sk-or-v1-mock-test-key-999');
+    const openrouterProv = providerRegistry.getProvider('openrouter');
+    assert.ok(openrouterProv, 'OpenRouter provider must exist in registry');
+
+    let contentReceived = '';
+    // Call streamChat without inline options.apiKey to ensure effectiveApiKey from keyManager is resolved
+    await openrouterProv.streamChat(
+      [{ role: 'user', content: 'hello' }],
+      {
+        model: 'minimax/minimax-m3.1-flash:free',
+      },
+      (chunk) => {
+        if (chunk.contentDelta) contentReceived += chunk.contentDelta;
+      }
+    );
+
+    assert.equal(contentReceived, 'Hello from OpenRouter');
+    assert.equal(interceptedUrl, 'https://openrouter.ai/api/v1/chat/completions');
+    assert.equal(interceptedBody.model, 'minimax/minimax-m3.1-flash:free');
+    assert.equal(interceptedHeaders['Authorization'], 'Bearer sk-or-v1-mock-test-key-999');
+    assert.equal(interceptedHeaders['HTTP-Referer'], 'https://code.ladestack.in');
+    assert.equal(interceptedHeaders['X-Title'], 'GB Coder (LadeStack)');
+  } finally {
+    globalThis.fetch = originalFetch;
+    keyManager.clearApiKey('openrouter');
+  }
+});
+
+await test('9.4 Real HTTP 401 Authentication Failure is surfaced accurately without fabricating success', async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async (url, options) => {
+    return new Response(
+      JSON.stringify({
+        error: {
+          message: 'Invalid API key for OpenRouter (BYOK)',
+          code: 401,
+        },
+      }),
+      {
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  };
+
+  try {
+    keyManager.setApiKey('openrouter', 'sk-or-v1-invalid-or-revoked-key');
+    const openrouterProv = providerRegistry.getProvider('openrouter');
+
+    // 1. streamChat must throw accurate 401 without swallowing or fabricating success
+    await assert.rejects(
+      async () => {
+        await openrouterProv.streamChat(
+          [{ role: 'user', content: 'test 401 surfacing' }],
+          {
+            model: 'minimax/minimax-m3.1-flash:free',
+          },
+          () => {}
+        );
+      },
+      (err) => {
+        assert.ok(err instanceof Error);
+        assert.match(err.message, /Authentication Failed \(401\)/);
+        assert.match(err.message, /Invalid API key for OpenRouter/);
+        // Ensure the secret key value is never leaked into the thrown error
+        assert.equal(err.message.includes('sk-or-v1-invalid-or-revoked-key'), false);
+        return true;
+      }
+    );
+
+    // 2. testConnection must return structured auth failure
+    const testResult = await openrouterProv.testConnection(
+      'sk-or-v1-invalid-or-revoked-key',
+      'https://openrouter.ai/api/v1',
+      'minimax/minimax-m3.1-flash:free',
+      undefined,
+      true
+    );
+
+    assert.equal(testResult.success, false);
+    assert.equal(testResult.errorCategory, 'auth');
+    assert.equal(testResult.httpStatus, 401);
+    assert.match(testResult.message, /Authentication failed \(401\)|Invalid API key for OpenRouter/);
+    assert.equal(testResult.message.includes('sk-or-v1-invalid-or-revoked-key'), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    keyManager.clearApiKey('openrouter');
+  }
+});
+
 console.log('\n============================================================');
 console.log(`  ALL ${passed} / ${total} TESTS PASSED!`);
 console.log('============================================================\n');
