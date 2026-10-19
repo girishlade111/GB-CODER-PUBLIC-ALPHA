@@ -106,6 +106,12 @@ export async function discoverModels(params: DiscoverModelsParams): Promise<Mode
     headers['Authorization'] = `Bearer ${apiKey.trim()}`;
   }
 
+  // Add OpenRouter attribution headers if endpoint is OpenRouter
+  if (discoveryUrl.includes('openrouter.ai')) {
+    if (!headers['HTTP-Referer']) headers['HTTP-Referer'] = 'https://code.ladestack.in';
+    if (!headers['X-Title']) headers['X-Title'] = 'GB Coder (LadeStack)';
+  }
+
   // 4. Setup AbortController with timeout
   const timeoutController = new AbortController();
   const timeoutId = setTimeout(() => {
@@ -189,9 +195,9 @@ export async function discoverModels(params: DiscoverModelsParams): Promise<Mode
           success: false,
           models: [],
           httpStatus: 401,
-          error: `Authentication failed (HTTP 401): ${sanitizedError}`,
+          error: 'Authentication failed (HTTP 401): Invalid API key for this provider endpoint.',
           errorCategory: 'auth',
-          suggestedAction: 'Check your API key. Ensure the key is valid and has permission to list models.',
+          suggestedAction: 'Check your API key. Ensure the key belongs to this provider and is authorized for model discovery.',
         };
       }
 
@@ -200,7 +206,7 @@ export async function discoverModels(params: DiscoverModelsParams): Promise<Mode
           success: false,
           models: [],
           httpStatus: 403,
-          error: `Access forbidden (HTTP 403): ${sanitizedError}`,
+          error: 'Access forbidden (HTTP 403): Your credentials lack permissions to list models on this endpoint.',
           errorCategory: 'auth',
           suggestedAction: 'Your API key does not have permission to access the /models endpoint.',
         };

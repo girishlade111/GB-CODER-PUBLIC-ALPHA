@@ -42,20 +42,15 @@ export class WorkspaceAdapter {
   public static normalizePath(filePath: string): string | null {
     if (!filePath || typeof filePath !== 'string') return null;
     const trimmed = filePath.trim();
-    if (
-      trimmed.startsWith('/') ||
-      trimmed.startsWith('\\') ||
-      /^[a-zA-Z]:/.test(trimmed) ||
-      trimmed.includes('\0')
-    ) {
+    if (/^[a-zA-Z]:/.test(trimmed) || trimmed.includes('\0')) {
       return null;
     }
-    const clean = trimmed.replace(/\\/g, '/').replace(/^\/+/, '');
-    const segments = clean.split('/');
-    if (segments.some((seg) => seg === '..' || seg === '.')) {
+    const clean = trimmed.replace(/\\/g, '/').replace(/^\.?\/+/, '');
+    const segments = clean.split('/').filter(Boolean);
+    if (segments.length === 0 || segments.some((seg) => seg === '..')) {
       return null;
     }
-    return clean;
+    return segments.join('/');
   }
 
   /**

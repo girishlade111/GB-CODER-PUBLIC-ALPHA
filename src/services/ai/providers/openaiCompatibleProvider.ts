@@ -43,13 +43,17 @@ export function redactSecretsFromText(text: unknown, customSecret?: string): str
     result = result.split(customSecret).join('[REDACTED_API_KEY]');
   }
 
-  // Redact URL query parameter keys: ?key=... or &key=...
-  result = result.replace(/([?&]key=)[^&\s"'`]+/gi, '$1[REDACTED_API_KEY]');
+  // Redact URL query parameter keys: ?key=... or &key=... or &api_key=...
+  result = result.replace(/([?&](?:key|api_key|token)=)[^&\s"'`]+/gi, '$1[REDACTED_API_KEY]');
   // Redact Bearer tokens
-  result = result.replace(/Bearer\s+[A-Za-z0-9_.-]{16,}/gi, 'Bearer [REDACTED_SECRET]');
-  // Redact standard API key patterns
-  result = result.replace(/sk-[A-Za-z0-9_-]{20,}/gi, '[REDACTED_API_KEY]');
-  result = result.replace(/AIzaSy[A-Za-z0-9_-]{30,}/gi, '[REDACTED_API_KEY]');
+  result = result.replace(/Bearer\s+[A-Za-z0-9_.*-]{6,}/gi, 'Bearer [REDACTED_SECRET]');
+  // Redact standard and partially masked API key patterns
+  result = result.replace(/sk-or-v1-[A-Za-z0-9_.*-]{4,}/gi, '[REDACTED_API_KEY]');
+  result = result.replace(/sk-[A-Za-z0-9_.*-]{4,}/gi, '[REDACTED_API_KEY]');
+  result = result.replace(/AIzaSy[A-Za-z0-9_.*-]{4,}/gi, '[REDACTED_API_KEY]');
+  result = result.replace(/gsk_[A-Za-z0-9_.*-]{4,}/gi, '[REDACTED_API_KEY]');
+  // Redact "Incorrect API key provided: ..." messages
+  result = result.replace(/(?:Incorrect|Invalid) API key (?:provided:?\s*)([^\s"'\`]+)/gi, 'Invalid API key provided: [REDACTED_API_KEY]');
   return result;
 }
 
@@ -185,6 +189,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
   private defaultModels: AiModelInfo[];
   private catalogRefreshed = false;
   private customHeaders: Record<string, string> = {};
+  private baseUrlOverride?: string;
 
   constructor(
     id: AiProviderId,
@@ -200,6 +205,14 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     if (customHeaders) {
       this.customHeaders = customHeaders;
     }
+  }
+
+  public setBaseUrlOverride(url?: string): void {
+    this.baseUrlOverride = url ? normalizeBaseUrl(url) : undefined;
+  }
+
+  public getBaseUrl(): string {
+    return this.baseUrlOverride || this.defaultBaseUrl;
   }
 
   public getAvailableModels(): AiModelInfo[] {
@@ -259,7 +272,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       throw new Error(`Selected model is unavailable: ${options.model}. Refresh models and explicitly select an available model.`);
     }
     const requestSignal = AbortSignal.any([...(options.signal ? [options.signal] : []), AbortSignal.timeout(90000)]);
-    const rawBaseUrl = options.baseUrl || this.defaultBaseUrl;
+    const rawBaseUrl = options.baseUrl || this.baseUrlOverride || this.defaultBaseUrl;
     const urlValidation = validateEndpointUrl(rawBaseUrl);
     if (!urlValidation.valid) {
       throw new Error(`Endpoint Configuration Error: ${urlValidation.error}`);
@@ -461,7 +474,11 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         }
       }
       if (!fullContent.trim() && !toolCallAccumulators.size) {
-        throw new Error('Empty provider response: no assistant text or tool calls. Check the selected model and streaming support.');
+        if (reasoning.trim()) {
+          fullContent = reasoning;
+        } else {
+          throw new Error('Empty provider response: no assistant text or tool calls. Check the selected model and streaming support.');
+        }
       }
       onChunk({ isComplete: true });
     } finally {
@@ -496,7 +513,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     consentToInference?: boolean
   ): Promise<ConnectionDiagnosticResult> {
     const start = performance.now();
-    const rawBaseUrl = baseUrl || this.defaultBaseUrl;
+    const rawBaseUrl = baseUrl || this.baseUrlOverride || this.defaultBaseUrl;
     const urlValidation = validateEndpointUrl(rawBaseUrl);
     if (!urlValidation.valid) {
       return {
@@ -615,13 +632,14 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         } catch {}
       }
 
-      const sanitizedError = redactSecretsFromText(errorMsg, apiKey);
+      let sanitizedError = redactSecretsFromText(errorMsg, apiKey);
 
       let errorCategory: ConnectionDiagnosticResult['errorCategory'] = 'unknown';
       let suggestedAction = 'Review provider configuration and credentials.';
 
       if (response.status === 401 || response.status === 403) {
         errorCategory = 'auth';
+        sanitizedError = `Authentication failed (${response.status}): Invalid API key for ${this.name}.`;
         suggestedAction = 'Check that your API key is valid and has permissions for this endpoint.';
       } else if (response.status === 404) {
         errorCategory = 'not_found';
@@ -677,7 +695,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     signal?: AbortSignal
   ): Promise<ModelDiscoveryResult> {
     return discoverModels({
-      baseUrl: baseUrl || this.defaultBaseUrl,
+      baseUrl: baseUrl || this.baseUrlOverride || this.defaultBaseUrl,
       apiKey,
       customHeaders: customHeaders || this.customHeaders,
       signal,

@@ -88,7 +88,8 @@ export const isBinaryFilePath = (filePath: string): boolean => {
 
 export class ContextBuilder {
   /**
-   * Extracts `@path/to/file` mentions from the user prompt text.
+   * Extracts `@path/to/file` and `@path/to/folder` mentions from user prompt text.
+   * Expands directory mentions to all constituent files within the project.
    */
   public static extractAtMentions(prompt: string, projectFiles: Array<{ path: string }>): string[] {
     const mentions: string[] = [];
@@ -96,15 +97,36 @@ export class ContextBuilder {
     let match: RegExpExecArray | null;
 
     while ((match = regex.exec(prompt)) !== null) {
-      const candidate = match[1];
-      // Check if it matches an actual file path in the project
-      const found = projectFiles.find(
-        (f) =>
-          f.path.toLowerCase() === candidate.toLowerCase() ||
-          f.path.toLowerCase().endsWith(`/${candidate.toLowerCase()}`)
-      );
+      const rawCandidate = match[1];
+      const candidate = rawCandidate.replace(/\\/g, '/').replace(/^\.?\/+/, '');
+      if (!candidate) continue;
+
+      // 1. Direct file path match (or path ending with /candidate, e.g. @App.tsx -> src/App.tsx)
+      const found = projectFiles.find((f) => {
+        const norm = f.path.replace(/\\/g, '/').replace(/^\.?\/+/, '');
+        return (
+          norm.toLowerCase() === candidate.toLowerCase() ||
+          norm.toLowerCase().endsWith(`/${candidate.toLowerCase()}`)
+        );
+      });
       if (found && !mentions.includes(found.path)) {
         mentions.push(found.path);
+        continue;
+      }
+
+      // 2. Directory match: expand all files inside matching folder
+      const dirCandidate = candidate.endsWith('/') ? candidate : `${candidate}/`;
+      const dirFiles = projectFiles.filter((f) => {
+        const norm = f.path.replace(/\\/g, '/').replace(/^\.?\/+/, '');
+        return (
+          norm.toLowerCase().startsWith(dirCandidate.toLowerCase()) ||
+          norm.toLowerCase().includes(`/${dirCandidate.toLowerCase()}`)
+        );
+      });
+      for (const df of dirFiles) {
+        if (!mentions.includes(df.path)) {
+          mentions.push(df.path);
+        }
       }
     }
 
@@ -193,7 +215,12 @@ export class ContextBuilder {
     const atMentions = this.extractAtMentions(prompt, project.files);
     let usedTokens = 0;
     let omittedCount = 0;
-    const validPath = (path: string) => !!path && !path.startsWith('/') && !path.includes('\\') && !path.includes(':') && !path.includes('\0') && !path.split('/').some((p) => p === '..' || p === '.');
+    const validPath = (path: string) => {
+      if (!path || typeof path !== 'string' || path.includes('\0') || /^[a-zA-Z]:/.test(path)) return false;
+      const clean = path.replace(/\\/g, '/').replace(/^\.?\/+/, '');
+      const segments = clean.split('/').filter(Boolean);
+      return segments.length > 0 && !segments.some((p) => p === '..');
+    };
 
     // Helper to add a file with budget tracking and security exclusion
     const addFile = (
@@ -201,25 +228,26 @@ export class ContextBuilder {
       reason: 'active_file' | 'user_attached' | 'at_mention' | 'relevant_context'
     ): boolean => {
       if (!validPath(filePath)) return false;
+      const cleanPath = filePath.replace(/\\/g, '/').replace(/^\.?\/+/, '');
 
       // Sensitive file protection: exclude credentials and secrets by default
-      if (isSensitiveFilePath(filePath)) {
-        if (!excludedSensitiveFiles.includes(filePath)) {
-          excludedSensitiveFiles.push(filePath);
+      if (isSensitiveFilePath(cleanPath)) {
+        if (!excludedSensitiveFiles.includes(cleanPath)) {
+          excludedSensitiveFiles.push(cleanPath);
         }
         return false;
       }
 
       // Ignore build artifacts and binary files
-      if (isIgnoredBuildPath(filePath) || isBinaryFilePath(filePath)) {
+      if (isIgnoredBuildPath(cleanPath) || isBinaryFilePath(cleanPath)) {
         return false;
       }
 
-      const file = project.files.find((f) => f.path === filePath);
-      if (!file || includedMap.has(filePath)) return false;
+      const file = project.files.find((f) => f.path.replace(/\\/g, '/').replace(/^\.?\/+/, '') === cleanPath);
+      if (!file || includedMap.has(file.path)) return false;
 
       const rawContent = file.content ?? '';
-      if (rawContent.includes('\0') || filePath.split('/').length > 16) { omittedCount++; return false; }
+      if (rawContent.includes('\0') || cleanPath.split('/').length > 16) { omittedCount++; return false; }
       let content = rawContent;
       let isTruncated = false;
 
@@ -241,7 +269,7 @@ export class ContextBuilder {
       const lines = content.split('\n').length;
       const charCount = content.length;
 
-      includedMap.set(filePath, {
+      includedMap.set(file.path, {
         path: file.path,
         content,
         language: file.language || 'plaintext',

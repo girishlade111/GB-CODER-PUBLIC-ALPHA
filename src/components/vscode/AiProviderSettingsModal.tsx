@@ -166,6 +166,50 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       }
     }
 
+    // Check if it matches an OpenAI-compatible catalog template (e.g. mistral, groq, together)
+    const templateEntry = BUILT_IN_CATALOG.find((c) => c.id === pId && c.isCustomTemplate);
+    if (templateEntry) {
+      const def = customProviderStore.getById(pId);
+      if (def) {
+        setIsEditingExistingCustom(true);
+        setCustomProviderId(def.id);
+        setCustomDisplayName(def.name);
+        setCustomBaseUrl(def.baseUrl);
+        setCustomModels(def.models && def.models.length > 0 ? def.models : [{ id: '', name: '' }]);
+        setCustomHeaders(def.headers || []);
+        setCustomContextWindow(def.contextWindow || 32000);
+        setCustomMaxTokens(def.maxTokens || 4096);
+        setCustomToolCalling(Boolean(def.supportsToolCalling));
+        const activeMod = providerRegistry.getActiveModel(pId);
+        const resolvedMod = activeMod && def.models.some((m) => m.id === activeMod)
+          ? activeMod
+          : (def.models[0]?.id || '');
+        setSelectedModelId(resolvedMod);
+        return;
+      }
+
+      setIsEditingExistingCustom(false);
+      setCustomProviderId(templateEntry.id);
+      setCustomDisplayName(templateEntry.name);
+      setCustomBaseUrl(templateEntry.defaultBaseUrl || '');
+      setCustomModels(
+        templateEntry.defaultModels && templateEntry.defaultModels.length > 0
+          ? templateEntry.defaultModels.map((m) => ({
+              id: m.id,
+              name: m.name,
+              contextWindow: m.contextWindow,
+              supportsToolCalling: m.supportsToolCalling,
+            }))
+          : [{ id: '', name: '' }]
+      );
+      setCustomHeaders([]);
+      setCustomContextWindow(templateEntry.defaultModels?.[0]?.contextWindow || 32000);
+      setCustomMaxTokens(4096);
+      setCustomToolCalling(templateEntry.toolCallingSupport === true);
+      setSelectedModelId(templateEntry.defaultModels?.[0]?.id || '');
+      return;
+    }
+
     if (pId === 'custom') {
       setIsEditingExistingCustom(false);
       setCustomProviderId('');
@@ -187,11 +231,12 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
 
     // Built-in provider
     setIsEditingExistingCustom(false);
+    const savedOverride = providerRegistry.getBaseUrlOverride(pId);
     try {
       const providerObj = providerRegistry.getProvider(pId);
-      setCustomBaseUrl(providerObj.defaultBaseUrl || '');
+      setCustomBaseUrl(savedOverride || providerObj.defaultBaseUrl || '');
     } catch {
-      setCustomBaseUrl('');
+      setCustomBaseUrl(savedOverride || '');
     }
     const currentActiveModel = providerRegistry.getActiveModel(pId);
     const availableModels = providerRegistry.getModelsForProvider(pId);
@@ -351,6 +396,12 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     });
   };
 
+  const isCustomMode =
+    selectedProviderId === 'custom' ||
+    isEditingExistingCustom ||
+    Boolean(BUILT_IN_CATALOG.find((c) => c.id === selectedProviderId)?.isCustomTemplate) ||
+    providerRegistry.isCustomProvider(selectedProviderId);
+
   // Model discovery actions
   const handleFetchModels = async () => {
     setFetchModelsError(null);
@@ -358,7 +409,25 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     setFormErrors({});
 
     const builtIn = selectedProviderId === 'openrouter' || selectedProviderId === 'openai';
-    const rawUrl = builtIn ? providerRegistry.getProvider(selectedProviderId).defaultBaseUrl : customBaseUrl.trim();
+
+    // Provider / Destination Mismatch Check
+    if (selectedProviderId === 'openai' && (apiKeyInput.trim().startsWith('sk-or-') || customBaseUrl.includes('openrouter.ai'))) {
+      setFormErrors((prev) => ({
+        ...prev,
+        apiKey: 'OpenRouter API key or endpoint detected under OpenAI provider. Select OpenRouter from the provider list, or enter an OpenAI API key.',
+      }));
+      return;
+    }
+    if (selectedProviderId === 'openrouter' && (apiKeyInput.trim().startsWith('sk-proj-') || (customBaseUrl.trim() && customBaseUrl.includes('api.openai.com')))) {
+      setFormErrors((prev) => ({
+        ...prev,
+        apiKey: 'OpenAI API key or endpoint detected under OpenRouter provider. Select OpenAI from the provider list, or enter an OpenRouter API key.',
+      }));
+      return;
+    }
+
+    const defaultUrl = builtIn ? providerRegistry.getProvider(selectedProviderId).defaultBaseUrl : '';
+    const rawUrl = customBaseUrl.trim() || defaultUrl;
     if (!rawUrl) {
       setFormErrors((prev) => ({ ...prev, baseUrl: 'Base URL is required to fetch models.' }));
       return;
@@ -392,7 +461,14 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       if (controller.signal.aborted) return;
 
       if (result.success && result.models.length > 0) {
-        if (builtIn) providerRegistry.applyDiscoveredModels(selectedProviderId, result.models);
+        if (builtIn) {
+          providerRegistry.applyDiscoveredModels(selectedProviderId, result.models);
+          if (!result.models.some((m) => m.id === selectedModelId)) {
+            const nextModel = result.models[0].id;
+            setSelectedModelId(nextModel);
+            providerRegistry.setActiveModel(selectedProviderId, nextModel);
+          }
+        }
         setDiscoveredModels(result.models);
         setSelectedDiscoveredIds(new Set(result.models.map((m) => m.id)));
         setFetchModelsSuccess(`Found ${result.models.length} model(s) from provider.`);
@@ -466,8 +542,24 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     setDiagnosticResult(null);
     setFormErrors({});
 
-    const isCustom = selectedProviderId === 'custom' || isEditingExistingCustom;
-    const targetBaseUrl = isCustom ? customBaseUrl : customBaseUrl;
+    if (selectedProviderId === 'openai' && (apiKeyInput.trim().startsWith('sk-or-') || customBaseUrl.includes('openrouter.ai'))) {
+      setIsTesting(false);
+      setFormErrors({
+        apiKey: 'OpenRouter API key or endpoint detected under OpenAI provider. Switch to OpenRouter, or provide an OpenAI key.',
+      });
+      return;
+    }
+    if (selectedProviderId === 'openrouter' && (apiKeyInput.trim().startsWith('sk-proj-') || (customBaseUrl.trim() && customBaseUrl.includes('api.openai.com')))) {
+      setIsTesting(false);
+      setFormErrors({
+        apiKey: 'OpenAI API key or endpoint detected under OpenRouter provider. Switch to OpenAI, or provide an OpenRouter key.',
+      });
+      return;
+    }
+
+    const isCustom = isCustomMode;
+    const defaultUrl = !isCustom ? providerRegistry.getProvider(selectedProviderId).defaultBaseUrl : '';
+    const targetBaseUrl = customBaseUrl.trim() || defaultUrl;
 
     // Strict model resolution
     let targetModel = '';
@@ -480,7 +572,9 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       }
     } else {
       const available = providerRegistry.getModelsForProvider(selectedProviderId);
-      targetModel = available.some((m) => m.id === selectedModelId) ? selectedModelId : '';
+      targetModel = (selectedModelId && available.some((m) => m.id === selectedModelId))
+        ? selectedModelId
+        : (available[0]?.id || '');
       if (!targetModel) setFetchModelsError('Selected model is unavailable. Refresh and select an available model.');
     }
 
@@ -543,7 +637,21 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
   // Save / Connect Provider
   const handleSaveAndConnect = () => {
     setFormErrors({});
-    const isCustom = selectedProviderId === 'custom' || isEditingExistingCustom;
+
+    if (selectedProviderId === 'openai' && (apiKeyInput.trim().startsWith('sk-or-') || customBaseUrl.includes('openrouter.ai'))) {
+      setFormErrors({
+        apiKey: 'OpenRouter API key or endpoint detected under OpenAI provider. Switch to OpenRouter, or provide an OpenAI key.',
+      });
+      return;
+    }
+    if (selectedProviderId === 'openrouter' && (apiKeyInput.trim().startsWith('sk-proj-') || (customBaseUrl.trim() && customBaseUrl.includes('api.openai.com')))) {
+      setFormErrors({
+        apiKey: 'OpenAI API key or endpoint detected under OpenRouter provider. Switch to OpenAI, or provide an OpenRouter key.',
+      });
+      return;
+    }
+
+    const isCustom = isCustomMode;
 
     if (isCustom) {
       // Validate custom provider definition
@@ -623,18 +731,33 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     }
 
     // Built-in provider
-    if (!providerRegistry.getModelsForProvider(selectedProviderId).some((m) => m.id === selectedModelId)) {
+    const availableModels = providerRegistry.getModelsForProvider(selectedProviderId);
+    const activeModel = (selectedModelId && availableModels.some((m) => m.id === selectedModelId))
+      ? selectedModelId
+      : (availableModels[0]?.id || '');
+
+    if (!activeModel && selectedProviderId !== 'mock') {
       setFormErrors({ general: 'Selected model is unavailable. Fetch models and explicitly select an available model.' });
       return;
     }
+
+    // Save Base URL override if modified
+    try {
+      const defaultUrl = providerRegistry.getProvider(selectedProviderId).defaultBaseUrl;
+      const currentOverride = customBaseUrl.trim();
+      if (currentOverride && currentOverride !== defaultUrl) {
+        providerRegistry.setBaseUrlOverride(selectedProviderId, currentOverride);
+      } else {
+        providerRegistry.setBaseUrlOverride(selectedProviderId, undefined);
+      }
+    } catch {}
+
     if (apiKeyInput.trim()) {
       keyManager.setApiKey(selectedProviderId, apiKeyInput, persistInSession);
     } else if (selectedProviderId !== 'mock') {
       keyManager.clearApiKey(selectedProviderId);
     }
 
-    const availableModels = providerRegistry.getModelsForProvider(selectedProviderId);
-    const activeModel = selectedModelId || availableModels[0]?.id || '';
     providerRegistry.setActiveModel(selectedProviderId, activeModel);
     assistAgentService.setProvider(selectedProviderId, activeModel);
     onClose();
@@ -962,7 +1085,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
               {/* ─────────────────────────────────────────────────────────────
                   CUSTOM PROVIDER BUILDER FIELDS
                  ───────────────────────────────────────────────────────────── */}
-              {(selectedProviderId === 'custom' || isEditingExistingCustom) && (
+              {isCustomMode && (
                 <>
                   {/* Provider ID */}
                   <div className="space-y-1">
@@ -980,7 +1103,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                           return n;
                         });
                       }}
-                      disabled={isEditingExistingCustom}
+                      disabled={isEditingExistingCustom || BUILT_IN_CATALOG.some((c) => c.id === customProviderId)}
                       placeholder="e.g. myprovider"
                       data-testid="custom-provider-id-input"
                       className={`w-full rounded-md border ${
@@ -1058,7 +1181,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
               {/* ─────────────────────────────────────────────────────────────
                   BUILT-IN BASE URL (For OpenAI or OpenRouter proxy)
                  ───────────────────────────────────────────────────────────── */}
-              {selectedProviderId === 'openai' && (
+              {!isCustomMode && (selectedProviderId === 'openai' || selectedProviderId === 'openrouter') && (
                 <div className="space-y-1">
                   <label className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                     <Globe className="h-3 w-3 text-cyan-400" />
@@ -1067,13 +1190,18 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                   <input
                     type="text"
                     value={customBaseUrl}
-                    onChange={(e) => setCustomBaseUrl(e.target.value)}
-                    placeholder="https://api.openai.com/v1"
+                    onChange={(e) => {
+                      setCustomBaseUrl(e.target.value);
+                      setDiagnosticResult(null);
+                    }}
+                    placeholder={providerRegistry.getProvider(selectedProviderId).defaultBaseUrl}
                     className="w-full rounded-md border border-[#2e3046] bg-[#12131c] px-3 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500"
                   />
-                  <p className="text-[10px] text-slate-500">
-                    Direct browser requests to api.openai.com are blocked by browser CORS. Use OpenRouter for browser BYOK or route through a CORS proxy.
-                  </p>
+                  {selectedProviderId === 'openai' && (
+                    <p className="text-[10px] text-slate-500">
+                      Direct browser requests to api.openai.com are blocked by browser CORS. Use OpenRouter for browser BYOK or route through a CORS proxy.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -1088,7 +1216,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                       API Key {selectedProviderId !== 'custom' && !isEditingExistingCustom && <span className="text-rose-400">*</span>}
                     </label>
                     <span className="text-[10px] text-slate-500">
-                      {selectedProviderId === 'custom' || isEditingExistingCustom
+                      {isCustomMode
                         ? 'Optional for unauthenticated local endpoints'
                         : 'Stored in memory only'}
                     </span>
@@ -1125,6 +1253,35 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                     </div>
                   </div>
 
+                  {/* Provider / Destination Mismatch Warning Alerts */}
+                  {selectedProviderId === 'openai' && (apiKeyInput.trim().startsWith('sk-or-') || customBaseUrl.includes('openrouter.ai')) && (
+                    <div className="rounded-md border border-amber-500/50 bg-amber-950/40 p-2.5 text-xs text-amber-200 flex items-start gap-2 mt-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-amber-300">Provider & Key Mismatch Detected</p>
+                        <p className="text-[11px] text-amber-200/90">
+                          You have selected the OpenAI provider, but entered an OpenRouter API key (<code className="font-mono text-amber-300">sk-or-v1-...</code>) or OpenRouter endpoint.
+                          Please switch to the <strong>OpenRouter</strong> provider from the directory, or enter a valid OpenAI API key.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedProviderId === 'openrouter' && (apiKeyInput.trim().startsWith('sk-proj-') || (customBaseUrl && customBaseUrl.includes('api.openai.com'))) && (
+                    <div className="rounded-md border border-amber-500/50 bg-amber-950/40 p-2.5 text-xs text-amber-200 flex items-start gap-2 mt-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-amber-300">Provider & Key Mismatch Detected</p>
+                        <p className="text-[11px] text-amber-200/90">
+                          You have selected the OpenRouter provider, but entered an OpenAI API key (<code className="font-mono text-amber-300">sk-proj-...</code>) or OpenAI endpoint.
+                          Please switch to the <strong>OpenAI</strong> provider from the directory, or enter a valid OpenRouter API key.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {formErrors.apiKey && <p className="text-[10px] text-rose-400">{formErrors.apiKey}</p>}
+
                   <label className="flex items-center gap-2 pt-1 text-[11px] text-slate-400 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1140,7 +1297,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
               {/* ─────────────────────────────────────────────────────────────
                   MODELS SECTION
                  ───────────────────────────────────────────────────────────── */}
-              {selectedProviderId === 'custom' || isEditingExistingCustom ? (
+              {isCustomMode ? (
                 <div className="space-y-3 border-t border-[#26283d] pt-3">
                   <div className="flex items-center justify-between gap-2">
                     <div>
@@ -1444,7 +1601,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
               {/* ─────────────────────────────────────────────────────────────
                   CUSTOM HEADERS SECTION
                  ───────────────────────────────────────────────────────────── */}
-              {(selectedProviderId === 'custom' || isEditingExistingCustom) && (
+              {isCustomMode && (
                 <div className="space-y-2 border-t border-[#26283d] pt-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1520,7 +1677,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
               {/* ─────────────────────────────────────────────────────────────
                   ADVANCED CONFIGURATION (COLLAPSIBLE)
                  ───────────────────────────────────────────────────────────── */}
-              {(selectedProviderId === 'custom' || isEditingExistingCustom) && (
+              {isCustomMode && (
                 <div className="border-t border-[#26283d] pt-2">
                   <button
                     type="button"
@@ -1654,7 +1811,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                   Test Connection
                 </button>
 
-                {isEditingExistingCustom && (
+                {isEditingExistingCustom && !BUILT_IN_CATALOG.some((c) => c.id === customProviderId) && (
                   <button
                     type="button"
                     onClick={handleDeleteCustomProvider}

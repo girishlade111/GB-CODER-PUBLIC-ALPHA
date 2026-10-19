@@ -369,6 +369,7 @@ export class AgentEngine {
             apiKey,
             model: activeModel,
             signal: this.abortController?.signal,
+            baseUrl: providerRegistry.getBaseUrlOverride(activeProvider.id),
             tools: ToolRegistry.getAllTools(),
           },
           (chunk) => {

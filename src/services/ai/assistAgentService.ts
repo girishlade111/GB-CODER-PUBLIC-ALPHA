@@ -407,7 +407,12 @@ class AssistAgentService {
           apiKey,
           model: selectedModel,
           signal: this.abortController.signal,
-          tools: providerRegistry.getModelsForProvider(selectedProvider).find((m) => m.id === selectedModel)?.supportsToolCalling === false ? undefined : ToolRegistry.getAllTools(),
+          baseUrl: providerRegistry.getBaseUrlOverride(selectedProvider),
+          tools:
+            this.state.selectedMode === 'Ask' ||
+            providerRegistry.getModelsForProvider(selectedProvider).find((m) => m.id === selectedModel)?.supportsToolCalling === false
+              ? undefined
+              : ToolRegistry.getAllTools(),
         },
         (chunk) => {
           // If project switched while streaming, discard chunk to avoid cross-project pollution

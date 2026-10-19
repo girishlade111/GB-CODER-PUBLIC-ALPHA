@@ -25,40 +25,24 @@ import { discoverModels } from './modelDiscoveryService.ts';
 
 const OPENROUTER_MODELS: AiModelInfo[] = [
   {
-    id: 'anthropic/claude-3.5-sonnet',
-    name: 'Claude 3.5 Sonnet (OpenRouter)',
+    id: 'openai/gpt-4o-mini',
+    name: 'GPT-4o Mini (OpenRouter)',
     provider: 'openrouter',
-    contextWindow: 200000,
-    description: 'Premier coding and reasoning model',
+    contextWindow: 128000,
+    description: 'Fast, cost-efficient model with excellent coding intelligence',
     recommended: true,
     supportsStreaming: true,
-  },
-  {
-    id: 'deepseek/deepseek-r1',
-    name: 'DeepSeek R1 (OpenRouter)',
-    provider: 'openrouter',
-    contextWindow: 64000,
-    description: 'Advanced reasoning model with deep thinking traces',
-    recommended: false,
-    supportsStreaming: true,
+    supportsToolCalling: true,
   },
   {
     id: 'openai/gpt-4o',
     name: 'GPT-4o (OpenRouter)',
     provider: 'openrouter',
     contextWindow: 128000,
-    description: 'Flagship multimodal OpenAI model via OpenRouter',
+    description: 'Flagship multimodal OpenAI model via OpenRouter gateway',
     recommended: false,
     supportsStreaming: true,
-  },
-  {
-    id: 'openai/gpt-4o-mini',
-    name: 'GPT-4o Mini (OpenRouter)',
-    provider: 'openrouter',
-    contextWindow: 128000,
-    description: 'Fast and lightweight model via OpenRouter',
-    recommended: false,
-    supportsStreaming: true,
+    supportsToolCalling: true,
   },
   {
     id: 'meta-llama/llama-3.3-70b-instruct',
@@ -68,6 +52,27 @@ const OPENROUTER_MODELS: AiModelInfo[] = [
     description: 'Leading open source instruction tuned model',
     recommended: false,
     supportsStreaming: true,
+    supportsToolCalling: true,
+  },
+  {
+    id: 'deepseek/deepseek-chat',
+    name: 'DeepSeek V3 (OpenRouter)',
+    provider: 'openrouter',
+    contextWindow: 64000,
+    description: 'Cost-effective high reasoning open architecture model',
+    recommended: false,
+    supportsStreaming: true,
+    supportsToolCalling: true,
+  },
+  {
+    id: 'anthropic/claude-3.5-sonnet',
+    name: 'Claude 3.5 Sonnet (OpenRouter)',
+    provider: 'openrouter',
+    contextWindow: 200000,
+    description: 'Legacy model ID for Claude 3.5 Sonnet',
+    recommended: false,
+    supportsStreaming: true,
+    supportsToolCalling: true,
   },
 ];
 
@@ -147,6 +152,17 @@ class ProviderRegistry {
     );
     this.registerProvider(new MockProvider());
     this.loadCustomProviders();
+    for (const id of ['openrouter', 'openai', 'custom']) {
+      try {
+        const savedOverride = localStorage.getItem(`gb-assist-base-url-override:${id}`);
+        if (savedOverride) {
+          const p = this.providers.get(id);
+          if (p && 'setBaseUrlOverride' in p && typeof (p as any).setBaseUrlOverride === 'function') {
+            (p as any).setBaseUrlOverride(savedOverride);
+          }
+        }
+      } catch { /* optional persistence */ }
+    }
     for (const id of ['openrouter', 'openai']) {
       try {
         const cached = JSON.parse(localStorage.getItem(`gb-assist-model-catalog:${id}`) || 'null');
@@ -324,6 +340,28 @@ class ProviderRegistry {
     return 32000;
   }
 
+  public setBaseUrlOverride(id: AiProviderId, url?: string): void {
+    const provider = this.providers.get(id);
+    if (provider && 'setBaseUrlOverride' in provider && typeof (provider as any).setBaseUrlOverride === 'function') {
+      (provider as any).setBaseUrlOverride(url);
+    }
+    try {
+      if (url) {
+        localStorage.setItem(`gb-assist-base-url-override:${id}`, url);
+      } else {
+        localStorage.removeItem(`gb-assist-base-url-override:${id}`);
+      }
+    } catch { /* optional persistence */ }
+  }
+
+  public getBaseUrlOverride(id: AiProviderId): string | undefined {
+    try {
+      return localStorage.getItem(`gb-assist-base-url-override:${id}`) || undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   public validateCustomEndpoint(url: string): { valid: boolean; error?: string } {
     return validateEndpointUrl(url);
   }
@@ -349,7 +387,8 @@ class ProviderRegistry {
     }
     const key = keyManager.getApiKey(id);
     const targetModel = (modelId || '').trim() || this.getActiveModel(id);
-    return provider.testConnection(key, baseUrl, targetModel, customHeaders, consentToInference);
+    const resolvedBaseUrl = baseUrl || this.getBaseUrlOverride(id);
+    return provider.testConnection(key, resolvedBaseUrl, targetModel, customHeaders, consentToInference);
   }
 
   public applyDiscoveredModels(id: AiProviderId, models: DiscoveredModel[], persist = true): void {
