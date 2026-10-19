@@ -95,6 +95,10 @@ export interface DiscoveredModel {
   description?: string;
   contextWindow?: number;
   ownedBy?: string;
+  supportsToolCalling?: boolean;
+  inputModalities?: string[];
+  outputModalities?: string[];
+  pricing?: { prompt?: string; completion?: string };
 }
 
 export interface ModelDiscoveryResult {

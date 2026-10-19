@@ -99,6 +99,7 @@ export class AgentEngine {
     prompt: string,
     context: {
       project: MultiFileProject;
+      attachedPaths?: string[];
       projectId: string;
       activePath?: string | null;
       customBudget?: Partial<AgentBudgetConfig>;
@@ -213,6 +214,7 @@ export class AgentEngine {
   private async runAgentLoop(
     context: {
       project: MultiFileProject;
+      attachedPaths?: string[];
       projectId: string;
       activePath?: string | null;
       onFileChange?: (path: string, content: string) => void;
@@ -228,6 +230,14 @@ export class AgentEngine {
     const activeProvider = providerRegistry.getActiveProvider();
     const activeModel = providerRegistry.getActiveModel(activeProvider.id);
     const apiKey = keyManager.getApiKey(activeProvider.id);
+    const modelInfo = activeProvider.getAvailableModels().find((m) => m.id === activeModel);
+    if (modelInfo?.supportsToolCalling === false) {
+      task.status = 'failed';
+      task.error = `Selected model "${activeModel}" does not support tool calling. Select a tool-capable model for Agent Mode.`;
+      this.persistTask(task);
+      this.notify();
+      return;
+    }
 
     // Prepare system instructions for autonomous agent
     const agentSystemPrompt =
@@ -247,9 +257,9 @@ export class AgentEngine {
     const assembledContext = ContextBuilder.assembleContext(
       context.project,
       context.activePath || null,
-      [],
+      context.attachedPaths || [],
       task.prompt,
-      32000
+      Math.min(16000, Math.floor(ContextBudget.calculateBudget(providerRegistry.getModelContextLimit(activeProvider.id, activeModel), { hasTools: true, maxOutputTokens: 4096 }).effectiveInputBudget / 2))
     );
 
     const projectFilesSummary = (context.project.files || [])
@@ -261,7 +271,7 @@ export class AgentEngine {
     const conversationMessages: ProviderChatMessage[] = [
       {
         role: 'system',
-        content: `${agentSystemPrompt}\n\nProject Structure:\n${projectFilesSummary}\n\n${assembledContext.summary}`,
+        content: `${agentSystemPrompt}\n\nProject Structure:\n${projectFilesSummary}\n\n${ContextBuilder.buildSystemPrompt(assembledContext, context.project.projectType)}`,
       },
       {
         role: 'user',
@@ -831,6 +841,7 @@ export class AgentEngine {
   public retryTask(
     context: {
       project: MultiFileProject;
+      attachedPaths?: string[];
       projectId: string;
       activePath?: string | null;
       onFileChange?: (path: string, content: string) => void;

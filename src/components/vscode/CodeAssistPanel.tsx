@@ -26,7 +26,6 @@ import {
   Brain,
   Sliders,
   FileCode,
-  Plus,
   FileText,
   Copy,
   ShieldAlert,
@@ -40,7 +39,9 @@ import {
 } from '../../services/ai/types';
 import { assistAgentService } from '../../services/ai/assistAgentService';
 import { providerRegistry } from '../../services/ai/providerRegistry';
-import { ContextBuilder, isSensitiveFilePath } from '../../services/ai/contextBuilder';
+import { ContextBudget } from '../../services/ai/contextBudget';
+import { ContextBuilder } from '../../services/ai/contextBuilder';
+import { AssistContextComposer } from './AssistContextComposer';
 import { AiProviderSettingsModal } from './AiProviderSettingsModal';
 import { AiMonacoDiffModal } from './AiMonacoDiffModal';
 
@@ -48,6 +49,7 @@ interface CodeAssistPanelProps {
   project: MultiFileProject;
   projectId?: string;
   activePath?: string | null;
+  getEditorContent?: (path: string) => string | undefined;
   isEditorDirty?: (path: string) => boolean;
   onApplyFiles?: (files: Array<{ path: string; content: string }>) => void;
   onClose?: () => void;
@@ -89,6 +91,7 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
   projectId,
   activePath,
   isEditorDirty,
+  getEditorContent,
   onApplyFiles,
   onClose,
 }) => {
@@ -107,7 +110,8 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
   const [inputPrompt, setInputPrompt] = useState('');
   const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
-  const [isContextPickerOpen, setIsContextPickerOpen] = useState(false);
+  const [modelSearch, setModelSearch] = useState('');
+
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [diffModalState, setDiffModalState] = useState<{
     isOpen: boolean;
@@ -124,8 +128,12 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
   const [expandedReasoning, setExpandedReasoning] = useState<Record<string, boolean>>({});
   const [showHistoryView, setShowHistoryView] = useState(false);
 
+  useEffect(() => { setInputPrompt(''); }, [state.currentProjectId, state.activeSessionId]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const currentProject = (): MultiFileProject => ({ ...project, files: project.files.map((file) => ({
+    ...file, content: getEditorContent?.(file.path) ?? file.content,
+  })) });
 
   const scrollToBottom = useCallback((smooth = true) => {
     messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
@@ -135,23 +143,24 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
     scrollToBottom();
   }, [activeSession?.messages.length, state.isGenerating, state.currentStreamContent, scrollToBottom]);
 
+  const contextBudget = Math.min(16000, Math.floor(ContextBudget.calculateBudget(
+    providerRegistry.getModelContextLimit(state.selectedProvider, state.selectedModel),
+    { hasTools: true, maxOutputTokens: 4096 }
+  ).effectiveInputBudget / 2));
+
   // Handle Send Prompt
   const handleSend = async () => {
     if (!inputPrompt.trim() || state.isGenerating) return;
+    const preview = ContextBuilder.assembleContext(currentProject(), activePath, state.attachedContextPaths, inputPrompt, contextBudget);
+    if ((preview.summary.includes('omitted') || preview.files.some((f) => f.isTruncated)) &&
+      !window.confirm(`Review bounded context for ${providerRegistry.getProvider(state.selectedProvider).name}: ${preview.summary}. Included paths: ${preview.files.map((f) => f.path).join(', ')}. Send this limited context?`)) return;
     const promptToSend = inputPrompt.trim();
     setInputPrompt('');
-    await assistAgentService.submitPrompt(promptToSend, project, activePath, {
+    await assistAgentService.submitPrompt(promptToSend, currentProject(), activePath, {
       onChangeFile: (p, c) => onApplyFiles?.([{ path: p, content: c }]),
       onCreateFile: (p, c) => onApplyFiles?.([{ path: p, content: c }]),
       isEditorDirty,
     });
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
   };
 
   const toggleReasoning = (msgId: string) => {
@@ -260,7 +269,8 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
     project,
     activePath,
     state.attachedContextPaths,
-    inputPrompt
+    inputPrompt,
+    contextBudget
   );
 
   const availableModels = providerRegistry.getModelsForProvider(state.selectedProvider);
@@ -352,14 +362,7 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={() => setIsContextPickerOpen(!isContextPickerOpen)}
-              className="flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 hover:underline"
-            >
-              <Plus className="h-3 w-3" />
-              <span>Context</span>
-            </button>
+
           </div>
         </div>
 
@@ -398,53 +401,7 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
           </div>
         )}
 
-        {/* File Picker Dropdown (when +Context is clicked) */}
-        {isContextPickerOpen && (
-          <div className="mt-2 rounded-lg border border-[#2e3046] bg-[#18192c] p-2 space-y-1 max-h-48 overflow-y-auto">
-            <div className="flex items-center justify-between pb-1 border-b border-white/5 text-[10px] font-bold text-slate-400 uppercase">
-              <span>Attach File to Context</span>
-              <button
-                type="button"
-                onClick={() => setIsContextPickerOpen(false)}
-                className="text-slate-500 hover:text-white"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-            {project.files.map((f) => {
-              const isSensitive = isSensitiveFilePath(f.path);
-              const isSelected = state.attachedContextPaths.includes(f.path) || f.path === activePath;
 
-              if (isSensitive) {
-                return (
-                  <div
-                    key={f.path}
-                    className="flex items-center justify-between px-2 py-1 rounded text-[10px] font-mono text-slate-500 bg-red-950/20 cursor-not-allowed opacity-60"
-                    title="Protected secret file: excluded from AI context for security"
-                  >
-                    <span className="truncate line-through">{f.path}</span>
-                    <span className="text-[8px] text-amber-500/80 uppercase font-sans">Protected</span>
-                  </div>
-                );
-              }
-
-              return (
-                <div
-                  key={f.path}
-                  onClick={() => {
-                    assistAgentService.toggleAttachedContextPath(f.path);
-                  }}
-                  className={`flex items-center justify-between px-2 py-1 rounded cursor-pointer text-[10px] font-mono transition-colors ${
-                    isSelected ? 'bg-cyan-500/10 text-cyan-300' : 'hover:bg-white/5 text-slate-400'
-                  }`}
-                >
-                  <span className="truncate">{f.path}</span>
-                  {isSelected && <Check className="h-3 w-3 text-cyan-400" />}
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* ── Main Chat Scroll Body ── */}
@@ -593,6 +550,12 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                         <div className="whitespace-pre-wrap font-sans leading-relaxed">
                           {msg.content}
                         </div>
+
+                        {msg.error && !msg.agentTaskState && <button type="button" className="text-cyan-300 underline"
+                          onClick={() => {
+                            const prior = activeSession.messages.slice(0, activeSession.messages.findIndex((item) => item.id === msg.id)).reverse().find((item) => item.role === 'user');
+                            if (prior) setInputPrompt(prior.content);
+                          }}>Retry prompt (review before sending)</button>}
 
                         {/* Autonomous Task Plan & Progress Card (Phase 3C) */}
                         {(msg.agentTaskState?.plan || msg.plan) && (
@@ -1059,16 +1022,11 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
       <div className="shrink-0 p-2.5 bg-[#141520] border-t border-[#262636]">
         <div className="relative rounded-lg border border-[#2e3046] focus-within:border-cyan-500 bg-[#12131c] shadow-md transition-colors p-2">
           {/* Textarea */}
-          <textarea
-            ref={textareaRef}
-            rows={2}
-            value={inputPrompt}
-            onChange={(e) => setInputPrompt(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask GB Assist, type @ to mention files... (Enter to send, Shift+Enter for new line)"
-            data-testid="ai-prompt-input"
-            className="w-full resize-none bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none max-h-32"
-          />
+          <AssistContextComposer key={`${state.currentProjectId}:${state.activeSessionId}`}
+            project={currentProject()} paths={state.attachedContextPaths} prompt={inputPrompt}
+            setPrompt={setInputPrompt} toggle={(path) => assistAgentService.toggleAttachedContextPath(path)}
+            clear={() => assistAgentService.clearAttachedContext()} onSend={handleSend}
+            provider={currentProviderObj.name} budgetTokens={contextBudget} activePath={activePath} isDirty={isEditorDirty} />
 
           {/* Control Bar inside input container */}
           <div className="flex items-center justify-between pt-1.5 border-t border-white/5 select-none">
@@ -1132,7 +1090,7 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                 </button>
 
                 {isModelMenuOpen && (
-                  <div className="absolute bottom-8 left-0 z-50 w-64 rounded-lg border border-[#262636] bg-[#181824] p-1 shadow-2xl text-xs space-y-0.5">
+                  <div className="absolute bottom-8 left-0 z-50 w-64 max-h-80 overflow-auto rounded-lg border border-[#262636] bg-[#181824] p-1 shadow-2xl text-xs space-y-0.5">
                     <div className="px-2 py-1 text-[10px] font-bold text-slate-500 uppercase flex items-center justify-between">
                       <span>Available Models</span>
                       <button
@@ -1146,7 +1104,8 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                         Settings
                       </button>
                     </div>
-                    {availableModels.map((mod) => (
+                    <input aria-label="Search available models" value={modelSearch} onChange={(e) => setModelSearch(e.target.value)} className="w-full bg-[#12131c] p-2" placeholder="Search name or model ID" />
+                    {availableModels.filter((mod) => `${mod.name} ${mod.id}`.toLowerCase().includes(modelSearch.toLowerCase())).slice(0, 100).map((mod) => (
                       <div
                         key={mod.id}
                         onClick={() => {

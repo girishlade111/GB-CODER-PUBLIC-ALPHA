@@ -1537,6 +1537,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               project={project}
               projectId={effectiveProjectId}
               activePath={activePath}
+              getEditorContent={(filePath) => {
+                if (activePathMirrorRef.current === filePath && editorRef.current) return editorRef.current.getValue();
+                return projectFilesMirrorRef.current.find((f) => f.path === filePath)?.content;
+              }}
               isEditorDirty={(filePath) => {
                 const clean = filePath.replace(/\\/g, '/').replace(/^\/+/, '');
                 return dirtyPathsMirrorRef.current.has(clean) || dirtyPathsMirrorRef.current.has(filePath);

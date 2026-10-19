@@ -31,6 +31,7 @@ import { agentEngine } from './agent/agentEngine.ts';
 
 class AssistAgentService {
   private state: CodeAssistState;
+  private generationId = 0;
   private listeners = new Set<() => void>();
   private abortController: AbortController | null = null;
 
@@ -49,12 +50,12 @@ class AssistAgentService {
       ? 'openrouter'
       : 'mock';
 
-    const defaultModel =
-      defaultProvider === 'gemini'
-        ? 'gemini-2.5-flash'
-        : defaultProvider === 'openrouter'
-        ? 'anthropic/claude-3.5-sonnet'
-        : 'mock-coder-fast';
+    let selectedProvider = defaultProvider;
+    try {
+      const saved = localStorage.getItem('gb-assist-active-provider');
+      if (saved && providerRegistry.getAllProviders().some((p) => p.id === saved)) selectedProvider = saved;
+    } catch { /* optional non-secret preference */ }
+    const defaultModel = providerRegistry.getActiveModel(selectedProvider);
 
     return {
       currentProjectId: projectId,
@@ -66,7 +67,7 @@ class AssistAgentService {
       currentReasoning: '',
       currentStreamContent: '',
       selectedMode: 'Code',
-      selectedProvider: defaultProvider,
+      selectedProvider,
       selectedModel: defaultModel,
       attachedContextPaths: [],
       tokenCount: {
@@ -117,6 +118,7 @@ class AssistAgentService {
       this.abortController = null;
     }
 
+    this.generationId++;
     const sessions = ConversationStore.loadSessions(projectId);
     this.state = {
       ...this.state,
@@ -142,6 +144,8 @@ class AssistAgentService {
   }
 
   public createNewSession(): string {
+    this.cancelGeneration();
+    this.clearAttachedContext();
     const newSession = ConversationStore.createNewSession(this.state.currentProjectId);
     this.state = {
       ...this.state,
@@ -156,6 +160,8 @@ class AssistAgentService {
 
   public switchSession(sessionId: string): void {
     if (this.state.activeSessionId === sessionId) return;
+    this.cancelGeneration();
+    this.clearAttachedContext();
     this.state = {
       ...this.state,
       activeSessionId: sessionId,
@@ -182,6 +188,8 @@ class AssistAgentService {
   }
 
   public setProvider(providerId: AiProviderId, modelId?: string): void {
+    this.cancelGeneration();
+    agentEngine.stopAgent('Provider changed');
     const models = providerRegistry.getModelsForProvider(providerId);
     let resolvedModel = '';
     if (modelId && models.some((m) => m.id === modelId)) {
@@ -195,6 +203,7 @@ class AssistAgentService {
     }
 
     providerRegistry.setActiveProvider(providerId);
+    try { localStorage.setItem('gb-assist-active-provider', providerId); } catch { /* optional preference */ }
     if (resolvedModel) {
       providerRegistry.setActiveModel(providerId, resolvedModel);
     }
@@ -210,6 +219,8 @@ class AssistAgentService {
   public setModel(modelId: string, providerId?: AiProviderId): void {
     const trimmed = (modelId || '').trim();
     if (!trimmed) return;
+    this.cancelGeneration();
+    agentEngine.stopAgent('Model changed');
     const targetProvider = providerId || this.state.selectedProvider;
     providerRegistry.setActiveProvider(targetProvider);
     providerRegistry.setActiveModel(targetProvider, trimmed);
@@ -236,6 +247,15 @@ class AssistAgentService {
   }
 
   public cancelGeneration(): void {
+    this.generationId++;
+    if (this.state.isGenerating && this.state.currentStreamContent.trim() && this.state.selectedMode !== 'Agent') {
+      const partial: CodeAssistMessage = { id: `partial-${Date.now()}-${this.generationId}`, role: 'assistant',
+        content: this.state.currentStreamContent, timestamp: Date.now(), providerId: this.state.selectedProvider,
+        modelId: this.state.selectedModel, error: 'Generation stopped; partial response preserved.' };
+      this.state.sessions = this.state.sessions.map((session) => session.id === this.state.generatingSessionId
+        ? { ...session, messages: [...session.messages, partial], updatedAt: Date.now() } : session);
+      ConversationStore.saveSessions(this.state.currentProjectId, this.state.sessions);
+    }
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
@@ -245,6 +265,8 @@ class AssistAgentService {
       isGenerating: false,
       generatingSessionId: null,
       progressStep: 'Generation stopped',
+      currentStreamContent: '',
+      currentReasoning: '',
     };
     this.notify();
   }
@@ -277,6 +299,9 @@ class AssistAgentService {
       return;
     }
 
+    const generationId = ++this.generationId;
+    const selectedProvider = this.state.selectedProvider;
+    const selectedModel = this.state.selectedModel;
     const targetProjectId = this.state.currentProjectId;
     const sessionId = this.state.activeSessionId;
     const userMsgId = `msg-${Date.now()}`;
@@ -347,13 +372,15 @@ class AssistAgentService {
 
       // 5. Build conversation history with Atomic Tool Block preservation
       const activeSession = this.getActiveSession();
-      const rawHistory = activeSession.messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-        toolCalls: m.toolCalls,
-        toolCallId: (m as any).toolCallId,
-        name: (m as any).name,
-      }));
+      const rawHistory = activeSession.messages.flatMap((m): import('./providers/baseProvider').ProviderChatMessage[] => {
+        const resolved = m.toolCalls?.length && m.toolCalls.every((call) => call.status === 'completed' || call.status === 'failed');
+        if (m.role === 'assistant' && resolved) return [
+          { role: 'assistant', content: m.content, toolCalls: m.toolCalls },
+          ...m.toolCalls!.map((call) => ({ role: 'tool' as const, toolCallId: call.id, name: call.toolName,
+            content: JSON.stringify(call.error ? { error: call.error } : call.result ?? {}) })),
+        ];
+        return [{ role: m.role, content: m.content, toolCallId: m.toolCallId, name: m.name }];
+      });
 
       // Prune history to fit available budget without ever severing tool calls from tool responses
       const prunedPrior = ContextBudget.pruneConversationHistory(
@@ -378,13 +405,13 @@ class AssistAgentService {
         apiMessages,
         {
           apiKey,
-          model: this.state.selectedModel,
+          model: selectedModel,
           signal: this.abortController.signal,
-          tools: ToolRegistry.getAllTools(),
+          tools: providerRegistry.getModelsForProvider(selectedProvider).find((m) => m.id === selectedModel)?.supportsToolCalling === false ? undefined : ToolRegistry.getAllTools(),
         },
         (chunk) => {
           // If project switched while streaming, discard chunk to avoid cross-project pollution
-          if (this.state.currentProjectId !== targetProjectId) return;
+          if (generationId !== this.generationId || this.state.currentProjectId !== targetProjectId) return;
 
           if (chunk.contentDelta) {
             streamContent += chunk.contentDelta;
@@ -398,6 +425,8 @@ class AssistAgentService {
           }
         }
       );
+
+      if (generationId !== this.generationId) return;
 
       // Update actual token metrics if returned by provider
       if (result.usage && result.usage.totalTokens) {
@@ -415,6 +444,7 @@ class AssistAgentService {
 
       if (result.toolCalls && result.toolCalls.length > 0) {
         for (const rawCall of result.toolCalls) {
+          if (generationId !== this.generationId) return;
           const toolCall = ToolExecutor.createToolCallRecord(rawCall.toolName, rawCall.args, rawCall.id);
 
           if (toolCall.permission === 'read') {
@@ -458,6 +488,27 @@ class AssistAgentService {
 
           processedToolCalls.push(toolCall);
         }
+      }
+
+      if (processedToolCalls.length && processedToolCalls.every((call) => call.permission === 'read')) {
+        const continuation = await provider.streamChat([
+          ...apiMessages,
+          { role: 'assistant', content: result.fullContent, toolCalls: processedToolCalls },
+          ...processedToolCalls.map((call) => ({ role: 'tool' as const, toolCallId: call.id, name: call.toolName,
+            content: JSON.stringify(call.error ? { error: call.error } : call.result) })),
+        ], { apiKey, model: selectedModel, signal: this.abortController!.signal }, (chunk) => {
+          if (generationId !== this.generationId) return;
+          if (chunk.contentDelta) {
+            streamContent += chunk.contentDelta;
+            this.state.currentStreamContent = streamContent;
+            this.notify();
+          }
+        });
+        if (generationId !== this.generationId) return;
+        result.fullContent = [result.fullContent, continuation.fullContent].filter(Boolean).join('\n');
+      }
+      if (!result.fullContent.trim() && processedToolCalls.length) {
+        result.fullContent = 'Tool actions are shown below. Approve pending actions or use Agent Mode for a multi-step workflow.';
       }
 
       // 6. Parse structured edit proposals from response (for XML tags and tool proposals)
@@ -528,6 +579,7 @@ class AssistAgentService {
       ConversationStore.saveSessions(this.state.currentProjectId, finalSessions);
       this.notify();
     } catch (err: unknown) {
+      if (generationId !== this.generationId) return;
       if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('aborted'))) {
         this.cancelGeneration();
         return;
@@ -537,13 +589,13 @@ class AssistAgentService {
         return;
       }
 
-      console.error('[AssistAgentService] Generation failed:', err);
+
       const errorMsg = err instanceof Error ? err.message : String(err);
 
       const assistantErrorMsg: CodeAssistMessage = {
         id: `msg-${Date.now() + 1}`,
         role: 'assistant',
-        content: `⚠️ **AI Request Error**\n\n${errorMsg}`,
+        content: `${this.state.currentStreamContent ? this.state.currentStreamContent + '\n\n' : ''}⚠️ **AI Request Error**\n\n${errorMsg}`,
         timestamp: Date.now(),
         providerId: this.state.selectedProvider,
         modelId: this.state.selectedModel,
@@ -574,7 +626,7 @@ class AssistAgentService {
       ConversationStore.saveSessions(this.state.currentProjectId, finalSessions);
       this.notify();
     } finally {
-      this.abortController = null;
+      if (generationId === this.generationId) this.abortController = null;
     }
   }
 
@@ -887,7 +939,7 @@ class AssistAgentService {
 
     // Sync agentEngine state updates to assistantMsg
     const unsubscribe = agentEngine.subscribe((agentTask) => {
-      if (!agentTask) return;
+      if (!agentTask || this.state.currentProjectId !== effectiveProjectId || this.state.activeSessionId !== sessionId) return;
 
       const currentSession = this.getActiveSession();
       const updatedMessages = currentSession.messages.map((m) => {
@@ -947,6 +999,7 @@ class AssistAgentService {
         trimmed,
         {
           project: options.project,
+          attachedPaths: [...this.state.attachedContextPaths],
           projectId: effectiveProjectId,
           activePath: options.activePath,
           onFileChange: options.onChangeFile,
@@ -956,10 +1009,12 @@ class AssistAgentService {
         {
           onStateChange: () => {},
           onStreamContent: (chunk) => {
+            if (this.state.currentProjectId !== effectiveProjectId || this.state.activeSessionId !== sessionId) return;
             this.state.currentStreamContent += chunk;
             this.notify();
           },
           onStreamReasoning: (chunk) => {
+            if (this.state.currentProjectId !== effectiveProjectId || this.state.activeSessionId !== sessionId) return;
             this.state.currentReasoning += chunk;
             this.notify();
           },

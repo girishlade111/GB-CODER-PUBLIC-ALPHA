@@ -6,7 +6,7 @@
  * - Bearer authentication and permitted custom headers
  * - Standard OpenAI/Mistral response normalization ({ data: [{ id }] })
  * - Status code classification (400, 401, 403, 404, 405, 429, 500, CORS, Network, Timeout)
- * - Safe deduplication and bounds-checking (max 1,000 models, 2MB payload)
+ * - Safe deduplication and bounds-checking (max 5,000 models, 8MB payload)
  * - AbortController timeout and manual cancellation support
  * - Zero billable inference probe execution
  */
@@ -22,8 +22,8 @@ import {
   redactSecretsFromText,
 } from './providers/openaiCompatibleProvider.ts';
 
-const MAX_DISCOVERY_MODELS = 1000;
-const MAX_RESPONSE_BYTES = 2 * 1024 * 1024; // 2MB
+const MAX_DISCOVERY_MODELS = 5000;
+const MAX_RESPONSE_BYTES = 8 * 1024 * 1024; // 8MB
 const DEFAULT_TIMEOUT_MS = 15000;
 
 export interface DiscoverModelsParams {
@@ -137,10 +137,6 @@ export async function discoverModels(params: DiscoverModelsParams): Promise<Mode
       redirect: 'manual',
     });
 
-    clearTimeout(timeoutId);
-    if (externalSignal) {
-      externalSignal.removeEventListener('abort', combinedAbortHandler);
-    }
 
     // Check for redirect rejection
     if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
@@ -272,7 +268,7 @@ export async function discoverModels(params: DiscoverModelsParams): Promise<Mode
         return {
           success: false,
           models: [],
-          error: 'Model list payload exceeded maximum allowed response size (2MB).',
+          error: 'Model list payload exceeded maximum allowed response size (8MB).',
           errorCategory: 'malformed',
           suggestedAction: 'Use manual model entry to specify desired models.',
         };
@@ -359,6 +355,8 @@ export async function discoverModels(params: DiscoverModelsParams): Promise<Mode
           contextWindow = m.max_context_tokens;
         }
 
+        if (!contextWindow && typeof m.max_context_length === 'number' && m.max_context_length > 0) contextWindow = m.max_context_length;
+
         if (typeof m.owned_by === 'string' && m.owned_by.trim()) {
           ownedBy = m.owned_by.trim();
         }
@@ -367,7 +365,18 @@ export async function discoverModels(params: DiscoverModelsParams): Promise<Mode
       if (!id || seenIds.has(id)) continue;
       seenIds.add(id);
 
+      const metadata = (typeof item === 'object' && item ? item : {}) as {
+        supported_parameters?: string[];
+        capabilities?: { function_calling?: boolean };
+        architecture?: { input_modalities?: unknown[]; output_modalities?: unknown[] };
+        pricing?: { prompt?: string; completion?: string };
+      };
       models.push({
+        supportsToolCalling: Array.isArray(metadata.supported_parameters) ? metadata.supported_parameters.includes('tools') :
+          typeof metadata.capabilities?.function_calling === 'boolean' ? metadata.capabilities.function_calling : undefined,
+        inputModalities: Array.isArray(metadata.architecture?.input_modalities) ? metadata.architecture.input_modalities.filter((m: unknown) => typeof m === 'string') : undefined,
+        outputModalities: Array.isArray(metadata.architecture?.output_modalities) ? metadata.architecture.output_modalities.filter((m: unknown) => typeof m === 'string') : undefined,
+        pricing: metadata.pricing ? { prompt: metadata.pricing.prompt, completion: metadata.pricing.completion } : undefined,
         id,
         name,
         description,
@@ -392,10 +401,6 @@ export async function discoverModels(params: DiscoverModelsParams): Promise<Mode
       httpStatus: response.status,
     };
   } catch (err: unknown) {
-    clearTimeout(timeoutId);
-    if (externalSignal) {
-      externalSignal.removeEventListener('abort', combinedAbortHandler);
-    }
 
     if (err instanceof Error) {
       if (err.name === 'AbortError' || err.message.includes('abort') || err.message.includes('timed out')) {
@@ -429,5 +434,8 @@ export async function discoverModels(params: DiscoverModelsParams): Promise<Mode
       errorCategory: 'network',
       suggestedAction: 'Check your internet connection, endpoint Base URL, and CORS settings.',
     };
+  } finally {
+    clearTimeout(timeoutId);
+    externalSignal?.removeEventListener('abort', combinedAbortHandler);
   }
 }

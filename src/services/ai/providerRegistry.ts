@@ -12,6 +12,7 @@ import {
   ModelDiscoveryResult,
   ProviderCatalogEntry,
   CustomProviderDefinition,
+  DiscoveredModel,
 } from './types.ts';
 import { IAiProvider } from './providers/baseProvider.ts';
 import { OpenAiCompatibleProvider, validateEndpointUrl } from './providers/openaiCompatibleProvider.ts';
@@ -146,6 +147,14 @@ class ProviderRegistry {
     );
     this.registerProvider(new MockProvider());
     this.loadCustomProviders();
+    for (const id of ['openrouter', 'openai']) {
+      try {
+        const cached = JSON.parse(localStorage.getItem(`gb-assist-model-catalog:${id}`) || 'null');
+        if (cached?.models?.length && Date.now() - cached.time < 86400000) this.applyDiscoveredModels(id, cached.models, false);
+        const selected = localStorage.getItem(`gb-assist-selected-model:${id}`);
+        if (selected) this.activeModelMap.set(id, selected);
+      } catch { /* Storage unavailable or invalid cache: use bundled fallback. */ }
+    }
   }
 
   public loadCustomProviders(): void {
@@ -184,6 +193,10 @@ class ProviderRegistry {
 
     this.registerProvider(provider);
     this.customProviderIds.add(def.id);
+    try {
+      const selected = localStorage.getItem(`gb-assist-selected-model:${def.id}`);
+      if (selected) this.activeModelMap.set(def.id, selected);
+    } catch { /* optional preference */ }
   }
 
   public registerCustomProvider(def: CustomProviderDefinition): { success: boolean; error?: string } {
@@ -253,6 +266,7 @@ class ProviderRegistry {
 
   public setActiveModel(providerId: AiProviderId, modelId: string): void {
     this.activeModelMap.set(providerId, modelId);
+    try { localStorage.setItem(`gb-assist-selected-model:${providerId}`, modelId); } catch { /* optional persistence */ }
   }
 
   public getActiveProvider(): IAiProvider {
@@ -333,9 +347,21 @@ class ProviderRegistry {
         errorCategory: 'config',
       };
     }
-    const key = keyManager.getApiKey(id) || keyManager.getApiKey('custom');
+    const key = keyManager.getApiKey(id);
     const targetModel = (modelId || '').trim() || this.getActiveModel(id);
     return provider.testConnection(key, baseUrl, targetModel, customHeaders, consentToInference);
+  }
+
+  public applyDiscoveredModels(id: AiProviderId, models: DiscoveredModel[], persist = true): void {
+    const provider = this.providers.get(id);
+    if (!(provider instanceof OpenAiCompatibleProvider)) return;
+    provider.setModels(models.map((m) => ({
+      id: m.id, name: m.name, provider: id, contextWindow: m.contextWindow || 0,
+      description: m.description || '', supportsStreaming: true, supportsToolCalling: m.supportsToolCalling,
+    })));
+    if (persist) {
+      try { localStorage.setItem(`gb-assist-model-catalog:${id}`, JSON.stringify({ time: Date.now(), models })); } catch { /* optional cache */ }
+    }
   }
 
   public async fetchModelsForProvider(
@@ -345,7 +371,7 @@ class ProviderRegistry {
     customHeaders?: Record<string, string>,
     signal?: AbortSignal
   ): Promise<ModelDiscoveryResult> {
-    const key = apiKey !== undefined ? apiKey : (keyManager.getApiKey(id) || keyManager.getApiKey('custom'));
+    const key = apiKey !== undefined ? apiKey : (keyManager.getApiKey(id));
     const provider = this.providers.get(id);
 
     if (provider && typeof provider.fetchAvailableModels === 'function') {

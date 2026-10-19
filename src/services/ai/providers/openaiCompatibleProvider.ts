@@ -150,6 +150,8 @@ export function validateEndpointUrl(endpointUrl: string): { valid: boolean; erro
     return { valid: false, error: `Unsupported protocol "${parsed.protocol}". Only HTTP and HTTPS are supported.` };
   }
 
+  if (parsed.username || parsed.password || parsed.search || parsed.hash) return { valid: false, error: 'Endpoint URLs cannot contain credentials, query parameters or fragments.' };
+
   const hostname = parsed.hostname.toLowerCase();
 
   // Never treat 0.0.0.0 as an approved browser-client loopback destination
@@ -181,6 +183,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
   public readonly name: string;
   public readonly defaultBaseUrl: string;
   private defaultModels: AiModelInfo[];
+  private catalogRefreshed = false;
   private customHeaders: Record<string, string> = {};
 
   constructor(
@@ -205,6 +208,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
 
   public setModels(models: AiModelInfo[]): void {
     this.defaultModels = models;
+    this.catalogRefreshed = true;
   }
 
   public setCustomHeaders(headers: Record<string, string>): void {
@@ -229,7 +233,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     }
 
     // Set Authorization header if apiKey is present and not explicitly overridden
-    if (apiKey && !headers['Authorization']) {
+    if (apiKey && !Object.keys(headers).some((name) => name.toLowerCase() === 'authorization')) {
       headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
@@ -251,6 +255,10 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     toolCalls?: import('../tools/types').ToolCallRecord[];
     usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
   }> {
+    if (this.catalogRefreshed && !this.defaultModels.some((m) => m.id === options.model)) {
+      throw new Error(`Selected model is unavailable: ${options.model}. Refresh models and explicitly select an available model.`);
+    }
+    const requestSignal = AbortSignal.any([...(options.signal ? [options.signal] : []), AbortSignal.timeout(90000)]);
     const rawBaseUrl = options.baseUrl || this.defaultBaseUrl;
     const urlValidation = validateEndpointUrl(rawBaseUrl);
     if (!urlValidation.valid) {
@@ -265,7 +273,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       this.customHeaders['Authorization'] ||
       options.customHeaders?.['Authorization']
     );
-    if (!hasAuth && this.id !== 'custom') {
+    if (!hasAuth && (this.id === 'openai' || this.id === 'openrouter')) {
       throw new Error(`API key required for ${this.name}. Configure your key in GB Assist settings.`);
     }
 
@@ -302,7 +310,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       model: options.model,
       messages: formattedMessages,
       stream: true,
-      stream_options: { include_usage: true },
+      ...(this.id === 'openai' || this.id === 'openrouter' ? { stream_options: { include_usage: true } } : {}),
       temperature: options.temperature ?? 0.2,
       max_tokens: options.maxTokens,
     };
@@ -327,7 +335,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         method: 'POST',
         headers: this.resolveHeaders(options.apiKey, options.customHeaders),
         body: JSON.stringify(requestBody),
-        signal: options.signal,
+        signal: requestSignal,
         redirect: 'manual',
       });
     } catch (err: unknown) {
@@ -392,117 +400,73 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     let parsedUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined = undefined;
     const toolCallAccumulators = new Map<number, { id: string; name: string; arguments: string }>();
 
+    const processEvent = (event: string): boolean => {
+      const data = event.split(/\r?\n/).filter((line) => line.startsWith('data:'))
+        .map((line) => line.slice(5).trimStart()).join('\n').trim();
+      if (!data) return false;
+      if (data === '[DONE]') return true;
+      let parsed;
+      try { parsed = JSON.parse(data); }
+      catch { throw new Error('Invalid SSE: provider returned a malformed JSON event. Retry or check streaming compatibility.'); }
+      if (parsed.error) throw new Error(`Provider stream error: ${redactSecretsFromText(parsed.error.message || parsed.error, options.apiKey).slice(0, 1000)}`);
+      if (parsed.usage) {
+        parsedUsage = { promptTokens: parsed.usage.prompt_tokens, completionTokens: parsed.usage.completion_tokens, totalTokens: parsed.usage.total_tokens };
+        onChunk({ actualUsage: parsedUsage });
+      }
+      const delta = parsed.choices?.[0]?.delta;
+      if (!delta) return false;
+      if (typeof delta.content === 'string' && delta.content) {
+        fullContent += delta.content;
+        onChunk({ contentDelta: delta.content });
+      }
+      const reasoningDelta = delta.reasoning_content || delta.reasoning;
+      if (typeof reasoningDelta === 'string' && reasoningDelta) {
+        reasoning += reasoningDelta;
+        onChunk({ reasoningDelta });
+      }
+      for (const tc of delta.tool_calls || []) {
+        const idx = tc.index ?? 0;
+        const acc = toolCallAccumulators.get(idx) || { id: tc.id || `call-${Date.now()}-${idx}`, name: '', arguments: '' };
+        if (tc.id) acc.id = tc.id;
+        acc.name += tc.function?.name || '';
+        acc.arguments += tc.function?.arguments || '';
+        toolCallAccumulators.set(idx, acc);
+        onChunk({ toolCallDelta: { id: acc.id, index: idx, name: acc.name, argumentsDelta: tc.function?.arguments } });
+      }
+      return false;
+    };
+    const abortReader = () => { void reader.cancel().catch(() => {}); };
+    requestSignal.addEventListener('abort', abortReader, { once: true });
     try {
-      while (true) {
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('text/event-stream')) {
+        throw new Error(`Unsupported streaming response (${contentType || 'missing Content-Type'}). Expected text/event-stream.`);
+      }
+      let complete = false;
+      while (!complete) {
+        requestSignal.throwIfAborted();
         const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() ?? '';
-
-        for (const rawLine of lines) {
-          const line = rawLine.trim();
-          if (!line || line.startsWith(':')) continue; // skip keep-alive comments
-          if (line === 'data: [DONE]') {
-            onChunk({ isComplete: true });
-            continue;
-          }
-
-          if (line.startsWith('data: ')) {
-            const dataStr = line.slice(6).trim();
-            if (!dataStr) continue;
-
-            try {
-              const parsed = JSON.parse(dataStr);
-
-              // Usage statistics (e.g. OpenAI stream_options or OpenRouter)
-              if (parsed.usage) {
-                parsedUsage = {
-                  promptTokens: parsed.usage.prompt_tokens,
-                  completionTokens: parsed.usage.completion_tokens,
-                  totalTokens: parsed.usage.total_tokens,
-                };
-                onChunk({ actualUsage: parsedUsage });
-              }
-
-              const choice = parsed.choices?.[0];
-              const delta = choice?.delta;
-
-              if (delta) {
-                // Content chunk
-                if (typeof delta.content === 'string' && delta.content) {
-                  fullContent += delta.content;
-                  onChunk({ contentDelta: delta.content });
-                }
-
-                // Reasoning / thinking delta (e.g. DeepSeek R1, QwQ)
-                const reasoningDelta = delta.reasoning_content || delta.reasoning;
-                if (typeof reasoningDelta === 'string' && reasoningDelta) {
-                  reasoning += reasoningDelta;
-                  onChunk({ reasoningDelta });
-                }
-
-                // Tool calls delta with fragmented name and arguments accumulation
-                if (Array.isArray(delta.tool_calls)) {
-                  for (const tc of delta.tool_calls) {
-                    const idx = tc.index ?? 0;
-                    let acc = toolCallAccumulators.get(idx);
-                    if (!acc) {
-                      acc = {
-                        id: tc.id || `call-${Date.now()}-${idx}`,
-                        name: '',
-                        arguments: '',
-                      };
-                      toolCallAccumulators.set(idx, acc);
-                    }
-                    if (tc.id) acc.id = tc.id;
-                    if (tc.function?.name) {
-                      acc.name += tc.function.name;
-                    }
-                    if (tc.function?.arguments) {
-                      acc.arguments += tc.function.arguments;
-                    }
-
-                    onChunk({
-                      toolCallDelta: {
-                        id: acc.id,
-                        index: idx,
-                        name: acc.name,
-                        argumentsDelta: tc.function?.arguments,
-                      },
-                    });
-                  }
-                }
-              }
-            } catch {
-              // Ignore partial JSON parse errors in stream
-            }
-          }
+        requestSignal.throwIfAborted();
+        buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
+        if (buffer.length > 2_000_000 || fullContent.length > 2_000_000) throw new Error('Provider stream exceeded response size limit.');
+        let boundary;
+        while ((boundary = /\r?\n\r?\n/.exec(buffer))) {
+          const event = buffer.slice(0, boundary.index);
+          buffer = buffer.slice(boundary.index + boundary[0].length);
+          if (processEvent(event)) { complete = true; break; }
+        }
+        if (done) {
+          if (!complete && buffer.trim()) processEvent(buffer);
+          break;
         }
       }
-
-      // Process any remaining buffered lines
-      if (buffer.trim()) {
-        const remaining = buffer.split('\n');
-        for (const rawLine of remaining) {
-          const line = rawLine.trim();
-          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-            try {
-              const parsed = JSON.parse(line.slice(6).trim());
-              if (parsed.usage) {
-                parsedUsage = {
-                  promptTokens: parsed.usage.prompt_tokens,
-                  completionTokens: parsed.usage.completion_tokens,
-                  totalTokens: parsed.usage.total_tokens,
-                };
-                onChunk({ actualUsage: parsedUsage });
-              }
-            } catch {}
-          }
-        }
+      if (!fullContent.trim() && !toolCallAccumulators.size) {
+        throw new Error('Empty provider response: no assistant text or tool calls. Check the selected model and streaming support.');
       }
+      onChunk({ isComplete: true });
     } finally {
+      requestSignal.removeEventListener('abort', abortReader);
+      await reader.cancel().catch(() => {});
       reader.releaseLock();
     }
 

@@ -203,7 +203,8 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     const target = initialProviderId || state.selectedProvider || 'gemini';
     loadProviderConfig(target);
     setCurrentView('directory');
-  }, [isOpen, initialProviderId, state.selectedProvider, loadProviderConfig]);
+    return cancelInFlightFetch;
+  }, [isOpen, initialProviderId, state.selectedProvider, loadProviderConfig, cancelInFlightFetch]);
 
   // Autofocus search input when directory opens
   useEffect(() => {
@@ -221,17 +222,15 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        if (currentView === 'config') {
-          setCurrentView('directory');
-        } else {
-          onClose();
-        }
+        e.stopPropagation();
+        cancelInFlightFetch();
+        onClose();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, currentView, onClose]);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [isOpen, currentView, onClose, cancelInFlightFetch]);
 
   // Lock body scroll while open
   useEffect(() => {
@@ -245,7 +244,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
   }, [isOpen]);
 
   // Catalog filtering for search
-  const catalog = useMemo(() => providerRegistry.getProviderCatalog(), []);
+  const catalog = providerRegistry.getProviderCatalog();
 
   const filteredCatalog = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -358,7 +357,8 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     setFetchModelsSuccess(null);
     setFormErrors({});
 
-    const rawUrl = customBaseUrl.trim();
+    const builtIn = selectedProviderId === 'openrouter' || selectedProviderId === 'openai';
+    const rawUrl = builtIn ? providerRegistry.getProvider(selectedProviderId).defaultBaseUrl : customBaseUrl.trim();
     if (!rawUrl) {
       setFormErrors((prev) => ({ ...prev, baseUrl: 'Base URL is required to fetch models.' }));
       return;
@@ -376,7 +376,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       }
     }
 
-    const targetId = isEditingExistingCustom
+    const targetId = builtIn ? selectedProviderId : isEditingExistingCustom
       ? customProviderId
       : (customProviderId.trim().toLowerCase() || selectedProviderId);
 
@@ -392,6 +392,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       if (controller.signal.aborted) return;
 
       if (result.success && result.models.length > 0) {
+        if (builtIn) providerRegistry.applyDiscoveredModels(selectedProviderId, result.models);
         setDiscoveredModels(result.models);
         setSelectedDiscoveredIds(new Set(result.models.map((m) => m.id)));
         setFetchModelsSuccess(`Found ${result.models.length} model(s) from provider.`);
@@ -405,8 +406,10 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       const msg = err instanceof Error ? err.message : String(err);
       setFetchModelsError(`Error fetching models: ${msg}`);
     } finally {
-      setIsFetchingModels(false);
-      fetchAbortControllerRef.current = null;
+      if (fetchAbortControllerRef.current === controller) {
+        setIsFetchingModels(false);
+        fetchAbortControllerRef.current = null;
+      }
     }
   };
 
@@ -416,32 +419,12 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     const toAdd = discoveredModels.filter((m) => selectedDiscoveredIds.has(m.id));
     if (toAdd.length === 0) return;
 
-    let firstAddedId = '';
-
-    setCustomModels((prev) => {
-      const existingIds = new Set(prev.map((m) => m.id.trim()).filter(Boolean));
-      const baseModels = prev.length === 1 && !prev[0].id.trim() ? [] : [...prev];
-      const newConfigs: CustomModelConfig[] = [];
-
-      for (const m of toAdd) {
-        if (!existingIds.has(m.id)) {
-          existingIds.add(m.id);
-          if (!firstAddedId) firstAddedId = m.id;
-          newConfigs.push({
-            id: m.id,
-            name: m.name !== m.id ? m.name : '',
-            contextWindow: m.contextWindow,
-          });
-        }
-      }
-
-      const merged = [...baseModels, ...newConfigs];
-      return merged.length > 0 ? merged : prev;
-    });
-
-    if (firstAddedId && (!selectedModelId || !customModels.some((m) => m.id === selectedModelId))) {
-      setSelectedModelId(firstAddedId);
-    }
+    const existingIds = new Set(customModels.map((m) => m.id.trim()).filter(Boolean));
+    const newModels = toAdd.filter((m) => !existingIds.has(m.id)).map((m) => ({
+      id: m.id, name: m.name, contextWindow: m.contextWindow, supportsToolCalling: m.supportsToolCalling,
+    }));
+    setCustomModels([...customModels.filter((m) => m.id.trim() || m.name.trim()), ...newModels]);
+    if ((!selectedModelId || !customModels.some((m) => m.id === selectedModelId)) && newModels[0]) setSelectedModelId(newModels[0].id);
 
     setFetchModelsSuccess(`Added ${toAdd.length} model(s) to configuration.`);
     setDiscoveredModels([]);
@@ -497,7 +480,8 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       }
     } else {
       const available = providerRegistry.getModelsForProvider(selectedProviderId);
-      targetModel = (selectedModelId || available[0]?.id || '').trim();
+      targetModel = available.some((m) => m.id === selectedModelId) ? selectedModelId : '';
+      if (!targetModel) setFetchModelsError('Selected model is unavailable. Refresh and select an available model.');
     }
 
     if (!targetModel) {
@@ -597,10 +581,10 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
         models: effectiveModels.map((m) => ({
           id: m.id.trim(),
           name: (m.name || m.id).trim(),
-          contextWindow: customContextWindow,
-          maxTokens: customMaxTokens,
+          contextWindow: m.contextWindow || customContextWindow,
+          maxTokens: m.maxTokens || customMaxTokens,
           supportsStreaming: true,
-          supportsToolCalling: customToolCalling,
+          supportsToolCalling: m.supportsToolCalling ?? customToolCalling,
         })),
         headers: customHeaders.filter((h) => h.name.trim()),
         contextWindow: customContextWindow,
@@ -639,6 +623,10 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     }
 
     // Built-in provider
+    if (!providerRegistry.getModelsForProvider(selectedProviderId).some((m) => m.id === selectedModelId)) {
+      setFormErrors({ general: 'Selected model is unavailable. Fetch models and explicitly select an available model.' });
+      return;
+    }
     if (apiKeyInput.trim()) {
       keyManager.setApiKey(selectedProviderId, apiKeyInput, persistInSession);
     } else if (selectedProviderId !== 'mock') {
@@ -1422,14 +1410,31 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                   <label className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
                     Selected Model
                   </label>
+                  {(selectedProviderId === 'openrouter' || selectedProviderId === 'openai') && <>
+                    <button type="button" data-testid="fetch-builtin-models-btn" onClick={handleFetchModels} disabled={isFetchingModels}
+                      className="rounded border border-cyan-500/40 px-3 py-2 text-cyan-300">{isFetchingModels ? 'Fetching…' : 'Fetch Models'}</button>
+                    <input aria-label="Search models" value={discoveredSearchQuery} onChange={(e) => setDiscoveredSearchQuery(e.target.value)}
+                      placeholder="Search model name or ID" className="w-full bg-[#12131c] p-2 border border-[#2e3046] rounded" />
+                    {fetchModelsError && <p role="alert" className="text-rose-300">{fetchModelsError}</p>}
+                    {fetchModelsSuccess && <p role="status">{fetchModelsSuccess} Catalog listing does not guarantee inference access.</p>}
+                  </>}
+                  {selectedProviderId === 'gemini' && <p className="text-slate-400">Bundled Gemini catalog. Automatic discovery is not supported by this adapter.</p>}
+                  {(() => { const m = discoveredModels.find((item) => item.id === selectedModelId); return m ? <p className="text-[10px] text-slate-400">
+                    {m.ownedBy || m.id.split('/')[0]} · Tools: {m.supportsToolCalling === undefined ? 'unknown' : m.supportsToolCalling ? 'supported' : 'unsupported'}
+                    {' · '}{m.inputModalities?.join(', ') || 'input unknown'} → {m.outputModalities?.join(', ') || 'output unknown'}
+                    {m.pricing && ` · USD/token: input ${m.pricing.prompt || 'unknown'}, output ${m.pricing.completion || 'unknown'}`}
+                  </p> : null; })()}
+                  {!models.some((m) => m.id === selectedModelId) && <p role="alert" className="text-amber-300">Selected model is unavailable. Select an available model.</p>}
                   <select
+                    aria-label="Selected model"
                     value={selectedModelId}
                     onChange={(e) => setSelectedModelId(e.target.value)}
                     className="w-full rounded-md border border-[#2e3046] bg-[#12131c] px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
                   >
-                    {models.map((m) => (
+                    {!models.some((m) => m.id === selectedModelId) && <option value={selectedModelId}>{selectedModelId || 'Select a model'} — unavailable</option>}
+                    {models.filter((m) => m.id === selectedModelId || `${m.id} ${m.name}`.toLowerCase().includes(discoveredSearchQuery.toLowerCase())).slice(0, 150).map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.name} ({Math.round(m.contextWindow / 1000)}k context)
+                        {m.name} — {m.id} ({m.contextWindow ? `${Math.round(m.contextWindow / 1000)}k context` : 'context unknown'})
                       </option>
                     ))}
                   </select>
@@ -1558,7 +1563,11 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                           <input
                             type="checkbox"
                             checked={customToolCalling}
-                            onChange={(e) => setCustomToolCalling(e.target.checked)}
+                            onChange={(e) => {
+                              const supported = e.target.checked;
+                              setCustomToolCalling(supported);
+                              setCustomModels((prev) => prev.map((model) => ({ ...model, supportsToolCalling: supported })));
+                            }}
                             className="rounded border-[#2e3046] bg-[#12131c] text-cyan-500 focus:ring-0"
                           />
                           <span>Supports native OpenAI structured tool calling (Agent Mode)</span>
