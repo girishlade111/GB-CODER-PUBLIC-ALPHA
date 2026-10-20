@@ -131,6 +131,7 @@ export class AnthropicProvider implements IAiProvider {
     reasoning?: string;
     toolCalls?: import('../tools/types').ToolCallRecord[];
     usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+    stopReason?: string;
   }> {
     const apiKey = cleanApiKey(options.apiKey || keyManager.getApiKey(this.id));
     if (!apiKey) {
@@ -151,7 +152,7 @@ export class AnthropicProvider implements IAiProvider {
       );
     }
 
-    // Separate system messages
+    // Separate system messages and group consecutive tool results into a single user turn
     let systemPrompt = '';
     const anthropicMessages: Array<{ role: 'user' | 'assistant'; content: any }> = [];
 
@@ -163,16 +164,20 @@ export class AnthropicProvider implements IAiProvider {
 
       if (msg.role === 'tool') {
         const toolMsg = msg as ProviderChatMessage;
-        anthropicMessages.push({
-          role: 'user',
-          content: [
-            {
-              type: 'tool_result',
-              tool_use_id: toolMsg.toolCallId || 'call_0',
-              content: toolMsg.content || '',
-            },
-          ],
-        });
+        const toolResultPart = {
+          type: 'tool_result',
+          tool_use_id: toolMsg.toolCallId || 'call_0',
+          content: toolMsg.content || '',
+        };
+        const lastMsg = anthropicMessages[anthropicMessages.length - 1];
+        if (lastMsg && lastMsg.role === 'user' && Array.isArray(lastMsg.content)) {
+          lastMsg.content.push(toolResultPart);
+        } else {
+          anthropicMessages.push({
+            role: 'user',
+            content: [toolResultPart],
+          });
+        }
         continue;
       }
 
@@ -209,15 +214,32 @@ export class AnthropicProvider implements IAiProvider {
         continue;
       }
 
-      anthropicMessages.push({
-        role: msg.role === 'assistant' ? 'assistant' : 'user',
-        content: msg.content || '',
-      });
+      const currentRole = msg.role === 'assistant' ? 'assistant' : 'user';
+      const lastMsg = anthropicMessages[anthropicMessages.length - 1];
+      if (lastMsg && lastMsg.role === currentRole) {
+        if (typeof lastMsg.content === 'string' && typeof msg.content === 'string') {
+          lastMsg.content += `\n\n${msg.content}`;
+        } else if (Array.isArray(lastMsg.content)) {
+          lastMsg.content.push({ type: 'text', text: msg.content || '' });
+        } else {
+          anthropicMessages.push({
+            role: currentRole,
+            content: msg.content || '',
+          });
+        }
+      } else {
+        anthropicMessages.push({
+          role: currentRole,
+          content: msg.content || '',
+        });
+      }
     }
 
-    // Ensure alternating user/assistant turns if needed, or non-empty messages
+    // Ensure alternating user/assistant turns if needed, or non-empty messages starting with user
     if (anthropicMessages.length === 0) {
       anthropicMessages.push({ role: 'user', content: 'Hello' });
+    } else if (anthropicMessages[0].role === 'assistant') {
+      anthropicMessages.unshift({ role: 'user', content: 'Continue' });
     }
 
     const payload: Record<string, any> = {
@@ -306,6 +328,7 @@ export class AnthropicProvider implements IAiProvider {
 
     let fullContent = '';
     let fullReasoning = '';
+    let stopReason: string | undefined;
     const toolCallRecords: import('../tools/types').ToolCallRecord[] = [];
     const activeToolMap = new Map<number, { id: string; name: string; argsJson: string }>();
     const usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
@@ -345,8 +368,13 @@ export class AnthropicProvider implements IAiProvider {
             // Handle Anthropic event types
             const eventType = eventObj.type;
 
-            if (eventType === 'message_start' && eventObj.message?.usage) {
-              usage.promptTokens = eventObj.message.usage.input_tokens || 0;
+            if (eventType === 'message_start') {
+              if (eventObj.message?.usage) {
+                usage.promptTokens = eventObj.message.usage.input_tokens || 0;
+              }
+              if (eventObj.message?.stop_reason) {
+                stopReason = eventObj.message.stop_reason;
+              }
             } else if (eventType === 'content_block_start') {
               const blockIndex = eventObj.index ?? 0;
               const block = eventObj.content_block;
@@ -396,6 +424,9 @@ export class AnthropicProvider implements IAiProvider {
                 activeToolMap.delete(blockIndex);
               }
             } else if (eventType === 'message_delta') {
+              if (eventObj.delta?.stop_reason) {
+                stopReason = eventObj.delta.stop_reason;
+              }
               if (eventObj.usage?.output_tokens) {
                 usage.completionTokens = eventObj.usage.output_tokens;
                 usage.totalTokens = usage.promptTokens + usage.completionTokens;
@@ -415,6 +446,29 @@ export class AnthropicProvider implements IAiProvider {
       reader.releaseLock();
     }
 
+    // Flush any pending tool call blocks that lacked content_block_stop
+    if (activeToolMap.size > 0) {
+      const { ToolExecutor } = await import('../tools/toolExecutor.ts');
+      for (const [, active] of activeToolMap.entries()) {
+        let parsedArgs: any = {};
+        try {
+          parsedArgs = JSON.parse(active.argsJson || '{}');
+        } catch {
+          parsedArgs = { raw: active.argsJson };
+        }
+        toolCallRecords.push(
+          ToolExecutor.createToolCallRecord(active.name, parsedArgs, active.id)
+        );
+      }
+      activeToolMap.clear();
+    }
+
+    if (!fullContent.trim() && toolCallRecords.length === 0 && fullReasoning.trim()) {
+      throw new Error(
+        'Provider Compatibility Error: Model produced reasoning tokens but no assistant answer content. Ensure the selected model and provider configuration support text completions.'
+      );
+    }
+
     onChunk({ isComplete: true, actualUsage: usage });
 
     return {
@@ -422,6 +476,7 @@ export class AnthropicProvider implements IAiProvider {
       reasoning: fullReasoning || undefined,
       toolCalls: toolCallRecords.length > 0 ? toolCallRecords : undefined,
       usage,
+      stopReason,
     };
   }
 

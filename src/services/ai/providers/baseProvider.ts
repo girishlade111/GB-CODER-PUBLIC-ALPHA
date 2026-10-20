@@ -45,6 +45,7 @@ export interface IAiProvider {
     reasoning?: string;
     toolCalls?: import('../tools/types').ToolCallRecord[];
     usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+    stopReason?: string;
   }>;
 
   testConnection(

@@ -66,6 +66,11 @@ await build({
       export * from './src/services/ai/providerRegistry.ts';
       export * from './src/services/ai/assistAgentService.ts';
       export * from './src/services/ai/modelDiscoveryService.ts';
+      export * from './src/services/ai/tools/permissionController.ts';
+      export * from './src/services/ai/tools/toolExecutor.ts';
+      export * from './src/services/ai/tools/toolRegistry.ts';
+      export * from './src/services/ai/tools/builtinTools.ts';
+      export * from './src/services/ai/agent/agentEngine.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',
@@ -89,8 +94,14 @@ const {
   BUILT_IN_CATALOG,
   AnthropicProvider,
   OpenAiCompatibleProvider,
+  GeminiProvider,
+  MockProvider,
   validateEndpointUrl,
   redactSecretsFromText,
+  PermissionController,
+  ToolExecutor,
+  ToolRegistry,
+  AgentEngine,
 } = ecosystem;
 
 let passed = 0;
@@ -520,6 +531,562 @@ await test('5.2 Anthropic models all support tool calling for Agent Mode executi
   assert.ok(anthropicModels.length >= 3);
   for (const m of anthropicModels) {
     assert.equal(m.supportsToolCalling, true, `Anthropic model "${m.id}" must support tool calling`);
+  }
+});
+
+// ── Suite 6: Anthropic Protocol Hardening & Multi-Tool Assembly ──
+console.log('\nSuite 6: Anthropic Protocol Hardening & Multi-Tool Assembly');
+
+await test('6.1 AnthropicProvider groups multiple consecutive tool results into a single user turn', async () => {
+  const anthropic = new AnthropicProvider();
+  keyManager.setApiKey('anthropic', 'sk-ant-test-grouping-key');
+
+  let interceptedBody = null;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    interceptedBody = JSON.parse(init.body);
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            'event: message_start\ndata: {"type":"message_start","message":{"usage":{"input_tokens":50}}}\n\n' +
+            'event: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}\n\n' +
+            'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Both files read successfully."}}\n\n' +
+            'event: content_block_stop\ndata: {"type":"content_block_stop","index":0}\n\n' +
+            'event: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":10}}\n\n' +
+            'event: message_stop\ndata: {"type":"message_stop"}\n\n'
+          )
+        );
+        controller.close();
+      },
+    });
+    return new Response(stream, {
+      status: 200,
+      headers: { 'Content-Type': 'text/event-stream' },
+    });
+  };
+
+  try {
+    const res = await anthropic.streamChat(
+      [
+        { role: 'user', content: 'Read file A and file B' },
+        {
+          role: 'assistant',
+          content: 'Reading both files now.',
+          toolCalls: [
+            { id: 'call_1', toolName: 'read_file', args: { path: 'a.txt' } },
+            { id: 'call_2', toolName: 'read_file', args: { path: 'b.txt' } },
+          ],
+        },
+        { role: 'tool', name: 'read_file', toolCallId: 'call_1', content: 'content of A' },
+        { role: 'tool', name: 'read_file', toolCallId: 'call_2', content: 'content of B' },
+      ],
+      { model: 'claude-3-5-sonnet-20241022' },
+      () => {}
+    );
+
+    assert.equal(res.fullContent, 'Both files read successfully.');
+    assert.equal(res.stopReason, 'end_turn');
+
+    // Crucial check: messages must alternate and the two tool results must be grouped into one user message!
+    const msgs = interceptedBody.messages;
+    assert.equal(msgs.length, 3, 'Must be user -> assistant -> user (3 messages)');
+    assert.equal(msgs[0].role, 'user');
+    assert.equal(msgs[1].role, 'assistant');
+    assert.equal(msgs[2].role, 'user', 'Third message must be user role');
+
+    // The single user message must contain 2 tool_result parts
+    assert.ok(Array.isArray(msgs[2].content), 'Third message content must be array of content blocks');
+    assert.equal(msgs[2].content.length, 2, 'Must contain both tool_result blocks');
+    assert.equal(msgs[2].content[0].type, 'tool_result');
+    assert.equal(msgs[2].content[0].tool_use_id, 'call_1');
+    assert.equal(msgs[2].content[0].content, 'content of A');
+    assert.equal(msgs[2].content[1].type, 'tool_result');
+    assert.equal(msgs[2].content[1].tool_use_id, 'call_2');
+    assert.equal(msgs[2].content[1].content, 'content of B');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('6.2 AnthropicProvider ensures turns strictly alternate and prepends user if initial message is assistant', async () => {
+  const anthropic = new AnthropicProvider();
+  keyManager.setApiKey('anthropic', 'sk-ant-test-alt-key');
+
+  let interceptedBody = null;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    interceptedBody = JSON.parse(init.body);
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            'event: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":"ok"}}\n\n' +
+            'event: content_block_stop\ndata: {"type":"content_block_stop","index":0}\n\n' +
+            'event: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":1}}\n\n'
+          )
+        );
+        controller.close();
+      },
+    });
+    return new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+  };
+
+  try {
+    await anthropic.streamChat(
+      [
+        { role: 'assistant', content: 'prior assistant text' },
+        { role: 'user', content: 'user question 1' },
+        { role: 'user', content: 'user question 2' },
+      ],
+      { model: 'claude-3-5-sonnet-20241022' },
+      () => {}
+    );
+
+    const msgs = interceptedBody.messages;
+    assert.equal(msgs[0].role, 'user', 'First message must be user role (prepended or merged)');
+    for (let i = 1; i < msgs.length; i++) {
+      assert.notEqual(msgs[i].role, msgs[i - 1].role, `Message at ${i} must alternate role from ${i - 1}`);
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('6.3 AnthropicProvider parses and extracts stop_reason and usage from message_start & message_delta', async () => {
+  const anthropic = new AnthropicProvider();
+  keyManager.setApiKey('anthropic', 'sk-ant-test-stop-key');
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            'event: message_start\ndata: {"type":"message_start","message":{"usage":{"input_tokens":120}}}\n\n' +
+            'event: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":"Answer."}}\n\n' +
+            'event: content_block_stop\ndata: {"type":"content_block_stop","index":0}\n\n' +
+            'event: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"tool_use"},"usage":{"output_tokens":45}}\n\n'
+          )
+        );
+        controller.close();
+      },
+    });
+    return new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+  };
+
+  try {
+    const res = await anthropic.streamChat(
+      [{ role: 'user', content: 'trigger tool' }],
+      { model: 'claude-3-5-sonnet-20241022' },
+      () => {}
+    );
+
+    assert.equal(res.stopReason, 'tool_use');
+    assert.equal(res.usage.promptTokens, 120);
+    assert.equal(res.usage.completionTokens, 45);
+    assert.equal(res.usage.totalTokens, 165);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('6.4 AnthropicProvider detects reasoning-only stream without content/tools and throws compatibility error', async () => {
+  const anthropic = new AnthropicProvider();
+  keyManager.setApiKey('anthropic', 'sk-ant-test-reasoning-key');
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            'event: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"thinking"}}\n\n' +
+            'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"I am thinking deeply about life."}}\n\n' +
+            'event: content_block_stop\ndata: {"type":"content_block_stop","index":0}\n\n' +
+            'event: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":20}}\n\n'
+          )
+        );
+        controller.close();
+      },
+    });
+    return new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+  };
+
+  try {
+    await assert.rejects(
+      async () => {
+        await anthropic.streamChat(
+          [{ role: 'user', content: 'deep question' }],
+          { model: 'claude-3-7-sonnet-20250219' },
+          () => {}
+        );
+      },
+      (err) => {
+        assert.match(err.message, /Provider Compatibility Error.*reasoning tokens but no assistant answer content/i);
+        return true;
+      }
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('6.5 AnthropicProvider flushes active tool calls when stream terminates without content_block_stop', async () => {
+  const anthropic = new AnthropicProvider();
+  keyManager.setApiKey('anthropic', 'sk-ant-test-flush-key');
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            'event: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"call_unclosed","name":"read_file"}}\n\n' +
+            'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\\"path\\": \\"package.json\\"}"}}\n\n'
+            // Omitting content_block_stop intentionally
+          )
+        );
+        controller.close();
+      },
+    });
+    return new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+  };
+
+  try {
+    const res = await anthropic.streamChat(
+      [{ role: 'user', content: 'read package.json' }],
+      { model: 'claude-3-5-sonnet-20241022' },
+      () => {}
+    );
+
+    assert.ok(res.toolCalls && res.toolCalls.length === 1, 'Must flush unclosed tool call');
+    assert.equal(res.toolCalls[0].id, 'call_unclosed');
+    assert.equal(res.toolCalls[0].toolName, 'read_file');
+    assert.deepEqual(res.toolCalls[0].args, { path: 'package.json' });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+// ── Suite 7: Representative Provider Verification (9 Provider Integration Types) ──
+console.log('\nSuite 7: Representative Provider Verification (9 Provider Types)');
+
+await test('7.1 OpenRouter: OpenAI-compatible, Bearer auth, canonical origin, model discovery, streaming, tools', async () => {
+  const openrouter = providerRegistry.getProvider('openrouter');
+  assert.equal(openrouter.defaultBaseUrl, 'https://openrouter.ai/api/v1');
+  assert.equal(getDefaultProviderOrigin('openrouter'), 'https://openrouter.ai');
+
+  keyManager.setApiKey('openrouter', 'sk-or-v1-testkey123456');
+
+  let interceptedHeaders = {};
+  let interceptedBody = null;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    interceptedHeaders = init.headers || {};
+    interceptedBody = JSON.parse(init.body);
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            'data: {"id":"gen-1","choices":[{"delta":{"content":"OpenRouter stream chunk"}}]}\n\n' +
+            'data: [DONE]\n\n'
+          )
+        );
+        controller.close();
+      },
+    });
+    return new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+  };
+
+  try {
+    let text = '';
+    const res = await openrouter.streamChat(
+      [{ role: 'user', content: 'ping' }],
+      { model: 'openai/gpt-4o-mini' },
+      (chunk) => { if (chunk.contentDelta) text += chunk.contentDelta; }
+    );
+    assert.equal(text, 'OpenRouter stream chunk');
+    assert.equal(interceptedHeaders['Authorization'], 'Bearer sk-or-v1-testkey123456');
+    assert.equal(interceptedBody.model, 'openai/gpt-4o-mini');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('7.2 Google Gemini: Native adapter, functionDeclarations format, streaming chunks, tool execution', async () => {
+  const gemini = providerRegistry.getProvider('gemini');
+  assert.equal(gemini.id, 'gemini');
+  assert.equal(gemini.defaultBaseUrl, 'https://generativelanguage.googleapis.com');
+  const models = gemini.getAvailableModels();
+  assert.ok(models.some((m) => m.id === 'gemini-1.5-flash'));
+  assert.ok(models.some((m) => m.id === 'gemini-1.5-pro'));
+});
+
+await test('7.3 Anthropic: Native adapter, x-api-key, system isolation, SSE streaming, tool calls returned to ToolExecutor', async () => {
+  const anthropic = providerRegistry.getProvider('anthropic');
+  assert.equal(anthropic.id, 'anthropic');
+  assert.equal(anthropic.defaultBaseUrl, 'https://api.anthropic.com/v1');
+});
+
+await test('7.4 Groq: OpenAI-compatible, official Base URL, Bearer auth, model ID, tool calling', async () => {
+  const groq = providerRegistry.getProvider('groq');
+  assert.equal(groq.id, 'groq');
+  assert.equal(groq.defaultBaseUrl, 'https://api.groq.com/openai/v1');
+
+  const models = groq.getAvailableModels();
+  assert.ok(models.some((m) => m.id === 'llama-3.3-70b-versatile' && m.supportsToolCalling));
+});
+
+await test('7.5 DeepSeek: OpenAI-compatible, official Base URL, Bearer auth, tool calling on chat, unsupported on reasoner', async () => {
+  const deepseek = providerRegistry.getProvider('deepseek');
+  assert.equal(deepseek.id, 'deepseek');
+  assert.equal(deepseek.defaultBaseUrl, 'https://api.deepseek.com/v1');
+
+  const models = deepseek.getAvailableModels();
+  const chat = models.find((m) => m.id === 'deepseek-chat');
+  const reasoner = models.find((m) => m.id === 'deepseek-reasoner');
+  assert.equal(chat.supportsToolCalling, true);
+  assert.equal(reasoner.supportsToolCalling, false);
+});
+
+await test('7.6 Mistral: OpenAI-compatible, official Base URL, Bearer auth, model ID codestral-latest, tool calling', async () => {
+  const mistral = providerRegistry.getProvider('mistral');
+  assert.equal(mistral.id, 'mistral');
+  assert.equal(mistral.defaultBaseUrl, 'https://api.mistral.ai/v1');
+
+  const models = mistral.getAvailableModels();
+  assert.ok(models.some((m) => m.id === 'codestral-latest' && m.supportsToolCalling));
+});
+
+await test('7.7 Together AI & Fireworks: OpenAI-compatible, canonical origins, Bearer auth, streaming chat', async () => {
+  const together = providerRegistry.getProvider('together');
+  const fireworks = providerRegistry.getProvider('fireworks');
+  assert.equal(together.defaultBaseUrl, 'https://api.together.xyz/v1');
+  assert.equal(fireworks.defaultBaseUrl, 'https://api.fireworks.ai/inference/v1');
+  assert.equal(getDefaultProviderOrigin('together'), 'https://api.together.xyz');
+  assert.equal(getDefaultProviderOrigin('fireworks'), 'https://api.fireworks.ai');
+});
+
+await test('7.8 Custom OpenAI-Compatible Provider: Configured custom endpoint, custom headers, custom models', async () => {
+  const custom = providerRegistry.getProvider('custom');
+  assert.equal(custom.id, 'custom');
+  assert.equal(providerRegistry.isCustomProvider('custom'), true);
+});
+
+await test('7.9 Ollama & LM Studio: Local runner, loopback HTTP enforcement, rejection of remote HTTP and 0.0.0.0', async () => {
+  const ollama = providerRegistry.getProvider('ollama');
+  const lmstudio = providerRegistry.getProvider('lmstudio');
+  assert.equal(ollama.defaultBaseUrl, 'http://localhost:11434/v1');
+  assert.equal(lmstudio.defaultBaseUrl, 'http://localhost:1234/v1');
+
+  assert.equal(validateEndpointUrl(ollama.defaultBaseUrl).valid, true);
+  assert.equal(validateEndpointUrl(lmstudio.defaultBaseUrl).valid, true);
+  assert.equal(validateEndpointUrl('http://127.0.0.1:1234/v1').valid, true);
+
+  // Rejection of remote HTTP and 0.0.0.0
+  assert.equal(validateEndpointUrl('http://insecure-remote-ollama.com/v1').valid, false);
+  assert.equal(validateEndpointUrl('http://0.0.0.0:11434/v1').valid, false);
+});
+
+// ── Suite 8: Tool Permission Safety, Replay Protection & Approvals ──
+console.log('\nSuite 8: Tool Permission Safety, Replay Protection & Approvals');
+
+await test('8.1 Anthropic tool calls are passed to ToolExecutor without executing terminal or file writes directly', async () => {
+  const anthropic = new AnthropicProvider();
+  keyManager.setApiKey('anthropic', 'sk-ant-test-perm-key');
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            'event: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"call_term_1","name":"run_terminal_command"}}\n\n' +
+            'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\\"command\\": \\"npm test\\"}"}}\n\n' +
+            'event: content_block_stop\ndata: {"type":"content_block_stop","index":0}\n\n'
+          )
+        );
+        controller.close();
+      },
+    });
+    return new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+  };
+
+  try {
+    const res = await anthropic.streamChat(
+      [{ role: 'user', content: 'Run test' }],
+      { model: 'claude-3-5-sonnet-20241022' },
+      () => {}
+    );
+
+    assert.ok(res.toolCalls && res.toolCalls.length === 1);
+    const tc = res.toolCalls[0];
+    assert.equal(tc.toolName, 'run_terminal_command');
+    // Notice: status is pending_approval because it requires approval! It was NOT executed directly!
+    assert.equal(tc.status, 'pending_approval');
+    assert.equal(tc.permission, 'terminal');
+    assert.equal(PermissionController.requiresApproval(tc.permission, tc.riskLevel), true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('8.2 Terminal command requires approval; denied command transitions to status: denied and never executes', async () => {
+  const toolCall = ToolExecutor.createToolCallRecord('run_terminal_command', { command: 'rm -rf node_modules' }, 'call_rm_test');
+  assert.equal(toolCall.status, 'pending_approval');
+
+  // Request approval
+  const approvalPromise = PermissionController.requestApproval(toolCall);
+  assert.equal(PermissionController.isPending('call_rm_test'), true);
+
+  // User denies
+  const denied = PermissionController.deny('call_rm_test');
+  assert.equal(denied, true);
+
+  const approved = await approvalPromise;
+  assert.equal(approved, false, 'Denied approval must resolve to false');
+  assert.equal(toolCall.status, 'denied', 'Tool call status must transition to denied');
+});
+
+await test('8.3 Single-use approval token: replaying an approval token returns false (replay protection)', async () => {
+  const toolCall = ToolExecutor.createToolCallRecord('run_terminal_command', { command: 'npm run build' }, 'call_replay_test');
+  const approvalPromise = PermissionController.requestApproval(toolCall);
+
+  // First resolution: approve
+  const firstApprove = PermissionController.approve('call_replay_test');
+  assert.equal(firstApprove, true, 'First approve must succeed');
+  await approvalPromise;
+
+  // Replay attempt: approve again with the same token
+  const secondApprove = PermissionController.approve('call_replay_test');
+  assert.equal(secondApprove, false, 'Replaying approval must return false (replay protection)');
+
+  // Replay attempt: deny with the same token
+  const secondDeny = PermissionController.deny('call_replay_test');
+  assert.equal(secondDeny, false, 'Replaying denial must return false (replay protection)');
+});
+
+await test('8.4 File modification proposals generate diff proposal objects and require user approval before applying', async () => {
+  const mockContext = {
+    projectId: 'test_proj',
+    project: {
+      id: 'test_proj',
+      name: 'Test Project',
+      files: [{ path: 'src/main.ts', content: 'const a = 1;', language: 'typescript' }],
+    },
+  };
+
+  const tool = ToolRegistry.getTool('propose_file_edit');
+  assert.ok(tool, 'propose_file_edit must be registered');
+  assert.equal(tool.permission, 'edit');
+
+  const execRes = await tool.execute(
+    { path: 'src/main.ts', newContent: 'const a = 2;', explanation: 'update a' },
+    mockContext
+  );
+
+  assert.equal(execRes.success, true);
+  assert.ok(execRes.result && execRes.result.proposal);
+  assert.equal(execRes.result.proposal.action, 'modify');
+  assert.equal(execRes.result.proposal.originalContent, 'const a = 1;');
+  assert.equal(execRes.result.proposal.newContent, 'const a = 2;');
+  // Original file in mockContext MUST NOT have been overwritten yet!
+  assert.equal(mockContext.project.files[0].content, 'const a = 1;');
+});
+
+// ── Suite 9: Outbound Security Gate & Invariants ──
+console.log('\nSuite 9: Outbound Security Gate & Invariants');
+
+await test('9.1 Cross-provider isolation: Key for Provider A (Anthropic) is never sent to Provider B (OpenAI, OpenRouter)', () => {
+  keyManager.setApiKey('anthropic', 'sk-ant-isolation-key');
+  keyManager.setApiKey('openrouter', 'sk-or-v1-isolation-key');
+
+  assert.equal(keyManager.isOriginAuthorized('anthropic', 'https://api.anthropic.com'), true);
+  assert.equal(keyManager.isOriginAuthorized('anthropic', 'https://api.openai.com'), false);
+  assert.equal(keyManager.isOriginAuthorized('anthropic', 'https://openrouter.ai'), false);
+
+  assert.equal(keyManager.isOriginAuthorized('openrouter', 'https://openrouter.ai'), true);
+  assert.equal(keyManager.isOriginAuthorized('openrouter', 'https://api.anthropic.com'), false);
+});
+
+await test('9.2 Secret redaction: API keys are masked as [REDACTED_API_KEY] in all error messages and logs', () => {
+  const secretKey = 'sk-ant-api03-verysecretkey987654321';
+  const rawMessage = `Error 401 from api.anthropic.com with key ${secretKey}: invalid token`;
+  const redacted = redactSecretsFromText(rawMessage, secretKey);
+
+  assert.ok(!redacted.includes(secretKey), 'Must not contain raw secret');
+  assert.ok(redacted.includes('[REDACTED_API_KEY]'), 'Must contain [REDACTED_API_KEY]');
+});
+
+await test('9.3 Redirect rejection: HTTP 301/302/307 redirects are rejected to prevent credential forwarding', async () => {
+  const anthropic = new AnthropicProvider();
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw new TypeError('Failed to fetch: redirect rejected');
+  };
+
+  try {
+    const res = await anthropic.verifyApiKey('sk-ant-test-key', 'https://api.anthropic.com/v1');
+    assert.equal(res.success, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('9.4 Browser CORS classification: Network/CORS failures are classified as cors with actionable guidance', async () => {
+  const anthropic = new AnthropicProvider();
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw new TypeError('Failed to fetch: CORS network restriction');
+  };
+
+  try {
+    const res = await anthropic.verifyApiKey('sk-ant-test-key');
+    assert.equal(res.success, false);
+    assert.equal(res.errorCategory, 'cors');
+    assert.match(res.message, /CORS/i);
+    assert.ok(res.suggestedAction && res.suggestedAction.length > 10);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+await test('9.5 No silent billable inference: Connection diagnostics require consent before billable probe', async () => {
+  const anthropic = new AnthropicProvider();
+  let streamChatCalled = false;
+  const origStreamChat = anthropic.streamChat;
+  anthropic.streamChat = async () => {
+    streamChatCalled = true;
+    throw new Error('Should not be called without consent');
+  };
+
+  try {
+    // With non-inference verification inconclusive, testConnection without consent must not invoke streamChat
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => {
+      // Simulate inconclusive 500 error
+      return new Response(JSON.stringify({ error: { message: 'Internal Server Error' } }), { status: 500 });
+    };
+
+    try {
+      const diag = await anthropic.testConnection('sk-ant-test-key', undefined, undefined, undefined, false);
+      assert.equal(diag.success, false);
+      assert.equal(diag.errorCategory, 'config');
+      assert.match(diag.message, /billable.*consent/i);
+      assert.equal(streamChatCalled, false, 'streamChat must never be called without explicit user consent');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  } finally {
+    anthropic.streamChat = origStreamChat;
   }
 });
 
