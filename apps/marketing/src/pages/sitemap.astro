@@ -5,6 +5,7 @@ import { getNav } from '../i18n/navigation';
 import { getBlogContent, getAllArticleSlugs } from '../i18n/blog';
 import { getDocsContent } from '../i18n/docs';
 import { getLocalizedPath } from '../i18n/utils';
+import Icon from '../components/ui/Icon.astro';
 
 const enNav = getNav('en');
 const enBlog = getBlogContent('en');
@@ -20,14 +21,7 @@ const articleSlugs = getAllArticleSlugs();
 >
   <section class="page-hero sitemap-hero">
     <div class="sitemap-hero-content">
-      <div class="sitemap-badge">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-          <path d="M2 12h20" />
-        </svg>
-        <span>Platform Index</span>
-      </div>
+      <span class="eyebrow">Directory</span>
       <h1>Human-Readable Sitemap</h1>
       <p>A structured, human-readable directory to help developers, learners, and search engines navigate every surface, guide, and language version of GB Coder.</p>
 
@@ -50,7 +44,7 @@ const articleSlugs = getAllArticleSlugs();
     <!-- Category 1: Core Platform Surfaces -->
     <section class="sitemap-card sitemap-group" data-sitemap-section>
       <div class="card-header">
-        <span class="group-icon">🚀</span>
+        <span class="group-icon"><Icon name="layout" size={22} /></span>
         <div>
           <h2>Core Platform Surfaces</h2>
           <p class="group-desc">Primary navigation destinations for the GB Coder development studio.</p>
@@ -63,14 +57,14 @@ const articleSlugs = getAllArticleSlugs();
         <li data-search="blog engineering articles tutorials"><a href="/blog" class="sitemap-link"><strong>Engineering Blog</strong><span>In-depth tutorials and developer articles</span></a></li>
         <li data-search="about mission ladestack creator"><a href="/about" class="sitemap-link"><strong>About GB Coder</strong><span>Mission, architecture principles, and LadeStack</span></a></li>
         <li data-search="contact support creator girish lade"><a href="/contact" class="sitemap-link"><strong>Contact & Connect</strong><span>Direct developer inquiries and social links</span></a></li>
-        <li data-search="open launch start ide app workspace"><a href="/app/projects" class="sitemap-link highlight-link"><strong>Launch GB Coder IDE ↗</strong><span>Open the in-browser workspace at /app/projects</span></a></li>
+        <li data-search="open launch start ide app workspace"><a href="/app/projects" class="sitemap-link highlight-link"><strong>Launch GB Coder IDE <Icon name="arrow-up-right" size={13} /></strong><span>Open the in-browser workspace at /app/projects</span></a></li>
       </ul>
     </section>
 
     <!-- Category 2: Technical Documentation Sections -->
     <section class="sitemap-card sitemap-group" data-sitemap-section>
       <div class="card-header">
-        <span class="group-icon">📖</span>
+        <span class="group-icon"><Icon name="file" size={22} /></span>
         <div>
           <h2>Documentation Sections</h2>
           <p class="group-desc">Direct links to technical architecture and setup guides.</p>
@@ -91,7 +85,7 @@ const articleSlugs = getAllArticleSlugs();
     <!-- Category 3: Engineering Articles & Tutorials -->
     <section class="sitemap-card sitemap-group" data-sitemap-section>
       <div class="card-header">
-        <span class="group-icon">✍️</span>
+        <span class="group-icon"><Icon name="pen" size={22} /></span>
         <div>
           <h2>Engineering Articles & Guides</h2>
           <p class="group-desc">Tutorials on web development, framework starters, and local backups.</p>
@@ -116,7 +110,7 @@ const articleSlugs = getAllArticleSlugs();
     <!-- Category 4: Multilingual Editions -->
     <section class="sitemap-card sitemap-group" data-sitemap-section>
       <div class="card-header">
-        <span class="group-icon">🌐</span>
+        <span class="group-icon"><Icon name="globe" size={22} /></span>
         <div>
           <h2>Multilingual Editions (9 Languages)</h2>
           <p class="group-desc">Fully localized editions across the studio, docs, and blogs.</p>
@@ -148,7 +142,7 @@ const articleSlugs = getAllArticleSlugs();
     <!-- Category 5: Legal, Governance & Machine Sitemaps -->
     <section class="sitemap-card sitemap-group" data-sitemap-section>
       <div class="card-header">
-        <span class="group-icon">⚖️</span>
+        <span class="group-icon"><Icon name="shield" size={22} /></span>
         <div>
           <h2>Governance & Search Feeds</h2>
           <p class="group-desc">Authoritative privacy policies, terms, and search engine directives.</p>
@@ -194,17 +188,8 @@ const articleSlugs = getAllArticleSlugs();
   .sitemap-hero {
     padding-bottom: 2.5rem;
   }
-  .sitemap-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.3rem 0.75rem;
-    background: var(--surface-soft);
-    color: var(--primary);
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 650;
-    margin-bottom: 1.25rem;
+  .sitemap-hero .eyebrow {
+    margin-bottom: 1.1rem;
   }
   .sitemap-search-wrap {
     position: relative;
@@ -213,7 +198,7 @@ const articleSlugs = getAllArticleSlugs();
   }
   .search-icon {
     position: absolute;
-    left: 1rem;
+    inset-inline-start: 1rem;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
@@ -221,142 +206,142 @@ const articleSlugs = getAllArticleSlugs();
   }
   #sitemapSearch {
     width: 100%;
-    padding: 0.85rem 1rem 0.85rem 2.75rem;
+    padding-block: 0.85rem;
+    padding-inline: 2.75rem 1rem;
     font-size: 0.95rem;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: var(--radius);
     background: var(--surface);
     color: var(--text-primary);
-    box-shadow: var(--shadow-sm);
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease;
   }
   #sitemapSearch:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--border-subtle);
+    box-shadow: 0 0 0 4px rgba(23, 102, 68, 0.1);
   }
   .sitemap-container {
     max-width: 1200px;
     display: flex;
     flex-direction: column;
-    gap: 2.5rem;
+    gap: 0;
   }
   .sitemap-card {
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 16px;
-    padding: 2.5rem;
-    box-shadow: var(--shadow-sm);
+    border-top: 1px solid var(--border);
+    padding: 3rem 0;
   }
   .card-header {
     display: flex;
     align-items: flex-start;
-    gap: 1.25rem;
+    gap: 1.1rem;
     margin-bottom: 2rem;
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--border-subtle);
   }
   .group-icon {
-    font-size: 1.75rem;
-    line-height: 1;
-    padding: 0.6rem;
-    background: var(--surface-soft);
-    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    color: var(--primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
   }
   .card-header h2 {
-    font-size: 1.5rem;
-    margin-bottom: 0.25rem;
+    font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+    margin-bottom: 0.3rem;
   }
   .group-desc {
     color: var(--text-secondary);
     font-size: 0.92rem;
     margin: 0;
+    max-width: 64ch;
   }
   .sitemap-links-grid {
     list-style: none;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.25rem;
+    gap: 0 2.5rem;
     padding: 0;
     margin: 0;
   }
   .sitemap-link {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    padding: 1.25rem;
-    border-radius: 10px;
-    background: var(--surface-soft);
-    border: 1px solid var(--border-subtle);
+    gap: 0.3rem;
+    padding: 1.1rem 0;
+    border-top: 1px solid var(--border-subtle);
     text-decoration: none;
     height: 100%;
-    transition: all 0.18s ease;
+    transition: border-color 0.18s ease;
   }
   .sitemap-link:hover {
-    background: var(--surface);
     border-color: var(--primary);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
   }
   .sitemap-link strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     color: var(--text-primary);
     font-size: 0.95rem;
     font-weight: 650;
   }
+  .sitemap-link:hover strong {
+    color: var(--primary);
+  }
   .sitemap-link span {
     color: var(--text-secondary);
     font-size: 0.82rem;
-    line-height: 1.45;
+    line-height: 1.5;
   }
   .highlight-link {
-    background: #e4eee7;
-    border-color: var(--border);
+    background: transparent;
   }
   .highlight-link strong {
     color: var(--primary);
   }
   .art-badge {
     align-self: flex-start;
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     font-weight: 700;
-    padding: 0.15rem 0.5rem;
-    border-radius: 4px;
-    background: var(--surface);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.1rem 0;
     color: var(--primary);
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.15rem;
   }
   .languages-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    gap: 0 2.5rem;
   }
   .lang-box {
-    background: var(--surface-soft);
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.25rem 0;
+    border-top: 1px solid var(--border-subtle);
   }
   .lang-box-head {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
-    margin-bottom: 1rem;
-    padding-bottom: 0.65rem;
-    border-bottom: 1px solid var(--border-subtle);
+    gap: 1rem;
+    margin-bottom: 0.85rem;
   }
   .lang-box-head strong {
-    font-size: 1.1rem;
+    font-size: 1.02rem;
     color: var(--text-primary);
   }
   .lang-badge {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--text-muted);
   }
   .lang-sublinks {
     list-style: none;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem 0.8rem;
+    gap: 0.35rem 1rem;
     padding: 0;
     margin: 0;
   }
@@ -364,7 +349,6 @@ const articleSlugs = getAllArticleSlugs();
     color: var(--text-secondary);
     font-size: 0.82rem;
     text-decoration: none;
-    padding: 0.2rem 0;
     transition: color 0.15s ease;
   }
   .lang-sublinks a:hover {
@@ -374,11 +358,10 @@ const articleSlugs = getAllArticleSlugs();
 
   @media (max-width: 700px) {
     .sitemap-card {
-      padding: 1.5rem;
+      padding: 2.25rem 0;
     }
     .card-header {
-      flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.9rem;
     }
   }
 </style>

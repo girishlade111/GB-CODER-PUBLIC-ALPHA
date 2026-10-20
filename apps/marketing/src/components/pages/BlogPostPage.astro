@@ -2,6 +2,7 @@
 import Site from '../../layouts/Site.astro';
 import Breadcrumbs from '../Breadcrumbs.astro';
 import CodeBlock from '../CodeBlock.astro';
+import Icon from '../ui/Icon.astro';
 import { getBlogContent, getAllArticleSlugs } from '../../i18n/blog';
 import { getNav } from '../../i18n/navigation';
 import { getLocalizedPath, getCanonicalUrl, calculateReadingTime } from '../../i18n/utils';
@@ -93,284 +94,346 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
 >
   <Breadcrumbs items={breadcrumbItems} lang={lang} />
 
-  <article class="blog-post-article">
-    <header class="post-header">
-      <h1 class="post-title">{article.title}</h1>
-
-      <div class="post-meta-strip">
-        <span>{blogContent.byAuthorLabel} <strong>{article.author}</strong></span>
-        <span class="dot-sep">&bull;</span>
-        <time datetime={article.date}>{article.date}</time>
-        <span class="dot-sep">&bull;</span>
-        <span>{readMinutes} {nav.readingTimeSuffix}</span>
-      </div>
-
+  <article class="post-shell">
+    <header class="post-head">
       <div class="post-tags">
         {article.tags.map((tag) => (
           <span class="post-tag">{tag}</span>
         ))}
       </div>
+
+      <h1 class="post-title">{article.title}</h1>
+
+      <div class="post-meta">
+        <span class="post-meta__author">{article.author}</span>
+        <span class="post-meta__sep" aria-hidden="true">/</span>
+        <time datetime={article.date}>{article.date}</time>
+        <span class="post-meta__sep" aria-hidden="true">/</span>
+        <span>{readMinutes} {nav.readingTimeSuffix}</span>
+      </div>
     </header>
 
-    <div class="post-lead">
-      <p>{article.intro}</p>
-    </div>
+    <div class="post-layout">
+      <div class="post-body">
+        <p class="post-lead">{article.intro}</p>
 
-    <div class="post-body">
-      {article.sections.map((section) => (
-        <section class="post-section">
-          <h2>{section.heading}</h2>
-          <p>{section.body}</p>
-          {section.codeSnippet && (
-            <CodeBlock
-                    locale={lang}
-              code={section.codeSnippet}
-              lang={section.codeLang || 'text'}
-            />
-          )}
-        </section>
-      ))}
+        {article.sections.map((section, index) => (
+          <section class="post-section">
+            <div class="post-section__head">
+              <span class="post-section__index" aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <h2>{section.heading}</h2>
+            </div>
+            <p>{section.body}</p>
+            {section.codeSnippet && (
+              <CodeBlock
+                locale={lang}
+                code={section.codeSnippet}
+                lang={section.codeLang || 'text'}
+              />
+            )}
+          </section>
+        ))}
 
-      <!-- Related Documentation Link -->
-      <div class="related-docs-box">
-        <h4>Need More Implementation Details?</h4>
-        <a href={getLocalizedPath(lang, article.relatedDocsLink)} class="related-docs-anchor">
-          {article.relatedDocsLabel}
-        </a>
+        <aside class="post-next" aria-label={article.relatedDocsLabel}>
+          <span class="post-next__label">Docs</span>
+          <a href={getLocalizedPath(lang, article.relatedDocsLink)} class="post-next__link">
+            <span>{article.relatedDocsLabel}</span>
+            <Icon name="arrow-right" size={14} />
+          </a>
+        </aside>
       </div>
-    </div>
 
-    <!-- Related Articles Section -->
-    <footer class="post-footer">
-      <div class="related-articles-section">
-        <h3>{blogContent.relatedArticlesTitle}</h3>
-        <div class="related-grid">
-          {otherSlugs.map((otherSlug) => {
-            const otherArticle = blogContent.articles[otherSlug];
-            if (!otherArticle) return null;
-            const otherUrl = getLocalizedPath(lang, `blog/${otherSlug}`);
-            return (
-              <div class="related-card">
-                <h4><a href={otherUrl}>{otherArticle.title}</a></h4>
-                <p>{otherArticle.description}</p>
-                <a href={otherUrl} class="related-link">
-                  <span>{blogContent.readArticleLabel}</span>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M5 12h14m-6-6 6 6-6 6"/>
-                  </svg>
-                </a>
-              </div>
-            );
-          })}
+      <aside class="post-rail" aria-label={blogContent.relatedArticlesTitle}>
+        <div class="post-rail__inner">
+          <h2 class="post-rail__title">{blogContent.relatedArticlesTitle}</h2>
+          <ul class="post-rail__list">
+            {otherSlugs.map((otherSlug) => {
+              const otherArticle = blogContent.articles[otherSlug];
+              if (!otherArticle) return null;
+              const otherUrl = getLocalizedPath(lang, `blog/${otherSlug}`);
+              return (
+                <li>
+                  <a href={otherUrl} class="post-rail__item">
+                    <span class="post-rail__item-title">{otherArticle.title}</span>
+                    <span class="post-rail__item-link">
+                      {blogContent.readArticleLabel}
+                      <Icon name="arrow-up-right" size={12} />
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
         </div>
-      </div>
+      </aside>
+    </div>
 
-      <div class="post-navigation-bar">
-        <a href={blogIndexUrl} class="back-link">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M19 12H5m6 6-6-6 6-6"/>
-          </svg>
-          <span>{blogContent.backToBlogLabel}</span>
-        </a>
-        <a href="/app/projects" class="cta-button">
-          <span>{nav.startCoding}</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M5 12h14m-6-6 6 6-6 6"/>
-          </svg>
-        </a>
-      </div>
+    <footer class="post-foot">
+      <a href={blogIndexUrl} class="post-back">
+        <Icon name="arrow-left" size={14} />
+        <span>{blogContent.backToBlogLabel}</span>
+      </a>
+      <a href="/app/projects" class="post-cta">
+        <span>{nav.startCoding}</span>
+        <Icon name="arrow-right" size={14} />
+      </a>
     </footer>
   </article>
 </Site>
 
 <style>
-  .blog-post-article {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 3rem 1.5rem 6rem;
+  .post-shell {
+    max-width: 1120px;
+    margin-inline: auto;
+    padding: clamp(2.5rem, 5vw, 4rem) 1.5rem 6rem;
   }
 
-  .post-header {
-    margin-bottom: 2.5rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid var(--border-subtle);
+  /* --- Masthead --------------------------------------------------------- */
+  .post-head {
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
   }
-
   .post-tags {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.4rem;
     flex-wrap: wrap;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
   }
-
   .post-tag {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-size: 0.7rem;
+    font-weight: 650;
     background: var(--surface-soft);
-    color: var(--accent-terracotta);
-    padding: 0.25rem 0.65rem;
+    color: var(--primary);
+    padding: 0.2rem 0.55rem;
     border-radius: 4px;
   }
-
   .post-title {
-    font-size: clamp(2.25rem, 4.5vw, 3.25rem);
-    line-height: 1.15;
-    margin-bottom: 1.25rem;
+    font-size: clamp(2.1rem, 4.6vw, 3.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+    max-width: 24ch;
+    margin: 0 0 1.5rem;
     color: var(--text-primary);
   }
-
-  .post-meta-strip {
-    font-size: 0.9rem;
-    color: var(--text-muted);
+  .post-meta {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
     flex-wrap: wrap;
+    font-size: 0.83rem;
+    color: var(--text-muted);
   }
-
-  .post-meta-strip strong {
+  .post-meta__author {
     color: var(--text-primary);
+    font-weight: 500;
+  }
+  .post-meta__sep {
+    color: var(--border);
   }
 
-  .dot-sep {
-    font-size: 0.8rem;
+  /* --- Body + rail ------------------------------------------------------ */
+  .post-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+  }
+  .post-body {
+    min-width: 0;
+    padding-top: 2.5rem;
   }
 
   .post-lead {
-    font-size: 1.2rem;
-    line-height: 1.7;
-    color: var(--text-secondary);
-    margin-bottom: 3rem;
-    padding: 1.5rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    font-size: clamp(1.15rem, 1.8vw, 1.35rem);
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin: 0 0 3rem;
+    padding-inline-start: 1.25rem;
+    border-inline-start: 2px solid var(--primary);
+    max-width: 60ch;
   }
 
-  .post-body {
-    display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
+  .post-section {
+    padding-bottom: 2.5rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border-subtle);
   }
-
-  .post-section h2 {
-    font-size: 1.75rem;
+  .post-section:last-of-type {
+    border-bottom: 0;
     margin-bottom: 1rem;
+  }
+  .post-section__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  .post-section__index {
+    font: 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .post-section h2 {
+    font-size: clamp(1.4rem, 2.4vw, 1.75rem);
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+    margin: 0;
     color: var(--text-primary);
   }
-
   .post-section p {
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     line-height: 1.75;
     color: var(--text-secondary);
-    margin-bottom: 1rem;
+    margin: 0 0 1rem;
+    max-width: 68ch;
   }
 
-  .related-docs-box {
-    margin: 2.5rem 0 1rem;
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    padding: 1.75rem;
-  }
-
-  .related-docs-box h4 {
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .related-docs-anchor {
-    color: var(--accent-terracotta);
-    font-weight: 600;
-    text-decoration: none;
-    font-size: 0.95rem;
-  }
-
-  .related-docs-anchor:hover {
-    text-decoration: underline;
-  }
-
-  /* Post Footer & Recommendations */
-  .post-footer {
-    margin-top: 4rem;
-    padding-top: 3rem;
+  /* --- Docs hand-off ---------------------------------------------------- */
+  .post-next {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1.35rem 0;
     border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .post-next__label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .post-next__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--primary);
+    font-weight: 650;
+    font-size: 0.92rem;
+    text-decoration: none;
+  }
+  .post-next__link:hover {
+    color: var(--accent-hover);
   }
 
-  .related-articles-section h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
+  /* --- Related rail ----------------------------------------------------- */
+  .post-rail__inner {
+    position: sticky;
+    top: 5.5rem;
+    padding-top: 2.5rem;
   }
-
-  .related-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 3rem;
+  .post-rail__title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--border);
+    margin: 0;
   }
-
-  .related-card {
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    padding: 1.5rem;
+  .post-rail__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .post-rail__item {
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+    text-decoration: none;
   }
-
-  .related-card h4 {
-    font-size: 1.15rem;
-    margin-bottom: 0.5rem;
-    line-height: 1.3;
-  }
-
-  .related-card h4 a {
+  .post-rail__item-title {
+    font-size: 0.95rem;
+    font-weight: 550;
+    line-height: 1.35;
     color: var(--text-primary);
-    text-decoration: none;
+    letter-spacing: -0.01em;
+    transition: color 0.15s ease;
   }
-
-  .related-card h4 a:hover {
-    color: var(--accent-terracotta);
+  .post-rail__item:hover .post-rail__item-title {
+    color: var(--primary);
   }
-
-  .related-card p {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
-    margin-bottom: 1rem;
-    flex: 1;
-  }
-
-  .related-link {
-    color: var(--accent-terracotta);
-    font-weight: 600;
-    font-size: 0.875rem;
-    text-decoration: none;
-  }
-
-  .post-navigation-bar {
-    display: flex;
-    justify-content: space-between;
+  .post-rail__item-link {
+    display: inline-flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.3rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .post-rail__item:hover .post-rail__item-link {
+    color: var(--primary);
   }
 
-  .back-link {
+  /* --- Footer ----------------------------------------------------------- */
+  .post-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 3.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+  .post-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
     color: var(--text-secondary);
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 0.9rem;
   }
-
-  .back-link:hover {
+  .post-back:hover {
     color: var(--text-primary);
   }
+  .post-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    text-decoration: none;
+    font-weight: 650;
+    font-size: 0.88rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 9999px;
+    transition: background 0.18s ease;
+  }
+  .post-cta:hover {
+    background: var(--accent-hover);
+  }
 
-  @media (max-width: 680px) {
-    .related-grid {
-      grid-template-columns: 1fr;
+  @media (max-width: 960px) {
+    .post-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .post-rail__inner {
+      position: static;
+      padding-top: 0;
+      margin-top: 3rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .post-shell {
+      padding-inline: 1.25rem;
+    }
+    .post-title {
+      font-size: 2.1rem;
+    }
+    .post-section p {
+      font-size: 0.98rem;
     }
   }
 </style>

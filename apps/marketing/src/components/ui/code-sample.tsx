@@ -1,6 +1,6 @@
 // Focused Astro-island adaptation of Kibo UI's MIT CodeBlock composition.
 // Header/body/copy structure retained; code is rendered as safe React text.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "./button";
 
 export function CodeSample({
@@ -9,12 +9,15 @@ export function CodeSample({
   copyLabel,
   copiedLabel,
   errorLabel,
+  icon,
 }: {
   code: string;
   filename: string;
   copyLabel: string;
   copiedLabel: string;
   errorLabel: string;
+  /** Optional leading glyph, drawn from the site's shared icon set. */
+  icon?: ReactNode;
 }) {
   const [status, setStatus] = useState<"idle" | "copied" | "error">("idle");
   const timer = useRef<ReturnType<typeof setTimeout>>();
@@ -36,7 +39,10 @@ export function CodeSample({
   return (
     <div className="sample-code">
       <div className="sample-code-header">
-        <span>{filename}</span>
+        <span className="sample-filename">
+          {icon}
+          {filename}
+        </span>
         <Button variant="ghost" onClick={copy} aria-label={copyLabel} className="copy-btn">
           <span className="copy-text">{status === "copied" ? copiedLabel : copyLabel}</span>
         </Button>

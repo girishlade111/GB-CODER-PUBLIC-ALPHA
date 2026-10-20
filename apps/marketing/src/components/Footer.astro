@@ -2,6 +2,7 @@
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/languages';
 import { getLocalizedPath } from '../i18n/utils';
 import { getNav } from '../i18n/navigation';
+import Icon from './ui/Icon.astro';
 
 interface Props {
   lang?: string;
@@ -53,7 +54,7 @@ const termsUrl = '/terms-and-conditions';
           <li><a href={featuresUrl}>{nav.features}</a></li>
           <li><a href={docsUrl}>{nav.docs}</a></li>
           <li><a href={blogUrl}>{nav.blog}</a></li>
-          <li><a href="/app/projects">{nav.app} ↗</a></li>
+          <li><a href="/app/projects">{nav.app} <Icon name="arrow-up-right" size={12} /></a></li>
         </ul>
       </div>
 
@@ -63,8 +64,8 @@ const termsUrl = '/terms-and-conditions';
         <ul class="footer-list">
           <li><a href={aboutUrl}>{nav.about}</a></li>
           <li><a href={contactUrl}>{nav.contact}</a></li>
-          <li><a href="https://ladestack.in" target="_blank" rel="noopener noreferrer">LadeStack.in ↗</a></li>
-          <li><a href="https://github.com/girishlade111" target="_blank" rel="noopener noreferrer">GitHub ↗</a></li>
+          <li><a href="https://ladestack.in" target="_blank" rel="noopener noreferrer">LadeStack.in <Icon name="arrow-up-right" size={12} /></a></li>
+          <li><a href="https://github.com/girishlade111" target="_blank" rel="noopener noreferrer">GitHub <Icon name="arrow-up-right" size={12} /></a></li>
         </ul>
       </div>
 
@@ -127,7 +128,7 @@ const termsUrl = '/terms-and-conditions';
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #10b981;
+    background: var(--primary);
     display: inline-block;
   }
 </style>

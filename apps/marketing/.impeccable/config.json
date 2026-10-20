@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "files": [
+          "src/styles/canvas.css"
+        ],
+        "createdAt": "2026-10-20T12:07:52.184Z",
+        "reason": "CSS mask alpha, not a palette colour"
+      },
+      {
+        "rule": "ai-color-palette",
+        "value": "*",
+        "files": [
+          "src/i18n/blog.ts"
+        ],
+        "createdAt": "2026-10-20T12:08:15.001Z",
+        "reason": "Blog article code samples carry their own Tailwind classes; not site UI"
+      }
+    ]
+  }
+}

@@ -1,12 +1,19 @@
 ---
 import Site from '../../layouts/Site.astro';
+import '../../styles/studio.css';
 import { getHomeContent } from '../../i18n/home';
 import { getLocalizedPath } from '../../i18n/utils';
 import { getStudioContent } from '../../i18n/studio';
 import { getBlogContent, getAllArticleSlugs } from '../../i18n/blog';
 import { getNav } from '../../i18n/navigation';
-import StudioDemo from '../StudioDemo.astro';
+import { getUi } from '../../i18n/ui';
+import StudioDemo from '../StudioDemo.tsx';
 import AssistShowcase from '../AssistShowcase.astro';
+import Icon from '../ui/Icon.astro';
+import Marquee from '../visuals/Marquee.astro';
+import StudioFrame from '../visuals/StudioFrame.astro';
+import CommandPalette from '../visuals/CommandPalette.astro';
+import EnvironmentSwitch from '../visuals/EnvironmentSwitch.astro';
 
 interface Props {
   lang?: string;
@@ -17,15 +24,33 @@ const content = getHomeContent(lang);
 const studio = getStudioContent(lang);
 const blog = getBlogContent(lang);
 const nav = getNav(lang);
+const ui = getUi(lang);
 
 const featuresUrl = getLocalizedPath(lang, 'features');
 const docsUrl = getLocalizedPath(lang, 'docs');
 const blogUrl = getLocalizedPath(lang, 'blog');
+
+const techStack = [
+  'HTML5',
+  'CSS3',
+  'JavaScript',
+  'TypeScript',
+  'React 18',
+  'Vue 3',
+  'Vite',
+  'Node.js',
+  'WebContainers',
+  'Monaco',
+  'IndexedDB',
+  'ZIP',
+];
+
+const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download'] as const;
 ---
 
 <Site title={content.metaTitle} description={content.metaDescription} lang={lang} basePath="">
   <!-- Hero Section -->
-  <section class="home-opening section-container">
+  <section class="home-opening canvas-backdrop">
     <div class="opening-copy">
       <div class="hero-header-block">
         <h1>{studio.title}</h1>
@@ -35,18 +60,14 @@ const blogUrl = getLocalizedPath(lang, 'blog');
         <div class="opening-actions">
           <a href="/app/projects" class="cta-button" id="heroStartBtn">
             {content.ctaPrimary}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M5 12h14m-6-6 6 6-6 6"/>
-            </svg>
+            <Icon name="arrow-right" size={16} />
           </a>
           <a href={featuresUrl} class="ui-button ui-button-outline" id="heroFeaturesBtn">
             {content.ctaSecondary}
           </a>
         </div>
         <span class="opening-note">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
+          <Icon name="shield" size={13} />
           {studio.noSetup}
         </span>
       </div>
@@ -54,41 +75,31 @@ const blogUrl = getLocalizedPath(lang, 'blog');
 
     <!-- Live Interactive Studio Stage -->
     <div class="studio-wrapper">
-      <div class="studio-ambient-glow" aria-hidden="true"></div>
-      <StudioDemo labels={studio} launchLabel={nav.openEditor} />
-    </div>
-
-    <!-- Minimalist Technology Stack Strip -->
-    <div class="technology-strip">
-      <span class="tech-tagline">{content.heroTag}</span>
-      <div class="tech-badges">
-        <span class="tech-chip">HTML5</span>
-        <span class="tech-chip">CSS3</span>
-        <span class="tech-chip">JavaScript</span>
-        <span class="tech-chip">React 18</span>
-        <span class="tech-chip">Vue 3</span>
-        <span class="tech-chip">Vite</span>
-        <span class="tech-chip">Node.js</span>
-        <span class="tech-chip">WebContainers</span>
-      </div>
+      <StudioDemo client:load labels={studio} launchLabel={nav.openEditor} />
     </div>
   </section>
 
-  <!-- Step-by-Step Workflow Section -->
+  <!-- Technology marquee -->
+  <section class="stack-band" aria-label={ui.marqueeLabel}>
+    <div class="stack-band__inner">
+      <span class="stack-band__label">{ui.marqueeLabel}</span>
+      <Marquee items={techStack} label={ui.marqueeLabel} />
+    </div>
+  </section>
+
+  <!-- Step-by-step workflow: ruled editorial steps -->
   <section class="workflow-section section-container">
     <div class="section-intro">
       <div>
         <h2>{studio.workflow}</h2>
       </div>
-      <a href={docsUrl} class="text-link">{nav.docs} <span aria-hidden="true">↗</span></a>
+      <a href={docsUrl} class="text-link">{nav.docs} <Icon name="arrow-up-right" size={14} /></a>
     </div>
 
     <ol class="workflow-steps">
       {studio.steps.map((step, i) => (
-        <li class="workflow-card">
-          <div class="step-badge">
-            <span class="step-num">{i + 1}</span>
-          </div>
+        <li class="workflow-step">
+          <span class="workflow-step__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
           <h3>{step}</h3>
           <p>{studio.stepText[i]}</p>
         </li>
@@ -96,7 +107,7 @@ const blogUrl = getLocalizedPath(lang, 'blog');
     </ol>
   </section>
 
-  <!-- Dual Environment Bento Grid -->
+  <!-- Environments: interactive switcher + descriptions -->
   <section class="environments-section">
     <div class="section-container">
       <div class="section-intro">
@@ -106,56 +117,25 @@ const blogUrl = getLocalizedPath(lang, 'blog');
         </div>
       </div>
 
-      <div class="environment-grid">
-        <!-- Environment 1: Static Prototyping -->
-        <article class="environment-card">
-          <div class="environment-visual static-visual" aria-hidden="true">
-            <div class="file-stack">
-              <span>index.html <i>HTML5</i></span>
-              <span>style.css <i>CSS3</i></span>
-              <span>script.js <i>ES6</i></span>
-            </div>
-            <div class="static-result">
-              <span class="result-bar"></span>
-              <span class="result-text"></span>
-              <span class="result-action"></span>
-            </div>
-          </div>
-          <div class="environment-content">
-            <h3>{content.staticCardTitle}</h3>
-            <p>{content.staticCardDesc}</p>
-            <a class="text-link" href={`${docsUrl}#static-workflow`}>
-              {nav.docs} <span aria-hidden="true">↗</span>
-            </a>
-          </div>
-        </article>
+      <EnvironmentSwitch
+        staticLabel={ui.envStatic}
+        containerLabel={ui.envContainer}
+      />
 
-        <!-- Environment 2: Advanced WebContainer IDE -->
-        <article class="environment-card">
-          <div class="environment-visual terminal-visual" aria-label="Illustrative terminal example">
-            <div class="terminal-top">
-              <div class="term-dots">
-                <span class="term-dot"></span>
-                <span class="term-dot"></span>
-                <span class="term-dot"></span>
-              </div>
-              <span>Terminal · In-Browser Node.js</span>
-            </div>
-            <pre><code><span>$ npm install</span><br/><span class="terminal-muted">added 42 packages in 320ms</span><br/><br/><span>$ npm run dev</span><br/><span class="terminal-muted">VITE v5.4.2 ready in 180 ms</span><br/><span class="terminal-local">➜ Local:   http://localhost:5173/</span></code></pre>
-          </div>
-          <div class="environment-content">
-            <h3>{content.advancedCardTitle}</h3>
-            <p>{content.advancedCardDesc}</p>
-            <a class="text-link" href={`${docsUrl}#webcontainer-terminal`}>
-              {nav.docs} <span aria-hidden="true">↗</span>
-            </a>
-          </div>
-        </article>
-      </div>
+      <dl class="environment-notes">
+        <div class="environment-note">
+          <dt>{content.staticCardTitle}</dt>
+          <dd>{content.staticCardDesc}</dd>
+        </div>
+        <div class="environment-note">
+          <dt>{content.advancedCardTitle}</dt>
+          <dd>{content.advancedCardDesc}</dd>
+        </div>
+      </dl>
     </div>
   </section>
 
-  <!-- Capabilities Matrix (Bento Cards with Minimal SVG Icons) -->
+  <!-- Capabilities bento -->
   <section class="capabilities-section section-container">
     <div class="section-intro">
       <div>
@@ -164,60 +144,59 @@ const blogUrl = getLocalizedPath(lang, 'blog');
       </div>
     </div>
 
-    <div class="capability-bento">
+    <div class="bento">
       {content.features.map((feat, idx) => (
-        <article class="capability-card">
-          <div class="capability-icon" aria-hidden="true">
-            {idx === 0 ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                <polyline points="16 18 22 12 16 6" />
-                <polyline points="8 6 2 12 8 18" />
-              </svg>
-            ) : idx === 1 ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                <line x1="8" y1="21" x2="16" y2="21" />
-                <line x1="12" y1="17" x2="12" y2="21" />
-              </svg>
-            ) : idx === 2 ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                <path d="M16.5 9.4 7.55 4.24a1.78 1.78 0 0 0-2.5 1.55v12.42a1.78 1.78 0 0 0 2.5 1.55L16.5 14.6a1.78 1.78 0 0 0 0-3.2z" />
-              </svg>
-            ) : idx === 3 ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                <rect x="4" y="4" width="16" height="16" rx="2" />
-                <rect x="9" y="9" width="6" height="6" />
-                <line x1="9" y1="1" x2="9" y2="4" />
-                <line x1="15" y1="1" x2="15" y2="4" />
-                <line x1="9" y1="20" x2="9" y2="23" />
-                <line x1="15" y1="20" x2="15" y2="23" />
-              </svg>
-            ) : idx === 4 ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-            )}
-          </div>
-          <h3>{feat.title}</h3>
-          <p>{feat.desc}</p>
+        <article
+          class:list={[
+            'bento__cell',
+            'spotlight',
+            idx === 0 || idx === 1 || idx === 5 ? 'bento__cell--half' : 'bento__cell--third',
+          ]}
+        >
+          <span class="bento__icon"><Icon name={capabilityIcons[idx] ?? 'sparkles'} size={19} /></span>
+          <h3 class="bento__title">{feat.title}</h3>
+          <p class="bento__desc">{feat.desc}</p>
         </article>
       ))}
-    </div>
-
-    <div class="features-link-row">
-      <a href={featuresUrl} class="text-link feature-link">
-        {content.ctaSecondary} <span aria-hidden="true">↗</span>
+      <a href={featuresUrl} class="bento__cell bento__cell--half bento__cta spotlight">
+        <span class="bento__icon"><Icon name="arrow-up-right" size={19} /></span>
+        <h3 class="bento__title">{content.ctaSecondary}</h3>
+        <p class="bento__desc">{content.featuresSub}</p>
       </a>
     </div>
 
     <!-- AI Pair Programmer Showcase -->
     <AssistShowcase lang={lang} />
+  </section>
+
+  <!-- Inside the studio: the real workspace -->
+  <section class="studio-proof-section">
+    <div class="section-container">
+      <div class="section-intro">
+        <div>
+          <h2>{ui.insideStudio.replace(/[.。！!]+$/, '')}</h2>
+          <p class="section-sub">{ui.insideStudioSub}</p>
+        </div>
+      </div>
+
+      <div class="studio-proof">
+        <div class="studio-proof__frame">
+          <StudioFrame
+            path={`workspace / react-starter`}
+            fileName="App.jsx"
+            activeFile="App.jsx"
+          />
+        </div>
+        <div class="studio-proof__palette">
+          <CommandPalette placeholder={ui.palettePlaceholder} />
+          <ul class="studio-proof__notes">
+            <li><Icon name="folder" size={14} /> {ui.explorerLabel}</li>
+            <li><Icon name="search" size={14} /> {ui.palettePlaceholder}</li>
+            <li><Icon name="eye" size={14} /> {studio.preview}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- Real-World Use Cases Section -->
@@ -269,21 +248,30 @@ const blogUrl = getLocalizedPath(lang, 'blog');
       <div>
         <h2>{studio.guides}</h2>
       </div>
-      <a href={blogUrl} class="text-link">{studio.allGuides} <span aria-hidden="true">↗</span></a>
+      <a href={blogUrl} class="text-link">{studio.allGuides} <Icon name="arrow-up-right" size={14} /></a>
     </div>
 
     <div class="journal-list">
       {getAllArticleSlugs().map((slug) => {
         const article = blog.articles[slug];
         return (
-          <article class="journal-card">
-            <span class="journal-category">{article.tags[0]}</span>
-            <h3>
-              <a href={getLocalizedPath(lang, `blog/${slug}`)}>{article.title}</a>
-            </h3>
-            <p>{article.description}</p>
-            <a href={getLocalizedPath(lang, `blog/${slug}`)} class="text-link">
-              {blog.readArticleLabel} <span aria-hidden="true">↗</span>
+          <article class="journal-row">
+            <div class="journal-row__meta">
+              <span class="journal-category">{article.tags[0]}</span>
+              <span class="journal-date">{article.date}</span>
+            </div>
+            <div class="journal-row__body">
+              <h3>
+                <a href={getLocalizedPath(lang, `blog/${slug}`)}>{article.title}</a>
+              </h3>
+              <p>{article.description}</p>
+            </div>
+            <a
+              href={getLocalizedPath(lang, `blog/${slug}`)}
+              class="journal-row__arrow"
+              aria-label={blog.readArticleLabel}
+            >
+              <Icon name="arrow-up-right" size={16} />
             </a>
           </article>
         );
@@ -293,19 +281,13 @@ const blogUrl = getLocalizedPath(lang, 'blog');
 
   <!-- Browser Compatibility Note -->
   <aside class="compatibility section-container">
-    <div class="compat-icon" aria-hidden="true">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
-    </div>
+    <span class="compat-icon" aria-hidden="true"><Icon name="globe" size={20} /></span>
     <div class="compat-content">
       <h2>{studio.support}</h2>
       <p>{studio.supportText}</p>
     </div>
     <a href={`${docsUrl}#troubleshooting`} class="text-link">
-      {nav.docs} <span aria-hidden="true">↗</span>
+      {nav.docs} <Icon name="arrow-up-right" size={14} />
     </a>
   </aside>
 
@@ -318,13 +300,22 @@ const blogUrl = getLocalizedPath(lang, 'blog');
       </div>
       <a href="/app/projects" class="cta-button cta-hero">
         {content.ctaFinalBtn}
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M5 12h14m-6-6 6 6-6 6"/>
-        </svg>
+        <Icon name="arrow-right" size={17} />
       </a>
     </div>
   </section>
 </Site>
+
+<script>
+  // Pointer-tracked spotlight for bento cells (Aceternity pattern).
+  document.querySelectorAll<HTMLElement>('.spotlight').forEach((el) => {
+    el.addEventListener('pointermove', (event) => {
+      const rect = el.getBoundingClientRect();
+      el.style.setProperty('--spot-x', `${event.clientX - rect.left}px`);
+      el.style.setProperty('--spot-y', `${event.clientY - rect.top}px`);
+    });
+  });
+</script>
 
 <style>
   .section-container {
@@ -332,32 +323,41 @@ const blogUrl = getLocalizedPath(lang, 'blog');
     padding-inline: 1.5rem;
     margin-inline: auto;
   }
+
+  /* --- Hero ------------------------------------------------------------ */
   .home-opening {
-    padding-top: 5rem;
-    padding-bottom: 2rem;
+    max-width: 1248px;
+    margin-inline: auto;
+    padding: 4.5rem 1.5rem 3.5rem;
   }
   .opening-copy {
     display: grid;
     grid-template-columns: 1.15fr 0.95fr;
     gap: 4rem;
-    align-items: flex-end;
-    margin-bottom: 3.5rem;
+    align-items: end;
+    margin-bottom: 3rem;
+  }
+  .hero-header-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
   }
   h1 {
     font-size: clamp(3rem, 5.5vw, 4.8rem);
-    font-weight: 650;
-    line-height: 1.05;
+    font-weight: 550;
+    line-height: 1.04;
     letter-spacing: -0.04em;
     color: var(--text-primary);
+    max-width: 12ch;
   }
   .opening-aside {
-    max-width: 480px;
+    max-width: 460px;
     padding-bottom: 0.35rem;
   }
   .hero-lead {
-    font-size: 1.15rem;
+    font-size: 1.12rem;
     color: var(--text-secondary);
-    line-height: 1.65;
+    line-height: 1.7;
     margin: 0;
   }
   .opening-actions {
@@ -370,10 +370,10 @@ const blogUrl = getLocalizedPath(lang, 'blog');
   .opening-note {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.45rem;
     font-size: 0.78rem;
     color: var(--text-muted);
-    margin-top: 1.25rem;
+    margin-top: 1.35rem;
   }
   .text-link {
     color: var(--text-primary);
@@ -382,317 +382,201 @@ const blogUrl = getLocalizedPath(lang, 'blog');
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.35rem;
     padding: 0.35rem 0;
     transition: color 0.15s ease;
   }
   .text-link:hover {
     color: var(--primary);
-    text-decoration: underline;
   }
-
-  /* Studio Stage Wrapper */
   .studio-wrapper {
     position: relative;
-    margin-top: 1.5rem;
-  }
-  .studio-ambient-glow {
-    position: absolute;
-    inset: -20px;
-    background: radial-gradient(circle at 50% 20%, rgba(19, 98, 64, 0.08) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Technology Strip */
-  .technology-strip {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1.25rem;
-    padding: 2.25rem 0;
-    border-bottom: 1px solid var(--border-subtle);
     margin-top: 1rem;
   }
-  .tech-tagline {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-  .tech-badges {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-  }
-  .tech-chip {
-    font-size: 0.76rem;
-    font-weight: 600;
-    padding: 0.25rem 0.65rem;
-    border-radius: 6px;
+
+  /* --- Technology band ------------------------------------------------- */
+  .stack-band {
+    border-block: 1px solid var(--border-subtle);
     background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    color: var(--text-secondary);
+  }
+  .stack-band__inner {
+    max-width: 1248px;
+    margin-inline: auto;
+    padding: 1.5rem 1.5rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 2rem;
+  }
+  .stack-band__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
   }
 
-  /* Workflow Section */
+  /* --- Workflow: ruled steps ------------------------------------------- */
   .workflow-section,
   .capabilities-section,
   .journal-section {
-    padding-top: 6rem;
-    padding-bottom: 6rem;
+    padding-top: 6.5rem;
+    padding-bottom: 6.5rem;
   }
   .section-intro {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 3rem;
-    margin-bottom: 3.5rem;
+    margin-bottom: 3.25rem;
+  }
+  .section-intro > div {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
   .section-intro h2 {
     font-size: clamp(2rem, 3.3vw, 2.85rem);
-    line-height: 1.15;
+    line-height: 1.12;
     letter-spacing: -0.035em;
     max-width: 22ch;
+    margin: 0;
   }
   .section-sub {
-    max-width: 48ch;
+    max-width: 52ch;
     color: var(--text-secondary);
     font-size: 1rem;
-    line-height: 1.6;
-    margin-top: 0.5rem;
+    line-height: 1.65;
+    margin: 0;
   }
   .workflow-steps {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
     list-style: none;
-    gap: 2rem;
     padding: 0;
     margin: 0;
+    border-top: 1px solid var(--border);
   }
-  .workflow-card {
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 14px;
-    padding: 2.25rem;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  .workflow-step {
+    padding: 2rem 2.5rem 2.25rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+    position: relative;
   }
-  .workflow-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--border);
-    box-shadow: var(--shadow-md);
+  .workflow-step + .workflow-step {
+    padding-left: 2.5rem;
+    border-left: 1px solid var(--border-subtle);
   }
-  .step-badge {
-    width: 36px;
-    height: 36px;
-    border: 1px solid var(--border-subtle);
-    border-radius: 50%;
-    background: var(--surface-soft);
-    display: grid;
-    place-items: center;
+  .workflow-step__num {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
     color: var(--primary);
-    font-weight: 750;
-    font-size: 0.85rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.1rem;
   }
-  .workflow-card h3 {
-    font-size: 1.25rem;
-    margin-bottom: 0.75rem;
-    line-height: 1.3;
+  .workflow-step h3 {
+    font-size: 1.28rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.65rem;
+    line-height: 1.25;
   }
-  .workflow-card p {
-    font-size: 0.92rem;
+  .workflow-step p {
+    font-size: 0.93rem;
     color: var(--text-secondary);
-    line-height: 1.6;
+    line-height: 1.65;
     margin: 0;
+    max-width: 34ch;
   }
 
-  /* Environments Section */
+  /* --- Environments ---------------------------------------------------- */
   .environments-section {
     background: var(--surface-soft);
-    padding: 6rem 0;
+    padding: 6.5rem 0;
     border-block: 1px solid var(--border-subtle);
   }
-  .environment-grid {
+  .environment-notes {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 2.5rem;
+    margin: 3rem 0 0;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--border);
   }
-  .environment-card {
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  .environment-note dt {
+    font-size: 1.1rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
   }
-  .environment-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-  }
-  .environment-visual {
-    min-height: 240px;
-    overflow: hidden;
-  }
-  .static-visual {
-    background: #e2ede6;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
-    padding: 2.5rem;
-  }
-  .file-stack {
-    display: grid;
-    gap: 0.65rem;
-    flex: 1;
-    max-width: 220px;
-    transform: rotate(-3deg);
-  }
-  .file-stack > span {
-    display: flex;
-    justify-content: space-between;
-    background: var(--surface);
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    font: 12px ui-monospace, monospace;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-  .file-stack i {
-    font-size: 9px;
-    color: var(--primary);
-    font-style: normal;
-    font-weight: 700;
-  }
-  .static-result {
-    width: 130px;
-    background: var(--surface);
-    padding: 1rem;
-    border-radius: 8px;
-    display: grid;
-    gap: 0.65rem;
-    transform: rotate(4deg);
-    box-shadow: var(--shadow-md);
-  }
-  .result-bar {
-    height: 55px;
-    background: #d8e5dd;
-    border-radius: 4px;
-  }
-  .result-text {
-    height: 8px;
-    background: #b7cebf;
-    border-radius: 2px;
-  }
-  .result-action {
-    height: 14px;
-    width: 60%;
-    background: var(--primary);
-    border-radius: 3px;
-  }
-  .terminal-visual {
-    background: var(--code-bg);
-    color: var(--code-text);
-  }
-  .terminal-top {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    border-bottom: 1px solid #1e382b;
-    font-size: 0.75rem;
-    padding: 0.75rem 1.25rem;
-    color: #9cb8a9;
-    background: rgba(14, 30, 23, 0.85);
-  }
-  .term-dots {
-    display: flex;
-    gap: 5px;
-  }
-  .term-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #2a523d;
-  }
-  .terminal-visual pre {
-    padding: 1.5rem;
-    font: 12px/1.8 ui-monospace, monospace;
-    overflow: auto;
-  }
-  .terminal-muted { color: #8ba997; }
-  .terminal-local { color: #a3e6be; font-weight: 600; }
-  .environment-content {
-    padding: 2.25rem;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-  }
-  .environment-content h3 {
-    font-size: 1.45rem;
-    margin-bottom: 0.75rem;
-  }
-  .environment-content p {
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-    flex: 1;
-  }
-
-  /* Capabilities Grid (Bento) */
-  .capability-bento {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1.75rem;
-  }
-  .capability-card {
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 14px;
-    padding: 2rem;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
-  }
-  .capability-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--border);
-    box-shadow: var(--shadow-md);
-  }
-  .capability-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: var(--surface-soft);
-    display: grid;
-    place-items: center;
-    color: var(--primary);
-    margin-bottom: 1.25rem;
-    border: 1px solid var(--border-subtle);
-  }
-  .capability-card h3 {
-    font-size: 1.15rem;
-    margin-bottom: 0.65rem;
-  }
-  .capability-card p {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    line-height: 1.55;
+  .environment-note dd {
     margin: 0;
-  }
-  .features-link-row {
-    margin-top: 2.5rem;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.65;
+    max-width: 52ch;
   }
 
-  /* Use Cases Section */
-  .usecases-section {
-    padding: 6rem 0;
+  /* --- Capabilities bento ---------------------------------------------- */
+  .capabilities-section .bento {
+    margin-bottom: 4rem;
+  }
+  .bento__cta {
+    text-decoration: none;
+    justify-content: center;
+    background: var(--surface-soft);
+  }
+  .bento__cta:hover {
+    background: var(--surface-soft);
+  }
+  .bento__cta .bento__title {
+    color: var(--primary);
+  }
+  .bento__cta .bento__desc {
+    display: none;
+  }
+
+  /* --- Studio proof ---------------------------------------------------- */
+  .studio-proof-section {
+    padding: 6.5rem 0;
     background: var(--surface);
+    border-block: 1px solid var(--border-subtle);
+  }
+  .studio-proof {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+  .studio-proof__palette {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .studio-proof__notes {
+    list-style: none;
+    display: grid;
+    gap: 0.75rem;
+    padding: 1.5rem 0 0;
+    margin: 0;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+  .studio-proof__notes li {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .studio-proof__notes svg {
+    color: var(--primary);
+  }
+
+  /* --- Use cases ------------------------------------------------------- */
+  .usecases-section {
+    padding: 6.5rem 0;
+    background: var(--canvas);
     border-block: 1px solid var(--border-subtle);
   }
   .usecases {
@@ -701,44 +585,64 @@ const blogUrl = getLocalizedPath(lang, 'blog');
     gap: 2rem;
   }
   .usecase-card {
-    background: var(--surface-soft);
     border: 1px solid var(--border-subtle);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
+    background: var(--surface);
     display: flex;
     flex-direction: column;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .usecase-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    border-color: var(--border);
+    transform: translateY(-3px);
   }
   .usecase-art {
-    height: 190px;
+    height: 180px;
     display: grid;
     place-items: center;
     padding: 2rem;
-    background: #edf3ef;
+    background: var(--surface-soft);
     border-bottom: 1px solid var(--border-subtle);
   }
-  .usecase-art-1 { background: #f0f4f1; }
-  .usecase-art-2 { background: #e6eee8; }
+  .usecase-art-1 {
+    background: #f1f5f2;
+  }
+  .usecase-art-2 {
+    background: #e4ede7;
+  }
   .layout-study {
-    width: 180px;
+    width: 170px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
     transform: rotate(-4deg);
   }
-  .study-bar-1 { grid-column: 1/-1; height: 50px; background: #9bbca7; border-radius: 6px; }
-  .study-bar-2, .study-bar-3 { height: 40px; background: #ffffff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-  .code-study, .project-study {
+  .study-bar-1 {
+    grid-column: 1/-1;
+    height: 46px;
+    background: #9bbca7;
+    border-radius: 6px;
+  }
+  .study-bar-2,
+  .study-bar-3 {
+    height: 38px;
+    background: #ffffff;
+    border-radius: 4px;
+  }
+  .code-study,
+  .project-study {
     font: 12px/1.8 ui-monospace, monospace;
     color: var(--primary);
     display: grid;
   }
-  .code-bracket { color: var(--text-muted); }
-  .code-inner { font-weight: 600; padding-left: 1rem; }
+  .code-bracket {
+    color: var(--text-muted);
+  }
+  .code-inner {
+    font-weight: 600;
+    padding-left: 1rem;
+  }
   .usecase-text {
     padding: 1.75rem;
     flex: 1;
@@ -746,82 +650,96 @@ const blogUrl = getLocalizedPath(lang, 'blog');
     flex-direction: column;
   }
   .usecase-text h3 {
-    font-size: 1.25rem;
-    margin-bottom: 0.65rem;
+    font-size: 1.22rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6rem;
   }
   .usecase-text p {
     font-size: 0.9rem;
     color: var(--text-secondary);
-    line-height: 1.55;
+    line-height: 1.6;
     margin: 0;
   }
 
-  /* Journal Section */
+  /* --- Journal: ruled rows --------------------------------------------- */
   .journal-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 2rem;
+    border-top: 1px solid var(--border);
   }
-  .journal-card {
+  .journal-row {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr) auto;
+    gap: 2.5rem;
+    align-items: start;
+    padding: 2.1rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background 0.25s ease;
+  }
+  .journal-row:hover {
     background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 14px;
-    padding: 2.25rem;
-    box-shadow: var(--shadow-sm);
+  }
+  .journal-row__meta {
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
     align-items: flex-start;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
-  }
-  .journal-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--border);
-    box-shadow: var(--shadow-md);
   }
   .journal-category {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
     color: var(--primary);
     background: var(--surface-soft);
-    padding: 0.25rem 0.6rem;
-    border-radius: 9999px;
-    margin-bottom: 1rem;
+    padding: 0.22rem 0.55rem;
+    border-radius: 4px;
   }
-  .journal-card h3 {
-    font-size: 1.35rem;
-    line-height: 1.35;
-    margin-bottom: 0.75rem;
+  .journal-date {
+    font-size: 0.78rem;
+    color: var(--text-muted);
   }
-  .journal-card h3 a {
+  .journal-row__body h3 {
+    font-size: clamp(1.15rem, 1.8vw, 1.5rem);
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+    margin-bottom: 0.5rem;
+  }
+  .journal-row__body h3 a {
     color: var(--text-primary);
     text-decoration: none;
     transition: color 0.15s ease;
   }
-  .journal-card h3 a:hover {
+  .journal-row__body h3 a:hover {
     color: var(--primary);
   }
-  .journal-card p {
-    font-size: 0.9rem;
+  .journal-row__body p {
+    font-size: 0.92rem;
     color: var(--text-secondary);
     line-height: 1.6;
-    margin-bottom: 1.5rem;
-    flex: 1;
+    margin: 0;
+    max-width: 68ch;
+  }
+  .journal-row__arrow {
+    color: var(--text-muted);
+    display: inline-flex;
+    padding-top: 0.2rem;
+    transition: color 0.2s ease, transform 0.2s ease;
+  }
+  .journal-row:hover .journal-row__arrow {
+    color: var(--primary);
+    transform: translate(2px, -2px);
   }
 
-  /* Compatibility Aside */
+  /* --- Compatibility --------------------------------------------------- */
   .compatibility {
     display: grid;
     grid-template-columns: 44px 1fr auto;
     gap: 2rem;
     align-items: center;
-    padding: 2.25rem;
+    padding: 2.25rem 2.5rem;
     background: var(--surface);
     border: 1px solid var(--border-subtle);
-    border-radius: 14px;
-    margin-bottom: 6rem;
-    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-lg);
+    margin-bottom: 6.5rem;
   }
   .compat-icon {
     width: 44px;
@@ -833,21 +751,24 @@ const blogUrl = getLocalizedPath(lang, 'blog');
     color: var(--primary);
   }
   .compat-content h2 {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     margin-bottom: 0.35rem;
   }
   .compat-content p {
     font-size: 0.88rem;
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: 1.55;
     margin: 0;
+    max-width: 78ch;
   }
 
-  /* Closing Section */
+  /* --- Closing --------------------------------------------------------- */
   .closing-section {
-    background: linear-gradient(180deg, var(--surface) 0%, #d8ece0 100%);
+    background:
+      radial-gradient(70% 140% at 12% 0%, rgba(23, 102, 68, 0.08), transparent 62%),
+      var(--surface);
     border-top: 1px solid var(--border-subtle);
-    padding: 6rem 0;
+    padding: 6.5rem 0;
   }
   .closing-content {
     display: flex;
@@ -857,7 +778,8 @@ const blogUrl = getLocalizedPath(lang, 'blog');
   }
   .closing-text h2 {
     font-size: clamp(2rem, 3.5vw, 3rem);
-    line-height: 1.15;
+    line-height: 1.12;
+    letter-spacing: -0.035em;
     margin-bottom: 0.75rem;
   }
   .closing-text p {
@@ -871,32 +793,63 @@ const blogUrl = getLocalizedPath(lang, 'blog');
     flex-shrink: 0;
   }
 
+  /* --- Responsive ------------------------------------------------------ */
   @media (max-width: 1000px) {
     .opening-copy {
       grid-template-columns: 1fr;
       gap: 2rem;
+      align-items: start;
     }
-    .capability-bento {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .studio-proof {
+      grid-template-columns: minmax(0, 1fr);
     }
     .closing-content {
       flex-direction: column;
       align-items: flex-start;
     }
+    .stack-band__inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+    }
   }
 
   @media (max-width: 768px) {
     .workflow-steps,
-    .environment-grid,
-    .capability-bento,
     .usecases,
-    .journal-list {
+    .environment-notes {
       grid-template-columns: 1fr;
-      gap: 1.5rem;
+    }
+    .workflow-step + .workflow-step {
+      padding-left: 0;
+      border-left: 0;
+    }
+    .workflow-step {
+      padding: 1.75rem 0;
+    }
+    .journal-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.9rem;
+      position: relative;
+      padding-right: 2.5rem;
+    }
+    .journal-row__meta {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .journal-row__arrow {
+      position: absolute;
+      top: 2.1rem;
+      right: 0;
     }
     .compatibility {
       grid-template-columns: 1fr;
       gap: 1.25rem;
+      padding: 1.75rem;
+    }
+    h1 {
+      font-size: clamp(2.8rem, 12vw, 4.2rem);
+      max-width: 13ch;
     }
   }
 </style>

@@ -16,9 +16,10 @@ export const buttonVariants = cva("ui-button", {
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> &
   VariantProps<typeof buttonVariants>;
 export const Button = React.forwardRef<HTMLButtonElement, Props>(
-  ({ className, variant, ...props }, ref) => (
+  ({ className, variant, type = "button", ...props }, ref) => (
     <button
       ref={ref}
+      type={type}
       className={clsx(buttonVariants({ variant }), className)}
       {...props}
     />

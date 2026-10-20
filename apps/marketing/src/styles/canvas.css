@@ -1,0 +1,563 @@
+/* ==========================================================================
+   GB Coder — Canvas primitives
+   Shared visual language for every marketing surface: ruled editorial rows,
+   hairline panels, pointer-tracked spotlights and app-proof frames.
+   All colours resolve to the semantic tokens in site.css.
+   ========================================================================== */
+
+/* --- Eyebrow label ------------------------------------------------------ */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 4px rgb(19 98 64 / 0.12);
+}
+.eyebrow--plain::before {
+  display: none;
+}
+
+/* --- Ruled editorial rows ---------------------------------------------- */
+.canvas-list {
+  border-top: 1px solid var(--border);
+}
+.canvas-row {
+  display: grid;
+  gap: 1rem 3rem;
+  padding: 2.25rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.25s ease;
+}
+.canvas-row:last-child {
+  border-bottom: 0;
+}
+.canvas-row__title {
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
+  letter-spacing: -0.02em;
+  line-height: 1.22;
+  margin: 0;
+}
+.canvas-row__body {
+  color: var(--text-secondary);
+  font-size: 0.96rem;
+  line-height: 1.7;
+  margin: 0;
+  max-width: 62ch;
+}
+.canvas-row__link {
+  color: var(--primary);
+  font-weight: 650;
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.canvas-row__link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* --- Hairline panel ----------------------------------------------------- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+.panel--sunk {
+  background: var(--surface-soft);
+  border-color: transparent;
+}
+.panel--flat {
+  background: transparent;
+  border: 0;
+}
+
+/* --- Grid + aurora backdrop -------------------------------------------- */
+.canvas-backdrop {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+}
+.canvas-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 620px;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle at center, var(--grid-dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 62% 58% at 50% 22%, #000 5%, transparent 72%);
+  -webkit-mask-image: radial-gradient(ellipse 62% 58% at 50% 22%, #000 5%, transparent 72%);
+  opacity: 0.85;
+}
+.canvas-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 560px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(46% 42% at 22% 18%, rgb(23 102 68 / 0.10), transparent 70%),
+    radial-gradient(38% 38% at 82% 6%, rgb(120 178 148 / 0.16), transparent 72%);
+  filter: blur(6px);
+}
+
+/* --- Marquee (infinite chip rail) --------------------------------------- */
+.marquee {
+  position: relative;
+  overflow: hidden;
+  padding-block: 0.35rem;
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.marquee__track {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: max-content;
+  animation: marquee-scroll 42s linear infinite;
+}
+.marquee:hover .marquee__track,
+.marquee:focus-within .marquee__track {
+  animation-play-state: paused;
+}
+.marquee__group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline-end: 0.5rem;
+}
+.marquee__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.marquee__chip::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0.65;
+}
+@keyframes marquee-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* --- Pointer-tracked spotlight (Aceternity pattern) --------------------- */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(
+    circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    rgb(19 98 64 / 0.13),
+    transparent 52%
+  );
+  pointer-events: none;
+}
+.spotlight:hover::before,
+.spotlight:focus-within::before {
+  opacity: 1;
+}
+
+/* --- Bento grid (Vibrant / Kibo pattern) -------------------------------- */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.bento__cell {
+  background: var(--surface);
+  padding: 1.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-height: 180px;
+  transition: background 0.25s ease;
+}
+.bento__cell:hover {
+  background: var(--surface-soft);
+}
+.bento__cell--wide {
+  grid-column: span 3;
+}
+.bento__cell--half {
+  grid-column: span 3;
+}
+.bento__cell--third {
+  grid-column: span 2;
+}
+.bento__cell--tall {
+  grid-row: span 2;
+}
+.bento__title {
+  font-size: 1.12rem;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.bento__desc {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 46ch;
+}
+.bento__icon {
+  color: var(--primary);
+  display: inline-flex;
+}
+
+/* --- IDE frame (app proof) ---------------------------------------------- */
+.ide-frame {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: var(--shadow-stage);
+}
+.ide-frame__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-soft);
+}
+.ide-frame__dots {
+  display: flex;
+  gap: 5px;
+}
+.ide-frame__dots span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.ide-frame__path {
+  font: 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  color: var(--text-muted);
+}
+.ide-frame__body {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  min-height: 260px;
+}
+.ide-frame__sidebar {
+  border-inline-end: 1px solid var(--border-subtle);
+  padding: 0.85rem 0.6rem;
+  background: var(--surface);
+}
+.ide-frame__label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0 0.45rem 0.5rem;
+}
+.ide-tree {
+  list-style: none;
+  display: grid;
+  gap: 1px;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.ide-tree li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.ide-tree li[data-depth="1"] {
+  padding-inline-start: 1.15rem;
+}
+.ide-tree li[data-depth="2"] {
+  padding-inline-start: 1.85rem;
+}
+.ide-tree li[data-active="true"] {
+  background: var(--surface-soft);
+  color: var(--primary);
+  font-weight: 600;
+}
+.ide-tree svg {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+.ide-frame__editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+}
+.ide-frame__code {
+  background: var(--code-bg);
+  color: var(--code-text);
+  padding: 0.9rem 0;
+  overflow: hidden;
+  border-inline-end: 1px solid var(--code-border);
+}
+.ide-frame__code pre {
+  font: 11.5px/1.75 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.ide-frame__preview {
+  padding: 1.1rem;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.ide-frame__preview-bar {
+  height: 34px;
+  border-radius: 6px;
+  background: var(--code-panel);
+}
+.ide-frame__preview-line {
+  height: 7px;
+  border-radius: 3px;
+  background: var(--code-muted);
+}
+.ide-frame__preview-line--short {
+  width: 62%;
+}
+.ide-frame__preview-btn {
+  margin-top: auto;
+  height: 26px;
+  width: 96px;
+  border-radius: 5px;
+  background: var(--primary);
+}
+.ide-frame__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.9rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-soft);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.ide-frame__status-list {
+  display: flex;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+/* --- Command palette (Kibo pattern) ------------------------------------- */
+.palette {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  max-width: 460px;
+  width: 100%;
+}
+.palette__input {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 0.95rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.palette__input kbd {
+  margin-inline-start: auto;
+  font: 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.2rem 0.35rem;
+  color: var(--text-muted);
+}
+.palette__list {
+  list-style: none;
+  padding: 0.4rem;
+  display: grid;
+  gap: 1px;
+}
+.palette__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 7px;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+}
+.palette__item[data-active="true"] {
+  background: var(--surface-soft);
+  color: var(--text-primary);
+}
+.palette__item svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.palette__hint {
+  margin-inline-start: auto;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* --- Segmented control (Kibo pattern, CSS-only) ------------------------- */
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  background: var(--surface-soft);
+}
+.segmented__option {
+  position: relative;
+}
+.segmented__option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+}
+.segmented__option label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.42rem 0.95rem;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+.segmented__option input:checked + label {
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+.segmented__option input:focus-visible + label {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+/* --- Stat rail ---------------------------------------------------------- */
+.stat-rail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--border-subtle);
+  border-block: 1px solid var(--border-subtle);
+}
+.stat-rail__cell {
+  background: var(--canvas);
+  padding: 1.6rem 1.25rem;
+}
+.stat-rail__value {
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+.stat-rail__label {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* --- Responsive --------------------------------------------------------- */
+@media (max-width: 1000px) {
+  .bento__cell--wide,
+  .bento__cell--half {
+    grid-column: span 3;
+  }
+  .stat-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ide-frame__body {
+    grid-template-columns: 160px minmax(0, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .bento {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .bento__cell--wide,
+  .bento__cell--half,
+  .bento__cell--third {
+    grid-column: span 1;
+  }
+  .bento__cell--tall {
+    grid-row: span 1;
+  }
+  .stat-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ide-frame__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ide-frame__sidebar {
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .ide-frame__editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ide-frame__code {
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--code-border);
+  }
+  .canvas-row {
+    gap: 0.75rem;
+    padding: 1.75rem 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee__track {
+    animation: none;
+  }
+  .spotlight::before {
+    transition: none;
+  }
+}

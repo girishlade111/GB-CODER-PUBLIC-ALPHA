@@ -1,0 +1,224 @@
+---
+/**
+ * GB Coder — environment switcher.
+ * A Kibo-UI style segmented control that swaps between the product's two
+ * real editing environments. Pure CSS state (`:has()`), so it works with
+ * keyboard and assistive technology without a JavaScript runtime.
+ */
+interface Props {
+  staticLabel: string;
+  containerLabel: string;
+}
+
+const { staticLabel, containerLabel } = Astro.props;
+
+const staticCode = [
+  { n: 1, t: '<main class="card">' },
+  { n: 2, t: '  <h1>Make room for' },
+  { n: 3, t: '  good ideas.</h1>' },
+  { n: 4, t: '  <p>Live preview</p>' },
+  { n: 5, t: '</main>' },
+];
+
+const terminalLines = [
+  { t: '$ npm install', muted: false },
+  { t: 'added 42 packages in 320ms', muted: true },
+  { t: '$ npm run dev', muted: false },
+  { t: 'VITE v5.4.2 ready in 180 ms', muted: true },
+  { t: '➜  Local: http://localhost:5173/', muted: false, accent: true },
+];
+---
+
+<div class="env-switch">
+  <div class="env-switch__control">
+    <div class="segmented" role="tablist" aria-label={staticLabel}>
+      <div class="segmented__option">
+        <input type="radio" name="gb-env" id="gb-env-static" checked />
+        <label for="gb-env-static" role="tab" aria-selected="true">{staticLabel}</label>
+      </div>
+      <div class="segmented__option">
+        <input type="radio" name="gb-env" id="gb-env-container" />
+        <label for="gb-env-container" role="tab" aria-selected="false">{containerLabel}</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="env-switch__stage">
+    <!-- Static editor: source beside a live preview -->
+    <div class="env-switch__panel" data-env-panel="static">
+      <div class="env-pane env-pane--code">
+        <div class="env-pane__bar"><span>index.html</span><span class="env-pane__tag">HTML</span></div>
+        <pre>{staticCode.map((line) => (
+          <div class="env-code-line">
+            <span class="line-number">{line.n}</span>
+            <span class="sample-code-text">{line.t}</span>
+          </div>
+        ))}</pre>
+      </div>
+      <div class="env-pane env-pane--preview">
+        <div class="env-pane__bar env-pane__bar--light"><span>Live preview</span><span class="env-dot"></span></div>
+        <div class="env-preview">
+          <span class="env-preview__title">Make room for</span>
+          <span class="env-preview__title">good ideas.</span>
+          <span class="env-preview__line"></span>
+          <span class="env-preview__line env-preview__line--short"></span>
+          <span class="env-preview__cta"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WebContainer IDE: terminal beside the dev-server preview -->
+    <div class="env-switch__panel" data-env-panel="container">
+      <div class="env-pane env-pane--code">
+        <div class="env-pane__bar"><span>terminal</span><span class="env-pane__tag">zsh</span></div>
+        <pre>{terminalLines.map((line) => (
+          <div class="env-code-line">
+            <span class:list={['sample-code-text', { 'env-code-muted': line.muted, 'env-code-accent': line.accent }]}>{line.t}</span>
+          </div>
+        ))}</pre>
+      </div>
+      <div class="env-pane env-pane--preview">
+        <div class="env-pane__bar env-pane__bar--light"><span>localhost:5173</span><span class="env-dot"></span></div>
+        <div class="env-preview">
+          <span class="env-preview__title">Hello, possibility.</span>
+          <span class="env-preview__line"></span>
+          <span class="env-preview__line env-preview__line--short"></span>
+          <span class="env-preview__cta env-preview__cta--small"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .env-switch__control {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  .env-switch__stage {
+    display: grid;
+  }
+  .env-switch__panel {
+    display: none;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: var(--shadow-stage);
+  }
+  .env-switch:has(#gb-env-static:checked) [data-env-panel='static'],
+  .env-switch:has(#gb-env-container:checked) [data-env-panel='container'] {
+    display: grid;
+  }
+  .env-pane {
+    min-width: 0;
+  }
+  .env-pane--code {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-right: 1px solid var(--code-border);
+  }
+  .env-pane__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.55rem 0.9rem;
+    border-bottom: 1px solid var(--code-border);
+    font: 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+    color: var(--code-muted);
+  }
+  .env-pane__bar--light {
+    background: var(--surface-soft);
+    border-bottom-color: var(--border-subtle);
+    color: var(--text-muted);
+  }
+  .env-pane__tag {
+    border: 1px solid var(--code-border);
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .env-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+    box-shadow: 0 0 0 3px rgb(23 102 68 / 0.14);
+  }
+  .env-pane pre {
+    margin: 0;
+    padding: 0.9rem 0;
+    font: 11.5px/1.8 ui-monospace, SFMono-Regular, Consolas, monospace;
+    overflow-x: auto;
+  }
+  .env-code-line {
+    display: flex;
+    gap: 0.9rem;
+    padding-inline: 0.9rem;
+    white-space: pre;
+  }
+  .env-code-line .line-number {
+    color: var(--code-dim);
+    user-select: none;
+    min-width: 1.2em;
+    text-align: right;
+  }
+  .env-code-muted {
+    color: var(--code-muted);
+  }
+  .env-code-accent {
+    color: var(--code-ghost);
+    font-weight: 600;
+  }
+  .env-pane--preview {
+    display: flex;
+    flex-direction: column;
+  }
+  .env-preview {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.35rem;
+  }
+  .env-preview__title {
+    font-size: 1.15rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 1.25;
+  }
+  .env-preview__line {
+    height: 7px;
+    border-radius: 3px;
+    background: var(--code-panel);
+    max-width: 78%;
+  }
+  .env-preview__line--short {
+    max-width: 48%;
+  }
+  .env-preview__cta {
+    margin-top: auto;
+    width: 108px;
+    height: 26px;
+    border-radius: 5px;
+    background: var(--primary);
+  }
+  .env-preview__cta--small {
+    width: 74px;
+  }
+  @media (max-width: 700px) {
+    .env-switch__panel {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .env-pane--code {
+      border-right: 0;
+      border-bottom: 1px solid var(--code-border);
+    }
+  }
+</style>
