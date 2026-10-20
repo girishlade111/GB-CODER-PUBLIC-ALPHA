@@ -323,7 +323,7 @@
 }
 .palette__input kbd {
   margin-inline-start: auto;
-  font: 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  font: 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 0.2rem 0.35rem;

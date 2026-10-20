@@ -13,6 +13,15 @@
         "reason": "CSS mask alpha, not a palette colour"
       },
       {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "src/i18n/blog.ts"
+        ],
+        "createdAt": "2026-10-20T12:08:15.001Z",
+        "reason": "Blog article code samples carry their own Tailwind classes; not site UI"
+      },
+      {
         "rule": "ai-color-palette",
         "value": "*",
         "files": [

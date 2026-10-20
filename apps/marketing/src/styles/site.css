@@ -10,6 +10,7 @@
   --text-primary: #172e25;
   --text-secondary: #506258;
   --text-muted: #5d6d63;
+  --text-faint: #7e9087;
   --accent-terracotta: #176644;
   --accent-hover: #104c33;
   --accent-dark: #172e25;
@@ -106,7 +107,8 @@ h2 {
   font-weight: 550;
 }
 p,
-dd {
+dd,
+li {
   text-wrap: pretty;
 }
 .page-hero {

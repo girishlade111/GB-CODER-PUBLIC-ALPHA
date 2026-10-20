@@ -124,6 +124,21 @@
         ],
         "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
       },
+      "text-faint": {
+        "role": "neutral",
+        "displayName": "Text Faint",
+        "tonalRamp": [
+          "oklch(15% 0.02461 158.04)",
+          "oklch(26% 0.02461 158.04)",
+          "oklch(38% 0.02461 158.04)",
+          "oklch(49% 0.02461 158.04)",
+          "oklch(61% 0.02461 158.04)",
+          "oklch(72% 0.02461 158.04)",
+          "oklch(84% 0.02461 158.04)",
+          "oklch(95% 0.02461 158.04)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
       "primary": {
         "role": "primary",
         "displayName": "Primary",
@@ -491,6 +506,16 @@
         "name": "The One Radius Language Rule",
         "body": "Every radius comes from the documented scale. A new corner value is a design-system decision, not a local choice.",
         "section": "shapes"
+      },
+      {
+        "name": "The Still Surface Rule",
+        "body": "Nothing on the site moves on its own. The technology rail is a static wrapping row of chips, not a looping marquee; the studio preview dot is a fixed dot, not a pulse. Motion is reserved for what a reader caused: the studio tab indicator slides when a tab is chosen, and the panel cross-fades under it. Both are suppressed under prefers-reduced-motion.",
+        "section": "motion"
+      },
+      {
+        "name": "The Legible Microcopy Rule",
+        "body": "Functional text - labels, statuses, metadata, badges, table cells - never renders below 11px. Body copy never renders below 12px. The smallest step on the type ramp is 0.7rem (11.2px), which is exactly the floor.",
+        "section": "typography"
       }
     ],
     "dos": [

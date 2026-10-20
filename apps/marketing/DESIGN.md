@@ -11,6 +11,7 @@ colors:
   text-primary: "#172e25"
   text-secondary: "#506258"
   text-muted: "#5d6d63"
+  text-faint: "#7e9087"
   primary: "#176644"
   accent-hover: "#104c33"
   accent-dark: "#172e25"
@@ -113,6 +114,68 @@ typography:
     fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace"
     fontSize: "12px"
     lineHeight: 1.85
+  post-title:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "clamp(2.1rem, 4.6vw, 3.5rem)"
+    fontWeight: 550
+    lineHeight: 1.08
+    letterSpacing: "-0.035em"
+  post-title-compact:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "2.1rem"
+    fontWeight: 550
+    lineHeight: 1.08
+    letterSpacing: "-0.035em"
+  post-lead:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "clamp(1.15rem, 1.8vw, 1.35rem)"
+    fontWeight: 400
+    lineHeight: 1.6
+  post-section-title:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "clamp(1.4rem, 2.4vw, 1.75rem)"
+    fontWeight: 550
+    lineHeight: 1.25
+    letterSpacing: "-0.025em"
+  doc-section-title:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "clamp(1.6rem, 2.8vw, 2.1rem)"
+    fontWeight: 550
+    lineHeight: 1.2
+    letterSpacing: "-0.03em"
+  doc-cta-title:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "clamp(1.4rem, 2.4vw, 1.85rem)"
+    fontWeight: 550
+    lineHeight: 1.2
+    letterSpacing: "-0.025em"
+  sitemap-group-title:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "clamp(1.35rem, 2.2vw, 1.75rem)"
+    fontWeight: 550
+    lineHeight: 1.25
+  studio-sample-title:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "clamp(1.6rem, 2.5vw, 2.2rem)"
+    fontWeight: 600
+    lineHeight: 1.2
+  studio-counter-title:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "2.2rem"
+    fontWeight: 600
+    lineHeight: 1.15
+  error-code:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "clamp(7rem, 22vw, 14rem)"
+    fontWeight: 550
+    lineHeight: 1
+    letterSpacing: "-0.04em"
+  error-title:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "clamp(2.5rem, 7vw, 4rem)"
+    fontWeight: 550
+    lineHeight: 1.1
+    letterSpacing: "-0.035em"
 rounded:
   micro: "3px"
   tag: "4px"
@@ -219,6 +282,7 @@ A single low-saturation green ground, a forest ink family and one concentrated e
 - **Forest Ink (`text-primary`, `#172e25`)**: headings and primary prose.
 - **Secondary Foliage (`text-secondary`, `#506258`)**: supporting prose, navigation, captions.
 - **Muted Foliage (`text-muted`, `#5d6d63`)**: metadata, timestamps, status text. It clears WCAG AA (4.72:1) on the soft-mint plane, which is the surface most of it lands on.
+- **Faint Foliage (`text-faint`, `#7e9087`)**: display-scale numerals only — the 404 mark on the not-found page. It is the quietest tone that still clears the 3:1 large-text threshold on the canvas (3.15:1), so a watermark stays legible instead of becoming a smudge.
 - **Rule (`border`, `#ccd9d1`)** and **Hairline (`border-subtle`, `#dfe7e2`)**: structural rows versus dividers.
 - **Deep Forest (`accent-dark`, `#172e25`)**: the darkest plane, used for code chrome.
 
@@ -257,9 +321,10 @@ A single low-saturation green ground, a forest ink family and one concentrated e
 - **Headline** (weight 550, `clamp(2rem, 3.3vw, 2.85rem)`): section headings on the home page.
 - **Title** (weight 600, `1.12rem`, tracking `-0.02em`): bento and ruling cell titles; `1.5rem` inside feature detail rows.
 - **Body** (weight 400, `1rem`, line-height 1.65): default prose. Reading copy is capped at 65–72 characters per line and set at line-height 1.85; page introductions stop at 65 characters.
-- **Label** (weight 600, `0.85rem`): navigation and column titles. Status and category labels drop to `0.72–0.8rem`.
+- **Label** (weight 600, `0.85rem`): navigation and column titles. Status and category labels drop to `0.8rem`; micro-labels sit on the `0.7rem` caption step, which is the floor.
 - **Button** (weight 650, `0.88rem`): every control.
 - **Code** (12px, line-height 1.85, tabular line numbers): the studio source pane and code blocks; 11–11.5px inside the IDE proof frame.
+- **Display scale steps**: `post-title` `clamp(2.1rem, 4.6vw, 3.5rem)`, `doc-section-title` `clamp(1.6rem, 2.8vw, 2.1rem)`, `post-section-title` `clamp(1.4rem, 2.4vw, 1.75rem)`, `sitemap-group-title` `clamp(1.35rem, 2.2vw, 1.75rem)`, `post-lead` `clamp(1.15rem, 1.8vw, 1.35rem)`, `studio-sample-title` `clamp(1.6rem, 2.5vw, 2.2rem)`, `studio-counter-title` `2.2rem`, `error-code` `clamp(7rem, 22vw, 14rem)` and `error-title` `clamp(2.5rem, 7vw, 4rem)`. Each is a fluid local variant of a documented role, not a new role.
 
 ### Named Rules
 
