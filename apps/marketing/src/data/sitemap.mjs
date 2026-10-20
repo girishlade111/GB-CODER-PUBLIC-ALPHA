@@ -21,6 +21,11 @@ export const MULTILINGUAL_PATHS = [
   "blog/voice-controlled-coding-browser-ide",
   "blog/mobile-testing-qr-code-popout-preview",
   "blog/project-snapshots-revision-diffs-browser-ide",
+  "blog/build-from-prompt-ai-project-generation",
+  "blog/automated-code-review-coderabbit-integration",
+  "blog/code-stats-and-developer-analytics",
+  "blog/custom-script-injection-and-cdn-libraries",
+  "blog/reusable-code-snippets-and-developer-velocity",
 ];
 export const ENGLISH_PATHS = [
   "privacy-policy",

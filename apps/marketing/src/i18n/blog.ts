@@ -43,6 +43,275 @@ export const BLOG_TRANSLATIONS: Record<string, BlogTranslations> = {
     "relatedArticlesTitle": "Related Technical Guides",
     "backToBlogLabel": "← Back to Blog",
     "articles": {
+      "build-from-prompt-ai-project-generation": {
+        "slug": "build-from-prompt-ai-project-generation",
+        "title": "Build from Prompt: Generating Multi-File Web Projects from Natural Language in GB Coder",
+        "description": "Learn how GB Coder generates entire multi-file web applications from natural language prompts, creates file trees, configures package.json, and streams code directly into Monaco.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Prompt Engineering",
+          "Full-Stack",
+          "AI Generation",
+          "WebContainer",
+          "GB Assist"
+        ],
+        "intro": "Starting a new web application traditionally begins with an empty canvas, endless setup boilerplate, and configuring dependencies across multiple config files. GB Coder’s Build from Prompt engine transforms natural language project prompts into complete, multi-file architectures directly inside your browser workspace. Powered by GB Assist and WebContainer execution, the engine produces fully functional file trees, styles, scripts, and runtime packages ready for instantaneous live preview.",
+        "sections": [
+          {
+            "heading": "1. From Single Snippets to Multi-File Web Applications",
+            "body": "Conventional AI coding assistants are typically designed for single-file completions or inline function synthesis. When developers want to explore an entirely new application idea—such as a personal finance tracker, a Markdown knowledge base, or an interactive canvas game—piecing together HTML, CSS, JavaScript modules, and configuration files piece by piece creates substantial cognitive drag. Build from Prompt fundamentally alters this trajectory by treating an application as a unified, cohesive system rather than disconnected code fragments.\n\nBy framing the generation task holistically, the assistant envisions the overall dependency graph before emitting code. It determines whether the project requires modern reactive state handling, localized storage persistence in IndexedDB, or external visual styling libraries, ensuring all subsequent files share matching variable names, consistent CSS selectors, and harmonious import bindings."
+          },
+          {
+            "heading": "2. Architectural Blueprint Generation: AST Planning in the Browser",
+            "body": "Before streaming any code characters to the editor, GB Coder commands the underlying foundation model to output a strictly typed structural manifest. This manifest defines the complete virtual directory tree, identifies the application entry point (such as index.html or src/main.tsx), lists required third-party packages, and delineates the specific responsibilities of each file.\n\nExecuting this planning phase inside the client browser thread guarantees that token generation stays focused and deterministic. If a user requests a dashboard with charts and real-time filters, the blueprint phase guarantees that the data simulation engine, the rendering canvas, and the layout stylesheet are accounted for simultaneously before any code buffers are allocated in memory."
+          },
+          {
+            "heading": "3. Automated Dependency Deduction and package.json Synthesis",
+            "body": "A frequent pitfall of generative coding tools is hallucinated library versions or mismatched peer dependencies that immediately break runtime execution. In GB Coder, the dependency deduction pipeline cross-references recognized library tokens against validated registries and compatible CDN distributions.\n\nWhen scaffolding a full-stack WebContainer project, GB Coder creates a clean, minimal package.json manifest. For lightweight static projects, it injects vetted CDN script and stylesheet tags directly into the generated index.html head without cluttering disk memory with unnecessary node_modules.",
+            "codeSnippet": "{\n  \"name\": \"fin-tracker-app\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\"\n  },\n  \"dependencies\": {\n    \"lucide\": \"^0.454.0\",\n    \"chart.js\": \"^4.4.6\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^5.4.10\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "4. Streaming File Creation Directly into Monaco Editor Tabs",
+            "body": "As the model returns responses over the direct HTTPS connection, GB Coder’s streaming parser dynamically splits incoming markdown code blocks by filename. When a new file declaration is encountered, GB Coder automatically creates the file entry in the virtual explorer, registers the tab in Monaco Editor, and streams text into the buffer with real-time syntax highlighting.\n\nDevelopers can watch their project materialize tab by tab. Rather than staring at a monolithic loading spinner, you observe your stylesheet rules, semantic markup, and TypeScript modules streaming in parallel with instant visual feedback."
+          },
+          {
+            "heading": "5. Instant Bootstrapping in the WebContainer Runtime",
+            "body": "Once the streaming generation phase completes, GB Coder mounts the virtual file tree directly into the WebContainer virtual file system. WebContainers execute authentic Node.js system calls inside a WebAssembly sandbox, permitting native command execution without remote cloud VMs.\n\nThe runtime initiates an automated package installation phase and kicks off the Vite development server. Within seconds, local port forwarding connects the running dev server port directly to the right-hand preview panel.",
+            "codeSnippet": "# WebContainer automatically spins up the generated project\nnpm install --prefer-offline\nnpx vite --port 3000 --host",
+            "codeLang": "bash"
+          },
+          {
+            "heading": "6. Iterative Prompt Refinement and Conversational Tweaks",
+            "body": "Rarely does a generated prototype fulfill every subjective design nuance on the first try. GB Coder provides an ongoing conversational refinement loop where developers can issue targeted follow-up instructions, such as: 'Add a dark mode toggle to the top navigation' or 'Persist transaction records in localStorage'.\n\nInstead of wiping and regenerating the entire project, GB Assist calculates surgical diffs for only the affected files. Changes are presented in Monaco's side-by-side Diff Viewer so you can inspect proposed modifications line-by-line before merging them into your project tree."
+          },
+          {
+            "heading": "7. Rejection-Resistant Sandboxing and Error Boundary Traps",
+            "body": "Browser-based execution requires resilient containment. If a generated script throws an uncaught syntax exception or enters an infinite render loop, GB Coder’s preview iframe isolates the fault using encapsulated Web Workers and DOM Error Boundaries.\n\nThe built-in Virtual Console catches the runtime error, highlights the exact originating file and line number, and allows you to feed the error stack trace back into GB Assist with a single click for instantaneous self-healing."
+          },
+          {
+            "heading": "8. Local-First Sovereignty: Direct Provider Communication",
+            "body": "Every project prompt dispatched in GB Coder travels directly from your client browser to your configured model provider (Inception Labs, Anthropic Claude, OpenAI, or local Ollama) using your personal API key. LadeStack operates no intermediary proxy servers and logs no prompt history.\n\nYour proprietary concepts, project architectures, and creative prompts remain strictly under your control. When combined with local IndexedDB persistence, Build from Prompt gives you the creative power of cutting-edge foundation models while preserving complete intellectual privacy."
+          }
+        ],
+        "relatedDocsLink": "/docs#ai-tools",
+        "relatedDocsLabel": "Explore GB Assist AI Documentation"
+      },
+      "automated-code-review-coderabbit-integration": {
+        "slug": "automated-code-review-coderabbit-integration",
+        "title": "Automated Code Reviews in the Browser: AI Auditing, Linting & Security with CodeRabbit",
+        "description": "Discover how GB Coder integrates automated CodeRabbit-style reviews into your browser workspace to spot security vulnerabilities, performance anti-patterns, and styling smells.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Review",
+          "Static Analysis",
+          "CodeRabbit",
+          "Security",
+          "Developer Tools"
+        ],
+        "intro": "Peer code reviews are fundamental for software quality, yet solo developers, rapid prototypers, and small teams often lack access to instant, thorough feedback. GB Coder integrates automated AI code review tooling directly into the browser IDE. Before committing code to GitHub or deploying to production, developers can trigger an exhaustive static analysis scan that highlights security vulnerabilities, performance bottlenecks, and architectural smells with actionable one-click fixes.",
+        "sections": [
+          {
+            "heading": "1. The Need for Pre-Commit Static Analysis in Fast-Paced Prototyping",
+            "body": "In-browser development encourages rapid experimentation, but rapid coding can inadvertently introduce unhandled promise rejections, memory leaks, and loose types. Waiting until a formal pull request review or CI pipeline failure to identify these flaws slows down developer velocity.\n\nBy introducing automated static reviews directly inside the active editor tab, GB Coder establishes a proactive quality guardrail. Code smells are identified while the context is fresh in your working memory, enabling immediate refinement before dirty code pollutes your repository history."
+          },
+          {
+            "heading": "2. Multi-Pass Audit Architecture: Syntax, Security, and Style",
+            "body": "GB Coder’s Code Review engine evaluates source code through three specialized auditing lenses. First, a structural syntax pass analyzes the Abstract Syntax Tree (AST) to identify dead code, unused imports, and unreachable branches.\n\nSecond, a security pass inspects input sanitization, API key leakages, and DOM injection vectors. Third, an idiomatic style pass evaluates code cleanliness, function cyclomatic complexity, and naming conventions to ensure the codebase remains maintainable over long-term iterations."
+          },
+          {
+            "heading": "3. Identifying Common Browser Vulnerabilities: XSS and Prototype Pollution",
+            "body": "Client-side web applications are especially vulnerable to Cross-Site Scripting (XSS) when rendering user-supplied strings directly into the DOM. The review scanner flags dangerous assignments like innerHTML, unvalidated document.write calls, and unescaped template literals.\n\nWhen a vulnerability is detected, the review modal provides a clear explanation of the exploit vector alongside an automated sanitization patch using standard browser APIs like textContent or DOMPurify.",
+            "codeSnippet": "// Detected vulnerability: Unsafe innerHTML assignment\n// element.innerHTML = userInput;\n\n// Automated remediation proposed by Code Review:\nconst cleanNode = document.createTextNode(userInput);\nelement.replaceChildren(cleanNode);",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Frontend Performance Smells: Memory Leaks and Excessive Re-renders",
+            "body": "In React and Vue single-file components, improper hook dependencies and uncleaned event listeners frequently cause insidious memory leaks. The review engine flags missing return cleanup functions inside useEffect hooks, unmemoized object references passed as props to heavy children, and unbounded interval timers.\n\nBy pinpointing these architectural smells with precise line coordinates, developers avoid runtime stutter, high CPU utilization on mobile devices, and dropped animation frames."
+          },
+          {
+            "heading": "5. Accessibility (a11y) Auditing in Sandboxed Previews",
+            "body": "Building an inclusive web requires strict adherence to accessibility standards. The review engine verifies that interactive elements contain appropriate ARIA roles, images specify descriptive alt attributes, buttons feature accessible text labels, and form inputs are associated with corresponding label elements.\n\nBy surfacing accessibility issues directly alongside syntax warnings, GB Coder helps developers build WCAG 2.1 AA compliant interfaces as a natural part of their daily coding routine."
+          },
+          {
+            "heading": "6. The Interactive Review Modal: Line-by-Line Comment Cards",
+            "body": "Triggering a code review opens the Code Review Modal. Issues are grouped by severity: Critical (security risks and runtime crashes), Warning (performance bottlenecks and accessibility violations), and Suggestion (style improvements and type refinements).\n\nEach finding is presented in an intuitive card featuring the affected filename, line range, an explanation of why the pattern is problematic, and a diff snippet showing the recommended resolution."
+          },
+          {
+            "heading": "7. One-Click Patch Application with Monaco Diff Integration",
+            "body": "Reviewing recommendations is effortless thanks to integrated diffing. Clicking 'Apply Fix' launches Monaco’s side-by-side diff inspector, allowing you to preview the exact modification before applying it to your workspace buffer.\n\nIf you prefer to adopt recommendations selectively, you can commit individual chunks while discarding others, retaining complete editorial autonomy over your codebase."
+          },
+          {
+            "heading": "8. Exporting Audit Reports for Pull Requests and Compliance",
+            "body": "For teams requiring formal documentation, GB Coder can compile the complete review findings into a structured Markdown or JSON audit summary. You can paste this summary directly into your GitHub Pull Request description or save it alongside project milestones.\n\nAll reviews run locally in your client session using your BYOK model credentials, ensuring proprietary intellectual property is never indexed or retained by third-party audit servers."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Review Editor & Tooling Documentation"
+      },
+      "code-stats-and-developer-analytics": {
+        "slug": "code-stats-and-developer-analytics",
+        "title": "Visualizing Code Health: Real-Time Architecture Metrics and Codebase Analytics in GB Coder",
+        "description": "Track codebase growth, cyclomatic complexity, SLOC distribution, and dependency weights in GB Coder using the integrated Code Stats Dashboard.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Analytics",
+          "Metrics",
+          "Architecture",
+          "Code Quality",
+          "Productivity"
+        ],
+        "intro": "Understanding the health and composition of your codebase is essential as web applications grow in size and complexity. GB Coder features a native Code Stats Dashboard that calculates real-time source code metrics, language distributions, comment ratios, and cyclomatic complexity without requiring external telemetry or CLI analyzers. Get instant clarity on project architecture directly from your browser workspace.",
+        "sections": [
+          {
+            "heading": "1. Why Code Metrics Matter in Browser-Based Workspaces",
+            "body": "As projects evolve from quick experiments into structured applications, file counts increase and architectural complexity compounds. Without visibility into file weights and logic density, codebases can quickly accumulate monolithic utility files and redundant components.\n\nGB Coder’s Code Stats Dashboard provides an ongoing bird's-eye view of your project health. Accessible with a single click from the status bar, it transforms abstract file trees into actionable visual analytics."
+          },
+          {
+            "heading": "2. Real-Time SLOC Parsing: Code, Comments, and Whitespace",
+            "body": "The foundation of code analytics is precise Source Lines of Code (SLOC) accounting. The parsing engine processes files in memory, categorizing every line into pure executable code, documentation comments (including JSDoc and multi-line comment blocks), and formatting whitespace.\n\nTracking the comment-to-code ratio gives engineering teams immediate insight into how thoroughly complex algorithms or state transitions are documented, promoting higher code legibility."
+          },
+          {
+            "heading": "3. Cyclomatic Complexity Estimation: Identifying High-Risk Functions",
+            "body": "Cyclomatic complexity measures the number of linearly independent paths through a program's source code. High complexity indicates convoluted nested conditionals (if/else chains, switch statements, and loop conditions) that are prone to regression bugs and difficult to test.\n\nGB Coder calculates complexity scores for every function in your project, displaying a color-coded leaderboard of the most complex routines so you know exactly which modules deserve refactoring into smaller, single-responsibility functions.",
+            "codeSnippet": "// Cyclomatic Complexity calculation based on control flow branches\nfunction assessComplexity(astNode) {\n  let paths = 1; // baseline linear path\n  traverseAST(astNode, (node) => {\n    if (['IfStatement', 'ConditionalExpression', 'SwitchCase', 'ForStatement', 'WhileStatement'].includes(node.type)) {\n      paths++;\n    }\n  });\n  return paths;\n}",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Multi-Language Asset Distribution",
+            "body": "Modern frontends are heterogeneous compositions of markup, styling, typed logic, and static assets. The stats engine charts the exact byte and line distribution across HTML, CSS, JavaScript, TypeScript, JSON, and SVG files.\n\nThis breakdown helps developers immediately spot asset anomalies—such as an unexpectedly huge inline SVG icon file or an unminified CSS bundle that might slow down initial page loads."
+          },
+          {
+            "heading": "5. Dependency Weight and Bundle Footprint Estimation",
+            "body": "Third-party libraries can dramatically inflate client delivery payloads. The Code Stats Dashboard parses your project's import statements and package declarations to estimate uncompressed dependency footprints.\n\nBy comparing the weight of external libraries against your custom application logic, you can make informed decisions about whether to retain a heavyweight utility package or replace it with a lightweight browser-native alternative."
+          },
+          {
+            "heading": "6. Architecture Health Score and Maintainability Index",
+            "body": "GB Coder combines lines of code, cyclomatic complexity, and documentation density to calculate an overarching Maintainability Index (0-100). Projects with modular components, reasonable branch complexity, and clean documentation earn an 'A' grade.\n\nThis single composite score gives developers immediate motivation to keep code clean, modular, and well-structured throughout extended prototyping sprints."
+          },
+          {
+            "heading": "7. Exporting Code Audit Reports in Markdown and JSON",
+            "body": "Need to present project statistics to colleagues, clients, or stakeholders? The Code Stats Dashboard features an instant 'Export Report' tool that formats your project metrics into clean Markdown tables or structured JSON payloads.\n\nYou can commit the generated report directly into your repository as an ARCHITECTURE.md record or attach it to sprint reviews."
+          },
+          {
+            "heading": "8. Zero-Telemetry Privacy: Local Computation in the Client Thread",
+            "body": "Privacy is paramount in GB Coder. All code analysis, AST parsing, and metric computations occur entirely within your browser's dedicated Web Worker thread. No source code lines, project names, or metric numbers are ever transmitted to external servers.\n\nYou enjoy enterprise-grade architectural visibility with the absolute guarantee that your intellectual property remains private and local on your machine."
+          }
+        ],
+        "relatedDocsLink": "/docs#architecture",
+        "relatedDocsLabel": "Read the Architecture & Storage Guides"
+      },
+      "custom-script-injection-and-cdn-libraries": {
+        "slug": "custom-script-injection-and-cdn-libraries",
+        "title": "Managing External Dependencies: CDNs, ESM Modules, and Custom Script Injection in GB Coder",
+        "description": "Master dependency management in GB Coder: learn how to inject CDN stylesheets, script libraries, ESM modules, and custom head tags into your live previews.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Dependencies",
+          "CDN",
+          "ESM",
+          "Custom Injection",
+          "Frontend"
+        ],
+        "intro": "Web development relies heavily on external libraries, from UI component frameworks and animation toolkits to utility icons and CSS systems. In GB Coder, developers have multiple flexible options for integrating third-party dependencies without tedious build configuration. Through the Custom Injection Manager and External Library Panel, you can effortlessly inject CDN scripts, import modern ESM modules, and configure custom HTML header tags into your sandboxed live previews.",
+        "sections": [
+          {
+            "heading": "1. The Three Tiers of Dependency Management in GB Coder",
+            "body": "Depending on your project's architecture, dependencies can be managed at three distinct levels in GB Coder: Traditional CDN script tags, modern browser-native ESM module imports, or full npm package installations within the WebContainer runtime.\n\nUnderstanding which tier to leverage allows you to optimize between zero-build simplicity and advanced bundler capabilities. For rapid mockups, CDN injections provide instant functionality without installation delays."
+          },
+          {
+            "heading": "2. The Custom Injection Manager: Head vs. Body Insertion",
+            "body": "The Custom Injection Manager gives you granular control over exactly where and when external assets are inserted into the preview document. Stylesheets and font references belong in the document <head> to prevent Flash of Unstyled Content (FOUC).\n\nConversely, heavy JavaScript runtime scripts—such as 3D canvas libraries (Three.js) or animation drivers (GSAP)—can be deferred or placed at the bottom of the <body> to ensure the DOM tree is fully parsed before script initialization begins.",
+            "codeSnippet": "<!-- Custom Injection configuration sample -->\n{\n  \"headTags\": [\n    \"<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'>\",\n    \"<link rel='preconnect' href='https://fonts.googleapis.com'>\"\n  ],\n  \"bodyScripts\": [\n    \"<script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'></script>\"\n  ]\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. Modern ESM Modules: Zero-Build Modern JavaScript",
+            "body": "With modern browser support for ECMAScript Modules (ESM), you can import npm packages directly in your JavaScript code without running a local bundler or package manager. By utilizing ESM CDNs such as esm.sh or unpkg, you can write native import statements directly in the Static Editor.\n\nThis approach gives you the clean developer experience of modern module imports while retaining the zero-setup, instant execution benefits of client-side static coding.",
+            "codeSnippet": "// Directly import lightweight ESM modules in the editor\nimport confetti from 'https://esm.sh/canvas-confetti@1.9.3';\nimport { formatDistanceToNow } from 'https://esm.sh/date-fns@4.1.0';\n\nconfetti({ particleCount: 100, spread: 70 });",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Stylesheet Injection and CSS Cascade Ordering",
+            "body": "When combining custom CSS with external frameworks like Tailwind CDN or Bootstrap, the order of stylesheet injection dictates CSS specificity. The Custom Injection Manager allows you to order external stylesheets prior to your project's styles.css.\n\nThis guarantees that your custom class rules and CSS variable overrides reliably take precedence over vendor default styles without requiring brittle !important annotations."
+          },
+          {
+            "heading": "5. Managing External Fonts and Web Icons",
+            "body": "Typography and iconography define the character of modern web apps. Through the External Library Manager, you can add curated font collections from Google Fonts and icon libraries like FontAwesome, Lucide, or Material Icons with a single toggle.\n\nGB Coder automatically preloads font stylesheets with preconnect hints, ensuring that custom typography renders crisp and sharp from the very first frame."
+          },
+          {
+            "heading": "6. Security in External Scripts: CSP and Sandbox Isolation",
+            "body": "Executing third-party code in a browser IDE demands rigorous security boundaries. All user previews in GB Coder run within sandboxed iframes governed by Content Security Policies (CSP) and Cross-Origin Embedder Policies (COEP).\n\nThis prevents untrusted third-party scripts from reading your IndexedDB project databases, accessing editor cookies, or tampering with Monaco's parent window context."
+          },
+          {
+            "heading": "7. Preserving Injections Across Workspaces and Backups",
+            "body": "Any custom head tags, script injections, and CDN choices you configure are automatically serialized into the project's metadata in IndexedDB. When you export a project backup as a ZIP archive, the injection configuration is preserved in a project.json manifest.\n\nRestoring the archive on another computer or sharing it with a colleague immediately rehydrates the exact external dependencies with zero manual re-entry."
+          },
+          {
+            "heading": "8. Troubleshooting CDN Load Failures and Offline Fallbacks",
+            "body": "Network latency or corporate firewalls can occasionally block specific CDN domains. GB Coder’s Virtual Console monitors network requests made by the preview iframe, surfacing HTTP 404 or CORS errors with explanatory troubleshooting suggestions.\n\nDevelopers can easily switch between redundant CDN mirrors (such as jsDelivr, cdnjs, and unpkg) to ensure uninterrupted productivity even on unstable connections."
+          }
+        ],
+        "relatedDocsLink": "/docs#getting-started",
+        "relatedDocsLabel": "Explore Dependency Setup in Documentation"
+      },
+      "reusable-code-snippets-and-developer-velocity": {
+        "slug": "reusable-code-snippets-and-developer-velocity",
+        "title": "Boosting In-Browser Coding Velocity with Custom Snippets and Monaco IntelliSense",
+        "description": "Accelerate your development in GB Coder with custom snippets: create language-scoped templates, multi-cursor tab stops, and trigger shortcuts inside Monaco.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Snippets",
+          "IntelliSense",
+          "Monaco Editor",
+          "Developer Velocity",
+          "Productivity"
+        ],
+        "intro": "Typing boilerplate HTML layouts, React component structures, or complex CSS flexbox centering recipes slows down coding flow. GB Coder includes a dedicated Snippet Manager and Sidebar integrated directly into Monaco Editor. By defining custom, language-scoped snippets with tab stops and placeholder variables, developers can scaffold complex patterns in milliseconds using simple trigger keywords.",
+        "sections": [
+          {
+            "heading": "1. Why Repetitive Boilerplate Hampers Rapid Prototyping",
+            "body": "In fast-paced web development, context switching to copy-paste recurring code snippets from older projects disrupts concentration. Whether you are constructing a standard CSS reset, setting up a responsive flex grid, or instantiating a React hook structure, manually typing repetitive syntax consumes precious creative energy.\n\nGB Coder’s custom snippet engine eliminates this friction by bringing desktop-grade expansion macros directly into your browser tab."
+          },
+          {
+            "heading": "2. The Anatomy of a Monaco Snippet: Prefix, Body, and Tab Stops",
+            "body": "Snippets in GB Coder adhere to standard Monaco and VS Code formatting. A snippet consists of a trigger prefix, an array of template body lines, and indexed tab stops denoted by $1, $2, etc.\n\nWhen expanded, your cursor lands at $1. Pressing Tab jumps smoothly to $2, while default placeholders like ${1:ComponentName} allow you to overwrite default tokens instantly across multiple cursor locations simultaneously.",
+            "codeSnippet": "{\n  \"React Functional Component\": {\n    \"prefix\": \"rfc\",\n    \"body\": [\n      \"import React, { useState } from 'react';\",\n      \"\",\n      \"export function ${1:ComponentName}() {\",\n      \"  const [state, setState] = useState(null);\",\n      \"\",\n      \"  return (\",\n      \"    <div className=\\\"${2:container}\\\">\",\n      \"      <h2>${1:ComponentName}</h2>\",\n      \"      $0\",\n      \"    </div>\",\n      \"  );\",\n      \"}\"\n    ],\n    \"description\": \"Creates a React functional component with state hook\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. Scoping Snippets by Language and Workspace Context",
+            "body": "To keep IntelliSense autocomplete clean and relevant, snippets in GB Coder are scoped by target language. A TypeScript React snippet will never clutter suggestions when editing an HTML or CSS stylesheet.\n\nYou can configure snippets globally across all projects or restrict specialized templates to particular workspaces, ensuring optimal suggestion relevance wherever you code."
+          },
+          {
+            "heading": "4. The Snippets Sidebar: Browsing, Searching, and One-Click Insertion",
+            "body": "If you cannot recall a snippet's trigger keyword, the Snippets Sidebar provides a convenient visual directory. Organized by category (HTML Structures, CSS Layouts, React Hooks, Utility Functions), you can filter snippets in real time using the search input.\n\nHovering over any snippet displays a formatted preview of the code it will generate. Clicking the insert button immediately writes the snippet at your editor's current cursor position."
+          },
+          {
+            "heading": "5. Built-in Snippet Library for Modern Web Development",
+            "body": "GB Coder comes pre-loaded with an extensive library of verified, modern web snippets. Out of the box, you have access to HTML5 semantic skeletons, modern CSS Grid and Flexbox centering recipes, async fetch wrappers with try/catch error handling, and reactive event listeners.\n\nThese curated presets serve as an instant productivity multiplier for students and seasoned developers alike."
+          },
+          {
+            "heading": "6. Creating Custom Snippets with Dynamic Variables",
+            "body": "Beyond static text and tab stops, GB Coder supports dynamic macro variables. You can insert current timestamp markers ($CURRENT_YEAR, $CURRENT_DATE), active file names ($TM_FILENAME), or even clipboard contents directly into your generated templates.\n\nThis enables powerful workflows like auto-generating file header comment blocks or wrapping selected code blocks in error handling logic."
+          },
+          {
+            "heading": "7. Syncing Snippets Across IndexedDB Workspaces",
+            "body": "Custom snippets are persisted locally within your browser's IndexedDB storage. You can edit, delete, or duplicate snippets anytime through the Snippet Manager modal.\n\nTo share your productivity toolkit across devices or with teammates, GB Coder allows you to export your snippet collection as a single JSON file and import it into any other GB Coder instance in seconds."
+          },
+          {
+            "heading": "8. Keybindings and Velocity Habits for Power Users",
+            "body": "Mastering snippet expansion unlocks lightning-fast typing velocity. Type your keyword prefix, press Tab or Enter, fill in your placeholders, and hit Tab to jump to the terminal cursor position ($0).\n\nCombined with Monaco's multi-cursor editing (Alt+Click) and the command palette (Ctrl+Shift+P), GB Coder delivers the swift, distraction-free editing flow of a finely tuned native desktop editor directly inside a browser tab."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Explore Monaco Editor Documentation"
+      },
       "byok-ai-assisted-coding-guide": {
         "slug": "byok-ai-assisted-coding-guide",
         "title": "AI Coding with BYOK: Inception, Claude, and Local Models",
@@ -778,6 +1047,275 @@ export const BLOG_TRANSLATIONS: Record<string, BlogTranslations> = {
     "relatedArticlesTitle": "Guías Técnicas Relacionadas",
     "backToBlogLabel": "← Volver al Blog",
     "articles": {
+      "build-from-prompt-ai-project-generation": {
+        "slug": "build-from-prompt-ai-project-generation",
+        "title": "Creación a partir de Prompts: Generación de Proyectos Web Multiarquivo con Lenguaje Natural en GB Coder",
+        "description": "Aprende cómo GB Coder genera aplicaciones web completas a partir de prompts en lenguaje natural, crea árboles de archivos, configura package.json y transmite código directamente en Monaco.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Prompt Engineering",
+          "Full-Stack",
+          "AI Generation",
+          "WebContainer",
+          "GB Assist"
+        ],
+        "intro": "Comenzar una nueva aplicación web tradicionalmente implica enfrentarse a un lienzo vacío, una configuración interminable y coordinar dependencias en múltiples archivos. El motor 'Build from Prompt' de GB Coder transforma instrucciones en lenguaje natural en arquitecturas multiarchivo completas directamente en tu espacio de trabajo del navegador. Impulsado por GB Assist y la ejecución en WebContainers, el motor genera árboles de archivos, estilos, scripts y paquetes listos para previsualización inmediata.",
+        "sections": [
+          {
+            "heading": "1. De Fragmentos Aislados a Aplicaciones Web Completas",
+            "body": "Los asistentes de programación habituales se limitan a completar líneas o generar funciones individuales. Cuando los desarrolladores desean explorar una idea completa —como un gestor de finanzas, una base de conocimiento en Markdown o un juego interactivo en canvas— unir fragmentos dispersos de HTML, CSS y módulos JavaScript genera una gran carga mental. Build from Prompt cambia este paradigma al concebir la aplicación como un sistema holístico y coherente en lugar de piezas desconectadas.\n\nAl abordar la generación de forma global, el asistente planifica el grafo de dependencias antes de emitir código. Determina si el proyecto necesita reactividad moderna, persistencia local en IndexedDB o librerías externas de interfaz, asegurando que todos los archivos compartan nombres de variables compatibles, selectores CSS consistentes e importaciones correctas."
+          },
+          {
+            "heading": "2. Generación del Plano Arquitectónico: Planificación AST en el Navegador",
+            "body": "Antes de enviar caracteres al editor, GB Coder instruye al modelo de lenguaje para que devuelva un manifiesto estructural estrictamente tipado. Este manifiesto describe la jerarquía del directorio virtual, identifica el punto de entrada (como index.html o src/main.tsx), enumera los paquetes de terceros necesarios y detalla las responsabilidades de cada archivo.\n\nEjecutar esta fase de planificación en el hilo del navegador asegura que la generación de tokens sea predecible y precisa. Si el usuario solicita un panel con gráficos y filtros dinámicos, el plano garantiza que el motor de datos, el lienzo de renderizado y las hojas de estilo se consideren conjuntamente antes de reservar buffers en memoria."
+          },
+          {
+            "heading": "3. Deducción Automática de Dependencias y Síntesis de package.json",
+            "body": "Un error habitual en herramientas de generación de código son las versiones ficticias de librerías o dependencias incompatibles que fallan al ejecutarse. En GB Coder, el proceso de deducción de dependencias contrasta los tokens solicitados con registros verificados y distribuciones CDN compatibles.\n\nAl crear un proyecto WebContainer full-stack, GB Coder sintetiza un package.json limpio y minimalista. En proyectos estáticos, inyecta etiquetas CDN validadas en el encabezado de index.html sin saturar el almacenamiento local con directorios node_modules innecesarios.",
+            "codeSnippet": "{\n  \"name\": \"fin-tracker-app\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\"\n  },\n  \"dependencies\": {\n    \"lucide\": \"^0.454.0\",\n    \"chart.js\": \"^4.4.6\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^5.4.10\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "4. Transmisión de Archivos Directamente en Pestañas de Monaco",
+            "body": "A medida que el modelo responde a través de la conexión HTTPS directa, el analizador de streaming de GB Coder divide los bloques de código entrantes según el nombre de archivo correspondiente. En cuanto se detecta una nueva declaración de archivo, GB Coder lo crea en el explorador virtual, registra la pestaña en Monaco Editor y transmite el contenido con resaltado sintáctico en tiempo real.\n\nLos desarrolladores pueden observar cómo su proyecto cobra vida pestaña por pestaña. En lugar de esperar pasivamente frente a un indicador de carga, ves cómo se despliegan en paralelo tus reglas de estilo, marcado semántico y módulos de TypeScript con retroalimentación visual inmediata."
+          },
+          {
+            "heading": "5. Arranque Instantáneo en el Entorno WebContainer",
+            "body": "Una vez finalizada la fase de generación, GB Coder monta el árbol de archivos directamente en el sistema de archivos virtual de WebContainer. Los WebContainers ejecutan llamadas de sistema auténticas de Node.js en un sandbox WebAssembly, permitiendo comandos nativos sin necesidad de servidores remotos.\n\nEl entorno inicia automáticamente la instalación de paquetes y lanza el servidor de desarrollo de Vite. En cuestión de segundos, la redirección de puertos locales conecta el servidor en ejecución con el panel de vista previa.",
+            "codeSnippet": "# WebContainer arranca automáticamente el proyecto generado\nnpm install --prefer-offline\nnpx vite --port 3000 --host",
+            "codeLang": "bash"
+          },
+          {
+            "heading": "6. Refinamiento Interactivo de Prompts y Ajustes Conversacionales",
+            "body": "Rara vez un prototipo generado satisface todos los detalles subjetivos de diseño en el primer intento. GB Coder ofrece un ciclo continuo de refinamiento conversacional donde puedes dar instrucciones adicionales, como: 'Añade un selector de modo oscuro en la navegación superior' o 'Guarda las transacciones en localStorage'.\n\nEn lugar de borrar y regenerar todo el proyecto, GB Assist calcula diferencias quirúrgicas únicamente en los archivos afectados. Los cambios se presentan en el visor de diferencias de Monaco para que puedas revisarlos línea por línea antes de aplicarlos."
+          },
+          {
+            "heading": "7. Aislamiento Seguro en Sandbox y Control de Errores",
+            "body": "La ejecución en el navegador exige un aislamiento robusto. Si un script generado produce un error sintáctico o entra en un bucle infinito, el iframe de vista previa de GB Coder contiene el fallo mediante Web Workers encapsulados y límites de error en el DOM.\n\nLa Consola Virtual integrada captura el error en tiempo real, resalta el archivo y la línea exacta donde se originó, y te permite reenviar el volcado de pila a GB Assist con un solo clic para autorepararlo inmediatamente."
+          },
+          {
+            "heading": "8. Soberanía Local: Comunicación Directa con el Proveedor",
+            "body": "Cada prompt enviado en GB Coder viaja directamente desde el navegador del cliente hasta el proveedor de modelos configurado (Inception Labs, Anthropic Claude, OpenAI u Ollama local) mediante tu clave API personal. LadeStack no utiliza servidores proxy intermediarios ni almacena historiales de prompts.\n\nTus ideas, arquitecturas y conceptos creativos permanecen bajo tu absoluto control. Junto con la persistencia en IndexedDB, Build from Prompt te brinda el poder de los modelos más avanzados con total privacidad intelectual."
+          }
+        ],
+        "relatedDocsLink": "/docs#ai-tools",
+        "relatedDocsLabel": "Explorar la Documentación de GB Assist"
+      },
+      "automated-code-review-coderabbit-integration": {
+        "slug": "automated-code-review-coderabbit-integration",
+        "title": "Revisiones de Código Automatizadas en el Navegador: Auditoría con IA, Linters y Seguridad con CodeRabbit",
+        "description": "Descubre cómo GB Coder integra revisiones automáticas al estilo CodeRabbit en el navegador para detectar vulnerabilidades de seguridad, problemas de rendimiento y malas prácticas.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Review",
+          "Static Analysis",
+          "CodeRabbit",
+          "Security",
+          "Developer Tools"
+        ],
+        "intro": "La revisión por pares es fundamental para la calidad del software, pero los desarrolladores independientes y equipos ágiles a menudo carecen de retroalimentación inmediata. GB Coder integra herramientas automatizadas de revisión con IA directamente en el IDE del navegador. Antes de confirmar cambios en GitHub o desplegar a producción, puedes ejecutar un análisis estático exhaustivo que detecta vulnerabilidades, cuellos de botella y problemas arquitectónicos con correcciones en un solo clic.",
+        "sections": [
+          {
+            "heading": "1. Análisis Estático Previo a la Confirmación en Prototipado Rápido",
+            "body": "El desarrollo en el navegador fomenta la experimentación ágil, pero la prisa puede introducir promesas no controladas, fugas de memoria o tipos débiles. Esperar a una revisión de pull request o a que falle el pipeline de CI retrasa innecesariamente el ritmo de trabajo.\n\nAl incorporar revisiones estáticas automáticas en la pestaña activa del editor, GB Coder ofrece una salvaguarda de calidad en tiempo real. Los problemas se detectan mientras el contexto está fresco en la memoria, permitiendo corregirlos antes de que el código sucio contamine el historial del repositorio."
+          },
+          {
+            "heading": "2. Arquitectura de Auditoría Multifásica: Sintaxis, Seguridad y Estilo",
+            "body": "El motor de revisión de GB Coder evalúa el código a través de tres fases especializadas. Primero, un análisis sintáctico estructural examina el Árbol de Sintaxis Abstracta (AST) para detectar código muerto, importaciones no utilizadas y ramas inalcanzables.\n\nSegundo, una fase de seguridad inspecciona la desinfección de entradas, posibles fugas de claves de API y vectores de inyección en el DOM. Tercero, una revisión de estilo evalúa la legibilidad, la complejidad ciclomática de las funciones y las convenciones de nomenclatura para garantizar la mantenibilidad a largo plazo."
+          },
+          {
+            "heading": "3. Detección de Vulnerabilidades Web Comunes: XSS y Contaminación de Prototipos",
+            "body": "Las aplicaciones web del lado del cliente son especialmente susceptibles a ataques Cross-Site Scripting (XSS) al insertar texto de usuarios directamente en el DOM. El analizador alerta ante asignaciones peligrosas como innerHTML, llamadas no validadas a document.write o plantillas de texto sin escapar.\n\nCuando se detecta una vulnerabilidad, el modal de revisión explica con claridad el vector de ataque y propone un parche automático con APIs nativas como textContent o DOMPurify.",
+            "codeSnippet": "// Vulnerabilidad detectada: Asignación insegura de innerHTML\n// element.innerHTML = userInput;\n\n// Corrección automática propuesta:\nconst cleanNode = document.createTextNode(userInput);\nelement.replaceChildren(cleanNode);",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Problemas de Rendimiento Frontend: Fugas de Memoria y Rerenders Innecesarios",
+            "body": "En componentes de React y Vue, las dependencias incorrectas en hooks o los escuchadores de eventos sin limpiar provocan fugas de memoria difíciles de depurar. El motor de revisión identifica funciones de limpieza omitidas en useEffect, referencias de objetos sin memorizar pasadas a componentes pesados y temporizadores descontrolados.\n\nAl localizar estos fallos arquitectónicos con números de línea exactos, evitas tirones en la interfaz, alto consumo de CPU en dispositivos móviles y caídas en la tasa de refresco."
+          },
+          {
+            "heading": "5. Auditoría de Accesibilidad (a11y) en Vistas Previas Aisladas",
+            "body": "Crear una web inclusiva exige respetar los estándares de accesibilidad. El motor de revisión comprueba que los elementos interactivos cuenten con roles ARIA apropiados, las imágenes tengan atributos alt descriptivos, los botones tengan etiquetas legibles y los campos de formulario estén vinculados a etiquetas asociadas.\n\nAl mostrar las observaciones de accesibilidad junto a las advertencias de sintaxis, GB Coder ayuda a construir interfaces compatibles con WCAG 2.1 AA de manera fluida y continua."
+          },
+          {
+            "heading": "6. El Modal de Revisión Interactivo: Tarjetas de Comentario Línea por Línea",
+            "body": "Al ejecutar una revisión se abre el Modal de Code Review. Los problemas se clasifican por gravedad: Crítico (fallos de seguridad y cuelgues), Advertencia (problemas de rendimiento y accesibilidad) y Sugerencia (mejoras de estilo y tipado).\n\nCada hallazgo se detalla en una tarjeta con el archivo afectado, el rango de líneas, la justificación del problema y un fragmento de diferencia que muestra la solución recomendada."
+          },
+          {
+            "heading": "7. Aplicación de Parches en un Clic con el Visor de Diferencias de Monaco",
+            "body": "Revisar y aplicar correcciones es sumamente sencillo gracias a la integración con Monaco Diff. Al pulsar 'Aplicar Corrección', se despliega la vista comparativa de Monaco para examinar el cambio exacto antes de guardarlo en el archivo.\n\nSi prefieres adoptar sugerencias de forma selectiva, puedes aceptar bloques individuales y descartar el resto, manteniendo un control editorial absoluto sobre tu código."
+          },
+          {
+            "heading": "8. Exportación de Informes de Auditoría para Pull Requests y Cumplimiento",
+            "body": "Para equipos que requieren documentación formal, GB Coder compila los hallazgos en un resumen estructurado en Markdown o JSON. Puedes copiar este informe directamente en la descripción de un Pull Request de GitHub o guardarlo junto a los hitos del proyecto.\n\nTodas las revisiones se procesan en tu sesión de navegador con tus credenciales BYOK, garantizando que tu propiedad intelectual nunca sea indexada por servidores externos."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Consultar la Documentación del Editor"
+      },
+      "code-stats-and-developer-analytics": {
+        "slug": "code-stats-and-developer-analytics",
+        "title": "Visualización de la Salud del Código: Métricas de Arquitectura y Analítica en Tiempo Real en GB Coder",
+        "description": "Monitorea el crecimiento del código, la complejidad ciclomática, la distribución de líneas y el peso de dependencias en GB Coder con el panel de Code Stats.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Analytics",
+          "Metrics",
+          "Architecture",
+          "Code Quality",
+          "Productivity"
+        ],
+        "intro": "Comprender la composición y el estado de tu código es fundamental a medida que las aplicaciones web aumentan en escala y complejidad. GB Coder incorpora un panel nativo de Estadísticas de Código que calcula métricas en tiempo real, distribución de lenguajes, ratios de comentarios y complejidad ciclomática sin herramientas externas ni telemetría remota. Obtén claridad arquitectónica inmediata directamente en tu navegador.",
+        "sections": [
+          {
+            "heading": "1. La Importancia de las Métricas en Entornos Basados en el Navegador",
+            "body": "A medida que los proyectos pasan de ser simples pruebas a aplicaciones estructuradas, la cantidad de archivos se dispara y la complejidad arquitectónica se acumula. Sin visibilidad sobre el tamaño de los módulos y la densidad de lógica, es fácil terminar con archivos monolíticos y componentes redundantes.\n\nEl panel de Code Stats de GB Coder ofrece una perspectiva global y actualizada de la salud del proyecto. Accesible desde la barra de estado con un solo clic, convierte estructuras de archivos complejas en análisis visuales prácticos."
+          },
+          {
+            "heading": "2. Conteo de Líneas en Tiempo Real: Código, Comentarios y Espacios",
+            "body": "La base del análisis de código es una medición rigurosa de las Líneas de Código Fuente (SLOC). El analizador procesa los archivos en memoria, desglosando cada línea en código ejecutable puro, comentarios de documentación (incluidos bloques JSDoc) y líneas en blanco.\n\nConocer la proporción de comentarios frente a código permite evaluar de inmediato si los algoritmos o flujos de estado complejos están adecuadamente documentados, mejorando la legibilidad general."
+          },
+          {
+            "heading": "3. Estimación de Complejidad Ciclomática: Identificación de Funciones Críticas",
+            "body": "La complejidad ciclomática mide el número de caminos independientes a través del código fuente. Una complejidad alta indica ramificaciones condicionales excesivas (anidamientos if/else, sentencias switch y bucles) propensas a errores y difíciles de someter a pruebas unitarias.\n\nGB Coder calcula la puntuación de complejidad de cada función del proyecto y muestra una lista priorizada por colores, permitiéndote identificar con precisión qué rutinas conviene refactorizar.",
+            "codeSnippet": "// Cálculo de complejidad ciclomática mediante recorrido de ramas\nfunction assessComplexity(astNode) {\n  let paths = 1; // camino lineal base\n  traverseAST(astNode, (node) => {\n    if (['IfStatement', 'ConditionalExpression', 'SwitchCase', 'ForStatement', 'WhileStatement'].includes(node.type)) {\n      paths++;\n    }\n  });\n  return paths;\n}",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Distribución Multilenguaje de Recursos del Proyecto",
+            "body": "Las aplicaciones web modernas integran maquetación, estilos, lógica tipada y recursos estáticos. El motor de estadísticas grafica la distribución exacta de bytes y líneas entre archivos HTML, CSS, JavaScript, TypeScript, JSON y SVG.\n\nEste desglose ayuda a detectar anomalías rápidamente, como un icono SVG inusualmente pesado o una hoja de estilos sin optimizar que podría ralentizar la carga inicial."
+          },
+          {
+            "heading": "5. Peso de Dependencias y Estimación del Tamaño del Bundle",
+            "body": "Las librerías externas pueden engrosar significativamente el tamaño del paquete enviado al cliente. El panel de Code Stats analiza las declaraciones de importación y el archivo package.json para estimar el peso de las dependencias sin comprimir.\n\nComparar el tamaño de las librerías con tu propia lógica te ayuda a tomar decisiones informadas sobre si mantener una librería voluminosa o sustituirla por una solución nativa más ligera."
+          },
+          {
+            "heading": "6. Índice de Mantenibilidad y Puntuación de Salud Arquitectónica",
+            "body": "GB Coder combina las líneas de código, la complejidad ciclomática y la densidad de documentación para calcular un Índice de Mantenibilidad general (de 0 a 100). Los proyectos con componentes modulares, lógica estructurada y documentación clara obtienen una calificación 'A'.\n\nEsta métrica global sirve de guía e incentivo para mantener el código limpio, desacoplado y fácil de evolucionar a lo largo del tiempo."
+          },
+          {
+            "heading": "7. Exportación de Informes de Auditoría en Markdown y JSON",
+            "body": "¿Necesitas compartir las estadísticas de tu proyecto con compañeros o clientes? El panel incluye una función instantánea de 'Exportar Informe' que estructura los datos en tablas limpias de Markdown o formatos JSON.\n\nPuedes incluir este informe en tu repositorio como un registro ARCHITECTURE.md o adjuntarlo a las revisiones de final de sprint."
+          },
+          {
+            "heading": "8. Privacidad Absoluta: Computación Local en el Hilo del Cliente",
+            "body": "La privacidad es un pilar inquebrantable en GB Coder. Todo el análisis de código, el procesamiento de AST y el cálculo de métricas ocurren íntegramente en un Web Worker en tu navegador. Ninguna línea de código, nombre de archivo o estadística se envía a servidores externos.\n\nDisfrutas de una visibilidad técnica avanzada con la certeza de que tu propiedad intelectual permanece exclusivamente en tu dispositivo."
+          }
+        ],
+        "relatedDocsLink": "/docs#architecture",
+        "relatedDocsLabel": "Leer Guías de Arquitectura y Almacenamiento"
+      },
+      "custom-script-injection-and-cdn-libraries": {
+        "slug": "custom-script-injection-and-cdn-libraries",
+        "title": "Gestión de Dependencias Externas: CDNs, Módulos ESM e Inyección de Scripts en GB Coder",
+        "description": "Domina la gestión de dependencias en GB Coder: inyecta hojas de estilo de CDN, librerías JavaScript, módulos ESM y etiquetas personalizadas en tus vistas previas.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Dependencies",
+          "CDN",
+          "ESM",
+          "Custom Injection",
+          "Frontend"
+        ],
+        "intro": "El desarrollo web moderno depende en gran medida de librerías externas, desde frameworks de componentes hasta utilidades de animación y paquetes de iconos. En GB Coder dispones de diversas opciones para integrar dependencias de terceros sin complejas configuraciones de compilación. Mediante el Administrador de Inyecciones Personalizadas y el Panel de Librerías Externas, puedes incorporar scripts de CDN, importar módulos ESM y definir etiquetas personalizadas en tus vistas previas aisladas.",
+        "sections": [
+          {
+            "heading": "1. Los Tres Niveles de Gestión de Dependencias en GB Coder",
+            "body": "Según los requisitos del proyecto, las dependencias pueden administrarse en tres niveles: etiquetas de script de CDN clásicas, importaciones de módulos ESM nativos del navegador o paquetes completos de npm en el entorno WebContainer.\n\nConocer cada nivel te permite equilibrar la simplicidad del desarrollo sin compiladores frente a la potencia de los empaquetadores avanzados. Para bocetos ágiles, las inyecciones CDN brindan funcionalidad inmediata sin esperas de instalación."
+          },
+          {
+            "heading": "2. El Administrador de Inyecciones: Encabezado (<head>) frente a Cuerpo (<body>)",
+            "body": "El Gestor de Inyección permite decidir con precisión en qué parte del documento se inserta cada recurso externo. Las hojas de estilo y las fuentes deben situarse en el <head> para evitar parpadeos de contenido sin estilo (FOUC).\n\nEn cambio, los scripts JavaScript pesados —como motores de canvas 3D (Three.js) o librerías de animación (GSAP)— pueden posponerse o incluirse al final del <body> para asegurar que el DOM esté completamente cargado antes de inicializarse.",
+            "codeSnippet": "<!-- Configuración de inyección personalizada -->\n{\n  \"headTags\": [\n    \"<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'>\",\n    \"<link rel='preconnect' href='https://fonts.googleapis.com'>\"\n  ],\n  \"bodyScripts\": [\n    \"<script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'></script>\"\n  ]\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. Módulos ESM Modernos: JavaScript Actual sin Pasos de Construcción",
+            "body": "Gracias al soporte generalizado de ECMAScript Modules (ESM) en los navegadores actuales, puedes importar paquetes npm directamente en tu código JavaScript sin necesidad de empaquetadores locales. Utilizando redes CDN para ESM como esm.sh o unpkg, puedes usar sentencias import nativas en el Editor Estático.\n\nEste enfoque combina la comodidad de las importaciones modulares con la inmediatez y ligereza del código estático en el cliente.",
+            "codeSnippet": "// Importar módulos ESM directamente en el editor\nimport confetti from 'https://esm.sh/canvas-confetti@1.9.3';\nimport { formatDistanceToNow } from 'https://esm.sh/date-fns@4.1.0';\n\nconfetti({ particleCount: 100, spread: 70 });",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Inyección de Hojas de Estilo y Orden de Cascada en CSS",
+            "body": "Al combinar CSS personalizado con frameworks externos como Tailwind CDN o Bootstrap, el orden de carga determina la especificidad de las reglas. El administrador permite situar las hojas de estilo externas antes del styles.css del proyecto.\n\nEsto asegura que tus clases y variables personalizadas prevalezcan de forma predecible sobre los estilos por defecto del framework sin tener que recurrir a la directiva !important."
+          },
+          {
+            "heading": "5. Integración de Tipografías Web e Iconografía Externa",
+            "body": "La tipografía y los iconos definen la personalidad visual de cualquier aplicación. Mediante el gestor de librerías, puedes añadir colecciones de Google Fonts e iconos populares como FontAwesome, Lucide o Material Icons con un solo clic.\n\nGB Coder precarga de manera automática las fuentes con sugerencias preconnect, logrando que el texto se muestre nítido desde el primer instante."
+          },
+          {
+            "heading": "6. Seguridad en Scripts Externos: CSP y Aislamiento en Sandbox",
+            "body": "Ejecutar código de terceros en un IDE dentro del navegador requiere medidas estrictas de aislamiento. Todas las vistas previas se ejecutan en iframes aislados con Content Security Policy (CSP) y directivas COEP.\n\nEsto impide que scripts de terceros no verificados puedan leer bases de datos IndexedDB del proyecto, acceder a cookies o interferir con la ventana principal de Monaco."
+          },
+          {
+            "heading": "7. Persistencia de Inyecciones en Espacios de Trabajo y Copias de Seguridad",
+            "body": "Todas las etiquetas de cabecera, scripts e importaciones de CDN configuradas se guardan de forma automática en los metadatos de IndexedDB. Al exportar una copia del proyecto en archivo ZIP, la configuración se preserva en un manifiesto project.json.\n\nRestaurar el archivo en otro equipo o compartirlo con otro desarrollador recupera exactamente las mismas dependencias sin necesidad de reconfiguración manual."
+          },
+          {
+            "heading": "8. Diagnóstico de Errores en CDN y Alternativas Fuera de Línea",
+            "body": "Las restricciones de red o los cortafuegos corporativos pueden bloquear ocasionalmente ciertos dominios CDN. La Consola Virtual de GB Coder supervisa las peticiones de red del iframe de vista previa y notifica errores HTTP 404 o de CORS con explicaciones útiles.\n\nPuedes alternar con facilidad entre diferentes réplicas de CDN (como jsDelivr, cdnjs o unpkg) para garantizar un trabajo continuo incluso ante conexiones inestables."
+          }
+        ],
+        "relatedDocsLink": "/docs#getting-started",
+        "relatedDocsLabel": "Ver Configuración de Dependencias en Docs"
+      },
+      "reusable-code-snippets-and-developer-velocity": {
+        "slug": "reusable-code-snippets-and-developer-velocity",
+        "title": "Acelerando la Velocidad de Programación: Snippets Personalizados e IntelliSense en Monaco",
+        "description": "Aumenta tu productividad en GB Coder con snippets a medida: crea plantillas por lenguaje, puntos de tabulación con multicursor y atajos rápidos en Monaco.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Snippets",
+          "IntelliSense",
+          "Monaco Editor",
+          "Developer Velocity",
+          "Productivity"
+        ],
+        "intro": "Escribir repetidamente estructuras HTML básicas, componentes de React o reglas de alineación en CSS ralentiza el ritmo de desarrollo. GB Coder incorpora un Gestor de Snippets y una Barra Lateral integrados directamente en Monaco Editor. Al definir fragmentos reutilizables con tabuladores y variables de sustitución, puedes generar estructuras complejas en milisegundos mediante palabras clave breves.",
+        "sections": [
+          {
+            "heading": "1. Cómo el Código Repetitivo Afecta la Concentración",
+            "body": "Cambiar de contexto constantemente para copiar y pegar fragmentos de proyectos anteriores rompe el flujo de trabajo. Ya sea redactando un reinicio de estilos en CSS, configurando una cuadrícula responsiva o creando la estructura de un hook en React, escribir sintaxis repetitiva consume tiempo valioso.\n\nEl sistema de snippets de GB Coder elimina este obstáculo llevando macros de expansión profesionales directamente a tu pestaña de navegador."
+          },
+          {
+            "heading": "2. Anatomía de un Snippet en Monaco: Prefijo, Cuerpo y Tabuladores",
+            "body": "Los fragmentos en GB Coder siguen el estándar de formato de Monaco y VS Code. Un snippet consta de un prefijo activador, las líneas que forman el cuerpo y puntos de tabulación identificados como $1, $2, etc.\n\nAl expandir el fragmento, el cursor se posiciona en $1. Al pulsar Tabulador salta a $2, mientras que los valores por defecto como ${1:ComponentName} permiten modificar identificadores en varias ubicaciones simultáneamente.",
+            "codeSnippet": "{\n  \"React Functional Component\": {\n    \"prefix\": \"rfc\",\n    \"body\": [\n      \"import React, { useState } from 'react';\",\n      \"\",\n      \"export function ${1:ComponentName}() {\",\n      \"  const [state, setState] = useState(null);\",\n      \"\",\n      \"  return (\",\n      \"    <div className=\\\"${2:container}\\\">\",\n      \"      <h2>${1:ComponentName}</h2>\",\n      \"      $0\",\n      \"    </div>\",\n      \"  );\",\n      \"}\"\n    ],\n    \"description\": \"Crea un componente funcional de React con hook de estado\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. Segmentación de Snippets por Lenguaje y Espacio de Trabajo",
+            "body": "Para mantener las sugerencias de IntelliSense limpias y contextuales, los snippets en GB Coder se organizan por lenguaje. Una plantilla de React TypeScript nunca aparecerá como sugerencia al editar un archivo HTML o una hoja de estilos CSS.\n\nPuedes definir snippets globales aplicables a todos los proyectos o limitarlos a proyectos específicos, garantizando sugerencias siempre relevantes."
+          },
+          {
+            "heading": "4. Barra Lateral de Snippets: Búsqueda, Vista Previa e Inserción",
+            "body": "Si no recuerdas el prefijo de un fragmento, la Barra Lateral ofrece un catálogo visual intuitivo. Organizada por categorías (Estructuras HTML, Diseños CSS, Hooks de React, Utilidades), puedes filtrar elementos en tiempo real mediante el buscador.\n\nAl colocar el cursor sobre un snippet se muestra una vista previa del código que insertará. Un clic en el botón de inserción escribe el fragmento en la posición actual del cursor."
+          },
+          {
+            "heading": "5. Colección Integrada de Snippets para Desarrollo Web Moderno",
+            "body": "GB Coder viene equipado con una variada biblioteca de plantillas web modernas. Dispones de esqueletos semánticos HTML5, patrones de centrado con Grid y Flexbox, funciones fetch asíncronas con manejo de errores y escuchadores de eventos reactivos.\n\nEstas plantillas predefinidas multiplican de inmediato la productividad tanto de principiantes como de ingenieros experimentados."
+          },
+          {
+            "heading": "6. Creación de Snippets Avanzados con Variables Dinámicas",
+            "body": "Más allá de texto fijo y tabuladores, GB Coder soporta variables dinámicas de entorno. Puedes insertar marcas temporales ($CURRENT_YEAR, $CURRENT_DATE), el nombre del archivo actual ($TM_FILENAME) o incluso el contenido del portapapeles directamente en las plantillas.\n\nEsto agiliza tareas como generar encabezados con comentarios o envolver bloques de código seleccionados en estructuras de control de excepciones."
+          },
+          {
+            "heading": "7. Sincronización de Snippets en IndexedDB y Portabilidad",
+            "body": "Los fragmentos personalizados se guardan de forma local en la base de datos IndexedDB del navegador. Puedes editarlos, duplicarlos o eliminarlos en cualquier momento desde el Gestor de Snippets.\n\nPara compartir tu colección entre distintos equipos o con tus compañeros, GB Coder permite exportar los snippets en un archivo JSON e importarlos en cualquier otra instancia en segundos."
+          },
+          {
+            "heading": "8. Atajos de Teclado y Flujo de Trabajo para Usuarios Avanzados",
+            "body": "Dominar la expansión de snippets permite codificar a gran velocidad. Escribe el prefijo, presiona Tab o Enter, completa los campos requeridos y avanza con Tab hasta la posición final del cursor ($0).\n\nEn combinación con la edición multicursor de Monaco (Alt+Clic) y la paleta de comandos (Ctrl+Shift+P), GB Coder ofrece la fluidez y precisión de un editor de escritorio profesional directamente en tu navegador."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Consultar la Documentación de Monaco Editor"
+      },
       "byok-ai-assisted-coding-guide": {
         "slug": "byok-ai-assisted-coding-guide",
         "title": "Programación con IA y BYOK: Inception, Claude y Modelos Locales",
@@ -1513,6 +2051,271 @@ export const BLOG_TRANSLATIONS: Record<string, BlogTranslations> = {
     "relatedArticlesTitle": "Gerelateerde Gidsen",
     "backToBlogLabel": "← Terug naar Blog",
     "articles": {
+      "build-from-prompt-ai-project-generation": {
+        "slug": "build-from-prompt-ai-project-generation",
+        "title": "Bouwen vanuit Prompts: Complete Webprojecten Genereren via Natuurlijke Taal in GB Coder",
+        "description": "Ontdek hoe GB Coder complete webapplicaties met meerdere bestanden opbouwt uit natuurlijke taal, mappenstructuren genereert, package.json instelt en code streamt in Monaco.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Prompt Engineering",
+          "Full-Stack",
+          "AI Generation",
+          "WebContainer",
+          "GB Assist"
+        ],
+        "intro": "Het starten van een nieuwe webapplicatie begint traditioneel met een leeg scherm, tijdrovende configuratiebestanden en het handmatig koppelen van afhankelijkheden. De 'Build from Prompt'-engine van GB Coder transformeert opdrachten in natuurlijke taal direct in een complete bestandsarchitectuur binnen je browser. Aangedreven door GB Assist en WebContainer-executie levert de engine werkende bestanden, stylesheets, scripts en runtime-pakketten op, direct klaar voor realtime preview.",
+        "sections": [
+          {
+            "heading": "1. Van Losse Codefragmenten naar Volledige Webapplicaties",
+            "body": "Traditionele AI-codeerassistenten zijn meestal ontworpen voor aanvullingen in één enkel bestand of inline functies. Wanneer ontwikkelaars een compleet nieuw concept willen verkennen — zoals een financieel dashboard, een Markdown-notitieapp of een interactieve canvasgame — kost het handmatig samenvoegen van HTML, CSS en JavaScript-modules veel moeite. Build from Prompt pakt dit anders aan door een applicatie te benaderen als één samenhangend systeem.\n\nDoor de opbouw in zijn geheel te bekijken, ontwerpt de assistent eerst de afhankelijkheidsgraaf. Er wordt bepaald of het project reactieve toestand nodig heeft, lokale opslag via IndexedDB of externe interface-bibliotheken, zodat alle gegenereerde bestanden consistente variabelenamen en uniforme CSS-selectors hanteren."
+          },
+          {
+            "heading": "2. Architectonisch Ontwerp: AST-Planning in de Browser",
+            "body": "Voordat er code naar de editor wordt gestuurd, genereert GB Coder eerst een gestructureerd manifest via het taalmodel. Dit manifest beschrijft de virtuele mappenstructuur, definieert het startpunt (zoals index.html of src/main.tsx), benoemt de benodigde pakketten en wijst de taken per bestand aan.\n\nOmdat deze planningsfase direct in de browserthread plaatsvindt, blijft de codegeneratie gericht en voorspelbaar. Vraagt een gebruiker om een dashboard met grafieken en filters, dan zorgt het plan ervoor dat de datalogica, het canvas en de stylesheets synchroon worden opgezet."
+          },
+          {
+            "heading": "3. Automatische Afhankelijkheden en package.json Synthese",
+            "body": "Een veelvoorkomend probleem bij AI-codegeneratie zijn niet-bestaande bibliotheekversies of conflicterende afhankelijkheden. GB Coder controleert aangevraagde bibliotheken direct tegen gevalideerde npm-registers en compatibele CDN-distributies.\n\nVoor een full-stack WebContainer-project maakt GB Coder een gestroomlijnd package.json aan. Voor statische prototypes worden gecontroleerde CDN-tags direct in de <head> van index.html geplaatst zonder overbodige bestanden in te laden.",
+            "codeSnippet": "{\n  \"name\": \"fin-tracker-app\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\"\n  },\n  \"dependencies\": {\n    \"lucide\": \"^0.454.0\",\n    \"chart.js\": \"^4.4.6\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^5.4.10\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "4. Bestanden Direct Streamen naar Monaco Editor Tabbladen",
+            "body": "Terwijl het AI-model via de directe HTTPS-verbinding antwoordt, splitst de streaming-parser van GB Coder inkomende codeblokken automatisch per bestandsnaam. Zodra een nieuw bestand wordt herkend, verschijnt het in de virtuele verkenner en opent Monaco Editor een nieuw tabblad met directe syntaxkleuring.\n\nOntwikkelaars zien hun project tab voor tab ontstaan. In plaats van te wachten op een algemeen laadicoon, volg je realtime hoe stylingregels, semantische opmaak en TypeScript-modules synchroon worden ingevuld."
+          },
+          {
+            "heading": "5. Direct Opstarten in de WebContainer Runtime",
+            "body": "Nadat de bestanden zijn gegenereerd, koppelt GB Coder de mappenstructuur direct aan het virtuele bestandssysteem van WebContainer. WebContainers voeren authentieke Node.js-systeemaanroepen uit binnen een WebAssembly-sandbox, zonder externe servers.\n\nHet systeem installeert automatisch de benodigde pakketten en start de Vite-ontwikkelserver. Binnen enkele seconden verbindt de poortkoppeling de ontwikkelserver met het ingebouwde previewpaneel.",
+            "codeSnippet": "# WebContainer start automatisch het gegenereerde project\nnpm install --prefer-offline\nnpx vite --port 3000 --host",
+            "codeLang": "bash"
+          },
+          {
+            "heading": "6. Interactieve Verfijning via Vervolgprompts",
+            "body": "Een eerste gegenereerd prototype voldoet zelden direct aan alle specifieke wensen. GB Coder biedt daarom een interactieve dialoog waarin je gerichte aanpassingen kunt doorgeven, zoals: 'Voeg een donkere modus toe' of 'Bewaar invoergegevens in localStorage'.\n\nIn plaats van het hele project opnieuw te bouwen, berekent GB Assist gerichte diffs voor alleen de relevante bestanden. Via de vergelijkingsweergave van Monaco controleer je de wijzigingen regel voor regel voordat je ze doorvoert."
+          },
+          {
+            "heading": "7. Robuuste Foutisolatie en Sandboxing",
+            "body": "Uitvoering binnen de browser vereist betrouwbare afscherming. Als een gegenereerd script een syntaxfout bevat of in een oneindige lus raakt, schermt het preview-iframe de rest van de editor af via Web Workers en foutgrenzen in de DOM.\n\nDe ingebouwde virtuele console registreert fouten direct met bestandsnaam en regelnummer, zodat je de foutmelding met één klik aan GB Assist kunt voorleggen voor een automatische herstelstap."
+          },
+          {
+            "heading": "8. Lokale Privacy: Directe Communicatie met de Modelprovider",
+            "body": "Alle prompts die je in GB Coder invoert, gaan rechtstreeks vanuit jouw browser naar de gekozen modelprovider (Inception Labs, Anthropic Claude, OpenAI of een lokale Ollama) via je eigen API-sleutel. LadeStack gebruikt geen tussenliggende servers en bewaart geen promptgeschiedenis.\n\nJe ideeën en code blijven volledig jouw eigendom. In combinatie met lokale opslag via IndexedDB combineert Build from Prompt krachtige AI-modellen met maximale gegevensveiligheid."
+          }
+        ],
+        "relatedDocsLink": "/docs#ai-tools",
+        "relatedDocsLabel": "Bekijk de GB Assist AI Documentatie"
+      },
+      "automated-code-review-coderabbit-integration": {
+        "slug": "automated-code-review-coderabbit-integration",
+        "title": "Geautomatiseerde Code Reviews in de Browser: AI-Audits, Linters en Beveiliging met CodeRabbit",
+        "description": "Ontdek hoe GB Coder automatische code-audits in CodeRabbit-stijl integreert om beveiligingslekken, prestatieknelpunten en stylingfouten direct op te sporen.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Review",
+          "Static Analysis",
+          "CodeRabbit",
+          "Security",
+          "Developer Tools"
+        ],
+        "intro": "Collegiale toetsing is essentieel voor softwarekwaliteit, maar zelfstandige ontwikkelaars en snelle teams hebben niet altijd direct toegang tot uitgebreide feedback. GB Coder integreert geautomatiseerde AI-codereviews rechtstreeks in de browser-IDE. Voordat je code naar GitHub pusht of publiceert, kun je een grondige statische analyse uitvoeren die kwetsbaarheden, vertragingen en foutpatronen aantoont met herstelopties met één klik.",
+        "sections": [
+          {
+            "heading": "1. Het Belang van Statische Analyse Vóór het Vastleggen van Code",
+            "body": "Snel prototypen in de browser stimuleert creativiteit, maar kan ook leiden tot onafgehandelde promises, geheugenlekken of losse typeringen. Wachten op een formele pull request-review of een falende buildpijplijn vertraagt het ontwikkelproces onnodig.\n\nDoor automatische statische controles direct in het actieve tabblad uit te voeren, biedt GB Coder een continue kwaliteitscontrole. Fouten worden gesignaleerd zolang de logica nog helder voor de geest staat, zodat je problemen direct kunt oplossen."
+          },
+          {
+            "heading": "2. Meerlaagse Auditarchitectuur: Syntaxis, Beveiliging en Stijl",
+            "body": "De analyse-engine van GB Coder onderzoekt broncode vanuit drie verschillende invalshoeken. Eerst controleert een syntaxcontrole via de Abstract Syntax Tree (AST) op ongebruikte imports, dode code en onbereikbare logica.\n\nDaarna inspecteert een beveiligingslaag invoervalidatie, mogelijke API-sleutellekken en DOM-injectierisico's. Tot slot beoordeelt een stijlaudit de leesbaarheid, cyclomatische complexiteit en naamgevingsconventies voor langdurig onderhoud."
+          },
+          {
+            "heading": "3. Webkwetsbaarheden Herkennen: XSS en Prototypevervuiling",
+            "body": "Webapplicaties aan de clientzijde zijn kwetsbaar voor Cross-Site Scripting (XSS) wanneer gebruikersinvoer direct in de DOM wordt geplaatst. De scanner waarschuwt bij risicovolle toewijzingen zoals innerHTML of ongevalideerde document.write-aanroepen.\n\nBij detectie toont het reviewvenster een duidelijke uitleg van het risico, samen met een veilige correctie via standaard browser-API's zoals textContent of DOMPurify.",
+            "codeSnippet": "// Gedetecteerde kwetsbaarheid: Onveilige innerHTML-toewijzing\n// element.innerHTML = userInput;\n\n// Geautomatiseerde oplossing voorgesteld door Code Review:\nconst cleanNode = document.createTextNode(userInput);\nelement.replaceChildren(cleanNode);",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Prestatieproblemen: Geheugenlekken en Onnodige Rerenders",
+            "body": "In React- en Vue-componenten leiden onvolledige hook-afhankelijkheden of niet-opgeruimde event listeners regelmatig tot geheugenverlies. De review-engine markeert ontbrekende opruimfuncties in useEffect, niet-gememoiseerde objectreferenties en oneindige timers.\n\nDoor deze knelpunten met exacte regelnummers aan te wijzen, voorkom je haperende interfaces, hoog batterijverbruik op mobiele apparaten en vertraagde animaties."
+          },
+          {
+            "heading": "5. Toegankelijkheid (a11y) Controleren in Geïsoleerde Previews",
+            "body": "Een gebruiksvriendelijk web vereist aandacht voor toegankelijkheidsstandaarden. De audit controleert of interactieve elementen geldige ARIA-rollen hebben, afbeeldingen duidelijke alt-attributen bevatten en formuliervelden gekoppeld zijn aan labels.\n\nDoor toegankelijkheidspunten naast gewone syntaxfouten te tonen, stimuleert GB Coder het bouwen van WCAG 2.1 AA-conforme interfaces als vast onderdeel van je dagelijkse routine."
+          },
+          {
+            "heading": "6. Het Interactieve Reviewvenster: Feedback per Regel",
+            "body": "Het starten van een audit opent het Code Review-paneel. Bevindingen worden overzichtelijk gerangschikt naar urgentie: Kritiek (beveiligingsrisico's en crashes), Waarschuwing (prestaties en toegankelijkheid) en Suggestie (stijl en typen).\n\nElk item staat op een duidelijke kaart met het betreffende bestand, de regelnummers, een toelichting op het probleem en een diff-weergave met de voorgestelde oplossing."
+          },
+          {
+            "heading": "7. Oplossingen Toepassen met Eén Klik via Monaco Diff",
+            "body": "Het doorvoeren van aanbevelingen werkt naadloos dankzij de ingebouwde diff-weergave. Door te klikken op 'Correctie Toepassen' opent Monaco een vergelijkingsscherm waarin je de voorgestelde wijziging exact kunt inzien vóór acceptatie.\n\nJe kunt suggesties ook per codeblok accepteren of weigeren, zodat je altijd de volledige controle behoudt over je codebase."
+          },
+          {
+            "heading": "8. Auditverslagen Exporteren voor Pull Requests en Teams",
+            "body": "Voor teams die rapportages nodig hebben, kan GB Coder alle bevindingen bundelen in een overzichtelijk Markdown- of JSON-bestand. Dit overzicht kun je direct toevoegen aan een GitHub Pull Request of bewaren bij je projectdocumentatie.\n\nAlle controles draaien lokaal in je browsersessie via je eigen BYOK-inloggegevens, zodat je intellectuele eigendom nooit op externe analyserservers belandt."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Bekijk de Editor & Tools Documentatie"
+      },
+      "code-stats-and-developer-analytics": {
+        "slug": "code-stats-and-developer-analytics",
+        "title": "Codekwaliteit Visualiseren: Realtime Architectuurstatistieken en Codebase-Analyse in GB Coder",
+        "description": "Volg codegroei, cyclomatische complexiteit, regelverdeling en bibliotheekgewichten in GB Coder met het ingebouwde Code Stats Dashboard.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Analytics",
+          "Metrics",
+          "Architecture",
+          "Code Quality",
+          "Productivity"
+        ],
+        "intro": "Inzicht in de samenstelling en kwaliteit van je code is onmisbaar naarmate webapplicaties groeien. GB Coder beschikt over een geïntegreerd Code Stats Dashboard dat realtime codestatistieken, taalverdelingen, commentaarverhoudingen en cyclomatische complexiteit berekent zonder externe tools of telemetrie. Krijg direct overzicht over je architectuur rechtstreeks in je browser.",
+        "sections": [
+          {
+            "heading": "1. Waarom Codestatistieken Belangrijk Zijn in Browser-IDE's",
+            "body": "Wanneer projecten evolueren van snelle proefjes naar volwaardige applicaties, groeit het aantal bestanden en neemt de complexiteit toe. Zonder inzicht in bestandsgroottes en logische dichtheid ontstaan er snel onoverzichtelijke modules en dubbele componenten.\n\nHet Code Stats Dashboard in GB Coder biedt continu een helder overzicht van de toestand van je project. Met één klik vanaf de statusbalk zet je abstracte bestandslijsten om in praktische visuele inzichten."
+          },
+          {
+            "heading": "2. Nauwkeurige Regeltelling: Code, Commentaar en Witregels",
+            "body": "De kern van code-analyse is een betrouwbare telling van Source Lines of Code (SLOC). De parser verwerkt bestanden in het geheugen en verdeelt elke regel in uitvoerbare code, documentatiecommentaar (zoals JSDoc) en witregels.\n\nDoor de verhouding tussen commentaar en code te volgen, zie je meteen of complexe algoritmen en toestandsovergangen voldoende zijn toegelicht, wat de overdraagbaarheid ten goede komt."
+          },
+          {
+            "heading": "3. Cyclomatische Complexiteit: Complexe Functies Identificeren",
+            "body": "Cyclomatische complexiteit meet het aantal onafhankelijke paden door de broncode. Een hoge score wijst op diep geneste voorwaarden (if/else-structuren, switch-blokken en lussen) die foutgevoelig zijn en lastig te testen.\n\nGB Coder berekent een score voor elke functie in je project en toont een overzichtelijke ranglijst met kleurcodering, zodat je precies ziet welke onderdelen baat hebben bij refactoring.",
+            "codeSnippet": "// Berekening van cyclomatische complexiteit op basis van vertakkingen\nfunction assessComplexity(astNode) {\n  let paths = 1; // lineair basispad\n  traverseAST(astNode, (node) => {\n    if (['IfStatement', 'ConditionalExpression', 'SwitchCase', 'ForStatement', 'WhileStatement'].includes(node.type)) {\n      paths++;\n    }\n  });\n  return paths;\n}",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Verdeling van Talen en Bestandstypen",
+            "body": "Moderne webapplicaties bestaan uit een mix van HTML-opmaak, CSS-styling, getypeerde TypeScript-logica en statische bestanden. De statistiekenmotor toont de exacte verhouding in regels en bytes over alle bestandstypen.\n\nDit helpt ontwikkelaars om onverwachte uitschieters direct op te merken, zoals een uitzonderlijk groot SVG-bestand of een ongecomprimeerd stijlblad dat de laadtijd kan vertragen."
+          },
+          {
+            "heading": "5. Bibliotheekgewicht en Bundelomvang Inschatten",
+            "body": "Externe pakketten kunnen de uiteindelijke downloadgrootte voor gebruikers aanzienlijk verhogen. Het Code Stats Dashboard analyseert importverklaringen en pakketdefinities om de omvang van afhankelijkheden in te schatten.\n\nDoor het gewicht van bibliotheken te vergelijken met je eigen code, maak je gefundeerde keuzes over het behouden van zware pakketten of het overstappen op lichtere, browser-eigen alternatieven."
+          },
+          {
+            "heading": "6. Onderhoudbaarheidsscore en Architectuurkwaliteit",
+            "body": "GB Coder combineert het aantal regels, de vertakkingscomplexiteit en de documentatiedichtheid tot een overkoepelende Maintainability Index (0-100). Projecten met modulaire componenten en heldere documentatie ontvangen een 'A'-beoordeling.\n\nDeze score biedt een motiverende richtlijn om code overzichtelijk, modulair en toekomstbestendig te houden tijdens langdurige ontwikkelsessies."
+          },
+          {
+            "heading": "7. Auditverslagen Exporteren naar Markdown en JSON",
+            "body": "Wil je statistieken delen met collega's, opdrachtgevers of belanghebbenden? Het dashboard bevat een exportfunctie die alle projectcijfers bundelt in nette Markdown-tabellen of gestructureerde JSON-bestanden.\n\nJe kunt het gegenereerde verslag direct opslaan in je repository als ARCHITECTURE.md of toevoegen aan periodieke sprintrapporten."
+          },
+          {
+            "heading": "8. Volledige Privacy: Lokale Berekeningen in de Clientthread",
+            "body": "Gegevensbescherming staat centraal in GB Coder. Alle code-analyses, AST-verwerkingen en berekeningen vinden volledig plaats binnen een Web Worker in jouw browser. Er worden geen regels code, projectnamen of statistieken naar externe servers verzonden.\n\nJe profiteert van geavanceerd architectuurinzicht met de garantie dat je intellectuele eigendom strikt lokaal op je eigen apparaat blijft."
+          }
+        ],
+        "relatedDocsLink": "/docs#architecture",
+        "relatedDocsLabel": "Lees de Architectuur & Opslaggidsen"
+      },
+      "custom-script-injection-and-cdn-libraries": {
+        "slug": "custom-script-injection-and-cdn-libraries",
+        "title": "Externe Afhankelijkheden Beheren: CDN's, ESM-Modules en Scriptinjectie in GB Coder",
+        "description": "Beheer afhankelijkheden in GB Coder: ontdek hoe je CDN-stijlbladen, scripts, ESM-modules en aangepaste header-tags toevoegt aan je live previews.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Dependencies",
+          "CDN",
+          "ESM",
+          "Custom Injection",
+          "Frontend"
+        ],
+        "intro": "Moderne webontwikkeling steunt zwaar op externe bibliotheken, van UI-componenten en animatietools tot pictogrammen en CSS-frameworks. In GB Coder heb je flexibele mogelijkheden om externe bronnen te integreren zonder ingewikkelde buildstappen. Via het paneel voor aangepaste injecties en bibliotheken voeg je moeiteloos CDN-scripts toe, importeer je ESM-modules en configureer je HTML-headertags in je afgeschermde preview.",
+        "sections": [
+          {
+            "heading": "1. Drie Niveaus van Afhankelijkheidsbeheer in GB Coder",
+            "body": "Afhankelijk van je projectstructuur kun je afhankelijkheden op drie manieren inzetten: klassieke CDN-scripttags, moderne native ESM-module-imports of volledige npm-pakketinstallaties via de WebContainer-omgeving.\n\nDoor de juiste methode te kiezen, balanceer je eenvoudig tussen snelle no-build prototypes en geavanceerde bundelmogelijkheden. Voor snelle concepten bieden CDN-injecties directe functionaliteit zonder wachttijd."
+          },
+          {
+            "heading": "2. Aangepaste Injecties: Plaatsing in <head> versus <body>",
+            "body": "Het injectiebeheer geeft je controle over waar en wanneer externe bronnen in het preview-document worden geplaatst. Stijlbladen en weblettertypen horen in de <head> om flikkering van ongeformatteerde inhoud (FOUC) te vermijden.\n\nZwaardere JavaScript-scripts — zoals 3D-canvasbibliotheken (Three.js) of animatiesystemen (GSAP) — kunnen juist onderaan de <body> worden geplaatst, zodat de DOM eerst volledig wordt opgebouwd."
+          },
+          {
+            "heading": "3. Moderne ESM-Modules: Hedendaags JavaScript Zonder Bundlers",
+            "body": "Dankzij brede ondersteuning voor ECMAScript Modules (ESM) in moderne browsers kun je npm-pakketten direct in je JavaScript gebruiken zonder lokale bundler. Via ESM-providers zoals esm.sh of unpkg schrijf je native importregels direct in de Statische Editor.\n\nDit levert het gemak op van modulaire importregels in combinatie met de snelheid van client-side statische code."
+          },
+          {
+            "heading": "4. Stijlbladen Injecteren en CSS-Cascadering Beheersen",
+            "body": "Wanneer je eigen CSS combineert met externe frameworks zoals Tailwind CDN of Bootstrap, bepaalt de laadvolgorde de specificiteit. In GB Coder kun je externe stijlbladen vóór je eigen styles.css laten inladen.\n\nZo weet je zeker dat je eigen klassen en CSS-variabelen altijd betrouwbaar voorrang krijgen zonder dat je toevlucht hoeft te nemen tot !important-declaraties."
+          },
+          {
+            "heading": "5. Weblettertypen en Pictogrammenverzamelingen Integreren",
+            "body": "Typografie en iconen geven een webapp zijn herkenbare uitstraling. Via de bibliotheekbeheerder voeg je met één klik lettertypen toe via Google Fonts of pictogrammen via FontAwesome, Lucide of Material Icons.\n\nGB Coder voegt automatisch preconnect-aanwijzingen toe aan lettertypestijlbladen, zodat teksten vanaf het eerste moment scherp worden weergegeven."
+          },
+          {
+            "heading": "6. Beveiliging bij Externe Scripts: CSP en Sandbox-Afscherming",
+            "body": "Het uitvoeren van externe code in een browser-IDE vereist strikte beveiliging. Alle previews binnen GB Coder draaien in sandboxed iframes die worden gereguleerd door Content Security Policies (CSP) en COEP-regels.\n\nDit voorkomt dat externe scripts ongemerkt toegang krijgen tot je IndexedDB-databases, cookies uitlezen of invloed uitoefenen op de bovenliggende editor."
+          },
+          {
+            "heading": "7. Injecties Behouden in Werkruimten en Back-ups",
+            "body": "Alle geconfigureerde scripts, head-tags en CDN-instellingen worden automatisch opgeslagen in de projectmetadata binnen IndexedDB. Exporteer je een project als ZIP-archief, dan blijft deze configuratie bewaard in een project.json-bestand.\n\nWanneer je het project op een andere computer herstelt, worden alle externe afhankelijkheden direct weer operationeel zonder handmatige invoer."
+          },
+          {
+            "heading": "8. CDN-Foutopsporing en Offline Alternatieven",
+            "body": "Netwerkbeperkingen of bedrijfsfirewalls kunnen bepaalde CDN-servers soms blokkeren. De virtuele console van GB Coder bewaakt netwerkaanroepen in de preview en toont duidelijke toelichtingen bij HTTP 404- of CORS-meldingen.\n\nOntwikkelaars kunnen snel schakelen tussen verschillende CDN-spiegels (zoals jsDelivr, cdnjs of unpkg) om zonder onderbreking door te kunnen werken."
+          }
+        ],
+        "relatedDocsLink": "/docs#getting-started",
+        "relatedDocsLabel": "Bekijk Afhankelijkheden in Documentatie"
+      },
+      "reusable-code-snippets-and-developer-velocity": {
+        "slug": "reusable-code-snippets-and-developer-velocity",
+        "title": "Sneller Programmeren in de Browser: Aangepaste Snippets en Monaco IntelliSense",
+        "description": "Verhoog je ontwikkelsnelheid in GB Coder met handige snippets: maak taalspecifieke sjablonen, multicursor-tabstops en snelle sneltoetsen in Monaco.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Snippets",
+          "IntelliSense",
+          "Monaco Editor",
+          "Developer Velocity",
+          "Productivity"
+        ],
+        "intro": "Het herhaaldelijk handmatig typen van HTML-basisstructuren, React-componenten of CSS-uitlijningsregels vertraagt het ontwikkelproces. GB Coder beschikt over een handige Snippet Manager en een zijbalk die rechtstreeks zijn gekoppeld aan Monaco Editor. Door aangepaste sjablonen in te stellen met tabstops en tijdelijke variabelen, genereer je complete codeblokken in milliseconden via korte trefwoorden.",
+        "sections": [
+          {
+            "heading": "1. Waarom Herhalende Code de Ontwikkelsnelheid Vertraagt",
+            "body": "Voortdurend schakelen tussen vensters om eerdere codefragmenten te kopiëren verstoort de concentratie. Of het nu gaat om een CSS-reset, een flexibele gridindeling of een React-hookstructuur, het handmatig overtikken van vaste patronen kost onnodig veel tijd.\n\nHet snippetsysteem van GB Coder neemt deze barrière weg door krachtige expansiemacro's rechtstreeks naar je browsertabblad te brengen."
+          },
+          {
+            "heading": "2. De Opbouw van een Monaco Snippet: Voorvoegsel, Inhoud en Tabstops",
+            "body": "Snippets in GB Coder volgen de standaardindeling van Monaco en VS Code. Een snippet bestaat uit een activerend trefwoord, de inhoudsregels en genummerde tabstops zoals $1 en $2.\n\nBij activatie landt de cursor direct op $1. Met de Tab-toets spring je soepel naar $2, terwijl standaardwaarden zoals ${1:ComponentName} het mogelijk maken om variabelen op meerdere plekken tegelijk te overschrijven.",
+            "codeSnippet": "{\n  \"React Functional Component\": {\n    \"prefix\": \"rfc\",\n    \"body\": [\n      \"import React, { useState } from 'react';\",\n      \"\",\n      \"export function ${1:ComponentName}() {\",\n      \"  const [state, setState] = useState(null);\",\n      \"\",\n      \"  return (\",\n      \"    <div className=\\\"${2:container}\\\">\",\n      \"      <h2>${1:ComponentName}</h2>\",\n      \"      $0\",\n      \"    </div>\",\n      \"  );\",\n      \"}\"\n    ],\n    \"description\": \"Maakt een functionele React-component aan met state-hook\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. Snippets Filteren op Programmeertaal en Werkruimte",
+            "body": "Om de IntelliSense-suggesties relevant en overzichtelijk te houden, zijn snippets in GB Coder gekoppeld aan specifieke talen. Een React TypeScript-sjabloon verschijnt daardoor nooit wanneer je in een gewoon HTML- of CSS-bestand werkt.\n\nJe kunt snippets globaal voor al je projecten instellen of toewijzen aan één specifieke werkruimte, zodat je altijd de juiste suggesties bij de hand hebt."
+          },
+          {
+            "heading": "4. De Snippet-Zijbalk: Zoeken, Bekijken en Invoegen",
+            "body": "Weet je het trefwoord van een snippet even niet meer? De zijbalk biedt een overzichtelijke catalogus. Ingedeeld in handige categorieën (HTML-structuren, CSS-lay-outs, React-hooks, Hulpmiddelen) vind je via het zoekveld direct het juiste fragment.\n\nWanneer je met de muis over een snippet beweegt, verschijnt er een voorvertoning van de code. Met één klik op de invoegknop wordt het fragment op de huidige cursorpositie geplaatst."
+          },
+          {
+            "heading": "5. Ingebouwde Verzameling van Moderne Websnippets",
+            "body": "GB Coder wordt geleverd met een zorgvuldig samengestelde set actuele webfragmenten. Direct beschikbaar zijn onder meer semantische HTML5-structuren, moderne flexbox- en gridcentreringen, asynchrone fetch-aanroepen met foutafhandeling en reactieve luisterfuncties.\n\nDeze standaardsjablonen bieden zowel beginnende ontwikkelaars als ervaren programmeurs een aanzienlijke tijdsbesparing."
+          },
+          {
+            "heading": "6. Geavanceerde Snippets Maken met Dynamische Variabelen",
+            "body": "Naast vaste tekst en tabstops ondersteunt GB Coder dynamische macrovariabelen. Je kunt actuele tijdsaanduidingen ($CURRENT_YEAR, $CURRENT_DATE), bestandsnamen ($TM_FILENAME) of klembordinhoud direct opnemen in je sjablonen.\n\nHiermee automatiseer je eenvoudig routinetaken, zoals het aanmaken van bestandsheaders of het inpakken van geselecteerde regels in foutafhandelingsblokken."
+          },
+          {
+            "heading": "7. Snippets Behouden via IndexedDB en Eenvoudig Delen",
+            "body": "Zelfgemaakte snippets worden veilig lokaal opgeslagen in de IndexedDB-opslag van je browser. Je kunt ze op elk moment aanpassen, dupliceren of verwijderen in de Snippet Manager.\n\nWil je jouw verzameling overzetten naar een ander apparaat of delen met teamleden? Exporteer je snippets eenvoudig als één JSON-bestand en importeer ze binnen enkele seconden in een andere GB Coder-omgeving."
+          },
+          {
+            "heading": "8. Sneltoetsen en Werkgewoonten voor Gevorderden",
+            "body": "Het soepel benutten van snippets maakt snel typen mogelijk. Typ het trefwoord, druk op Tab of Enter, vul de velden in en gebruik Tab om direct naar de eindpositie van de cursor ($0) te gaan.\n\nIn combinatie met de multicursor-functionaliteit van Monaco (Alt+Klik) en het opdrachtpalet (Ctrl+Shift+P) biedt GB Coder de snelheid en precisie van een volwaardige desktop-editor direct in je browser."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Bekijk de Monaco Editor Documentatie"
+      },
       "byok-ai-assisted-coding-guide": {
         "slug": "byok-ai-assisted-coding-guide",
         "title": "AI-Coderen met BYOK: Inception, Claude en Lokale Modellen",
@@ -2245,6 +3048,275 @@ export const BLOG_TRANSLATIONS: Record<string, BlogTranslations> = {
     "relatedArticlesTitle": "Guides Techniques Recommandés",
     "backToBlogLabel": "← Retour au Blog",
     "articles": {
+      "build-from-prompt-ai-project-generation": {
+        "slug": "build-from-prompt-ai-project-generation",
+        "title": "Création à partir de Prompts : Génération d'Applications Multi-Fichiers en Langage Naturel avec GB Coder",
+        "description": "Découvrez comment GB Coder génère des projets web complets à partir d'instructions en langage naturel, crée l'arborescence, configure package.json et diffuse le code dans Monaco.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Prompt Engineering",
+          "Full-Stack",
+          "AI Generation",
+          "WebContainer",
+          "GB Assist"
+        ],
+        "intro": "Démarrer une nouvelle application web commence généralement par une page blanche, de longues configurations et l'association manuelle de dépendances multiples. Le moteur 'Build from Prompt' de GB Coder convertit des descriptions en langage naturel en architectures multi-fichiers complètes au cœur de votre navigateur. Propulsé par GB Assist et l'exécution WebContainer, ce moteur produit des arborescences de fichiers, des styles, des scripts et des paquets prêts pour un aperçu dynamique immédiat.",
+        "sections": [
+          {
+            "heading": "1. Des Extraits Isolés aux Applications Web Complètes",
+            "body": "Les assistants de programmation conventionnels sont souvent limités à l'autocomplétion de lignes ou à la synthèse d'une fonction isolée. Lorsqu'un développeur souhaite explorer une idée complète — comme un tableau de bord financier, une base de connaissances en Markdown ou un jeu interactif en canvas — assembler séparément les fichiers HTML, CSS et JavaScript crée une forte charge mentale. Build from Prompt transforme cette expérience en concevant l'application comme un système cohérent et unifié.\n\nEn abordant la génération dans sa globalité, l'assistant élabore le graphe de dépendances avant même d'écrire la moindre ligne de code. Il détermine si le projet nécessite une gestion d'état réactive, une persistance locale dans IndexedDB ou des bibliothèques visuelles externes, assurant une parfaite concordance des sélecteurs CSS, des noms de variables et des imports."
+          },
+          {
+            "heading": "2. Élaboration du Plan Architectural : Planification AST dans le Navigateur",
+            "body": "Avant de transmettre des caractères à l'éditeur, GB Coder demande au modèle de fondation de produire un manifeste structurel strictement typé. Ce document détaille l'arborescence virtuelle, identifie le point d'entrée (comme index.html ou src/main.tsx), recense les paquets nécessaires et précise le rôle de chaque composant.\n\nExécuter cette phase de planification dans le thread du navigateur garantit que la génération reste ciblée et déterministe. Si l'utilisateur demande un tableau de bord avec graphiques et filtres, le plan veille à ce que le modèle de données, le canevas de rendu et les feuilles de style soient pensés conjointement."
+          },
+          {
+            "heading": "3. Déduction Automatique des Dépendances et Synthèse de package.json",
+            "body": "Un écueil fréquent lors de la génération de code par IA réside dans les versions fantaisistes de bibliothèques qui échouent au lancement. Dans GB Coder, le pipeline de déduction confronte les paquets demandés aux registres validés et aux distributions CDN compatibles.\n\nLors de la création d'un projet WebContainer full-stack, GB Coder génère un fichier package.json minimaliste et éprouvé. Pour les projets statiques simples, il insère directement des balises CDN fiables dans l'en-tête de index.html sans encombrer la mémoire de node_modules superflus.",
+            "codeSnippet": "{\n  \"name\": \"fin-tracker-app\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\"\n  },\n  \"dependencies\": {\n    \"lucide\": \"^0.454.0\",\n    \"chart.js\": \"^4.4.6\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^5.4.10\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "4. Diffusion Directe des Fichiers dans les Onglets de Monaco Editor",
+            "body": "Au fur et à mesure que le modèle répond via la liaison HTTPS directe, l'analyseur de streaming de GB Coder segmente les blocs de code selon le nom de fichier spécifié. Dès qu'une nouvelle déclaration de fichier apparaît, GB Coder l'ajoute à l'explorateur virtuel, ouvre l'onglet dans Monaco et insère le texte avec coloration syntaxique en temps réel.\n\nLes développeurs voient ainsi leur projet se matérialiser onglet par onglet. Plutôt que de fixer un indicateur de chargement muet, vous visualisez en direct la création de vos règles de style, de votre balisage sémantique et de vos modules TypeScript."
+          },
+          {
+            "heading": "5. Lancement Immédiat dans l'Environnement WebContainer",
+            "body": "Dès la fin de la génération, GB Coder monte l'arborescence de fichiers dans le système de fichiers virtuel de WebContainer. Les WebContainers exécutent de vrais appels système Node.js dans un bac à sable WebAssembly, permettant l'utilisation de commandes natives sans serveur distant.\n\nLe système lance automatiquement l'installation des dépendances puis démarre le serveur de développement Vite. En quelques secondes, la redirection de port connecte le serveur local au volet de prévisualisation intégré.",
+            "codeSnippet": "# WebContainer lance automatiquement le projet généré\nnpm install --prefer-offline\nnpx vite --port 3000 --host",
+            "codeLang": "bash"
+          },
+          {
+            "heading": "6. Ajustements Interactifs et Itérations Conversationnelles",
+            "body": "Un prototype initial comble rarement l'ensemble des attentes stylistiques dès le premier essai. GB Coder propose un dialogue continu au cours duquel vous pouvez soumettre des instructions complémentaires, telles que : 'Ajoute un sélecteur de mode sombre' ou 'Sauvegarde les données dans localStorage'.\n\nAu lieu d'écraser l'ensemble du projet, GB Assist calcule des différences chirurgicales sur les seuls fichiers concernés. Les changements sont affichés dans le comparateur de Monaco pour vous permettre de valider chaque modification ligne par ligne."
+          },
+          {
+            "heading": "7. Confinement Robuste et Gestion des Erreurs d'Exécution",
+            "body": "L'exécution in-browser requiert une isolation sans faille. Si un script généré produit une erreur de syntaxe ou entre dans une boucle infinie, l'iframe de prévisualisation de GB Coder isole l'incident grâce à des Web Workers dédiés et des limites d'erreur dans le DOM.\n\nLa console virtuelle intégrée intercepte immédiatement l'erreur, indique le fichier et la ligne en cause, et vous permet de transmettre la trace à GB Assist d'un simple clic pour une correction automatique instantanée."
+          },
+          {
+            "heading": "8. Souveraineté des Données : Dialogue Direct avec le Fournisseur",
+            "body": "Chaque prompt saisi dans GB Coder est acheminé directement depuis votre navigateur vers votre fournisseur de modèles (Inception Labs, Anthropic Claude, OpenAI ou un modèle local Ollama) grâce à votre propre clé API. LadeStack n'opère aucun serveur proxy intermédiaire et ne conserve aucun historique de vos requêtes.\n\nVos idées et votre code source demeurent sous votre entière maîtrise. Associé à la persistance locale dans IndexedDB, Build from Prompt conjugue l'ingéniosité des grands modèles d'IA avec une stricte confidentialité intellectuelle."
+          }
+        ],
+        "relatedDocsLink": "/docs#ai-tools",
+        "relatedDocsLabel": "Explorer la Documentation de GB Assist"
+      },
+      "automated-code-review-coderabbit-integration": {
+        "slug": "automated-code-review-coderabbit-integration",
+        "title": "Revues de Code Automatisées dans le Navigateur : Audit IA, Linters et Sécurité avec CodeRabbit",
+        "description": "Apprenez comment GB Coder intègre des revues automatiques inspirées de CodeRabbit pour déceler failles de sécurité, régressions de performance et défauts de style.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Review",
+          "Static Analysis",
+          "CodeRabbit",
+          "Security",
+          "Developer Tools"
+        ],
+        "intro": "La revue de code entre pairs est essentielle à la fiabilité des logiciels, mais les développeurs indépendants ou les équipes agiles n'ont pas toujours accès à des retours rapides et détaillés. GB Coder intègre des outils d'audit automatisés par IA directement au sein de l'IDE du navigateur. Avant de pousser votre code sur GitHub ou de déployer en production, vous pouvez déclencher une analyse statique approfondie qui relève les vulnérabilités de sécurité et les goulets d'étranglement avec des correctifs applicables en un clic.",
+        "sections": [
+          {
+            "heading": "1. L'Intérêt de l'Analyse Statique Précoce lors du Prototypage",
+            "body": "Développer rapidement dans son navigateur favorise la créativité, mais l'urgence peut glisser des promesses non gérées, des fuites de mémoire ou des typages approximatifs. Attendre une revue tardive de pull request ou l'échec d'un pipeline d'intégration continue ralentit le flux de travail.\n\nEn réalisant des analyses statiques automatiques dès l'onglet actif de l'éditeur, GB Coder instaure un contrôle qualité permanent. Les anomalies sont signalées pendant que la logique est encore claire dans votre esprit, facilitant une résolution immédiate."
+          },
+          {
+            "heading": "2. Architecture d'Audit Multi-Niveaux : Syntaxe, Sécurité et Style",
+            "body": "Le moteur d'analyse de GB Coder examine le code source sous trois angles complémentaires. Une analyse syntaxique parcourt l'arbre syntaxique abstrait (AST) pour repérer le code mort, les imports inutilisés et les blocs inaccessibles.\n\nUne seconde passe dédiée à la sécurité contrôle l'assainissement des données, les risques de divulgation de clés d'API et les vecteurs d'injection dans le DOM. Enfin, un audit de style évalue la lisibilité, la complexité cyclomatique des fonctions et le respect des conventions de nommage."
+          },
+          {
+            "heading": "3. Détection des Vulnérabilités Web Courantes : XSS et Pollution de Prototype",
+            "body": "Les applications web côté client sont particulièrement exposées aux attaques Cross-Site Scripting (XSS) lorsque des entrées utilisateur sont injectées sans contrôle dans le DOM. Le scanner signale les usages risqués tels que innerHTML, les appels non vérifiés à document.write ou les gabarits de chaînes bruts.\n\nLorsqu'un risque est mis en lumière, la fenêtre d'audit expose clairement la menace et propose un correctif prêt à l'emploi reposant sur des interfaces natives comme textContent ou DOMPurify.",
+            "codeSnippet": "// Vulnérabilité repérée : Affectation innerHTML non sécurisée\n// element.innerHTML = userInput;\n\n// Correction automatique proposée par la revue :\nconst cleanNode = document.createTextNode(userInput);\nelement.replaceChildren(cleanNode);",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Défauts de Performance Frontend : Fuites Mémoire et Re-rendus Superflus",
+            "body": "Dans les composants React et Vue, une mauvaise gestion des dépendances dans les hooks ou des écouteurs d'événements non libérés provoquent de sournoises fuites de mémoire. Le moteur identifie l'absence de fonction de nettoyage dans useEffect, le passage de références non mémoïsées à des composants lourds et les temporisateurs non annulés.\n\nEn localisant ces anomalies avec précision, vous préservez la réactivité de l'interface, limitez la sollicitation du processeur sur mobile et évitez les saccades d'affichage."
+          },
+          {
+            "heading": "5. Contrôle de l'Accessibilité (a11y) dans les Prévisualisations Isolées",
+            "body": "Concevoir un web accessible implique le respect rigoureux des standards. Le moteur vérifie que les éléments interactifs possèdent les attributs ARIA adéquats, que les images comportent des descriptions alt signifiantes et que les champs de formulaire sont associés à des libellés explicites.\n\nEn affichant les remarques d'accessibilité aux côtés des avertissements syntaxiques, GB Coder incite à bâtir des interfaces conformes à la norme WCAG 2.1 AA tout au long du développement quotidien."
+          },
+          {
+            "heading": "6. L'Interface Interactive de Revue : Fiches de Commentaires Détaillées",
+            "body": "Le lancement d'un audit ouvre la fenêtre de revue de code. Les constats sont organisés selon leur niveau de gravité : Critique (failles de sécurité et plantages), Avertissement (performances et accessibilité) et Suggestion (style et clarté du code).\n\nChaque fiche mentionne le fichier ciblé, la plage de lignes, l'explication du problème et un comparatif visuel présentant la correction recommandée."
+          },
+          {
+            "heading": "7. Application des Correctifs en un Clic via Monaco Diff",
+            "body": "Appliquer les ajustements suggérés s'effectue sans effort grâce à l'intégration du comparateur de Monaco. En cliquant sur 'Appliquer la Correction', une vue différentielle côte à côte s'affiche afin de vous permettre de jauger la modification avant son enregistrement.\n\nVous pouvez également choisir d'adopter les propositions par blocs distincts, conservant ainsi une autorité absolue sur l'ensemble de votre base de code."
+          },
+          {
+            "heading": "8. Exportation des Rapports d'Audit pour vos Pull Requests",
+            "body": "Pour les équipes qui formalisent leurs démarches, GB Coder compile les conclusions de l'audit dans un fichier Markdown ou JSON soigné. Vous pouvez intégrer cette synthèse à la description de votre Pull Request sur GitHub ou l'archiver avec vos livrables de projet.\n\nToutes les analyses s'exécutent localement au sein de votre session grâce à votre clé BYOK, évitant ainsi tout transfert de propriété intellectuelle vers des serveurs tiers."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Consulter la Documentation de l'Éditeur"
+      },
+      "code-stats-and-developer-analytics": {
+        "slug": "code-stats-and-developer-analytics",
+        "title": "Visualiser la Santé du Code : Métriques d'Architecture et Analyse en Temps Réel avec GB Coder",
+        "description": "Mesurez la croissance du code, la complexité cyclomatique, la répartition des lignes et le poids des bibliothèques avec le tableau de bord Code Stats de GB Coder.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Analytics",
+          "Metrics",
+          "Architecture",
+          "Code Quality",
+          "Productivity"
+        ],
+        "intro": "Maîtriser la structure et l'état de santé de votre code est indispensable à mesure que vos projets web grandissent en envergure. GB Coder intègre un tableau de bord natif de statistiques de code qui calcule en direct les métriques essentielles, la ventilation des langages, la proportion de commentaires et la complexité cyclomatique, sans dépendre d'outils externes ni de télémétrie. Gardez une vision claire de votre architecture directement dans votre navigateur.",
+        "sections": [
+          {
+            "heading": "1. L'Intérêt des Métriques dans les Espaces de Travail Web",
+            "body": "Au fur et à mesure qu'une simple maquette se transforme en application structurée, le nombre de fichiers augmente et la complexité s'accroît. Sans indicateurs sur la densité logique et la taille des modules, une base de code peut rapidement accumuler des fichiers monolithiques et des doublons.\n\nLe tableau de bord Code Stats de GB Coder fournit une vue d'ensemble instantanée de l'état de votre projet. Accessible d'un simple clic depuis la barre d'état, il transforme une simple liste de fichiers en données visuelles exploitables."
+          },
+          {
+            "heading": "2. Comptage Précis des Lignes : Code Exécutable, Commentaires et Espaces",
+            "body": "Le fondement de l'analyse repose sur un comptage rigoureux des lignes de code source (SLOC). Le moteur de traitement analyse les fichiers en mémoire et distingue le code opérationnel, les commentaires documentaires (notamment les blocs JSDoc) et les lignes vides.\n\nObserver le ratio entre commentaires et code permet d'évaluer instantanément si les algorithmes délicats ou les transitions d'état sont convenablement documentés, favorisant ainsi la lisibilité générale."
+          },
+          {
+            "heading": "3. Évaluation de la Complexité Cyclomatique : Cibler les Fonctions Critiques",
+            "body": "La complexité cyclomatique mesure le nombre de chemins indépendants traversant le code source d'un programme. Une valeur élevée révèle des imbrications conditionnelles excessives (enchaînements if/else, blocs switch et boucles) susceptibles d'engendrer des régressions et délicates à tester.\n\nGB Coder calcule ce score pour chacune de vos fonctions et établit un classement par code couleur, vous désignant avec exactitude les routines nécessitant un découpage modulaire.",
+            "codeSnippet": "// Calcul de la complexité cyclomatique par exploration des branches de contrôle\nfunction assessComplexity(astNode) {\n  let paths = 1; // chemin linéaire de référence\n  traverseAST(astNode, (node) => {\n    if (['IfStatement', 'ConditionalExpression', 'SwitchCase', 'ForStatement', 'WhileStatement'].includes(node.type)) {\n      paths++;\n    }\n  });\n  return paths;\n}",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Répartition Multilingue des Ressources du Projet",
+            "body": "Les interfaces modernes combinent balisage HTML, styles CSS, logique TypeScript et ressources statiques. Le moteur cartographie précisément le volume d'octets et de lignes selon la nature des fichiers.\n\nCette répartition aide à identifier immédiatement des anomalies, comme une icône SVG anormalement lourde ou une feuille de style non minifiée susceptible de ralentir le chargement initial."
+          },
+          {
+            "heading": "5. Poids des Dépendances et Estimation de la Taille du Paquet",
+            "body": "L'emploi de bibliothèques tierces peut accroître considérablement le volume des données transmises au client. Le tableau de bord inspecte les imports et les déclarations de paquets pour évaluer l'empreinte globale des dépendances.\n\nEn mettant en balance le poids de ces modules externes avec votre propre logique métier, vous prenez des décisions éclairées quant à l'opportunité de conserver un paquet volumineux ou de lui préférer une solution native."
+          },
+          {
+            "heading": "6. Score de Maintenabilité et Indice de Santé Globale",
+            "body": "GB Coder synthétise le nombre de lignes, la complexité cyclomatique et la densité documentaire afin d'attribuer un indice de maintenabilité global noté de 0 à 100. Les projets aux composants bien découpés et documentés obtiennent la mention 'A'.\n\nCe score synthétique encourage le développeur à conserver une structure propre, modulable et facile à faire évoluer au fil des sprints."
+          },
+          {
+            "heading": "7. Exportation des Rapports d'Analyse en Markdown et JSON",
+            "body": "Besoin de partager ces métriques avec un client, un collègue ou lors d'une rétrospective d'équipe ? Le tableau de bord propose une fonction d'exportation qui agence toutes les données en tableaux Markdown clairs ou en objets JSON structurés.\n\nVous pouvez intégrer ce bilan dans votre dépôt sous la forme d'un document ARCHITECTURE.md ou le joindre à vos livrables techniques."
+          },
+          {
+            "heading": "8. Confidentialité Garantie : Calcul Local au Cœur du Client",
+            "body": "La sécurité des données est un principe fondamental dans GB Coder. Toutes les opérations d'analyse, de parcours AST et de calculs métriques s'effectuent au sein d'un Web Worker dédié dans votre propre navigateur. Aucun extrait de code ni résultat n'est transmis à des serveurs distants.\n\nVous bénéficiez d'une clarté technique avancée avec la garantie que votre propriété intellectuelle demeure strictement confinée à votre poste de travail."
+          }
+        ],
+        "relatedDocsLink": "/docs#architecture",
+        "relatedDocsLabel": "Lire les Guides d'Architecture et de Stockage"
+      },
+      "custom-script-injection-and-cdn-libraries": {
+        "slug": "custom-script-injection-and-cdn-libraries",
+        "title": "Gérer les Dépendances Externes : CDN, Modules ESM et Injections de Scripts avec GB Coder",
+        "description": "Maîtrisez les dépendances dans GB Coder : injectez des styles CDN, des scripts utilitaires, des modules ESM et des balises personnalisées dans vos aperçus en direct.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Dependencies",
+          "CDN",
+          "ESM",
+          "Custom Injection",
+          "Frontend"
+        ],
+        "intro": "La conception web contemporaine s'appuie largement sur des bibliothèques externes, qu'il s'agisse d'outils d'animation, de systèmes d'icônes ou de frameworks CSS. Dans GB Coder, plusieurs voies complémentaires vous permettent d'adopter des dépendances tierces sans aucune configuration fastidieuse. Grâce au gestionnaire d'injections et au volet de bibliothèques, vous intégrez aisément des scripts CDN, des modules ESM modernes et des balises personnalisées au sein de vos aperçus isolés.",
+        "sections": [
+          {
+            "heading": "1. Les Trois Niveaux de Gestion des Dépendances dans GB Coder",
+            "body": "Selon la nature du projet, vous pouvez administrer vos dépendances à trois échelons : les balises de scripts CDN classiques, les imports de modules ESM natifs ou l'installation complète de paquets npm dans l'environnement WebContainer.\n\nCette souplesse vous laisse arbitrer entre la simplicité immédiate sans étape de compilation et la puissance des outils de regroupement avancés. Pour un prototype rapide, l'injection CDN apporte une réponse immédiate sans délai d'installation."
+          },
+          {
+            "heading": "2. Gestionnaire d'Injections : Choix entre En-tête (<head>) et Corps (<body>)",
+            "body": "Le panneau d'injections personnalisées vous offre le contrôle précis sur l'emplacement de chaque ressource externe. Les feuilles de style et les polices trouvent naturellement leur place dans le <head> afin d'éviter tout scintillement de contenu brut (FOUC).\n\nÀ l'inverse, des bibliothèques JavaScript plus imposantes — comme un moteur 3D (Three.js) ou une bibliothèque d'animation (GSAP) — peuvent être placées en fin de <body> pour s'assurer que le DOM est complètement chargé avant leur initialisation.",
+            "codeSnippet": "<!-- Exemple de configuration d'injections personnalisées -->\n{\n  \"headTags\": [\n    \"<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'>\",\n    \"<link rel='preconnect' href='https://fonts.googleapis.com'>\"\n  ],\n  \"bodyScripts\": [\n    \"<script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'></script>\"\n  ]\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. Modules ESM Modernes : Le JavaScript d'Aujourd'hui sans Bundler",
+            "body": "Grâce à la prise en charge étendue des modules ECMAScript (ESM) par les navigateurs récents, vous pouvez importer des paquets npm directement dans votre code sans recourir à un bundler local. En exploitant des CDN adaptés comme esm.sh ou unpkg, vous écrivez des imports natifs dans l'Éditeur Statique.\n\nVous combinez ainsi le confort d'une syntaxe moderne avec la rapidité d'exécution de code statique directement côté client.",
+            "codeSnippet": "// Importation directe de modules ESM dans l'éditeur\nimport confetti from 'https://esm.sh/canvas-confetti@1.9.3';\nimport { formatDistanceToNow } from 'https://esm.sh/date-fns@4.1.0';\n\nconfetti({ particleCount: 100, spread: 70 });",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Injection de Feuilles de Style et Préservation de la Cascade CSS",
+            "body": "Lorsque vous associez votre propre feuille de style avec des frameworks externes tels que Bootstrap ou le CDN de Tailwind, l'ordre de chargement détermine la priorité. GB Coder veille à insérer les styles externes avant le fichier styles.css du projet.\n\nVos classes et variables CSS personnalisées conservent ainsi la primauté sur les règles par défaut du framework, sans vous obliger à user de directives !important indésirables."
+          },
+          {
+            "heading": "5. Intégration de Polices Web et de Catalogues d'Icônes",
+            "body": "La typographie et les icônes confèrent son identité visuelle à toute application web. Grâce au catalogue de bibliothèques, vous pouvez intégrer des polices Google Fonts et des jeux d'icônes réputés tels que FontAwesome, Lucide ou Material Icons d'un simple clic.\n\nGB Coder applique automatiquement des indications preconnect aux feuilles de polices, garantissant un affichage net dès la première seconde."
+          },
+          {
+            "heading": "6. Sécurité des Scripts Externes : Règles CSP et Bac à Sable",
+            "body": "Faire tourner du code tiers au sein d'un IDE de navigateur réclame un cloisonnement sans compromis. Dans GB Coder, toutes les prévisualisations s'exécutent dans des iframes isolées régies par des politiques Content Security Policy (CSP) et COEP.\n\nCes protections empêchent les scripts externes d'accéder aux données IndexedDB de votre projet, de lire des cookies d'authentification ou d'interférer avec la fenêtre principale de Monaco."
+          },
+          {
+            "heading": "7. Conservation des Injections au Fil des Sauvegardes",
+            "body": "L'ensemble des balises d'en-tête, scripts et dépendances configurés est automatiquement enregistré dans les métadonnées de votre projet dans IndexedDB. Lors de l'exportation d'une sauvegarde au format ZIP, ces choix sont fidèlement consignés dans un fichier project.json.\n\nRestaurer l'archive sur une autre machine ou la transmettre à un confrère rétablit l'intégralité de l'environnement sans requérir la moindre ressaisie manuelle."
+          },
+          {
+            "heading": "8. Résolution des Échecs Réseau et Alternatives Hors-Ligne",
+            "body": "Des configurations de réseau d'entreprise ou des pare-feu peuvent ponctuellement bloquer certains serveurs de distribution. La console virtuelle de GB Coder surveille les requêtes réseau de l'aperçu et signale immédiatement les erreurs HTTP 404 ou les refus CORS avec des indications utiles.\n\nVous pouvez ainsi basculer facilement entre plusieurs miroirs CDN (comme jsDelivr, cdnjs ou unpkg) pour continuer à travailler en toute sérénité."
+          }
+        ],
+        "relatedDocsLink": "/docs#getting-started",
+        "relatedDocsLabel": "Explorer la Configuration des Dépendances"
+      },
+      "reusable-code-snippets-and-developer-velocity": {
+        "slug": "reusable-code-snippets-and-developer-velocity",
+        "title": "Accélérer sa Vitesse de Développement : Snippets Personnalisés et IntelliSense dans Monaco",
+        "description": "Augmentez votre productivité dans GB Coder : concevez des modèles par langage, exploitez les points de tabulation multi-curseurs et des raccourcis rapides dans Monaco.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Snippets",
+          "IntelliSense",
+          "Monaco Editor",
+          "Developer Velocity",
+          "Productivity"
+        ],
+        "intro": "Taper continuellement les mêmes structures HTML, canevas de composants React ou agencements CSS répétitifs ralentit la cadence de création. GB Coder intègre un Gestionnaire de Snippets et un volet latéral directement connectés à Monaco Editor. En configurant des modèles réutilisables pourvus de tabulations et de variables dynamiques, vous insérez des architectures de code entières en une fraction de seconde grâce à de simples mots-clés.",
+        "sections": [
+          {
+            "heading": "1. En Quoi le Code Répétitif Freine l'Élan Créatif",
+            "body": "Passer son temps à changer d'application pour copier-coller des portions de code issues de projets passés brise la concentration. Qu'il s'agisse de poser un reset CSS, d'agencer une grille adaptative ou de structurer un hook React, réécrire sans cesse la même syntaxe disperse votre énergie.\n\nLe dispositif de snippets de GB Coder supprime ces frictions en apportant des fonctionnalités d'expansion professionnelles au cœur de votre onglet web."
+          },
+          {
+            "heading": "2. Structure d'un Snippet Monaco : Préfixe, Corps et Points d'Arrêt",
+            "body": "Les extraits dans GB Coder se conforment aux conventions éprouvées de Monaco et de VS Code. Un snippet réunit un préfixe déclencheur, les lignes de gabarit et des repères d'arrêt identifiés par $1, $2, etc.\n\nÀ l'insertion, le curseur se positionne sur $1. Une pression sur Tabulation vous mène à $2, tandis que des valeurs indicatives telles que ${1:ComponentName} permettent de remplacer simultanément un nom à plusieurs emplacements.",
+            "codeSnippet": "{\n  \"React Functional Component\": {\n    \"prefix\": \"rfc\",\n    \"body\": [\n      \"import React, { useState } from 'react';\",\n      \"\",\n      \"export function ${1:ComponentName}() {\",\n      \"  const [state, setState] = useState(null);\",\n      \"\",\n      \"  return (\",\n      \"    <div className=\\\"${2:container}\\\">\",\n      \"      <h2>${1:ComponentName}</h2>\",\n      \"      $0\",\n      \"    </div>\",\n      \"  );\",\n      \"}\"\n    ],\n    \"description\": \"Génère un composant fonctionnel React avec hook d'état\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. Filtrage des Snippets par Langage et Contexte de Projet",
+            "body": "Pour préserver la pertinence des suggestions IntelliSense, les snippets sont classés par langage cible dans GB Coder. Un extrait dédié à React TypeScript n'apparaîtra jamais lorsque vous travaillez dans un fichier HTML ou CSS classique.\n\nVous pouvez configurer des modèles universels pour l'ensemble de vos espaces ou réserver des extraits particuliers à un projet dédié, garantissant ainsi des suggestions toujours appropriées."
+          },
+          {
+            "heading": "4. Le Volet Latéral de Snippets : Exploration, Recherche et Insertion",
+            "body": "Si le préfixe d'un extrait vous échappe, le volet latéral met à votre disposition un répertoire visuel commode. Structuré par familles (Éléments HTML, Dispositions CSS, Hooks React, Fonctions Utilitaires), il vous permet de filtrer les modèles en temps réel via un champ de saisie.\n\nSurvoler une entrée affiche un aperçu du code qui sera généré. Un clic sur le bouton dédié insère instantanément le bloc à la position exacte du curseur."
+          },
+          {
+            "heading": "5. Bibliothèque Intégrée d'Extraits pour le Web Moderne",
+            "body": "GB Coder est livré avec une sélection prête à l'emploi de modèles modernes et vérifiés. Dès l'ouverture, vous profitez de canevas sémantiques HTML5, de centrage CSS Flexbox et Grid, de requêtes fetch asynchrones avec gestion des erreurs et d'écouteurs d'événements réactifs.\n\nCes composants prédéfinis constituent un véritable tremplin d'efficacité pour les apprenants comme pour les développeurs confirmés."
+          },
+          {
+            "heading": "6. Modèles Évolués avec Variables Dynamiques d'Environnement",
+            "body": "Au-delà du texte statique et des sauts de curseur, GB Coder accepte des variables macro dynamiques. Vous pouvez ainsi incorporer des horodatages ($CURRENT_YEAR, $CURRENT_DATE), le nom du fichier courant ($TM_FILENAME) ou même le contenu du presse-papiers au sein de vos modèles.\n\nCela simplifie des opérations régulières comme l'ajout d'en-têtes commentés ou l'encadrement d'un bloc sélectionné dans une structure de capture d'exceptions."
+          },
+          {
+            "heading": "7. Synchronisation Locale dans IndexedDB et Portabilité",
+            "body": "Vos snippets personnalisés sont conservés en toute sécurité dans l'espace IndexedDB de votre navigateur. Vous pouvez les modifier, les dédoubler ou les supprimer à tout moment depuis le gestionnaire de snippets.\n\nPour partager votre boîte à outils entre plusieurs postes ou avec votre équipe, GB Coder permet d'exporter votre collection en un unique fichier JSON et de la réimporter dans une autre session en quelques secondes."
+          },
+          {
+            "heading": "8. Raccourcis Clavier et Automatismes pour Développeurs Exigeants",
+            "body": "Maîtriser le déploiement des snippets décuple la vitesse de saisie. Tapez le mot-clé, validez avec Tab ou Entrée, renseignez vos paramètres et progressez avec Tab jusqu'à la position de sortie terminale ($0).\n\nEn synergie avec le mode multi-curseur de Monaco (Alt+Clic) et la palette de commandes (Ctrl+Shift+P), GB Coder délivre l'agilité et le confort d'un éditeur de bureau de premier plan directement dans un onglet web."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Consulter la Documentation de Monaco Editor"
+      },
       "byok-ai-assisted-coding-guide": {
         "slug": "byok-ai-assisted-coding-guide",
         "title": "Coder avec l'IA en BYOK : Inception, Claude et Modèles Locaux",
@@ -2977,6 +4049,275 @@ export const BLOG_TRANSLATIONS: Record<string, BlogTranslations> = {
     "relatedArticlesTitle": "おすすめの技術ガイド",
     "backToBlogLabel": "← ブログ一覧に戻る",
     "articles": {
+      "build-from-prompt-ai-project-generation": {
+        "slug": "build-from-prompt-ai-project-generation",
+        "title": "プロンプトからのアプリ構築：自然言語から複数ファイルのWebプロジェクトを自動生成するGB Coder",
+        "description": "自然言語プロンプトからGB Coderが複数ファイル構成のWebアプリを自動生成し、ディレクトリ構造、package.jsonの調整、Monacoエディタへの直接ストリーミングを行う仕組みを解説します。",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Prompt Engineering",
+          "Full-Stack",
+          "AI Generation",
+          "WebContainer",
+          "GB Assist"
+        ],
+        "intro": "新しいWebアプリケーションの立ち上げは、白紙のエディタ、煩雑な初期設定、そして複数の設定ファイルによる依存関係の調整という骨の折れる作業から始まります。GB Coderの「Build from Prompt」エンジンは、自然言語による指示をブラウザ内で完結する完全なマルチファイル構成のWebアプリへと即座に変換します。GB AssistとWebContainerの実行環境を組み合わせることで、ファイル構造、スタイル、スクリプト、ランタイムパッケージを同時に整え、即座にライブプレビューを提供します。",
+        "sections": [
+          {
+            "heading": "1. 単一のコード断片から完結したWebアプリケーションへ",
+            "body": "一般的なAIコーディングツールは、1行ごとの補完や独立した関数の生成を前提に設計されています。しかし、家計簿ツールやMarkdownメモ帳、インタラクティブなゲームといった本格的なアイデアを試す際、HTML・CSS・JavaScript・設定ファイルを個別に生成して組み立てるのは認知負荷が高くなります。Build from Promptは、アプリケーションを断片ではなく統一されたエコシステムとして捉えることで、この課題を根本から解決します。\n\nプロジェクト全体を俯瞰してコード生成に臨むため、アシスタントはまず依存関係の全体グラフを設計します。リアクティブな状態管理が必要か、IndexedDBによるローカル永続化が必要か、外部UIライブラリが必要かを事前に判断し、生成される各ファイルの変数名、CSSセレクタ、インポートパスの整合性を完全に保ちます。"
+          },
+          {
+            "heading": "2. 設計図の生成：ブラウザ内でのASTプランニング",
+            "body": "エディタにコード文字列を書き込む前に、GB Coderは基底のモデルに対して厳格な型定義を持つ構造マニフェスト（JSONスキーマ）を出力するよう要求します。このマニフェストには、仮想ディレクトリ構造、エントリポイント（index.htmlやsrc/main.tsxなど）、外部パッケージ一覧、そして各ファイルの責務が明確に定義されます。\n\nこの計画フェーズをクライアントのブラウザスレッドで実行することにより、後続のトークン生成のブレや脱線を防止します。チャートやフィルターを含むダッシュボードをリクエストした場合でも、データロジック、レンダリングキャンバス、スタイルシートの3者が同期した状態でコードバッファが確保されます。"
+          },
+          {
+            "heading": "3. 依存関係の自動推論とpackage.jsonの生成",
+            "body": "AIによる自動生成でよくある問題が、実在しない架空のライブラリバージョンや依存性の不一致による実行エラーです。GB Coderの依存関係推論パイプラインは、指定されたライブラリ名を正規のnpmレジストリおよび互換CDNカタログと照合します。\n\nフルスタックのWebContainer環境では、クリーンで過不足のないpackage.jsonを構築します。静的プロトタイプの場合は、検証済みのCDNタグをindex.htmlの<head>に直接配置するため、無駄なnode_modulesでブラウザのメモリを圧迫することがありません。",
+            "codeSnippet": "{\n  \"name\": \"fin-tracker-app\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\"\n  },\n  \"dependencies\": {\n    \"lucide\": \"^0.454.0\",\n    \"chart.js\": \"^4.4.6\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^5.4.10\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "4. Monacoエディタのタブへのダイレクトストリーミング",
+            "body": "モデルから直接HTTPS経由でトークンが返答されると、GB Coderのストリーミングパーサーがファイル名ごとにMarkdownブロックを動的に分割します。新しいファイルの宣言が検出された瞬間に、仮想エクスプローラーにファイルが作成され、Monacoエディタにタブが開かれ、リアルタイムの構文ハイライト付きでコードが流し込まれます。\n\n開発者はプロジェクトがタブごとに構築されていく様子を目の前で観察できます。単調なロードスピナーを待つ代わりに、CSS規則、HTMLマークアップ、TypeScriptモジュールが同時に記述されていく快適な開発体験が得られます。"
+          },
+          {
+            "heading": "5. WebContainerによる即時ブートストラップ",
+            "body": "コード生成フェーズが完了すると、GB Coderは仮想ファイルツリーをWebContainerの仮想ファイルシステムに直接マウントします。WebContainerはWebAssemblyのサンドボックス内で真正のNode.jsシステムコールを処理するため、外部サーバーを使わずにネイティブコマンドを実行できます。\n\nシステムは自動的にパッケージのインストールを完了させ、Vite開発サーバーを立ち上げます。数秒以内にローカルポートフォワーディングが機能し、プレビューパネルに動作画面が表示されます。",
+            "codeSnippet": "# WebContainerが自動的に生成プロジェクトを起動\nnpm install --prefer-offline\nnpx vite --port 3000 --host",
+            "codeLang": "bash"
+          },
+          {
+            "heading": "6. 対話的なプロンプト調整と段階的リファクタリング",
+            "body": "最初に生成されたプロトタイプが、個人の好むデザインや細部をすべて満たしているとは限りません。GB Coderは継続的な対話型リファインメントを提供しており、「ナビゲーションにダークモード切り替えを追加して」「取引データをlocalStorageに保存して」といった追加の指示を柔軟に受け付けます。\n\nプロジェクト全体を初期化して再生成するのではなく、GB Assistは変更が必要なファイルだけを特定し、外科手術のような高精度の差分を算出します。差分はMonacoの比較画面に表示され、内容を確認しながら安全に適用できます。"
+          },
+          {
+            "heading": "7. 堅牢なエラー境界とサンドボックス保護",
+            "body": "ブラウザ内でのコード実行には高度な保護機構が不可欠です。生成されたスクリプトが構文エラーを引き起こしたり無限ループに陥った場合でも、GB CoderのプレビューiframeはWeb WorkerとDOM Error Boundaryによって隔離されます。\n\n内蔵の仮想コンソールがエラーの発生元ファイルと行番号を即座にキャッチし、ワンクリックでGB Assistにスタックトレースを送信して自動修正を依頼することができます。"
+          },
+          {
+            "heading": "8. データの完全主権：モデルプロバイダーとの直接通信",
+            "body": "GB Coderに入力されたプロンプトは、ユーザー自身が設定したAPIキーを使用して、ブラウザから各モデルプロバイダー（Inception Labs、Anthropic Claude、OpenAI、またはローカルのOllama）の公式エンドポイントへ直接送信されます。LadeStackが中継サーバーを介したりログを蓄積することはありません。\n\n独自のアイデアや企業秘密は、完全にあなた自身の手元にとどまります。IndexedDBによるローカルストレージと組み合わせることで、最先端の生成AIを活用しながら完璧なプライバシーを維持できます。"
+          }
+        ],
+        "relatedDocsLink": "/docs#ai-tools",
+        "relatedDocsLabel": "GB Assistのドキュメントを確認する"
+      },
+      "automated-code-review-coderabbit-integration": {
+        "slug": "automated-code-review-coderabbit-integration",
+        "title": "ブラウザ内自動コードレビュー：CodeRabbit型AI監査・静的解析・セキュリティ診断",
+        "description": "CodeRabbitに着想を得た自動コードレビューツールをGB Coderで活用し、脆弱性、パフォーマンスの悪化、アクセシビリティの不備をブラウザ上で即座に検出・修正する方法を学びます。",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Review",
+          "Static Analysis",
+          "CodeRabbit",
+          "Security",
+          "Developer Tools"
+        ],
+        "intro": "ピアレビューはソフトウェア品質を担保するための要ですが、個人開発やスピード重視の現場では詳細なフィードバックを迅速に得ることが困難です。GB Coderは、AI駆動の高度な自動コードレビューツールをブラウザIDEに直接統合しました。GitHubへのコミットや本番デプロイを行う前に包括的な静的解析を実行し、セキュリティ上の弱点、ボトルネック、設計上の不備を検出し、ワンクリックで適用可能な修正案を提示します。",
+        "sections": [
+          {
+            "heading": "1. 高速プロトタイピングにおけるコミット前静的解析の意義",
+            "body": "ブラウザでの手軽な開発は試行錯誤を促進しますが、未処理のPromise、メモリリーク、曖昧な型定義といった技術的負債を知らず知らずのうちに生み出しがちです。プルリクエストのレビュー待ちやCIパイプラインのエラーまで待つのは開発リズムを乱します。\n\nエディタのアクティブタブ内で即座に静的解析を実行できるため、GB Coderは常に高品質な状態を維持します。ロジックの記憶が新しいうちに問題点が可視化されるため、クリーンなコードだけをリポジトリへ反映できます。"
+          },
+          {
+            "heading": "2. 多層構造の監査アーキテクチャ：構文・セキュリティ・スタイル",
+            "body": "GB Coderのレビューエンジンは、3つの専門的な視点からソースコードをスキャンします。まず、抽象構文木（AST）に基づく構文チェックにより、デッドコード、未使用のインポート、到達不能ブロックを特定します。\n\n次に、セキュリティパスが入出力のサニタイズ状況、APIキーの誤混入、DOMインジェクションのリスクを監査します。最後にスタイルパスが関数の循環的複雑度や命名規則を評価し、長期的な保守性を担保します。"
+          },
+          {
+            "heading": "3. 代表的なWeb脆弱性の早期発見：XSSとプロトタイプ汚染",
+            "body": "クライアントサイドのWebアプリでは、ユーザー入力を検証せずにDOMへ反映させた際のクロスサイトスクリプティング（XSS）が重大な脅威となります。静的スキャナーは、innerHTMLの安易な代入、未検証のdocument.write呼び出し、エスケープされていないテンプレート文字列を瞬時に警告します。\n\n脆弱性が検知されると、レビュー画面に攻撃の仕組みが明快に解説され、textContentやDOMPurifyなどの安全な標準APIを用いた修正パッチが提示されます。",
+            "codeSnippet": "// 検知された脆弱性：危険なinnerHTMLへの代入\n// element.innerHTML = userInput;\n\n// 自動コードレビューによる安全な修正パッチ：\nconst cleanNode = document.createTextNode(userInput);\nelement.replaceChildren(cleanNode);",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. フロントエンド性能低下の是正：メモリリークと過剰レンダリング",
+            "body": "ReactやVueのコンポーネントでは、不適切なフックの依存配列や解放されていないイベントリスナーがメモリリークの原因となります。レビューエンジンは、useEffect内のクリーンアップ関数の欠落、重い子要素へ渡されるメモ化されていないオブジェクト参照、解除されないタイマーを的確に指摘します。\n\n問題箇所がファイル名と正確な行番号で特定されるため、スマートフォンの発熱やバッテリー消耗、アニメーションのフレーム落ちを未然に防ぐことができます。"
+          },
+          {
+            "heading": "5. サンドボックスプレビューでのアクセシビリティ（a11y）監査",
+            "body": "誰にとっても利用しやすいWebを構築するには、アクセシビリティ標準の遵守が欠かせません。レビュー機能は、インタラクティブ要素のARIAロール、画像の代替テキスト（alt属性）、ボタンの認識しやすいラベル、フォームとlabel要素の関連付けを自動検証します。\n\n構文警告と同じ画面でアクセシビリティの改善点を提示することで、日々のコーディングの中で自然にWCAG 2.1 AA準拠のインターフェースを構築できます。"
+          },
+          {
+            "heading": "6. 直感的なレビューモーダル：行単位のコメントカード",
+            "body": "レビューを実行すると、専用のコードレビューモーダルが展開されます。指摘事項は緊急度順に「Critical（重大なセキュリティ欠陥やクラッシュ）」「Warning（性能上のボトルネックやアクセシビリティ不備）」「Suggestion（スタイル改善や型の補強）」に分類されます。\n\n各カードには該当ファイル、行番号、背景にある設計上の懸念、そして推奨される修正前後の差分が分かりやすく表示されます。"
+          },
+          {
+            "heading": "7. Monaco Diff統合によるワンクリック修正適用",
+            "body": "推奨事項の取り込みはMonacoの差分エディタによって極めてスムーズです。「修正を適用」をクリックすると横並びのDiffビューアが開き、変更内容を十分に吟味した上でエディタのバッファへ反映できます。\n\n必要に応じて提案を部分ごとに選択適用することも可能なため、開発者がコードの最終決定権を確実に保持できます。"
+          },
+          {
+            "heading": "8. プルリクエスト用監査レポートの出力",
+            "body": "チームでの共有や開発記録のために、GB Coderはレビュー結果をMarkdown形式やJSON形式で一括出力できます。この要約をGitHubのプルリクエスト説明欄にそのまま貼り付けることで、レビュアーの負担を大幅に軽減できます。\n\nすべてのレビュー処理は自身のBYOK認証情報を使ってクライアントセッション内で完結するため、コードが第三者の分析サーバーに流出することはありません。"
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "エディタおよび開発ツールの詳細を見る"
+      },
+      "code-stats-and-developer-analytics": {
+        "slug": "code-stats-and-developer-analytics",
+        "title": "コードの健全性を可視化：GB Coderにおけるリアルタイムアーキテクチャ計測と統計分析",
+        "description": "コード行数、循環的複雑度、言語構成比、ライブラリの容量をGB Coder内蔵のCode Statsダッシュボードで視覚的に把握します。",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Analytics",
+          "Metrics",
+          "Architecture",
+          "Code Quality",
+          "Productivity"
+        ],
+        "intro": "Webアプリケーションの機能が増えるにつれ、コードベース全体の健全性と構成を客観的に把握することが重要になります。GB Coderには標準でCode Statsダッシュボードが搭載されており、外部のツールや遠隔の分析サーバーを使わずに、コード行数、言語構成比、コメント率、循環的複雑度をリアルタイムに算出します。ブラウザ内から直接プロジェクトの設計品質をチェックしましょう。",
+        "sections": [
+          {
+            "heading": "1. なぜブラウザIDEでコード計測が重要なのか",
+            "body": "初期の小さなプロトタイプが本格的なアプリへと成長する過程で、ファイル数は急増し構造は複雑化します。ファイルの肥大化やロジックの過密状態に気づかないままでいると、いつの間にか巨大な単一ファイルや重複コンポーネントが蓄積してしまいます。\n\nGB CoderのCode Statsダッシュボードは、プロジェクト全体の健全性を俯瞰する計器盤の役割を果たします。ステータスバーからワンクリックで呼び出せ、複雑なファイル群を直感的な統計データへと変換します。"
+          },
+          {
+            "heading": "2. リアルタイムSLOC集計：実行コード・コメント・空白行の分離",
+            "body": "コード分析の基礎となるのが、厳密なソース行数（SLOC）のカウントです。解析エンジンはメモリ上でファイルを走査し、実行可能なコード行、JSDocなどのドキュメントコメント、そして整形用の空白行を自動分類します。\n\nコメントと実コードの比率を把握することで、複雑なアルゴリズムや状態遷移が適切に解説されているかを客観的に確認でき、チームでの可読性向上につながります。"
+          },
+          {
+            "heading": "3. 循環的複雑度の算出：リファクタリング対象の明確化",
+            "body": "循環的複雑度（Cyclomatic Complexity）は、コード内の条件分岐の多さを測る指標です。この数値が高い関数は、ネストしたif/else文やループが入り組んでおり、バグが潜みやすく単体テストも困難になります。\n\nGB Coderはプロジェクト内の全関数の複雑度スコアを計算し、要注意な関数を色分けしてリスト表示するため、分割すべきモジュールが一目で判明します。",
+            "codeSnippet": "// 制御フローの分岐数に基づく循環的複雑度の計算\nfunction assessComplexity(astNode) {\n  let paths = 1; // 基本となる直線パス\n  traverseAST(astNode, (node) => {\n    if (['IfStatement', 'ConditionalExpression', 'SwitchCase', 'ForStatement', 'WhileStatement'].includes(node.type)) {\n      paths++;\n    }\n  });\n  return paths;\n}",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. 言語別・アセット別の容量および行数バランス",
+            "body": "現代のフロントエンドは、HTML、CSS、JavaScript/TypeScript、JSON、SVGなどの複合的なアセットで成り立っています。統計エンジンは、ファイルタイプごとの正確なバイト数と行数の比率をグラフ化します。\n\n極端にサイズの大きなインラインSVGや、最適化されていない巨大なCSSファイルなど、初期表示速度を低下させる原因を素早く発見できます。"
+          },
+          {
+            "heading": "5. 外部ライブラリの容量とバンドル影響の把握",
+            "body": "サードパーティ製ライブラリの安易な追加は、クライアントに配信されるバンドルサイズを急速に肥大化させます。Code Statsダッシュボードは、インポート文とpackage.jsonを解析して展開時の容量を試算します。\n\n自作コードの分量と外部ライブラリの比率を比較することで、巨大なユーティリティをそのまま使い続けるべきか、標準APIに置き換えるべきかを賢く判断できます。"
+          },
+          {
+            "heading": "6. 保守性指数（Maintainability Index）と総合スコア",
+            "body": "行数、循環的複雑度、コメント密度を統合し、0〜100点満点の保守性指数を算出します。モジュール分割が適切で構造が分かりやすいプロジェクトには最高ランクの「A」判定が付与されます。\n\n客観的なグレードが表示されることで、日々の開発においてコードを整理整頓された状態に保つ良い動機付けとなります。"
+          },
+          {
+            "heading": "7. MarkdownおよびJSON形式での監査レポート書き出し",
+            "body": "開発チームのメンバーやクライアントにプロジェクトの状況を報告したい場合、ダッシュボードの「レポート書き出し」ボタンが役立ちます。整形されたMarkdown表や構造化JSON形式で即座に出力できます。\n\n生成されたレポートはリポジトリ内のARCHITECTURE.mdとして保存したり、開発レビューの資料として添付できます。"
+          },
+          {
+            "heading": "8. 確実なプライバシー：クライアントスレッド内でのローカル処理",
+            "body": "GB Coderにおけるプライバシーの原則は揺らぎません。すべてのコード走査、AST解析、統計計算はブラウザのWeb Workerスレッド内でローカルに完結します。コードの断片やプロジェクト名が外部サーバーに送信されることはありません。\n\n知的財産を完全に手元で守りながら、本格的な品質測定のメリットを享受できます。"
+          }
+        ],
+        "relatedDocsLink": "/docs#architecture",
+        "relatedDocsLabel": "アーキテクチャおよびストレージの解説を読む"
+      },
+      "custom-script-injection-and-cdn-libraries": {
+        "slug": "custom-script-injection-and-cdn-libraries",
+        "title": "外部依存関係の管理：GB CoderにおけるCDN、ESMモジュール、カスタムスクリプト注入",
+        "description": "GB Coderでのライブラリ導入をマスター：CDNスタイルシート、JavaScript、ESMモジュール、カスタムヘッダータグを安全にライブプレビューへ組み込む方法。",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Dependencies",
+          "CDN",
+          "ESM",
+          "Custom Injection",
+          "Frontend"
+        ],
+        "intro": "現代のWeb開発は、UIコンポーネント、アニメーションツール、アイコン集、CSSフレームワークなど多種多様な外部ライブラリの上に成り立っています。GB Coderでは、煩雑なビルド設定を行わずに外部資産を活用するための柔軟な仕組みが整っています。カスタム注入マネージャーと外部ライブラリパネルを通じて、CDNスクリプト、最新のESMモジュール、自由なHTMLタグをプレビュー環境へ自在に組み込むことができます。",
+        "sections": [
+          {
+            "heading": "1. GB Coderにおける3段階の依存関係管理",
+            "body": "プロジェクトの性質に応じて、依存関係は次の3つの階層から選択できます：手軽なCDNスクリプトタグ、ブラウザ標準のESMモジュールインポート、そしてWebContainerによる本格的なnpmパッケージのインストールです。\n\nそれぞれの特性を理解することで、ビルド不要のシンプルさと高機能なバンドル環境を自由に使い分けることができます。手早く試作したい場面では、CDN注入によって待機時間ゼロで機能を取り込めます。"
+          },
+          {
+            "heading": "2. カスタム注入マネージャー：<head>配置と<body>配置の使い分け",
+            "body": "カスタム注入パネルでは、外部リソースをプレビューHTMLのどの位置に挿入するかを緻密に制御できます。スタイルシートやフォント定義は、スタイルの崩れ（FOUC）を防ぐため<head>内に配置します。\n\n一方、Three.jsなどの3DライブラリやGSAPなどのアニメーションエンジンといった重量級のスクリプトは、DOMの読み込み完了を待つため<body>の末尾に配置するのが理想的です。",
+            "codeSnippet": "<!-- カスタム注入の設定例 -->\n{\n  \"headTags\": [\n    \"<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'>\",\n    \"<link rel='preconnect' href='https://fonts.googleapis.com'>\"\n  ],\n  \"bodyScripts\": [\n    \"<script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'></script>\"\n  ]\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. 最新のESMモジュール：ビルド工程不要のモダンJavaScript",
+            "body": "現代のブラウザにおけるECMAScript Modules（ESM）の普及により、ローカルでバンドラーを動かさなくても、npmパッケージをJavaScriptコード内で直接インポートできます。esm.shやunpkgなどのESM CDNを活用すれば、標準のエディタで直接import文を記述できます。\n\nモダンなモジュール分割の利便性と、静的コードならではの軽快な即時実行性を両立できるアプローチです。",
+            "codeSnippet": "// エディタ内で直接ESMモジュールをインポートして利用\nimport confetti from 'https://esm.sh/canvas-confetti@1.9.3';\nimport { formatDistanceToNow } from 'https://esm.sh/date-fns@4.1.0';\n\nconfetti({ particleCount: 100, spread: 70 });",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. スタイルシートの読み込み順序とCSSカスケードの制御",
+            "body": "自作のCSSとTailwind CDNやBootstrapなどの外部フレームワークを併用する場合、スタイルの読み込み順序が優先度を左右します。GB Coderでは、外部スタイルシートを常にプロジェクトのstyles.cssより前に配置するよう管理しています。\n\nこれにより、自作クラスやCSS変数が外部スタイルの初期値を確実に上書きでき、不自然な!importantの多用を防ぐことができます。"
+          },
+          {
+            "heading": "5. Webフォントとアイコンフォントのワンクリック導入",
+            "body": "タイポグラフィとアイコンは、アプリの完成度を大きく左右します。ライブラリ管理画面から、Google Fontsの厳選コレクションやFontAwesome、Lucide、Material Iconsなどをスイッチ一つで導入できます。\n\nGB Coderはpreconnectヒントを自動的に付与するため、フォントのダウンロードが高速化され、表示のチラつきを抑えることができます。"
+          },
+          {
+            "heading": "6. 外部スクリプトのセキュリティ：CSPとサンドボックス隔離",
+            "body": "ブラウザIDE内でサードパーティ製コードを実行する際は、万全のセキュリティ対策が求められます。GB Coderのプレビューは、Content Security Policy（CSP）とCOEPで保護された独立iframe内で実行されます。\n\nこれにより、外部スクリプトが本体エディタのIndexedDBデータを読み取ったり、Cookieや親ウィンドウのコンテキストを侵害するリスクを完全に遮断します。"
+          },
+          {
+            "heading": "7. プロジェクト保存とZIPバックアップにおける設定の継承",
+            "body": "設定したカスタムタグやスクリプトは、プロジェクトのメタデータとしてIndexedDBに自動保存されます。プロジェクトをZIPアーカイブとしてダウンロードする際も、設定はproject.json内に完全に記録されます。\n\n別のマシンでプロジェクトを復元したり仲間に共有した際も、再設定の手間なくまったく同じ外部リソースが瞬時に再構築されます。"
+          },
+          {
+            "heading": "8. CDNの接続トラブル対策とフォールバック",
+            "body": "会社のネットワーク制限やファイアウォールによって、特定のCDNドメインが遮断されることがあります。仮想コンソールはプレビュー内の通信を監視し、HTTP 404やCORSのエラーを検出すると原因と対策を提示します。\n\njsDelivr、cdnjs、unpkgなどの複数のミラーを手軽に切り替えて、通信環境に左右されずにコーディングを継続できます。"
+          }
+        ],
+        "relatedDocsLink": "/docs#getting-started",
+        "relatedDocsLabel": "ドキュメントで依存関係の設定を確認する"
+      },
+      "reusable-code-snippets-and-developer-velocity": {
+        "slug": "reusable-code-snippets-and-developer-velocity",
+        "title": "開発スピードを最大化：Monaco IntelliSenseとカスタムスニペット活用術",
+        "description": "GB Coderでカスタムスニペットを活用して作業を高速化：言語別のテンプレート作成、マルチカーソルのタブストップ、素早いショートカット展開をマスター。",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Snippets",
+          "IntelliSense",
+          "Monaco Editor",
+          "Developer Velocity",
+          "Productivity"
+        ],
+        "intro": "定型のHTMLレイアウトやReactコンポーネントの骨組み、CSSの中央揃えの記述などを毎回手作業で入力するのは時間の無駄です。GB Coderには、Monaco Editorと緊密に連動した専用のスニペットマネージャーとサイドバーが備わっています。タブストップや置換変数を備えた再利用可能なスニペットを定義しておくことで、短いキーワードから瞬時に複雑なコードブロックを展開できます。",
+        "sections": [
+          {
+            "heading": "1. なぜボイラープレートの繰り返し入力が開発を阻害するのか",
+            "body": "過去のプロジェクトから似たようなコードを探してコピー＆ペーストする作業は、開発者の集中力を途切れさせます。CSSリセットの記述、レスポンシブなグリッドの設定、Reactフックの宣言など、決まりきった構文の入力に貴重な創造性を費やすべきではありません。\n\nGB Coderのスニペットエンジンは、デスクトップ級のマクロ展開機能をブラウザタブ内に持ち込むことで、この余計な摩擦を一掃します。"
+          },
+          {
+            "heading": "2. Monacoスニペットの構造：プレフィックス・本文・タブストップ",
+            "body": "GB Coderのスニペット記法は、VS CodeやMonacoの標準形式に完全準拠しています。呼び出しの合図となるプレフィックス、展開されるコード行の配列、そして$1、$2といった番号付きタブストップで構成されます。\n\n展開直後にカーソルは$1に移動し、Tabキーを押すだけで$2へとスムーズに遷移します。${1:ComponentName}のような初期値を設定しておけば、複数箇所の識別子を一度に入力・書き換えできます。",
+            "codeSnippet": "{\n  \"React Functional Component\": {\n    \"prefix\": \"rfc\",\n    \"body\": [\n      \"import React, { useState } from 'react';\",\n      \"\",\n      \"export function ${1:ComponentName}() {\",\n      \"  const [state, setState] = useState(null);\",\n      \"\",\n      \"  return (\",\n      \"    <div className=\\\"${2:container}\\\">\",\n      \"      <h2>${1:ComponentName}</h2>\",\n      \"      $0\",\n      \"    </div>\",\n      \"  );\",\n      \"}\"\n    ],\n    \"description\": \"状態フック付きのReact関数コンポーネントを作成\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. 言語別・ワークスペース別のスニペット適用スコープ",
+            "body": "IntelliSenseの自動補完候補を常にすっきりと実用的に保つため、スニペットは対象言語ごとにスコープ設定されます。React TypeScript用のスニペットが、HTMLやCSSの編集中に誤って候補に出てくる心配はありません。\n\nすべてのプロジェクトで使えるグローバルスニペットとして登録することも、特定のプロジェクト専用に限定することも柔軟に選択できます。"
+          },
+          {
+            "heading": "4. スニペットサイドバー：一覧検索とワンクリック挿入",
+            "body": "スニペットのプレフィックスを忘れてしまった場合でも、専用のサイドバーから視覚的に探すことができます。カテゴリ別（HTML構造、CSSレイアウト、Reactフック、ユーティリティ）に分類されており、検索ボックスで素早く絞り込めます。\n\n各項目にカーソルを合わせると展開後のプレビューが表示され、挿入ボタンをクリックするだけでエディタの現在位置にコードが書き込まれます。"
+          },
+          {
+            "heading": "5. すぐに役立つ最新Web開発用ビルトインスニペット集",
+            "body": "GB Coderには、モダンWeb標準に準拠した定番スニペットがあらかじめ多数収録されています。HTML5のセマンティック骨格、FlexboxやGridによる配置パターン、エラー処理付きの非同期fetch関数、イベントリスナー定義などが標準で揃っています。\n\nプログラミング学習者にとっても実務エンジニアにとっても、即座に役立つ生産性の武器となります。"
+          },
+          {
+            "heading": "6. 動的マクロ変数を活用した高度なテンプレート作成",
+            "body": "固定テキストやタブストップだけでなく、動的変数をスニペットに組み込むことができます。現在の年や日付（$CURRENT_YEAR, $CURRENT_DATE）、現在のファイル名（$TM_FILENAME）、クリップボードの内容などをテンプレート内に動的に反映できます。\n\nファイルのヘッダーコメントの生成や、選択中のコードを即座にtry/catchブロックで囲むといった高度な操作が容易になります。"
+          },
+          {
+            "heading": "7. IndexedDBでの確実な保存とJSONによる共有",
+            "body": "登録したカスタムスニペットは、ブラウザ内のIndexedDBに大切に保存されます。スニペットマネージャーからいつでも追加・編集・複製・削除が可能です。\n\nお気に入りの設定を他のパソコンへ移行したり同僚と共有したい場合は、コレクション全体を単一のJSONファイルとしてエクスポートし、別のGB Coder環境へ一瞬でインポートできます。"
+          },
+          {
+            "heading": "8. パワーユーザーのためのショートカット活用術",
+            "body": "スニペット展開のリズムを掴むと、入力速度は劇的に向上します。プレフィックスを入力してTabまたはEnterを押し、プレースホルダーを書き換えてTabで最後の終了位置（$0）へジャンプします。\n\nMonacoのマルチカーソル編集（Alt+クリック）やコマンドパレット（Ctrl+Shift+P）と併用することで、本格的なデスクトップエディタと同等の心地よい操作性をブラウザ上で満喫できます。"
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Monacoエディタのドキュメントを確認する"
+      },
       "byok-ai-assisted-coding-guide": {
         "slug": "byok-ai-assisted-coding-guide",
         "title": "BYOKによるAIコーディング：Inception、Claude、ローカルモデル連携",
@@ -3710,6 +5051,275 @@ export const BLOG_TRANSLATIONS: Record<string, BlogTranslations> = {
     "relatedArticlesTitle": "관련 기술 가이드",
     "backToBlogLabel": "← 블로그 목록으로 돌아가기",
     "articles": {
+      "build-from-prompt-ai-project-generation": {
+        "slug": "build-from-prompt-ai-project-generation",
+        "title": "프롬프트 기반 프로젝트 구축: 자연어로 다중 파일 웹 프로젝트 자동 생성하기",
+        "description": "GB Coder가 자연어 프롬프트로부터 완전한 다중 파일 웹 애플리케이션을 생성하고, 디렉터리 트리 구성, package.json 설정, Monaco 에디터 스트리밍을 수행하는 원리를 살펴봅니다.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Prompt Engineering",
+          "Full-Stack",
+          "AI Generation",
+          "WebContainer",
+          "GB Assist"
+        ],
+        "intro": "새로운 웹 애플리케이션을 시작할 때 개발자는 보통 빈 에디터, 끝없는 초기 보일러플레이트, 여러 설정 파일에 걸친 의존성 구성이라는 번거로운 과정에 직면합니다. GB Coder의 'Build from Prompt' 엔진은 브라우저 작업 공간 내에서 자연어 지시 사항을 완전한 다중 파일 아키텍처로 즉시 변환합니다. GB Assist와 WebContainer 실행 환경을 통해 파일 트리, 스타일, 스크립트, 런타임 패키지를 생성하여 즉각적인 실시간 미리보기를 제공합니다.",
+        "sections": [
+          {
+            "heading": "1. 단일 코드 조각에서 완전한 웹 애플리케이션으로의 전환",
+            "body": "기존의 AI 코딩 도우미는 대개 한 줄 완성이나 독립된 함수 생성에 집중되어 있습니다. 가계부 애플리케이션, 마크다운 지식 베이스, 캔버스 기반 게임 등 전체적인 아이디어를 구체화하려 할 때, 분리된 HTML, CSS, JavaScript 모듈을 일일이 조립하는 것은 상당한 피로감을 유발합니다. Build from Prompt는 애플리케이션을 파편이 아닌 유기적인 단일 시스템으로 취급함으로써 개발 방식을 혁신합니다.\n\n프로젝트 전체를 조망하여 코드를 생성하기 때문에, AI 도우미는 실제 코드를 작성하기 전에 의존성 그래프를 먼저 기획합니다. 리액티브 상태 관리가 필요한지, IndexedDB 기반의 로컬 영속성이 필요한지, 외부 UI 라이브러리가 필요한지 판단하여 생성되는 모든 파일이 일치하는 변수명, 일관된 CSS 선택자, 정확한 임포트 구문을 공유하도록 보장합니다."
+          },
+          {
+            "heading": "2. 아키텍처 청사진 생성: 브라우저 내 AST 기획",
+            "body": "에디터에 실제 코드를 출력하기 전에, GB Coder는 기본 모델에 엄격하게 정의된 구조 매니페스트(JSON 스키마)를 요청합니다. 이 매니페스트는 가상 디렉터리 트리, 진입점(index.html 또는 src/main.tsx 등), 필요한 외부 패키지 목록, 그리고 각 파일의 구체적인 역할을 정의합니다.\n\n클라이언트 브라우저 스레드에서 이러한 기획 단계를 선행함으로써 토큰 생성이 흔들리지 않고 일관성을 유지합니다. 차트와 실시간 필터가 포함된 대시보드를 요청하더라도, 데이터 로직, 렌더링 캔버스, 레이아웃 스타일시트가 메모리 할당 전에 동시에 조율됩니다."
+          },
+          {
+            "heading": "3. 의존성 자동 추론 및 package.json 구성",
+            "body": "생성형 코딩 도구의 흔한 문제 중 하나는 존재하지 않는 라이브러리 버전이나 호환되지 않는 패키지로 인해 런타임 에러가 발생하는 것입니다. GB Coder의 의존성 추론 파이프라인은 요청된 라이브러리를 검증된 npm 레지스트리 및 호환 CDN 카탈로그와 대조합니다.\n\n풀스택 WebContainer 프로젝트에서는 깔끔하고 최적화된 package.json을 생성합니다. 가벼운 정적 프로젝트의 경우, 불필요한 node_modules로 브라우저 메모리를 낭비하지 않고 index.html의 <head>에 검증된 CDN 스크립트와 스타일 태그를 직접 삽입합니다.",
+            "codeSnippet": "{\n  \"name\": \"fin-tracker-app\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\"\n  },\n  \"dependencies\": {\n    \"lucide\": \"^0.454.0\",\n    \"chart.js\": \"^4.4.6\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^5.4.10\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "4. Monaco 에디터 탭으로의 실시간 파일 스트리밍",
+            "body": "직접 연결된 HTTPS를 통해 모델의 응답이 전달되면, GB Coder의 스트리밍 파서는 수신된 마크다운 코드 블록을 파일명에 따라 동적으로 분할합니다. 새로운 파일 선언이 감지되는 즉시 가상 파일 탐색기에 파일이 등록되고 Monaco 에디터에 새 탭이 열리며 실시간 구문 강조와 함께 코드가 채워집니다.\n\n개발자는 프로젝트가 탭별로 점진적으로 구현되는 과정을 직접 지켜볼 수 있습니다. 멈춰 있는 로딩 아이콘을 쳐다보는 대신, CSS 스타일 규칙, 시맨틱 마크업, TypeScript 모듈이 병렬로 작성되는 모습을 즉각적으로 확인할 수 있습니다."
+          },
+          {
+            "heading": "5. WebContainer 런타임을 통한 즉시 부트스트랩",
+            "body": "코드 생성 단계가 완료되면, GB Coder는 가상 파일 트리를 WebContainer의 가상 파일 시스템에 즉시 마운트합니다. WebContainer는 WebAssembly 샌드박스 내에서 실제 Node.js 시스템 호출을 처리하므로 원격 가상 서버 없이도 네이티브 명령을 실행할 수 있습니다.\n\n런타임은 패키지 설치 과정을 자동으로 시작하고 Vite 개발 서버를 구동합니다. 몇 초 이내에 로컬 포트 포워딩이 활성화되어 실행 중인 개발 서버 화면이 우측 미리보기 패널에 나타납니다.",
+            "codeSnippet": "# WebContainer가 생성된 프로젝트를 자동으로 시작\nnpm install --prefer-offline\nnpx vite --port 3000 --host",
+            "codeLang": "bash"
+          },
+          {
+            "heading": "6. 대화형 프롬프트 개선 및 세밀한 코드 조정",
+            "body": "처음 생성된 프로토타입이 개발자가 원하는 세부 디자인을 한 번에 완벽히 충족하기는 어렵습니다. GB Coder는 '상단 내비게이션에 다크 모드 토글을 추가해줘' 또는 '거래 내역을 localStorage에 저장해줘'와 같은 후속 명령을 자연스럽게 이어갈 수 있는 대화형 개선 루프를 지원합니다.\n\n전체 프로젝트를 처음부터 다시 생성하지 않고, GB Assist는 변경이 필요한 파일만을 대상으로 정밀한 diff를 계산합니다. Monaco의 비교 뷰어에 변경 사항이 표시되므로 적용 전에 한 줄씩 검토할 수 있습니다."
+          },
+          {
+            "heading": "7. 견고한 에러 경계와 샌드박스 보호 체계",
+            "body": "브라우저 기반 코드 실행에는 철저한 격리가 필수적입니다. 생성된 스크립트에 구문 오류가 있거나 무한 루프가 발생하더라도, GB Coder의 미리보기 iframe은 Web Worker와 DOM 에러 경계를 통해 결함을 안전하게 격리합니다.\n\n내장된 가상 콘솔이 런타임 오류를 즉시 감지하여 문제가 발생한 파일과 정확한 라인 번호를 표시하며, 클릭 한 번으로 오류 스택을 GB Assist에 전달하여 즉시 자동 수정을 요청할 수 있습니다."
+          },
+          {
+            "heading": "8. 로컬 우선 주권: 모델 제공업체와의 직접 통신",
+            "body": "GB Coder에서 전송하는 모든 프로젝트 프롬프트는 사용자가 직접 입력한 개인 API 키를 통해 브라우저에서 모델 제공업체(Inception Labs, Anthropic Claude, OpenAI 또는 로컬 Ollama)의 공식 엔드포인트로 직접 이동합니다. LadeStack은 중간 프록시 서버를 운영하지 않으며 프롬프트 내역을 수집하지 않습니다.\n\n여러분의 독창적인 아이디어와 프로젝트 설계는 오직 여러분의 손안에 유지됩니다. IndexedDB 로컬 저장소와 결합된 Build from Prompt는 최첨단 파운데이션 모델의 생산성을 누리면서도 완벽한 지적 프라이버시를 보장합니다."
+          }
+        ],
+        "relatedDocsLink": "/docs#ai-tools",
+        "relatedDocsLabel": "GB Assist AI 문서 살펴보기"
+      },
+      "automated-code-review-coderabbit-integration": {
+        "slug": "automated-code-review-coderabbit-integration",
+        "title": "브라우저 내 자동 코드 리뷰: CodeRabbit 스타일 AI 감사, 린팅 및 보안 진단",
+        "description": "GB Coder에 통합된 CodeRabbit 스타일 자동 코드 리뷰를 활용하여 보안 취약점, 성능 저하 패턴, 코드 스타일 결함을 브라우저에서 즉시 진단하고 해결하세요.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Review",
+          "Static Analysis",
+          "CodeRabbit",
+          "Security",
+          "Developer Tools"
+        ],
+        "intro": "동료 코드 리뷰는 소프트웨어 품질을 보장하는 핵심 과정이지만, 1인 개발자나 빠른 릴리스를 추구하는 팀에서는 즉각적이고 심도 있는 피드백을 받기 어렵습니다. GB Coder는 브라우저 IDE에 AI 기반의 지능형 자동 코드 리뷰 도구를 직접 내장했습니다. 코드를 GitHub에 커밋하거나 배포하기 전에 종합적인 정적 분석을 실행하여 보안 취약점, 병목 현상, 아키텍처 문제를 파악하고 클릭 한 번으로 수정할 수 있습니다.",
+        "sections": [
+          {
+            "heading": "1. 빠른 프로토타이핑에서 커밋 전 정적 분석의 필요성",
+            "body": "브라우저 내 코딩은 빠른 시도를 장려하지만, 속도에 치중하다 보면 처리되지 않은 Promise 거부, 메모리 누수, 모호한 타입 정의가 쉽게 누적될 수 있습니다. 정식 풀 리퀘스트 리뷰나 CI 빌드 실패가 발생할 때까지 기다리는 것은 작업 흐름을 끊기 마련입니다.\n\n현재 활성화된 에디터 탭에서 정적 분석을 즉시 실행함으로써 GB Coder는 선제적인 품질 보호막을 형성합니다. 로직의 맥락이 생생할 때 문제점을 발견하므로 결함이 있는 코드가 저장소 히스토리를 오염시키기 전에 즉각 정리할 수 있습니다."
+          },
+          {
+            "heading": "2. 다단계 감사 아키텍처: 구문, 보안, 스타일",
+            "body": "GB Coder의 리뷰 엔진은 세 가지 전문적인 관점에서 소스 코드를 면밀히 검사합니다. 첫째, 추상 구문 트리(AST)를 분석하여 사용되지 않는 임포트, 데드 코드, 도달할 수 없는 분기문을 감지합니다.\n\n둘째, 입력값 살균 처리, API 키 노출 위험, DOM 인젝션 가능성을 검사하는 보안 감사를 수행합니다. 셋째, 함수의 순환 복잡도와 명명 규칙을 평가하여 장기적인 유지보수성을 뒷받침합니다."
+          },
+          {
+            "heading": "3. 일반적인 웹 취약점 식별: XSS 및 프로토타입 오염",
+            "body": "클라이언트 사이드 웹 앱에서는 사용자 입력을 DOM에 직접 반영할 때 크로스 사이트 스크립팅(XSS) 취약점에 쉽게 노출됩니다. 정적 스캐너는 innerHTML의 부주의한 대입, 검증되지 않은 document.write 호출, 이스케이프되지 않은 템플릿 리터럴을 즉각 경고합니다.\n\n취약점이 발견되면 리뷰 창에 익스플로잇 위험에 대한 명확한 설명과 함께 textContent나 DOMPurify 같은 표준 API를 적용한 자동 수정 패치가 제시됩니다.",
+            "codeSnippet": "// 감지된 취약점: 안전하지 않은 innerHTML 할당\n// element.innerHTML = userInput;\n\n// 코드 리뷰가 제안하는 안전한 자동 수정:\nconst cleanNode = document.createTextNode(userInput);\nelement.replaceChildren(cleanNode);",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. 프론트엔드 성능 저하 요인: 메모리 누수와 불필요한 리렌더링",
+            "body": "React 및 Vue 컴포넌트에서는 훅 의존성 배열의 오류나 해제되지 않은 이벤트 리스너로 인해 메모리 누수가 빈번히 발생합니다. 리뷰 엔진은 useEffect 내 클린업 함수 누락, 무거운 하위 컴포넌트에 전달되는 메모이제이션되지 않은 객체 참조, 해제되지 않은 타이머를 정밀하게 찾아냅니다.\n\n이러한 문제를 정확한 라인 번호와 함께 짚어냄으로써 모바일 환경에서의 발열, 배터리 소모, 애니메이션 프레임 드랍을 사전에 방지할 수 있습니다."
+          },
+          {
+            "heading": "5. 격리된 미리보기 환경에서의 웹 접근성(a11y) 점검",
+            "body": "포용적인 웹을 만들기 위해서는 접근성 표준을 준수해야 합니다. 리뷰 기능은 대화형 요소의 적절한 ARIA 역할, 이미지의 구체적인 alt 속성, 버튼의 명확한 텍스트 라벨, 폼 입력 필드와 label 태그의 연결 여부를 점검합니다.\n\n접근성 개선 사항을 일반 구문 경고와 나란히 표시함으로써, 일상적인 코딩 과정에서 자연스럽게 WCAG 2.1 AA 기준을 준수하는 UI를 구현할 수 있습니다."
+          },
+          {
+            "heading": "6. 인터랙티브 리뷰 모달: 라인별 상세 피드백 카드",
+            "body": "리뷰를 실행하면 전용 코드 리뷰 모달이 열립니다. 발견된 이슈는 위험도에 따라 'Critical(보안 취약점 및 런타임 충돌)', 'Warning(성능 저하 및 접근성 미흡)', 'Suggestion(스타일 개선 및 타입 보완)'으로 깔끔하게 구분됩니다.\n\n각 카드에는 대상 파일명, 라인 범위, 해당 패턴이 문제가 되는 이유, 권장 수정 사항을 보여주는 diff 스니펫이 명확히 담겨 있습니다."
+          },
+          {
+            "heading": "7. Monaco Diff 통합을 통한 원클릭 패치 적용",
+            "body": "Monaco의 비교 뷰어 덕분에 제안된 수정 사항을 확인하고 반영하는 과정이 매우 간편합니다. '수정 적용'을 클릭하면 좌우 대비 diff 화면이 열려 에디터 버퍼에 적용하기 전에 변경 내용을 정확히 확인할 수 있습니다.\n\n원하는 변경 블록만 선택적으로 적용할 수도 있으므로 개발자가 코드에 대한 최종 결정권을 완벽하게 유지할 수 있습니다."
+          },
+          {
+            "heading": "8. 풀 리퀘스트 및 팀 공유용 감사 요약 보고서 내보내기",
+            "body": "팀원 간 공유나 프로젝트 문서화를 위해 GB Coder는 전체 리뷰 결과를 정돈된 Markdown 또는 JSON 형식으로 내보내는 기능을 제공합니다. 이 요약을 GitHub PR 본문에 붙여넣어 리뷰어의 이해를 도울 수 있습니다.\n\n모든 감사 과정은 사용자의 BYOK 인증 정보를 바탕으로 클라이언트 세션 내에서만 이루어지므로 중요한 비즈니스 로직이 외부 감사 서버에 저장될 위험이 전혀 없습니다."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "에디터 및 개발 도구 문서 확인하기"
+      },
+      "code-stats-and-developer-analytics": {
+        "slug": "code-stats-and-developer-analytics",
+        "title": "코드 건강 상태 시각화: GB Coder의 실시간 아키텍처 지표 및 코드베이스 분석",
+        "description": "코드 라인 수, 순환 복잡도, 언어별 구성비, 외부 패키지 용량을 GB Coder의 내장 Code Stats 대시보드로 실시간 추적하세요.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Analytics",
+          "Metrics",
+          "Architecture",
+          "Code Quality",
+          "Productivity"
+        ],
+        "intro": "웹 애플리케이션의 규모가 커질수록 전체 코드베이스의 구조와 건전성을 객관적으로 파악하는 일이 매우 중요해집니다. GB Coder는 외부 도구나 원격 분석 서버 없이도 소스 라인 수, 언어별 분포, 주석 비율, 순환 복잡도를 실시간으로 산출하는 Code Stats 대시보드를 기본 제공합니다. 브라우저 내에서 프로젝트의 설계 품질을 한눈에 점검해보세요.",
+        "sections": [
+          {
+            "heading": "1. 브라우저 기반 작업 공간에서 코드 지표가 중요한 이유",
+            "body": "가벼운 실험으로 시작한 프로젝트가 완성도 높은 앱으로 확장되면 파일 수가 급증하고 아키텍처 복잡도가 심화됩니다. 파일별 용량이나 로직 밀도를 제때 확인하지 않으면 불필요하게 거대한 단일 파일과 중복 컴포넌트가 쌓이기 쉽습니다.\n\nGB Coder의 Code Stats 대시보드는 프로젝트의 전반적인 건강 상태를 조망하는 계기판 역할을 합니다. 상태 표시줄에서 클릭 한 번으로 호출하여 복잡한 파일 트리를 직관적인 시각 자료로 전환해 줍니다."
+          },
+          {
+            "heading": "2. 실시간 SLOC 정밀 집계: 실행 코드, 주석, 공백 분리",
+            "body": "코드 분석의 출발점은 엄격한 소스 코드 라인 수(SLOC) 산정입니다. 분석 엔진은 메모리 내에서 파일을 스캔하여 순수 실행 코드, 문서화 주석(JSDoc 및 멀티라인 주석 포함), 서식용 공백 라인을 명확히 구분합니다.\n\n주석 대비 코드 비율을 확인함으로써 복잡한 알고리즘이나 상태 전환이 충분히 설명되어 있는지 객관적으로 파악할 수 있어 팀 내 가독성이 향상됩니다."
+          },
+          {
+            "heading": "3. 순환 복잡도 측정: 고위험 함수 및 리팩토링 대상 파악",
+            "body": "순환 복잡도(Cyclomatic Complexity)는 프로그램 내 독립적인 실행 경로의 수를 측정하는 척도입니다. 이 수치가 높다는 것은 if/else, switch문, 루프 등 조건 분기가 지나치게 얽혀 있어 버그 발생 확률이 높고 단위 테스트 작성이 어렵다는 것을 의미합니다.\n\nGB Coder는 프로젝트 내 모든 함수의 복잡도 점수를 계산하여 주의가 필요한 함수를 색상별로 정리해 주므로 우선적으로 분할해야 할 모듈을 즉시 파악할 수 있습니다.",
+            "codeSnippet": "// 제어 흐름 분기 수 기반의 순환 복잡도 계산 로직\nfunction assessComplexity(astNode) {\n  let paths = 1; // 기본 선형 경로\n  traverseAST(astNode, (node) => {\n    if (['IfStatement', 'ConditionalExpression', 'SwitchCase', 'ForStatement', 'WhileStatement'].includes(node.type)) {\n      paths++;\n    }\n  });\n  return paths;\n}",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. 다중 언어 및 자산별 분포 현황",
+            "body": "현대 웹 개발은 HTML 마크업, CSS 스타일, 타입 안전한 TypeScript 로직, 정적 자산이 결합된 형태를 띱니다. 통계 엔진은 파일 형식별 정확한 바이트 크기와 라인 비율을 시각화합니다.\n\n비정상적으로 용량이 큰 인라인 SVG나 미처 압축되지 않은 CSS 파일 등 초기 렌더링 속도를 떨어뜨릴 수 있는 요소를 빠르게 발견할 수 있습니다."
+          },
+          {
+            "heading": "5. 외부 라이브러리 무게와 번들 영향도 예측",
+            "body": "외부 패키지를 무분별하게 추가하면 사용자에게 전송되는 번들 크기가 순식간에 불어납니다. Code Stats 대시보드는 임포트 구문과 package.json을 분석하여 라이브러리의 압축 해제 용량을 추정합니다.\n\n직접 작성한 로직의 크기와 외부 패키지 무게를 비교해 봄으로써 무거운 라이브러리를 계속 유지할지 가벼운 표준 API로 대체할지 합리적인 결정을 내릴 수 있습니다."
+          },
+          {
+            "heading": "6. 유지보수성 지수(Maintainability Index)와 종합 건강 점수",
+            "body": "GB Coder는 라인 수, 분기 복잡도, 주석 밀도를 종합하여 0~100점 척도의 유지보수성 지수를 산출합니다. 모듈화가 잘 되어 있고 로직이 깔끔한 프로젝트는 최상위 'A' 등급을 받게 됩니다.\n\n이러한 객관적인 지표는 장기적인 개발 과정에서도 코드를 체계적이고 간결하게 관리하도록 돕는 훌륭한 동기부여가 됩니다."
+          },
+          {
+            "heading": "7. Markdown 및 JSON 감사 보고서 내보내기",
+            "body": "프로젝트 통계를 동료나 고객, 이해관계자에게 보고해야 하나요? 대시보드의 '보고서 내보내기' 기능을 사용하면 전체 지표를 깔끔한 Markdown 표나 구조화된 JSON 데이터로 즉시 내려받을 수 있습니다.\n\n생성된 보고서를 저장소의 ARCHITECTURE.md 파일로 저장하거나 스프린트 리뷰 자료로 손쉽게 첨부할 수 있습니다."
+          },
+          {
+            "heading": "8. 철저한 프라이버시: 클라이언트 스레드 기반 로컬 연산",
+            "body": "개인정보 보호는 GB Coder의 핵심 가치입니다. 모든 소스 코드 분석, AST 파싱, 메트릭 계산은 브라우저의 Web Worker 스레드 내에서만 안전하게 실행됩니다. 코드 라인이나 프로젝트 이름이 외부 분석 서버로 전송되는 일은 절대 없습니다.\n\n여러분의 지적 자산을 완벽히 보호하면서 고도화된 아키텍처 인사이트를 온전히 누릴 수 있습니다."
+          }
+        ],
+        "relatedDocsLink": "/docs#architecture",
+        "relatedDocsLabel": "아키텍처 및 스토리지 가이드 읽기"
+      },
+      "custom-script-injection-and-cdn-libraries": {
+        "slug": "custom-script-injection-and-cdn-libraries",
+        "title": "외부 라이브러리 및 의존성 관리: GB Coder의 CDN, ESM 모듈, 커스텀 스크립트 주입",
+        "description": "GB Coder에서 의존성을 손쉽게 관리하세요: CDN 스타일시트, 자바스크립트 라이브러리, ESM 모듈, 커스텀 헤더 태그를 실시간 미리보기에 안전하게 주입하는 방법.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Dependencies",
+          "CDN",
+          "ESM",
+          "Custom Injection",
+          "Frontend"
+        ],
+        "intro": "현대 웹 개발은 UI 컴포넌트 프레임워크, 애니메이션 엔진, 아이콘 세트, CSS 시스템 등 다양한 외부 라이브러리를 기반으로 이루어집니다. GB Coder는 복잡한 번들러 설정 없이도 타사 의존성을 자유롭게 통합할 수 있는 강력한 유연성을 제공합니다. 커스텀 스크립트 주입 관리자와 외부 라이브러리 패널을 통해 CDN 스크립트, 최신 ESM 모듈, 커스텀 HTML 태그를 격리된 라이브 미리보기에 손쉽게 삽입할 수 있습니다.",
+        "sections": [
+          {
+            "heading": "1. GB Coder의 3단계 의존성 관리 방식",
+            "body": "프로젝트 요구사항에 따라 의존성은 세 가지 수준에서 유연하게 관리할 수 있습니다: 전통적인 CDN 스크립트 태그, 브라우저 표준 ESM 모듈 임포트, 그리고 WebContainer를 통한 정식 npm 패키지 설치입니다.\n\n각 방식의 장단점을 파악하면 빌드 없는 가벼운 개발과 강력한 모듈 번들링 사이에서 최적의 선택을 할 수 있습니다. 빠른 아이디어 검증에는 CDN 주입이 대기 시간 없이 즉각적인 효용을 제공합니다."
+          },
+          {
+            "heading": "2. 커스텀 주입 관리자: <head> 삽입과 <body> 삽입의 전략적 구분",
+            "body": "주입 관리자를 사용하면 외부 리소스가 미리보기 문서의 어느 위치에 배치될지 세밀하게 제어할 수 있습니다. 스타일시트와 폰트 정의는 스타일이 입혀지지 않은 상태로 깜빡이는 현상(FOUC)을 방지하기 위해 <head>에 위치해야 합니다.\n\n반면 Three.js 같은 3D 렌더링 라이브러리나 GSAP 같은 애니메이션 도구 등 무거운 자바스크립트 파일은 DOM 파싱이 완료된 후 실행되도록 <body> 하단에 배치하는 것이 좋습니다.",
+            "codeSnippet": "<!-- 커스텀 주입 설정 구성 예시 -->\n{\n  \"headTags\": [\n    \"<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'>\",\n    \"<link rel='preconnect' href='https://fonts.googleapis.com'>\"\n  ],\n  \"bodyScripts\": [\n    \"<script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'></script>\"\n  ]\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. 최신 ESM 모듈: 빌드 단계 없는 모던 자바스크립트",
+            "body": "최신 브라우저가 ECMAScript Modules(ESM)을 기본 지원함에 따라, 로컬 번들러를 거치지 않고도 npm 패키지를 자바스크립트 코드에서 바로 불러올 수 있습니다. esm.sh나 unpkg 같은 ESM CDN을 활용하면 정적 에디터에서도 표준 import 구문을 그대로 작성할 수 있습니다.\n\n이를 통해 최신 모듈 작성 방식의 이점을 누리면서도 정적 개발 특유의 가볍고 즉각적인 실행 속도를 경험할 수 있습니다.",
+            "codeSnippet": "// 에디터에서 직접 ESM 모듈을 임포트하여 사용\nimport confetti from 'https://esm.sh/canvas-confetti@1.9.3';\nimport { formatDistanceToNow } from 'https://esm.sh/date-fns@4.1.0';\n\nconfetti({ particleCount: 100, spread: 70 });",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. 스타일시트 주입 순서와 CSS 캐스케이딩 제어",
+            "body": "직접 작성한 CSS와 Tailwind CDN 또는 Bootstrap 같은 프레임워크를 함께 사용할 때는 스타일 로드 순서가 명시도에 직접적인 영향을 미칩니다. GB Coder는 외부 스타일시트가 프로젝트의 styles.css보다 앞서 로드되도록 정렬합니다.\n\n따라서 불필요한 !important 키워드를 남발하지 않고도 여러분이 작성한 커스텀 클래스와 CSS 변수가 프레임워크의 기본 스타일을 안정적으로 재정의할 수 있습니다."
+          },
+          {
+            "heading": "5. 웹 폰트 및 아이콘 라이브러리 간편 등록",
+            "body": "타이포그래피와 아이콘은 웹 앱의 완성도를 결정짓는 중요한 요소입니다. 라이브러리 관리 메뉴에서 Google Fonts 컬렉션이나 FontAwesome, Lucide, Material Icons 같은 아이콘 팩을 토글 한 번으로 추가할 수 있습니다.\n\nGB Coder는 폰트 링크에 preconnect 힌트를 자동으로 추가하여 폰트 다운로드 지연을 최소화하고 첫 화면부터 선명하게 텍스트를 표현합니다."
+          },
+          {
+            "heading": "6. 외부 스크립트 보안: CSP 및 샌드박스 격리",
+            "body": "브라우저 IDE 내에서 타사 스크립트를 실행할 때는 엄격한 보안 울타리가 마련되어 있어야 합니다. GB Coder의 미리보기는 Content Security Policy(CSP)와 COEP 정책으로 철저히 보호되는 샌드박스 iframe 내에서 구동됩니다.\n\n이를 통해 외부 스크립트가 메인 에디터의 IndexedDB 프로젝트 데이터를 탈취하거나 쿠키 및 부모 윈도우 컨텍스트에 접근하는 것을 원천 차단합니다."
+          },
+          {
+            "heading": "7. 작업 공간 보존 및 ZIP 백업 시 설정 유지",
+            "body": "설정한 모든 헤더 태그, 스크립트 주입 내용, CDN 목록은 IndexedDB의 프로젝트 메타데이터에 안전하게 자동 저장됩니다. 프로젝트를 ZIP 파일로 백업할 때도 이 설정이 project.json 매니페스트에 그대로 보존됩니다.\n\n다른 PC에서 백업을 복원하거나 팀원에게 전달하더라도 수동 재설정 없이 동일한 외부 의존성이 즉시 재현됩니다."
+          },
+          {
+            "heading": "8. CDN 로딩 문제 진단 및 오프라인 대체 방안",
+            "body": "네트워크 불안정이나 사내 방화벽 정책으로 인해 특정 CDN 도메인이 차단되는 경우가 있습니다. GB Coder의 가상 콘솔은 미리보기 iframe의 네트워크 요청을 모니터링하여 HTTP 404나 CORS 오류 발생 시 명확한 원인과 해결 방안을 안내합니다.\n\njsDelivr, cdnjs, unpkg 등 여러 CDN 미러 서버를 손쉽게 전환하며 어떤 환경에서도 끊김 없이 작업을 이어갈 수 있습니다."
+          }
+        ],
+        "relatedDocsLink": "/docs#getting-started",
+        "relatedDocsLabel": "문서에서 의존성 설정 방법 알아보기"
+      },
+      "reusable-code-snippets-and-developer-velocity": {
+        "slug": "reusable-code-snippets-and-developer-velocity",
+        "title": "개발 속도 극대화: Monaco IntelliSense와 커스텀 스니펫 활용법",
+        "description": "GB Coder에서 커스텀 스니펫으로 코딩 생산성을 극대화하세요: 언어별 템플릿 생성, 멀티 커서 탭스톱, 빠른 키워드 확장을 Monaco에서 완벽 활용.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Snippets",
+          "IntelliSense",
+          "Monaco Editor",
+          "Developer Velocity",
+          "Productivity"
+        ],
+        "intro": "기본적인 HTML 레이아웃, React 컴포넌트 뼈대, CSS flexbox 정렬 규칙 등을 매번 직접 입력하는 것은 개발 흐름을 크게 지연시킵니다. GB Coder에는 Monaco 에디터와 긴밀히 연동된 전용 스니펫 관리자와 사이드바가 탑재되어 있습니다. 탭스톱과 동적 플레이스홀더 변수가 포함된 재사용 가능한 스니펫을 정의하여 짧은 키워드 하나로 복잡한 코드 블록을 수 밀리초 만에 완성할 수 있습니다.",
+        "sections": [
+          {
+            "heading": "1. 반복적인 보일러플레이트가 개발 몰입을 방해하는 이유",
+            "body": "과거 프로젝트에서 코드를 찾아 복사하고 붙여넣는 전환 작업은 개발자의 집중력을 쉽게 분산시킵니다. CSS 리셋 규칙을 작성하든, 반응형 그리드를 구성하든, React 훅을 선언하든, 반복적인 구문을 매번 타이핑하는 것은 귀중한 에너지를 소모합니다.\n\nGB Coder의 스니펫 엔진은 데스크톱 IDE 수준의 강력한 매크로 확장 기능을 브라우저 탭 안으로 가져와 이러한 불필요한 번거로움을 완전히 제거합니다."
+          },
+          {
+            "heading": "2. Monaco 스니펫의 해부: 접두사, 본문, 그리고 탭스톱",
+            "body": "GB Coder의 스니펫은 VS Code 및 Monaco의 표준 형식을 충실히 따릅니다. 호출 키워드가 되는 접두사(prefix), 템플릿 코드 본문, 그리고 $1, $2 등으로 표기되는 탭스톱으로 구성됩니다.\n\n확장 직후 커서는 $1 위치로 이동하며, Tab 키를 누르면 $2로 부드럽게 점프합니다. ${1:ComponentName}과 같은 기본값을 지정해 두면 여러 위치의 식별자를 동시에 수정할 수도 있습니다.",
+            "codeSnippet": "{\n  \"React Functional Component\": {\n    \"prefix\": \"rfc\",\n    \"body\": [\n      \"import React, { useState } from 'react';\",\n      \"\",\n      \"export function ${1:ComponentName}() {\",\n      \"  const [state, setState] = useState(null);\",\n      \"\",\n      \"  return (\",\n      \"    <div className=\\\"${2:container}\\\">\",\n      \"      <h2>${1:ComponentName}</h2>\",\n      \"      $0\",\n      \"    </div>\",\n      \"  );\",\n      \"}\"\n    ],\n    \"description\": \"상태 훅을 포함한 React 함수 컴포넌트 생성\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. 언어별 및 작업 공간별 스니펫 적용 범위 설정",
+            "body": "IntelliSense 자동완성 목록을 깔끔하고 유용하게 유지하기 위해 스니펫은 대상 언어별로 엄격하게 분류됩니다. React TypeScript용 스니펫이 일반 HTML이나 CSS 파일을 편집할 때 추천 목록에 나타나 방해하지 않습니다.\n\n모든 프로젝트에서 공통으로 쓸 전역 스니펫으로 등록할 수도 있고 특정 작업 공간 전용으로 제한할 수도 있어 상황에 맞는 최적의 추천을 유지할 수 있습니다."
+          },
+          {
+            "heading": "4. 스니펫 사이드바: 시각적 검색과 원클릭 코드 삽입",
+            "body": "스니펫의 축약 키워드가 기억나지 않더라도 사이드바를 통해 한눈에 찾아볼 수 있습니다. 범주별(HTML 구조, CSS 레이아웃, React 훅, 유틸리티)로 정리되어 있으며 검색창을 통해 원하는 템플릿을 빠르게 필터링할 수 있습니다.\n\n항목에 마우스를 올리면 생성될 코드의 서식화된 미리보기가 표시되며, 삽입 버튼을 클릭하면 현재 에디터 커서 위치에 코드가 즉시 작성됩니다."
+          },
+          {
+            "heading": "5. 최신 웹 개발을 위한 엄선된 빌트인 스니펫 라이브러리",
+            "body": "GB Coder에는 최신 웹 표준을 충실히 반영한 풍부한 스니펫이 기본 탑재되어 있습니다. HTML5 시맨틱 골격, Flexbox 및 Grid 정렬 레이아웃, 에러 핸들링이 포함된 비동기 fetch 래퍼, 리액티브 이벤트 리스너 등이 준비되어 있습니다.\n\n이러한 내장 프리셋은 웹 개발 입문자부터 숙련된 엔지니어까지 모두에게 즉각적인 생산성 향상을 선사합니다."
+          },
+          {
+            "heading": "6. 동적 매크로 변수를 활용한 고급 템플릿 제작",
+            "body": "고정된 텍스트와 탭스톱 외에도 GB Coder는 동적 환경 변수를 완벽히 지원합니다. 현재 연도 및 날짜($CURRENT_YEAR, $CURRENT_DATE), 현재 작업 파일명($TM_FILENAME), 클립보드 내용 등을 템플릿에 유기적으로 삽입할 수 있습니다.\n\n이를 활용하면 파일 상단 주석 헤더를 자동으로 생성하거나 선택한 코드 블록을 즉시 try/catch로 감싸는 고급 작업 흐름을 손쉽게 구축할 수 있습니다."
+          },
+          {
+            "heading": "7. IndexedDB 기반 영속성과 JSON 파일 기반 공유",
+            "body": "등록한 사용자 정의 스니펫은 브라우저의 IndexedDB 저장소에 안전하게 보관됩니다. 스니펫 관리자 모달을 통해 언제든지 템플릿을 수정, 복제, 삭제할 수 있습니다.\n\n다른 장치로 도구 모음을 옮기거나 동료와 공유하고 싶을 때는 전체 스니펫 목록을 하나의 JSON 파일로 내보내어 다른 GB Coder 인스턴스에 즉시 가져올 수 있습니다."
+          },
+          {
+            "heading": "8. 파워 유저를 위한 단축키 활용 및 타이핑 리듬",
+            "body": "스니펫 확장 리듬을 몸에 익히면 타이핑 속도가 눈부시게 빨라집니다. 키워드를 입력하고 Tab 또는 Enter를 누른 후, 필요한 값을 입력하고 Tab으로 마지막 종료 커서 위치($0)로 도달합니다.\n\nMonaco의 멀티 커서 편집(Alt+클릭) 및 커맨드 팔레트(Ctrl+Shift+P)와 병행하면 브라우저 안에서도 전문 데스크톱 에디터를 다루듯 거침없는 코딩을 만끽할 수 있습니다."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Monaco 에디터 문서 살펴보기"
+      },
       "byok-ai-assisted-coding-guide": {
         "slug": "byok-ai-assisted-coding-guide",
         "title": "BYOK 기반 AI 코딩: Inception, Claude 및 로컬 모델 연동 가이드",
@@ -4443,6 +6053,275 @@ export const BLOG_TRANSLATIONS: Record<string, BlogTranslations> = {
     "relatedArticlesTitle": "推荐关联技术指南",
     "backToBlogLabel": "← 返回技术博客列表",
     "articles": {
+      "build-from-prompt-ai-project-generation": {
+        "slug": "build-from-prompt-ai-project-generation",
+        "title": "从提示词构建应用：在 GB Coder 中利用自然语言生成多文件 Web 项目",
+        "description": "了解 GB Coder 如何依据自然语言提示词完整生成包含多文件的 Web 应用程序，自动建立目录树、配置 package.json 并实时向 Monaco 编辑器流式传输代码。",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Prompt Engineering",
+          "Full-Stack",
+          "AI Generation",
+          "WebContainer",
+          "GB Assist"
+        ],
+        "intro": "开启一个全新的 Web 应用开发往往始于一片空白的编辑区、冗长繁琐的基础脚手架搭建以及跨多个配置文件的依赖配置。GB Coder 的 'Build from Prompt'（从提示词构建）引擎直接在浏览器工作区内将自然语言指示转换为完整的多文件项目架构。得益于 GB Assist 与 WebContainer 执行环境的深度协同，该引擎能同时输出具备完整功能的文件树、样式表、脚本与运行时依赖包，即刻呈现实时预览。",
+        "sections": [
+          {
+            "heading": "1. 从单一代码片段跃升至完整多文件 Web 应用",
+            "body": "传统的 AI 编码助手大多局限于单行补全或单个独立函数的生成。当开发者想要验证一个全新的产品创意时——例如个人记账仪表盘、Markdown 知识库或交互式 Canvas 游戏——分别拼凑 HTML、CSS 与 JavaScript 模块会带来巨大的心智负担。Build from Prompt 改变了这一模式，将应用程序视为一个有机统一的系统而非零散的代码碎片。\n\n通过对生成任务进行全局统筹，助手会在输出具体代码之前预先规划整体依赖关系图。它能判断项目是否需要响应式状态管理、基于 IndexedDB 的本地持久化或是外部 UI 视觉库，确保后续生成的所有文件共享一致的变量命名、统一的 CSS 选择器与精准的模块导入路径。"
+          },
+          {
+            "heading": "2. 生成架构蓝图：浏览器端抽象语法树（AST）规划",
+            "body": "在向编辑器输出任何代码文本之前，GB Coder 会要求底层基座模型输出一份强类型的结构化清单（JSON Schema）。该清单详细定义了虚拟目录层级、明确了项目入口点（如 index.html 或 src/main.tsx）、列出必需的第三方包，并规定了每个文件的具体职责划分。\n\n在客户端浏览器线程中优先执行这一规划流程，确保了后续 token 生成的聚焦与确定性。即使用户要求构建一个带有数据图表与多维筛选的仪表盘，蓝图机制也能保证数据模拟逻辑、渲染画布与排版样式表在内存分配代码缓冲区之前就已达成同步协同。"
+          },
+          {
+            "heading": "3. 依赖项自动推断与 package.json 合成",
+            "body": "生成式编码工具最常见的隐患之一是虚构不存在的库版本或导致运行时崩溃的依赖冲突。在 GB Coder 中，依赖推断流水线会将解析出的库名称与已验证的 npm 注册表及兼容 CDN 目录进行交叉比对。\n\n在脚手架构建全栈 WebContainer 项目时，GB Coder 会生成精简干净的 package.json 清单。对于轻量级静态项目，它则直接将校验过的 CDN 脚本和样式标签注入生成的 index.html 头部，而不会因多余的 node_modules 浪费浏览器内存空间。",
+            "codeSnippet": "{\n  \"name\": \"fin-tracker-app\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\"\n  },\n  \"dependencies\": {\n    \"lucide\": \"^0.454.0\",\n    \"chart.js\": \"^4.4.6\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^5.4.10\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "4. 直接向 Monaco 编辑器标签页流式传输文件内容",
+            "body": "随着模型通过端到端直接 HTTPS 连接返回响应，GB Coder 的流式解析器会按文件名动态切分传入的 Markdown 代码块。一旦检测到新的文件声明，GB Coder 会在虚拟文件浏览器中创建该条目，在 Monaco 编辑器中注册对应标签页，并伴随实时语法高亮将代码注入编辑缓冲区。\n\n开发者可以清晰地见证项目逐个标签页被构建出来的全过程。无需面对冰冷的加载动画，你能亲眼目睹样式表规则、语义化标记与 TypeScript 模块在眼前并发生长并即刻获得视觉反馈。"
+          },
+          {
+            "heading": "5. 在 WebContainer 运行时中即时引导与启动",
+            "body": "当流式生成阶段完成后，GB Coder 会将虚拟文件树直接挂载到 WebContainer 的虚拟文件系统中。WebContainers 在 WebAssembly 沙箱内执行真实的 Node.js 系统调用，无需远程云服务器即可支持原生命令行操作。\n\n运行时环境会自动执行依赖安装流程并启动 Vite 开发服务器。数秒之内，本地端口转发便会将正在运行的开发服务器端口直接映射至右侧预览视窗。",
+            "codeSnippet": "# WebContainer 自动拉起所生成的全新工程\nnpm install --prefer-offline\nnpx vite --port 3000 --host",
+            "codeLang": "bash"
+          },
+          {
+            "heading": "6. 交互式提示词精炼与渐进式调整",
+            "body": "初次生成的原型往往难以在所有细节上完全贴合开发者的主观审美偏好。GB Coder 提供了连续的交互式调整循环，开发者可以随时下达针对性指令，如：'在顶部导航栏增加深色模式切换按钮' 或 '将交易数据持久化到 localStorage 中'。\n\nGB Assist 不会推翻并重新生成整个项目，而是专门针对受影响的文件计算高精度的局部差分（Diff）。修改内容将呈现在 Monaco 的双栏对比视图中，供你在合并入项目树之前逐行审阅与确认。"
+          },
+          {
+            "heading": "7. 容错沙箱机制与 DOM 错误边界隔离",
+            "body": "在浏览器内执行动态代码需要严密的安全边界。如果生成的脚本抛出未捕获的语法异常或陷入死循环，GB Coder 的预览 iframe 会通过封装的 Web Worker 与 DOM 错误边界将异常完全局限在局部。\n\n内置的虚拟控制台会实时拦截运行时错误，高亮显示发生错误的具体文件名和行号，并支持一键将错误堆栈回传给 GB Assist 进行即时自动化修复。"
+          },
+          {
+            "heading": "8. 本地优先的数据主权：直连模型供应商",
+            "body": "在 GB Coder 中发出的每一条工程提示词，均利用开发者自备的 API 密钥直接从浏览器客户端发送至指定的模型供应商端点（Inception Labs、Anthropic Claude、OpenAI 或本地部署的 Ollama）。LadeStack 不设中间代理服务器，绝不记录任何提示词日志。\n\n你的独创构想、项目架构与业务逻辑始终完全处于你的控制之下。结合基于 IndexedDB 的本地存储，Build from Prompt 让开发者在尽享前沿 AI 模型生产力的同时，拥有无懈可击的数据隐私屏障。"
+          }
+        ],
+        "relatedDocsLink": "/docs#ai-tools",
+        "relatedDocsLabel": "探索 GB Assist AI 工具文档"
+      },
+      "automated-code-review-coderabbit-integration": {
+        "slug": "automated-code-review-coderabbit-integration",
+        "title": "浏览器内自动化代码审查：CodeRabbit 风格的 AI 审计、静态检查与安全加固",
+        "description": "探索 GB Coder 如何将 CodeRabbit 风格的自动化代码审查集成到浏览器工作区，即时捕获安全漏洞、性能反模式与代码异味。",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Review",
+          "Static Analysis",
+          "CodeRabbit",
+          "Security",
+          "Developer Tools"
+        ],
+        "intro": "同行代码审查（Peer Code Review）是保证软件质量的基石，但在独立开发或敏捷试错场景中，开发者往往缺乏即时且细致的审查反馈。GB Coder 将基于 AI 的智能化自动代码审查工具直接整合至浏览器 IDE 中。在向 GitHub 提交代码或部署生产环境之前，开发者可触发全面的静态代码分析，排查安全隐患、性能瓶颈与架构异味，并一键应用推荐的修复补丁。",
+        "sections": [
+          {
+            "heading": "1. 快速原型开发中提交前静态分析的关键价值",
+            "body": "在浏览器中进行敏捷编码能够极大地激发创造力，但快节奏的编写很容易不经意间埋下未处理的 Promise 拒绝、内存泄漏与松散类型定义等隐患。等待正式的 Pull Request 审查或持续集成流水线报错，会严重拖慢开发节奏。\n\n通过在当前活跃的编辑器标签页内直接引入自动化静态审查，GB Coder 构建了实时的质量防线。在思维记忆尚且鲜活时识别潜在代码异味，便于立即修正，避免不规范代码污染版本库历史。"
+          },
+          {
+            "heading": "2. 多维审计架构：语法、安全性与风格规范",
+            "body": "GB Coder 的审查引擎从三个专门视角对源码展开立体扫描。首先是结构语法审查，通过遍历抽象语法树（AST）找出冗余废弃代码、未使用的导入模块与永远无法执行的逻辑分支。\n\n其次是安全性扫描，专项检查输入净化、API 密钥泄漏风险与 DOM 注入隐患。最后是代码风格把控，评估函数的圈复杂度与命名规范，确保代码在长期维护演进中保持极佳的可读性。"
+          },
+          {
+            "heading": "3. 识别常见 Web 漏洞：跨站脚本攻击（XSS）与原型链污染",
+            "body": "当把未经校验的用户输入直接渲染至 DOM 时，客户端 Web 应用极易暴露在跨站脚本（XSS）攻击之下。审查扫描器会立刻标出危险的 innerHTML 赋值、未校验的 document.write 行为以及未经转义的模板字符串。\n\n一旦探查到安全隐患，审查弹窗会清晰剖析攻击路径，并提供基于 textContent 或 DOMPurify 等浏览器标准 API 的自动化替换补丁。",
+            "codeSnippet": "// 探查到的安全漏洞：危险的 innerHTML 直接赋值\n// element.innerHTML = userInput;\n\n// 自动化代码审查推荐的安全修复补丁：\nconst cleanNode = document.createTextNode(userInput);\nelement.replaceChildren(cleanNode);",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. 前端性能隐患治理：内存泄漏与无节制重复渲染",
+            "body": "在 React 与 Vue 单文件组件中，不恰当的 Hook 依赖项与未解绑的事件监听器是引发内存泄漏的高发原因。审查引擎能够精准捕获 useEffect 中缺失的清理函数、向重型子组件传递未经 memo 的对象引用，以及未受控的定时器循环。\n\n通过带有精确定位行号的问题报告，开发者可以从根源上杜绝界面卡顿、移动设备发热耗电以及动画掉帧等体验顽疾。"
+          },
+          {
+            "heading": "5. 沙箱预览环境下的无障碍访问（a11y）专项审计",
+            "body": "构建具有包容性的 Web 环境需要严格遵循可访问性标准。审查引擎会核实可交互组件是否声明了规范的 ARIA 属性、图片是否提供了具象的 alt 描述、按钮是否有可供朗读的文本，以及表单项是否与对应的 label 标签建立了关联。\n\n在常规语法诊断旁同步呈现无障碍访问改进建议，帮助开发者在日常编码流程中自然而然地达成 WCAG 2.1 AA 标准规范。"
+          },
+          {
+            "heading": "6. 交互式审查弹窗：逐行批注反馈卡片",
+            "body": "触发代码审查即可唤起专用审查面板。发现的问题按严重级别清晰划分：Critical（重大安全缺陷与崩溃隐患）、Warning（性能损耗与可访问性不足）以及 Suggestion（代码风格优化与类型严谨度）。\n\n每一张卡片均列明了受影响的文件路径、行号区间、原理分析说明以及展示推荐修复方案的双栏差异预览。"
+          },
+          {
+            "heading": "7. 依托 Monaco Diff 深度集成实现一键修补",
+            "body": "借助 Monaco 的差异对比组件，采纳建议变得轻而易举。点击 '应用修复' 即可启动侧对侧 Diff 查看器，让你在将修改持久化到编辑缓冲区之前清晰比对每一个字符的变化。\n\n如果你倾向于有选择性地采纳建议，还可以按代码块分别接收或拒绝，牢牢掌握对代码库的绝对主导权。"
+          },
+          {
+            "heading": "8. 导出审计报告：赋能 Pull Request 与团队汇报",
+            "body": "对于有规范交付要求的团队，GB Coder 支持将完整的审查结果汇编为格式工整的 Markdown 或 JSON 审计报告。你可以将其直接粘贴进 GitHub PR 描述中，辅助同行评审。\n\n所有的审查运算均通过你的自备密钥在客户端会话中完成，确保核心商业机密与代码资产绝不会被第三方云审计系统抓取。"
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "查阅编辑器与开发工具文档"
+      },
+      "code-stats-and-developer-analytics": {
+        "slug": "code-stats-and-developer-analytics",
+        "title": "代码健康度可视化：GB Coder 中的实时架构度量与代码库多维分析",
+        "description": "利用 GB Coder 内置的 Code Stats 仪表盘实时掌握代码行数、圈复杂度、语言占比与外部依赖包体积。",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Analytics",
+          "Metrics",
+          "Architecture",
+          "Code Quality",
+          "Productivity"
+        ],
+        "intro": "随着 Web 应用代码规模的不断扩张，客观掌握代码库的健康状态与模块构成显得至关重要。GB Coder 提供了原生的 Code Stats（代码统计）仪表盘，无需外部分析插件或远程度量服务，即可实时计算有效代码行数、语言分布配比、注释覆盖率以及函数圈复杂度。直接在浏览器内对项目架构质量实现洞若观火的掌控。",
+        "sections": [
+          {
+            "heading": "1. 浏览器集成开发环境中代码度量的重要性",
+            "body": "当项目从初期的小型试验逐步演进为成熟复杂的商业应用，文件数量急剧攀升，架构复杂度也不断加深。若缺乏对模块体积和逻辑密度的直观洞察，代码库极易滋生臃肿的单体工具文件与大量重复组件。\n\nGB Coder 的 Code Stats 仪表盘充当了项目健康状况的全景显示屏。只需在状态栏轻点一下，即可将庞杂的文件列表转化为极具参考价值的直观图表。"
+          },
+          {
+            "heading": "2. 实时源码行数精确解析：代码、注释与空行清晰分离",
+            "body": "代码分析的基石在于对有效源码行（SLOC）的精确核算。分析引擎在内存中逐行扫描文件，将每一行精准划分为可执行代码、文档注释（包含 JSDoc 及多行注释块）以及排版空行。\n\n追踪注释与代码的比例能够让研发团队客观评估复杂算法或状态逻辑是否得到了充分阐释，显著提高协同代码的可读性。"
+          },
+          {
+            "heading": "3. 圈复杂度估算：精准定位高风险重构函数",
+            "body": "圈复杂度（Cyclomatic Complexity）用于衡量程序执行路径的独立线性分支数量。该指标过高意味着存在深层嵌套的条件分支（if/else 链条、switch 分支与多重循环），往往是缺陷隐患的高发地带，且难以编写单元测试。\n\nGB Coder 为项目内的每个函数单独评分，并通过颜色高亮列出复杂度排名榜单，帮助开发者明确指出哪些冗长函数需要被解耦重构。",
+            "codeSnippet": "// 基于分支控制流计算圈复杂度的核心算法示例\nfunction assessComplexity(astNode) {\n  let paths = 1; // 基础线性执行路径\n  traverseAST(astNode, (node) => {\n    if (['IfStatement', 'ConditionalExpression', 'SwitchCase', 'ForStatement', 'WhileStatement'].includes(node.type)) {\n      paths++;\n    }\n  });\n  return paths;\n}",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. 多语言资产结构配比可视化呈现",
+            "body": "现代前端工程是由 HTML 页面结构、CSS 视觉表现、带类型约束的 TypeScript 逻辑以及静态资产交织构成的复合体。度量引擎直观绘制各类资产的字节大小与行数百分比。\n\n这有助于开发者快速察觉异常状况，例如发现某个内联 SVG 图标意外占用了过大体积，或未压缩的样式表拖慢了首页加载速度。"
+          },
+          {
+            "heading": "5. 第三方依赖体积评估与打包负载测算",
+            "body": "盲目引入外部依赖包会迅速膨胀交付至客户端的代码体积。Code Stats 仪表盘通过深入分析 import 导入语句和 package.json 依赖声明，预估未压缩时的依赖占用空间。\n\n将第三方库体积与自主业务逻辑进行权衡对比，有助于理智抉择究竟是保留厚重的工具包，还是替换为原生轻量级 API 实现。"
+          },
+          {
+            "heading": "6. 可维护性综合指数（Maintainability Index）评级",
+            "body": "GB Coder 深度结合代码行数、分支复杂度与文档完备度，折算出 0 至 100 分的可维护性综合指数。组件模块化优秀且文档翔实的高水准工程将获评顶尖的 'A' 级评级。\n\n这一量化指标为团队在长周期的敏捷迭代中持续保持代码整洁与优雅设计提供了持续正向的动力。"
+          },
+          {
+            "heading": "7. 导出 Markdown 与 JSON 格式的审计归档报告",
+            "body": "需要向团队成员、管理者或客户汇报项目代码体量吗？仪表盘内置了一键 '导出报告' 功能，将当前工程的全部健康指标整理为规整的 Markdown 表格或结构化 JSON 数据包。\n\n你可以把生成的报告作为 ARCHITECTURE.md 提交到代码仓库，或作为版本发布的质量背书文档。"
+          },
+          {
+            "heading": "8. 极致隐私保障：浏览器客户端线程本地运算",
+            "body": "隐私保护是 GB Coder 绝不妥协的底线准则。所有的代码扫描、AST 树遍历与统计指标计算均完全在浏览器专属的 Web Worker 线程中独立执行，绝不会将任何代码内容或统计数值传输至云端。\n\n在确保企业核心技术资产完全保留在个人电脑上的同时，尽享顶尖架构度量工具带来的便利。"
+          }
+        ],
+        "relatedDocsLink": "/docs#architecture",
+        "relatedDocsLabel": "深入了解架构与本地存储机制"
+      },
+      "custom-script-injection-and-cdn-libraries": {
+        "slug": "custom-script-injection-and-cdn-libraries",
+        "title": "外部依赖项精细化管理：GB Coder 中的 CDN、ESM 模块与自定义脚本注入",
+        "description": "全面掌握 GB Coder 中的依赖管理方案：学习如何安全地将 CDN 样式表、JavaScript 库、ESM 模块及自定义 Head 标签引入沙箱实时预览。",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Dependencies",
+          "CDN",
+          "ESM",
+          "Custom Injection",
+          "Frontend"
+        ],
+        "intro": "现代 Web 开发极大地依赖丰富的外部开源库，涵盖各类 UI 交互组件、动效工具、图标字体库以及 CSS 样式系统。在 GB Coder 中，开发者拥有极为灵活的多层级依赖引入渠道，彻底告别繁琐的前置编译配置。借助自定义注入管理器与外部库面板，你可以轻松地向沙箱预览中添加 CDN 脚本、引入现代 ESM 模块并灵活定制 HTML 头部标签。",
+        "sections": [
+          {
+            "heading": "1. GB Coder 中的三层依赖管理体系",
+            "body": "依据项目类型的不同，GB Coder 支持在三个层面管理外部依赖：经典的 CDN 脚本标签、现代浏览器原生的 ESM 模块导入，以及在 WebContainer 虚拟终端中通过 npm 进行标准安装。\n\n理清各个维度的适用场景，有助于在零构建的极速试错与功能完备的模块打包之间找到平衡。在敏捷原型构想阶段，CDN 注入能实现零等待的即开即用体验。"
+          },
+          {
+            "heading": "2. 自定义注入管理器：<head> 注入与 <body> 注入的位置策略",
+            "body": "自定义注入管理面板赋予了开发者精细决定外部资源在预览页面中插入位置的能力。样式表与字体链接理应优先放入 <head> 区域，以彻底避免页面加载时的样式闪烁（FOUC）。\n\n而体积庞大的重型 JavaScript 运行时——比如 Three.js 3D 渲染库或 GSAP 动画引擎——则适宜放在 <body> 标签末尾，确保在脚本初始化前 DOM 树已完整构建完毕。",
+            "codeSnippet": "<!-- 自定义注入配置示例数据 -->\n{\n  \"headTags\": [\n    \"<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'>\",\n    \"<link rel='preconnect' href='https://fonts.googleapis.com'>\"\n  ],\n  \"bodyScripts\": [\n    \"<script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'></script>\"\n  ]\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. 现代 ESM 模块体系：零打包享受最新 JavaScript 生态",
+            "body": "随着各大主流浏览器对 ECMAScript 模块（ESM）的原生普及，无需在本地启动打包器即可直接在脚本中 import 引用 npm 生态包。借助 esm.sh 或 unpkg 等 ESM 专用 CDN，开发者可在静态编辑器中自由编写原生 import 语句。\n\n这完美兼顾了现代模块化语法的优雅体验与客户端静态代码瞬间运行的高效优势。",
+            "codeSnippet": "// 在编辑器中直接 import 原生 ESM 模块并执行\nimport confetti from 'https://esm.sh/canvas-confetti@1.9.3';\nimport { formatDistanceToNow } from 'https://esm.sh/date-fns@4.1.0';\n\nconfetti({ particleCount: 100, spread: 70 });",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. 样式表注入顺序与 CSS 层叠优先级把控",
+            "body": "当将个人编写的 CSS 与 Tailwind CDN 或 Bootstrap 等大型框架共同引入时，样式表的加载顺序直接决定了样式的层叠优先级。GB Coder 会确保外部样式表永远排布在项目自带的 styles.css 之前。\n\n这一顺序从根本上保证了你自定义的类名规则与 CSS 变量能够稳健地覆盖框架的默认样式，无需被迫使用 !important 这种破坏可维护性的特殊语法。"
+          },
+          {
+            "heading": "5. Web 字体与矢量图标库的简易装配",
+            "body": "精致的字体排印与直观的图标系统是一流 Web 界面的灵魂所在。在外部库管理面板中，只需轻轻一勾，即可将 Google Fonts 的流行字系或是 FontAwesome、Lucide、Material Icons 等主流图标方案快速接入当前项目。\n\nGB Coder 会自动添加 preconnect 预连接优化提示，加速字体下载并确保文本从初次绘制起便清晰锐利。"
+          },
+          {
+            "heading": "6. 第三方脚本安全防范：CSP 策略与沙箱环境隔离",
+            "body": "在浏览器集成开发环境中运行不可信的外部代码必须构筑起绝对坚固的安全防御。GB Coder 的所有预览渲染均置身于受 Content Security Policy（CSP）和 COEP 严格监管的独立沙箱 iframe 中。\n\n这能完全杜绝潜在恶意脚本偷窥你保存在 IndexedDB 中的工程数据，或试图窃取父级 Monaco 编辑器所在主窗口的上下文权限。"
+          },
+          {
+            "heading": "7. 跨工作空间持久化与 ZIP 导出还原保持一致",
+            "body": "所有配置的自定义头部标签、外链脚本与 CDN 设置均会自动沉淀至项目在 IndexedDB 中的元数据里。在将项目打包导出为 ZIP 备份文件时，这些配置会被完整写入 project.json 清单。\n\n即使将工程拷贝至其他计算机或分发给协作者，重新导入后即可百分之百复现当初配置的依赖环境，省去了繁杂的人工二次设置。"
+          },
+          {
+            "heading": "8. CDN 访问故障排除与离线容灾策略",
+            "body": "网络抖动或特定企业内网的防火墙规则可能会偶然阻断某些 CDN 服务器的访问。GB Coder 的虚拟控制台时刻监控预览页面的网络交互，在发生 HTTP 404 或跨域 CORS 阻拦时输出详尽的排查指南。\n\n开发者可随时无缝切换至等效的 CDN 镜像源（如 jsDelivr、cdnjs 或 unpkg），无论在何种网络环境下都能维持高产出的开发节拍。"
+          }
+        ],
+        "relatedDocsLink": "/docs#getting-started",
+        "relatedDocsLabel": "查阅文档中的依赖环境配置指南"
+      },
+      "reusable-code-snippets-and-developer-velocity": {
+        "slug": "reusable-code-snippets-and-developer-velocity",
+        "title": "提速日常编码：Monaco IntelliSense 与自定义代码片段实战",
+        "description": "在 GB Coder 中利用自定义代码片段成倍提升生产力：掌握按语言划分模板、多光标制表位跳跃及缩写快速展开技巧。",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Snippets",
+          "IntelliSense",
+          "Monaco Editor",
+          "Developer Velocity",
+          "Productivity"
+        ],
+        "intro": "反复手动敲击标准的 HTML 框架骨架、React 组件基础样板或是繁杂的 CSS 居中对齐代码，无形中严重拖慢了编程思路的连贯性。GB Coder 内置了与 Monaco 编辑器浑然一体的专属代码片段（Snippets）管理器与边栏面板。通过预设带有制表位（Tab Stops）与替换占位符的复用模板，只需输入简短缩写前缀，即可在毫秒间展开复杂的代码架构。",
+        "sections": [
+          {
+            "heading": "1. 频繁复制粘贴刻板代码对研发心流的打扰",
+            "body": "在快节奏的 Web 原型开发中，频繁切换窗口去翻找历史项目并复制常用代码片段，会极大地割裂开发者的专注力。无论是手写标准 CSS 样式重置、搭建响应式栅格结构，还是初始化 React Hook 骨架，机械地输入固定语法不仅枯燥而且无端消耗创造力。\n\nGB Coder 的代码片段系统彻底清除了这种阻碍，将桌面级集成开发环境的宏展开能力无缝移植到了浏览器标签页中。"
+          },
+          {
+            "heading": "2. Monaco 代码片段的核心结构：前缀、代码体与制表位",
+            "body": "GB Coder 的代码片段规范严格遵守 Monaco 与 VS Code 的通用标准。一个片段由触发前缀（prefix）、代码行模板阵列以及使用 $1、$2 标识的按序跳转制表位组成。\n\n展开片段后，光标会自动落在 $1 位置；敲击 Tab 键则平滑切换至 $2。配合 ${1:ComponentName} 形式的默认占位符，开发者能够一次性同步修改多处引用的同名标识符。",
+            "codeSnippet": "{\n  \"React Functional Component\": {\n    \"prefix\": \"rfc\",\n    \"body\": [\n      \"import React, { useState } from 'react';\",\n      \"\",\n      \"export function ${1:ComponentName}() {\",\n      \"  const [state, setState] = useState(null);\",\n      \"\",\n      \"  return (\",\n      \"    <div className=\\\"${2:container}\\\">\",\n      \"      <h2>${1:ComponentName}</h2>\",\n      \"      $0\",\n      \"    </div>\",\n      \"  );\",\n      \"}\"\n    ],\n    \"description\": \"创建带有状态 Hook 的 React 函数式组件\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. 依语言类型与工程环境限定作用域",
+            "body": "为保障 IntelliSense 智能联想列表时刻精准清爽，GB Coder 中的代码片段均严格按目标编程语言设置作用域。针对 React TypeScript 编写的模板绝不会在用户编辑普通的 HTML 或 CSS 文件时产生干扰提示。\n\n开发者既可将其设为全工程通用的全局片段，也可将其绑定至特定工作区，确保在任意编码情境下都能获得最恰当的代码建议。"
+          },
+          {
+            "heading": "4. 代码片段侧边栏：检索翻阅与单点快速插入",
+            "body": "如果不小心遗忘了某个片段的激活前缀，侧边栏提供了直观的可视化模板库。分类目录（HTML 结构、CSS 布局、React Hooks、通用工具）层次分明，配合顶部的实时过滤输入框，能让你在瞬间锁定所需模版。\n\n鼠标悬停在条目上可直接浮现代码生成预览。轻点插入按钮，整段模板即可立即写入当前编辑器光标所处的位置。"
+          },
+          {
+            "heading": "5. 内置开箱即用的现代 Web 经典代码库",
+            "body": "GB Coder 预装了覆盖现代 Web 核心实践的丰富代码片段库。涵盖 HTML5 语义化基础结构、Flexbox 与 Grid 居中对齐模版、具备完善异常捕获的异步 fetch 网络请求包装，以及响应式事件侦听逻辑等。\n\n无论对于初学编程的探索者，还是经验丰富的高级工程师，这些高质量预设都能带来即插即用的提速收益。"
+          },
+          {
+            "heading": "6. 利用动态环境变量打造高阶智能模板",
+            "body": "除了固定字符与制表位跳跃外，GB Coder 还深度支持动态宏变量。你可以把当前时间标记（$CURRENT_YEAR, $CURRENT_DATE）、当前文件名（$TM_FILENAME）乃至剪贴板暂存文本直接编织进模板中。\n\n这使得诸如自动化生成标准文件头部版权注释，或是将当前圈选的高亮代码快速包裹在 try/catch 保护块中等高阶操作变得信手拈来。"
+          },
+          {
+            "heading": "7. 基于 IndexedDB 稳定存储与单文件 JSON 迁移",
+            "body": "你精心编纂的自定义代码片段将安全保存在浏览器的 IndexedDB 数据库中。通过片段管理弹窗，你可以随时编辑、重构、复制或精简你的模板藏库。\n\n若想将这套趁手的生产力武器同步至其它电脑或分享给团队搭档，只需将其导出为一个轻盈的 JSON 文件，在对方的 GB Coder 中点击导入即可秒级复现。"
+          },
+          {
+            "heading": "8. 进阶键盘技巧与肌肉记忆节奏培养",
+            "body": "领悟代码片段的展开节奏将使你的键盘敲击速度成倍爆发。键入缩写前缀，按下 Tab 或回车，快速键入占位符参数，随后用 Tab 顺滑抵达最终的光标落脚点（$0）。\n\n结合 Monaco 编辑器的多光标并发编辑（Alt+点击）与全局命令面板（Ctrl+Shift+P），在浏览器标签页内也能收获如行云流水般丝滑且充满掌控感的高端开发体验。"
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "查阅 Monaco 编辑器深度指南"
+      },
       "byok-ai-assisted-coding-guide": {
         "slug": "byok-ai-assisted-coding-guide",
         "title": "BYOK 驱动的 AI 编程：Inception、Claude 与本地模型深度联动",
@@ -5178,6 +7057,275 @@ export const BLOG_TRANSLATIONS: Record<string, BlogTranslations> = {
     "relatedArticlesTitle": "Рекомендуемые Руководства",
     "backToBlogLabel": "← Вернуться в Блог",
     "articles": {
+      "build-from-prompt-ai-project-generation": {
+        "slug": "build-from-prompt-ai-project-generation",
+        "title": "Создание проектов по текстовому описанию: генерация многофайловых веб-приложений в GB Coder",
+        "description": "Узнайте, как GB Coder создает полноценные многофайловые веб-приложения по инструкциям на естественном языке, строит файловую структуру, настраивает package.json и транслирует код в Monaco.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Prompt Engineering",
+          "Full-Stack",
+          "AI Generation",
+          "WebContainer",
+          "GB Assist"
+        ],
+        "intro": "Создание нового веб-приложения традиционно начинается с чистого листа, утомительной настройки шаблонов и кропотливого сопоставления зависимостей в конфигурационных файлах. Движок 'Build from Prompt' в GB Coder преобразует текстовые инструкции на естественном языке в готовую многофайловую архитектуру прямо в рабочей вкладке вашего браузера. Благодаря интеграции GB Assist и среды исполнения WebContainer система генерирует файловую структуру, стили, скрипты и пакеты, готовые к мгновенному интерактивному предпросмотру.",
+        "sections": [
+          {
+            "heading": "1. От отдельных фрагментов кода к целостным веб-приложениям",
+            "body": "Обычные AI-ассистенты, как правило, ориентированы на автодополнение отдельных строк или генерацию изолированных функций. Когда разработчик хочет воплотить полноценную идею — будь то финансовый трекер, база знаний Markdown или интерактивная игра на canvas — ручная сборка разрозненных файлов HTML, CSS и модулей JavaScript отнимает массу сил. Build from Prompt меняет подход, воспринимая будущее приложение как единый слаженный организм, а не случайный набор файлов.\n\nКомплексный охват задачи позволяет ассистенту спланировать полный граф зависимостей еще до генерации первого символа. Система определяет, требуется ли реактивное управление состоянием, локальное хранилище в IndexedDB или внешние библиотеки интерфейса, гарантируя согласованность имен переменных, классов CSS и путей импорта во всех файлах."
+          },
+          {
+            "heading": "2. Проектирование архитектуры: планирование AST прямо в браузере",
+            "body": "Прежде чем передать код в редактор, GB Coder запрашивает у базовой нейросети строго типизированный структурный манифест (JSON Schema). Этот документ определяет иерархию виртуальных каталогов, точку входа (например, index.html или src/main.tsx), перечень внешних библиотек и зоны ответственности каждого файла.\n\nВыполнение этапа проектирования непосредственно в потоке браузера обеспечивает точность и предсказуемость последующей генерации токенов. Если пользователь запросил аналитический дашборд с графиками, архитектурный план согласует логику данных, холст визуализации и стили оформления до выделения буферов памяти."
+          },
+          {
+            "heading": "3. Автоматический вывод зависимостей и синтез package.json",
+            "body": "Распространенная проблема генеративного кодирования — вымышленные версии библиотек или конфликтующие пакеты, приводящие к сбоям при запуске. Механизм GB Coder проверяет упоминаемые библиотеки по официальным реестрам npm и проверенным CDN-каталогам.\n\nПри создании full-stack проекта для WebContainer формируется чистый и лаконичный файл package.json. Для легковесных статических проектов проверенные теги CDN вставляются прямо в тег <head> файла index.html, не загромождая память каталогами node_modules.",
+            "codeSnippet": "{\n  \"name\": \"fin-tracker-app\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\"\n  },\n  \"dependencies\": {\n    \"lucide\": \"^0.454.0\",\n    \"chart.js\": \"^4.4.6\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^5.4.10\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "4. Потоковая передача файлов во вкладки редактора Monaco",
+            "body": "По мере поступления ответов от модели через прямое HTTPS-соединение потоковый парсер GB Coder разделяет блоки Markdown по именам файлов. Как только обнаруживается заголовок нового файла, GB Coder регистрирует его в дереве проводника, открывает вкладку в Monaco Editor и начинает построчную трансляцию текста с подсветкой синтаксиса.\n\nРазработчик видит, как проект оживает вкладка за вкладкой. Вместо созерцания значка ожидания вы наблюдаете одновременную параллельную отрисовку CSS-правил, семантической разметки и TypeScript-модулей с мгновенной обратной связью."
+          },
+          {
+            "heading": "5. Мгновенный запуск в среде WebContainer",
+            "body": "После завершения генерации GB Coder монтирует виртуальное файловое дерево в файловую систему WebContainer. Среда WebContainer обрабатывает реальные системные вызовы Node.js в изолированном контексте WebAssembly, обеспечивая работу нативных команд без удаленных серверов.\n\nСреда автоматически устанавливает зависимости и запускает локальный dev-сервер Vite. В течение нескольких секунд проброс портов связывает работающий сервер с панелью интерактивного предпросмотра.",
+            "codeSnippet": "# WebContainer автоматически развертывает созданный проект\nnpm install --prefer-offline\nnpx vite --port 3000 --host",
+            "codeLang": "bash"
+          },
+          {
+            "heading": "6. Интерактивная доработка проекта через уточняющие подсказки",
+            "body": "Первоначальный вариант редко удовлетворяет всем субъективным предпочтениям автора с первой попытки. GB Coder поддерживает диалоговый режим доработки, где вы можете давать точечные указания: 'Добавь переключатель темной темы в шапку' или 'Сохраняй историю операций в localStorage'.\n\nВместо полной перегенерации проекта GB Assist рассчитывает хирургические патчи только для затронутых файлов. Изменения выводятся в окне сравнения Monaco, позволяя вам утвердить правки строка за строкой."
+          },
+          {
+            "heading": "7. Надежная изоляция и обработка ошибок выполнения",
+            "body": "Выполнение скриптов прямо в браузере требует строгой изоляции. Если сгенерированный код содержит синтаксическую ошибку или входит в бесконечный цикл, iframe предпросмотра изолирует проблему при помощи Web Workers и обработчиков Error Boundary в DOM.\n\nВстроенная виртуальная консоль фиксирует сбой в реальном времени, указывает файл и строку, позволяя в один клик перенаправить трассировку стека в GB Assist для автоматического исправления."
+          },
+          {
+            "heading": "8. Приоритет локальной безопасности: прямое общение с провайдером",
+            "body": "Каждый текстовый запрос в GB Coder передается напрямую из вашего браузера в API выбранного провайдера (Inception Labs, Anthropic Claude, OpenAI или локальный Ollama) по личному API-ключу. LadeStack не держит промежуточных прокси-серверов и не ведет журнал ваших запросов.\n\nВаша интеллектуальная собственность и коммерческие замыслы остаются исключительно под вашим контролем. Сочетая локальное хранилище в IndexedDB и генеративный потенциал нейросетей, Build from Prompt дарит свободу творчества при абсолютной конфиденциальности."
+          }
+        ],
+        "relatedDocsLink": "/docs#ai-tools",
+        "relatedDocsLabel": "Ознакомиться с документацией GB Assist"
+      },
+      "automated-code-review-coderabbit-integration": {
+        "slug": "automated-code-review-coderabbit-integration",
+        "title": "Автоматизированное код-ревью в браузере: аудит безопасности, линтинг и анализ качества с CodeRabbit",
+        "description": "Узнайте, как GB Coder проводит автоматическое код-ревью в стиле CodeRabbit прямо в браузере, выявляя уязвимости, проблемы производительности и стилистические ошибки.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Review",
+          "Static Analysis",
+          "CodeRabbit",
+          "Security",
+          "Developer Tools"
+        ],
+        "intro": "Рецензирование кода коллегами — основа надежности ПО, однако разработчикам-одиночкам и небольшим стартапам трудно получить регулярную и глубокую обратную связь. GB Coder интегрирует продвинутые инструменты автоматического AI-аудита прямо в веб-редактор. Перед отправкой коммита в GitHub или публикацией проекта запустите всесторонний статический анализ, который укажет на уязвимости, слабые места в архитектуре и предложит готовые исправления в один клик.",
+        "sections": [
+          {
+            "heading": "1. Необходимость статического анализа до коммита при быстрой разработке",
+            "body": "Создание прототипов в браузере раскрепощает фантазию, но спешка часто приводит к появлению необработанных промисов, утечек памяти и неточных типов. Ожидание официального ревью пулл-реквеста или сообщений об ошибках от CI-пайплайна сильно сбивает рабочий ритм.\n\nПроводя статический анализ непосредственно в активной вкладке, GB Coder формирует защитный барьер качества. Замечания появляются, пока логика свежа в памяти, что позволяет быстро устранить недочеты до засорения истории репозитория."
+          },
+          {
+            "heading": "2. Многоуровневая структура аудита: синтаксис, безопасность и стиль",
+            "body": "Механизм проверки в GB Coder оценивает исходный код в трех взаимодополняющих плоскостях. Структурный синтаксический анализ обходит абстрактное синтаксическое дерево (AST), выявляя неиспользуемые переменные, лишние импорты и недостижимый код.\n\nПроверка безопасности анализирует фильтрацию пользовательских данных, риск утечки ключей API и векторы инъекций в DOM. Наконец, стилистический аудит оценивает цикломатическую сложность функций и соблюдение соглашений об именовании для долговечной поддержки проекта."
+          },
+          {
+            "heading": "3. Выявление распространенных веб-уязвимостей: XSS и Prototype Pollution",
+            "body": "Клиентские веб-приложения уязвимы для межсайтового скриптинга (XSS), если пользовательский ввод вставляется в DOM без должной экранизации. Сканер немедленно отмечает опасное использование innerHTML, непроверенные вызовы document.write и необработанные шаблонные строки.\n\nПри обнаружении проблемы диалоговое окно ревью подробно объясняет опасность и формирует готовый патч с использованием безопасных браузерных API, таких как textContent или библиотека DOMPurify.",
+            "codeSnippet": "// Обнаруженная уязвимость: Опасное прямое присваивание в innerHTML\n// element.innerHTML = userInput;\n\n// Безопасное исправление, предложенное аудитом:\nconst cleanNode = document.createTextNode(userInput);\nelement.replaceChildren(cleanNode);",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Проблемы производительности: утечки памяти и лишние рендеры",
+            "body": "В компонентах React и Vue некорректно указанные зависимости в хуках или незакрытые слушатели событий нередко провоцируют скрытые утечки памяти. Анализатор указывает на отсутствие функции очистки в useEffect, передачу немемоизированных объектов тяжелым дочерним элементам и бесконтрольные таймеры.\n\nУстранение этих недочетов по точным номерам строк защищает приложение от подтормаживаний, перегрева мобильных устройств и падения частоты кадров в анимациях."
+          },
+          {
+            "heading": "5. Аудит доступности (a11y) в изолированной среде предпросмотра",
+            "body": "Создание доступного веб-интерфейса требует строгого следования стандартам. Модуль аудита проверяет наличие корректных ARIA-атрибутов у интерактивных элементов, альтернативный текст у изображений, понятные подписи к кнопкам и связь полей ввода с тегами label.\n\nОтображение рекомендаций по доступности наряду с обычными синтаксическими подсказками помогает соблюдать стандарты WCAG 2.1 AA в процессе повседневной работы над кодом."
+          },
+          {
+            "heading": "6. Интерактивная панель ревью: карточки замечаний по строкам",
+            "body": "Запуск аудита открывает специальное окно Code Review. Замечания ранжируются по степени серьезности: Критические (угрозы безопасности и сбои), Предупреждения (вопросы скорости и доступности) и Рекомендации (стилистика и типизация).\n\nКаждое замечание представлено в виде карточки с именем файла, строками, обоснованием проблемы и блоком сравнения, демонстрирующим предлагаемое решение."
+          },
+          {
+            "heading": "7. Применение исправлений в один клик через Monaco Diff",
+            "body": "Внедрение рекомендаций происходит быстро и прозрачно благодаря интеграции со встроенным средством сравнения. Нажатие кнопки 'Применить исправление' открывает экран сравнения Monaco, где вы можете внимательно проинспектировать изменения до внесения их в файл.\n\nПри необходимости можно принимать исправления выборочно, сохраняя полный контроль над своим кодом."
+          },
+          {
+            "heading": "8. Экспорт отчетов об аудите для пулл-реквестов и командной работы",
+            "body": "Для команд, ведущих документацию, GB Coder позволяет выгрузить результаты проверки в формате Markdown или JSON. Этот отчет удобно вставить в описание Pull Request на GitHub для облегчения работы проверяющих.\n\nВсе операции анализа выполняются локально в вашем браузере с использованием ваших ключей BYOK, что исключает попадание закрытого кода на внешние серверы."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Изучить документацию по редактору"
+      },
+      "code-stats-and-developer-analytics": {
+        "slug": "code-stats-and-developer-analytics",
+        "title": "Визуализация здоровья кода: архитектурные метрики и статистика проектов в GB Coder",
+        "description": "Контролируйте объем кодовой базы, цикломатическую сложность, распределение строк и вес библиотек в панели Code Stats прямо в GB Coder.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Analytics",
+          "Metrics",
+          "Architecture",
+          "Code Quality",
+          "Productivity"
+        ],
+        "intro": "Понимание структуры и качества программного кода жизненно необходимо по мере роста любого веб-приложения. В GB Coder встроена панель аналитики Code Stats, которая в режиме реального времени рассчитывает объем строк, соотношение языков, плотность комментариев и цикломатическую сложность без обращения к внешним утилитам и облачным сканерам. Получайте мгновенную ясность об архитектуре проекта прямо в браузере.",
+        "sections": [
+          {
+            "heading": "1. Зачем разработчику метрики кода в браузере",
+            "body": "Когда проект перерастает рамки простого наброска, число файлов стремительно увеличивается, а архитектурные связи усложняются. Без понимания плотности логики в кодовой базе незаметно накапливаются перегруженные файлы и дублирующие компоненты.\n\nПанель Code Stats в GB Coder служит удобной приборной панелью проекта. Доступная в один клик из строки состояния, она превращает файловое дерево в наглядную визуальную аналитику."
+          },
+          {
+            "heading": "2. Точный подсчет строк: код, комментарии и пустое пространство",
+            "body": "Фундаментом аналитики выступает строгий учет строк исходного кода (SLOC). Алгоритм сканирует файлы в оперативной памяти и четко разделяет полезный исполняемый код, комментарии документации (включая JSDoc) и пустые строки оформления.\n\nАнализ соотношения комментариев к чистому коду позволяет объективно оценить, насколько хорошо описаны сложные алгоритмы или переходы состояний, что критично для командной разработки."
+          },
+          {
+            "heading": "3. Оценка цикломатической сложности: поиск запутанных функций",
+            "body": "Цикломатическая сложность (Cyclomatic Complexity) показывает количество независимых маршрутов выполнения в коде. Высокий показатель свидетельствует о глубокой вложенности ветвлений (if/else, switch и циклов), что увеличивает вероятность ошибок и мешает тестированию.\n\nGB Coder вычисляет сложность для каждой функции и ранжирует их по цветовой шкале, наглядно указывая, какие модули нуждаются в декомпозиции и рефакторинге в первую очередь.",
+            "codeSnippet": "// Расчет цикломатической сложности на основе ветвлений AST\nfunction assessComplexity(astNode) {\n  let paths = 1; // базовый линейный путь\n  traverseAST(astNode, (node) => {\n    if (['IfStatement', 'ConditionalExpression', 'SwitchCase', 'ForStatement', 'WhileStatement'].includes(node.type)) {\n      paths++;\n    }\n  });\n  return paths;\n}",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Баланс используемых языков и форматов ассетов",
+            "body": "Современный фронтенд сочетает разметку HTML, стили CSS, логику на TypeScript и статические ресурсы. Движок метрик отображает процентное соотношение байт и строк по всем типам файлов.\n\nЭто помогает вовремя заметить аномалии: например, случайно попавший в сборку огромный файл встроенного SVG или несжатый файл стилей, замедляющий первую загрузку."
+          },
+          {
+            "heading": "5. Оценка веса зависимостей и размера бандла",
+            "body": "Подключение сторонних пакетов способно многократно увеличить объем передаваемых клиенту данных. Панель Code Stats анализирует импорты и манифест package.json, оценивая реальный вес зависимостей в распакованном виде.\n\nСопоставление размера внешних библиотек с собственной логикой позволяет взвешенно решить, стоит ли использовать тяжелый пакет или заменить его компактным нативным решением."
+          },
+          {
+            "heading": "6. Индекс поддерживаемости (Maintainability Index) и общий рейтинг",
+            "body": "GB Coder объединяет показатели строк кода, ветвистости логики и объема комментариев для вычисления сводного индекса поддерживаемости (от 0 до 100). Проекты с модульной структурой и ясным кодом получают высшую оценку 'A'.\n\nЭтот интегральный рейтинг служит отличным стимулом для поддержания чистоты и порядка в проекте на протяжении долгих спринтов разработки."
+          },
+          {
+            "heading": "7. Экспорт отчетов аудита в форматах Markdown и JSON",
+            "body": "Хотите поделиться метриками с коллегами, клиентами или руководством? Функция 'Экспорт отчета' форматирует все ключевые показатели проекта в опрятные таблицы Markdown или структурированный JSON.\n\nПолученный файл можно сохранить в репозиторий под именем ARCHITECTURE.md или прикрепить к отчету об итогах спринта."
+          },
+          {
+            "heading": "8. Конфиденциальность данных: все вычисления происходят на клиенте",
+            "body": "Безопасность — фундаментальный принцип GB Coder. Весь синтаксический анализ, обход AST и расчет метрик происходят исключительно в выделенном потоке Web Worker вашего браузера. Ни строки исходников, ни цифры статистики не уходят на удаленные серверы.\n\nВы получаете доступ к профессиональной аналитике без малейшего риска компрометации интеллектуальной собственности."
+          }
+        ],
+        "relatedDocsLink": "/docs#architecture",
+        "relatedDocsLabel": "Читать документацию по архитектуре и хранилищу"
+      },
+      "custom-script-injection-and-cdn-libraries": {
+        "slug": "custom-script-injection-and-cdn-libraries",
+        "title": "Управление внешними библиотеками: CDN, ESM-модули и внедрение скриптов в GB Coder",
+        "description": "Освойте управление зависимостями в GB Coder: узнайте, как подключать стили CDN, JS-библиотеки, модули ESM и настраивать теги head в интерактивном предпросмотре.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Dependencies",
+          "CDN",
+          "ESM",
+          "Custom Injection",
+          "Frontend"
+        ],
+        "intro": "Веб-разработка немыслима без сторонних библиотек: компонентов интерфейса, систем анимации, наборов иконок и CSS-фреймворков. В GB Coder предусмотрено несколько удобных способов подключения сторонних зависимостей без длительной настройки сборщиков. Менеджер внедрения скриптов и панель внешних библиотек позволяют легко добавлять ресурсы CDN, импортировать современные ESM-модули и настраивать HTML-теги в изолированном окне просмотра.",
+        "sections": [
+          {
+            "heading": "1. Три уровня работы с зависимостями в GB Coder",
+            "body": "В зависимости от целей проекта вы можете подключать библиотеки на трех уровнях: классические теги скриптов с CDN, нативный импорт ESM-модулей в коде либо полноценная установка пакетов npm в среде WebContainer.\n\nПонимание особенностей каждого уровня помогает найти баланс между простотой прототипирования без сборки и возможностями продвинутых сборщиков. Для быстрых экспериментов внедрение через CDN обеспечивает моментальную готовность к работе."
+          },
+          {
+            "heading": "2. Менеджер внедрения: выбор между тегами <head> и <body>",
+            "body": "Панель пользовательских инъекций дает полный контроль над тем, в какую часть документа вставляется внешний ресурс. Таблицы стилей и определения веб-шрифтов следует размещать в <head>, чтобы избежать неприятного эффекта мерцания нестилизованного контента (FOUC).\n\nВ то же время тяжелые JavaScript-библиотеки — например, 3D-движки (Three.js) или средства анимации (GSAP) — лучше размещать в конце <body>, гарантируя полную готовность дерева DOM перед инициализацией скриптов.",
+            "codeSnippet": "<!-- Пример конфигурации пользовательских инъекций -->\n{\n  \"headTags\": [\n    \"<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'>\",\n    \"<link rel='preconnect' href='https://fonts.googleapis.com'>\"\n  ],\n  \"bodyScripts\": [\n    \"<script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'></script>\"\n  ]\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. Современные модули ESM: веб-стандарты без локальных сборщиков",
+            "body": "Благодаря поддержке ECMAScript Modules (ESM) в браузерах вы можете подключать npm-пакеты прямо в своем JS-коде без локального бандлера. Используя специализированные CDN, такие как esm.sh или unpkg, вы пишете привычные инструкции import в статическом редакторе.\n\nЭто позволяет совместить удобство современного модульного подхода со скоростью мгновенного исполнения статического кода на стороне клиента.",
+            "codeSnippet": "// Прямой импорт легковесных ESM-модулей в редакторе\nimport confetti from 'https://esm.sh/canvas-confetti@1.9.3';\nimport { formatDistanceToNow } from 'https://esm.sh/date-fns@4.1.0';\n\nconfetti({ particleCount: 100, spread: 70 });",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Подключение таблиц стилей и контроль каскада CSS",
+            "body": "При совмещении собственного CSS с фреймворками вроде Tailwind CDN или Bootstrap порядок загрузки напрямую влияет на специфичность селекторов. GB Coder автоматически упорядочивает внешние таблицы стилей перед проектным styles.css.\n\nЭто гарантирует, что ваши пользовательские классы и CSS-переменные надежно переопределят стили фреймворка без необходимости прибегать к директиве !important."
+          },
+          {
+            "heading": "5. Простое подключение веб-шрифтов и библиотек иконок",
+            "body": "Типографика и иконки формируют характер приложения. В менеджере библиотек можно одним щелчком подключить гарнитуры из Google Fonts или наборы значков, такие как FontAwesome, Lucide и Material Icons.\n\nGB Coder автоматически проставляет подсказки preconnect для шрифтов, обеспечивая моментальную и четкую отрисовку текста с первого кадра."
+          },
+          {
+            "heading": "6. Безопасность внешних скриптов: политика CSP и песочница",
+            "body": "Выполнение стороннего кода в браузере требует бескомпромиссной защиты. Интерактивный предпросмотр в GB Coder работает внутри изолированных iframe под управлением строгих политик Content Security Policy (CSP) и COEP.\n\nЭто исключает возможность несанкционированного доступа чужих скриптов к базе данных IndexedDB проекта, cookie-файлам или главному окну редактора Monaco."
+          },
+          {
+            "heading": "7. Сохранение конфигурации в проектах и ZIP-архивах",
+            "body": "Все добавленные скрипты, теги заголовков и выбранные CDN автоматически сохраняются в метаданных проекта в IndexedDB. При экспорте проекта в ZIP-архив параметры инъекций бережно упаковываются в файл project.json.\n\nПри открытии архива на другом компьютере или передаче коллегам вся конфигурация восстанавливается в точности без ручной перенастройки."
+          },
+          {
+            "heading": "8. Диагностика сетевых сбоев CDN и резервные варианты",
+            "body": "Сетевые сбои или корпоративные брандмауэры могут ограничивать доступ к отдельным серверам CDN. Виртуальная консоль GB Coder отслеживает запросы окна предпросмотра и информирует об ошибках HTTP 404 или блокировках CORS с рекомендациями по устранению.\n\nВы можете легко переключиться на альтернативное зеркало (jsDelivr, cdnjs или unpkg), продолжая продуктивную работу в любых сетевых условиях."
+          }
+        ],
+        "relatedDocsLink": "/docs#getting-started",
+        "relatedDocsLabel": "Изучить настройку зависимостей в руководстве"
+      },
+      "reusable-code-snippets-and-developer-velocity": {
+        "slug": "reusable-code-snippets-and-developer-velocity",
+        "title": "Ускорение работы: пользовательские сниппеты и IntelliSense в редакторе Monaco",
+        "description": "Пишите код быстрее в GB Coder благодаря сниппетам: настраивайте шаблоны под конкретные языки, перемещайтесь по точкам табуляции и используйте быстрые сокращения.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Snippets",
+          "IntelliSense",
+          "Monaco Editor",
+          "Developer Velocity",
+          "Productivity"
+        ],
+        "intro": "Регулярный ручной ввод базовой разметки HTML, заготовок компонентов React или типовых правил выравнивания CSS отвлекает от сути задачи. В GB Coder интегрированы менеджер сниппетов и удобная боковая панель, тесно взаимодействующие с Monaco Editor. Настраивая многоразовые фрагменты кода с точками табуляции и подставляемыми переменными, вы можете разворачивать объемные конструкции за доли секунды по коротким префиксам.",
+        "sections": [
+          {
+            "heading": "1. Как рутинный код замедляет процесс разработки",
+            "body": "Постоянное переключение между окнами для копирования типовых фрагментов из старых файлов рассеивает концентрацию. Будь то сброс стилей CSS, настройка адаптивной сетки или шаблон хука React, повторный ввод известного синтаксиса отнимает творческую энергию.\n\nСистема сниппетов в GB Coder решает эту задачу, перенося функциональность макросов из профессиональных настольных IDE прямо в окно веб-браузера."
+          },
+          {
+            "heading": "2. Структура сниппета в Monaco: префикс, тело и точки табуляции",
+            "body": "Сниппеты в GB Coder оформляются по единым стандартам Monaco и VS Code. Шаблон включает в себя префикс вызова, строки готового кода и пронумерованные точки остановки курсора ($1, $2 и т.д.).\n\nПосле вставки курсор перемещается в точку $1. Нажатие клавиши Tab переносит вас в позицию $2, а значения по умолчанию (${1:ComponentName}) позволяют синхронно отредактировать имя компонента сразу в нескольких местах.",
+            "codeSnippet": "{\n  \"React Functional Component\": {\n    \"prefix\": \"rfc\",\n    \"body\": [\n      \"import React, { useState } from 'react';\",\n      \"\",\n      \"export function ${1:ComponentName}() {\",\n      \"  const [state, setState] = useState(null);\",\n      \"\",\n      \"  return (\",\n      \"    <div className=\\\"${2:container}\\\">\",\n      \"      <h2>${1:ComponentName}</h2>\",\n      \"      $0\",\n      \"    </div>\",\n      \"  );\",\n      \"}\"\n    ],\n    \"description\": \"Создает функциональный React-компонент с хуком состояния\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. Разграничение сниппетов по языкам и рабочим пространствам",
+            "body": "Чтобы список подсказок автодополнения IntelliSense оставался релевантным, сниппеты привязываются к конкретному языку программирования. Шаблон для React на TypeScript никогда не появится при редактировании файла HTML или таблицы стилей CSS.\n\nВы можете создавать глобальные сниппеты для всех своих проектов либо ограничивать область их действия рамками одного проекта."
+          },
+          {
+            "heading": "4. Боковая панель сниппетов: удобный поиск и вставка в один клик",
+            "body": "Если вы забыли точный префикс шаблона, боковая панель предоставит наглядный каталог заготовок. Они сгруппированы по тематическим категориям (HTML-разметка, CSS-сетки, хуки React, служебные функции), а строка поиска позволяет мгновенно отфильтровать нужный вариант.\n\nПри наведении курсора на карточку отображается окно предварительного просмотра кода. Клик по кнопке вставки переносит фрагмент прямо в текущую позицию курсора."
+          },
+          {
+            "heading": "5. Встроенная библиотека шаблонов для современной веб-разработки",
+            "body": "GB Coder поставляется с обширным набором готовых сниппетов, составленных по современным стандартам. В комплекте доступны семантические каркасы HTML5, приемы центрирования на CSS Grid и Flexbox, асинхронные обертки для fetch с обработкой ошибок и обработчики событий.\n\nЭти шаблоны служат надежным ускорителем как для начинающих веб-разработчиков, так и для опытных инженеров."
+          },
+          {
+            "heading": "6. Создание адаптивных шаблонов с динамическими переменными",
+            "body": "Помимо статичного текста и позиций табуляции, GB Coder поддерживает динамические переменные. Вы можете внедрять в код текущий год и дату ($CURRENT_YEAR, $CURRENT_DATE), имя редактируемого файла ($TM_FILENAME) или данные из буфера обмена.\n\nЭто позволяет автоматизировать рутину — например, формирование заголовков с копирайтом или обрамление выделенного блока конструкцией try/catch."
+          },
+          {
+            "heading": "7. Надежное сохранение в IndexedDB и перенос через JSON",
+            "body": "Все созданные вами шаблоны надежно сохраняются в базе данных IndexedDB вашего браузера. С помощью модального окна управления сниппетами вы можете в любой момент редактировать, дублировать или удалять заготовки.\n\nЧтобы перенести свой арсенал на другой компьютер или поделиться им с коллегами, экспортируйте сниппеты в один файл JSON и импортируйте его в любую копию GB Coder за пару секунд."
+          },
+          {
+            "heading": "8. Горячие клавиши и продуктивные привычки для опытных пользователей",
+            "body": "Освоение быстрой вставки сниппетов многократно увеличивает скорость набора кода. Наберите префикс, нажмите Tab или Enter, заполните параметры и клавишей Tab переместитесь в финальную позицию курсора ($0).\n\nВ сочетании с мультикурсорным редактированием Monaco (Alt+клик) и палитрой команд (Ctrl+Shift+P) GB Coder обеспечивает скорость и гибкость профессионального настольного редактора прямо в браузере."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Изучить документацию по Monaco Editor"
+      },
       "byok-ai-assisted-coding-guide": {
         "slug": "byok-ai-assisted-coding-guide",
         "title": "AI-программирование с BYOK: Inception, Claude и локальные модели",
@@ -5910,6 +8058,275 @@ export const BLOG_TRANSLATIONS: Record<string, BlogTranslations> = {
     "relatedArticlesTitle": "Guias Técnicos Relacionados",
     "backToBlogLabel": "← Voltar ao Blog",
     "articles": {
+      "build-from-prompt-ai-project-generation": {
+        "slug": "build-from-prompt-ai-project-generation",
+        "title": "Criação a Partir de Prompts: Gerando Projetos Web Multi-Arquivos com Linguagem Natural no GB Coder",
+        "description": "Saiba como o GB Coder gera aplicações web completas com múltiplos arquivos a partir de instruções em linguagem natural, monta árvores de diretórios, configura o package.json e transmite código diretamente no Monaco.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Prompt Engineering",
+          "Full-Stack",
+          "AI Generation",
+          "WebContainer",
+          "GB Assist"
+        ],
+        "intro": "Iniciar uma nova aplicação web tradicionalmente exige encarar uma tela em branco, lidar com arquivos de configuração maçantes e vincular dependências manualmente. O motor 'Build from Prompt' do GB Coder transforma instruções em linguagem natural em arquiteturas multi-arquivos completas diretamente no seu navegador. Alimentado pelo GB Assist e pela execução em WebContainers, o motor cria árvores de arquivos funcionais, folhas de estilo, scripts e pacotes prontos para visualização em tempo real.",
+        "sections": [
+          {
+            "heading": "1. De Trechos Isolados a Aplicações Web Completas",
+            "body": "Assistentes convencionais de código por IA costumam focar no preenchimento de linhas isoladas ou na geração de funções simples. Quando o desenvolvedor quer explorar uma ideia de ponta a ponta — como um painel financeiro, uma base de notas em Markdown ou um jogo interativo em canvas — juntar manualmente blocos de HTML, CSS e JavaScript impõe uma alta carga cognitiva. O Build from Prompt inova ao enxergar o projeto como um ecossistema coeso e estruturado.\n\nAo abordar a geração de forma sistêmica, o assistente desenha o grafo de dependências antes de emitir qualquer código. Ele define se o projeto necessita de reatividade moderna, armazenamento local no IndexedDB ou bibliotecas visuais externas, assegurando que todos os arquivos subsequentes compartilhem nomes de variáveis harmônicos, seletores CSS coerentes e importações precisas."
+          },
+          {
+            "heading": "2. Geração da Planta Arquitetônica: Planejamento AST no Navegador",
+            "body": "Antes de escrever no editor, o GB Coder solicita ao modelo de linguagem um manifesto estrutural com tipagem estrita (JSON Schema). Esse documento mapeia a árvore de pastas virtuais, identifica o ponto de entrada (como index.html ou src/main.tsx), relaciona as dependências de terceiros e especifica o papel de cada arquivo.\n\nConduzir essa etapa de planejamento no navegador garante uma geração de tokens estável e previsível. Mesmo ao solicitar um dashboard com gráficos e filtros dinâmicos, o plano assegura que o modelo de dados, o canvas de renderização e as folhas de estilo sejam arquitetados em conjunto antes da alocação de buffers na memória."
+          },
+          {
+            "heading": "3. Dedução Automática de Dependências e Síntese de package.json",
+            "body": "Um obstáculo clássico da geração de código por IA são versões inexistentes de bibliotecas ou dependências conflitantes que falham na execução. No GB Coder, o pipeline de dedução de dependências cruza os pacotes requisitados com registros oficiais do npm e catálogos CDN compatíveis.\n\nPara projetos full-stack em WebContainer, o sistema compõe um package.json enxuto e eficaz. Em protótipos estáticos, ele insere tags CDN homologadas diretamente no <head> do index.html, sem sobrecarregar a memória com diretórios node_modules desnecessários.",
+            "codeSnippet": "{\n  \"name\": \"fin-tracker-app\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\"\n  },\n  \"dependencies\": {\n    \"lucide\": \"^0.454.0\",\n    \"chart.js\": \"^4.4.6\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^5.4.10\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "4. Transmissão Contínua de Arquivos nas Abas do Monaco Editor",
+            "body": "Conforme o modelo responde via conexão HTTPS direta, o parser de streaming do GB Coder separa os blocos de código com base no nome do arquivo indicado. Assim que um novo arquivo é identificado, o GB Coder cria a entrada no explorador virtual, abre a aba no Monaco e preenche o buffer com destaque de sintaxe em tempo real.\n\nOs desenvolvedores acompanham o nascimento do projeto aba por aba. Em vez de fitar um indicador de carregamento estático, você assiste à escrita simultânea de regras de estilo, marcação semântica e módulos TypeScript com feedback visual instantâneo."
+          },
+          {
+            "heading": "5. Inicialização Imediata no Ambiente WebContainer",
+            "body": "Concluída a geração de arquivos, o GB Coder monta a estrutura no sistema de arquivos virtual do WebContainer. Os WebContainers processam chamadas de sistema genuínas do Node.js em uma sandbox WebAssembly, viabilizando comandos nativos sem servidores remotos.\n\nO ambiente executa a instalação dos pacotes e inicia o servidor de desenvolvimento do Vite. Em poucos segundos, o redirecionamento de portas locais conecta o servidor em execução ao painel lateral de pré-visualização.",
+            "codeSnippet": "# O WebContainer inicializa o projeto gerado de forma autônoma\nnpm install --prefer-offline\nnpx vite --port 3000 --host",
+            "codeLang": "bash"
+          },
+          {
+            "heading": "6. Refinamento Interativo de Prompts e Ajustes Cirúrgicos",
+            "body": "Raramente um primeiro protótipo atende a todos os detalhes subjetivos de design de imediato. O GB Coder disponibiliza um fluxo contínuo de refinamento conversacional, onde você pode solicitar alterações pontuais, tais como: 'Adicione um seletor de tema escuro no cabeçalho' ou 'Salve o histórico de transações no localStorage'.\n\nEm vez de recriar todo o projeto do zero, o GB Assist calcula diffs cirúrgicos apenas para os arquivos modificados. As alterações surgem no visualizador de diferenças do Monaco para que você aprove linha por linha com total segurança."
+          },
+          {
+            "heading": "7. Isolamento Robusto em Sandbox e Tratamento de Erros",
+            "body": "A execução dentro do navegador requer isolamento rígido. Se um script gerado contiver erros de sintaxe ou entrar em loop infinito, o iframe de pré-visualização do GB Coder contém o problema por meio de Web Workers dedicados e limites de erro no DOM.\n\nO Console Virtual embutido intercepta falhas em tempo real, indica o arquivo e a linha de origem e permite reenviar o rastreamento de pilha ao GB Assist com um só clique para autocorreção imediata."
+          },
+          {
+            "heading": "8. Soberania Local dos Dados: Conexão Direta com Provedores",
+            "body": "Cada prompt enviado no GB Coder vai diretamente do seu navegador para o provedor de IA escolhido (Inception Labs, Anthropic Claude, OpenAI ou um modelo local no Ollama) utilizando sua chave de API própria. A LadeStack não opera servidores proxy intermediários e não armazena histórico de mensagens.\n\nSuas criações intelectuais e designs permanecem sob sua exclusiva custódia. Aliado à persistência local no IndexedDB, o Build from Prompt alia a versatilidade dos modelos generativos a uma estrita garantia de privacidade."
+          }
+        ],
+        "relatedDocsLink": "/docs#ai-tools",
+        "relatedDocsLabel": "Conhecer a Documentação do GB Assist"
+      },
+      "automated-code-review-coderabbit-integration": {
+        "slug": "automated-code-review-coderabbit-integration",
+        "title": "Revisão Automatizada de Código no Navegador: Auditoria com IA, Linters e Segurança com CodeRabbit",
+        "description": "Veja como o GB Coder incorpora revisões de código automáticas no estilo CodeRabbit para detectar vulnerabilidades, gargalos de performance e desvios de estilo no navegador.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Review",
+          "Static Analysis",
+          "CodeRabbit",
+          "Security",
+          "Developer Tools"
+        ],
+        "intro": "A revisão por pares é indispensável para assegurar a confiabilidade do código, mas programadores solo e equipes ágeis nem sempre dispõem de revisores imediatos. O GB Coder integra recursos inteligentes de auditoria com IA diretamente no IDE web. Antes de enviar commits ao GitHub ou publicar sua aplicação, acione uma varredura estática minuciosa que sinaliza vulnerabilidades, pontos de lentidão e falhas arquiteturais com correções em um clique.",
+        "sections": [
+          {
+            "heading": "1. A Importância da Análise Estática Pré-Commit no Prototipagem Ágil",
+            "body": "Desenvolver no navegador incentiva a prototipagem rápida, mas a agilidade pode deixar passar promessas não tratadas, vazamentos de memória e tipagens frouxas. Aguardar uma revisão formal de pull request ou uma quebra na esteira de integração contínua (CI) retarda o ritmo de entrega.\n\nAo executar verificações estáticas na aba ativa do editor, o GB Coder cria uma barreira de qualidade em tempo real. Os problemas são apontados enquanto a lógica está fresca na memória, viabilizando correções imediatas antes de o código chegar ao repositório."
+          },
+          {
+            "heading": "2. Arquitetura de Auditoria em Múltiplas Camadas: Sintaxe, Segurança e Estilo",
+            "body": "O motor de revisão do GB Coder analisa o código sob três perspectivas complementares. Primeiro, a varredura sintática percorre a Árvore de Sintaxe Abstrata (AST) para apontar trechos mortos, importações órfãs e ramificações inatingíveis.\n\nEm seguida, a análise de segurança avalia a higienização de entradas, vazamento acidental de chaves de API e riscos de injeção no DOM. Por fim, uma checagem de estilo avalia a complexidade ciclomática e padrões de nomenclatura, zelando pela manutenibilidade do código."
+          },
+          {
+            "heading": "3. Identificando Falhas Comuns da Web: XSS e Poluição de Protótipos",
+            "body": "Aplicações executadas no cliente são alvos fáceis de Cross-Site Scripting (XSS) quando dados de usuários são inseridos diretamente no DOM. O analisador detecta atribuições arriscadas a innerHTML, comandos document.write sem validação e interpolações de strings não tratadas.\n\nAo encontrar uma falha, o painel de revisão explica a mecânica da ameaça e fornece um patch pronto utilizando interfaces nativas e seguras como textContent ou DOMPurify.",
+            "codeSnippet": "// Vulnerabilidade detectada: Atribuição direta insegura a innerHTML\n// element.innerHTML = userInput;\n\n// Correção automática sugerida pela auditoria:\nconst cleanNode = document.createTextNode(userInput);\nelement.replaceChildren(cleanNode);",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Gargalos de Desempenho Frontend: Vazamentos de Memória e Renders Excessivos",
+            "body": "Em componentes de React e Vue, dependências mal configuradas em hooks ou ouvintes de eventos não cancelados acarretam vazamentos graduais de memória. O motor aponta ausência de funções de limpeza em useEffect, referências não memorizadas em componentes pesados e temporizadores infinitos.\n\nIdentificar essas inconsistências com o número exato da linha evita travamentos de interface, consumo excessivo de bateria em dispositivos móveis e quedas na taxa de quadros de animações."
+          },
+          {
+            "heading": "5. Auditoria de Acessibilidade (a11y) nas Visualizações Isoladas",
+            "body": "Desenvolver uma web acessível requer aderência estrita às normas. A revisão inspeciona se elementos interativos contam com papéis ARIA corretos, se imagens têm descrições alt adequadas, se botões possuem rótulos legíveis e se formulários relacionam campos a tags label.\n\nAo unir apontamentos de acessibilidade aos avisos de sintaxe, o GB Coder estimula a criação de projetos conformes com as diretrizes WCAG 2.1 AA na rotina diária."
+          },
+          {
+            "heading": "6. Painel Interativo de Revisão: Cartões de Feedback por Linha",
+            "body": "Ao disparar uma revisão, abre-se o modal dedicado. Os apontamentos são agrupados por gravidade: Crítico (falhas de segurança e erros fatais), Alerta (desempenho e acessibilidade) e Sugestão (estilo e tipagem).\n\nCada cartão indica o arquivo, as linhas atingidas, o motivo da recomendação e uma visualização em diff destacando a correção sugerida."
+          },
+          {
+            "heading": "7. Aplicação de Correções em Um Clique com Monaco Diff",
+            "body": "Aceitar as melhorias sugeridas é descomplicado graças ao Monaco Diff integrado. Clicar em 'Aplicar Correção' aciona o painel comparativo lado a lado, permitindo auditar o ajuste antes de gravá-lo no arquivo.\n\nÉ possível também aprovar propostas de forma seletiva bloco por bloco, garantindo que o desenvolvedor conserve o controle integral sobre a base de código."
+          },
+          {
+            "heading": "8. Exportação de Relatórios para Pull Requests e Documentação",
+            "body": "Para equipes que documentam suas entregas, o GB Coder compila os resultados da análise em resumos bem diagramados em Markdown ou JSON. Esse relatório pode ser anexado diretamente à descrição de um Pull Request no GitHub.\n\nTodo o processamento ocorre no próprio navegador com suas credenciais BYOK, sem que seu código proprietário seja exposto a sistemas externos de auditoria."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Consultar a Documentação do Editor"
+      },
+      "code-stats-and-developer-analytics": {
+        "slug": "code-stats-and-developer-analytics",
+        "title": "Visualização da Saúde do Código: Métricas de Arquitetura e Análise de Projetos no GB Coder",
+        "description": "Monitore o volume de código, a complexidade ciclomática, a distribuição de linhas e o peso de bibliotecas no GB Coder com o painel Code Stats.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Analytics",
+          "Metrics",
+          "Architecture",
+          "Code Quality",
+          "Productivity"
+        ],
+        "intro": "Compreender a saúde e o dimensionamento da sua base de código é crucial à medida que aplicações web ganham porte e complexidade. O GB Coder dispõe de um painel nativo de Estatísticas de Código que mensura em tempo real métricas de linhas, proporção de linguagens, densidade de comentários e complexidade ciclomática, sem demandar telemetria externa ou ferramentas de terceiros. Tenha clareza imediata sobre sua arquitetura diretamente no navegador.",
+        "sections": [
+          {
+            "heading": "1. A Relevância das Métricas em Ambientes de Desenvolvimento Web",
+            "body": "Conforme pequenos experimentos se transformam em aplicações consolidadas, a contagem de arquivos dispara e as relações estruturais se aprofundam. Sem clareza sobre o tamanho dos módulos e a densidade das funções, o projeto acumula arquivos monolíticos e código duplicado com facilidade.\n\nO painel Code Stats do GB Coder atua como um mapa de controle da saúde do projeto. Acessível com um clique na barra de status, ele converte estruturas de arquivos abstratas em métricas visuais práticas."
+          },
+          {
+            "heading": "2. Contagem Precisa de Linhas: Código Útil, Comentários e Espaçamento",
+            "body": "A base da análise reside na apuração rigorosa de Linhas de Código Fonte (SLOC). O analisador examina os arquivos na memória e separa o código executável, as anotações de documentação (como blocos JSDoc) e as quebras de linha estéticas.\n\nAcompanhar a proporção de comentários em relação ao código revela de pronto se algoritmos complexos ou transições de estado estão documentados adequadamente, fortalecendo a colaboração."
+          },
+          {
+            "heading": "3. Estimativa de Complexidade Ciclomática: Foco nas Funções Críticas",
+            "body": "A complexidade ciclomática indica a quantidade de caminhos lógicos independentes em um programa. Índices elevados denotam condicionais profundamente aninhadas (estruturas if/else, switch e laços) que favorecem regressões e dificultam testes unitários.\n\nO GB Coder calcula a complexidade de cada função e exibe uma lista classificada por cores, facilitando a identificação imediata de rotinas candidatas a refatoração e desmembramento.",
+            "codeSnippet": "// Cálculo de complexidade ciclomática a partir de desvios no fluxo de controle\nfunction assessComplexity(astNode) {\n  let paths = 1; // caminho linear de base\n  traverseAST(astNode, (node) => {\n    if (['IfStatement', 'ConditionalExpression', 'SwitchCase', 'ForStatement', 'WhileStatement'].includes(node.type)) {\n      paths++;\n    }\n  });\n  return paths;\n}",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Proporção Multilinguagem e Equilíbrio de Arquivos",
+            "body": "Projetos front-end mesclam marcação HTML, estilo CSS, lógica tipada em TypeScript e arquivos estáticos. O motor calcula e exibe a proporção exata em bytes e em linhas para cada formato presente no espaço de trabalho.\n\nEssa visão panorâmica ajuda a flagrar anomalias rapidamente, como um ícone SVG inesperadamente volumoso ou um arquivo CSS não otimizado que poderia comprometer o carregamento inicial."
+          },
+          {
+            "heading": "5. Dimensionamento de Dependências e Impacto no Pacote Final",
+            "body": "O uso indiscriminado de bibliotecas externas pode inflar desnecessariamente o pacote entregue aos usuários. O painel Code Stats avalia os comandos de importação e o arquivo package.json para estimar a carga das dependências descompactadas.\n\nAo contrapor o volume do código de terceiros com o da sua própria lógica, você toma decisões embasadas sobre manter uma biblioteca ou substituí-la por uma alternativa nativa mais leve."
+          },
+          {
+            "heading": "6. Índice de Manutenibilidade e Nota Geral de Saúde",
+            "body": "O GB Coder cruza contagem de linhas, complexidade ciclomática e cobertura de documentação para calcular o Índice de Manutenibilidade (de 0 a 100). Aplicações com módulos desacoplados e boa clareza recebem a qualificação 'A'.\n\nEssa classificação objetiva funciona como um estímulo contínuo para conservar o código organizado e bem formatado em sprints de longa duração."
+          },
+          {
+            "heading": "7. Exportação de Relatórios de Auditoria em Markdown e JSON",
+            "body": "Precisa apresentar métricas para colegas, gestores ou clientes? O painel dispõe do recurso 'Exportar Relatório', que reúne todos os indicadores do projeto em tabelas limpas de Markdown ou objetos JSON organizados.\n\nO material gerado pode ser incluído no repositório com o nome ARCHITECTURE.md ou anexado às revisões de entrega."
+          },
+          {
+            "heading": "8. Privacidade Absoluta: Processamento Exclusivo no Lado do Cliente",
+            "body": "A preservação da privacidade é uma diretriz inegociável no GB Coder. Toda a varredura de código, processamento de AST e cálculo de métricas decorrem em uma Web Worker no seu navegador. Nenhuma linha de código ou indicador estatístico é enviado para a nuvem.\n\nVocê desfruta de um instrumental de análise de alto nível com a certeza de que seus ativos técnicos continuam totalmente protegidos em sua máquina."
+          }
+        ],
+        "relatedDocsLink": "/docs#architecture",
+        "relatedDocsLabel": "Ler os Guias de Arquitetura e Armazenamento"
+      },
+      "custom-script-injection-and-cdn-libraries": {
+        "slug": "custom-script-injection-and-cdn-libraries",
+        "title": "Gerenciamento de Dependências Externas: CDNs, Módulos ESM e Injeção de Scripts no GB Coder",
+        "description": "Domine o gerenciamento de dependências no GB Coder: aprenda a injetar estilos de CDN, bibliotecas JavaScript, módulos ESM e tags head customizadas nas suas visualizações.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Dependencies",
+          "CDN",
+          "ESM",
+          "Custom Injection",
+          "Frontend"
+        ],
+        "intro": "O desenvolvimento web apoia-se fortemente em bibliotecas consolidadas, sejam componentes visuais, utilitários de animação, coleções de ícones ou frameworks de CSS. No GB Coder, o desenvolvedor dispõe de múltiplos caminhos para incorporar recursos externos sem depender de etapas cansativas de build. Por meio do Gerenciador de Injeções Customizadas e da aba de bibliotecas, é simples adicionar scripts de CDN, importar módulos ESM modernos e definir tags HTML personalizadas nas suas prévias isoladas.",
+        "sections": [
+          {
+            "heading": "1. As Três Esferas de Gestão de Dependências no GB Coder",
+            "body": "Conforme o escopo do projeto, as bibliotecas podem ser gerenciadas em três níveis no GB Coder: tags de script tradicionais de CDN, importações nativas de módulos ESM pelo navegador ou pacotes instalados via npm no ambiente WebContainer.\n\nConhecer as vantagens de cada abordagem ajuda a dosar entre a agilidade da ausência de compiladores e o poder dos empacotadores completos. Em protótipos de validação rápida, a injeção via CDN proporciona funcionalidade imediata sem esperas de instalação."
+          },
+          {
+            "heading": "2. Gerenciador de Injeções: Inserção Estratégica em <head> e <body>",
+            "body": "O painel de injeção permite determinar a localização exata de cada recurso externo no documento de teste. Folhas de estilo e declarações de fontes devem ser direcionadas ao <head> para impedir o desagradável efeito de conteúdo sem formatação (FOUC).\n\nEm contrapartida, bibliotecas JavaScript mais robustas — como motores 3D (Three.js) ou suítes de animação (GSAP) — podem ser alocadas no rodapé de <body>, assegurando que o DOM já esteja plenamente interpretado antes da inicialização dos scripts.",
+            "codeSnippet": "<!-- Exemplo de configuração de injeções customizadas -->\n{\n  \"headTags\": [\n    \"<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'>\",\n    \"<link rel='preconnect' href='https://fonts.googleapis.com'>\"\n  ],\n  \"bodyScripts\": [\n    \"<script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'></script>\"\n  ]\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. Módulos ESM Modernos: Ecossistema Atual sem Empacotadores",
+            "body": "Com a adesão integral aos ECMAScript Modules (ESM) pelos navegadores de hoje, é perfeitamente viável importar pacotes do npm diretamente no JavaScript sem bundlers locais. Utilizando CDNs focados em ESM, como esm.sh ou unpkg, você escreve comandos import nativos no Editor Estático.\n\nEssa metodologia une a elegância da sintaxe moderna à fluidez da execução direta de arquivos estáticos no cliente.",
+            "codeSnippet": "// Importando módulos ESM diretamente no editor\nimport confetti from 'https://esm.sh/canvas-confetti@1.9.3';\nimport { formatDistanceToNow } from 'https://esm.sh/date-fns@4.1.0';\n\nconfetti({ particleCount: 100, spread: 70 });",
+            "codeLang": "javascript"
+          },
+          {
+            "heading": "4. Injeção de Folhas de Estilo e Hierarquia de Cascata no CSS",
+            "body": "Ao aliar código CSS próprio a frameworks consolidados como Bootstrap ou Tailwind CDN, a ordem de importação define a especificidade. O GB Coder organiza a inserção para que os estilos de CDN fiquem posicionados antes do styles.css do projeto.\n\nDessa forma, suas classes e variáveis CSS sobrepõem as definições padrão do framework com naturalidade, eliminando a necessidade de recorrer a anotações artificiais como !important."
+          },
+          {
+            "heading": "5. Inclusão Prática de Fontes Web e Conjuntos de Ícones",
+            "body": "A tipografia e a iconografia definem a personalidade estética de uma aplicação. Pelo gestor de bibliotecas, é possível habilitar coleções do Google Fonts ou pacotes como FontAwesome, Lucide e Material Icons com um clique.\n\nO GB Coder aplica automaticamente diretivas preconnect aos links de fontes, otimizando o carregamento dos arquivos para uma renderização nítida desde o primeiro momento."
+          },
+          {
+            "heading": "6. Segurança ao Executar Scripts Externos: Políticas CSP e Sandbox",
+            "body": "Rodar código de terceiros em um ambiente de desenvolvimento web exige barreiras rigorosas de proteção. No GB Coder, todas as visualizações ocorrem dentro de iframes isolados, protegidos por políticas Content Security Policy (CSP) e diretivas COEP.\n\nIsso previne que scripts externos tentem ler os bancos de dados IndexedDB do seu projeto, acessar cookies da aplicação ou interferir no contexto da janela principal do Monaco."
+          },
+          {
+            "heading": "7. Preservação das Configurações em Workspaces e Arquivos ZIP",
+            "body": "Todas as tags, scripts e URLs de CDN informados ficam registrados nos metadados do projeto no IndexedDB. Ao exportar uma cópia de segurança em arquivo ZIP, essas escolhas são devidamente arquivadas no manifesto project.json.\n\nAo descompactar e restaurar o projeto em outra máquina ou compartilhar o arquivo com outro desenvolvedor, todas as dependências externas voltam a funcionar instantaneamente."
+          },
+          {
+            "heading": "8. Solução de Problemas de Conexão com CDNs e Alternativas Locais",
+            "body": "Políticas de segurança corporativas ou oscilações de rede podem ocasionalmente bloquear o acesso a determinados domínios CDN. O Console Virtual do GB Coder monitora as chamadas de rede da visualização e notifica erros HTTP 404 ou restrições de CORS com orientações claras.\n\nO desenvolvedor pode alternar entre provedores espelho (como jsDelivr, cdnjs ou unpkg) com facilidade, dando continuidade ao trabalho sem interrupções."
+          }
+        ],
+        "relatedDocsLink": "/docs#getting-started",
+        "relatedDocsLabel": "Ver Configuração de Dependências na Documentação"
+      },
+      "reusable-code-snippets-and-developer-velocity": {
+        "slug": "reusable-code-snippets-and-developer-velocity",
+        "title": "Potencializando a Velocidade de Código: Snippets Personalizados e IntelliSense no Monaco",
+        "description": "Acelere seu desenvolvimento no GB Coder com snippets sob medida: crie modelos por linguagem, navegue por tabstops multicursor e use atalhos rápidos no Monaco.",
+        "date": "2026-10-20",
+        "author": "Girish Lade",
+        "tags": [
+          "Code Snippets",
+          "IntelliSense",
+          "Monaco Editor",
+          "Developer Velocity",
+          "Productivity"
+        ],
+        "intro": "Digitar continuamente estruturas HTML básicas, modelos de componentes React ou regras comuns de alinhamento em CSS prejudica a fluidez da programação. O GB Coder conta com um Gerenciador de Snippets dedicado e uma barra lateral totalmente integrados ao Monaco Editor. Ao salvar trechos reutilizáveis providos de tabstops e variáveis dinâmicas, você instancia blocos complexos de código em milissegundos a partir de prefixos curtos.",
+        "sections": [
+          {
+            "heading": "1. Como o Código Repetitivo Prejudica a Concentração Criativa",
+            "body": "Trocar de tela repetidas vezes para localizar e copiar trechos de código de trabalhos anteriores quebra a linha de raciocínio. Seja montando um reset de estilos em CSS, configurando uma grade flexível ou criando a casca de um hook no React, digitar estruturas rotineiras dissipa seu foco criativo.\n\nO mecanismo de snippets do GB Coder resolve esse atrito, trazendo capacidades de expansão no padrão de editores de ponta para a sua aba do navegador."
+          },
+          {
+            "heading": "2. A Composição de um Snippet no Monaco: Prefixo, Corpo e Tabstops",
+            "body": "Os templates no GB Coder seguem a convenção consagrada do Monaco e do VS Code. Cada snippet reúne um prefixo de disparo, as linhas de texto da estrutura e marcadores de parada numerados como $1, $2, etc.\n\nLogo após a expansão, o cursor salta para $1. Um toque na tecla Tab avança fluidamente para $2, enquanto marcadores com nomes predefinidos (${1:ComponentName}) permitem renomear identificadores em múltiplos locais simultaneamente.",
+            "codeSnippet": "{\n  \"React Functional Component\": {\n    \"prefix\": \"rfc\",\n    \"body\": [\n      \"import React, { useState } from 'react';\",\n      \"\",\n      \"export function ${1:ComponentName}() {\",\n      \"  const [state, setState] = useState(null);\",\n      \"\",\n      \"  return (\",\n      \"    <div className=\\\"${2:container}\\\">\",\n      \"      <h2>${1:ComponentName}</h2>\",\n      \"      $0\",\n      \"    </div>\",\n      \"  );\",\n      \"}\"\n    ],\n    \"description\": \"Cria componente funcional React com hook de estado\"\n  }\n}",
+            "codeLang": "json"
+          },
+          {
+            "heading": "3. Filtro de Snippets por Linguagem e Escopo do Workspace",
+            "body": "Para manter as sugestões do IntelliSense sempre pertinentes e organizadas, os snippets são catalogados por linguagem de destino. Um modelo voltado a React TypeScript jamais aparecerá ao manipular um arquivo HTML simples ou uma folha de estilos CSS.\n\nVocê tem a flexibilidade de definir snippets globais válidos para todos os projetos ou restringi-los a um espaço de trabalho específico, mantendo recomendações sempre contextuais."
+          },
+          {
+            "heading": "4. Barra Lateral de Snippets: Busca, Prévia e Inserção Imediata",
+            "body": "Caso não se recorde do prefixo exato de um modelo, a barra lateral reúne um catálogo visual amigável. Classificado por categorias (Estruturas HTML, Layouts CSS, Hooks React, Utilitários), você localiza rapidamente o trecho desejado via campo de pesquisa.\n\nAo posicionar o cursor sobre um item, uma prévia do código resultante é exibida. Clicar no botão de inserção escreve o modelo diretamente na posição atual do cursor no editor."
+          },
+          {
+            "heading": "5. Biblioteca Pré-Instalada de Snippets para a Web Moderna",
+            "body": "O GB Coder já vem equipado com uma criteriosa seleção de snippets modernos e testados. Entre eles, esqueletos semânticos de HTML5, padrões de alinhamento com CSS Grid e Flexbox, chamadas fetch assíncronas com tratamento de erros e ouvintes de eventos reativos.\n\nEsses blocos servem como um acelerador de produtividade tanto para estudantes quanto para desenvolvedores experientes."
+          },
+          {
+            "heading": "6. Criação de Snippets com Variáveis Macro Dinâmicas",
+            "body": "Além de palavras fixas e paradas de tabulação, o GB Coder aceita variáveis macro dinâmicas. Você pode inserir a data ou ano correntes ($CURRENT_YEAR, $CURRENT_DATE), o nome do arquivo atual ($TM_FILENAME) ou o conteúdo copiado na área de transferência diretamente nos modelos.\n\nIsso simplifica a geração automática de cabeçalhos de comentários ou o envelopamento de linhas selecionadas em blocos de tratamento de exceções."
+          },
+          {
+            "heading": "7. Persistência no IndexedDB e Portabilidade em JSON",
+            "body": "Os templates cadastrados são salvos localmente na base IndexedDB do seu navegador. Você pode editá-los, duplicá-los ou excluí-los a qualquer momento pelo modal do Snippet Manager.\n\nPara transportar sua caixa de ferramentas para outro computador ou compartilhar seus atalhos com colegas, exporte a coleção inteira em um arquivo JSON e faça a importação em outro GB Coder em questão de instantes."
+          },
+          {
+            "heading": "8. Atalhos de Teclado e Ritmo de Digitação para Usuários Avançados",
+            "body": "Dominar o fluxo de expansão de snippets eleva sensivelmente a velocidade de digitação. Digite o prefixo, pressione Tab ou Enter, preencha os parâmetros e alcance a posição final ($0) com outro toque em Tab.\n\nAliado à edição multicursor do Monaco (Alt+Clique) e à paleta de comandos (Ctrl+Shift+P), o GB Coder entrega a precisão e agilidade de um editor desktop profissional diretamente no navegador."
+          }
+        ],
+        "relatedDocsLink": "/docs#editor",
+        "relatedDocsLabel": "Consultar a Documentação do Monaco Editor"
+      },
       "byok-ai-assisted-coding-guide": {
         "slug": "byok-ai-assisted-coding-guide",
         "title": "Programação com IA e BYOK: Inception, Claude e Modelos Locais",
@@ -6650,6 +9067,11 @@ export function getAllArticleSlugs(): string[] {
     "screenshot-to-code-visual-prototyping",
     "voice-controlled-coding-browser-ide",
     "mobile-testing-qr-code-popout-preview",
-    "project-snapshots-revision-diffs-browser-ide"
+    "project-snapshots-revision-diffs-browser-ide",
+    "build-from-prompt-ai-project-generation",
+    "automated-code-review-coderabbit-integration",
+    "code-stats-and-developer-analytics",
+    "custom-script-injection-and-cdn-libraries",
+    "reusable-code-snippets-and-developer-velocity"
 ];
 }
