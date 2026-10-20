@@ -17,9 +17,21 @@ no third-party illustration enters the build.
 - **Palette:** every fill resolves to a token in `src/styles/site.css`
   (`--canvas`, `--surface`, `--surface-soft`, `--border`, `--primary`,
   `--code-bg`) so the card cannot drift from the site.
-- **Regeneration:** the filter graph is kept in the build notes for this
-  change; re-render with the same ffmpeg `lavfi` pipeline and the same
-  `drawbox`/`drawtext` primitives.
+- **Regeneration:** the exact ffmpeg filter graph ships with the asset in
+  `public/og-image.filter.txt`. Re-render it with:
+
+  ```
+  ffmpeg -y -f lavfi -i "color=c=0xf5f8f6:s=1200x630:d=1" \
+         -f lavfi -i "gradients=s=1200x630:c0=0xd7ece0:c1=0xf5f8f6:x0=1250:y0=0:x1=520:y1=520:seed=0:d=1" \
+         -filter_complex_script public/og-image.filter.txt \
+         -map "[out]" -frames:v 1 public/og-image.png
+  ```
+
+  Run the command from a directory that holds the Manrope variable font at
+  `fonts/Manrope.ttf` (upstream: <https://github.com/google/fonts/tree/main/ofl/manrope>).
+  The graph needs no network access and no design tool. The `seed=0` on the
+  gradient source matters: without it `ffmpeg` randomises the wash and the
+  card stops being reproducible.
 - **Usage:** `og:image`, `og:image:width`, `og:image:height`,
   `og:image:type`, `twitter:image` and `apple-touch-icon`.
 

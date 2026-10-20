@@ -1,0 +1,29 @@
+[0]format=rgba[base];
+[1]format=rgba,colorchannelmixer=aa=0.5,format=rgba[wash];
+[base][wash]overlay=0:0[bg];
+[bg]
+drawbox=x=0:y=0:w=12:h=630:color=0x176644:t=fill,
+drawbox=x=96:y=170:w=58:h=58:color=0x176644:t=2,
+drawbox=x=97:y=171:w=56:h=56:color=0xffffff:t=fill,
+drawtext=fontfile=fonts/Manrope.ttf:text='GB':fontcolor=0x176644:fontsize=22:borderw=1:bordercolor=0x176644:x=113:y=187,
+drawtext=fontfile=fonts/Manrope.ttf:text='GB Coder':fontcolor=0x172e25:fontsize=64:borderw=2:bordercolor=0x172e25:x=174:y=166,
+drawtext=fontfile=fonts/Manrope.ttf:text='Your next idea. Already in motion.':fontcolor=0x506258:fontsize=36:x=96:y=284,
+drawbox=x=96:y=368:w=1008:h=2:color=0xccd9d1:t=fill,
+drawtext=fontfile=fonts/Manrope.ttf:text='Browser-first development studio':fontcolor=0x627268:fontsize=26:x=96:y=394,
+drawtext=fontfile=fonts/Manrope.ttf:text='code.ladestack.in':fontcolor=0x176644:fontsize=25:borderw=1:bordercolor=0x176644:x=96:y=516,
+drawbox=x=700:y=150:w=240:h=330:color=0x152b23:t=fill,
+drawbox=x=700:y=150:w=240:h=34:color=0x1e3a2c:t=fill,
+drawbox=x=722:y=208:w=140:h=8:color=0x7fb39a:t=fill,
+drawbox=x=722:y=232:w=186:h=8:color=0x5d9179:t=fill,
+drawbox=x=722:y=256:w=112:h=8:color=0x5d9179:t=fill,
+drawbox=x=722:y=288:w=164:h=8:color=0x7fb39a:t=fill,
+drawbox=x=722:y=312:w=92:h=8:color=0x5d9179:t=fill,
+drawbox=x=722:y=344:w=64:h=26:color=0x2f8f60:t=fill,
+drawbox=x=958:y=150:w=162:h=330:color=0xffffff:t=fill,
+drawbox=x=958:y=150:w=162:h=34:color=0xe8f0eb:t=fill,
+drawbox=x=976:y=206:w=126:h=46:color=0xe8f0eb:t=fill,
+drawbox=x=976:y=272:w=118:h=7:color=0xd5e2da:t=fill,
+drawbox=x=976:y=289:w=74:h=7:color=0xd5e2da:t=fill,
+drawbox=x=976:y=320:w=66:h=24:color=0x176644:t=fill,
+drawbox=x=958:y=150:w=162:h=330:color=0xdfe7e2:t=2
+[out]

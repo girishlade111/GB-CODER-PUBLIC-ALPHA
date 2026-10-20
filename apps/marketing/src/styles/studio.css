@@ -246,12 +246,11 @@
   padding: 2rem;
   background: radial-gradient(circle at 50% 50%, rgba(19, 98, 64, 0.03) 0%, transparent 80%), var(--surface);
 }
+/* The sample output is an open composition on the preview surface, not a
+   card inside a card. Flattening it keeps the hierarchy honest. */
 .idea-art {
   position: relative;
   overflow: hidden;
-  background: var(--surface-soft);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
   padding: 2.25rem;
   min-height: 280px;
   display: flex;
