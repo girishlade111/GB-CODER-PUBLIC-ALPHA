@@ -1,8 +1,877 @@
 ---
+// GB Coder — Redesigned Error Handling (404) Page
+// Mineral-mint design language, interactive diagnostic code card,
+// smooth ambient animations, and intuitive quick navigation.
+import '../styles/canvas.css';
 import '../styles/site.css';
+import '../styles/studio.css';
 import Icon from '../components/ui/Icon.astro';
 ---
+
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="robots" content="noindex,follow"/><title>Page not found — GB Coder</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"/></head>
-<body><main class="not-found"><a class="home-brand" href="/">GB Coder / LadeStack</a><p class="error-code">404</p><h1>A little off the path.</h1><p>This page isn't here. Your next idea still can be.</p><div class="cta-row"><a class="cta-button" href="/">Back to home</a><a class="cta-button ui-button-outline" href="/sitemap">Explore all pages</a></div><a class="editor-link" href="/app/projects">Open the studio <Icon name="arrow-right" size={12} /></a></main></body></html>
-<style>.not-found{width:min(100%,900px);margin:auto;padding:4rem 1.5rem}.home-brand{color:var(--text-primary);font-weight:700;text-decoration:none}.error-code{font-size:clamp(7rem,22vw,14rem);line-height:1;margin:4rem 0 2rem;color:var(--text-faint);letter-spacing:-.04em}h1{font-size:clamp(2.5rem,7vw,4rem);margin-bottom:1rem}.not-found>p:not(.error-code){color:var(--text-secondary)}.editor-link{display:inline-block;color:var(--primary);margin-top:2rem;font-size:.9rem}</style>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,follow" />
+    <title>Page not found (404) — GB Coder</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="error-page canvas-backdrop">
+    <!-- Ambient Floating Background Particles -->
+    <div class="ambient-glow" aria-hidden="true"></div>
+    <div class="floating-symbol sym-1" aria-hidden="true">&lt;/&gt;</div>
+    <div class="floating-symbol sym-2" aria-hidden="true">&#123;&nbsp;&#125;</div>
+    <div class="floating-symbol sym-3" aria-hidden="true">404</div>
+    <div class="floating-symbol sym-4" aria-hidden="true">=&gt;</div>
+    <div class="floating-symbol sym-5" aria-hidden="true">null</div>
+
+    <!-- Minimal Header Bar -->
+    <header class="error-nav">
+      <div class="error-nav__inner">
+        <a href="/" class="brand-link" title="GB Coder Home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+          </span>
+          <span class="brand-text">
+            <strong>GB Coder</strong>
+            <span class="brand-sep">/</span>
+            <span class="brand-sub">LadeStack</span>
+          </span>
+        </a>
+
+        <div class="nav-actions">
+          <div class="status-pill" title="Server system status">
+            <span class="status-dot"></span>
+            <span class="status-label">Route Not Resolved</span>
+          </div>
+          <a href="/app/projects" class="nav-studio-btn">
+            <span>Launch Studio</span>
+            <Icon name="arrow-up-right" size={13} />
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Frame -->
+    <main class="error-main" id="main-content">
+      <div class="error-shell">
+        <!-- Top Badge -->
+        <div class="badge-wrap">
+          <span class="error-badge">
+            <Icon name="sparkles" size={13} />
+            <span>HTTP 404 • Resource Missing</span>
+          </span>
+        </div>
+
+        <!-- Hero 404 Sculpture with Orbiting Ring -->
+        <div class="sculpture-wrap">
+          <div class="error-numeral" aria-label="404 Error">
+            <span class="digit digit-left">4</span>
+            <div class="digit-center">
+              <span class="zero-glyph">0</span>
+              <div class="zero-radar" aria-hidden="true">
+                <div class="radar-sweep"></div>
+                <div class="radar-reticle">
+                  <Icon name="search" size={20} />
+                </div>
+              </div>
+            </div>
+            <span class="digit digit-right">4</span>
+          </div>
+        </div>
+
+        <!-- Headline & Supporting Prose -->
+        <h1 class="error-title">A little off the path.</h1>
+        <p class="error-lead">
+          This page isn't in our memory index, but your next breakthrough idea can be.
+          Let's get you back to building without losing your momentum.
+        </p>
+
+        <!-- Interactive Diagnostic Terminal Card -->
+        <div class="terminal-card">
+          <div class="terminal-head">
+            <div class="terminal-dots" aria-hidden="true">
+              <span class="dot dot-close"></span>
+              <span class="dot dot-min"></span>
+              <span class="dot dot-max"></span>
+            </div>
+            <span class="terminal-title">
+              <Icon name="terminal" size={12} />
+              <span>resolution_diagnostic.ts</span>
+            </span>
+            <span class="terminal-badge">Client 404</span>
+          </div>
+          <div class="terminal-body">
+            <div class="code-line">
+              <span class="line-num">01</span>
+              <span class="syntax-keyword">const</span>&nbsp;<span class="syntax-var">targetRoute</span>&nbsp;=&nbsp;<span class="syntax-string" id="dynamicRoute">window.location.pathname</span>;
+            </div>
+            <div class="code-line">
+              <span class="line-num">02</span>
+              <span class="syntax-keyword">const</span>&nbsp;<span class="syntax-var">status</span>&nbsp;=&nbsp;<span class="syntax-func">resolvePath</span>(<span class="syntax-var">targetRoute</span>);
+            </div>
+            <div class="code-line line-error">
+              <span class="line-num">03</span>
+              <span class="syntax-comment">// ✖ RouteResolutionError: Path not found in static manifest</span>
+            </div>
+            <div class="code-line line-ready">
+              <span class="line-num">04</span>
+              <span class="syntax-comment">// ✔ Memory buffer intact. Safe navigation routes available:</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Actions -->
+        <div class="actions-row">
+          <a href="/" class="btn-primary">
+            <Icon name="arrow-left" size={16} />
+            <span>Back to home</span>
+          </a>
+          <a href="/sitemap" class="btn-secondary">
+            <Icon name="layout" size={16} />
+            <span>Explore all pages</span>
+          </a>
+          <a href="/app/projects" class="btn-studio">
+            <span>Open in-browser studio</span>
+            <Icon name="arrow-right" size={16} />
+          </a>
+        </div>
+
+        <!-- Quick Jump Bento Grid -->
+        <section class="quick-nav" aria-label="Suggested destinations">
+          <h2 class="quick-nav__heading">Popular Destinations</h2>
+          <div class="bento-grid">
+            <a href="/app/projects" class="bento-card">
+              <div class="bento-icon">
+                <Icon name="code" size={18} />
+              </div>
+              <div class="bento-text">
+                <div class="bento-title-row">
+                  <span class="bento-title">Web Studio IDE</span>
+                  <Icon name="arrow-up-right" size={12} class="bento-arrow" />
+                </div>
+                <p class="bento-desc">Zero-install Monaco & WebContainer workspace</p>
+              </div>
+            </a>
+
+            <a href="/features" class="bento-card">
+              <div class="bento-icon">
+                <Icon name="zap" size={18} />
+              </div>
+              <div class="bento-text">
+                <div class="bento-title-row">
+                  <span class="bento-title">Features & Runtimes</span>
+                  <Icon name="arrow-up-right" size={12} class="bento-arrow" />
+                </div>
+                <p class="bento-desc">React, Vue, full terminal, and live DOM preview</p>
+              </div>
+            </a>
+
+            <a href="/docs" class="bento-card">
+              <div class="bento-icon">
+                <Icon name="book" size={18} />
+              </div>
+              <div class="bento-text">
+                <div class="bento-title-row">
+                  <span class="bento-title">Documentation</span>
+                  <Icon name="arrow-up-right" size={12} class="bento-arrow" />
+                </div>
+                <p class="bento-desc">Architecture guides, BYOK AI setups, and CLI tools</p>
+              </div>
+            </a>
+
+            <a href="/blog" class="bento-card">
+              <div class="bento-icon">
+                <Icon name="pen" size={18} />
+              </div>
+              <div class="bento-text">
+                <div class="bento-title-row">
+                  <span class="bento-title">Engineering Blog</span>
+                  <Icon name="arrow-up-right" size={12} class="bento-arrow" />
+                </div>
+                <p class="bento-desc">In-depth tutorials, code reviews, and benchmarks</p>
+              </div>
+            </a>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Minimal Footer -->
+    <footer class="error-foot">
+      <div class="error-foot__inner">
+        <span>&copy; {new Date().getFullYear()} GB Coder by LadeStack. All rights reserved.</span>
+        <div class="error-foot__links">
+          <a href="/">Home</a>
+          <span aria-hidden="true">&bull;</span>
+          <a href="/privacy-policy">Privacy</a>
+          <span aria-hidden="true">&bull;</span>
+          <a href="/terms-and-conditions">Terms</a>
+          <span aria-hidden="true">&bull;</span>
+          <a href="/contact">Contact</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Client Script to populate the exact missing path -->
+    <script is:inline>
+      (function() {
+        try {
+          const pathEl = document.getElementById('dynamicRoute');
+          if (pathEl && typeof window !== 'undefined' && window.location.pathname) {
+            const raw = window.location.pathname;
+            pathEl.textContent = '"' + (raw.length > 36 ? raw.slice(0, 36) + '...' : raw) + '"';
+          }
+        } catch (_) {}
+      })();
+    </script>
+  </body>
+</html>
+
+<style>
+  /* ==========================================================================
+     GB Coder — Redesigned 404 Error Page Styles
+     Mineral-mint palette, responsive typography, and subtle micro-animations.
+     ========================================================================== */
+
+  .error-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--canvas, #f5f8f6);
+    color: var(--text-primary, #172e25);
+    font-family: var(--font-display, "Manrope Variable", sans-serif);
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* --- Ambient Atmosphere & Floating Glyphs -------------------------------- */
+  .ambient-glow {
+    position: fixed;
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(90vw, 750px);
+    height: 480px;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(23, 102, 68, 0.12) 0%,
+      rgba(120, 178, 148, 0.08) 45%,
+      transparent 72%
+    );
+    z-index: 0;
+    pointer-events: none;
+    filter: blur(40px);
+    animation: auraPulse 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes auraPulse {
+    0% {
+      opacity: 0.6;
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+  }
+
+  .floating-symbol {
+    position: absolute;
+    font: 12px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: var(--text-faint, #7e9087);
+    opacity: 0.28;
+    pointer-events: none;
+    z-index: 0;
+    user-select: none;
+  }
+  .sym-1 { top: 18%; left: 8%; animation: floatSlow 10s ease-in-out infinite alternate; }
+  .sym-2 { top: 28%; right: 10%; animation: floatReverse 12s ease-in-out infinite alternate; font-size: 14px; }
+  .sym-3 { top: 65%; left: 6%; animation: floatSlow 14s ease-in-out infinite alternate; }
+  .sym-4 { top: 78%; right: 12%; animation: floatReverse 11s ease-in-out infinite alternate; }
+  .sym-5 { top: 12%; right: 25%; animation: floatSlow 13s ease-in-out infinite alternate; }
+
+  @keyframes floatSlow {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-22px) rotate(4deg); }
+  }
+  @keyframes floatReverse {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(20px) rotate(-5deg); }
+  }
+
+  /* --- Navigation Bar ----------------------------------------------------- */
+  .error-nav {
+    position: relative;
+    z-index: 10;
+    border-bottom: 1px solid var(--border-subtle, #dfe7e2);
+    background: rgba(245, 248, 246, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .error-nav__inner {
+    max-width: 1080px;
+    margin-inline: auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .brand-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    color: var(--text-primary, #172e25);
+    transition: opacity 0.15s ease;
+  }
+  .brand-link:hover {
+    opacity: 0.85;
+  }
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm, 6px);
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #ccd9d1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary, #176644);
+    box-shadow: var(--shadow-sm, 0 1px 2px rgba(23, 46, 37, 0.04));
+  }
+  .brand-text {
+    font-size: 0.95rem;
+    letter-spacing: -0.01em;
+  }
+  .brand-sep {
+    color: var(--border, #ccd9d1);
+    margin-inline: 0.25rem;
+  }
+  .brand-sub {
+    color: var(--text-secondary, #506258);
+    font-weight: 500;
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.3rem 0.75rem;
+    background: var(--surface-soft, #e8f0eb);
+    border: 1px solid var(--border-subtle, #dfe7e2);
+    border-radius: 9999px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-secondary, #506258);
+  }
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #e09224;
+    box-shadow: 0 0 0 2px rgba(224, 146, 36, 0.2);
+    animation: statusBlink 2.2s infinite ease-in-out;
+  }
+  @keyframes statusBlink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+
+  .nav-studio-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 650;
+    color: var(--primary, #176644);
+    text-decoration: none;
+    padding: 0.35rem 0.8rem;
+    border-radius: var(--radius-sm, 6px);
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #ccd9d1);
+    transition: all 0.15s ease;
+  }
+  .nav-studio-btn:hover {
+    border-color: var(--primary, #176644);
+    background: var(--surface-soft, #e8f0eb);
+    color: var(--accent-hover, #104c33);
+  }
+
+  /* --- Main Container ----------------------------------------------------- */
+  .error-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(2.5rem, 5vw, 5rem) 1.5rem;
+    position: relative;
+    z-index: 5;
+  }
+  .error-shell {
+    width: min(100%, 780px);
+    margin-inline: auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* --- Badge -------------------------------------------------------------- */
+  .badge-wrap {
+    margin-bottom: 1.25rem;
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  .error-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--surface-soft, #e8f0eb);
+    border: 1px solid var(--border, #ccd9d1);
+    color: var(--primary, #176644);
+    padding: 0.35rem 0.9rem;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* --- 404 Sculpture ------------------------------------------------------ */
+  .sculpture-wrap {
+    position: relative;
+    margin-bottom: 1.5rem;
+    animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.08s backwards;
+  }
+  .error-numeral {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1em;
+    font-size: clamp(6.5rem, 18vw, 11rem);
+    font-weight: 550;
+    line-height: 0.9;
+    letter-spacing: -0.06em;
+    color: var(--text-faint, #7e9087);
+    user-select: none;
+  }
+  .digit {
+    display: inline-block;
+    transition: transform 0.3s ease;
+  }
+  .digit-left:hover {
+    transform: rotate(-4deg) translateY(-4px);
+  }
+  .digit-right:hover {
+    transform: rotate(4deg) translateY(-4px);
+  }
+
+  .digit-center {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zero-glyph {
+    opacity: 0.25;
+  }
+  .zero-radar {
+    position: absolute;
+    inset: 15% 15%;
+    border-radius: 50%;
+    border: 2px dashed rgba(23, 102, 68, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: spinSlow 20s linear infinite;
+  }
+  .radar-sweep {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(23, 102, 68, 0.18) 70deg, transparent 75deg);
+  }
+  .radar-reticle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #ccd9d1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary, #176644);
+    box-shadow: var(--shadow-sm, 0 1px 2px rgba(23, 46, 37, 0.04));
+    animation: counterSpin 20s linear infinite;
+  }
+
+  @keyframes spinSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes counterSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(-360deg); }
+  }
+
+  /* --- Headlines ---------------------------------------------------------- */
+  .error-title {
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    font-weight: 550;
+    margin: 0 0 1rem;
+    color: var(--text-primary, #172e25);
+    animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s backwards;
+  }
+  .error-lead {
+    font-size: clamp(1rem, 2vw, 1.15rem);
+    line-height: 1.6;
+    color: var(--text-secondary, #506258);
+    max-width: 54ch;
+    margin: 0 0 2rem;
+    animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.22s backwards;
+  }
+
+  /* --- Diagnostic Terminal Card ------------------------------------------- */
+  .terminal-card {
+    width: 100%;
+    max-width: 600px;
+    background: var(--code-bg, #152b23);
+    border: 1px solid var(--code-border, #1e382b);
+    border-radius: var(--radius-lg, 14px);
+    box-shadow: var(--shadow-stage, 0 24px 64px -16px rgba(23, 78, 55, 0.16));
+    margin-bottom: 2.25rem;
+    overflow: hidden;
+    text-align: left;
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.28s backwards;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .terminal-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 28px 72px -16px rgba(23, 78, 55, 0.22);
+  }
+
+  .terminal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 1rem;
+    background: #11231c;
+    border-bottom: 1px solid var(--code-border, #1e382b);
+  }
+  .terminal-dots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .dot-close { background: #ff5f56; border: 1px solid #e0443e; }
+  .dot-min { background: #ffbd2e; border: 1px solid #dea123; }
+  .dot-max { background: #27c93f; border: 1px solid #1aab29; }
+
+  .terminal-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font: 11.5px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: var(--code-dim, #789d89);
+  }
+  .terminal-badge {
+    font: 10px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: #ff9d97;
+    background: rgba(255, 95, 86, 0.15);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .terminal-body {
+    padding: 1rem 1.15rem;
+    font: 12.5px/1.7 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: var(--code-text, #e4f1e9);
+  }
+  .code-line {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .line-num {
+    color: var(--code-dim, #789d89);
+    user-select: none;
+    font-size: 11px;
+    width: 1.8ch;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .syntax-keyword { color: #f07178; font-weight: 600; }
+  .syntax-var { color: #82aaff; }
+  .syntax-string { color: #c3e88d; font-weight: 500; }
+  .syntax-func { color: #ffcb6b; }
+  .syntax-comment { color: var(--code-muted, #9cb8a9); font-style: italic; }
+  .line-error .syntax-comment { color: #ff9d97; }
+  .line-ready .syntax-comment { color: #80cbc4; }
+
+  /* --- Action Buttons Row ------------------------------------------------- */
+  .actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    margin-bottom: 3.5rem;
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards;
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--primary, #176644);
+    color: #ffffff;
+    font-size: 0.92rem;
+    font-weight: 650;
+    text-decoration: none;
+    padding: 0.75rem 1.35rem;
+    border-radius: var(--radius, 8px);
+    box-shadow: 0 4px 14px -3px rgba(23, 102, 68, 0.4);
+    transition: all 0.18s ease;
+  }
+  .btn-primary:hover {
+    background: var(--accent-hover, #104c33);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px -4px rgba(23, 102, 68, 0.5);
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface, #ffffff);
+    color: var(--text-primary, #172e25);
+    border: 1px solid var(--border, #ccd9d1);
+    font-size: 0.92rem;
+    font-weight: 650;
+    text-decoration: none;
+    padding: 0.75rem 1.35rem;
+    border-radius: var(--radius, 8px);
+    box-shadow: var(--shadow-sm, 0 1px 2px rgba(23, 46, 37, 0.04));
+    transition: all 0.18s ease;
+  }
+  .btn-secondary:hover {
+    background: var(--surface-soft, #e8f0eb);
+    border-color: var(--primary, #176644);
+    color: var(--primary, #176644);
+    transform: translateY(-2px);
+  }
+
+  .btn-studio {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--surface-soft, #e8f0eb);
+    color: var(--primary, #176644);
+    font-size: 0.92rem;
+    font-weight: 650;
+    text-decoration: none;
+    padding: 0.75rem 1.35rem;
+    border-radius: var(--radius, 8px);
+    border: 1px solid transparent;
+    transition: all 0.18s ease;
+  }
+  .btn-studio:hover {
+    background: #d8e8dc;
+    border-color: var(--primary, #176644);
+    transform: translateY(-2px);
+  }
+
+  /* --- Quick Navigation Bento Section ------------------------------------- */
+  .quick-nav {
+    width: 100%;
+    max-width: 760px;
+    border-top: 1px solid var(--border-subtle, #dfe7e2);
+    padding-top: 2.25rem;
+    text-align: left;
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.42s backwards;
+  }
+  .quick-nav__heading {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted, #5d6d63);
+    margin: 0 0 1.15rem;
+    text-align: center;
+  }
+
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  .bento-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 1rem 1.15rem;
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #ccd9d1);
+    border-radius: var(--radius-lg, 14px);
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--shadow-sm, 0 1px 2px rgba(23, 46, 37, 0.04));
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .bento-card:hover {
+    border-color: var(--primary, #176644);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md, 0 4px 16px -2px rgba(23, 46, 37, 0.06));
+  }
+  .bento-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm, 6px);
+    background: var(--surface-soft, #e8f0eb);
+    color: var(--primary, #176644);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .bento-card:hover .bento-icon {
+    background: var(--primary, #176644);
+    color: #ffffff;
+  }
+
+  .bento-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .bento-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    margin-bottom: 0.25rem;
+  }
+  .bento-title {
+    font-size: 0.95rem;
+    font-weight: 650;
+    color: var(--text-primary, #172e25);
+    letter-spacing: -0.015em;
+    transition: color 0.15s ease;
+  }
+  .bento-card:hover .bento-title {
+    color: var(--primary, #176644);
+  }
+  .bento-arrow {
+    color: var(--text-faint, #7e9087);
+    transition: transform 0.15s ease, color 0.15s ease;
+  }
+  .bento-card:hover .bento-arrow {
+    color: var(--primary, #176644);
+    transform: translate(2px, -2px);
+  }
+  .bento-desc {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--text-secondary, #506258);
+    margin: 0;
+  }
+
+  /* --- Footer ------------------------------------------------------------- */
+  .error-foot {
+    position: relative;
+    z-index: 10;
+    border-top: 1px solid var(--border-subtle, #dfe7e2);
+    padding: 1.25rem 1.5rem;
+    background: rgba(245, 248, 246, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .error-foot__inner {
+    max-width: 1080px;
+    margin-inline: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    font-size: 0.8rem;
+    color: var(--text-muted, #5d6d63);
+  }
+  .error-foot__links {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+  .error-foot__links a {
+    color: var(--text-secondary, #506258);
+    text-decoration: none;
+    font-weight: 550;
+    transition: color 0.15s ease;
+  }
+  .error-foot__links a:hover {
+    color: var(--primary, #176644);
+  }
+
+  /* --- Keyframes ---------------------------------------------------------- */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* --- Responsive Breakpoints --------------------------------------------- */
+  @media (max-width: 720px) {
+    .bento-grid {
+      grid-template-columns: 1fr;
+    }
+    .status-pill {
+      display: none;
+    }
+    .actions-row {
+      flex-direction: column;
+      width: 100%;
+    }
+    .btn-primary, .btn-secondary, .btn-studio {
+      width: 100%;
+      justify-content: center;
+    }
+    .error-nav__inner, .error-foot__inner {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
