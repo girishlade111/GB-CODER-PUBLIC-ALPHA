@@ -73,6 +73,7 @@ const {
   BUILT_IN_CATALOG,
   OpenAiCompatibleProvider,
   discoverModels,
+  cleanApiKey,
 } = await import(pathToFileURL(bundleFile).href);
 
 console.log('============================================================');
@@ -198,6 +199,14 @@ await test('2.2 Missing API key on remote Inception endpoint returns clear valid
   }
 });
 
+await test('2.3 cleanApiKey purges zero-width spaces, trailing backslashes, enclosing backticks, and control characters', async () => {
+  assert.equal(cleanApiKey('sk-1234567890\u200Babcdef\uFEFF'), 'sk-1234567890abcdef');
+  assert.equal(cleanApiKey('Bearer sk-1234567890abcdef'), 'sk-1234567890abcdef');
+  assert.equal(cleanApiKey('"sk-1234567890abcdef"'), 'sk-1234567890abcdef');
+  assert.equal(cleanApiKey('`sk-1234567890abcdef`'), 'sk-1234567890abcdef');
+  assert.equal(cleanApiKey('sk-1234567890abcdef \\\n'), 'sk-1234567890abcdef');
+});
+
 // ── Suite 3: Test Connection & Chat Payload Inspection ──
 console.log('\nSuite 3: Test Connection & Chat Payload Inspection');
 
@@ -278,6 +287,7 @@ await test('3.2 Remote HTTP 401 error is parsed truthfully and masks API key in 
     assert.equal(res.errorCategory, 'auth');
     assert.ok(!res.message.includes('secret_key_abcdef'), 'API key must be redacted from error message');
     assert.ok(res.message.includes('[REDACTED_API_KEY]'));
+    assert.ok(res.suggestedAction.includes('Inception Platform developer dashboard'), 'Must guide user to developer platform');
   } finally {
     globalThis.fetch = originalFetch;
   }

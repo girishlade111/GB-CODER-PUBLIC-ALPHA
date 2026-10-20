@@ -906,7 +906,12 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
         } else if (!keyVerificationResult.success && (keyVerificationResult.httpStatus === 401 || keyVerificationResult.httpStatus === 403) && (result.httpStatus === 401 || result.httpStatus === 403)) {
           // Case B: Both /key and inference return 401
           result.message = `[Diagnostic Case B: Key Rejected Upstream] ${result.message}`;
-          result.suggestedAction = `Your API key was rejected by ${selectedProviderId} on both key inspection and inference. Check for revoked keys or generate a fresh key in your OpenRouter console.`;
+          if (selectedProviderId === 'inception' || targetBaseUrl.includes('inceptionlabs.ai')) {
+            result.suggestedAction =
+              'Inception Labs rejected your API key (401). Verify that your key was created on the developer platform dashboard (https://inceptionlabs.ai/dashboard) rather than the consumer playground, and ensure your account has an active plan or billing setup.';
+          } else {
+            result.suggestedAction = `Your API key was rejected by ${activeProviderObj?.name || selectedProviderId} on both key inspection and inference. Check for revoked keys or generate a fresh key in your ${activeProviderObj?.name || selectedProviderId} console.`;
+          }
         } else if (keyVerificationResult.success && result.success) {
           // Case C: Both succeed
           result.message = `[Diagnostic Case C: Fully Authenticated] ${result.message}`;

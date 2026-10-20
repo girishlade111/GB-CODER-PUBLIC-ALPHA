@@ -746,7 +746,12 @@ export class OpenAiCompatibleProvider implements IAiProvider {
         errorCategory = 'auth';
         const providerDetail = sanitizedError ? ` - ${sanitizedError}` : '';
         sanitizedError = `Authentication failed (${response.status}): Invalid API key for ${this.name}${providerDetail}`;
-        suggestedAction = 'Check that your API key is valid, active, and has permissions for this endpoint.';
+        if (this.id === 'inception' || url.includes('inceptionlabs.ai')) {
+          suggestedAction =
+            'Inception Labs uses separate accounts for the consumer playground vs. the developer platform. Generate your API key from the Inception Platform developer dashboard (https://inceptionlabs.ai/dashboard), and ensure your account has an active plan or billing setup.';
+        } else {
+          suggestedAction = `Check that your API key is valid, active, and has permissions in your ${this.name} dashboard.`;
+        }
       } else if (response.status === 404) {
         errorCategory = 'not_found';
         suggestedAction = `The endpoint or model "${targetModel}" was not found. Verify the model ID and Base URL.`;

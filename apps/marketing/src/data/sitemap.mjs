@@ -10,6 +10,9 @@ export const MULTILINGUAL_PATHS = [
   "blog/react-vue-browser-ide",
   "blog/browser-project-backup-restore",
   "blog/how-gb-coder-works",
+  "blog/browser-ide-vs-desktop-ide",
+  "blog/browser-ide-github-sync",
+  "blog/browser-ide-deploy-vercel-netlify",
   "about",
   "contact",
 ];

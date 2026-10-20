@@ -35,11 +35,19 @@ export function extractOrigin(url: string): string {
  */
 export function cleanApiKey(rawKey?: string): string {
   if (!rawKey) return '';
-  let cleaned = rawKey.trim();
+  // Strip zero-width characters, BOM, and direction marks
+  let cleaned = rawKey.replace(/[\u200B-\u200D\uFEFF\u200E\u200F]/g, '').trim();
   if (!cleaned) return '';
 
-  // Strip enclosing double or single quotes
-  if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+  // Strip trailing backslashes often copied from curl commands
+  cleaned = cleaned.replace(/\\+$/, '').trim();
+
+  // Strip enclosing double, single, or backtick quotes
+  if (
+    (cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+    (cleaned.startsWith("'") && cleaned.endsWith("'")) ||
+    (cleaned.startsWith('`') && cleaned.endsWith('`'))
+  ) {
     cleaned = cleaned.slice(1, -1).trim();
   }
 
@@ -47,6 +55,9 @@ export function cleanApiKey(rawKey?: string): string {
   if (/^bearer\s+/i.test(cleaned)) {
     cleaned = cleaned.replace(/^bearer\s+/i, '').trim();
   }
+
+  // Strip any remaining zero-width or control characters
+  cleaned = cleaned.replace(/[\x00-\x1F\x7F]/g, '');
 
   return cleaned.trim();
 }
