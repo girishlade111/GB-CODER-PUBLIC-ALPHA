@@ -16,6 +16,11 @@ export const MULTILINGUAL_PATHS = [
   "blog/browser-ide-api-keys-environment-variables",
   "about",
   "contact",
+  "blog/byok-ai-assisted-coding-guide",
+  "blog/screenshot-to-code-visual-prototyping",
+  "blog/voice-controlled-coding-browser-ide",
+  "blog/mobile-testing-qr-code-popout-preview",
+  "blog/project-snapshots-revision-diffs-browser-ide",
 ];
 export const ENGLISH_PATHS = [
   "privacy-policy",
