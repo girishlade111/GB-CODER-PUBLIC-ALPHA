@@ -64,6 +64,8 @@
     "audit:e2e:byok": "node scripts/e2e-byok-provider-system.mjs",
     "audit:security:byok": "node scripts/verify-byok-security-gate.mjs",
     "audit:ecosystem": "node scripts/verify-multi-provider-ecosystem.mjs",
+    "audit:inception": "node scripts/verify-inception-provider.mjs",
+    "audit:e2e:inception": "node scripts/e2e-inception-provider-acceptance.mjs",
     "audit:e2e:boot": "node scripts/e2e-boot-recovery.mjs",
     "audit:e2e:multi-provider": "node scripts/e2e-multi-provider-functional-acceptance.mjs"
   },

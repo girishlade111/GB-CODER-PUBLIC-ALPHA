@@ -752,6 +752,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     try {
       if (apiKeyInput.trim()) {
         keyManager.setApiKey(targetId, apiKeyInput, persistInSession, targetBaseUrl);
+        keyManager.authorizeOrigin(targetId, targetBaseUrl);
         if (isCustom) {
           keyManager.authorizeOrigin('custom', targetBaseUrl);
         }
@@ -826,6 +827,15 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     const defaultUrl = !isCustom ? providerRegistry.getProvider(selectedProviderId).defaultBaseUrl : '';
     const targetBaseUrl = customBaseUrl.trim() || defaultUrl;
 
+    const isLocalUrl = /^(http:\/\/)?(localhost|127\.0\.0\.1|\[::1\])(:\d+)?/i.test(targetBaseUrl);
+    if (!apiKeyInput.trim() && !isLocalUrl && selectedProviderId !== 'mock') {
+      setIsTesting(false);
+      setFormErrors({
+        apiKey: `An API key is required before testing connection to ${activeProviderObj?.name || selectedProviderId}.`,
+      });
+      return;
+    }
+
     // Strict model resolution
     let targetModel = '';
     if (isCustom) {
@@ -867,6 +877,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       // Temporarily stash key in keyManager for diagnostic
       if (apiKeyInput.trim()) {
         keyManager.setApiKey(targetId, apiKeyInput, persistInSession, targetBaseUrl);
+        keyManager.authorizeOrigin(targetId, targetBaseUrl);
         if (isCustom) {
           keyManager.authorizeOrigin('custom', targetBaseUrl);
         }
@@ -1698,7 +1709,9 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                         Models <span className="text-rose-400">*</span>
                       </label>
                       <p className="text-[10px] text-slate-500">
-                        Fetch available models from this provider or add one manually.
+                        {activeProviderObj?.browserCorsSupport === false
+                          ? 'Automatic discovery is restricted by provider CORS. Use bundled models or add manually.'
+                          : 'Fetch available models from this provider or add one manually.'}
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -2155,6 +2168,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                 {/* Diagnostic Result Output */}
                 {diagnosticResult && (
                   <div
+                    data-testid="diagnostic-result-alert"
                     className={`rounded-lg border p-2.5 text-xs space-y-1 mt-2 ${
                       diagnosticResult.success
                         ? 'border-emerald-500/30 bg-emerald-950/20 text-emerald-300'

@@ -9,6 +9,7 @@ export const MULTILINGUAL_PATHS = [
   "blog/html-css-javascript-live-preview",
   "blog/react-vue-browser-ide",
   "blog/browser-project-backup-restore",
+  "blog/how-gb-coder-works",
   "about",
   "contact",
 ];

@@ -207,6 +207,24 @@ export function validateEndpointUrl(endpointUrl: string): { valid: boolean; erro
   return { valid: true };
 }
 
+/**
+ * Checks whether an endpoint URL targets a genuine local loopback host (localhost, 127.0.0.1, [::1]).
+ */
+export function isLoopbackEndpoint(rawUrl: string): boolean {
+  try {
+    const parsed = new URL(rawUrl);
+    const hostname = parsed.hostname.toLowerCase();
+    return (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '[::1]' ||
+      hostname === '::1'
+    );
+  } catch {
+    return false;
+  }
+}
+
 export class OpenAiCompatibleProvider implements IAiProvider {
   public readonly id: AiProviderId;
   public readonly name: string;
@@ -334,7 +352,8 @@ export class OpenAiCompatibleProvider implements IAiProvider {
       this.customHeaders['Authorization'] ||
       options.customHeaders?.['Authorization']
     );
-    if (!hasAuth && (this.id === 'openai' || this.id === 'openrouter')) {
+    const isLocal = isLoopbackEndpoint(baseUrl);
+    if (!hasAuth && !isLocal && this.id !== 'mock') {
       throw new Error(`API key required for ${this.name}. Configure your key in GB Assist settings.`);
     }
 
@@ -619,6 +638,19 @@ export class OpenAiCompatibleProvider implements IAiProvider {
 
     const url = `${resolvedUrl}/chat/completions`;
     const targetOrigin = extractOrigin(url);
+    const isLocal = isLoopbackEndpoint(url);
+
+    if (!isLocal && this.id !== 'mock' && (!apiKey || !apiKey.trim())) {
+      return {
+        success: false,
+        latencyMs: 0,
+        message: `API key is required before testing connection to ${this.name}.`,
+        errorDetails: 'Missing API key.',
+        endpointTested: url,
+        errorCategory: 'config',
+        suggestedAction: `Please enter an API key for ${this.name} before running connection diagnostics.`,
+      };
+    }
 
     if (apiKey && apiKey.trim()) {
       const authorized = keyManager.isKeyOrProviderAuthorized(
@@ -839,9 +871,9 @@ export class OpenAiCompatibleProvider implements IAiProvider {
     // Determine target verification URL
     // OpenRouter has dedicated GET /key endpoint
     // OpenAI and other OpenAI-compatible endpoints verify credentials via GET /models
-    let verifyEndpoint = `${resolvedUrl}/key`;
-    if (this.id === 'openai') {
-      verifyEndpoint = `${resolvedUrl}/models`;
+    let verifyEndpoint = `${resolvedUrl}/models`;
+    if (this.id === 'openrouter') {
+      verifyEndpoint = `${resolvedUrl}/key`;
     }
 
     const headers = this.resolveHeaders(effectiveApiKey, customHeaders);
@@ -942,7 +974,7 @@ export class OpenAiCompatibleProvider implements IAiProvider {
           endpointTested: verifyEndpoint,
           errorCategory: 'auth',
           keyState: 'invalid',
-          suggestedAction: 'The provider rejected your API key. Generate a new key in your OpenRouter account and paste it here.',
+          suggestedAction: `The provider rejected your API key. Generate a new key in your ${this.name} account and paste it here.`,
         };
       }
 

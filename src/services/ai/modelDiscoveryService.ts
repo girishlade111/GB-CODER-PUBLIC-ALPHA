@@ -397,12 +397,13 @@ export async function discoverModels(params: DiscoverModelsParams): Promise<Mode
 
       const metadata = (typeof item === 'object' && item ? item : {}) as {
         supported_parameters?: string[];
+        supported_features?: string[];
         capabilities?: { function_calling?: boolean };
         architecture?: { input_modalities?: unknown[]; output_modalities?: unknown[] };
         pricing?: { prompt?: string; completion?: string };
       };
       models.push({
-        supportsToolCalling: Array.isArray(metadata.supported_parameters) ? metadata.supported_parameters.includes('tools') :
+        supportsToolCalling: Array.isArray(metadata.supported_features) ? metadata.supported_features.includes('tools') : Array.isArray(metadata.supported_parameters) ? metadata.supported_parameters.includes('tools') :
           typeof metadata.capabilities?.function_calling === 'boolean' ? metadata.capabilities.function_calling : undefined,
         inputModalities: Array.isArray(metadata.architecture?.input_modalities) ? metadata.architecture.input_modalities.filter((m: unknown) => typeof m === 'string') : undefined,
         outputModalities: Array.isArray(metadata.architecture?.output_modalities) ? metadata.architecture.output_modalities.filter((m: unknown) => typeof m === 'string') : undefined,
