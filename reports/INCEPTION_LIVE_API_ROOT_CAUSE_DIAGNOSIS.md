@@ -3,104 +3,114 @@
 **Date:** October 20, 2026  
 **Repository:** `girishlade111/GB-CODER-PUBLIC-ALPHA`  
 **Branch:** `feature/multilingual-marketing-seo`  
-**Initial Baseline Commit:** `3c0de66`  
-**Final Local Commit:** Pending local commit  
-**Final Verdict:** `CONDITIONAL PASS` (All application-side defects identified, resolved, and verified; live external inference BLOCKED solely by upstream provider credentials rejection)
+**Latest Local Commit:** `3c45e5b`  
+**Final Live Provider Status:** `CONDITIONAL PASS` (All application-side code defects, key sanitization vulnerabilities, and diagnostic reporting issues resolved and verified; live external inference NOT VERIFIED pending user-controlled key invocation)
 
 ---
 
-## 1. Executive Summary & Diagnostic Context
+## 1. Executive Summary & Diagnostic Execution Evidence
 
-The user reported that after entering their Inception Labs API key in GB Coder:
-1. **Fetch Models** returned: `"Browser CORS restriction: Cannot access provider models endpoint from the browser."`
-2. **Test Connection** returned: `"HTTP 401: Incorrect API key provided."`
-3. **Chat** could not proceed.
-4. **Agent tool calling** could not be live-verified against the external API.
+### Diagnostic Execution Audit
+* **Was a request executed with a user-supplied private Inception key?** **NO**.
+* **Evidence:**
+  1. The temporary localhost diagnostic server (`127.0.0.1:4288`, task `task-1018`) was launched and remained active for 10 minutes until hitting its automated safety timeout (`[DIAG SERVER] Safety timeout reached (10 min). Shutting down...`). No HTTP payload or key was received.
+  2. All direct terminal network probes performed by the agent against `https://api.inceptionlabs.ai` were executed strictly with **dummy/synthetic test tokens** (`sk-dummy-key-test`, `sk-invalid-key-probe`).
+  3. The agent has not extracted, read, printed, or handled the user's private key.
 
-This investigation conducted direct network probes against `api.inceptionlabs.ai`, examined the browser HTTP transport behavior, audited key sanitization and propagation in GB Coder, and identified both upstream provider constraints and application-side sanitization defects.
+### Actual Meaning of the Observed HTTP 401
+* **Dummy-Key Authentication Rejection:** **VERIFIED**. Direct terminal probes proved that `api.inceptionlabs.ai/v1/chat/completions` actively validates the `Authorization: Bearer <key>` header and returns HTTP 401 `{"error":{"message":"Incorrect API key provided","code":"invalid_api_key"}}` for unrecognized keys.
+* **User's Actual API-Key Validity:** **NOT VERIFIED**. Because the agent has not evaluated the user's private key, the observed HTTP 401 in the user's previous in-app test cannot be assumed to be an invalid key from the provider.
+* **Live Chat Inference with Real Key:** **NOT VERIFIED**. No billable inference request was executed.
 
 ---
 
-## 2. Direct Network Probes & Upstream Provider Evidence
+## 2. Capabilities & Protocol Verification Matrix
 
-### Probe 1: Direct Non-Browser `GET /v1/models`
-* **Request:** `GET https://api.inceptionlabs.ai/v1/models` with `Accept: application/json`
-* **Response Status:** `200 OK` (Latency: ~474ms, Content-Type: `application/json`)
-* **Key Finding:** The endpoint returns `200 OK` whether an Authorization header is provided, omitted, or contains a dummy key. It is a public catalog cached by AWS CloudFront (`x-cache: Hit from cloudfront`).
-* **CORS Behavior:** While HTTP `OPTIONS` preflight returns `Access-Control-Allow-Origin: <origin>`, the CloudFront cached `GET` response **omits** `Access-Control-Allow-Origin` entirely. Consequently, any browser `fetch()` to `/v1/models` triggers a browser-level CORS failure (`TypeError: Failed to fetch`).
-* **Conclusion:** `GET /models` cannot be accessed from browser JavaScript without a proxy, nor can it be used as a non-billable key verification endpoint because Inception Labs does not authenticate it.
+| Capability / Dimension | Status | Evidence & Details |
+| :--- | :---: | :--- |
+| **Endpoint Reachability** | **VERIFIED** | Direct HTTP connection to `https://api.inceptionlabs.ai` succeeds with ~474ms latency. |
+| **CORS on `/v1/models`** | **VERIFIED UNSUPPORTED** | `GET /v1/models` is a public CloudFront-cached catalog (`x-cache: Hit from cloudfront`). It omits `Access-Control-Allow-Origin` on GET responses. In-browser `fetch()` correctly throws a CORS error. Handled truthfully in GB Coder via `browserCorsSupport: false` and manual model selection. |
+| **CORS on `/v1/chat/completions`** | **VERIFIED SUPPORTED** | Both `OPTIONS` preflight and `POST` directly reflect `Access-Control-Allow-Origin: <requester-origin>`. In-browser chat completions do **not** suffer from CORS restrictions. |
+| **Model ID Validation** | **VERIFIED** | Probing with an unrecognized model returns HTTP 400 listing accepted models (`mercury, mercury-2, mercury-2.5, mercury-3...`). Model `mercury-2.5` is verified as officially supported. |
+| **Dummy-Key Rejection** | **VERIFIED** | Direct terminal probe returns HTTP 401 `{"error":{"message":"Incorrect API key provided","code":"invalid_api_key"}}`. |
+| **User's Private Key Validity** | **NOT VERIFIED** | No test was executed with the user's private key. |
+| **Live Chat Inference (Real Key)** | **NOT VERIFIED** | No billable completion was executed with user credentials. |
+| **Streaming & Tool Calling Architecture** | **VERIFIED (LOCAL/MOCK)** | SSE streaming parsing and multi-tool delta assembly verified in unit and Chromium E2E acceptance suites. |
 
-### Probe 2: Direct `POST /v1/chat/completions` & CORS Reflection
-* **Request:** `OPTIONS` and `POST` to `https://api.inceptionlabs.ai/v1/chat/completions` with headers `Origin: http://localhost:4202`, `Authorization: Bearer <key>`, `Content-Type: application/json`.
-* **OPTIONS Status:** `200 OK` (`access-control-allow-origin: http://localhost:4202`, `access-control-allow-methods: DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT`, `access-control-allow-headers: authorization,content-type`).
-* **POST Status:** `401 Unauthorized` with `access-control-allow-origin: http://localhost:4202`.
-* **Response Body:** `{"error":{"message":"Incorrect API key provided","type":"authentication_error","param":null,"code":"invalid_api_key"}}`.
-* **Conclusion:** Unlike `/models`, `POST /v1/chat/completions` **HAS FULL BROWSER CORS SUPPORT**. The browser receives the exact upstream HTTP 401 JSON body directly from Inception Labs.
+---
 
-### Probe 3: Model Identifier Validation
-* Probing `POST /v1/chat/completions` with an unrecognized model returned:
-  ```json
-  {
-    "error": {
-      "message": [
-        {
-          "type": "value_error",
-          "loc": ["body", "model"],
-          "msg": "Value error, Model must be one of the following: mercury, mercury-2, mercury-2.5, mercury-3, mercury-3-preview-1002, mercury-3-preview-1014, mercury-coder, mercury-coder-small, mercury-small"
-        }
-      ],
-      "type": "invalid_request_error"
-    }
+## 3. Temporary Server & Process Termination Audit
+
+* **Localhost Diagnostic Server (`127.0.0.1:4288`):** **STOPPED**.
+  - `Get-NetTCPConnection -LocalPort 4288` returns exit code 1 (no active connections or listeners).
+  - Background task `task-1018` exited cleanly on timeout.
+* **Temporary Files & Processes:**
+  - `scripts/temp-diag-server.mjs`: Permanently deleted (`Test-Path` returns `False`).
+  - `scripts/inception-live-diag.ps1`: Permanently deleted (`Test-Path` returns `False`).
+  - `manage_task list`: Confirms zero background tasks currently active.
+  - No credential or user input was ever written to disk or preserved in memory.
+
+---
+
+## 4. `cleanApiKey` Normalization Policy Audit
+
+Inspection of `cleanApiKey` in `src/services/ai/keyManager.ts` confirmed that the normalization policy strictly removes non-printable formatting artifacts while preserving legitimate credential bytes:
+
+```typescript
+export function cleanApiKey(rawKey?: string): string {
+  if (!rawKey) return '';
+  // 1. Strip non-printable unicode artifacts: zero-width space, joiners, BOM, direction marks
+  let cleaned = rawKey.replace(/[\u200B-\u200D\uFEFF\u200E\u200F]/g, '').trim();
+  if (!cleaned) return '';
+
+  // 2. Strip trailing line-continuation backslashes often copied from curl commands
+  cleaned = cleaned.replace(/\\+$/, '').trim();
+
+  // 3. Strip enclosing symmetric quotes (double, single, or backticks)
+  if (
+    (cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+    (cleaned.startsWith("'") && cleaned.endsWith("'")) ||
+    (cleaned.startsWith('`') && cleaned.endsWith('`'))
+  ) {
+    cleaned = cleaned.slice(1, -1).trim();
   }
-  ```
-* **Conclusion:** `mercury-2.5` is an officially recognized model on Inception Labs' API gateway.
+
+  // 4. Strip accidental leading "Bearer " prefix from header specifications
+  if (/^bearer\s+/i.test(cleaned)) {
+    cleaned = cleaned.replace(/^bearer\s+/i, '').trim();
+  }
+
+  // 5. Strip non-printable ASCII control characters (null, tabs, line breaks)
+  cleaned = cleaned.replace(/[\x00-\x1F\x7F]/g, '');
+
+  return cleaned.trim();
+}
+```
+
+### Normalization Policy Principles:
+* **Preserved:** All standard printable ASCII characters used in API keys across all providers: `[A-Za-z0-9+/=_-]`, colons, hyphens, and dots.
+* **Stripped:** Only invisible non-printable unicode characters (`\u200B`, `\uFEFF`, etc.), control characters (`\x00-\x1F`), shell line-continuation backslashes (`\`), matching enclosing quotes (`"..."`, `'...'`, `` `...` ``), and redundant `Bearer ` prefixes.
+* **Safety:** Legitimate credential bytes are never mutated.
 
 ---
 
-## 3. Credential-Routing & Application Defects Identified
+## 5. Confirmed Application Defects & Source Corrections
 
-### Defect 1: Incomplete Key Sanitization (`cleanApiKey`)
-* **File:** `src/services/ai/keyManager.ts`
-* **Issue:** `cleanApiKey` only stripped quotes and the `Bearer ` prefix. When users copy-paste keys from web browsers or terminal documentation, invisible zero-width spaces (`\u200B`, `\u200C`, `\u200D`, `\uFEFF`), non-breaking spaces (`\u00A0`), control characters (`\x00-\x1F`), line-continuation backslashes (`\`), or enclosing backticks (`` ` ``) can remain in the string.
-* **Impact:** Any hidden character in the key causes Inception Labs' hashing/database lookup to fail, triggering HTTP 401 `invalid_api_key`.
-* **Fix:** Hardened `cleanApiKey` to purge all zero-width characters, BOM, direction marks, control characters, trailing backslashes, and backticks.
-
-### Defect 2: Hardcoded Provider Name in Diagnostic Guidance
-* **File:** `src/components/vscode/AiProviderSettingsModal.tsx`
-* **Issue:** In `handleRunDiagnostic`, Case B (both key inspection and inference return 401) had hardcoded recommendation: `"Check for revoked keys or generate a fresh key in your OpenRouter console."`
-* **Fix:** Replaced with dynamic provider resolution (`${activeProviderObj?.name || selectedProviderId}`) and added tailored guidance for Inception Labs.
-
-### Defect 3: Redundant Error Message Prefixing & Generic 401 Advice
-* **File:** `src/services/ai/providers/openaiCompatibleProvider.ts`
-* **Issue:** On HTTP 401, error messages were formatted as `Connection failed (401): Authentication failed (401): Invalid API key for ... - Incorrect API key provided`. Furthermore, suggestedAction was generic.
-* **Fix:** Streamlined error message formatting and added explicit guidance explaining that Inception Labs uses separate accounts for the consumer playground vs. the developer platform (`https://inceptionlabs.ai/dashboard`).
+1. **Defect:** `cleanApiKey` previously allowed zero-width spaces (`\u200B`), BOM (`\uFEFF`), and trailing backslashes copied from documentation snippets into the key string.
+   - **Fix:** Hardened `cleanApiKey` in `src/services/ai/keyManager.ts` and added regression tests in `scripts/verify-inception-provider.mjs`.
+2. **Defect:** Hardcoded `"OpenRouter console"` in Case B diagnostic recommendation in `AiProviderSettingsModal.tsx`.
+   - **Fix:** Updated to dynamically resolve provider name (`${activeProviderObj?.name || selectedProviderId}`) and provide tailored Inception Platform developer dashboard guidance.
+3. **Defect:** Redundant error prefixing in `testConnection` (`"Connection failed (401): Authentication failed (401): ..."`).
+   - **Fix:** Streamlined message formatting in `src/services/ai/providers/openaiCompatibleProvider.ts`.
 
 ---
 
-## 4. Diagnostic Matrix Assessment (Phase 5)
-
-| Case | Scenario | Observed Evidence | Verdict |
-| :---: | :--- | :--- | :--- |
-| **Case A** | Direct API = 200, GB Coder = 401 | Not observed | N/A |
-| **Case B** | **Direct API = 401, GB Coder = 401** | **Observed**: Both direct terminal curl/node probes and in-app browser `testConnection` receive identical HTTP 401 `{"error":{"message":"Incorrect API key provided","code":"invalid_api_key"}}` from Inception Labs. | **UPSTREAM PROVIDER REJECTION** |
-| **Case C** | Direct API = 200, Browser = CORS | Observed on `GET /models` only (CloudFront CDN cache behavior). Chat completions do not suffer from CORS. | Handled via manual model entry & `browserCorsSupport: false` |
-| **Case D** | Direct API = 400 | Observed when model ID is invalid; resolved by using `mercury-2.5`. | Resolved |
-| **Case E** | Direct API = 500 | Not observed. | N/A |
-| **Case F** | Direct API = 200, GB Coder = 200, Chat fails | Not observed. | N/A |
-
-### Why Inception Labs Rejects the Key (Case B Root Causes)
-1. **Playground vs. Platform Account Mismatch:** Inception Labs officially documents that the consumer web playground account is separate from the Inception Platform developer account. API keys created on the consumer playground cannot authenticate to `api.inceptionlabs.ai`. They must be generated from the developer platform at `https://inceptionlabs.ai/dashboard`.
-2. **Account Billing Status:** Newly created developer accounts may require selecting an initial tier or adding payment details before the API gateway routes tokens.
-3. **Key Revocation:** If a key was revoked or regenerated in the dashboard, existing keys are invalidated immediately.
-
----
-
-## 5. Verification Matrix & Audit Results
+## 6. Automated Verification Matrix
 
 | Test Suite | Purpose | Tests | Status |
 | :--- | :--- | :---: | :---: |
 | `npm run typecheck` | TypeScript Compiler Check | — | **0 Errors (PASS)** |
-| `npm run audit:inception` | Inception Protocol, Models & Hardened `cleanApiKey` | 10 | **10 / 10 PASS** |
+| `npm run audit:inception` | Inception Protocol, Models & `cleanApiKey` | 10 | **10 / 10 PASS** |
 | `npm run audit:e2e:inception` | Playwright Chromium E2E Acceptance (Port 4202) | 9 | **9 / 9 PASS** |
 | `npm run audit:byok` | BYOK KeyManager & Security Invariants | 38 | **38 / 38 PASS** |
 | `npm run audit:security:byok` | Outbound Security & Origin Isolation | 13 | **13 / 13 PASS** |
@@ -110,14 +120,11 @@ This investigation conducted direct network probes against `api.inceptionlabs.ai
 
 ---
 
-## 6. Actionable User Steps to Complete Live External Verification
+## 7. Actionable User Next Steps for In-App Live Verification
 
-1. Log into the official **Inception Platform Developer Dashboard**:  
-   👉 [https://inceptionlabs.ai/dashboard](https://inceptionlabs.ai/dashboard) (ensure this is the developer portal, not the consumer playground).
-2. Confirm your account is active and has an API plan or billing method configured.
-3. Generate a fresh API key from the **API Keys** section and copy it.
-4. Open GB Coder at `http://localhost:4202/app/ide`.
-5. Open Provider Settings (sliders icon) -> Select **Inception Labs (Mercury)**.
-6. Paste the key into the API key field. (The hardened `cleanApiKey` will automatically purge any accidental whitespace, zero-width characters, or backticks).
-7. Check the probe consent checkbox and click **Test Connection** with model `mercury-2.5`.
-8. Once connection succeeds (200 OK), click **Save Configuration & Select Active Model** to use Inception Labs for Chat and Agent mode.
+Because the user prefers in-app verification using their already entered key:
+1. Ensure your Inception Labs key was generated on the **Inception Platform developer dashboard** at [https://inceptionlabs.ai/dashboard](https://inceptionlabs.ai/dashboard) (rather than the consumer web playground), and that an active plan or billing setup is present.
+2. In GB Coder (`http://localhost:4202/app/ide`), open Provider Settings -> **Inception Labs (Mercury)**.
+3. Enter or re-paste your key (the hardened `cleanApiKey` will automatically strip any invisible copy-paste artifacts).
+4. Select model `mercury-2.5`, check the probe consent checkbox, and click **Test Connection**.
+5. Once connection succeeds, click **Save Configuration & Select Active Model** to chat or run autonomous agent tasks.
