@@ -13,6 +13,7 @@ export const MULTILINGUAL_PATHS = [
   "blog/browser-ide-vs-desktop-ide",
   "blog/browser-ide-github-sync",
   "blog/browser-ide-deploy-vercel-netlify",
+  "blog/browser-ide-api-keys-environment-variables",
   "about",
   "contact",
 ];

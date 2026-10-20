@@ -483,6 +483,70 @@ npm run dev
         relatedDocsLink: '/docs#getting-started',
         relatedDocsLabel: 'Read the full GB Coder documentation →',
       },
+      'browser-ide-api-keys-environment-variables': {
+        slug: 'browser-ide-api-keys-environment-variables',
+        title: 'API Keys and Environment Variables in a Browser IDE',
+        description: 'Where API keys and environment variables belong in a browser IDE: client-side exposure, safe storage, token scoping, rotation, deployment, incident response.',
+        date: '2026-10-20',
+        author: 'Girish Lade',
+        tags: ['Security', 'API Keys', 'Environment Variables', 'Browser IDE', 'Best Practices'],
+        intro: 'Every browser IDE meets the same question sooner or later: where do the keys go? The project needs an API endpoint, the AI panel needs a provider key, and the deployment needs an account token. On a desktop machine those values can live in a shell profile or an untracked file. In a browser tab the boundary is different. Anything shipped with the page can be read by the page, and anything stored in the browser profile belongs to that profile. This guide sets out a practical model: which values are safe to publish, which must never reach the client, how GB Coder handles provider credentials, and what to do when a key leaks. It is for people who want the convenience of a browser IDE without pretending that a browser tab is a secret vault.',
+        sections: [
+          {
+            heading: '1. A browser tab is a public build target',
+            body: 'The first rule is uncomfortable but simple: a static web app cannot keep a secret. The browser downloads HTML, CSS, and JavaScript, then executes them on the user\'s machine. Anyone can open DevTools, read the network panel, search the bundle, or set a breakpoint and inspect a variable. Minifying the code, splitting it into chunks, or hiding a value in a configuration file changes the effort, not the outcome. A browser IDE adds a sandbox for running project code, but the IDE\'s own interface still runs on the same origin and must read whatever it needs to function. The sandbox is not a vault for values the interface itself has to use. The useful test is straightforward: if a value must be available to code running in the tab, assume the person using the tab can read it, and assume any script that runs on the same origin can read it too. That does not make browser development unsafe. It defines the boundary. Public identifiers can live there; server credentials cannot.',
+          },
+          {
+            heading: '2. What an environment variable means in a static app',
+            body: 'In a Node.js server, an environment variable is read at runtime from the process. In a Vite, Create React App, Next.js, or Astro build, public environment variables are different: the bundler replaces references with literal strings while it builds. Vite exposes variables prefixed with VITE_ through import.meta.env; Create React App uses REACT_APP_; Next.js uses NEXT_PUBLIC_; Astro uses PUBLIC_. The prefix is a naming convention, not a security control. Once a value is inlined, it is part of the JavaScript that every visitor downloads. A variable without a public prefix is normally unavailable to client code, which is why server-only values must be read by a server or a serverless function, not by a static page. A .env file is a development and build input, not a runtime secret store. It is useful for local configuration and for keeping values out of source control, but it does not make a value private after the build.',
+            codeSnippet: `# Safe to expose: a public endpoint
+VITE_API_URL=https://api.example.com
+
+# Never expose: keep this on a server
+STRIPE_SECRET_KEY=REPLACE_WITH_SERVER_SECRET`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '3. Which keys can live in the browser',
+            body: 'Some keys are designed to be public. A Stripe publishable key identifies an account and creates payment tokens; the secret key actually moves money and must stay on a server. A Supabase anon key is safe only when row-level security policies are correct. A Firebase web configuration identifies a project but does not grant administrative access. Map and usage-reporting keys are often restricted by domain or API. These values can ship to the browser, but they still deserve limits: allowed origins, API restrictions, least-privilege roles, quotas, and alerts. The opposite category is easier to state. Service-role keys, database passwords, SMTP credentials, signing secrets, and private AI provider keys must never be in a static bundle. A provider key that belongs to the application is especially dangerous: anyone who finds it can spend the application\'s money. A key that belongs to the user is a different case. It is still a bearer credential, but it is the user\'s own, and the goal is to keep it in the user\'s browser rather than in the project or the repository.',
+          },
+          {
+            heading: '4. How GB Coder handles provider credentials',
+            body: 'GB Coder\'s AI panel is bring-your-own-key. The key manager keeps provider keys in memory by default. It does not write them to localStorage. A user can explicitly opt in to sessionStorage persistence, which scopes the value to the current tab and normally clears it when the tab closes. The key is removed from memory and session storage when the user clears it. The manager also binds each key to an authorized endpoint origin, and an outbound request gate checks that a credential is not sent to a destination it was not approved for. Provider errors pass through a redaction layer that strips key patterns and active keys before the message reaches the interface or a log. Custom provider metadata is stored in localStorage, but headers marked secret are scrubbed before persistence and must be entered again. Requests go directly from the browser to the provider endpoint; GB Coder does not proxy the key through a LadeStack server. These measures reduce accidental persistence and cross-origin leakage. They do not change the basic rule: any script that can run on the same origin can read what the page can read. Use a clean profile for sensitive work, and do not install untrusted extensions.',
+          },
+          {
+            heading: '5. Project secrets, .env files, and build-time inlining',
+            body: 'Keep secrets out of the project tree. Add .env and its local variants to .gitignore, and commit a .env.example with placeholder names instead. If a project uses Vite, remember that every VITE_ variable is inlined into the production bundle. A value that was convenient during local development becomes public the moment it is used in a production build. Before deploying, inspect the generated assets for key patterns, and treat a hit as an incident rather than a warning. GitHub secret scanning and push protection can catch some known token formats, but they are a backstop, not a substitute for keeping the values out of the repository. A browser IDE\'s ZIP export includes project files. If a .env file is inside the project, it travels with the backup. A backup is not an encrypted vault. Store exports somewhere private, and delete old copies when they are no longer needed. The same applies to screenshots, issue reports, and chat messages: a key pasted into any of them has left the browser.',
+            codeSnippet: `# .gitignore
+.env
+.env.local
+.env.*.local`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '6. GitHub and deployment tokens',
+            body: 'GitHub personal access tokens and deployment tokens are more powerful than they look. A classic token with repository and workflow scopes can read private code, change files, and trigger releases. Prefer fine-grained tokens with a single repository, an explicit permission list, and an expiration date. Give a token only the permissions the task needs: contents read and write for a sync, not administration or billing. Create separate tokens for separate devices or purposes, and revoke them when the work is done. Deployment tokens for Vercel or Netlify can publish, replace, or delete projects. If the provider supports project or team scoping, use it; if it supports expiration, set one. Paste the token into the deployment panel only when needed, and do not save it in a project file. In CI, use repository or organization secrets rather than a committed .env, and remember that pull requests from forks normally do not receive secrets. A token that has been screenshotted, shared in a chat, or committed to a public repository should be treated as compromised even if it was deleted a second later.',
+          },
+          {
+            heading: '7. AI provider keys: BYOK without surprises',
+            body: 'An AI provider key is a bearer credential with a bill attached. Anyone who has it can send requests, consume quota, and incur charges. Use a key that is scoped to a project, set a spending limit where the provider offers one, and use a separate key for experiments rather than the organization\'s master key. Check usage regularly, especially after sharing a device or installing a new extension. Local providers such as Ollama, LM Studio, and vLLM do not need a cloud key, but their endpoints are still services on the machine. Do not expose a local endpoint to the public internet just to make a demo work. If a custom provider points at a proxy, the proxy can see the key; use only a proxy you control and understand. Prompt injection is a related risk: a file, a web page, or a pasted error message can contain instructions aimed at the assistant. Keep secrets out of prompts and out of files that the assistant is allowed to read. If a key appears in a conversation, rotate it.',
+          },
+          {
+            heading: '8. Shared computers, extensions, and XSS',
+            body: 'A shared or lab computer deserves a different routine. Use a private browser profile, do not opt in to session persistence, and close the tab when you finish. If the browser offers to save the key, decline. Clear the site\'s storage if you suspect it was retained. Browser extensions are another part of the boundary: an extension with broad host permissions can often read page content or storage, and a malicious update can arrive after you install it. Use a minimal profile for work that involves credentials. Cross-site scripting is the classic web risk in this context. If an attacker can run a script on the IDE\'s origin, that script can read localStorage and sessionStorage and can make requests while the page is open. Keep dependencies current, avoid untrusted third-party scripts, and consider a content security policy on the deployed site. Clipboard managers and screen-sharing tools also see what you copy and display. Clear the clipboard after moving a key, and pause sharing before opening a provider settings panel.',
+          },
+          {
+            heading: '9. Rotating a leaked key',
+            body: 'Rotation is the only reliable response to a leaked key. Revoking first is important: if the old key remains valid while a replacement is prepared, the exposure continues. Create the new key with the narrowest scope that works, update the application or browser settings, redeploy if the value was part of a build, and verify that the old key is rejected. Then check the provider\'s usage and audit logs for activity you did not expect. If the key was committed to Git, deleting the file is not enough; the value remains in history. Rotate first, then rewrite history with a tool such as git filter-repo or BFG, force-push with the team\'s agreement, and ask collaborators to re-clone. Hosting platforms may cache old builds, so make sure the old value cannot be served from a stale bundle. If the key was pasted into an AI chat, a support ticket, or a screenshot, assume it was retained and rotate it. Finally, record what happened, add a check that would have caught it, and shorten the next key\'s lifetime.',
+          },
+          {
+            heading: '10. A practical checklist',
+            body: 'Use this sequence before a project leaves the browser. First, classify each value: a public identifier, a user credential, or a server secret. Second, keep server secrets out of the static bundle and put them behind a serverless function or API. Third, expose only values that need the public prefix, and inspect the built assets before deployment. Fourth, keep .env files out of Git, commit a .env.example, and enable secret scanning. Fifth, create scoped, expiring tokens for GitHub and hosting, one per purpose. Sixth, in GB Coder, leave keys in memory unless you are on a trusted device, and opt in to session persistence only when you understand the trade-off. Seventh, never paste a key into a prompt, an issue, a screenshot, or a project file. Eighth, rotate on any doubt, and revoke before you replace. Ninth, use a clean browser profile on shared machines. Tenth, write down the plan for a leak before you need it. A browser IDE can handle credentials responsibly when it treats the browser as a public client rather than a private vault.',
+          },
+        ],
+        relatedDocsLink: '/docs#getting-started',
+        relatedDocsLabel: 'Read the full GB Coder documentation →',
+      },
     },
   },
   es: {
@@ -882,6 +946,70 @@ npm run dev
         relatedDocsLink: '/docs#getting-started',
         relatedDocsLabel: 'Leer la documentación completa de GB Coder →',
       },
+      'browser-ide-api-keys-environment-variables': {
+        slug: 'browser-ide-api-keys-environment-variables',
+        title: 'Claves de API y variables de entorno en un IDE de navegador',
+        description: 'Dónde ubicar las claves de API y variables de entorno en un IDE de navegador: exposición, almacenamiento, alcance, rotación, despliegue y respuesta.',
+        date: '2026-10-20',
+        author: 'Girish Lade',
+        tags: ['Seguridad', 'Claves de API', 'Variables de entorno', 'IDE de navegador', 'Buenas prácticas'],
+        intro: 'Todo IDE de navegador acaba enfrentándose a la misma pregunta: ¿dónde van las claves? El proyecto necesita un endpoint de API, el panel de IA necesita una clave de proveedor y el despliegue necesita un token de cuenta. En un equipo de escritorio, esos valores pueden vivir en un perfil de shell o en un archivo no rastreado. En una pestaña del navegador el límite es distinto. Todo lo que se envía con la página puede leerlo la página, y todo lo que se guarda en el perfil del navegador pertenece a ese perfil. Esta guía propone un modelo práctico: qué valores se pueden publicar, cuáles nunca deben llegar al cliente, cómo gestiona GB Coder las credenciales de proveedores y qué hacer cuando se filtra una clave. Está pensada para quien quiere la comodidad de un IDE de navegador sin fingir que una pestaña es una caja fuerte.',
+        sections: [
+          {
+            heading: '1. Una pestaña del navegador es un objetivo de compilación público',
+            body: 'La primera regla es incómoda pero sencilla: una aplicación web estática no puede guardar un secreto. El navegador descarga HTML, CSS y JavaScript, y después los ejecuta en la máquina del usuario. Cualquiera puede abrir DevTools, revisar el panel de red, buscar en el bundle o poner un punto de interrupción e inspeccionar una variable. Minificar el código, dividirlo en fragmentos u ocultar un valor en un archivo de configuración cambia el esfuerzo, no el resultado. Un IDE de navegador añade un sandbox para ejecutar el código del proyecto, pero la interfaz del propio IDE sigue ejecutándose en el mismo origen y debe leer lo que necesita para funcionar. El sandbox no es una caja fuerte para los valores que la propia interfaz tiene que usar. La prueba útil es directa: si un valor debe estar disponible para el código que se ejecuta en la pestaña, asume que la persona que usa la pestaña puede leerlo, y que cualquier script que se ejecute en el mismo origen también puede leerlo. Eso no hace inseguro el desarrollo en el navegador. Define el límite. Los identificadores públicos pueden vivir ahí; las credenciales de servidor, no.',
+          },
+          {
+            heading: '2. Qué significa una variable de entorno en una app estática',
+            body: 'En un servidor Node.js, una variable de entorno se lee en tiempo de ejecución desde el proceso. En una compilación de Vite, Create React App, Next.js o Astro, las variables de entorno públicas funcionan de otra manera: el bundler sustituye las referencias por cadenas literales durante la compilación. Vite expone las variables con prefijo VITE_ mediante import.meta.env; Create React App usa REACT_APP_; Next.js usa NEXT_PUBLIC_; Astro usa PUBLIC_. El prefijo es una convención de nombres, no un control de seguridad. Una vez que un valor se inserta en el código, forma parte del JavaScript que descarga cada visitante. Una variable sin prefijo público normalmente no está disponible para el código del cliente, y por eso los valores exclusivos del servidor deben leerlos un servidor o una función serverless, no una página estática. Un archivo .env es una entrada de desarrollo y compilación, no un almacén de secretos en tiempo de ejecución. Sirve para la configuración local y para mantener valores fuera del control de versiones, pero no vuelve privado un valor después de la compilación.',
+            codeSnippet: `# Safe to expose: a public endpoint
+VITE_API_URL=https://api.example.com
+
+# Never expose: keep this on a server
+STRIPE_SECRET_KEY=REPLACE_WITH_SERVER_SECRET`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '3. Qué claves pueden vivir en el navegador',
+            body: 'Algunas claves están diseñadas para ser públicas. Una clave publicable de Stripe identifica una cuenta y crea tokens de pago; la clave secreta es la que mueve dinero y debe quedarse en un servidor. Una clave anónima de Supabase solo es segura cuando las políticas de seguridad a nivel de fila son correctas. La configuración web de Firebase identifica un proyecto, pero no concede acceso administrativo. Las claves de mapas y analítica suelen restringirse por dominio o por API. Estos valores pueden llegar al navegador, pero aun así merecen límites: orígenes permitidos, restricciones de API, roles con privilegios mínimos, cuotas y alertas. La categoría opuesta es más fácil de enunciar. Las claves con rol de servicio, las contraseñas de bases de datos, las credenciales SMTP, los secretos de firma y las claves privadas de proveedores de IA nunca deben estar en un bundle estático. Una clave de proveedor que pertenece a la aplicación es especialmente peligrosa: cualquiera que la encuentre puede gastar el dinero de la aplicación. Una clave que pertenece al usuario es otro caso. Sigue siendo una credencial de portador, pero es suya, y el objetivo es mantenerla en su navegador y no en el proyecto ni en el repositorio.',
+          },
+          {
+            heading: '4. Cómo gestiona GB Coder las credenciales de proveedores',
+            body: 'El panel de IA de GB Coder funciona con tu propia clave (BYOK). El gestor de claves mantiene las claves de proveedor en memoria por defecto. No las escribe en localStorage. El usuario puede optar explícitamente por persistirlas en sessionStorage, lo que limita el valor a la pestaña actual y normalmente lo borra al cerrarla. La clave se elimina de la memoria y del almacenamiento de sesión cuando el usuario la borra. El gestor también vincula cada clave a un origen de endpoint autorizado, y una puerta de salida comprueba que una credencial no se envíe a un destino para el que no fue aprobada. Los errores de los proveedores pasan por una capa de redacción que elimina patrones de claves y claves activas antes de que el mensaje llegue a la interfaz o a un log. Los metadatos de proveedores personalizados se guardan en localStorage, pero las cabeceras marcadas como secretas se limpian antes de persistir y deben volver a introducirse. Las peticiones van directamente del navegador al endpoint del proveedor; GB Coder no actúa como proxy de la clave a través de un servidor de LadeStack. Estas medidas reducen la persistencia accidental y las fugas entre orígenes. No cambian la regla básica: cualquier script que pueda ejecutarse en el mismo origen puede leer lo que puede leer la página. Usa un perfil limpio para trabajo sensible y no instales extensiones que no confíes.',
+          },
+          {
+            heading: '5. Secretos del proyecto, archivos .env y sustitución en la compilación',
+            body: 'Mantén los secretos fuera del árbol del proyecto. Añade .env y sus variantes locales a .gitignore, y confirma un .env.example con nombres de marcador de posición. Si un proyecto usa Vite, recuerda que cada variable VITE_ se inserta en el bundle de producción. Un valor que era cómodo durante el desarrollo local se vuelve público en el momento en que se usa en una compilación de producción. Antes de desplegar, inspecciona los recursos generados en busca de patrones de claves y trata cualquier hallazgo como un incidente, no como una advertencia. El escaneo de secretos y la protección de push de GitHub pueden detectar algunos formatos de token conocidos, pero son una red de seguridad, no un sustituto de mantener los valores fuera del repositorio. La exportación ZIP de un IDE de navegador incluye los archivos del proyecto. Si hay un archivo .env dentro del proyecto, viaja con la copia de seguridad. Una copia de seguridad no es una caja fuerte cifrada. Guarda las exportaciones en un lugar privado y elimina las copias antiguas cuando ya no las necesites. Lo mismo se aplica a capturas de pantalla, informes de incidencias y mensajes de chat: una clave pegada en cualquiera de ellos ya salió del navegador.',
+            codeSnippet: `# .gitignore
+.env
+.env.local
+.env.*.local`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '6. Tokens de GitHub y de despliegue',
+            body: 'Los tokens de acceso personal de GitHub y los tokens de despliegue son más poderosos de lo que parecen. Un token clásico con permisos de repositorio y flujo de trabajo puede leer código privado, cambiar archivos y activar releases. Prefiere tokens de grano fino con un solo repositorio, una lista explícita de permisos y una fecha de caducidad. Da a un token solo los permisos que necesita la tarea: lectura y escritura de contenidos para una sincronización, no administración ni facturación. Crea tokens separados para dispositivos o propósitos separados y revócalos cuando termines. Los tokens de despliegue de Vercel o Netlify pueden publicar, reemplazar o eliminar proyectos. Si el proveedor admite alcance por proyecto o equipo, úsalo; si admite caducidad, configúrala. Pega el token en el panel de despliegue solo cuando sea necesario y no lo guardes en un archivo del proyecto. En CI, usa secretos del repositorio u organización en lugar de un .env confirmado, y recuerda que las pull requests de forks normalmente no reciben secretos. Un token que se ha capturado en pantalla, compartido en un chat o confirmado en un repositorio público debe tratarse como comprometido aunque se haya borrado un segundo después.',
+          },
+          {
+            heading: '7. Claves de proveedores de IA: BYOK sin sorpresas',
+            body: 'Una clave de proveedor de IA es una credencial de portador con una factura adjunta. Cualquiera que la tenga puede enviar peticiones, consumir cuota y generar cargos. Usa una clave limitada a un proyecto, configura un límite de gasto si el proveedor lo ofrece y usa una clave separada para experimentos en lugar de la clave maestra de la organización. Revisa el uso con regularidad, sobre todo después de compartir un dispositivo o instalar una extensión nueva. Los proveedores locales como Ollama, LM Studio y vLLM no necesitan una clave en la nube, pero sus endpoints siguen siendo servicios de la máquina. No expongas un endpoint local a internet solo para que funcione una demo. Si un proveedor personalizado apunta a un proxy, el proxy puede ver la clave; usa solo un proxy que controles y entiendas. La inyección de prompts es un riesgo relacionado: un archivo, una página web o un mensaje de error pegado pueden contener instrucciones dirigidas al asistente. Mantén los secretos fuera de los prompts y de los archivos que el asistente tiene permitido leer. Si una clave aparece en una conversación, rótala.',
+          },
+          {
+            heading: '8. Equipos compartidos, extensiones y XSS',
+            body: 'Un equipo compartido o de laboratorio merece una rutina distinta. Usa un perfil de navegador privado, no optes por la persistencia de sesión y cierra la pestaña al terminar. Si el navegador ofrece guardar la clave, rechaza. Borra el almacenamiento del sitio si sospechas que se conservó. Las extensiones del navegador son otra parte del límite: una extensión con permisos amplios de host a menudo puede leer el contenido o el almacenamiento de la página, y una actualización maliciosa puede llegar después de instalarla. Usa un perfil mínimo para el trabajo con credenciales. El cross-site scripting es el riesgo web clásico en este contexto. Si un atacante puede ejecutar un script en el origen del IDE, ese script puede leer localStorage y sessionStorage y hacer peticiones mientras la página está abierta. Mantén las dependencias actualizadas, evita scripts de terceros que no confíes y considera una política de seguridad de contenido en el sitio desplegado. Los gestores de portapapeles y las herramientas para compartir pantalla también ven lo que copias y muestras. Limpia el portapapeles después de mover una clave y pausa la compartición antes de abrir un panel de configuración del proveedor.',
+          },
+          {
+            heading: '9. Rotar una clave filtrada',
+            body: 'La rotación es la única respuesta fiable a una clave filtrada. Revocar primero es importante: si la clave antigua sigue siendo válida mientras se prepara la nueva, la exposición continúa. Crea la nueva clave con el alcance más estrecho que funcione, actualiza la aplicación o la configuración del navegador, vuelve a desplegar si el valor formaba parte de una compilación y verifica que la clave antigua es rechazada. Después revisa el uso y los registros de auditoría del proveedor en busca de actividad que no esperabas. Si la clave se confirmó en Git, borrar el archivo no basta; el valor permanece en el historial. Rota primero, luego reescribe el historial con una herramienta como git filter-repo o BFG, haz force-push con el acuerdo del equipo y pide a los colaboradores que vuelvan a clonar. Las plataformas de hosting pueden cachear compilaciones antiguas, así que asegúrate de que el valor antiguo no pueda servirse desde un bundle obsoleto. Si la clave se pegó en un chat de IA, un tíquet de soporte o una captura, asume que se conservó y rótala. Por último, registra lo ocurrido, añade una comprobación que lo habría detectado y acorta la vida de la siguiente clave.',
+          },
+          {
+            heading: '10. Una lista de comprobación práctica',
+            body: 'Usa esta secuencia antes de que un proyecto salga del navegador. Primero, clasifica cada valor: identificador público, credencial de usuario o secreto de servidor. Segundo, mantén los secretos de servidor fuera del bundle estático y colócalos detrás de una función serverless o una API. Tercero, expón solo los valores que necesitan el prefijo público e inspecciona los recursos compilados antes de desplegar. Cuarto, mantén los archivos .env fuera de Git, confirma un .env.example y activa el escaneo de secretos. Quinto, crea tokens con alcance y caducidad para GitHub y hosting, uno por propósito. Sexto, en GB Coder, deja las claves en memoria salvo que estés en un dispositivo de confianza, y opta por la persistencia de sesión solo cuando entiendas la contrapartida. Séptimo, nunca pegues una clave en un prompt, una incidencia, una captura o un archivo del proyecto. Octavo, rota ante cualquier duda y revoca antes de reemplazar. Noveno, usa un perfil de navegador limpio en máquinas compartidas. Décimo, escribe el plan para una filtración antes de necesitarlo. Un IDE de navegador puede gestionar credenciales de forma responsable si trata el navegador como un cliente público y no como una caja fuerte privada.',
+          },
+        ],
+        relatedDocsLink: '/docs#getting-started',
+        relatedDocsLabel: 'Leer la documentación completa de GB Coder →',
+      },
     },
   },
   nl: {
@@ -1209,7 +1337,7 @@ npm run dev
           },
           {
             heading: '3. Statische sites en Vite-apps nemen verschillende routes',
-            body: 'De bundel verschilt omdat de twee projecttypen anders behandeld moeten worden. Een gewoon HTML/CSS/JavaScript-project heeft geen package.json. Vercel krijgt de opdracht geen framework te gebruiken en serveert de bestanden statisch. Netlify publiceert de ZIP as-is, wat voor statische bestanden ook klopt. Er valt niets te installeren of compileren, dus de eerste deployment is meestal snel. Een React- of Vue-project bevat een gegenereerde package.json, een Vite-config en bronbestanden. Op Vercel herkent de provider Vite, installeert de dependencies, draait de productiebuild en publiceert de output. Dat is een echte cloudbuild, geen simulatie in de browser, en daarom kan het een minuut of langer duren. Vercel gebruikt ook de versies uit package.json, niet wat toevallig in de editor geladen was. De handmatige ZIP-deployment van Netlify voert geen build-commando uit, dus dezelfde Vite-bronboom wordt geüpload en ongecompileerd gepubliceerd. Gebruik voor React of Vue op Netlify de Git-integratie van de provider; de one-clickroute van Netlify publiceert alleen statische output. Externe bibliotheken en injectie-instellingen zitten al in de bundel. Als een Vercel-build afhankelijk is van een privépakket, een native binary of een dienst die de build-image niet kan bereiken, mislukt de build terwijl de preview lokaal werkt. De logs laten zien welk geval je hebt.',
+            body: 'De bundel verschilt omdat de twee projecttypen anders behandeld moeten worden. Een gewoon HTML/CSS/JavaScript-project heeft geen package.json. Vercel krijgt de opdracht geen framework te gebruiken en serveert de bestanden statisch. Netlify publiceert de ZIP ongewijzigd, wat voor statische bestanden ook klopt. Er valt niets te installeren of compileren, dus de eerste deployment is meestal snel. Een React- of Vue-project bevat een gegenereerde package.json, een Vite-config en bronbestanden. Op Vercel herkent de provider Vite, installeert de dependencies, draait de productiebuild en publiceert de output. Dat is een echte cloudbuild, geen simulatie in de browser, en daarom kan het een minuut of langer duren. Vercel gebruikt ook de versies uit package.json, niet wat toevallig in de editor geladen was. De handmatige ZIP-deployment van Netlify voert geen build-commando uit, dus dezelfde Vite-bronboom wordt geüpload en ongecompileerd gepubliceerd. Gebruik voor React of Vue op Netlify de Git-integratie van de provider; de one-clickoptie van Netlify publiceert alleen statische output. Externe bibliotheken en injectie-instellingen zitten al in de bundel. Als een Vercel-build afhankelijk is van een privépakket, een native binary of een dienst die de build-image niet kan bereiken, mislukt de build terwijl de preview lokaal werkt. De logs laten zien welk geval je hebt.',
           },
           {
             heading: '4. Een token met de juiste scope',
@@ -1221,7 +1349,7 @@ npm run dev
           },
           {
             heading: '6. Wat het voortgangsscherm werkelijk toont',
-            body: 'De voortgangsbalk gaat door verpakken, uploaden, bouwen, beveiligen en klaar. Bij Netlify staat het bouwlabel voor verwerking door de provider, niet voor een build-commando. Het is een rapport van de client, geen voorspelling van de provider. Het percentage loopt snel door de eerste twee fasen en blijft onder 100 staan terwijl de provider het remote werk afrondt. Dat is bewust: remote werk kan onvoorspelbaar lang duren en een balk die naar 99 procent racet, zou liegen. GB Coder pollt de provider elke anderhalve seconde en werkt het bericht bij wanneer de status verandert. Een uploadrequest heeft een timeout van twee minuten. Het paneel stopt na drie minuten deployment-polling met wachten en verwijst naar het dashboard, omdat de deployment kan afronden terwijl de browser niet meer kijkt. Annuleren, de dialoog sluiten of Escape indrukken breekt het lopende request en de poll-loop af. Als de provider de deployment al heeft geaccepteerd, kan de deployment aan zijn kant doorgaan; controleer het dashboard voordat je aanneemt dat annuleren een rollback was. De logs van de provider zijn de autoritatieve bron wanneer een deployment mislukt.',
+            body: 'De voortgangsbalk gaat door verpakken, uploaden, bouwen, beveiligen en klaar. Bij Netlify staat het bouwlabel voor verwerking door de provider, niet voor een build-commando. Het is een rapport van de client, geen voorspelling van de provider. Het percentage loopt snel door de eerste twee fasen en blijft onder 100 staan terwijl de provider het werk op afstand afrondt. Dat is bewust: werk op afstand kan onvoorspelbaar lang duren en een balk die naar 99 procent racet, zou liegen. GB Coder pollt de provider elke anderhalve seconde en werkt het bericht bij wanneer de status verandert. Een uploadrequest heeft een timeout van twee minuten. Het paneel stopt na drie minuten deployment-polling met wachten en verwijst naar het dashboard, omdat de deployment kan afronden terwijl de browser niet meer kijkt. Annuleren, de dialoog sluiten of Escape indrukken breekt het lopende request en de pollinglus af. Als de provider de deployment al heeft geaccepteerd, kan de deployment aan zijn kant doorgaan; controleer het dashboard voordat je aanneemt dat annuleren een rollback was. De logs van de provider zijn de autoritatieve bron wanneer een deployment mislukt.',
           },
           {
             heading: '7. Opnieuw deployen, stabiele URL\'s en providerstatus',
@@ -1229,7 +1357,7 @@ npm run dev
           },
           {
             heading: '8. Limieten en fouten om op te plannen',
-            body: 'Er gelden twee limieten voordat het request het tabblad verlaat: 900 bestanden en 64 MB ongecomprimeerde inhoud. Ze liggen onder de plafonds van de providers, zodat een enorme upload niet halverwege een browsersessie mislukt. Een mediarijke site kan grote afbeeldingen en video beter op een CDN of in Git houden dan in de projectbundel. Fouten zijn per oorzaak gescheiden. Een 401 betekent dat het token is geweigerd; een 403 wijst meestal op ontbrekende rechten voor het account of team; een 413 of 429 betekent dat de payload te groot is of dat de provider rate-limitet; een 422 betekent dat het project als ongeldig is afgewezen; een 5xx is meestal tijdelijk. Op Vercel is een mislukte frameworkbuild anders: de upload slaagde en de build faalde, dus lees de logs in plaats van een nieuw token te plakken. Een Vercel-build die omgevingsvariabelen nodig heeft, is een andere grens. De dialoog heeft geen editor daarvoor. Stel de waarden in de projectinstellingen van Vercel in en deploy opnieuw; de eerste build kan mislukken voordat het project bestaat. De handmatige ZIP-route van Netlify heeft geen buildstap, dus daar geldt dit niet. Een poll-limiet van drie minuten is geen mislukte deployment, alleen een mislukte wachttijd.',
+            body: 'Er gelden twee limieten voordat het request het tabblad verlaat: 900 bestanden en 64 MB ongecomprimeerde inhoud. Ze liggen onder de plafonds van de providers, zodat een enorme upload niet halverwege een browsersessie mislukt. Een mediarijke site kan grote afbeeldingen en video beter op een CDN of in Git houden dan in de projectbundel. Fouten zijn per oorzaak gescheiden. Een 401 betekent dat het token is geweigerd; een 403 wijst meestal op ontbrekende rechten voor het account of team; een 413 of 429 betekent dat de payload te groot is of dat de provider de snelheid beperkt; een 422 betekent dat het project als ongeldig is afgewezen; een 5xx is meestal tijdelijk. Op Vercel is een mislukte frameworkbuild anders: de upload slaagde en de build faalde, dus lees de logs in plaats van een nieuw token te plakken. Een Vercel-build die omgevingsvariabelen nodig heeft, is een andere grens. De dialoog heeft geen editor daarvoor. Stel de waarden in de projectinstellingen van Vercel in en deploy opnieuw; de eerste build kan mislukken voordat het project bestaat. De handmatige ZIP-route van Netlify heeft geen buildstap, dus daar geldt dit niet. Een poll-limiet van drie minuten is geen mislukte deployment, alleen een mislukte wachttijd.',
           },
           {
             heading: '9. Beveiliging, eigendom en de datagrens',
@@ -1238,6 +1366,70 @@ npm run dev
           {
             heading: '10. Wanneer browserdeployment het juiste gereedschap is',
             body: 'Gebruik deze route om een kleine site snel online te zetten: een landingspagina, portfolio, klassendemo, prototype voor klantreview of statische documentatiepagina. Het past ook wanneer het project al in GB Coder staat en het alternatief een ZIP exporteren, een terminal openen en een CLI configureren op een machine die niet van jou is. Het past slecht bij een monorepo, een server-rendered applicatie met database, een build met private registry-referenties, een team dat releases via branchpreviews en approvals doet, of assets boven de uploadlimieten. Dat zijn taken voor Git-integratie, een CI-pipeline of een desktopomgeving. De twee benaderingen kunnen samenwerken: ontwerp en itereer in de browser, push de bron naar GitHub wanneer het historie verdient en laat CI de productiebuild publiceren. Een praktische routine: test de preview op telefoonbreedte, controleer de bundelsamenvatting, deploy, open de live-URL op een tweede apparaat en bewaar de buildlog. Om het te proberen open je het Projectendashboard op /app/projects, maak of open je een project en kies Deploy. De configuratiereferentie staat in de documentatie.',
+          },
+        ],
+        relatedDocsLink: '/docs#getting-started',
+        relatedDocsLabel: 'Lees de volledige GB Coder-documentatie →',
+      },
+      'browser-ide-api-keys-environment-variables': {
+        slug: 'browser-ide-api-keys-environment-variables',
+        title: 'API-sleutels en omgevingsvariabelen in een browser-IDE',
+        description: 'Waar API-sleutels en omgevingsvariabelen horen in een browser-IDE: blootstelling aan de client, veilige opslag, scoping, rotatie, deployment en respons.',
+        date: '2026-10-20',
+        author: 'Girish Lade',
+        tags: ['Beveiliging', 'API-sleutels', 'Omgevingsvariabelen', 'Browser-IDE', 'Best practices'],
+        intro: 'Elke browser-IDE krijgt vroeg of laat dezelfde vraag: waar blijven de sleutels? Het project heeft een API-endpoint nodig, het AI-paneel een providersleutel en de deployment een accounttoken. Op een desktopmachine kunnen die waarden in een shellprofiel of een niet-gevolgd bestand staan. In een browsertab is de grens anders. Alles wat met de pagina wordt meegestuurd, kan door de pagina worden gelezen, en alles wat in het browserprofiel wordt opgeslagen, hoort bij dat profiel. Deze gids geeft een praktisch model: welke waarden je mag publiceren, welke nooit de client mogen bereiken, hoe GB Coder providerreferenties behandelt en wat je moet doen als een sleutel uitlekt. Hij is bedoeld voor mensen die het gemak van een browser-IDE willen zonder te doen alsof een tab een kluis is.',
+        sections: [
+          {
+            heading: '1. Een browsertab is een openbaar builddoel',
+            body: 'De eerste regel is ongemakkelijk maar simpel: een statische webapp kan geen geheim bewaren. De browser downloadt HTML, CSS en JavaScript en voert die uit op de machine van de gebruiker. Iedereen kan DevTools openen, het netwerkpaneel lezen, de bundel doorzoeken of een breakpoint zetten en een variabele inspecteren. Minificeren, opsplitsen in chunks of een waarde in een configuratiebestand verstoppen verandert de inspanning, niet de uitkomst. Een browser-IDE voegt een sandbox toe voor het uitvoeren van projectcode, maar de interface van de IDE draait nog steeds op dezelfde origin en moet lezen wat hij nodig heeft. De sandbox is geen kluis voor waarden die de interface zelf gebruikt. De bruikbare test is eenvoudig: als een waarde beschikbaar moet zijn voor code in de tab, ga er dan van uit dat de gebruiker hem kan lezen, en dat elk script op dezelfde origin hem ook kan lezen. Dat maakt browserontwikkeling niet onveilig. Het definieert de grens. Publieke identificatoren kunnen erin; serverreferenties niet.',
+          },
+          {
+            heading: '2. Wat een omgevingsvariabele betekent in een statische app',
+            body: 'Op een Node.js-server wordt een omgevingsvariabele tijdens runtime uit het proces gelezen. In een build met Vite, Create React App, Next.js of Astro werken publieke omgevingsvariabelen anders: de bundler vervangt verwijzingen tijdens de build door letterlijke strings. Vite stelt variabelen met het voorvoegsel VITE_ beschikbaar via import.meta.env; Create React App gebruikt REACT_APP_; Next.js gebruikt NEXT_PUBLIC_; Astro gebruikt PUBLIC_. Het voorvoegsel is een naamgevingsconventie, geen beveiligingsmaatregel. Zodra een waarde is ingevoegd, maakt hij deel uit van de JavaScript die elke bezoeker downloadt. Een variabele zonder publiek voorvoegsel is normaal gesproken niet beschikbaar voor clientcode; daarom moeten waarden die alleen voor de server bedoeld zijn, door een server of serverless functie worden gelezen, niet door een statische pagina. Een .env-bestand is invoer voor ontwikkeling en build, geen runtime-geheimenopslag. Het is handig voor lokale configuratie en om waarden buiten versiebeheer te houden, maar het maakt een waarde na de build niet privé.',
+            codeSnippet: `# Safe to expose: a public endpoint
+VITE_API_URL=https://api.example.com
+
+# Never expose: keep this on a server
+STRIPE_SECRET_KEY=REPLACE_WITH_SERVER_SECRET`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '3. Welke sleutels in de browser mogen leven',
+            body: 'Sommige sleutels zijn ontworpen om openbaar te zijn. Een publiceerbare Stripe-sleutel identificeert een account en maakt betaaltokens; de geheime sleutel verplaatst daadwerkelijk geld en moet op een server blijven. Een Supabase anon-sleutel is alleen veilig als de row-level security policies kloppen. Een Firebase-webconfiguratie identificeert een project, maar geeft geen beheertoegang. Sleutels voor kaarten en gebruiksmeting zijn vaak beperkt per domein of API. Deze waarden mogen naar de browser, maar verdienen nog steeds grenzen: toegestane origins, API-beperkingen, rollen met minimale rechten, quota en waarschuwingen. De tegenovergestelde categorie is makkelijker te benoemen. Service-role-sleutels, databasewachtwoorden, SMTP-referenties, ondertekeningsgeheimen en privésleutels van AI-providers horen nooit in een statische bundel. Een providersleutel die bij de applicatie hoort, is extra gevaarlijk: iedereen die hem vindt, kan het geld van de applicatie uitgeven. Een sleutel die bij de gebruiker hoort, is een ander geval. Het blijft een bearer-referentie, maar het is de zijne, en het doel is hem in de browser van de gebruiker te houden in plaats van in het project of de repository.',
+          },
+          {
+            heading: '4. Hoe GB Coder providerreferenties behandelt',
+            body: 'Het AI-paneel van GB Coder werkt volgens bring-your-own-key. De sleutelbeheerder houdt providersleutels standaard in het geheugen. Hij schrijft ze niet naar localStorage. De gebruiker kan expliciet kiezen voor opslag in sessionStorage; daarmee is de waarde beperkt tot het huidige tabblad en wordt hij normaal gewist wanneer het tabblad sluit. De sleutel wordt uit het geheugen en de sessieopslag verwijderd wanneer de gebruiker hem wist. De beheerder koppelt elke sleutel ook aan een toegestane endpoint-origin, en een uitgaande poort controleert dat een referentie niet naar een bestemming wordt gestuurd waarvoor hij niet is goedgekeurd. Fouten van providers gaan door een redactielaag die sleutelpatronen en actieve sleutels verwijdert voordat het bericht de interface of een log bereikt. Metadata van aangepaste providers wordt in localStorage opgeslagen, maar headers die als geheim zijn gemarkeerd, worden vóór opslag gewist en moeten opnieuw worden ingevoerd. Verzoeken gaan rechtstreeks van de browser naar het endpoint van de provider; GB Coder stuurt de sleutel niet via een LadeStack-server. Deze maatregelen beperken onbedoelde opslag en lekken tussen origins. Ze veranderen de basisregel niet: elk script dat op dezelfde origin kan draaien, kan lezen wat de pagina kan lezen. Gebruik een schoon profiel voor gevoelig werk en installeer geen extensies die je niet vertrouwt.',
+          },
+          {
+            heading: '5. Projectgeheimen, .env-bestanden en invoeging tijdens de build',
+            body: 'Houd geheimen buiten de projectmap. Zet .env en de lokale varianten in .gitignore en commit een .env.example met placeholders. Als een project Vite gebruikt, onthoud dan dat elke VITE_-variabele in de productiebundel wordt ingevoegd. Een waarde die tijdens lokale ontwikkeling handig was, wordt openbaar zodra hij in een productiebuild wordt gebruikt. Inspecteer vóór de deployment de gegenereerde assets op sleutelpatronen en behandel een treffer als een incident, niet als een waarschuwing. GitHub secret scanning en push protection kunnen sommige bekende tokenformaten vinden, maar het is een vangnet, geen vervanging voor het buiten de repository houden van waarden. De ZIP-export van een browser-IDE bevat projectbestanden. Als er een .env-bestand in het project staat, reist het mee met de back-up. Een back-up is geen versleutelde kluis. Bewaar exports op een privéplek en verwijder oude kopieën wanneer je ze niet meer nodig hebt. Hetzelfde geldt voor screenshots, issue-rapporten en chatberichten: een sleutel die in een daarvan is geplakt, heeft de browser al verlaten.',
+            codeSnippet: `# .gitignore
+.env
+.env.local
+.env.*.local`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '6. GitHub- en deploymenttokens',
+            body: 'GitHub personal access tokens en deploymenttokens zijn krachtiger dan ze lijken. Een klassiek token met repository- en workflowrechten kan privécode lezen, bestanden wijzigen en releases starten. Geef de voorkeur aan fine-grained tokens met één repository, een expliciete rechtenlijst en een vervaldatum. Geef een token alleen de rechten die de taak nodig heeft: contents lezen en schrijven voor een sync, niet administration of billing. Maak aparte tokens voor aparte apparaten of doelen en trek ze in wanneer het werk klaar is. Deploymenttokens voor Vercel of Netlify kunnen projecten publiceren, vervangen of verwijderen. Als de provider scoping per project of team ondersteunt, gebruik die; als hij vervaldatums ondersteunt, stel er een in. Plak het token alleen in het deploymentpaneel wanneer dat nodig is en sla het niet op in een projectbestand. Gebruik in CI repository- of organisatiegeheimen in plaats van een gecommitte .env, en onthoud dat pull requests van forks normaal gesproken geen geheimen ontvangen. Een token dat is gefotografeerd, in een chat is gedeeld of in een openbare repository is gecommit, moet als gecompromitteerd worden beschouwd, ook als het een seconde later is verwijderd.',
+          },
+          {
+            heading: '7. AI-providersleutels: BYOK zonder verrassingen',
+            body: 'Een AI-providersleutel is een bearer-referentie met een rekening eraan vast. Iedereen die hem heeft, kan verzoeken sturen, quota verbruiken en kosten maken. Gebruik een sleutel die aan een project is gekoppeld, stel een uitgavelimiet in als de provider dat biedt, en gebruik een aparte sleutel voor experimenten in plaats van de hoofdsleutel van de organisatie. Controleer het gebruik regelmatig, zeker na het delen van een apparaat of het installeren van een nieuwe extensie. Lokale providers zoals Ollama, LM Studio en vLLM hebben geen cloudsleutel nodig, maar hun endpoints zijn nog steeds diensten op de machine. Stel een lokaal endpoint niet bloot aan het openbare internet alleen om een demo te laten werken. Als een aangepaste provider naar een proxy wijst, kan de proxy de sleutel zien; gebruik alleen een proxy die je beheert en begrijpt. Prompt-injectie is een verwant risico: een bestand, een webpagina of een geplakt foutbericht kan instructies bevatten die op de assistent zijn gericht. Houd geheimen buiten prompts en buiten bestanden die de assistent mag lezen. Als een sleutel in een gesprek verschijnt, roteer hem dan.',
+          },
+          {
+            heading: '8. Gedeelde computers, extensies en XSS',
+            body: 'Een gedeelde computer of labcomputer vraagt om een andere routine. Gebruik een privé-browserprofiel, kies niet voor sessiepersistentie en sluit het tabblad als je klaar bent. Als de browser aanbiedt de sleutel op te slaan, weiger dat. Wis de opslag van de site als je vermoedt dat die bewaard is gebleven. Browserextensies zijn een ander deel van de grens: een extensie met brede hostrechten kan vaak paginacontent of opslag lezen, en een kwaadaardige update kan binnenkomen nadat je hem hebt geïnstalleerd. Gebruik een minimaal profiel voor werk met referenties. Cross-site scripting is in deze context het klassieke webrisico. Als een aanvaller een script op de origin van de IDE kan uitvoeren, kan dat script localStorage en sessionStorage lezen en verzoeken doen zolang de pagina open is. Houd dependencies actueel, vermijd niet-vertrouwde scripts van derden en overweeg een content security policy op de gedeployde site. Klembordbeheerders en schermdeeltools zien ook wat je kopieert en toont. Wis het klembord nadat je een sleutel hebt verplaatst en pauzeer het delen voordat je een providerinstellingenpaneel opent.',
+          },
+          {
+            heading: '9. Een uitgelekte sleutel roteren',
+            body: 'Rotatie is de enige betrouwbare reactie op een uitgelekte sleutel. Eerst intrekken is belangrijk: als de oude sleutel geldig blijft terwijl een vervanger wordt voorbereid, gaat de blootstelling door. Maak de nieuwe sleutel met de smalst mogelijke scope, werk de applicatie of browserinstellingen bij, deploy opnieuw als de waarde deel uitmaakte van een build, en controleer dat de oude sleutel wordt geweigerd. Bekijk daarna het gebruik en de auditlogs van de provider op activiteit die je niet verwachtte. Als de sleutel in Git is gecommit, is het bestand verwijderen niet genoeg; de waarde blijft in de geschiedenis staan. Roteer eerst en herschrijf daarna de geschiedenis met een tool zoals git filter-repo of BFG, force-push in overleg met het team en vraag medewerkers opnieuw te clonen. Hostingplatforms kunnen oude builds cachen, dus zorg dat de oude waarde niet uit een verouderde bundel kan worden geserveerd. Als de sleutel in een AI-chat, een supportticket of een screenshot is geplakt, ga er dan van uit dat hij is bewaard en roteer hem. Leg ten slotte vast wat er is gebeurd, voeg een controle toe die het had kunnen vangen en verkort de levensduur van de volgende sleutel.',
+          },
+          {
+            heading: '10. Een praktische checklist',
+            body: 'Gebruik deze volgorde voordat een project de browser verlaat. Ten eerste, classificeer elke waarde: publieke identificator, gebruikersreferentie of servergeheim. Ten tweede, houd servergeheimen buiten de statische bundel en zet ze achter een serverless functie of API. Ten derde, stel alleen waarden bloot die het publieke voorvoegsel nodig hebben, en inspecteer de gebouwde assets vóór de deployment. Ten vierde, houd .env-bestanden buiten Git, commit een .env.example en schakel secret scanning in. Ten vijfde, maak tokens met scope en vervaldatum voor GitHub en hosting, één per doel. Ten zesde, laat sleutels in GB Coder in het geheugen tenzij je op een vertrouwd apparaat zit, en kies alleen voor sessiepersistentie als je de afweging begrijpt. Ten zevende, plak een sleutel nooit in een prompt, een issue, een screenshot of een projectbestand. Ten achtste, roteer bij twijfel en trek in voordat je vervangt. Ten negende, gebruik een schoon browserprofiel op gedeelde machines. Ten tiende, schrijf het plan voor een lek op voordat je het nodig hebt. Een browser-IDE kan verantwoord met referenties omgaan als hij de browser als een publieke client behandelt en niet als een privékluis.',
           },
         ],
         relatedDocsLink: '/docs#getting-started',
@@ -1570,7 +1762,7 @@ npm run dev
           },
           {
             heading: '3. Sites statiques et applications Vite : des chemins différents',
-            body: 'Le paquet diffère parce que les deux types de projet demandent un traitement différent. Un projet HTML/CSS/JavaScript simple n’a pas de package.json. Vercel reçoit l’instruction de n’utiliser aucun framework et sert les fichiers en statique. Netlify publie le ZIP tel quel, ce qui convient aussi aux fichiers statiques. Il n’y a rien à installer ni à compiler, donc le premier déploiement est généralement rapide. Un projet React ou Vue contient un package.json généré, une configuration Vite et des sources. Sur Vercel, le fournisseur détecte Vite, installe les dépendances, lance le build de production et publie la sortie. C’est un vrai build cloud, pas une simulation dans le navigateur, et c’est pourquoi il peut prendre une minute ou plus. Vercel utilise aussi les versions enregistrées dans package.json, pas ce qui se trouvait dans l’éditeur. Le déploiement ZIP manuel de Netlify n’exécute pas de commande de build : la même arborescence source Vite est publiée telle qu’elle a été envoyée, sans compilation. Pour React ou Vue sur Netlify, utilisez l’intégration Git du fournisseur ; le parcours en un clic de Netlify ne publie que de la sortie statique. Les bibliothèques externes et les réglages d’injection sont déjà dans le paquet. Si un build Vercel dépend d’un paquet privé, d’un binaire natif ou d’un service inaccessible depuis son image de build, le build échouera même si la prévisualisation fonctionne. Les logs indiquent dans quel cas vous êtes.',
+            body: 'Le paquet diffère parce que les deux types de projet demandent un traitement différent. Un projet HTML/CSS/JavaScript simple n’a pas de package.json. Vercel reçoit l’instruction de n’utiliser aucun framework et sert les fichiers en statique. Netlify publie le ZIP tel quel, ce qui convient aussi aux fichiers statiques. Il n’y a rien à installer ni à compiler, donc le premier déploiement est généralement rapide. Un projet React ou Vue contient un package.json généré, une configuration Vite et des sources. Sur Vercel, le fournisseur détecte Vite, installe les dépendances, lance le build de production et publie la sortie. C’est un vrai build cloud, pas une simulation dans le navigateur, et c’est pourquoi il peut prendre une minute ou plus. Vercel utilise aussi les versions enregistrées dans package.json, pas ce qui se trouvait dans l’éditeur. Le déploiement ZIP manuel de Netlify n’exécute pas de commande de build : la même arborescence source Vite est publiée telle qu’elle a été envoyée, sans compilation. Pour React ou Vue sur Netlify, utilisez l’intégration Git du fournisseur ; le parcours en un clic de Netlify ne publie que des fichiers statiques. Les bibliothèques externes et les réglages d’injection sont déjà dans le paquet. Si un build Vercel dépend d’un paquet privé, d’un binaire natif ou d’un service inaccessible depuis son image de build, le build échouera même si la prévisualisation fonctionne. Les logs indiquent dans quel cas vous êtes.',
           },
           {
             heading: '4. Obtenir un jeton avec la bonne portée',
@@ -1599,6 +1791,70 @@ npm run dev
           {
             heading: '10. Quand le déploiement depuis le navigateur est le bon outil',
             body: 'Utilisez ce chemin pour mettre rapidement en ligne un petit site : landing page, portfolio, démo de cours, prototype pour une revue client ou page de documentation statique. Il convient aussi lorsque le projet vit déjà dans GB Coder et que l’alternative consiste à exporter un ZIP, ouvrir un terminal et configurer une CLI sur une machine qui n’est pas la vôtre. Il convient mal à un monorepo, une application rendue côté serveur avec base de données, un build nécessitant des identifiants de registre privé, une équipe qui publie via des previews de branche et des approbations, ou des assets dépassant les limites d’envoi. Ces tâches relèvent de l’intégration Git du fournisseur, d’un pipeline CI ou d’un environnement de bureau. Les deux approches peuvent coexister : concevoir et itérer dans le navigateur, pousser la source vers GitHub lorsqu’elle mérite un historique, et laisser la CI publier le build de production. Une routine pratique : tester la prévisualisation en largeur téléphone, vérifier le résumé du paquet, déployer, ouvrir l’URL sur un second appareil et conserver le log. Pour essayer, ouvrez le tableau de bord des projets sur /app/projects, créez ou ouvrez un projet et choisissez Deploy. La référence de configuration se trouve dans la documentation.',
+          },
+        ],
+        relatedDocsLink: '/docs#getting-started',
+        relatedDocsLabel: 'Lire la documentation complète de GB Coder →',
+      },
+      'browser-ide-api-keys-environment-variables': {
+        slug: 'browser-ide-api-keys-environment-variables',
+        title: 'Clés API et variables d\'environnement dans un IDE web',
+        description: 'Où placer les clés API et les variables d\'environnement dans un IDE web : exposition, stockage, portée, gestion de la rotation, déploiement et réponse.',
+        date: '2026-10-20',
+        author: 'Girish Lade',
+        tags: ['Sécurité', 'Clés API', 'Variables d\'environnement', 'IDE web', 'Bonnes pratiques'],
+        intro: 'Tout IDE web finit par poser la même question : où vont les clés ? Le projet a besoin d\'un point de terminaison API, le panneau IA d\'une clé de fournisseur et le déploiement d\'un jeton de compte. Sur une machine de bureau, ces valeurs peuvent vivre dans un profil shell ou dans un fichier non suivi. Dans un onglet de navigateur, la frontière est différente. Tout ce qui est envoyé avec la page peut être lu par la page, et tout ce qui est stocké dans le profil du navigateur appartient à ce profil. Ce guide propose un modèle pratique : quelles valeurs peuvent être publiées, lesquelles ne doivent jamais atteindre le client, comment GB Coder gère les identifiants des fournisseurs et quoi faire lorsqu\'une clé fuite. Il s\'adresse à ceux qui veulent le confort d\'un IDE web sans prétendre qu\'un onglet est un coffre-fort.',
+        sections: [
+          {
+            heading: '1. Un onglet de navigateur est une cible de compilation publique',
+            body: 'La première règle est inconfortable mais simple : une application web statique ne peut pas garder un secret. Le navigateur télécharge HTML, CSS et JavaScript, puis les exécute sur la machine de l\'utilisateur. N\'importe qui peut ouvrir les DevTools, lire le panneau réseau, fouiller le bundle ou poser un point d\'arrêt et inspecter une variable. Minifier le code, le découper en morceaux ou cacher une valeur dans un fichier de configuration change l\'effort, pas le résultat. Un IDE web ajoute un sandbox pour exécuter le code du projet, mais l\'interface de l\'IDE s\'exécute toujours sur la même origine et doit lire ce dont elle a besoin pour fonctionner. Le sandbox n\'est pas un coffre pour les valeurs que l\'interface elle-même doit utiliser. Le test utile est direct : si une valeur doit être disponible pour le code exécuté dans l\'onglet, partez du principe que la personne qui utilise l\'onglet peut la lire, et que tout script exécuté sur la même origine peut aussi la lire. Cela ne rend pas le développement dans le navigateur dangereux. Cela définit la frontière. Les identifiants publics peuvent y vivre ; les identifiants serveur non.',
+          },
+          {
+            heading: '2. Ce que signifie une variable d\'environnement dans une application statique',
+            body: 'Sur un serveur Node.js, une variable d\'environnement est lue à l\'exécution depuis le processus. Dans une compilation Vite, Create React App, Next.js ou Astro, les variables d\'environnement publiques fonctionnent différemment : le bundler remplace les références par des chaînes littérales pendant la compilation. Vite expose les variables préfixées par VITE_ via import.meta.env ; Create React App utilise REACT_APP_ ; Next.js utilise NEXT_PUBLIC_ ; Astro utilise PUBLIC_. Le préfixe est une convention de nommage, pas un contrôle de sécurité. Une fois la valeur intégrée, elle fait partie du JavaScript que chaque visiteur télécharge. Une variable sans préfixe public n\'est normalement pas accessible au code client, ce qui explique pourquoi les valeurs réservées au serveur doivent être lues par un serveur ou une fonction serverless, et non par une page statique. Un fichier .env est une entrée de développement et de compilation, pas un coffre de secrets à l\'exécution. Il est utile pour la configuration locale et pour garder des valeurs hors du contrôle de version, mais il ne rend pas une valeur privée après la compilation.',
+            codeSnippet: `# Safe to expose: a public endpoint
+VITE_API_URL=https://api.example.com
+
+# Never expose: keep this on a server
+STRIPE_SECRET_KEY=REPLACE_WITH_SERVER_SECRET`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '3. Quelles clés peuvent vivre dans le navigateur',
+            body: 'Certaines clés sont conçues pour être publiques. Une clé publiable Stripe identifie un compte et crée des jetons de paiement ; la clé secrète déplace réellement de l\'argent et doit rester sur un serveur. Une clé anon Supabase n\'est sûre que si les politiques de sécurité au niveau des lignes sont correctes. Une configuration web Firebase identifie un projet, mais ne donne pas d\'accès administratif. Les clés de cartes et de mesure d\'usage sont souvent limitées par domaine ou par API. Ces valeurs peuvent être envoyées au navigateur, mais elles méritent quand même des limites : origines autorisées, restrictions d\'API, rôles à privilèges minimaux, quotas et alertes. La catégorie opposée est plus facile à énoncer. Les clés de rôle de service, les mots de passe de bases de données, les identifiants SMTP, les secrets de signature et les clés privées de fournisseurs d\'IA ne doivent jamais figurer dans un bundle statique. Une clé de fournisseur qui appartient à l\'application est particulièrement dangereuse : quiconque la trouve peut dépenser l\'argent de l\'application. Une clé qui appartient à l\'utilisateur est un autre cas. Elle reste un identifiant bearer, mais c\'est le sien, et l\'objectif est de la garder dans son navigateur plutôt que dans le projet ou le dépôt.',
+          },
+          {
+            heading: '4. Comment GB Coder gère les identifiants des fournisseurs',
+            body: 'Le panneau IA de GB Coder fonctionne en bring-your-own-key. Le gestionnaire de clés conserve les clés de fournisseur en mémoire par défaut. Il ne les écrit pas dans localStorage. L\'utilisateur peut choisir explicitement une persistance dans sessionStorage, ce qui limite la valeur à l\'onglet courant et l\'efface normalement à la fermeture de l\'onglet. La clé est retirée de la mémoire et du stockage de session lorsque l\'utilisateur l\'efface. Le gestionnaire lie aussi chaque clé à une origine de point de terminaison autorisée, et une porte de sortie vérifie qu\'un identifiant n\'est pas envoyé vers une destination non approuvée. Les erreurs des fournisseurs passent par une couche de rédaction qui supprime les motifs de clés et les clés actives avant que le message n\'atteigne l\'interface ou un journal. Les métadonnées des fournisseurs personnalisés sont stockées dans localStorage, mais les en-têtes marqués comme secrets sont effacés avant la persistance et doivent être saisis à nouveau. Les requêtes vont directement du navigateur au point de terminaison du fournisseur ; GB Coder ne fait pas transiter la clé par un serveur LadeStack. Ces mesures réduisent la persistance accidentelle et les fuites entre origines. Elles ne changent pas la règle de base : tout script capable de s\'exécuter sur la même origine peut lire ce que la page peut lire. Utilisez un profil propre pour les travaux sensibles et n\'installez pas d\'extensions non fiables.',
+          },
+          {
+            heading: '5. Secrets du projet, fichiers .env et intégration à la compilation',
+            body: 'Gardez les secrets hors de l\'arborescence du projet. Ajoutez .env et ses variantes locales à .gitignore, et validez un .env.example avec des noms de remplacement. Si un projet utilise Vite, rappelez-vous que chaque variable VITE_ est intégrée au bundle de production. Une valeur pratique en développement local devient publique dès qu\'elle est utilisée dans une compilation de production. Avant de déployer, inspectez les ressources générées à la recherche de motifs de clés et traitez toute correspondance comme un incident, pas comme un avertissement. La détection de secrets et la protection push de GitHub peuvent repérer certains formats de jetons connus, mais elles constituent un filet de sécurité, pas un substitut au fait de garder les valeurs hors du dépôt. L\'export ZIP d\'un IDE web inclut les fichiers du projet. Si un fichier .env se trouve dans le projet, il voyage avec la sauvegarde. Une sauvegarde n\'est pas un coffre chiffré. Stockez les exports dans un endroit privé et supprimez les anciennes copies lorsqu\'elles ne sont plus utiles. Il en va de même pour les captures d\'écran, les rapports de bogues et les messages de chat : une clé collée dans l\'un d\'eux a déjà quitté le navigateur.',
+            codeSnippet: `# .gitignore
+.env
+.env.local
+.env.*.local`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '6. Jetons GitHub et jetons de déploiement',
+            body: 'Les jetons d\'accès personnels GitHub et les jetons de déploiement sont plus puissants qu\'ils n\'en ont l\'air. Un jeton classique avec les portées repository et workflow peut lire du code privé, modifier des fichiers et déclencher des releases. Préférez les jetons fine-grained limités à un seul dépôt, avec une liste explicite de permissions et une date d\'expiration. N\'accordez à un jeton que les permissions nécessaires à la tâche : lecture et écriture des contenus pour une synchronisation, pas administration ni facturation. Créez des jetons distincts pour des appareils ou des usages distincts et révoquez-les une fois le travail terminé. Les jetons de déploiement Vercel ou Netlify peuvent publier, remplacer ou supprimer des projets. Si le fournisseur permet une portée par projet ou par équipe, utilisez-la ; s\'il permet une expiration, définissez-la. Ne collez le jeton dans le panneau de déploiement que lorsque c\'est nécessaire et ne l\'enregistrez pas dans un fichier du projet. En CI, utilisez les secrets du dépôt ou de l\'organisation plutôt qu\'un .env validé, et rappelez-vous que les pull requests issues de forks ne reçoivent normalement pas de secrets. Un jeton photographié, partagé dans un chat ou validé dans un dépôt public doit être considéré comme compromis, même s\'il a été supprimé une seconde plus tard.',
+          },
+          {
+            heading: '7. Clés de fournisseurs d\'IA : BYOK sans surprises',
+            body: 'Une clé de fournisseur d\'IA est un identifiant bearer avec une facture attachée. Quiconque la possède peut envoyer des requêtes, consommer du quota et générer des frais. Utilisez une clé limitée à un projet, fixez une limite de dépenses si le fournisseur le permet, et utilisez une clé distincte pour les expérimentations plutôt que la clé maîtresse de l\'organisation. Surveillez l\'usage régulièrement, surtout après avoir partagé un appareil ou installé une nouvelle extension. Les fournisseurs locaux comme Ollama, LM Studio et vLLM n\'ont pas besoin de clé cloud, mais leurs points de terminaison restent des services sur la machine. N\'exposez pas un point de terminaison local à l\'internet public juste pour faire fonctionner une démo. Si un fournisseur personnalisé pointe vers un proxy, le proxy peut voir la clé ; n\'utilisez qu\'un proxy que vous contrôlez et comprenez. L\'injection de prompts est un risque connexe : un fichier, une page web ou un message d\'erreur collé peut contenir des instructions destinées à l\'assistant. Gardez les secrets hors des prompts et hors des fichiers que l\'assistant est autorisé à lire. Si une clé apparaît dans une conversation, faites-la tourner.',
+          },
+          {
+            heading: '8. Ordinateurs partagés, extensions et XSS',
+            body: 'Un ordinateur partagé ou de laboratoire mérite une routine différente. Utilisez un profil de navigateur privé, ne choisissez pas la persistance de session et fermez l\'onglet lorsque vous avez terminé. Si le navigateur propose d\'enregistrer la clé, refusez. Effacez le stockage du site si vous pensez qu\'il a été conservé. Les extensions de navigateur font partie de la frontière : une extension dotée de larges permissions d\'hôte peut souvent lire le contenu ou le stockage de la page, et une mise à jour malveillante peut arriver après l\'installation. Utilisez un profil minimal pour les travaux impliquant des identifiants. Le cross-site scripting est le risque web classique dans ce contexte. Si un attaquant peut exécuter un script sur l\'origine de l\'IDE, ce script peut lire localStorage et sessionStorage et envoyer des requêtes tant que la page est ouverte. Gardez les dépendances à jour, évitez les scripts tiers non fiables et envisagez une politique de sécurité du contenu sur le site déployé. Les gestionnaires de presse-papiers et les outils de partage d\'écran voient aussi ce que vous copiez et affichez. Videz le presse-papiers après avoir déplacé une clé et suspendez le partage avant d\'ouvrir un panneau de configuration de fournisseur.',
+          },
+          {
+            heading: '9. Faire tourner une clé compromise',
+            body: 'La rotation est la seule réponse fiable à une clé compromise. Révoquer d\'abord est important : si l\'ancienne clé reste valide pendant que la nouvelle est préparée, l\'exposition continue. Créez la nouvelle clé avec la portée la plus étroite possible, mettez à jour l\'application ou les réglages du navigateur, redéployez si la valeur faisait partie d\'une compilation, puis vérifiez que l\'ancienne clé est rejetée. Consultez ensuite l\'usage et les journaux d\'audit du fournisseur pour repérer une activité inattendue. Si la clé a été validée dans Git, supprimer le fichier ne suffit pas ; la valeur reste dans l\'historique. Faites d\'abord tourner la clé, puis réécrivez l\'historique avec un outil comme git filter-repo ou BFG, forcez le push avec l\'accord de l\'équipe et demandez aux collaborateurs de recloner. Les plateformes d\'hébergement peuvent mettre en cache d\'anciens builds ; assurez-vous que l\'ancienne valeur ne peut pas être servie depuis un bundle obsolète. Si la clé a été collée dans un chat IA, un ticket de support ou une capture d\'écran, supposez qu\'elle a été conservée et faites-la tourner. Enfin, consignez ce qui s\'est passé, ajoutez un contrôle qui l\'aurait détecté et raccourcissez la durée de vie de la clé suivante.',
+          },
+          {
+            heading: '10. Une liste de vérification pratique',
+            body: 'Utilisez cette séquence avant qu\'un projet ne quitte le navigateur. Premièrement, classez chaque valeur : identifiant public, identifiant utilisateur ou secret serveur. Deuxièmement, gardez les secrets serveur hors du bundle statique et placez-les derrière une fonction serverless ou une API. Troisièmement, n\'exposez que les valeurs qui ont besoin du préfixe public et inspectez les ressources compilées avant le déploiement. Quatrièmement, gardez les fichiers .env hors de Git, validez un .env.example et activez la détection de secrets. Cinquièmement, créez des jetons à portée limitée et expirants pour GitHub et l\'hébergement, un par usage. Sixièmement, dans GB Coder, laissez les clés en mémoire sauf si vous êtes sur un appareil de confiance, et n\'activez la persistance de session que si vous comprenez le compromis. Septièmement, ne collez jamais une clé dans un prompt, un ticket, une capture d\'écran ou un fichier du projet. Huitièmement, faites tourner la clé au moindre doute et révoquez avant de remplacer. Neuvièmement, utilisez un profil de navigateur propre sur les machines partagées. Dixièmement, écrivez le plan de fuite avant d\'en avoir besoin. Un IDE web peut gérer des identifiants de manière responsable s\'il traite le navigateur comme un client public et non comme un coffre privé.',
           },
         ],
         relatedDocsLink: '/docs#getting-started',
@@ -1965,6 +2221,70 @@ npm run dev
         relatedDocsLink: '/docs#getting-started',
         relatedDocsLabel: 'GB Coder のドキュメントを読む →',
       },
+      'browser-ide-api-keys-environment-variables': {
+        slug: 'browser-ide-api-keys-environment-variables',
+        title: 'ブラウザIDEのAPIキーと環境変数を安全に扱う',
+        description: 'ブラウザIDEでAPIキーと環境変数を扱う方法。クライアント側への露出、安全な保管、権限の絞り込み、ローテーション、デプロイ、漏えい時の対応を解説します。',
+        date: '2026-10-20',
+        author: 'Girish Lade',
+        tags: ['セキュリティ', 'APIキー', '環境変数', 'ブラウザIDE', 'ベストプラクティス'],
+        intro: 'どのブラウザIDEも、遅かれ早かれ同じ問いに直面します。キーはどこに置くのか。プロジェクトにはAPIエンドポイントが必要で、AIパネルにはプロバイダーのキーが必要で、デプロイにはアカウントのトークンが必要です。デスクトップ環境なら、これらの値はシェルのプロファイルや追跡されていないファイルに置けます。ブラウザのタブでは境界が異なります。ページと一緒に配信されるものはページから読めますし、ブラウザプロファイルに保存されたものはそのプロファイルに属します。このガイドでは実用的なモデルを整理します。公開してよい値、クライアントに決して届けてはいけない値、GB Coderがプロバイダーの資格情報をどう扱うか、そしてキーが漏えいしたときの対処です。ブラウザのタブを秘密の金庫だと思い込まず、ブラウザIDEの利便性を享受したい人に向けています。',
+        sections: [
+          {
+            heading: '1. ブラウザのタブは公開されたビルド対象',
+            body: '最初のルールは不愉快ですが単純です。静的Webアプリは秘密を保持できません。ブラウザはHTML、CSS、JavaScriptをダウンロードし、ユーザーのマシンで実行します。誰でもDevToolsを開き、ネットワークパネルを読み、バンドルを検索し、ブレークポイントを設定して変数を検査できます。コードを難読化したり、チャンクに分割したり、設定ファイルに値を隠したりしても、変わるのは手間だけで結果は変わりません。ブラウザIDEはプロジェクトコードを実行するサンドボックスを追加しますが、IDE自体のUIは同じオリジンで動き、必要な値を読まなければなりません。サンドボックスは、UIが使う値の金庫ではありません。有用な判定は単純です。タブで動くコードから参照できる値は、タブを使う人にも読めると考えてください。同じオリジンで動くスクリプトにも読めると考えてください。これはブラウザ開発を危険にする話ではありません。境界を定義する話です。公開識別子は置けますが、サーバーの資格情報は置けません。',
+          },
+          {
+            heading: '2. 静的アプリにおける環境変数の意味',
+            body: 'Node.jsサーバーでは、環境変数は実行時にプロセスから読み取ります。Vite、Create React App、Next.js、Astroのビルドでは、公開環境変数の扱いが異なります。バンドラーがビルド時に参照をリテラル文字列へ置き換えるのです。ViteはVITE_接頭辞の変数をimport.meta.env経由で公開し、Create React AppはREACT_APP_、Next.jsはNEXT_PUBLIC_、AstroはPUBLIC_を使います。接頭辞は命名規則であり、セキュリティ制御ではありません。値がインライン化された時点で、それはすべての訪問者がダウンロードするJavaScriptの一部になります。公開接頭辞のない変数は通常クライアントコードから利用できないため、サーバー専用の値は静的ページではなく、サーバーまたはサーバーレス関数で読む必要があります。.envファイルは開発とビルドの入力であり、実行時の秘密保管庫ではありません。ローカル設定やバージョン管理外での値の維持には役立ちますが、ビルド後に値を非公開にはしません。',
+            codeSnippet: `# Safe to expose: a public endpoint
+VITE_API_URL=https://api.example.com
+
+# Never expose: keep this on a server
+STRIPE_SECRET_KEY=REPLACE_WITH_SERVER_SECRET`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '3. ブラウザに置いてよいキー',
+            body: '公開されることを前提としたキーもあります。Stripeの公開可能キーはアカウントを識別し、支払いトークンを作成します。秘密キーは実際に資金を動かすため、サーバーに置かなければなりません。Supabaseのanonキーは、行レベルセキュリティのポリシーが正しい場合にのみ安全です。FirebaseのWeb設定はプロジェクトを識別しますが、管理者アクセスを付与するものではありません。地図や分析のキーは、多くの場合ドメインやAPIで制限されます。これらの値はブラウザに配信できますが、許可オリジン、API制限、最小権限のロール、クォータ、アラートといった制限は必要です。反対のカテゴリはもっと簡単です。サービスロールキー、データベースのパスワード、SMTP資格情報、署名秘密、AIプロバイダーの秘密キーは、静的バンドルに入れてはいけません。アプリケーション自身のプロバイダーキーは特に危険です。見つけた人がアプリケーションの資金を使えます。ユーザー自身のキーは別の話です。Bearer資格情報であることに変わりはありませんが、持ち主はユーザーであり、目的はプロジェクトやリポジトリではなく、そのユーザーのブラウザに置くことです。',
+          },
+          {
+            heading: '4. GB Coderがプロバイダー資格情報を扱う方法',
+            body: 'GB CoderのAIパネルはbring-your-own-key方式です。キーマネージャーは既定でプロバイダーキーをメモリに保持します。localStorageには書き込みません。ユーザーが明示的に選んだ場合だけsessionStorageに保存し、その場合は現在のタブに限定され、通常はタブを閉じると消えます。ユーザーがキーを消去すると、メモリとセッションストレージから削除されます。マネージャーは各キーを許可されたエンドポイントのオリジンに結び付け、送信ゲートが、承認されていない宛先に資格情報が送られないか確認します。プロバイダーのエラーは秘匿化レイヤーを通り、メッセージがUIやログに届く前にキーのパターンと有効なキーを除去します。カスタムプロバイダーのメタデータはlocalStorageに保存されますが、秘密としてマークされたヘッダーは保存前に消去され、再入力が必要です。リクエストはブラウザからプロバイダーのエンドポイントへ直接送られ、GB CoderがLadeStackのサーバー経由でキーを中継することはありません。これらの対策は、偶発的な保存とオリジン間の漏えいを減らします。ただし基本ルールは変わりません。同じオリジンで動けるスクリプトは、ページが読めるものを読めます。機密作業にはクリーンなプロファイルを使い、信頼できない拡張機能を入れないでください。',
+          },
+          {
+            heading: '5. プロジェクトの秘密、.envファイル、ビルド時のインライン化',
+            body: '秘密はプロジェクトツリーの外に置きます。.envとそのローカル変種を.gitignoreに追加し、プレースホルダー名だけの.env.exampleをコミットします。Viteを使うプロジェクトでは、VITE_変数がすべて本番バンドルにインライン化されることを忘れないでください。ローカル開発で便利だった値も、本番ビルドで使われた瞬間に公開されます。デプロイ前に生成されたアセットをキーのパターンで検査し、見つかったら警告ではなくインシデントとして扱います。GitHubのシークレットスキャンとプッシュ保護は既知のトークン形式をいくつか検出できますが、あくまで最後の網であり、値をリポジトリの外に保つ代わりにはなりません。ブラウザIDEのZIPエクスポートにはプロジェクトファイルが含まれます。.envがプロジェクト内にあれば、バックアップと一緒に移動します。バックアップは暗号化された金庫ではありません。エクスポートは非公開の場所に保存し、不要になった古いコピーは削除してください。スクリーンショット、Issue、チャットメッセージも同じです。そこに貼られたキーは、すでにブラウザの外に出ています。',
+            codeSnippet: `# .gitignore
+.env
+.env.local
+.env.*.local`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '6. GitHubトークンとデプロイトークン',
+            body: 'GitHubの個人アクセストークンとデプロイトークンは、見た目より強力です。repositoryとworkflowのスコープを持つクラシックトークンは、非公開コードを読み、ファイルを変更し、リリースを起動できます。単一リポジトリ、明示的な権限リスト、有効期限を持つfine-grainedトークンを優先してください。トークンにはタスクに必要な権限だけを与えます。同期ならcontentsの読み書きだけで、administrationやbillingは不要です。デバイスや用途ごとに別のトークンを作り、作業が終わったら失効させます。VercelやNetlifyのデプロイトークンは、プロジェクトの公開、置換、削除ができます。プロバイダーがプロジェクト単位やチーム単位のスコープに対応しているなら使い、有効期限に対応しているなら設定してください。トークンは必要なときだけデプロイパネルに貼り、プロジェクトファイルには保存しないでください。CIではコミットされた.envではなく、リポジトリや組織のシークレットを使います。フォークからのpull requestには通常シークレットが渡らないことも覚えておきましょう。スクリーンショットに写した、チャットで共有した、公開リポジトリにコミットしたトークンは、1秒後に削除したとしても侵害されたものとして扱います。',
+          },
+          {
+            heading: '7. AIプロバイダーキー：BYOKを予想外の事態なく使う',
+            body: 'AIプロバイダーのキーは、請求書が付いたBearer資格情報です。持っている人は誰でもリクエストを送り、クォータを消費し、料金を発生させられます。プロジェクト単位に制限されたキーを使い、プロバイダーが提供するなら支出上限を設定し、組織のマスターキーではなく実験用の別キーを使ってください。特にデバイスを共有した後や新しい拡張機能を入れた後は、使用量を定期的に確認します。Ollama、LM Studio、vLLMなどのローカルプロバイダーはクラウドキーを必要としませんが、エンドポイントはマシン上のサービスです。デモを動かすためだけにローカルエンドポイントをインターネットへ公開しないでください。カスタムプロバイダーがプロキシを指す場合、プロキシはキーを見られます。自分が管理し、理解しているプロキシだけを使ってください。プロンプトインジェクションも関連するリスクです。ファイル、Webページ、貼り付けたエラーメッセージには、アシスタントに向けた指示が含まれている可能性があります。秘密はプロンプトの外に置き、アシスタントに読ませるファイルにも入れないでください。会話にキーが現れたら、ローテーションしてください。',
+          },
+          {
+            heading: '8. 共有コンピューター、拡張機能、XSS',
+            body: '共有されたコンピューターやラボのマシンには、別の手順が必要です。プライベートなブラウザプロファイルを使い、セッションへの保存を選ばず、終わったらタブを閉じます。ブラウザがキーの保存を提案したら断ります。残っている疑いがあれば、サイトのストレージを消去します。ブラウザ拡張機能も境界の一部です。広いホスト権限を持つ拡張機能は、ページの内容やストレージを読めることが多く、インストール後に悪意ある更新が届く可能性もあります。資格情報を扱う作業には最小限のプロファイルを使ってください。この文脈での典型的なWebリスクはクロスサイトスクリプティングです。攻撃者がIDEのオリジンでスクリプトを実行できれば、そのスクリプトはlocalStorageとsessionStorageを読み、ページが開いている間にリクエストを送れます。依存関係を最新に保ち、信頼できない第三者スクリプトを避け、デプロイしたサイトでContent Security Policyの導入を検討してください。クリップボードマネージャーや画面共有ツールも、コピーして表示するものを見ています。キーを移動した後にクリップボードを消去し、プロバイダー設定パネルを開く前に共有を一時停止してください。',
+          },
+          {
+            heading: '9. 漏えいしたキーのローテーション',
+            body: '漏えいしたキーへの信頼できる対応はローテーションだけです。先に失効させることが重要です。新しいキーを準備している間も古いキーが有効なら、露出は続きます。新しいキーは必要最小限のスコープで作り、アプリケーションやブラウザの設定を更新し、値がビルドに含まれていたなら再デプロイし、古いキーが拒否されることを確認します。次に、プロバイダーの使用量と監査ログで、予期しない活動がないか確認します。Gitにコミットしたキーは、ファイルを削除するだけでは不十分です。値は履歴に残ります。先にローテーションし、git filter-repoやBFGなどのツールで履歴を書き換え、チームの合意を得てforce-pushし、共同作業者に再クローンを依頼します。ホスティングプラットフォームは古いビルドをキャッシュすることがあるため、古い値が古いバンドルから配信されないようにしてください。AIチャット、サポートチケット、スクリーンショットにキーを貼った場合は、保持されたものとしてローテーションします。最後に、何が起きたかを記録し、それを検出できたはずのチェックを追加し、次のキーの寿命を短くします。',
+          },
+          {
+            heading: '10. 実践的なチェックリスト',
+            body: 'プロジェクトがブラウザを離れる前に、この順序を使ってください。第一に、各値を分類します。公開識別子、ユーザー資格情報、サーバー秘密のどれかです。第二に、サーバー秘密を静的バンドルの外に置き、サーバーレス関数やAPIの背後に移します。第三に、公開接頭辞が必要な値だけを公開し、デプロイ前にビルド済みアセットを検査します。第四に、.envファイルをGitの外に置き、.env.exampleをコミットし、シークレットスキャンを有効にします。第五に、GitHubとホスティング用に、用途ごとのスコープ付きで有効期限のあるトークンを作ります。第六に、GB Coderでは信頼できるデバイスでない限りキーをメモリに置き、トレードオフを理解したときだけセッションへの保存を選びます。第七に、キーをプロンプト、Issue、スクリーンショット、プロジェクトファイルに決して貼らないでください。第八に、少しでも疑わしければローテーションし、交換前に失効させます。第九に、共有マシンではクリーンなブラウザプロファイルを使います。第十に、必要になる前に漏えい時の計画を書いておきます。ブラウザを私的な金庫ではなく公開クライアントとして扱えば、ブラウザIDEでも資格情報を責任を持って管理できます。',
+          },
+        ],
+        relatedDocsLink: '/docs#getting-started',
+        relatedDocsLabel: 'GB Coderの完全なドキュメントを読む →',
+      },
     },
   },
   ko: {
@@ -2292,7 +2612,7 @@ npm run dev
           },
           {
             heading: '3. 정적 사이트와 Vite 앱은 경로가 다르다',
-            body: '번들이 다른 이유는 두 프로젝트 유형의 처리가 다르기 때문입니다. 일반 HTML/CSS/JavaScript 프로젝트에는 package.json이 없습니다. Vercel에는 프레임워크를 쓰지 말라고 지정하고 파일을 정적 사이트로 제공합니다. Netlify는 ZIP을 그대로 게시하며, 이는 정적 파일에도 올바릅니다. 설치할 것도 컴파일할 것도 없어 첫 배포는 보통 빠릅니다. React 또는 Vue 프로젝트에는 생성된 package.json, Vite 설정, 소스 파일이 포함됩니다. Vercel에서는 프로바이더가 Vite를 감지하고 의존성을 설치한 뒤 프로덕션 빌드를 실행해 출력을 게시합니다. 브라우저 안의 시뮬레이션이 아니라 실제 클라우드 빌드이므로 1분 이상 걸릴 수 있습니다. Vercel은 편집기에 우연히 로드된 버전이 아니라 package.json에 기록된 버전을 사용합니다. Netlify의 수동 ZIP 배포는 빌드 명령을 실행하지 않으므로 같은 Vite 소스 트리가 업로드된 그대로, 컴파일되지 않은 채 게시됩니다. Netlify에서 React 또는 Vue를 쓰려면 프로바이더의 Git 통합을 사용하세요. Netlify 원클릭 경로는 정적 출력만 게시합니다. 외부 라이브러리와 주입 설정은 이미 번들에 반영되어 있습니다. Vercel 빌드가 비공개 패키지, 네이티브 바이너리, 빌드 이미지에서 닿을 수 없는 서비스에 의존하면 로컬 미리보기가 되어도 빌드는 실패합니다. 어느 경우인지는 로그로 확인할 수 있습니다.',
+            body: '번들이 다른 이유는 두 프로젝트 유형의 처리가 다르기 때문입니다. 일반 HTML/CSS/JavaScript 프로젝트에는 package.json이 없습니다. Vercel에는 프레임워크를 쓰지 말라고 지정하고 파일을 정적 사이트로 제공합니다. Netlify는 ZIP을 그대로 게시하며, 이는 정적 파일에도 올바릅니다. 설치할 것도 컴파일할 것도 없어 첫 배포는 보통 빠릅니다. React 또는 Vue 프로젝트에는 생성된 package.json, Vite 설정, 소스 파일이 포함됩니다. Vercel에서는 프로바이더가 Vite를 감지하고 의존성을 설치한 뒤 프로덕션 빌드를 실행해 출력을 게시합니다. 브라우저 안의 시뮬레이션이 아니라 실제 클라우드 빌드이므로 1분 이상 걸릴 수 있습니다. Vercel은 편집기에 우연히 로드된 버전이 아니라 package.json에 기록된 버전을 사용합니다. Netlify의 수동 ZIP 배포는 빌드 명령을 실행하지 않으므로 같은 Vite 소스 트리가 업로드된 그대로, 컴파일되지 않은 채 게시됩니다. Netlify에서 React 또는 Vue를 쓰려면 프로바이더의 Git 통합을 사용하세요. Netlify 원클릭 경로는 정적 출력만 게시합니다. 외부 라이브러리와 주입 설정은 이미 번들에 반영되어 있습니다. Vercel 빌드가 비공개 패키지, 네이티브 바이너리, 빌드 이미지에서 닿을 수 없는 서비스에 의존하면 로컬 미리보기가 작동해도 빌드는 실패합니다. 어느 경우인지는 로그로 확인할 수 있습니다.',
           },
           {
             heading: '4. 올바른 범위의 토큰 준비',
@@ -2304,7 +2624,7 @@ npm run dev
           },
           {
             heading: '6. 진행 화면이 실제로 보여주는 것',
-            body: '진행 표시줄은 패키징, 업로드, 빌드, 보안 설정, 완료 순으로 이동합니다. Netlify에서 빌드 표시는 프로바이더의 처리 과정을 뜻하며 빌드 명령을 의미하지 않습니다. 클라이언트의 보고이지 프로바이더의 예측이 아닙니다. 비율은 처음 두 단계에서 빠르게 오르고 프로바이더가 원격 작업을 끝내는 동안 100 아래에 머뭅니다. 의도된 동작입니다. 원격 작업 시간은 예측할 수 없고, 99%까지 질주하는 막대는 거짓말이 되기 때문입니다. GB Coder는 1.5초마다 프로바이더를 폴링하고 상태가 바뀌면 메시지를 갱신합니다. 업로드 요청에는 2분 제한 시간이 있습니다. 패널은 배포 폴링을 3분 후 중단하고 대시보드로 안내합니다. 브라우저가 보기를 멈춰도 배포는 끝날 수 있기 때문입니다. 취소, 대화상자 닫기, Escape 키는 진행 중인 요청과 폴링 루프를 중단합니다. 프로바이더가 이미 배포를 받아들였다면 그쪽에서 배포가 계속될 수 있습니다. 취소가 롤백을 뜻한다고 가정하지 말고 대시보드를 확인하세요. 배포가 실패하면 프로바이더의 로그가 신뢰할 수 있는 출처입니다.',
+            body: '진행 표시줄은 패키징, 업로드, 빌드, 보안 설정, 완료 순으로 이동합니다. Netlify에서 빌드 표시는 프로바이더의 처리 과정을 뜻하며 빌드 명령을 의미하지 않습니다. 클라이언트의 보고일 뿐, 프로바이더의 예측이 아닙니다. 비율은 처음 두 단계에서 빠르게 오르고 프로바이더가 원격 작업을 끝내는 동안 100 아래에 머뭅니다. 의도된 동작입니다. 원격 작업 시간은 예측할 수 없고, 99%까지 질주하는 막대는 거짓말이 되기 때문입니다. GB Coder는 1.5초마다 프로바이더를 폴링하고 상태가 바뀌면 메시지를 갱신합니다. 업로드 요청에는 2분 제한 시간이 있습니다. 패널은 배포 폴링을 3분 후 중단하고 대시보드로 안내합니다. 브라우저가 보기를 멈춰도 배포는 끝날 수 있기 때문입니다. 취소, 대화상자 닫기, Escape 키는 진행 중인 요청과 폴링 루프를 중단합니다. 프로바이더가 이미 배포를 받아들였다면 그쪽에서 배포가 계속될 수 있습니다. 취소가 롤백을 뜻한다고 가정하지 말고 대시보드를 확인하세요. 배포가 실패하면 프로바이더의 로그가 신뢰할 수 있는 출처입니다.',
           },
           {
             heading: '7. 재배포, 안정적인 URL, 프로바이더 상태',
@@ -2325,6 +2645,70 @@ npm run dev
         ],
         relatedDocsLink: '/docs#getting-started',
         relatedDocsLabel: 'GB Coder 전체 문서 보기 →',
+      },
+      'browser-ide-api-keys-environment-variables': {
+        slug: 'browser-ide-api-keys-environment-variables',
+        title: '브라우저 IDE에서 API 키와 환경 변수를 안전하게 다루기',
+        description: '브라우저 IDE에서 API 키와 환경 변수를 다루는 방법: 클라이언트 노출, 안전한 보관, 권한 범위, 로테이션, 배포, 유출 대응을 설명합니다.',
+        date: '2026-10-20',
+        author: 'Girish Lade',
+        tags: ['보안', 'API 키', '환경 변수', '브라우저 IDE', '모범 사례'],
+        intro: '모든 브라우저 IDE는 결국 같은 질문에 도달합니다. 키를 어디에 둘 것인가? 프로젝트에는 API 엔드포인트가 필요하고, AI 패널에는 공급자 키가 필요하며, 배포에는 계정 토큰이 필요합니다. 데스크톱에서는 이런 값을 셸 프로필이나 추적되지 않는 파일에 둘 수 있습니다. 브라우저 탭에서는 경계가 다릅니다. 페이지와 함께 전송되는 것은 페이지가 읽을 수 있고, 브라우저 프로필에 저장된 것은 그 프로필에 속합니다. 이 가이드는 실용적인 모델을 정리합니다. 공개해도 되는 값, 클라이언트에 절대 도달해서는 안 되는 값, GB Coder가 공급자 자격 증명을 처리하는 방식, 키가 유출되었을 때의 대응입니다. 브라우저 탭을 비밀 금고라고 가정하지 않으면서 브라우저 IDE의 편리함을 원하는 사람을 위한 글입니다.',
+        sections: [
+          {
+            heading: '1. 브라우저 탭은 공개된 빌드 대상',
+            body: '첫 번째 규칙은 불편하지만 단순합니다. 정적 웹 앱은 비밀을 보관할 수 없습니다. 브라우저는 HTML, CSS, JavaScript를 내려받아 사용자의 기기에서 실행합니다. 누구나 DevTools를 열고 네트워크 패널을 읽고 번들을 검색하고 중단점을 설정해 변수를 검사할 수 있습니다. 코드를 축소하거나 청크로 나누거나 설정 파일에 값을 숨겨도 달라지는 것은 노력이지 결과가 아닙니다. 브라우저 IDE는 프로젝트 코드를 실행하는 샌드박스를 추가하지만, IDE 자체의 UI는 여전히 같은 오리진에서 실행되며 필요한 값을 읽어야 합니다. 샌드박스는 UI가 사용해야 하는 값의 금고가 아닙니다. 유용한 판단 기준은 간단합니다. 탭에서 실행되는 코드가 값을 사용할 수 있어야 한다면, 탭을 사용하는 사람도 그 값을 읽을 수 있다고 가정하세요. 같은 오리진에서 실행되는 스크립트도 읽을 수 있다고 가정하세요. 이것은 브라우저 개발을 위험하게 만드는 이야기가 아닙니다. 경계를 정의하는 이야기입니다. 공개 식별자는 둘 수 있지만 서버 자격 증명은 둘 수 없습니다.',
+          },
+          {
+            heading: '2. 정적 앱에서 환경 변수가 의미하는 것',
+            body: 'Node.js 서버에서는 환경 변수를 런타임에 프로세스에서 읽습니다. Vite, Create React App, Next.js, Astro 빌드에서는 공개 환경 변수의 동작이 다릅니다. 번들러가 빌드 중에 참조를 리터럴 문자열로 바꿉니다. Vite는 VITE_ 접두사 변수를 import.meta.env를 통해 노출하고, Create React App은 REACT_APP_, Next.js는 NEXT_PUBLIC_, Astro는 PUBLIC_을 사용합니다. 접두사는 명명 규칙이지 보안 제어가 아닙니다. 값이 인라인되는 순간 그 값은 모든 방문자가 내려받는 JavaScript의 일부가 됩니다. 공개 접두사가 없는 변수는 일반적으로 클라이언트 코드에서 사용할 수 없으므로, 서버 전용 값은 정적 페이지가 아니라 서버나 서버리스 함수에서 읽어야 합니다. .env 파일은 개발과 빌드 입력이지 런타임 비밀 저장소가 아닙니다. 로컬 구성과 버전 관리 밖에 값을 두는 데는 유용하지만, 빌드 후에 값을 비공개로 만들어 주지는 않습니다.',
+            codeSnippet: `# Safe to expose: a public endpoint
+VITE_API_URL=https://api.example.com
+
+# Never expose: keep this on a server
+STRIPE_SECRET_KEY=REPLACE_WITH_SERVER_SECRET`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '3. 브라우저에 둘 수 있는 키',
+            body: '일부 키는 공개되도록 설계되었습니다. Stripe 공개 키는 계정을 식별하고 결제 토큰을 만듭니다. 비밀 키는 실제로 돈을 움직이므로 서버에 있어야 합니다. Supabase anon 키는 행 수준 보안 정책이 올바를 때만 안전합니다. Firebase 웹 구성은 프로젝트를 식별하지만 관리자 액세스를 부여하지는 않습니다. 지도와 분석 키는 흔히 도메인이나 API로 제한됩니다. 이런 값은 브라우저로 보낼 수 있지만, 허용 오리진, API 제한, 최소 권한 역할, 할당량, 경고 같은 제한이 여전히 필요합니다. 반대 범주는 말하기 더 쉽습니다. 서비스 역할 키, 데이터베이스 비밀번호, SMTP 자격 증명, 서명 비밀, AI 공급자의 비밀 키는 정적 번들에 절대 들어가면 안 됩니다. 애플리케이션 소유의 공급자 키는 특히 위험합니다. 발견한 사람이 애플리케이션의 돈을 쓸 수 있기 때문입니다. 사용자 소유 키는 다른 경우입니다. 여전히 베어러 자격 증명이지만 사용자의 것이며, 목표는 프로젝트나 저장소가 아니라 사용자의 브라우저에 두는 것입니다.',
+          },
+          {
+            heading: '4. GB Coder가 공급자 자격 증명을 처리하는 방식',
+            body: 'GB Coder의 AI 패널은 bring-your-own-key 방식입니다. 키 관리자는 기본적으로 공급자 키를 메모리에 보관합니다. localStorage에는 쓰지 않습니다. 사용자가 명시적으로 선택한 경우에만 sessionStorage에 저장하며, 이때 값은 현재 탭으로 제한되고 일반적으로 탭을 닫으면 지워집니다. 사용자가 키를 지우면 메모리와 세션 저장소에서 제거됩니다. 관리자는 각 키를 승인된 엔드포인트 오리진에 묶고, 아웃바운드 게이트가 자격 증명이 승인되지 않은 대상으로 전송되지 않는지 확인합니다. 공급자 오류는 가림 처리 계층을 거치며, 메시지가 UI나 로그에 도달하기 전에 키 패턴과 활성 키를 제거합니다. 사용자 지정 공급자 메타데이터는 localStorage에 저장되지만, 비밀로 표시된 헤더는 저장 전에 지워지며 다시 입력해야 합니다. 요청은 브라우저에서 공급자 엔드포인트로 직접 전송되며, GB Coder가 LadeStack 서버를 통해 키를 프록시하지 않습니다. 이런 조치는 우발적 저장과 오리진 간 유출을 줄입니다. 하지만 기본 규칙은 바뀌지 않습니다. 같은 오리진에서 실행될 수 있는 스크립트는 페이지가 읽을 수 있는 것을 읽을 수 있습니다. 민감한 작업에는 깨끗한 프로필을 사용하고 신뢰할 수 없는 확장 프로그램을 설치하지 마세요.',
+          },
+          {
+            heading: '5. 프로젝트 비밀, .env 파일, 빌드 시 인라인 처리',
+            body: '비밀은 프로젝트 트리 밖에 두세요. .env와 로컬 변형을 .gitignore에 추가하고, 자리 표시자 이름만 담은 .env.example을 커밋하세요. Vite를 쓰는 프로젝트라면 모든 VITE_ 변수가 프로덕션 번들에 인라인된다는 점을 기억하세요. 로컬 개발에서 편리했던 값도 프로덕션 빌드에 사용되는 순간 공개됩니다. 배포 전에 생성된 자산에서 키 패턴을 검사하고, 발견되면 경고가 아니라 사고로 취급하세요. GitHub 비밀 스캔과 푸시 보호는 알려진 토큰 형식 일부를 잡을 수 있지만, 안전망일 뿐 저장소 밖에 값을 두는 일을 대신하지는 않습니다. 브라우저 IDE의 ZIP 내보내기에는 프로젝트 파일이 포함됩니다. .env 파일이 프로젝트 안에 있으면 백업과 함께 이동합니다. 백업은 암호화된 금고가 아닙니다. 내보내기는 비공개 장소에 보관하고 더 이상 필요 없는 오래된 사본은 삭제하세요. 스크린샷, 이슈 보고서, 채팅 메시지도 마찬가지입니다. 그중 하나에 붙여넣은 키는 이미 브라우저를 떠난 것입니다.',
+            codeSnippet: `# .gitignore
+.env
+.env.local
+.env.*.local`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '6. GitHub 토큰과 배포 토큰',
+            body: 'GitHub 개인 액세스 토큰과 배포 토큰은 보기보다 강력합니다. repository와 workflow 범위를 가진 클래식 토큰은 비공개 코드를 읽고 파일을 변경하고 릴리스를 시작할 수 있습니다. 단일 저장소, 명시적 권한 목록, 만료일이 있는 fine-grained 토큰을 선호하세요. 토큰에는 작업에 필요한 권한만 부여하세요. 동기화에는 contents 읽기와 쓰기만 있으면 되고 administration이나 billing은 필요 없습니다. 기기나 용도별로 별도 토큰을 만들고 작업이 끝나면 폐기하세요. Vercel이나 Netlify의 배포 토큰은 프로젝트를 게시, 교체, 삭제할 수 있습니다. 공급자가 프로젝트나 팀 범위를 지원하면 사용하고, 만료를 지원하면 설정하세요. 토큰은 필요할 때만 배포 패널에 붙여넣고 프로젝트 파일에 저장하지 마세요. CI에서는 커밋된 .env 대신 저장소나 조직 비밀을 사용하고, 포크에서 온 pull request에는 일반적으로 비밀이 전달되지 않는다는 점을 기억하세요. 스크린샷에 찍혔거나 채팅에서 공유되었거나 공개 저장소에 커밋된 토큰은 1초 뒤에 삭제했더라도 침해된 것으로 취급해야 합니다.',
+          },
+          {
+            heading: '7. AI 공급자 키: 놀라움 없는 BYOK',
+            body: 'AI 공급자 키는 청구서가 붙은 베어러 자격 증명입니다. 가진 사람은 누구나 요청을 보내고 할당량을 소비하며 비용을 발생시킬 수 있습니다. 프로젝트 범위로 제한된 키를 사용하고, 공급자가 제공하면 지출 한도를 설정하고, 조직의 마스터 키 대신 실험용 별도 키를 사용하세요. 특히 기기를 공유하거나 새 확장 프로그램을 설치한 뒤에는 사용량을 정기적으로 확인하세요. Ollama, LM Studio, vLLM 같은 로컬 공급자는 클라우드 키가 필요 없지만, 엔드포인트는 여전히 기기 위의 서비스입니다. 데모를 돌리기 위해 로컬 엔드포인트를 공용 인터넷에 노출하지 마세요. 사용자 지정 공급자가 프록시를 가리키면 프록시가 키를 볼 수 있습니다. 자신이 관리하고 이해하는 프록시만 사용하세요. 프롬프트 인젝션도 관련 위험입니다. 파일, 웹 페이지, 붙여넣은 오류 메시지에는 어시스턴트를 겨냥한 지시가 들어 있을 수 있습니다. 비밀은 프롬프트 밖에 두고, 어시스턴트가 읽도록 허용한 파일에도 넣지 마세요. 대화에 키가 나타나면 로테이션하세요.',
+          },
+          {
+            heading: '8. 공유 컴퓨터, 확장 프로그램, XSS',
+            body: '공유 컴퓨터나 실습실 기기에는 다른 절차가 필요합니다. 비공개 브라우저 프로필을 사용하고, 세션 저장을 선택하지 말고, 끝나면 탭을 닫으세요. 브라우저가 키 저장을 제안하면 거절하세요. 남아 있다고 의심되면 사이트 저장소를 지우세요. 브라우저 확장 프로그램도 경계의 일부입니다. 넓은 호스트 권한을 가진 확장 프로그램은 흔히 페이지 내용이나 저장소를 읽을 수 있고, 설치 후에 악성 업데이트가 도착할 수도 있습니다. 자격 증명을 다루는 작업에는 최소한의 프로필을 사용하세요. 이 맥락에서 전형적인 웹 위험은 크로스 사이트 스크립팅입니다. 공격자가 IDE 오리진에서 스크립트를 실행할 수 있으면, 그 스크립트는 localStorage와 sessionStorage를 읽고 페이지가 열려 있는 동안 요청을 보낼 수 있습니다. 의존성을 최신으로 유지하고 신뢰할 수 없는 타사 스크립트를 피하며, 배포된 사이트에 콘텐츠 보안 정책을 고려하세요. 클립보드 관리자와 화면 공유 도구도 복사하고 표시하는 것을 봅니다. 키를 옮긴 뒤 클립보드를 지우고, 공급자 설정 패널을 열기 전에 공유를 일시 중지하세요.',
+          },
+          {
+            heading: '9. 유출된 키 로테이션',
+            body: '유출된 키에 대한 신뢰할 수 있는 대응은 로테이션뿐입니다. 먼저 폐기하는 것이 중요합니다. 새 키를 준비하는 동안 이전 키가 유효하면 노출은 계속됩니다. 새 키는 필요한 최소 범위로 만들고, 애플리케이션이나 브라우저 설정을 업데이트하고, 값이 빌드에 포함되어 있었다면 다시 배포한 뒤 이전 키가 거부되는지 확인하세요. 그다음 공급자의 사용량과 감사 로그에서 예상하지 못한 활동을 확인하세요. 키가 Git에 커밋되었다면 파일을 삭제하는 것만으로는 부족합니다. 값은 기록에 남습니다. 먼저 로테이션한 뒤 git filter-repo나 BFG 같은 도구로 기록을 다시 쓰고, 팀의 동의를 얻어 force-push하고, 협업자에게 다시 클론하도록 요청하세요. 호스팅 플랫폼은 오래된 빌드를 캐시할 수 있으므로 이전 값이 오래된 번들에서 제공되지 않도록 하세요. 키를 AI 채팅, 지원 티켓, 스크린샷에 붙여넣었다면 보관된 것으로 가정하고 로테이션하세요. 마지막으로 무슨 일이 있었는지 기록하고, 문제를 잡았을 수 있는 검사를 추가하고, 다음 키의 수명을 줄이세요.',
+          },
+          {
+            heading: '10. 실용적인 체크리스트',
+            body: '프로젝트가 브라우저를 떠나기 전에 이 순서를 사용하세요. 첫째, 각 값을 분류합니다. 공개 식별자, 사용자 자격 증명, 서버 비밀 중 하나입니다. 둘째, 서버 비밀을 정적 번들 밖에 두고 서버리스 함수나 API 뒤로 옮깁니다. 셋째, 공개 접두사가 필요한 값만 노출하고 배포 전에 빌드된 자산을 검사합니다. 넷째, .env 파일을 Git 밖에 두고 .env.example을 커밋하며 비밀 스캔을 활성화합니다. 다섯째, GitHub와 호스팅용으로 범위가 제한되고 만료되는 토큰을 용도별로 하나씩 만듭니다. 여섯째, GB Coder에서는 신뢰할 수 있는 기기가 아니라면 키를 메모리에 두고, 트레이드오프를 이해할 때만 세션 저장을 선택합니다. 일곱째, 키를 프롬프트, 이슈, 스크린샷, 프로젝트 파일에 절대 붙여넣지 않습니다. 여덟째, 조금이라도 의심되면 로테이션하고 교체 전에 폐기합니다. 아홉째, 공유 기기에서는 깨끗한 브라우저 프로필을 사용합니다. 열째, 필요해지기 전에 유출 대응 계획을 적어 둡니다. 브라우저를 사적인 금고가 아니라 공개 클라이언트로 취급하면 브라우저 IDE에서도 자격 증명을 책임 있게 관리할 수 있습니다.',
+          },
+        ],
+        relatedDocsLink: '/docs#getting-started',
+        relatedDocsLabel: 'GB Coder 전체 문서 읽기 →',
       },
     },
   },
@@ -2730,6 +3114,70 @@ npm run dev
         relatedDocsLink: '/docs#getting-started',
         relatedDocsLabel: '阅读 GB Coder 完整文档 →',
       },
+      'browser-ide-api-keys-environment-variables': {
+        slug: 'browser-ide-api-keys-environment-variables',
+        title: '浏览器 IDE 中的 API 密钥与环境变量安全指南',
+        description: '浏览器 IDE 中 API 密钥与环境变量的处理指南：客户端暴露、安全存储、权限范围、轮换、部署与泄露响应。',
+        date: '2026-10-20',
+        author: 'Girish Lade',
+        tags: ['安全', 'API 密钥', '环境变量', '浏览器 IDE', '最佳实践'],
+        intro: '每个浏览器 IDE 最终都会面对同一个问题：密钥放在哪里？项目需要 API 端点，AI 面板需要提供商密钥，部署需要账户令牌。在桌面环境中，这些值可以放在 shell 配置文件或未被跟踪的文件里。在浏览器标签页中，边界不同。随页面一起发送的内容可以被页面读取，保存在浏览器配置文件中的内容属于该配置文件。本指南给出一个实用模型：哪些值可以公开，哪些绝不能到达客户端，GB Coder 如何处理提供商凭据，以及密钥泄露后该怎么办。它面向希望享受浏览器 IDE 便利、又不把标签页当成秘密保险箱的人。',
+        sections: [
+          {
+            heading: '1. 浏览器标签页是公开的构建目标',
+            body: '第一条规则令人不适但很简单：静态 Web 应用无法保存秘密。浏览器下载 HTML、CSS 和 JavaScript，然后在用户的机器上执行。任何人都可以打开 DevTools、查看网络面板、搜索打包文件，或者设置断点检查变量。压缩代码、拆分成块、把值藏进配置文件，改变的只是难度，不是结果。浏览器 IDE 为运行项目代码增加了沙箱，但 IDE 自身的界面仍运行在同一源上，必须读取它运行所需的内容。沙箱不是界面自身所用值的保险箱。有用的判断标准很直接：如果标签页中运行的代码必须能访问某个值，就假定使用标签页的人也能读取它，并假定同一源上运行的任何脚本也能读取它。这并不意味着浏览器开发不安全，而是在定义边界。公开标识符可以放在那里，服务器凭据不行。',
+          },
+          {
+            heading: '2. 静态应用中的环境变量意味着什么',
+            body: '在 Node.js 服务器中，环境变量在运行时从进程中读取。在 Vite、Create React App、Next.js 或 Astro 的构建中，公开环境变量的工作方式不同：打包器在构建时把引用替换为字面量字符串。Vite 通过 import.meta.env 暴露带 VITE_ 前缀的变量；Create React App 使用 REACT_APP_；Next.js 使用 NEXT_PUBLIC_；Astro 使用 PUBLIC_。前缀是命名约定，不是安全控制。值一旦被内联，就会成为每位访客下载的 JavaScript 的一部分。没有公开前缀的变量通常无法被客户端代码使用，因此仅限服务器的值必须由服务器或无服务器函数读取，而不是由静态页面读取。.env 文件是开发和构建的输入，不是运行时秘密存储。它适合本地配置和让值远离版本控制，但不会在构建后让值变为私有。',
+            codeSnippet: `# Safe to expose: a public endpoint
+VITE_API_URL=https://api.example.com
+
+# Never expose: keep this on a server
+STRIPE_SECRET_KEY=REPLACE_WITH_SERVER_SECRET`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '3. 哪些密钥可以放在浏览器中',
+            body: '有些密钥本来就是公开的。Stripe 可发布密钥用于标识账户并创建支付令牌；秘密密钥真正移动资金，必须留在服务器上。Supabase anon 密钥只有在行级安全策略正确时才安全。Firebase Web 配置标识项目，但不授予管理访问权限。地图和分析密钥通常按域名或 API 限制。这些值可以发送到浏览器，但仍需要限制：允许的来源、API 限制、最小权限角色、配额和告警。相反的类别更容易说明。服务角色密钥、数据库密码、SMTP 凭据、签名密钥和 AI 提供商的私钥绝不能出现在静态打包文件中。属于应用本身的提供商密钥尤其危险：任何找到它的人都能花应用的钱。属于用户的密钥是另一种情况。它仍是 bearer 凭据，但归用户所有，目标是把它留在用户的浏览器中，而不是项目或仓库里。',
+          },
+          {
+            heading: '4. GB Coder 如何处理提供商凭据',
+            body: 'GB Coder 的 AI 面板采用 bring-your-own-key 模式。密钥管理器默认将提供商密钥保存在内存中，不写入 localStorage。用户可以明确选择持久化到 sessionStorage，这会把值限制在当前标签页，通常会在标签页关闭时清除。用户清除密钥时，它会从内存和会话存储中移除。管理器还会把每个密钥绑定到已授权的端点源，出站网关会检查凭据不会被发送到未获批准的目标。提供商错误会经过脱敏层，在消息到达界面或日志之前移除密钥模式和活动密钥。自定义提供商元数据保存在 localStorage 中，但标记为秘密的请求头会在持久化前被清除，必须重新输入。请求直接从浏览器发往提供商的端点；GB Coder 不会通过 LadeStack 服务器代理密钥。这些措施减少了意外持久化和跨源泄露，但不会改变基本规则：任何能在同一源上运行的脚本，都能读取页面能读取的内容。处理敏感工作时使用干净的配置文件，不要安装不受信任的扩展程序。',
+          },
+          {
+            heading: '5. 项目秘密、.env 文件与构建时内联',
+            body: '把秘密留在项目目录之外。将 .env 及其本地变体加入 .gitignore，并提交只含占位符名称的 .env.example。如果项目使用 Vite，请记住每个 VITE_ 变量都会被内联到生产打包文件中。本地开发时方便的值，一旦用于生产构建就会公开。部署前检查生成的资源中是否有密钥模式，发现后要当作事件处理，而不是警告。GitHub 的秘密扫描和推送保护可以捕获一些已知令牌格式，但它们只是兜底，不能替代把值留在仓库之外。浏览器 IDE 的 ZIP 导出包含项目文件。如果项目中有 .env 文件，它会随备份一起移动。备份不是加密保险箱。把导出文件存放在私密位置，并在不再需要时删除旧副本。截图、问题报告和聊天消息也是如此：粘贴到其中任何一个地方的密钥都已经离开了浏览器。',
+            codeSnippet: `# .gitignore
+.env
+.env.local
+.env.*.local`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '6. GitHub 令牌与部署令牌',
+            body: 'GitHub 个人访问令牌和部署令牌比看起来更强大。带有 repository 和 workflow 范围的经典令牌可以读取私有代码、修改文件并触发发布。优先使用细粒度令牌，限定单个仓库、明确的权限列表和到期日期。只给令牌分配任务所需的权限：同步只需要 contents 读写，不需要 administration 或 billing。为不同设备或用途创建不同令牌，完成后撤销。Vercel 或 Netlify 的部署令牌可以发布、替换或删除项目。如果提供商支持项目或团队范围，就使用它；如果支持过期时间，就设置一个。只在需要时把令牌粘贴到部署面板，不要把它保存在项目文件中。在 CI 中，使用仓库或组织秘密，而不是提交 .env，并记住来自 fork 的 pull request 通常不会获得秘密。被截图、在聊天中分享或提交到公开仓库的令牌，即使在下一秒删除，也应视为已泄露。',
+          },
+          {
+            heading: '7. AI 提供商密钥：没有意外的 BYOK',
+            body: 'AI 提供商密钥是附带账单的 bearer 凭据。任何持有它的人都可以发送请求、消耗配额并产生费用。使用限定到项目的密钥，在提供商支持时设置支出上限，并使用单独的实验密钥而不是组织的主密钥。定期检查用量，尤其是在共享设备或安装新扩展程序之后。Ollama、LM Studio 和 vLLM 等本地提供商不需要云密钥，但它们的端点仍是机器上的服务。不要为了让演示运行就把本地端点暴露到公网。如果自定义提供商指向代理，代理可以看到密钥；只使用你控制并理解的代理。提示注入是相关风险：文件、网页或粘贴的错误消息可能包含针对助手的指令。把秘密留在提示之外，也不要放进允许助手读取的文件中。如果密钥出现在对话中，请轮换它。',
+          },
+          {
+            heading: '8. 共享电脑、扩展程序与 XSS',
+            body: '共享或实验室电脑需要不同的流程。使用私密浏览器配置文件，不要选择会话持久化，完成后关闭标签页。如果浏览器提出保存密钥，请拒绝。如果怀疑密钥被保留，清除站点存储。浏览器扩展也是边界的一部分：拥有广泛主机权限的扩展通常可以读取页面内容或存储，恶意更新也可能在安装后到来。处理凭据时使用最小化配置文件。在这种场景下，跨站脚本是典型的 Web 风险。如果攻击者能在 IDE 的源上运行脚本，该脚本就能读取 localStorage 和 sessionStorage，并在页面打开期间发送请求。保持依赖更新，避免不受信任的第三方脚本，并考虑在部署站点上使用内容安全策略。剪贴板管理器和屏幕共享工具也会看到你复制和显示的内容。移动密钥后清除剪贴板，在打开提供商设置面板前暂停共享。',
+          },
+          {
+            heading: '9. 轮换泄露的密钥',
+            body: '轮换是应对密钥泄露的唯一可靠方法。先撤销很重要：如果在准备新密钥时旧密钥仍然有效，暴露就会继续。用最窄的可用范围创建新密钥，更新应用或浏览器设置，如果该值是构建的一部分就重新部署，并验证旧密钥已被拒绝。然后检查提供商的使用量和审计日志，寻找意外活动。如果密钥已提交到 Git，仅仅删除文件是不够的，值仍留在历史中。先轮换，再用 git filter-repo 或 BFG 等工具重写历史，与团队达成一致后强制推送，并请协作者重新克隆。托管平台可能缓存旧构建，因此要确保旧值无法从过时的打包文件中提供。如果密钥被粘贴到 AI 聊天、支持工单或截图中，假定它已被保留并轮换。最后，记录发生了什么，添加本可以捕获它的检查，并缩短下一个密钥的有效期。',
+          },
+          {
+            heading: '10. 实用检查清单',
+            body: '在项目离开浏览器之前，按这个顺序检查。第一，对每个值分类：公开标识符、用户凭据或服务器秘密。第二，把服务器秘密留在静态打包文件之外，放到无服务器函数或 API 后面。第三，只暴露需要公开前缀的值，并在部署前检查构建产物。第四，让 .env 文件远离 Git，提交 .env.example，并启用秘密扫描。第五，为 GitHub 和托管创建有范围、会过期的令牌，每个用途一个。第六，在 GB Coder 中，除非在可信设备上，否则让密钥留在内存中；只有理解权衡时才选择会话持久化。第七，绝不把密钥粘贴到提示、问题、截图或项目文件中。第八，有任何疑问就轮换，并在替换前撤销。第九，在共享机器上使用干净的浏览器配置文件。第十，在需要之前写下泄露应对计划。只要把浏览器当作公开客户端而不是私人保险箱，浏览器 IDE 就能负责任地处理凭据。',
+          },
+        ],
+        relatedDocsLink: '/docs#getting-started',
+        relatedDocsLabel: '阅读完整的 GB Coder 文档 →',
+      },
     },
   },
   ru: {
@@ -3091,6 +3539,70 @@ npm run dev
         relatedDocsLink: '/docs#getting-started',
         relatedDocsLabel: 'Читать полную документацию GB Coder →',
       },
+      'browser-ide-api-keys-environment-variables': {
+        slug: 'browser-ide-api-keys-environment-variables',
+        title: 'Ключи API и переменные окружения в браузерной IDE',
+        description: 'Где место ключам API и переменным окружения в браузерной IDE: клиентская экспозиция, безопасное хранение, ограничение прав, ротация, деплой и реакция на утечку.',
+        date: '2026-10-20',
+        author: 'Girish Lade',
+        tags: ['Безопасность', 'Ключи API', 'Переменные окружения', 'Браузерная IDE', 'Лучшие практики'],
+        intro: 'Рано или поздно любой браузерной IDE задают один и тот же вопрос: где хранить ключи? Проекту нужен endpoint API, панели ИИ — ключ провайдера, а деплою — токен аккаунта. На десктопе эти значения можно держать в профиле оболочки или в неотслеживаемом файле. В браузерной вкладке граница другая. Всё, что отправляется вместе со страницей, может быть прочитано страницей, а всё, что хранится в профиле браузера, принадлежит этому профилю. Это руководство предлагает практическую модель: какие значения можно публиковать, какие никогда не должны попадать к клиенту, как GB Coder обращается с учётными данными провайдеров и что делать при утечке ключа. Оно для тех, кто хочет удобство браузерной IDE, не делая вид, что вкладка — это секретный сейф.',
+        sections: [
+          {
+            heading: '1. Браузерная вкладка — публичная цель сборки',
+            body: 'Первое правило неудобно, но просто: статическое веб-приложение не может хранить секрет. Браузер скачивает HTML, CSS и JavaScript, а затем выполняет их на машине пользователя. Любой может открыть DevTools, посмотреть сетевую панель, поискать по бандлу или поставить точку останова и проверить переменную. Минификация, разбиение на чанки или сокрытие значения в конфигурационном файле меняют затраты, но не результат. Браузерная IDE добавляет песочницу для выполнения кода проекта, но интерфейс самой IDE по-прежнему работает на том же origin и должен читать то, что ему нужно для работы. Песочница не является сейфом для значений, которые использует сам интерфейс. Полезный тест прост: если значение должно быть доступно коду во вкладке, считайте, что человек, использующий вкладку, тоже может его прочитать, как и любой скрипт на том же origin. Это не делает браузерную разработку небезопасной. Это определяет границу. Публичные идентификаторы там жить могут; серверные учётные данные — нет.',
+          },
+          {
+            heading: '2. Что означает переменная окружения в статическом приложении',
+            body: 'На сервере Node.js переменная окружения читается во время выполнения из процесса. В сборке Vite, Create React App, Next.js или Astro публичные переменные окружения работают иначе: сборщик заменяет ссылки на литеральные строки во время сборки. Vite предоставляет переменные с префиксом VITE_ через import.meta.env; Create React App использует REACT_APP_; Next.js — NEXT_PUBLIC_; Astro — PUBLIC_. Префикс — это соглашение об именовании, а не средство защиты. Как только значение встроено, оно становится частью JavaScript, который скачивает каждый посетитель. Переменная без публичного префикса обычно недоступна клиентскому коду, поэтому серверные значения должны читать сервер или serverless-функция, а не статическая страница. Файл .env — это входные данные для разработки и сборки, а не хранилище секретов во время выполнения. Он полезен для локальной конфигурации и для того, чтобы держать значения вне системы контроля версий, но не делает значение приватным после сборки.',
+            codeSnippet: `# Safe to expose: a public endpoint
+VITE_API_URL=https://api.example.com
+
+# Never expose: keep this on a server
+STRIPE_SECRET_KEY=REPLACE_WITH_SERVER_SECRET`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '3. Какие ключи могут жить в браузере',
+            body: 'Некоторые ключи созданы публичными. Публикуемый ключ Stripe идентифицирует аккаунт и создаёт платёжные токены; секретный ключ реально двигает деньги и должен оставаться на сервере. Anon-ключ Supabase безопасен только при корректных политиках row-level security. Веб-конфигурация Firebase идентифицирует проект, но не даёт административного доступа. Ключи карт и аналитики часто ограничиваются доменом или API. Эти значения можно отправлять в браузер, но им всё равно нужны ограничения: разрешённые origin, ограничения API, роли с минимальными правами, квоты и оповещения. Противоположную категорию перечислить проще. Ключи service role, пароли баз данных, учётные данные SMTP, секреты подписи и приватные ключи AI-провайдеров никогда не должны попадать в статический бандл. Ключ провайдера, принадлежащий приложению, особенно опасен: любой, кто его найдёт, сможет тратить деньги приложения. Ключ, принадлежащий пользователю, — другой случай. Это по-прежнему bearer-учётные данные, но они принадлежат пользователю, и цель — держать их в его браузере, а не в проекте или репозитории.',
+          },
+          {
+            heading: '4. Как GB Coder обращается с учётными данными провайдеров',
+            body: 'Панель ИИ в GB Coder работает по модели bring-your-own-key. Менеджер ключей по умолчанию хранит ключи провайдеров в памяти. Он не записывает их в localStorage. Пользователь может явно включить сохранение в sessionStorage; тогда значение ограничено текущей вкладкой и обычно очищается при её закрытии. Ключ удаляется из памяти и сессионного хранилища, когда пользователь его очищает. Менеджер также привязывает каждый ключ к разрешённому origin endpoint, а исходящий шлюз проверяет, что учётные данные не отправляются на неутверждённый адрес. Ошибки провайдеров проходят через слой редактирования, который удаляет шаблоны ключей и активные ключи до того, как сообщение попадёт в интерфейс или лог. Метаданные пользовательских провайдеров хранятся в localStorage, но заголовки, помеченные как секретные, очищаются перед сохранением и должны быть введены заново. Запросы идут напрямую из браузера в endpoint провайдера; GB Coder не проксирует ключ через сервер LadeStack. Эти меры уменьшают случайное сохранение и утечки между origin. Но они не меняют базовое правило: любой скрипт, который может выполняться на том же origin, может прочитать то, что читает страница. Используйте чистый профиль для чувствительной работы и не устанавливайте недоверенные расширения.',
+          },
+          {
+            heading: '5. Секреты проекта, файлы .env и встраивание при сборке',
+            body: 'Держите секреты вне дерева проекта. Добавьте .env и его локальные варианты в .gitignore, а в репозиторий коммитьте .env.example с именами-заполнителями. Если проект использует Vite, помните, что каждая переменная VITE_ встраивается в production-бандл. Значение, удобное при локальной разработке, становится публичным в момент, когда его используют в production-сборке. Перед деплоем проверьте сгенерированные ассеты на шаблоны ключей и рассматривайте находку как инцидент, а не предупреждение. Сканирование секретов и push protection в GitHub могут поймать некоторые известные форматы токенов, но это страховка, а не замена хранению значений вне репозитория. ZIP-экспорт браузерной IDE включает файлы проекта. Если файл .env находится в проекте, он уезжает вместе с резервной копией. Резервная копия — не зашифрованный сейф. Храните экспорты в приватном месте и удаляйте старые копии, когда они больше не нужны. То же относится к скриншотам, отчётам об ошибках и сообщениям в чате: ключ, вставленный в любое из этого, уже покинул браузер.',
+            codeSnippet: `# .gitignore
+.env
+.env.local
+.env.*.local`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '6. Токены GitHub и деплоя',
+            body: 'Личные токены доступа GitHub и токены деплоя мощнее, чем кажутся. Классический токен с областями repository и workflow может читать приватный код, менять файлы и запускать релизы. Предпочитайте fine-grained токены с одним репозиторием, явным списком разрешений и сроком действия. Давайте токену только те права, которые нужны задаче: для синхронизации достаточно чтения и записи contents, без administration и billing. Создавайте отдельные токены для разных устройств или целей и отзывайте их по завершении работы. Токены деплоя Vercel или Netlify могут публиковать, заменять или удалять проекты. Если провайдер поддерживает ограничение по проекту или команде, используйте его; если поддерживает срок действия, задайте его. Вставляйте токен в панель деплоя только при необходимости и не сохраняйте его в файле проекта. В CI используйте секреты репозитория или организации, а не закоммиченный .env, и помните, что pull request из форков обычно не получают секретов. Токен, который попал на скриншот, был отправлен в чат или закоммичен в публичный репозиторий, следует считать скомпрометированным, даже если его удалили через секунду.',
+          },
+          {
+            heading: '7. Ключи AI-провайдеров: BYOK без сюрпризов',
+            body: 'Ключ AI-провайдера — это bearer-учётные данные с прикреплённым счётом. Любой, у кого он есть, может отправлять запросы, расходовать квоту и создавать затраты. Используйте ключ, ограниченный проектом, задайте лимит расходов, если провайдер это позволяет, и используйте отдельный ключ для экспериментов вместо мастер-ключа организации. Регулярно проверяйте использование, особенно после того, как поделились устройством или установили новое расширение. Локальные провайдеры вроде Ollama, LM Studio и vLLM не требуют облачного ключа, но их endpoint — всё равно сервис на машине. Не выставляйте локальный endpoint в публичный интернет только ради работающей демонстрации. Если пользовательский провайдер указывает на прокси, прокси видит ключ; используйте только тот прокси, который вы контролируете и понимаете. Prompt injection — связанный риск: файл, веб-страница или вставленное сообщение об ошибке могут содержать инструкции для ассистента. Держите секреты вне промптов и вне файлов, которые ассистенту разрешено читать. Если ключ появился в разговоре, ротируйте его.',
+          },
+          {
+            heading: '8. Общие компьютеры, расширения и XSS',
+            body: 'Общий или лабораторный компьютер требует другой процедуры. Используйте приватный профиль браузера, не включайте сохранение сессии и закрывайте вкладку по завершении. Если браузер предлагает сохранить ключ, откажитесь. Очистите хранилище сайта, если подозреваете, что оно сохранилось. Расширения браузера — тоже часть границы: расширение с широкими правами хоста часто может читать содержимое страницы или хранилище, а вредоносное обновление может прийти уже после установки. Используйте минимальный профиль для работы с учётными данными. Классический веб-риск в этом контексте — cross-site scripting. Если атакующий может выполнить скрипт на origin IDE, этот скрипт сможет читать localStorage и sessionStorage и отправлять запросы, пока страница открыта. Обновляйте зависимости, избегайте недоверенных сторонних скриптов и рассмотрите content security policy на задеплоенном сайте. Менеджеры буфера обмена и инструменты демонстрации экрана тоже видят, что вы копируете и показываете. Очищайте буфер обмена после переноса ключа и приостанавливайте демонстрацию перед открытием панели настроек провайдера.',
+          },
+          {
+            heading: '9. Ротация утёкшего ключа',
+            body: 'Ротация — единственный надёжный ответ на утёкший ключ. Сначала отозвать — важно: если старый ключ остаётся действительным, пока готовится замена, экспозиция продолжается. Создайте новый ключ с минимально необходимой областью, обновите приложение или настройки браузера, задеплойте заново, если значение входило в сборку, и проверьте, что старый ключ отклоняется. Затем изучите использование и журналы аудита провайдера на предмет неожиданной активности. Если ключ был закоммичен в Git, удалить файл недостаточно: значение остаётся в истории. Сначала ротируйте, затем перепишите историю инструментом вроде git filter-repo или BFG, сделайте force-push по согласованию с командой и попросите коллег клонировать репозиторий заново. Платформы хостинга могут кешировать старые сборки, поэтому убедитесь, что старое значение нельзя отдать из устаревшего бандла. Если ключ вставляли в чат с ИИ, тикет поддержки или скриншот, считайте, что он сохранён, и ротируйте его. Наконец, зафиксируйте, что произошло, добавьте проверку, которая могла бы это поймать, и сократите срок жизни следующего ключа.',
+          },
+          {
+            heading: '10. Практический чек-лист',
+            body: 'Используйте эту последовательность, прежде чем проект покинет браузер. Во-первых, классифицируйте каждое значение: публичный идентификатор, учётные данные пользователя или серверный секрет. Во-вторых, держите серверные секреты вне статического бандла и помещайте их за serverless-функцию или API. В-третьих, раскрывайте только значения, которым нужен публичный префикс, и проверяйте собранные ассеты перед деплоем. В-четвёртых, держите файлы .env вне Git, коммитьте .env.example и включите сканирование секретов. В-пятых, создавайте токены с ограниченной областью и сроком действия для GitHub и хостинга, по одному на задачу. В-шестых, в GB Coder оставляйте ключи в памяти, если вы не на доверенном устройстве, и включайте сохранение сессии только когда понимаете компромисс. В-седьмых, никогда не вставляйте ключ в промпт, тикет, скриншот или файл проекта. В-восьмых, ротируйте при любом сомнении и отзывайте до замены. В-девятых, используйте чистый профиль браузера на общих машинах. В-десятых, запишите план действий при утечке заранее. Браузерная IDE может ответственно обращаться с учётными данными, если относиться к браузеру как к публичному клиенту, а не как к приватному сейфу.',
+          },
+        ],
+        relatedDocsLink: '/docs#getting-started',
+        relatedDocsLabel: 'Читать полную документацию GB Coder →',
+      },
     },
   },
   pt: {
@@ -3430,7 +3942,7 @@ npm run dev
           },
           {
             heading: '6. O que a tela de progresso realmente mostra',
-            body: 'A barra de progresso passa por empacotamento, upload, build, proteção e pronto. Na Netlify, o rótulo de build representa o processamento do provedor, não um comando de build. É um relatório do cliente, não uma previsão do provedor. A porcentagem avança nas duas primeiras etapas e fica abaixo de 100 enquanto o provedor conclui o trabalho remoto. Isso é intencional: o trabalho remoto pode levar um tempo imprevisível, e uma barra que disparasse para 99% estaria mentindo. O GB Coder consulta o provedor a cada um segundo e meio e atualiza a mensagem quando o estado muda. Uma requisição de upload tem timeout de dois minutos. O painel para de esperar após três minutos de polling do deploy e aponta para o dashboard, porque o deploy pode terminar mesmo quando o navegador já parou de olhar. Cancelar, fechar o diálogo ou pressionar Escape aborta a requisição em andamento e o loop de polling. Se o provedor já aceitou o deploy, o deploy pode continuar do lado dele; confira o dashboard antes de assumir que cancelar equivale a rollback. Os logs do provedor são a fonte autoritativa quando um deploy falha.',
+            body: 'A barra de progresso passa por empacotamento, upload, build, proteção e pronto. Na Netlify, o rótulo de build representa o processamento do provedor, não um comando de build. É um relatório do cliente, não uma previsão do provedor. A porcentagem avança nas duas primeiras etapas e fica abaixo de 100 enquanto o provedor conclui o trabalho remoto. Isso é intencional: o trabalho remoto pode levar um tempo imprevisível, e uma barra que disparasse para 99% estaria mentindo. O GB Coder consulta o provedor a cada segundo e meio e atualiza a mensagem quando o estado muda. Uma requisição de upload tem timeout de dois minutos. O painel para de esperar após três minutos de polling do deploy e aponta para o dashboard, porque o deploy pode terminar mesmo quando o navegador já parou de olhar. Cancelar, fechar o diálogo ou pressionar Escape aborta a requisição em andamento e o loop de polling. Se o provedor já aceitou o deploy, o deploy pode continuar do lado dele; confira o dashboard antes de assumir que cancelar equivale a rollback. Os logs do provedor são a fonte autoritativa quando um deploy falha.',
           },
           {
             heading: '7. Novos deploys, URLs estáveis e estado do provedor',
@@ -3447,6 +3959,70 @@ npm run dev
           {
             heading: '10. Quando o deploy pelo navegador é a ferramenta certa',
             body: 'Use este caminho quando a tarefa é colocar um site pequeno no ar rápido: landing page, portfólio, demonstração de aula, protótipo para revisão de cliente ou página de documentação estática. Também serve quando o projeto já vive no GB Coder e a alternativa é exportar um ZIP, abrir um terminal e configurar uma CLI em uma máquina que não é sua. Ele não serve para monorepo, aplicação renderizada no servidor com banco de dados, build que exige credenciais de registro privado, time que lança por branch previews e aprovações, ou ativos acima dos limites de upload. Esses são trabalhos da integração Git do provedor, de um pipeline de CI ou de um ambiente desktop. As duas abordagens podem conviver: rascunhe e itere no navegador, envie o código ao GitHub quando ele merecer histórico e deixe o CI publicar o build de produção. Uma rotina prática: teste a prévia na largura de celular, confira o resumo do pacote, faça o deploy, abra a URL em um segundo dispositivo e guarde o log do build. Para experimentar, abra o painel de projetos em /app/projects, crie ou abra um projeto e escolha Deploy. A referência de configuração está na documentação.',
+          },
+        ],
+        relatedDocsLink: '/docs#getting-started',
+        relatedDocsLabel: 'Ler a documentação completa do GB Coder →',
+      },
+      'browser-ide-api-keys-environment-variables': {
+        slug: 'browser-ide-api-keys-environment-variables',
+        title: 'Chaves de API e variáveis de ambiente em um IDE de navegador',
+        description: 'Onde ficam as chaves de API e as variáveis de ambiente em um IDE de navegador: exposição no cliente, armazenamento, escopo, rotação, deploy e resposta.',
+        date: '2026-10-20',
+        author: 'Girish Lade',
+        tags: ['Segurança', 'Chaves de API', 'Variáveis de ambiente', 'IDE de navegador', 'Boas práticas'],
+        intro: 'Todo IDE de navegador chega, cedo ou tarde, à mesma pergunta: onde ficam as chaves? O projeto precisa de um endpoint de API, o painel de IA precisa de uma chave de provedor e o deploy precisa de um token de conta. Em uma máquina desktop, esses valores podem ficar em um perfil de shell ou em um arquivo não rastreado. Em uma aba do navegador, a fronteira é diferente. Tudo o que é enviado com a página pode ser lido pela página, e tudo o que é armazenado no perfil do navegador pertence a esse perfil. Este guia propõe um modelo prático: quais valores podem ser publicados, quais nunca devem chegar ao cliente, como o GB Coder lida com credenciais de provedores e o que fazer quando uma chave vaza. Ele é para quem quer a conveniência de um IDE de navegador sem fingir que uma aba é um cofre.',
+        sections: [
+          {
+            heading: '1. Uma aba do navegador é um alvo de build público',
+            body: 'A primeira regra é desconfortável, mas simples: um aplicativo web estático não consegue guardar um segredo. O navegador baixa HTML, CSS e JavaScript e os executa na máquina do usuário. Qualquer pessoa pode abrir o DevTools, ler o painel de rede, pesquisar o bundle ou definir um breakpoint e inspecionar uma variável. Minificar o código, dividi-lo em chunks ou esconder um valor em um arquivo de configuração muda o esforço, não o resultado. Um IDE de navegador adiciona um sandbox para executar o código do projeto, mas a interface do próprio IDE continua rodando na mesma origem e precisa ler o que for necessário para funcionar. O sandbox não é um cofre para valores que a própria interface precisa usar. O teste útil é direto: se um valor precisa estar disponível para o código que roda na aba, presuma que a pessoa que usa a aba pode lê-lo, e que qualquer script na mesma origem também pode. Isso não torna o desenvolvimento no navegador inseguro. Define a fronteira. Identificadores públicos podem ficar ali; credenciais de servidor não.',
+          },
+          {
+            heading: '2. O que uma variável de ambiente significa em um app estático',
+            body: 'Em um servidor Node.js, uma variável de ambiente é lida em tempo de execução a partir do processo. Em um build de Vite, Create React App, Next.js ou Astro, as variáveis de ambiente públicas funcionam de outra forma: o bundler substitui as referências por strings literais durante o build. O Vite expõe variáveis com o prefixo VITE_ por meio de import.meta.env; o Create React App usa REACT_APP_; o Next.js usa NEXT_PUBLIC_; o Astro usa PUBLIC_. O prefixo é uma convenção de nomes, não um controle de segurança. Depois que um valor é embutido, ele faz parte do JavaScript que cada visitante baixa. Uma variável sem prefixo público normalmente não fica disponível para o código do cliente, e é por isso que valores exclusivos do servidor precisam ser lidos por um servidor ou uma função serverless, não por uma página estática. Um arquivo .env é uma entrada de desenvolvimento e build, não um cofre de segredos em tempo de execução. Ele é útil para configuração local e para manter valores fora do controle de versão, mas não torna um valor privado depois do build.',
+            codeSnippet: `# Safe to expose: a public endpoint
+VITE_API_URL=https://api.example.com
+
+# Never expose: keep this on a server
+STRIPE_SECRET_KEY=REPLACE_WITH_SERVER_SECRET`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '3. Quais chaves podem ficar no navegador',
+            body: 'Algumas chaves são feitas para serem públicas. Uma chave publicável do Stripe identifica uma conta e cria tokens de pagamento; a chave secreta realmente movimenta dinheiro e precisa ficar em um servidor. Uma chave anon do Supabase só é segura quando as políticas de row-level security estão corretas. Uma configuração web do Firebase identifica um projeto, mas não concede acesso administrativo. Chaves de mapas e de medição de uso costumam ser restritas por domínio ou API. Esses valores podem ir para o navegador, mas ainda merecem limites: origens permitidas, restrições de API, papéis com privilégios mínimos, cotas e alertas. A categoria oposta é mais fácil de enumerar. Chaves de service role, senhas de banco de dados, credenciais SMTP, segredos de assinatura e chaves privadas de provedores de IA nunca devem estar em um bundle estático. Uma chave de provedor que pertence à aplicação é especialmente perigosa: quem a encontrar pode gastar o dinheiro da aplicação. Uma chave que pertence ao usuário é outro caso. Continua sendo uma credencial bearer, mas é dele, e o objetivo é mantê-la no navegador do usuário, não no projeto ou no repositório.',
+          },
+          {
+            heading: '4. Como o GB Coder lida com credenciais de provedores',
+            body: 'O painel de IA do GB Coder funciona no modelo bring-your-own-key. O gerenciador de chaves mantém as chaves de provedor na memória por padrão. Ele não as grava no localStorage. O usuário pode optar explicitamente por persistir no sessionStorage, o que limita o valor à aba atual e normalmente o apaga quando a aba fecha. A chave é removida da memória e do armazenamento de sessão quando o usuário a apaga. O gerenciador também vincula cada chave a uma origem de endpoint autorizada, e um gateway de saída verifica se a credencial não está sendo enviada a um destino não aprovado. Erros de provedores passam por uma camada de redação que remove padrões de chave e chaves ativas antes que a mensagem chegue à interface ou a um log. Metadados de provedores personalizados são armazenados no localStorage, mas cabeçalhos marcados como secretos são apagados antes da persistência e precisam ser digitados novamente. As requisições vão diretamente do navegador para o endpoint do provedor; o GB Coder não faz proxy da chave por um servidor da LadeStack. Essas medidas reduzem a persistência acidental e vazamentos entre origens. Não mudam a regra básica: qualquer script que consiga rodar na mesma origem pode ler o que a página lê. Use um perfil limpo para trabalho sensível e não instale extensões não confiáveis.',
+          },
+          {
+            heading: '5. Segredos do projeto, arquivos .env e embutimento no build',
+            body: 'Mantenha segredos fora da árvore do projeto. Adicione .env e suas variantes locais ao .gitignore e faça commit de um .env.example com nomes de espaço reservado. Se o projeto usa Vite, lembre-se de que toda variável VITE_ é embutida no bundle de produção. Um valor conveniente durante o desenvolvimento local se torna público no momento em que é usado em um build de produção. Antes do deploy, inspecione os assets gerados em busca de padrões de chave e trate qualquer ocorrência como incidente, não como aviso. A verificação de segredos e a proteção de push do GitHub podem detectar alguns formatos de token conhecidos, mas são uma rede de segurança, não um substituto para manter os valores fora do repositório. A exportação ZIP de um IDE de navegador inclui os arquivos do projeto. Se houver um arquivo .env dentro do projeto, ele viaja com o backup. Um backup não é um cofre criptografado. Guarde as exportações em um local privado e exclua cópias antigas quando não forem mais necessárias. O mesmo vale para capturas de tela, relatos de problemas e mensagens de chat: uma chave colada em qualquer um deles já saiu do navegador.',
+            codeSnippet: `# .gitignore
+.env
+.env.local
+.env.*.local`,
+            codeLang: 'bash',
+          },
+          {
+            heading: '6. Tokens do GitHub e de deploy',
+            body: 'Tokens de acesso pessoal do GitHub e tokens de deploy são mais poderosos do que parecem. Um token clássico com escopos repository e workflow pode ler código privado, alterar arquivos e disparar releases. Prefira tokens fine-grained com um único repositório, uma lista explícita de permissões e uma data de expiração. Dê ao token apenas as permissões de que a tarefa precisa: leitura e escrita de contents para uma sincronização, sem administration ou billing. Crie tokens separados para dispositivos ou finalidades diferentes e revogue-os quando o trabalho terminar. Tokens de deploy da Vercel ou da Netlify podem publicar, substituir ou excluir projetos. Se o provedor oferece escopo por projeto ou equipe, use; se oferece expiração, defina uma. Cole o token no painel de deploy apenas quando necessário e não o salve em um arquivo do projeto. Em CI, use segredos do repositório ou da organização em vez de um .env commitado, e lembre-se de que pull requests de forks normalmente não recebem segredos. Um token que foi capturado em screenshot, compartilhado em um chat ou commitado em um repositório público deve ser tratado como comprometido, mesmo que tenha sido excluído um segundo depois.',
+          },
+          {
+            heading: '7. Chaves de provedores de IA: BYOK sem surpresas',
+            body: 'Uma chave de provedor de IA é uma credencial bearer com uma fatura anexada. Quem a tiver pode enviar requisições, consumir cota e gerar cobranças. Use uma chave limitada a um projeto, defina um limite de gastos quando o provedor oferecer e use uma chave separada para experimentos em vez da chave mestra da organização. Verifique o uso regularmente, especialmente depois de compartilhar um dispositivo ou instalar uma nova extensão. Provedores locais como Ollama, LM Studio e vLLM não precisam de chave na nuvem, mas seus endpoints continuam sendo serviços na máquina. Não exponha um endpoint local à internet pública só para fazer uma demonstração funcionar. Se um provedor personalizado aponta para um proxy, o proxy pode ver a chave; use apenas um proxy que você controla e entende. Prompt injection é um risco relacionado: um arquivo, uma página web ou uma mensagem de erro colada pode conter instruções voltadas ao assistente. Mantenha segredos fora dos prompts e dos arquivos que o assistente tem permissão para ler. Se uma chave aparecer em uma conversa, rotacione-a.',
+          },
+          {
+            heading: '8. Computadores compartilhados, extensões e XSS',
+            body: 'Um computador compartilhado ou de laboratório exige uma rotina diferente. Use um perfil de navegador privado, não opte pela persistência de sessão e feche a aba ao terminar. Se o navegador oferecer para salvar a chave, recuse. Limpe o armazenamento do site se suspeitar que ele foi mantido. Extensões de navegador também fazem parte da fronteira: uma extensão com permissões amplas de host muitas vezes pode ler o conteúdo ou o armazenamento da página, e uma atualização maliciosa pode chegar depois da instalação. Use um perfil mínimo para trabalhos que envolvem credenciais. Cross-site scripting é o risco web clássico nesse contexto. Se um atacante conseguir executar um script na origem do IDE, esse script pode ler localStorage e sessionStorage e fazer requisições enquanto a página estiver aberta. Mantenha as dependências atualizadas, evite scripts de terceiros não confiáveis e considere uma content security policy no site implantado. Gerenciadores de área de transferência e ferramentas de compartilhamento de tela também veem o que você copia e exibe. Limpe a área de transferência depois de mover uma chave e pause o compartilhamento antes de abrir um painel de configurações do provedor.',
+          },
+          {
+            heading: '9. Rotacionando uma chave vazada',
+            body: 'Rotação é a única resposta confiável para uma chave vazada. Revogar primeiro é importante: se a chave antiga continuar válida enquanto a substituição é preparada, a exposição continua. Crie a nova chave com o escopo mais estreito que funcione, atualize a aplicação ou as configurações do navegador, refaça o deploy se o valor fazia parte de um build e verifique se a chave antiga é rejeitada. Depois, confira o uso e os logs de auditoria do provedor em busca de atividade inesperada. Se a chave foi commitada no Git, apagar o arquivo não basta; o valor permanece no histórico. Rotacione primeiro, depois reescreva o histórico com uma ferramenta como git filter-repo ou BFG, faça force-push com o acordo da equipe e peça aos colaboradores que clonem novamente. Plataformas de hospedagem podem armazenar builds antigos em cache, então garanta que o valor antigo não possa ser servido a partir de um bundle desatualizado. Se a chave foi colada em um chat de IA, um ticket de suporte ou uma captura de tela, presuma que foi retida e rotacione. Por fim, registre o que aconteceu, adicione uma verificação que teria detectado o problema e encurte a vida útil da próxima chave.',
+          },
+          {
+            heading: '10. Uma checklist prática',
+            body: 'Use esta sequência antes que um projeto saia do navegador. Primeiro, classifique cada valor: identificador público, credencial de usuário ou segredo de servidor. Segundo, mantenha segredos de servidor fora do bundle estático e coloque-os atrás de uma função serverless ou API. Terceiro, exponha apenas valores que precisam do prefixo público e inspecione os assets compilados antes do deploy. Quarto, mantenha arquivos .env fora do Git, faça commit de um .env.example e ative a verificação de segredos. Quinto, crie tokens com escopo e expiração para GitHub e hospedagem, um por finalidade. Sexto, no GB Coder, deixe as chaves na memória a menos que esteja em um dispositivo confiável, e opte pela persistência de sessão apenas quando entender o trade-off. Sétimo, nunca cole uma chave em um prompt, uma issue, uma captura de tela ou um arquivo do projeto. Oitavo, rotacione em qualquer dúvida e revogue antes de substituir. Nono, use um perfil de navegador limpo em máquinas compartilhadas. Décimo, escreva o plano para um vazamento antes de precisar dele. Um IDE de navegador pode lidar com credenciais de forma responsável quando trata o navegador como um cliente público, não como um cofre privado.',
           },
         ],
         relatedDocsLink: '/docs#getting-started',
@@ -3469,5 +4045,6 @@ export function getAllArticleSlugs(): string[] {
     'browser-ide-vs-desktop-ide',
     'browser-ide-github-sync',
     'browser-ide-deploy-vercel-netlify',
+    'browser-ide-api-keys-environment-variables',
   ];
 }
