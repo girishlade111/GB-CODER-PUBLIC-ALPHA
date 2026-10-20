@@ -22,7 +22,6 @@ export interface UiTranslations {
   groupData: string;
   groupDataSub: string;
   allCapabilities: string;
-  assistEyebrow: string;
   copy: string;
   copied: string;
 }
@@ -50,7 +49,6 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     groupData: 'Storage, portability & privacy',
     groupDataSub: 'Where your work lives, and how it leaves and returns.',
     allCapabilities: 'Every capability, end to end',
-    assistEyebrow: 'Built-in AI assistant',
     copy: 'Copy',
     copied: 'Copied',
   },
@@ -76,7 +74,6 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     groupData: 'Almacenamiento, portabilidad y privacidad',
     groupDataSub: 'Dónde vive tu trabajo y cómo sale y vuelve.',
     allCapabilities: 'Todas las capacidades, de principio a fin',
-    assistEyebrow: 'Asistente de IA integrado',
     copy: 'Copiar',
     copied: 'Copiado',
   },
@@ -102,7 +99,6 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     groupData: 'Opslag, draagbaarheid en privacy',
     groupDataSub: 'Waar je werk woont, en hoe het vertrekt en terugkomt.',
     allCapabilities: 'Alle mogelijkheden, van begin tot eind',
-    assistEyebrow: 'Ingebouwde AI-assistent',
     copy: 'Kopiëren',
     copied: 'Gekopieerd',
   },
@@ -128,7 +124,6 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     groupData: 'Stockage, portabilité et confidentialité',
     groupDataSub: 'Où vit votre travail, et comment il part et revient.',
     allCapabilities: 'Toutes les capacités, de bout en bout',
-    assistEyebrow: 'Assistant IA intégré',
     copy: 'Copier',
     copied: 'Copié',
   },
@@ -154,7 +149,6 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     groupData: '保存・移植・プライバシー',
     groupDataSub: '作業の保管場所と、出し入れの方法。',
     allCapabilities: 'すべての機能を、最初から最後まで',
-    assistEyebrow: '組み込みAIアシスタント',
     copy: 'コピー',
     copied: 'コピーしました',
   },
@@ -180,7 +174,6 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     groupData: '저장, 이동, 개인정보',
     groupDataSub: '작업이 보관되는 곳과 그것이 나가고 돌아오는 방식.',
     allCapabilities: '처음부터 끝까지 모든 기능',
-    assistEyebrow: '내장 AI 어시스턴트',
     copy: '복사',
     copied: '복사됨',
   },
@@ -206,7 +199,6 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     groupData: '存储、迁移与隐私',
     groupDataSub: '你的工作存放在哪里，以及如何导出与恢复。',
     allCapabilities: '端到端的全部能力',
-    assistEyebrow: '内置 AI 助手',
     copy: '复制',
     copied: '已复制',
   },
@@ -232,7 +224,6 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     groupData: 'Хранение, переносимость и приватность',
     groupDataSub: 'Где живёт ваша работа и как она выходит и возвращается.',
     allCapabilities: 'Все возможности, от начала до конца',
-    assistEyebrow: 'Встроенный ИИ-ассистент',
     copy: 'Копировать',
     copied: 'Скопировано',
   },
@@ -258,7 +249,6 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     groupData: 'Armazenamento, portabilidade e privacidade',
     groupDataSub: 'Onde o seu trabalho vive e como ele sai e volta.',
     allCapabilities: 'Todas as capacidades, de ponta a ponta',
-    assistEyebrow: 'Assistente de IA integrado',
     copy: 'Copiar',
     copied: 'Copiado',
   },

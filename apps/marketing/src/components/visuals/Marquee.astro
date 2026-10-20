@@ -1,8 +1,9 @@
 ---
 /**
  * GB Coder — technology marquee.
- * Adapted from Aceternity UI's marquee composition. Pure CSS, no runtime
- * dependency, pauses on hover and keyboard focus, respects reduced motion.
+ * Adapted from Aceternity UI's marquee composition, but static: the chips
+ * sit in a centred rail that wraps, so nothing scrolls on its own and no
+ * item is ever hidden.
  */
 interface Props {
   items: string[];
@@ -14,12 +15,10 @@ const { items, label } = Astro.props;
 
 <div class="marquee" role="group" aria-label={label}>
   <div class="marquee__track">
-    {[0, 1].map((copy) => (
-      <div class="marquee__group" aria-hidden={copy === 1 ? 'true' : undefined}>
-        {items.map((item) => (
-          <span class="marquee__chip">{item}</span>
-        ))}
-      </div>
-    ))}
+    <div class="marquee__group">
+      {items.map((item) => (
+        <span class="marquee__chip">{item}</span>
+      ))}
+    </div>
   </div>
 </div>

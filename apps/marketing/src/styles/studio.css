@@ -230,6 +230,7 @@
   font-weight: 600;
   color: var(--primary);
 }
+/* A static dot, not a pulse: the preview status is a label, not live data. */
 .preview-dot {
   width: 7px;
   height: 7px;
@@ -237,11 +238,6 @@
   border-radius: 50%;
   box-shadow: 0 0 0 2px rgba(23, 102, 68, 0.25);
   display: inline-block;
-  animation: pulse-dot 2s infinite ease-in-out;
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.9); }
 }
 .output-canvas {
   flex: 1;
@@ -408,7 +404,7 @@
   gap: 1rem;
   padding: 0.75rem 1.25rem;
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-soft);
 }

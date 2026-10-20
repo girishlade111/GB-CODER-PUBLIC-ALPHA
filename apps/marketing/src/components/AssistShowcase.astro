@@ -1,7 +1,6 @@
 ---
 import { getAssistContent } from '../i18n/assist';
 import { getStudioContent } from '../i18n/studio';
-import { getUi } from '../i18n/ui';
 
 interface Props {
   lang?: string;
@@ -10,12 +9,10 @@ interface Props {
 const { lang = 'en' } = Astro.props;
 const copy = getAssistContent(lang);
 const studio = getStudioContent(lang);
-const ui = getUi(lang);
 ---
 
 <section class="assist-showcase">
   <div class="assist-description">
-    <span class="eyebrow assist-eyebrow">{ui.assistEyebrow}</span>
     <h2>{copy.title}</h2>
     <p>{copy.description}</p>
     <p>{copy.review}</p>
@@ -63,10 +60,6 @@ const ui = getUi(lang);
     padding: 4.5rem 0 2rem;
     border-top: 1px solid var(--border-subtle);
     margin-top: 3.5rem;
-  }
-
-  .assist-eyebrow {
-    margin-bottom: 1.35rem;
   }
 
   .assist-description h2 {
@@ -127,7 +120,7 @@ const ui = getUi(lang);
     background: var(--primary);
   }
   .assist-demo-badge {
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-muted);
@@ -159,7 +152,7 @@ const ui = getUi(lang);
     border-inline-start: 2px solid var(--primary);
   }
   .prompt-author {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
@@ -182,7 +175,7 @@ const ui = getUi(lang);
     gap: 1rem;
     flex-wrap: wrap;
     margin-bottom: 0.6rem;
-    font-size: 0.72rem;
+    font-size: 0.8rem;
   }
   .proposal-file {
     font-family: ui-monospace, SFMono-Regular, Consolas, monospace;

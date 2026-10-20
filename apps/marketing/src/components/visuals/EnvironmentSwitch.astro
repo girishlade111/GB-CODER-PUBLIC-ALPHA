@@ -4,13 +4,18 @@
  * A Kibo-UI style segmented control that swaps between the product's two
  * real editing environments. Pure CSS state (`:has()`), so it works with
  * keyboard and assistive technology without a JavaScript runtime.
+ *
+ * The choice is exposed as a native radio group: the checked state lives on
+ * the radio, so it can never drift out of sync with the panel on screen.
  */
 interface Props {
   staticLabel: string;
   containerLabel: string;
+  /** Accessible name for the group, e.g. "Editing environment". */
+  label: string;
 }
 
-const { staticLabel, containerLabel } = Astro.props;
+const { staticLabel, containerLabel, label } = Astro.props;
 
 const staticCode = [
   { n: 1, t: '<main class="card">' },
@@ -31,14 +36,14 @@ const terminalLines = [
 
 <div class="env-switch">
   <div class="env-switch__control">
-    <div class="segmented" role="tablist" aria-label={staticLabel}>
+    <div class="segmented" role="radiogroup" aria-label={label}>
       <div class="segmented__option">
         <input type="radio" name="gb-env" id="gb-env-static" checked />
-        <label for="gb-env-static" role="tab" aria-selected="true">{staticLabel}</label>
+        <label for="gb-env-static">{staticLabel}</label>
       </div>
       <div class="segmented__option">
         <input type="radio" name="gb-env" id="gb-env-container" />
-        <label for="gb-env-container" role="tab" aria-selected="false">{containerLabel}</label>
+        <label for="gb-env-container">{containerLabel}</label>
       </div>
     </div>
   </div>
@@ -139,7 +144,7 @@ const terminalLines = [
     border: 1px solid var(--code-border);
     border-radius: 4px;
     padding: 0.15rem 0.4rem;
-    font-size: 9px;
+    font-size: 0.7rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }

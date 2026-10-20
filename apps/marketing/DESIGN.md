@@ -10,7 +10,7 @@ colors:
   border-subtle: "#dfe7e2"
   text-primary: "#172e25"
   text-secondary: "#506258"
-  text-muted: "#627268"
+  text-muted: "#5d6d63"
   primary: "#176644"
   accent-hover: "#104c33"
   accent-dark: "#172e25"
@@ -20,7 +20,7 @@ colors:
   grid-line: "rgba(23, 102, 68, 0.035)"
   code-border: "#1e382b"
   code-muted: "#9cb8a9"
-  code-dim: "#557867"
+  code-dim: "#789d89"
   code-ghost: "#c9e0d3"
   code-panel: "#d5e2da"
   chrome-close: "#ff5f56"
@@ -37,6 +37,12 @@ typography:
   display:
     fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
     fontSize: "clamp(3rem, 5.5vw, 4.8rem)"
+    fontWeight: 550
+    lineHeight: 1.14
+    letterSpacing: "-0.035em"
+  display-mobile:
+    fontFamily: '"Manrope Variable", "Segoe UI", sans-serif'
+    fontSize: "clamp(2.8rem, 12vw, 4.2rem)"
     fontWeight: 550
     lineHeight: 1.14
     letterSpacing: "-0.035em"
@@ -212,14 +218,14 @@ A single low-saturation green ground, a forest ink family and one concentrated e
 - **Soft Mint (`surface-soft`, `#e8f0eb`)**: quiet tonal fills for the tab rail, code-window chrome, language boxes and hover states.
 - **Forest Ink (`text-primary`, `#172e25`)**: headings and primary prose.
 - **Secondary Foliage (`text-secondary`, `#506258`)**: supporting prose, navigation, captions.
-- **Muted Foliage (`text-muted`, `#627268`)**: metadata, timestamps, status text.
+- **Muted Foliage (`text-muted`, `#5d6d63`)**: metadata, timestamps, status text. It clears WCAG AA (4.72:1) on the soft-mint plane, which is the surface most of it lands on.
 - **Rule (`border`, `#ccd9d1`)** and **Hairline (`border-subtle`, `#dfe7e2`)**: structural rows versus dividers.
 - **Deep Forest (`accent-dark`, `#172e25`)**: the darkest plane, used for code chrome.
 
 ### Dark Plane
 
 - **Ink Code (`code-bg`, `#152b23`)** with **Mint Code (`code-text`, `#e4f1e9`)**: the source pane of the studio and the IDE proof frame. The only dark surface on the site.
-- **Code Rule (`code-border`, `#1e382b`)**, **Code Muted (`code-muted`, `#9cb8a9`)**, **Code Dim (`code-dim`, `#557867`)** and **Code Ghost (`code-ghost`, `#c9e0d3`)**: the hairlines, secondary text, line numbers and ghost-control text inside that plane. Every dark code surface on the site resolves to this one family.
+- **Code Rule (`code-border`, `#1e382b`)**, **Code Muted (`code-muted`, `#9cb8a9`)**, **Code Dim (`code-dim`, `#789d89`)** and **Code Ghost (`code-ghost`, `#c9e0d3`)**: the hairlines, secondary text, line numbers and ghost-control text inside that plane. Every dark code surface on the site resolves to this one family. `code-dim` carries the line numbers and clears WCAG AA (4.98:1) against `code-bg`.
 - **Code Panel (`code-panel`, `#d5e2da`)**: the neutral bar of the preview pane.
 
 ### Two Named Exceptions
@@ -246,7 +252,7 @@ A single low-saturation green ground, a forest ink family and one concentrated e
 
 ### Hierarchy
 
-- **Display** (weight 550, `clamp(3rem, 5.5vw, 4.8rem)`, line-height 1.14, tracking `-0.035em`): the home title only. It breaks to three lines at 1440px and to `clamp(2.8rem, 12vw, 4.2rem)` below 700px.
+- **Display** (weight 550, `clamp(3rem, 5.5vw, 4.8rem)`, line-height 1.14, tracking `-0.035em`): the home title only. It breaks to three lines at 1440px and to the **Display Mobile** step (`clamp(2.8rem, 12vw, 4.2rem)`) below 700px.
 - **Page Title** (weight 550, `clamp(2.5rem, 5.5vw, 4.75rem)`): inner-page titles, e.g. Features, Docs, Blog.
 - **Headline** (weight 550, `clamp(2rem, 3.3vw, 2.85rem)`): section headings on the home page.
 - **Title** (weight 600, `1.12rem`, tracking `-0.02em`): bento and ruling cell titles; `1.5rem` inside feature detail rows.
@@ -264,6 +270,8 @@ A single low-saturation green ground, a forest ink family and one concentrated e
 ## Layout
 
 Content is centered on a 1248px container with 1.5rem gutters. Inner pages use 1200px for hero and grid content, 1000px for prose documents, 860px for articles, and 1100px for the blog index. The home opening is a two-column copy composition above a full-width studio stage; the workflow, use-case and journal groups are ruled rows rather than card grids.
+
+The features page is an architecture, not a catalogue: a sticky 300px rail names each capability group and its intent, while the right column carries the individual capabilities as ruled rows. On the blog index one guide is promoted as a featured lead with its own meta column, and the remaining guides follow as ruled rows under a filter row.
 
 Vertical rhythm is generous: home sections sit at 4.5rem top padding, page heroes at `clamp(3rem, 7vw, 7rem)`. Reading sections are ruled and open — no nested panels.
 
@@ -286,15 +294,19 @@ Depth is tonal. Paper surfaces sit on the mineral ground and are separated by ha
 
 **The Restrained Shadow Rule.** At most one stage-level shadow is visible in a viewport. Shadows never stack.
 
+**The Still Surface Rule.** Nothing on the site moves on its own. The technology rail is a static row of chips that wraps, not a looping marquee; the studio preview dot is a fixed dot, not a pulse; no status light animates to look alive. Motion is reserved for the one place a user caused it: the studio tab indicator slides when a tab is chosen, and the panel cross-fades under it. Both are suppressed under `prefers-reduced-motion`. A surface that animates without a cause is decoration, and decoration that asks for attention is a cost the reader pays.
+
 ## Shapes
 
 Corners are softly squared: 4px for tags, 6px for controls and the tab rail, 8px for surfaces and code blocks, 14px for panels and app frames, 16px for the studio stage, and fully round only for pills, chips and status dots. Rows in reading sections have square corners and a top rule.
 
-The signature geometry is built rather than decorated: a dot-grid and two soft aurora pools form the hero backdrop, an orbiting ring pair marks the sample preview, a file tree and a split editor form the IDE proof frame. Nothing uses a geometric mask to stand in for a photographic subject, and the site ships no raster photography.
+The signature geometry is built rather than decorated: a dot-grid and two soft aurora pools form the hero backdrop, an orbiting ring pair marks the sample preview, a file tree and a split editor form the IDE proof frame. Nothing uses a geometric mask to stand in for a photographic subject, and the site ships no raster photography. The single shipping raster is the 1200 × 630 Open Graph card, generated from these same tokens and recorded with its provenance in `public/ASSETS.md`.
 
 ### Named Rules
 
 **The One Radius Language Rule.** Every radius comes from the documented scale. A new corner value is a design-system decision, not a local choice.
+
+**The Legible Microcopy Rule.** Functional text — labels, statuses, metadata, badges, table cells — never renders below 11px. Body copy never renders below 12px. The smallest documented step on the type ramp is `0.7rem` (11.2px), which is exactly the floor; anything smaller is off-system. Decorative letterspaced micro-labels are still functional text and sit under the same floor.
 
 ## Components
 
@@ -333,9 +345,17 @@ Source is shown in the dark code plane with tabular line numbers. The code block
 
 The IDE frame, command palette and segmented environment switch are CSS-composed, not screenshots. The command palette is a real focusable list of commands with an active row; the segmented control is a CSS-only radio group with a checked-state surface.
 
+### Feature Architecture
+
+The features page groups capabilities by the job they do in the workspace — editor, runtime, frameworks, storage — rather than listing them flat. Each group opens with a numbered rail label (a two-digit index, emerald, small caps) that stays sticky while its capabilities scroll past. A capability is a ruled row: a 44px bordered icon plate, an uppercase badge, the title, a summary capped at 62 characters, and a bulleted proof list with drawn check glyphs. The rail and the rows share one hairline grid, so the page reads as a specification.
+
+### Blog Index
+
+The most recent guide is promoted: a two-column lead with a left meta column (the featured label and its tags) and a right column carrying the title, description and byline. The remaining guides follow as ruled rows with tags above the title. A filter row of at most eight tags — the most-used tags in the corpus, never the full taxonomy — narrows the list in place. The filter is progressive enhancement: without JavaScript every article remains present and reachable.
+
 ### Inputs and Fields
 
-One field pattern exists: the sitemap filter. A 10px-radius white field on the mineral ground with a hairline border, a leading search glyph, and a focus state that swaps the border to emerald with a 3px hairline halo.
+Two field patterns exist. The sitemap filter is a 10px-radius white field on the mineral ground with a hairline border, a leading search glyph, and a focus state that swaps the border to emerald with a 3px hairline halo. The blog filter is a row of chips: a transparent outlined pill with forest-ink text that becomes a solid emerald fill with white text when pressed, so the active filter is unmistakable without adding a second control.
 
 ## Do's and Don'ts
 
