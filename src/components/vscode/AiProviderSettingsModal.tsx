@@ -83,6 +83,8 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
+  type DirectoryTab = 'all' | 'popular' | 'compatible' | 'cloud' | 'local' | 'reference';
+  const [activeTab, setActiveTab] = useState<DirectoryTab>('all');
 
   // Built-in / Common configuration form state
   const [apiKeyInput, setApiKeyInput] = useState('');
@@ -305,15 +307,32 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
   const catalog = providerRegistry.getProviderCatalog();
 
   const filteredCatalog = useMemo(() => {
+    let list = catalog;
+    if (activeTab === 'popular') {
+      list = list.filter((c) => c.tier === 'tier_a' || c.category === 'popular');
+    } else if (activeTab === 'compatible') {
+      list = list.filter((c) => c.tier === 'tier_b' && c.group !== 'local' && c.id !== 'custom' && c.id !== 'mock');
+    } else if (activeTab === 'cloud') {
+      list = list.filter((c) => c.tier === 'tier_c' || c.group === 'cloud');
+    } else if (activeTab === 'local') {
+      list = list.filter((c) => c.group === 'local' || c.id === 'ollama' || c.id === 'lmstudio' || c.id === 'vllm');
+    } else if (activeTab === 'reference') {
+      list = list.filter((c) => c.tier === 'tier_d' || c.group === 'reference');
+    }
+
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return catalog;
-    return catalog.filter((entry) => {
+    if (!q) return list;
+    return list.filter((entry) => {
       const matchName = entry.name.toLowerCase().includes(q);
       const matchId = String(entry.id).toLowerCase().includes(q);
       const matchDesc = entry.description.toLowerCase().includes(q);
-      return matchName || matchId || matchDesc;
+      const matchTier = entry.tier?.toLowerCase().includes(q);
+      const matchModels = entry.defaultModels?.some(
+        (m) => m.id.toLowerCase().includes(q) || m.name.toLowerCase().includes(q)
+      );
+      return matchName || matchId || matchDesc || matchTier || matchModels;
     });
-  }, [catalog, searchQuery]);
+  }, [catalog, activeTab, searchQuery]);
 
   const popularProviders = useMemo(
     () => filteredCatalog.filter((c) => c.category === 'popular'),
@@ -334,12 +353,45 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
 
   if (!isOpen) return null;
 
+  // Tier badge helper
+  const renderTierBadge = (tier?: string) => {
+    switch (tier) {
+      case 'tier_a':
+        return (
+          <span className="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 text-[9px] text-emerald-300 font-mono">
+            Tier A · Native
+          </span>
+        );
+      case 'tier_b':
+        return (
+          <span className="rounded bg-cyan-500/10 border border-cyan-500/20 px-1.5 py-0.2 text-[9px] text-cyan-300 font-mono">
+            Tier B · Compatible
+          </span>
+        );
+      case 'tier_c':
+        return (
+          <span className="rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 text-[9px] text-amber-300 font-mono">
+            Tier C · Special Auth
+          </span>
+        );
+      case 'tier_d':
+        return (
+          <span className="rounded bg-slate-500/10 border border-slate-500/20 px-1.5 py-0.2 text-[9px] text-slate-400 font-mono">
+            Tier D · Catalog
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
+
   // Icon selector helper
   const renderProviderIcon = (iconName?: string, providerId?: AiProviderId) => {
     const className = "h-4 w-4";
     if (providerId === 'gemini') return <Sparkles className={`${className} text-cyan-400`} />;
     if (providerId === 'openrouter') return <Globe className={`${className} text-emerald-400`} />;
     if (providerId === 'openai') return <Cpu className={`${className} text-indigo-400`} />;
+    if (providerId === 'anthropic') return <Compass className={`${className} text-amber-300`} />;
     if (providerId === 'mock') return <FlaskConical className={`${className} text-amber-400`} />;
     if (iconName === 'Zap') return <Zap className={`${className} text-amber-400`} />;
     if (iconName === 'Server') return <Server className={`${className} text-blue-400`} />;
@@ -347,6 +399,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
     if (iconName === 'Layers') return <Layers className={`${className} text-purple-400`} />;
     if (iconName === 'Activity') return <Activity className={`${className} text-emerald-400`} />;
     if (iconName === 'Compass') return <Compass className={`${className} text-rose-400`} />;
+    if (iconName === 'Search') return <Search className={`${className} text-teal-400`} />;
     return <Sliders className={`${className} text-cyan-400`} />;
   };
 
@@ -360,6 +413,73 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
       }
     }
     setCurrentView('config');
+  };
+
+  const renderProviderCard = (entry: ProviderCatalogEntry, isConfiguredSection = false) => {
+    const isConnected = entry.id === 'mock' || keyManager.hasApiKey(entry.id);
+    const isSelected = state.selectedProvider === entry.id;
+
+    return (
+      <button
+        type="button"
+        key={entry.id}
+        onClick={() => handleSelectProvider(entry)}
+        data-testid={isConfiguredSection ? `configured-provider-${entry.id}` : `provider-card-${entry.id}`}
+        className={`w-full text-left flex items-center justify-between p-2.5 rounded-lg border transition-all cursor-pointer group ${
+          isSelected
+            ? 'border-cyan-500/50 bg-cyan-950/20 text-white'
+            : 'border-[#26283d] bg-[#18192c]/40 hover:bg-[#18192c] hover:border-slate-700 text-slate-300'
+        }`}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-1.5 rounded-md bg-white/5 border border-white/10 shrink-0 group-hover:scale-105 transition-transform">
+            {renderProviderIcon(entry.iconName, entry.id)}
+          </div>
+          <div className="truncate">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-xs text-white">{entry.name}</span>
+              {isSelected && (
+                <span className="rounded bg-cyan-500/20 px-1.5 py-0.2 text-[10px] text-cyan-300 font-mono">
+                  Active
+                </span>
+              )}
+              {renderTierBadge(entry.tier)}
+              {entry.browserCorsSupport && (
+                <span className="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 text-[9px] text-emerald-300 font-mono">
+                  CORS Ready
+                </span>
+              )}
+              {entry.toolCallingSupport === true && (
+                <span className="rounded bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.2 text-[9px] text-purple-300 font-mono">
+                  Tools
+                </span>
+              )}
+              {entry.id === 'mock' && (
+                <span className="rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 text-[9px] text-amber-300 font-mono">
+                  Offline Mock
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-400 truncate mt-0.5">{entry.description}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {isConnected && (
+            <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+              <Check className="h-3 w-3" />
+              <span className="hidden sm:inline">Configured</span>
+            </span>
+          )}
+          {entry.tier === 'tier_c' && !isConnected && (
+            <span className="text-[10px] text-amber-400/80 font-mono hidden sm:inline">Special Auth</span>
+          )}
+          {entry.tier === 'tier_d' && !isConnected && (
+            <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">Catalog</span>
+          )}
+          <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
+        </div>
+      </button>
+    );
   };
 
   const handleClearKey = () => {
@@ -907,11 +1027,11 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
 
     // Built-in provider
     const availableModels = providerRegistry.getModelsForProvider(selectedProviderId);
-    if (!availableModels.some((m) => m.id === selectedModelId)) {
+    const activeModel = selectedModelId || availableModels[0]?.id || '';
+    if (!availableModels.some((m) => m.id === activeModel)) {
       setFormErrors({ general: 'Selected model is unavailable. Fetch models and explicitly select an available model.' });
       return;
     }
-    const activeModel = selectedModelId;
 
     // Save Base URL override if modified
     try {
@@ -1018,56 +1138,43 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
               </div>
             </div>
 
+            {/* Category Filter Tabs */}
+            <div className="flex items-center gap-1.5 border-b border-[#26283d] bg-[#111220] px-3 py-1.5 overflow-x-auto text-[11px]">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'popular', label: 'Popular (Tier A)' },
+                { id: 'compatible', label: 'Compatible (Tier B)' },
+                { id: 'cloud', label: 'Cloud / Gateways (Tier C)' },
+                { id: 'local', label: 'Local Runners' },
+                { id: 'reference', label: 'Catalog (Tier D)' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id as any)}
+                  data-testid={`provider-tab-${tab.id}`}
+                  className={`px-2.5 py-1 rounded-md transition-colors whitespace-nowrap font-medium ${
+                    activeTab === tab.id
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
             {/* Provider List Body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-5">
               {/* Configured Providers Section */}
-              {configuredProviders.length > 0 && !searchQuery && (
+              {configuredProviders.length > 0 && !searchQuery && activeTab === 'all' && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                     <span>Configured Providers</span>
                     <span className="text-emerald-400 font-normal lowercase">ready in workspace</span>
                   </div>
                   <div className="grid grid-cols-1 gap-1.5">
-                    {configuredProviders.map((entry) => {
-                      const isSelected = state.selectedProvider === entry.id;
-                      return (
-                        <button
-                          type="button"
-                          key={`cfg-${entry.id}`}
-                          onClick={() => handleSelectProvider(entry)}
-                          data-testid={`configured-provider-${entry.id}`}
-                          className={`w-full text-left flex items-center justify-between p-2.5 rounded-lg border transition-all cursor-pointer ${
-                            isSelected
-                              ? 'border-cyan-500/50 bg-cyan-950/20 text-white'
-                              : 'border-[#26283d] bg-[#18192c]/60 hover:bg-[#18192c] hover:border-slate-700 text-slate-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="p-1.5 rounded-md bg-white/5 border border-white/10 shrink-0">
-                              {renderProviderIcon(entry.iconName, entry.id)}
-                            </div>
-                            <div className="truncate">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-xs text-white">{entry.name}</span>
-                                {isSelected && (
-                                  <span className="rounded bg-cyan-500/20 px-1.5 py-0.2 text-[10px] text-cyan-300 font-mono">
-                                    Active
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[11px] text-slate-400 truncate">{entry.description}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-medium">
-                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                              Configured
-                            </span>
-                            <ChevronRight className="h-3.5 w-3.5 text-slate-500" />
-                          </div>
-                        </button>
-                      );
-                    })}
+                    {configuredProviders.map((entry) => renderProviderCard(entry, true))}
                   </div>
                 </div>
               )}
@@ -1076,52 +1183,10 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
               {popularProviders.length > 0 && (
                 <div className="space-y-2">
                   <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    Popular
+                    {activeTab === 'all' ? 'Popular' : 'Popular Providers'}
                   </div>
                   <div className="grid grid-cols-1 gap-1.5">
-                    {popularProviders.map((entry) => {
-                      const isConnected =
-                        entry.id === 'mock' || keyManager.hasApiKey(entry.id);
-                      return (
-                        <button
-                          type="button"
-                          key={entry.id}
-                          onClick={() => handleSelectProvider(entry)}
-                          data-testid={`provider-card-${entry.id}`}
-                          className="w-full text-left flex items-center justify-between p-2.5 rounded-lg border border-[#26283d] bg-[#18192c]/40 hover:bg-[#18192c] hover:border-slate-700 transition-all cursor-pointer text-slate-300 group"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="p-1.5 rounded-md bg-white/5 border border-white/10 shrink-0 group-hover:scale-105 transition-transform">
-                              {renderProviderIcon(entry.iconName, entry.id)}
-                            </div>
-                            <div className="truncate">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-xs text-white">{entry.name}</span>
-                                {entry.browserCorsSupport && (
-                                  <span className="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 text-[9px] text-emerald-300 font-mono">
-                                    CORS Ready
-                                  </span>
-                                )}
-                                {entry.id === 'mock' && (
-                                  <span className="rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 text-[9px] text-amber-300 font-mono">
-                                    Offline Mock
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[11px] text-slate-400 truncate">{entry.description}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {isConnected && (
-                              <span className="flex items-center gap-1 text-[10px] text-emerald-400">
-                                <Check className="h-3 w-3" />
-                              </span>
-                            )}
-                            <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
-                          </div>
-                        </button>
-                      );
-                    })}
+                    {popularProviders.map((entry) => renderProviderCard(entry))}
                   </div>
                 </div>
               )}
@@ -1130,39 +1195,10 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
               {otherProviders.length > 0 && (
                 <div className="space-y-2">
                   <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    Other Providers
+                    {activeTab === 'all' ? 'Other Providers' : 'Provider Directory'}
                   </div>
                   <div className="grid grid-cols-1 gap-1.5">
-                    {otherProviders.map((entry) => {
-                      const isConnected = keyManager.hasApiKey(entry.id);
-                      return (
-                        <button
-                          type="button"
-                          key={entry.id}
-                          onClick={() => handleSelectProvider(entry)}
-                          data-testid={`provider-card-${entry.id}`}
-                          className="w-full text-left flex items-center justify-between p-2.5 rounded-lg border border-[#26283d] bg-[#18192c]/40 hover:bg-[#18192c] hover:border-slate-700 transition-all cursor-pointer text-slate-300 group"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="p-1.5 rounded-md bg-white/5 border border-white/10 shrink-0 group-hover:scale-105 transition-transform">
-                              {renderProviderIcon(entry.iconName, entry.id)}
-                            </div>
-                            <div className="truncate">
-                              <span className="font-medium text-xs text-white">{entry.name}</span>
-                              <p className="text-[11px] text-slate-400 truncate">{entry.description}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {isConnected && (
-                              <span className="flex items-center gap-1 text-[10px] text-emerald-400">
-                                <Check className="h-3 w-3" />
-                              </span>
-                            )}
-                            <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
-                          </div>
-                        </button>
-                      );
-                    })}
+                    {otherProviders.map((entry) => renderProviderCard(entry))}
                   </div>
                 </div>
               )}
@@ -1258,6 +1294,77 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                   </a>
                 )}
               </div>
+
+              {/* Tier C Special Authentication Requirements Banner */}
+              {activeProviderObj?.tier === 'tier_c' && (
+                <div className="rounded-lg border border-amber-500/40 bg-amber-950/20 p-3 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-semibold text-amber-300">Additional Integration Requirements</h4>
+                      <p className="text-[11px] text-amber-200/90 leading-relaxed mt-0.5">
+                        {activeProviderObj.tierCRequirements ||
+                          'This provider requires cloud IAM, tenant authentication, or specialized gateway deployment.'}
+                      </p>
+                    </div>
+                  </div>
+                  {activeProviderObj.docUrl && (
+                    <div className="pt-1">
+                      <a
+                        href={activeProviderObj.docUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 underline underline-offset-2"
+                      >
+                        <span>View setup documentation</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tier D Catalog Reference Banner */}
+              {activeProviderObj?.tier === 'tier_d' && (
+                <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-3 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <Layers className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-200">Catalog Reference Entry</h4>
+                      <p className="text-[11px] text-slate-400 leading-relaxed mt-0.5">
+                        {activeProviderObj.tierDStatus ||
+                          'This provider is included in the catalog for ecosystem discovery. A native adapter is not yet connected.'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    {activeProviderObj.docUrl && (
+                      <a
+                        href={activeProviderObj.docUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300"
+                      >
+                        <span>Documentation</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        loadProviderConfig('custom');
+                        setCustomDisplayName(activeProviderObj.name);
+                        if (activeProviderObj.defaultBaseUrl) {
+                          setCustomBaseUrl(activeProviderObj.defaultBaseUrl);
+                        }
+                      }}
+                      className="rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 px-2.5 py-1 text-[11px] text-white transition-colors"
+                    >
+                      Configure as Custom Provider
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* ─────────────────────────────────────────────────────────────
                   CUSTOM PROVIDER BUILDER FIELDS
@@ -1358,7 +1465,11 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
               {/* ─────────────────────────────────────────────────────────────
                   BUILT-IN BASE URL (For OpenAI or OpenRouter proxy)
                  ───────────────────────────────────────────────────────────── */}
-              {!isCustomMode && (selectedProviderId === 'openai' || selectedProviderId === 'openrouter') && (
+              {!isCustomMode &&
+                (selectedProviderId === 'openai' ||
+                  selectedProviderId === 'openrouter' ||
+                  selectedProviderId === 'anthropic' ||
+                  providerRegistry.getAllProviders().some((p) => p.id === selectedProviderId)) && (
                 <div className="space-y-1">
                   <label className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                     <Globe className="h-3 w-3 text-cyan-400" />
@@ -1377,6 +1488,11 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                   {selectedProviderId === 'openai' && (
                     <p className="text-[10px] text-slate-500">
                       Direct browser requests to api.openai.com are blocked by browser CORS. Use OpenRouter for browser BYOK or route through a CORS proxy.
+                    </p>
+                  )}
+                  {selectedProviderId === 'anthropic' && (
+                    <p className="text-[10px] text-slate-500">
+                      Direct browser requests to api.anthropic.com require CORS proxy routing or an authorized gateway. Header <code className="font-mono text-cyan-300">anthropic-dangerous-direct-browser-access: true</code> is attached automatically. For direct browser BYOK without a proxy, OpenRouter is recommended.
                     </p>
                   )}
                   {isDestinationOverride && !isDestinationAuthorized && (

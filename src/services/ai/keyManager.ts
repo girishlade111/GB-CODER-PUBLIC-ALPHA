@@ -62,6 +62,40 @@ export function getDefaultProviderOrigin(provider: AiProviderId): string {
       return 'https://openrouter.ai';
     case 'gemini':
       return 'https://generativelanguage.googleapis.com';
+    case 'anthropic':
+      return 'https://api.anthropic.com';
+    case 'groq':
+      return 'https://api.groq.com';
+    case 'deepseek':
+      return 'https://api.deepseek.com';
+    case 'mistral':
+      return 'https://api.mistral.ai';
+    case 'together':
+      return 'https://api.together.xyz';
+    case 'fireworks':
+      return 'https://api.fireworks.ai';
+    case 'cerebras':
+      return 'https://api.cerebras.ai';
+    case 'deepinfra':
+      return 'https://api.deepinfra.com';
+    case 'nvidia':
+      return 'https://integrate.api.nvidia.com';
+    case 'inception':
+      return 'https://api.inceptionlabs.ai';
+    case 'moonshot':
+      return 'https://api.moonshot.cn';
+    case 'minimax':
+      return 'https://api.minimax.chat';
+    case 'huggingface':
+      return 'https://router.huggingface.co';
+    case 'dashscope':
+      return 'https://dashscope.aliyuncs.com';
+    case 'ollama':
+      return 'http://localhost:11434';
+    case 'lmstudio':
+      return 'http://localhost:1234';
+    case 'vllm':
+      return 'http://localhost:8000';
     case 'mock':
       return '';
     default:
@@ -83,7 +117,28 @@ class KeyManager {
   private rehydrateFromSession(): void {
     if (typeof window === 'undefined' || !window.sessionStorage) return;
     try {
-      const providers: AiProviderId[] = ['openai', 'openrouter', 'gemini', 'custom'];
+      const providers: AiProviderId[] = [
+        'openai',
+        'openrouter',
+        'gemini',
+        'anthropic',
+        'groq',
+        'deepseek',
+        'mistral',
+        'together',
+        'fireworks',
+        'cerebras',
+        'deepinfra',
+        'nvidia',
+        'inception',
+        'moonshot',
+        'minimax',
+        'huggingface',
+        'ollama',
+        'lmstudio',
+        'vllm',
+        'custom',
+      ];
       for (const p of providers) {
         const storedKey = window.sessionStorage.getItem(`${SESSION_PREFIX}${p}`);
         if (storedKey) {
@@ -314,8 +369,14 @@ class KeyManager {
 
     // Default origin fallback if no custom origins explicitly set
     const def = getDefaultProviderOrigin(provider);
-    if (def && (!set || set.size === 0) && def === targetOrigin) {
-      return true;
+    if (def && (!set || set.size === 0)) {
+      if (def === targetOrigin) return true;
+      const alternates: Record<string, string[]> = {
+        together: ['https://api.together.xyz', 'https://api.together.ai'],
+        huggingface: ['https://router.huggingface.co', 'https://api-inference.huggingface.co'],
+        minimax: ['https://api.minimax.chat', 'https://api.minimaxi.chat'],
+      };
+      if (alternates[provider]?.includes(targetOrigin)) return true;
     }
 
     return false;

@@ -60,6 +60,7 @@ await build({
       export * from './src/services/ai/providers/baseProvider.ts';
       export * from './src/services/ai/providers/openaiCompatibleProvider.ts';
       export * from './src/services/ai/providers/geminiProvider.ts';
+      export * from './src/services/ai/providers/anthropicProvider.ts';
       export * from './src/services/ai/providers/mockProvider.ts';
       export * from './src/services/ai/providerRegistry.ts';
       export * from './src/services/ai/assistAgentService.ts';

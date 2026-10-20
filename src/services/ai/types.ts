@@ -5,8 +5,32 @@
  * project context, edit proposals, and connection diagnostics.
  */
 
-export type BuiltInAiProviderId = 'gemini' | 'openrouter' | 'openai' | 'custom' | 'mock';
+export type BuiltInAiProviderId =
+  | 'gemini'
+  | 'openrouter'
+  | 'openai'
+  | 'anthropic'
+  | 'groq'
+  | 'deepseek'
+  | 'mistral'
+  | 'together'
+  | 'fireworks'
+  | 'cerebras'
+  | 'deepinfra'
+  | 'nvidia'
+  | 'inception'
+  | 'moonshot'
+  | 'minimax'
+  | 'huggingface'
+  | 'ollama'
+  | 'lmstudio'
+  | 'vllm'
+  | 'custom'
+  | 'mock';
 export type AiProviderId = BuiltInAiProviderId | (string & {});
+
+export type ProviderIntegrationTier = 'tier_a' | 'tier_b' | 'tier_c' | 'tier_d';
+export type ProviderCapabilityStatus = 'supported' | 'unsupported' | 'unknown' | 'not_verified';
 
 export interface AiModelInfo {
   id: string;
@@ -56,6 +80,7 @@ export interface ProviderCatalogEntry {
   name: string;
   description: string;
   category: 'popular' | 'other';
+  tier: ProviderIntegrationTier;
   iconName?: string;
   defaultBaseUrl?: string;
   docUrl?: string;
@@ -65,6 +90,11 @@ export interface ProviderCatalogEntry {
   streamingSupport: boolean;
   defaultModels?: AiModelInfo[];
   isCustomTemplate?: boolean;
+  protocol?: 'openai' | 'anthropic' | 'gemini' | 'azure' | 'aws_bedrock' | 'vertex_ai' | 'custom';
+  authType?: 'bearer' | 'x-api-key' | 'iam' | 'oauth' | 'header_custom' | 'none';
+  group?: 'popular' | 'compatible' | 'cloud' | 'local' | 'reference';
+  tierCRequirements?: string;
+  tierDStatus?: string;
 }
 
 export interface AiProviderConfig {

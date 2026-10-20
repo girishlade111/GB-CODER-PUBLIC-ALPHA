@@ -18,6 +18,7 @@ import {
 import { IAiProvider } from './providers/baseProvider.ts';
 import { OpenAiCompatibleProvider, validateEndpointUrl } from './providers/openaiCompatibleProvider.ts';
 import { GeminiProvider } from './providers/geminiProvider.ts';
+import { AnthropicProvider } from './providers/anthropicProvider.ts';
 import { MockProvider } from './providers/mockProvider.ts';
 import { keyManager } from './keyManager.ts';
 import { customProviderStore } from './customProviderStore.ts';
@@ -127,6 +128,7 @@ class ProviderRegistry {
 
   constructor() {
     this.registerProvider(new GeminiProvider());
+    this.registerProvider(new AnthropicProvider());
     this.registerProvider(
       new OpenAiCompatibleProvider(
         'openrouter',
@@ -151,25 +153,46 @@ class ProviderRegistry {
         CUSTOM_MODELS
       )
     );
+
+    // Register built-in OpenAI-compatible providers from BUILT_IN_CATALOG
+    for (const entry of BUILT_IN_CATALOG) {
+      if (
+        entry.protocol === 'openai' &&
+        entry.defaultBaseUrl &&
+        entry.defaultModels &&
+        entry.defaultModels.length > 0 &&
+        !this.providers.has(entry.id)
+      ) {
+        this.registerProvider(
+          new OpenAiCompatibleProvider(
+            entry.id,
+            entry.name,
+            entry.defaultBaseUrl,
+            entry.defaultModels
+          )
+        );
+      }
+    }
+
     this.registerProvider(new MockProvider());
     this.loadCustomProviders();
-    for (const id of ['openrouter', 'openai', 'custom']) {
+
+    for (const p of this.providers.values()) {
       try {
-        const savedOverride = localStorage.getItem(`gb-assist-base-url-override:${id}`);
-        if (savedOverride) {
-          const p = this.providers.get(id);
-          if (p && 'setBaseUrlOverride' in p && typeof (p as any).setBaseUrlOverride === 'function') {
-            (p as any).setBaseUrlOverride(savedOverride);
-          }
+        const savedOverride = localStorage.getItem(`gb-assist-base-url-override:${p.id}`);
+        if (savedOverride && 'setBaseUrlOverride' in p && typeof (p as any).setBaseUrlOverride === 'function') {
+          (p as any).setBaseUrlOverride(savedOverride);
         }
       } catch { /* optional persistence */ }
-    }
-    for (const id of ['openrouter', 'openai']) {
       try {
-        const cached = JSON.parse(localStorage.getItem(`gb-assist-model-catalog:${id}`) || 'null');
-        if (cached?.models?.length && Date.now() - cached.time < 86400000) this.applyDiscoveredModels(id, cached.models, false);
-        const selected = localStorage.getItem(`gb-assist-selected-model:${id}`);
-        if (selected) this.activeModelMap.set(id, selected);
+        const cached = JSON.parse(localStorage.getItem(`gb-assist-model-catalog:${p.id}`) || 'null');
+        if (cached?.models?.length && Date.now() - cached.time < 86400000) {
+          this.applyDiscoveredModels(p.id, cached.models, false);
+        }
+        const selected = localStorage.getItem(`gb-assist-selected-model:${p.id}`);
+        if (selected) {
+          this.activeModelMap.set(p.id, selected);
+        }
       } catch { /* Storage unavailable or invalid cache: use bundled fallback. */ }
     }
   }
@@ -251,6 +274,7 @@ class ProviderRegistry {
           name: cp.name,
           description: cp.description || `Custom provider at ${cp.baseUrl}`,
           category: 'other',
+          tier: 'tier_b',
           iconName: 'Sliders',
           defaultBaseUrl: cp.baseUrl,
           browserCorsSupport: false,
@@ -335,8 +359,13 @@ class ProviderRegistry {
     }
     // Fallback defaults per provider
     if (providerId === 'gemini') return 1048576;
+    if (providerId === 'anthropic') return 200000;
+    if (providerId === 'minimax') return 1000000;
     if (providerId === 'openrouter') return 128000;
     if (providerId === 'openai') return 128000;
+    if (providerId === 'mistral') return 128000;
+    if (providerId === 'deepseek') return 64000;
+    if (providerId === 'groq') return 128000;
     if (providerId === 'custom') return 32000;
     return 32000;
   }
