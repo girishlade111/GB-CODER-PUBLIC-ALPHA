@@ -24,7 +24,7 @@ export function mountStatusPage(root: HTMLElement): () => void {
   let timer: ReturnType<typeof setInterval> | undefined;
   const wait = Number(root.dataset.retryWait || 0);
   const target = root.dataset.redirectHref;
-  const redirect = target && /^\/(?!\/)/.test(target) && !/[\\\u0000-\u001f]/.test(target) ? target : undefined;
+  const redirect = target && /^\/(?!\/)/.test(target) && ![...target].some(char => char === '\\' || char.charCodeAt(0) < 32) ? target : undefined;
   let attempts = 0;
   try { attempts = Number(sessionStorage.getItem(key) || 0) || 0; } catch { /* Storage may be disabled. */ }
   const automaticRetry = Number(root.dataset.autoRetrySeconds || 0);

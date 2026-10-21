@@ -86,5 +86,5 @@ export function getStatusConfig(input: number): StatusConfig {
 
 /** Disallow script URLs, protocol-relative URLs and external redirects. */
 export function safeStatusHref(href: string | undefined, fallback = '/'): string {
-  return href && /^\/(?!\/)/.test(href) && !/[\\\u0000-\u001f]/.test(href) ? href : fallback;
+  return href && /^\/(?!\/)/.test(href) && ![...href].some(char => char === '\\' || char.charCodeAt(0) < 32) ? href : fallback;
 }

@@ -89,7 +89,7 @@
 .status-destinations.status-reveal { animation-delay: 280ms; }
 @keyframes status-arrive { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 .status-page[data-status-variant='processing'] .status-center-digit { animation: status-breathe 4s ease-in-out infinite; }
-.status-page[data-status-variant='success'] .status-motif svg { animation: status-check 650ms 170ms cubic-bezier(.16, 1, .3, 1) backwards; }
+.status-page[data-status-variant='success'] .status-motif svg { animation: status-check 550ms 170ms cubic-bezier(.16, 1, .3, 1) backwards; }
 .status-page[data-status-variant='direction'] .status-motif svg { animation: status-flow 4s ease-in-out infinite; }
 .status-page[data-status-variant='lost'] .status-code > span:first-child { transform: rotate(-6deg); }
 .status-page[data-status-variant='lost'] .status-code > span:last-child { transform: rotate(6deg); }

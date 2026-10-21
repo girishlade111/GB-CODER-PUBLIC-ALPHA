@@ -57,7 +57,7 @@ export function cleanApiKey(rawKey?: string): string {
   }
 
   // Strip any remaining zero-width or control characters
-  cleaned = cleaned.replace(/[\x00-\x1F\x7F]/g, '');
+  cleaned = [...cleaned].filter(char => char.charCodeAt(0) > 31 && char.charCodeAt(0) !== 127).join('');
 
   return cleaned.trim();
 }
