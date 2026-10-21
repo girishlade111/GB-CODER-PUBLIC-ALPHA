@@ -1,0 +1,11 @@
+---
+import StatusDocument from '../layouts/StatusDocument.astro';
+import { STATUS_CODES } from '../../../../src/components/status/status-config';
+// Build-only documents get packed into the server error helper and removed
+// from public output. Only 4xx/5xx can become real error responses.
+export function getStaticPaths() {
+  return STATUS_CODES.filter(code => code >= 400).map(code => ({ params: { code: String(code) } }));
+}
+const code = Number(Astro.params.code);
+---
+<StatusDocument code={code} />

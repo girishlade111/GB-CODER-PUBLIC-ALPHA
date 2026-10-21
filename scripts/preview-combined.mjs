@@ -22,6 +22,7 @@ import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
+const { sendStatusPage, wantsStatusHtml } = require('../api/_lib/status-response.cjs');
 const ROOT_DIR = process.cwd();
 const DIST = join(ROOT_DIR, 'dist');
 const API_DIR = join(ROOT_DIR, 'api');
@@ -51,7 +52,10 @@ const MIME_TYPES = {
   '.xml': 'application/xml; charset=utf-8',
 };
 
-export const createPreviewServer = () => http.createServer(async (req, res) => {
+// beforeRequest is an in-process test seam, never a public fault endpoint.
+export const createPreviewServer = ({ beforeRequest } = {}) => http.createServer(async (req, res) => {
+  try {
+  if (beforeRequest) await beforeRequest(req);
   const urlObj = new URL(req.url, `http://localhost:${PORT}`);
   const pathname = decodeURIComponent(urlObj.pathname);
 
@@ -111,12 +115,14 @@ export const createPreviewServer = () => http.createServer(async (req, res) => {
         return;
       } catch (err) {
         console.error(`API Error on ${pathname}:`, err);
+        if (wantsStatusHtml(req)) return sendStatusPage(res, 500);
         res.statusCode = 500;
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ error: 'Internal Server Error' }));
         return;
       }
     }
+    if (wantsStatusHtml(req)) return sendStatusPage(res, 404);
     res.statusCode = 404;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ error: 'API route not found' }));
@@ -198,6 +204,14 @@ export const createPreviewServer = () => http.createServer(async (req, res) => {
 
   res.statusCode = 404;
   res.end('Not Found');
+  } catch (error) {
+    console.error('[preview] Request failed:', error.message);
+    if (res.headersSent) { res.destroy(); return; }
+    if (wantsStatusHtml(req)) return sendStatusPage(res, 500);
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: 'Internal Server Error' }));
+  }
 });
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {

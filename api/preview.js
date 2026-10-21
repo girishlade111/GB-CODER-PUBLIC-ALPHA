@@ -1,3 +1,5 @@
+const { sendStatusPage, wantsStatusHtml } = require('./_lib/status-response.cjs')
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   
@@ -5,6 +7,7 @@ module.exports = async (req, res) => {
 
   try {
     if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+      if (wantsStatusHtml(req)) return sendStatusPage(res, 503)
       return res.status(503).json({ error: 'Share/Preview storage is not configured (missing Upstash Redis credentials).' })
     }
 
@@ -16,11 +19,13 @@ module.exports = async (req, res) => {
 
     const { id } = req.query
     if (!id || id.length !== 8) {
+      if (wantsStatusHtml(req)) return sendStatusPage(res, 400)
       return res.status(400).json({ error: 'Invalid preview ID' })
     }
 
     const data = await redis.get(`preview:${id}`)
     if (!data) {
+      if (wantsStatusHtml(req)) return sendStatusPage(res, 404)
       return res.status(404).json({ error: 'Preview not found or expired' })
     }
 
@@ -33,6 +38,7 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     console.error('[api/preview] Error:', error.message)
+    if (wantsStatusHtml(req)) return sendStatusPage(res, 500)
     return res.status(500).json({ error: 'Failed to load preview. Try again.' })
   }
 }

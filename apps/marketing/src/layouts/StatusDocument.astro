@@ -1,0 +1,25 @@
+---
+import StatusPage, { type StatusPageProps } from '../../../../src/components/status/StatusPage';
+import { getStatusConfig } from '../../../../src/components/status/status-config';
+interface Props extends StatusPageProps {}
+const status = getStatusConfig(Astro.props.code);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="description" content={status.message} />
+    <title>{status.code} {status.reason} — GB Coder</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body style="margin:0">
+    <slot name="toolbar" />
+    <StatusPage {...Astro.props} />
+    <script>
+      import { mountStatusPage } from '../../../../src/components/status/status-client';
+      document.querySelectorAll<HTMLElement>('.status-page').forEach(root => mountStatusPage(root));
+    </script>
+  </body>
+</html>
