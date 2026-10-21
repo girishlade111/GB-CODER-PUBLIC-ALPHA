@@ -156,6 +156,32 @@ try {
     await page.waitForLoadState('networkidle');
     report.checks.push('Redirect cancellation/manual/automatic navigation; Retry-After gate; auto-retry cancellation, exponential backoff and three-attempt cap; manual retry reload and counter reset');
     assert.deepEqual(errors, []);
+    // Exercise the actual production React boundary in an isolated browser tab.
+    // CSS is covered above; this bundle tests crash recovery and secret handling.
+    const boundaryBundle = await build({
+      stdin: { contents: `import React from 'react'; import { createRoot } from 'react-dom/client'; import ErrorBoundary from './src/components/ErrorBoundary'; function Crash() { throw new Error('PRIVATE_REACT_ERROR_DETAIL'); } createRoot(document.getElementById('boundary-fixture')).render(React.createElement(ErrorBoundary, null, React.createElement(Crash)));`, resolveDir: process.cwd(), loader: 'tsx' },
+      bundle: true, write: false, format: 'iife', platform: 'browser',
+      define: { 'import.meta.env.DEV': 'false', 'process.env.NODE_ENV': '"production"' },
+      plugins: [{ name: 'behavior-only-css', setup(builder) { builder.onLoad({ filter: /\.css$/ }, () => ({ contents: '', loader: 'js' })); } }],
+    });
+    const boundary = await browser.newPage();
+    await boundary.goto(base, { waitUntil: 'networkidle' });
+    await boundary.evaluate(() => {
+      localStorage.setItem('gbcoder_snapshots', '{"testBackup":true}');
+      document.body.innerHTML = '<div id="boundary-fixture"></div>';
+    });
+    await boundary.addScriptTag({ content: boundaryBundle.outputFiles[0].text });
+    await boundary.locator('.status-page[data-status-code="500"]').waitFor();
+    await boundary.waitForFunction(() => document.title.startsWith('500'));
+    assert.ok(!(await boundary.locator('body').textContent()).includes('PRIVATE_REACT_ERROR_DETAIL'));
+    assert.equal(await boundary.locator('.status-details').count(), 0);
+    assert.equal(await boundary.locator('meta[name="robots"]').getAttribute('content'), 'noindex');
+    assert.equal(await boundary.evaluate(() => localStorage.getItem('gbcoder_emergency_save')), '{"testBackup":true}');
+    const [download] = await Promise.all([boundary.waitForEvent('download'), boundary.getByRole('button', { name: 'Export emergency backup' }).click()]);
+    assert.match(download.suggestedFilename(), /^gbcoder-emergency-backup-.*\.json$/);
+    await download.cancel();
+    await boundary.close();
+    report.checks.push('Actual production React boundary catches render failure, sets title/noindex, hides internal details and preserves emergency backup/export');
     const noJS = await browser.newPage({ javaScriptEnabled: false });
     assert.equal((await noJS.goto(base + '/missing-no-js')).status(), 404);
     await noJS.getByText('Go back', { exact: true }).click();
