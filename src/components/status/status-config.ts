@@ -69,7 +69,7 @@ export const STATUS_CONFIG = {
   429: entry(429, 'Too Many Requests', 'Let’s take a small breather.', 'A few too many requests arrived at once.', 'Give it a moment before trying again.'),
   451: entry(451, 'Unavailable For Legal Reasons', 'This page isn’t available here.', 'We can’t show this page because of a legal restriction.', 'Contact us if you need more information.'),
   500: entry(500, 'Internal Server Error', 'A pause on our side.', 'Something went wrong on our side. It’s not your fault.', 'Try again in a moment, or let us know if it keeps happening.'),
-  501: entry(501, 'Not Implemented', 'We can’t do that just yet.', 'This service doesn’t support that action.', 'Try a different path, or contact us for help.'),
+  501: entry(501, 'Not Implemented', 'We can’t do that just yet.', 'This service doesn’t support that action. It’s not your fault.', 'Try a different path, or contact us for help.'),
   502: entry(502, 'Bad Gateway', 'A connection missed its cue.', 'One of the services we rely on didn’t respond as expected.', 'It’s not your fault. Give it a moment and try again.'),
   503: entry(503, 'Service Unavailable', 'A moment to catch our breath.', 'We’re temporarily unable to help with this request.', 'It’s not your fault. Please try again shortly.'),
   504: entry(504, 'Gateway Timeout', 'We waited, too.', 'Another service took too long to respond.', 'It’s not your fault. Try again in a moment.'),

@@ -148,7 +148,13 @@ try {
     await page.waitForLoadState('networkidle');
     assert.equal(await page.evaluate(() => sessionStorage.getItem('gbcoder:status-retry:/__status/503')), '3');
     assert.match(await page.locator('[data-status-countdown]').textContent(), /paused/);
-    report.checks.push('Redirect cancellation/manual/automatic navigation; Retry-After gate; auto-retry cancellation, exponential backoff and three-attempt cap');
+    await Promise.all([page.waitForEvent('framenavigated', frame => frame === page.mainFrame()), page.locator('[data-status-action="retry"]').click()]);
+    await page.waitForLoadState('networkidle');
+    assert.equal(await page.evaluate(() => sessionStorage.getItem('gbcoder:status-retry:/__status/503')), null);
+    await page.goto(`${dev}/__status/408`);
+    await Promise.all([page.waitForEvent('framenavigated', frame => frame === page.mainFrame()), page.locator('[data-status-action="retry"]').click()]);
+    await page.waitForLoadState('networkidle');
+    report.checks.push('Redirect cancellation/manual/automatic navigation; Retry-After gate; auto-retry cancellation, exponential backoff and three-attempt cap; manual retry reload and counter reset');
     assert.deepEqual(errors, []);
     const noJS = await browser.newPage({ javaScriptEnabled: false });
     assert.equal((await noJS.goto(base + '/missing-no-js')).status(), 404);
