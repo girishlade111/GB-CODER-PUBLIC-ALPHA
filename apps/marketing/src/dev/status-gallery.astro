@@ -1,6 +1,7 @@
 ---
 import StatusDocument from '../layouts/StatusDocument.astro';
-import { STATUS_CONFIG, STATUS_CLASSES, STATUS_CODES, getStatusConfig } from '../../../../src/components/status/status-config';
+import StatusCodeGroup from './StatusCodeGroup.astro';
+import { STATUS_CLASSES, STATUS_CODES, getStatusConfig } from '../../../../src/components/status/status-config';
 const selected = Number(Astro.params.code || 404);
 const code = getStatusConfig(selected).code;
 const themeParam = Astro.url.searchParams.get('theme');
@@ -12,12 +13,12 @@ const status = getStatusConfig(code);
 <div slot="toolbar" class="gallery-toolbar">
   <div><a href="/__status">Status gallery</a><span>Development only · screens are demonstrations</span></div>
   <form action="/__status" id="status-switcher">
-    <label>Status <select name="code" id="gallery-code">{Object.entries(STATUS_CLASSES).map(([group, info]) => <optgroup label={`${group}xx · ${info.name}`}>{STATUS_CODES.filter(item => Math.floor(item / 100) === Number(group)).map(item => <option value={item} selected={code === item}>{item} · {STATUS_CONFIG[item as keyof typeof STATUS_CONFIG].reason}</option>)}</optgroup>)}</select></label>
+    <label>Status <select name="code" id="gallery-code">{STATUS_CODES.map(item => <option value={item} selected={code === item}>{item} · {getStatusConfig(item).reason}</option>)}</select></label>
     <label>Theme <select name="theme" id="gallery-theme"><option value="auto" selected={theme === 'auto'}>System</option><option value="light" selected={theme === 'light'}>Light</option><option value="dark" selected={theme === 'dark'}>Dark</option></select></label>
     <label class="gallery-timer"><input type="checkbox" name="timer" value="on" checked={timerDemo} /> Demo countdowns</label>
     <button type="submit">Preview</button>
   </form>
-  <nav aria-label="All status codes">{Object.entries(STATUS_CLASSES).map(([group, info]) => <details open={Number(group) === status.class}><summary>{group}xx · {info.name}</summary><div>{STATUS_CODES.filter(item => Math.floor(item / 100) === Number(group)).map(item => <a href={`/__status/${item}?theme=${theme}`} aria-current={item === code ? 'page' : undefined}>{item}</a>)}</div></details>)}</nav>
+  <nav aria-label="All status codes">{Object.entries(STATUS_CLASSES).map(([group, info]) => <StatusCodeGroup group={Number(group)} name={info.name} selected={code} theme={theme} />)}</nav>
 </div>
 </StatusDocument>
 <script>
@@ -37,10 +38,10 @@ const status = getStatusConfig(code);
   label { display: flex; align-items: center; gap: .5rem; }
   select, button { max-width: 100%; min-height: 44px; padding: .4rem .7rem; background: #f5f8f6; color: inherit; border: 1px solid #ccd9d1; border-radius: 6px; font: inherit; }
   nav { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; }
-  details > div { display: flex; flex-wrap: wrap; max-width: 30rem; }
-  summary { min-height: 44px; cursor: pointer; display: flex; align-items: center; }
-  details a { display: grid; place-items: center; min-width: 44px; min-height: 44px; color: #176644; text-underline-offset: 4px; }
-  [aria-current] { font-weight: 800; }
+  nav :global(details > div) { display: flex; flex-wrap: wrap; max-width: 30rem; }
+  nav :global(summary) { min-height: 44px; cursor: pointer; display: flex; align-items: center; }
+  nav :global(details a) { display: grid; place-items: center; min-width: 44px; min-height: 44px; color: #176644; text-underline-offset: 4px; }
+  nav :global([aria-current]) { font-weight: 800; }
   :focus-visible { outline: 2px solid #176644; outline-offset: 3px; }
   @media (max-width: 600px) { form, label { align-items: stretch; } label { flex-direction: column; width: 100%; } .gallery-timer { flex-direction: row; align-items: center; } }
 </style>

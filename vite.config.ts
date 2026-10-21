@@ -214,6 +214,8 @@ function localApiPlugin(): Plugin {
         } catch (err: unknown) {
           console.error(`[local-api-handler] error on ${urlPath}:`, err);
           if (!res.headersSent) {
+            const { wantsStatusHtml, sendStatusPage } = require('./api/_lib/status-response.cjs');
+            if (wantsStatusHtml(req)) { sendStatusPage(res, 500); return; }
             res.statusCode = 500;
             res.setHeader('Content-Type', 'application/json');
             /*

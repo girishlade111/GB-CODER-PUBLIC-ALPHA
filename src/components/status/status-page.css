@@ -6,19 +6,19 @@
   --st-soft: #e8f0eb; --st-border: #ccd9d1;
   --st-rule: #dfe7e2; --st-text: #172e25;
   --st-secondary: #506258; --st-muted: #5d6d63;
-  --st-faint: #7e9087; --st-primary: #176644;
+  --st-faint: #7e9087; --st-primary: #176644; --st-positive: #104c33;
   --st-button: #176644; --st-on-button: #ffffff; --st-accent: var(--st-faint);
   --st-font: 'Manrope Variable', 'Segoe UI', sans-serif;
   display: flex; flex-direction: column; min-height: 100svh; width: 100%;
   background: var(--st-bg); color: var(--st-text); font: 400 1rem/1.65 var(--st-font);
   -webkit-font-smoothing: antialiased; text-align: left; color-scheme: light;
 }
-.status-page[data-status-theme='dark'] { --st-bg: #152b23; --st-surface: #172e25; --st-soft: #1e382b; --st-border: #789d89; --st-rule: #506258; --st-text: #e4f1e9; --st-secondary: #c9e0d3; --st-muted: #9cb8a9; --st-faint: #d5e2da; --st-primary: #c9e0d3; --st-button: #e4f1e9; --st-on-button: #152b23; color-scheme: dark; }
+.status-page[data-status-theme='dark'] { --st-bg: #152b23; --st-surface: #172e25; --st-soft: #1e382b; --st-border: #789d89; --st-rule: #506258; --st-text: #e4f1e9; --st-secondary: #c9e0d3; --st-muted: #9cb8a9; --st-faint: #d5e2da; --st-primary: #c9e0d3; --st-positive: #e4f1e9; --st-button: #e4f1e9; --st-on-button: #152b23; color-scheme: dark; }
 @media (prefers-color-scheme: dark) {
-  .status-page[data-status-theme='auto'] { --st-bg: #152b23; --st-surface: #172e25; --st-soft: #1e382b; --st-border: #789d89; --st-rule: #506258; --st-text: #e4f1e9; --st-secondary: #c9e0d3; --st-muted: #9cb8a9; --st-faint: #d5e2da; --st-primary: #c9e0d3; --st-button: #e4f1e9; --st-on-button: #152b23; color-scheme: dark; }
+  .status-page[data-status-theme='auto'] { --st-bg: #152b23; --st-surface: #172e25; --st-soft: #1e382b; --st-border: #789d89; --st-rule: #506258; --st-text: #e4f1e9; --st-secondary: #c9e0d3; --st-muted: #9cb8a9; --st-faint: #d5e2da; --st-primary: #c9e0d3; --st-positive: #e4f1e9; --st-button: #e4f1e9; --st-on-button: #152b23; color-scheme: dark; }
 }
 .status-page[data-status-tone='muted'] { --st-accent: var(--st-muted); }
-.status-page[data-status-tone='positive'] { --st-accent: var(--st-primary); }
+.status-page[data-status-tone='positive'] { --st-accent: var(--st-positive); }
 .status-page[data-status-tone='ink'] { --st-accent: var(--st-text); }
 .status-page[data-status-tone='secondary'] { --st-accent: var(--st-secondary); }
 .status-page *, .status-page *::before, .status-page *::after { box-sizing: border-box; }

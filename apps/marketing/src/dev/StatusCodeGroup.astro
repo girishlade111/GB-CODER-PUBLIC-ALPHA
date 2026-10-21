@@ -1,0 +1,10 @@
+---
+import { STATUS_CODES } from '../../../../src/components/status/status-config';
+interface Props { group: number; name: string; selected: number; theme: string }
+const { group, name, selected, theme } = Astro.props;
+const codes = STATUS_CODES.filter(code => Math.floor(code / 100) === group);
+---
+<details open={Math.floor(selected / 100) === group}>
+  <summary>{group}xx · {name}</summary>
+  <div>{codes.map(code => <a href={`/__status/${code}?theme=${theme}`} aria-current={code === selected ? 'page' : undefined}>{code}</a>)}</div>
+</details>
