@@ -10,7 +10,7 @@ const timerDemo = Astro.url.searchParams.get('timer') === 'on';
 const status = getStatusConfig(code);
 ---
 <StatusDocument code={code} theme={theme} redirect={timerDemo && status.class === 3 ? { href: '/__status/200', seconds: 8 } : undefined} autoRetry={timerDemo && (code === 503 || code === 504) ? { seconds: 10, maxAttempts: 3 } : undefined} retryAfterSeconds={5}>
-<div slot="toolbar" class="gallery-toolbar">
+<div slot="toolbar" class="gallery-toolbar" data-gallery-theme={theme}>
   <div><a href="/__status">Status gallery</a><span>Development only · screens are demonstrations</span></div>
   <form action="/__status" id="status-switcher">
     <label>Status <select name="code" id="gallery-code">{STATUS_CODES.map(item => <option value={item} selected={code === item}>{item} · {getStatusConfig(item).reason}</option>)}</select></label>
@@ -30,18 +30,20 @@ const status = getStatusConfig(code);
   });
 </script>
 <style>
-  .gallery-toolbar { padding: 1rem 1.5rem; background: #e8f0eb; color: #172e25; border-bottom: 1px solid #ccd9d1; font: .8rem/1.5 'Manrope Variable', 'Segoe UI', sans-serif; }
+  .gallery-toolbar { --gallery-bg: #e8f0eb; --gallery-field: #f5f8f6; --gallery-text: #172e25; --gallery-muted: #506258; --gallery-rule: #ccd9d1; --gallery-link: #176644; padding: 1rem 1.5rem; background: var(--gallery-bg); color: var(--gallery-text); border-bottom: 1px solid var(--gallery-rule); font: .8rem/1.5 'Manrope Variable', 'Segoe UI', sans-serif; }
+  .gallery-toolbar[data-gallery-theme='dark'] { --gallery-bg: #1e382b; --gallery-field: #152b23; --gallery-text: #e4f1e9; --gallery-muted: #9cb8a9; --gallery-rule: #789d89; --gallery-link: #c9e0d3; color-scheme: dark; }
+  @media (prefers-color-scheme: dark) { .gallery-toolbar[data-gallery-theme='auto'] { --gallery-bg: #1e382b; --gallery-field: #152b23; --gallery-text: #e4f1e9; --gallery-muted: #9cb8a9; --gallery-rule: #789d89; --gallery-link: #c9e0d3; color-scheme: dark; } }
   .gallery-toolbar > div, form { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
   .gallery-toolbar > div > a { color: inherit; font-weight: 750; }
-  .gallery-toolbar > div > span { color: #506258; }
+  .gallery-toolbar > div > span { color: var(--gallery-muted); }
   form { margin-block: .75rem; }
   label { display: flex; align-items: center; gap: .5rem; }
-  select, button { max-width: 100%; min-height: 44px; padding: .4rem .7rem; background: #f5f8f6; color: inherit; border: 1px solid #ccd9d1; border-radius: 6px; font: inherit; }
+  select, button { max-width: 100%; min-height: 44px; padding: .4rem .7rem; background: var(--gallery-field); color: inherit; border: 1px solid var(--gallery-rule); border-radius: 6px; font: inherit; }
   nav { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; }
   nav :global(details > div) { display: flex; flex-wrap: wrap; max-width: 30rem; }
   nav :global(summary) { min-height: 44px; cursor: pointer; display: flex; align-items: center; }
-  nav :global(details a) { display: grid; place-items: center; min-width: 44px; min-height: 44px; color: #176644; text-underline-offset: 4px; }
+  nav :global(details a) { display: grid; place-items: center; min-width: 44px; min-height: 44px; color: var(--gallery-link); text-underline-offset: 4px; }
   nav :global([aria-current]) { font-weight: 800; }
-  :focus-visible { outline: 2px solid #176644; outline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--gallery-link); outline-offset: 3px; }
   @media (max-width: 600px) { form, label { align-items: stretch; } label { flex-direction: column; width: 100%; } .gallery-timer { flex-direction: row; align-items: center; } }
 </style>

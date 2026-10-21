@@ -138,13 +138,13 @@ try {
     await page.clock.runFor(11000);
     assert.match(await page.locator('[data-status-countdown]').textContent(), /cancelled/);
     await page.goto(`${dev}/__status/503?timer=on`);
-    await page.clock.runFor(11000);
+    await Promise.all([page.waitForEvent('framenavigated', frame => frame === page.mainFrame()), page.clock.runFor(11000)]);
     await page.waitForLoadState('networkidle');
     assert.equal(await page.evaluate(() => sessionStorage.getItem('gbcoder:status-retry:/__status/503')), '1');
-    await page.clock.runFor(21000);
+    await Promise.all([page.waitForEvent('framenavigated', frame => frame === page.mainFrame()), page.clock.runFor(21000)]);
     await page.waitForLoadState('networkidle');
     assert.equal(await page.evaluate(() => sessionStorage.getItem('gbcoder:status-retry:/__status/503')), '2');
-    await page.clock.runFor(41000);
+    await Promise.all([page.waitForEvent('framenavigated', frame => frame === page.mainFrame()), page.clock.runFor(41000)]);
     await page.waitForLoadState('networkidle');
     assert.equal(await page.evaluate(() => sessionStorage.getItem('gbcoder:status-retry:/__status/503')), '3');
     assert.match(await page.locator('[data-status-countdown]').textContent(), /paused/);

@@ -33,7 +33,7 @@ export function statusClass(code: number): StatusClass {
 
 function entry(code: number, reason: string, title: string, message: string, hint: string, cta?: StatusCta): StatusConfig {
   const group = statusClass(code);
-  return { code, class: group, reason, title, message, hint, primaryCta: cta ?? (group === 5 || code === 408 || code === 429 ? retry : home), secondaryCta: back, variant: STATUS_CLASSES[group].variant, accentTone: STATUS_CLASSES[group].accentTone };
+  return { code, class: group, reason, title, message, hint, primaryCta: cta ?? (group === 5 || code === 408 || code === 429 ? retry : home), secondaryCta: cta?.action === 'back' ? { label: 'Contact us', href: '/contact' } : back, variant: STATUS_CLASSES[group].variant, accentTone: STATUS_CLASSES[group].accentTone };
 }
 
 /** Add one entry here; the gallery and generated server documents follow it. */

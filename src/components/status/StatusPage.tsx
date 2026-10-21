@@ -59,7 +59,7 @@ export default function StatusPage({ code, theme = 'auto', loginHref, retryAfter
         <div className="status-actions status-reveal">
           <a className="status-button" href={safeStatusHref(primary.href)} data-status-action={primary.action}><Icon name={primary.action === 'retry' ? 'clock' : primary.action === 'login' ? 'lock' : 'arrow-left'} /><span>{primary.label}</span></a>
           <a className="status-button status-button-outline" href={safeStatusHref(status.secondaryCta.href)} data-status-action={status.secondaryCta.action}>{status.secondaryCta.label}</a>
-          {primary.href !== '/' && <a className="status-text-link" href="/">Go to Home</a>}
+          {(primary.href !== '/' || primary.action === 'retry' || primary.action === 'back') && <a className="status-text-link" href="/">Go to Home</a>}
         </div>
         <p className="status-hint status-reveal">{status.hint}</p>
         <p className="status-reason status-reveal"><span>{status.code} · {status.reason}</span>{status.class >= 4 && <code className="status-path" data-status-path />}</p>
