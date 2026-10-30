@@ -13,6 +13,8 @@ import { WorkbenchSecondarySidebar } from './WorkbenchSecondarySidebar';
 import { WorkbenchBottomPanel } from './WorkbenchBottomPanel';
 import { WorkbenchStatusBar } from './WorkbenchStatusBar';
 import { WorkbenchEditorArea } from './WorkbenchEditorArea';
+import { CustomizeLayoutModal } from './CustomizeLayoutModal';
+import { createDefaultWorkbenchLayout } from '../../services/workbench/workbenchLayoutStore';
 import './workbenchTheme.css';
 
 interface WorkbenchShellProps {
@@ -194,34 +196,73 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
       data-testid="vscode-mode"
     >
       {/* ── Title Bar ── */}
-      <WorkbenchTitleBar
-        projectName={projectName}
-        layoutState={{
-          ...layout,
-          primarySidebar: {
-            ...layout.primarySidebar,
-            visible: effectivePrimaryVisible,
-          },
-          secondarySidebar: {
-            ...layout.secondarySidebar,
-            visible: effectiveSecondaryVisible,
-          },
-        }}
-        onTogglePrimarySidebar={handleTogglePrimarySidebar}
-        onToggleSecondarySidebar={handleToggleSecondarySidebar}
-        onToggleBottomPanel={handleToggleBottomPanel}
-        onApplyPreset={onApplyPreset}
-        onOpenQuickOpen={onOpenQuickOpen}
-        onOpenCommandPalette={onOpenCommandPalette}
-        onOpenSettings={onOpenSettings}
-        onOpenProjects={onOpenProjects}
-        onExit={onExit}
-        webcontainerState={webcontainerState}
-      />
+      {layout.menuBar?.visible !== false ? (
+        <WorkbenchTitleBar
+          projectName={projectName}
+          layoutState={{
+            ...layout,
+            primarySidebar: {
+              ...layout.primarySidebar,
+              visible: effectivePrimaryVisible,
+            },
+            secondarySidebar: {
+              ...layout.secondarySidebar,
+              visible: effectiveSecondaryVisible,
+            },
+          }}
+          onTogglePrimarySidebar={handleTogglePrimarySidebar}
+          onToggleSecondarySidebar={handleToggleSecondarySidebar}
+          onToggleBottomPanel={handleToggleBottomPanel}
+          onApplyPreset={onApplyPreset}
+          onOpenCustomizeLayout={() => setIsCustomizeLayoutOpen(true)}
+          onOpenQuickOpen={onOpenQuickOpen}
+          onOpenCommandPalette={onOpenCommandPalette}
+          onOpenSettings={onOpenSettings}
+          onOpenProjects={onOpenProjects}
+          onExit={onExit}
+          webcontainerState={webcontainerState}
+        />
+      ) : (
+        <div
+          className="group relative h-1.5 w-full bg-transparent hover:h-9 hover:bg-[var(--background)] transition-all z-20 overflow-hidden shrink-0"
+          title="Hover to reveal Menu Bar"
+        >
+          <div className="hidden group-hover:block w-full h-full">
+            <WorkbenchTitleBar
+              projectName={projectName}
+              layoutState={{
+                ...layout,
+                primarySidebar: {
+                  ...layout.primarySidebar,
+                  visible: effectivePrimaryVisible,
+                },
+                secondarySidebar: {
+                  ...layout.secondarySidebar,
+                  visible: effectiveSecondaryVisible,
+                },
+              }}
+              onTogglePrimarySidebar={handleTogglePrimarySidebar}
+              onToggleSecondarySidebar={handleToggleSecondarySidebar}
+              onToggleBottomPanel={handleToggleBottomPanel}
+              onApplyPreset={onApplyPreset}
+              onOpenCustomizeLayout={() => setIsCustomizeLayoutOpen(true)}
+              onOpenQuickOpen={onOpenQuickOpen}
+              onOpenCommandPalette={onOpenCommandPalette}
+              onOpenSettings={onOpenSettings}
+              onOpenProjects={onOpenProjects}
+              onExit={onExit}
+              webcontainerState={webcontainerState}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── Main Workbench Body ── */}
-      <div className="flex min-h-0 flex-1 overflow-hidden relative">
+      <div className={`flex min-h-0 flex-1 overflow-hidden relative ${
+        layout.primarySidebarPosition === 'right' ? 'flex-row-reverse' : 'flex-row'
+      }`}>
         {/* Fixed Activity Bar */}
+        {layout.activityBar?.visible !== false && (
         <WorkbenchActivityBar
           activeViewId={layout.primarySidebar.activeViewId}
           isSidebarOpen={effectivePrimaryVisible}
@@ -270,6 +311,7 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
           onOpenCodeRabbit={onOpenCodeRabbit}
           onResetContainer={onResetContainer}
         />
+        )}
 
         {/* Primary Sidebar (Left) */}
         <WorkbenchPrimarySidebar
@@ -306,10 +348,14 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
         {/* Center: Editor Area + Docked Bottom Panel */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--background)]">
           {/* Editor Area */}
-          <WorkbenchEditorArea {...editorAreaProps} />
+          <WorkbenchEditorArea
+            {...editorAreaProps}
+            isCenteredLayout={Boolean(layout.modes?.centeredLayout)}
+          />
 
           {/* Bottom Panel */}
           <WorkbenchBottomPanel
+            panelAlignment={layout.panelAlignment ?? 'center'}
             height={layout.bottomPanel.height}
             visible={layout.bottomPanel.visible}
             isMaximized={layout.bottomPanel.isMaximized}
@@ -381,6 +427,7 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
       </div>
 
       {/* ── Status Bar ── */}
+      {layout.statusBar?.visible !== false && (
       <WorkbenchStatusBar
         isTerminalOpen={layout.bottomPanel.visible}
         onToggleTerminal={handleToggleBottomPanel}
@@ -396,6 +443,18 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
         dirtyCount={dirtyCount}
         currentPreset={layout.currentPreset}
         webcontainerState={webcontainerState}
+      />
+      )}
+
+      {/* ── Customize Layout Modal ── */}
+      <CustomizeLayoutModal
+        isOpen={isCustomizeLayoutOpen}
+        onClose={() => setIsCustomizeLayoutOpen(false)}
+        layoutState={layout}
+        onUpdateLayout={onUpdateLayout}
+        onResetLayout={() => {
+          onUpdateLayout(() => createDefaultWorkbenchLayout());
+        }}
       />
     </div>
   );
