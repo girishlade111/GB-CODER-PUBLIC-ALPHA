@@ -4436,18 +4436,7 @@ function App() {
         */}
 
 
-        {showAIChat && (
-          <Suspense fallback={null}>
-            <AIChatAssistant
-              isOpen={showAIChat}
-              onClose={() => setShowAIChat(false)}
-              html={html}
-              css={css}
-              javascript={javascript}
-              externalLibraries={externalLibraries}
-            />
-          </Suspense>
-        )}
+
 
         {showVoiceCommands && (
           <Suspense fallback={null}>
