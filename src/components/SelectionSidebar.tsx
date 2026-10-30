@@ -24,12 +24,12 @@ const LadeStackLoader: React.FC = () => {
         <div className="flex flex-col items-center justify-center py-12">
             {/* Modern Orbital Emblem */}
             <div className="relative flex items-center justify-center w-12 h-12 mb-4">
-                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-amber-500 border-r-amber-400/60 animate-spin" />
+                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-white border-r-white/60 animate-spin" />
                 <div
                     className="absolute inset-1.5 rounded-full border border-dashed border-slate-600/50 animate-spin"
                     style={{ animationDirection: 'reverse', animationDuration: '4s' }}
                 />
-                <div className="w-7 h-7 rounded-lg bg-surface-overlay border border-amber-500/40 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.25)]">
+                <div className="w-7 h-7 rounded-lg bg-surface-overlay border border-white/20 flex items-center justify-center shadow-[0_0_12px_rgba(255,255,255,0.2)]">
                     <svg
                         className="w-4 h-4 text-amber-400"
                         viewBox="0 0 24 24"
