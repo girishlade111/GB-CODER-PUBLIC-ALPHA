@@ -12,7 +12,6 @@ import {
   FilePlus,
   Mic,
   MicOff,
-  Bug,
   Scan,
   Rocket,
   Github,
@@ -26,7 +25,6 @@ interface NavigationBarProps {
   onAutoSaveToggle: () => void;
   onRun: () => void;
   onOpenBuildFromPrompt: () => void;
-  onOpenCodeRabbit?: () => void;
   /** Screenshot → Code. Optional so legal/doc pages can omit the trigger. */
   onOpenScreenshotToCode?: () => void;
   onExternalLibraryManagerToggle: () => void;
@@ -80,7 +78,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   onAutoSaveToggle,
   onRun,
   onOpenBuildFromPrompt,
-  onOpenCodeRabbit,
   onOpenScreenshotToCode,
   onClear,
   onNewProject,
@@ -247,21 +244,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   <span className="hidden lg:inline">Build with AI</span>
                 </button>
               </Tooltip>
-
-              {/* button-secondary — cream fill, hairline outline. */}
-              {onOpenCodeRabbit && (
-                <Tooltip label="CodeRabbit AI Bug Scanner">
-                  <button
-                    onClick={onOpenCodeRabbit}
-                    className={`inline-flex items-center justify-center gap-2 rounded-md border border-stroke bg-surface-canvas px-3 py-2 ${NAV_LINK} text-content-primary transition-colors hover:bg-surface-hover compact:min-h-[44px] compact:min-w-[44px]`}
-                    title="CodeRabbit AI Bug Scanner"
-                    aria-label="CodeRabbit AI Bug Scanner"
-                  >
-                    <Bug className="h-4 w-4 text-accent sm:h-5 sm:w-5" />
-                    <span className="hidden xl:inline">CodeRabbit AI</span>
-                  </button>
-                </Tooltip>
-              )}
 
               {/* button-secondary — icon-only: Screenshot to Code is a peer of
                   Build with AI, and a second labelled coral CTA would compete

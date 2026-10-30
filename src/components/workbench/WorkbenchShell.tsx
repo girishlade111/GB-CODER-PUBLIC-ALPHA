@@ -42,7 +42,6 @@ interface WorkbenchShellProps {
   diagnostics?: { errorCount: number; warningCount: number };
   onOpenSnapshots?: () => void;
   onOpenVoiceCommands?: () => void;
-  onOpenCodeRabbit?: () => void;
   onResetContainer?: () => void;
   onNewTerminal?: () => void;
   onToggleSplitTerminal?: () => void;
@@ -68,7 +67,6 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
   diagnostics = { errorCount: 0, warningCount: 0 },
   onOpenSnapshots,
   onOpenVoiceCommands,
-  onOpenCodeRabbit,
   onResetContainer,
   onNewTerminal,
   onToggleSplitTerminal,
@@ -315,7 +313,6 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
           onOpenSettings={onOpenSettings}
           onOpenSnapshots={onOpenSnapshots}
           onOpenVoiceCommands={onOpenVoiceCommands}
-          onOpenCodeRabbit={onOpenCodeRabbit}
           onResetContainer={onResetContainer}
         />
         )}

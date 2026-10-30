@@ -30,14 +30,12 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
   const [inceptionKey, setInceptionKey] = useState(settings.inceptionApiKey || '');
   const [atriaKey, setAtriaKey] = useState(settings.atriaApiKey || '');
   const [nvidiaKey, setNvidiaKey] = useState(settings.nvidiaApiKey || '');
-  const [coderabbitKey, setCoderabbitKey] = useState(settings.codeRabbitApiKey || '');
 
   useEffect(() => {
     if (isOpen) {
       setInceptionKey(settings.inceptionApiKey || '');
       setAtriaKey(settings.atriaApiKey || '');
       setNvidiaKey(settings.nvidiaApiKey || '');
-      setCoderabbitKey(settings.codeRabbitApiKey || '');
     }
   }, [isOpen, settings]);
 
@@ -66,7 +64,6 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
       inceptionApiKey: inceptionKey.trim(),
       atriaApiKey: atriaKey.trim(),
       nvidiaApiKey: nvidiaKey.trim(),
-      codeRabbitApiKey: coderabbitKey.trim(),
     });
     toast.success('Settings & API keys saved successfully');
   };
@@ -301,17 +298,6 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                       value={nvidiaKey}
                       onChange={(e) => setNvidiaKey(e.target.value)}
                       placeholder="nvapi-..."
-                      className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 font-mono text-xs text-white focus:border-[var(--ring)] focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-400">CodeRabbit AI API Key (Bug Scanner)</label>
-                    <input
-                      type="password"
-                      value={coderabbitKey}
-                      onChange={(e) => setCoderabbitKey(e.target.value)}
-                      placeholder="cr-..."
                       className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 font-mono text-xs text-white focus:border-[var(--ring)] focus:outline-none"
                     />
                   </div>

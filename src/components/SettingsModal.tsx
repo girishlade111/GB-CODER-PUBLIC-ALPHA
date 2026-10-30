@@ -316,28 +316,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         </div>
                     </div>
 
-                    {/* CodeRabbit AI */}
-                    <div>
-                        <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
-                            CodeRabbit AI Scanner
-                        </div>
-                        <div className="rounded-lg border border-stroke-dark bg-product p-4">
-                            <div className="text-[13.5px] font-medium text-content-on-dark mb-1">
-                                API Key
-                            </div>
-                            <input
-                                type="password"
-                                value={settings.codeRabbitApiKey || ''}
-                                onChange={(e) => updateSettings({ codeRabbitApiKey: e.target.value })}
-                                placeholder="Enter your CodeRabbit / Gemini API Key..."
-                                className="w-full px-3 py-1.5 text-[13px] font-mono rounded-md bg-product-elevated border border-stroke-dark text-content-on-dark focus:border-accent outline-none transition-colors"
-                            />
-                            <p className="text-[12.5px] text-content-on-dark-soft mt-2">
-                                Used by the AI bug scanner to audit project code for logic issues and security vulnerabilities.
-                            </p>
-                        </div>
-                    </div>
-
                     {/* Voice Commands */}
                     <div>
                         <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">

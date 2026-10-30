@@ -7,7 +7,6 @@ import {
   TerminalSquare,
   Settings,
   RotateCcw,
-  Bug,
   Mic,
   Database,
 } from 'lucide-react';
@@ -26,7 +25,6 @@ interface WorkbenchActivityBarProps {
   onOpenSettings: () => void;
   onOpenSnapshots?: () => void;
   onOpenVoiceCommands?: () => void;
-  onOpenCodeRabbit?: () => void;
   onResetContainer?: () => void;
 }
 
@@ -41,7 +39,6 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
   onOpenSettings,
   onOpenSnapshots,
   onOpenVoiceCommands,
-  onOpenCodeRabbit,
   onResetContainer,
 }) => {
   return (
@@ -216,21 +213,6 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
               className="flex h-10 w-12 items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
             >
               <Mic className="h-5 w-5" strokeWidth={1.5} />
-            </button>
-          </Tooltip>
-        )}
-
-        {/* CodeRabbit Review */}
-        {onOpenCodeRabbit && (
-          <Tooltip label="Code Review (CodeRabbit)" side="right">
-            <button
-              type="button"
-              onClick={onOpenCodeRabbit}
-              aria-label="Code Review"
-              data-testid="activity-bar-coderabbit"
-              className="flex h-10 w-12 items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
-            >
-              <Bug className="h-5 w-5" strokeWidth={1.5} />
             </button>
           </Tooltip>
         )}

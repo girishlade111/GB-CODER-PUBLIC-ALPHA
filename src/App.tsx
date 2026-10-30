@@ -163,7 +163,6 @@ const DisclaimerPage = lazyWithRecovery(() => import('./components/pages/Disclai
 const ContactPage = lazyWithRecovery(() => import('./components/pages/ContactPage'));
 const ExtensionsMarketplace = lazyWithRecovery(() => import('./components/ExtensionsMarketplace'));
 const SettingsModal = lazyWithRecovery(() => import('./components/SettingsModal'));
-const CodeRabbitReviewModal = lazyWithRecovery(() => import('./components/CodeRabbitReviewModal'));
 const HistoryPanel = lazyWithRecovery(() => import('./components/HistoryPanel'));
 const KeyboardShortcutsHelp = lazyWithRecovery(() => import('./components/KeyboardShortcutsHelp'));
 const CommandPalette = lazyWithRecovery(() => import('./components/CommandPalette'));
@@ -700,7 +699,6 @@ function App() {
   const [externalLibraries, setExternalLibraries] = useState<ExternalLibrary[]>([]);
   const [showExtensionsMarketplace, setShowExtensionsMarketplace] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [showCodeRabbitModal, setShowCodeRabbitModal] = useState<boolean>(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState<boolean>(false);
   const [showCommandPalette, setShowCommandPalette] = useState<boolean>(false);
   const [showExportShare, setShowExportShare] = useState<boolean>(false);
@@ -4842,7 +4840,6 @@ function App() {
         onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
         onRun={() => handleCommand('run')}
         onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-        onOpenCodeRabbit={() => setShowCodeRabbitModal(true)}
         onOpenScreenshotToCode={() => setShowScreenshotToCode(true)}
         onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
         onClear={handleClearAll}
@@ -4932,7 +4929,6 @@ function App() {
           onOpenImport={() => setShowImport(true)}
           onOpenVSCodeMode={handleEnterVSCodeMode}
           onOpenAIChat={() => setShowAIChat(true)}
-          onOpenCodeRabbit={() => setShowCodeRabbitModal(true)}
           onOpenVoiceCommands={() => setShowVoiceCommands(true)}
           onOpenStatistics={() => setShowStats(true)}
           onOpenInjection={() => setShowInjectionManager(true)}
@@ -5248,24 +5244,6 @@ function App() {
           <SettingsModal
             isOpen={showSettings}
             onClose={() => setShowSettings(false)}
-          />
-        </Suspense>
-      )}
-
-      {/* CodeRabbit AI Bug Scanner Modal */}
-      {isPhase3Ready && (
-        <Suspense fallback={null}>
-          <CodeRabbitReviewModal
-            isOpen={showCodeRabbitModal}
-            onClose={() => setShowCodeRabbitModal(false)}
-            files={fileProject.files.map((f) => ({
-              filename: f.path,
-              content: f.content,
-              language: f.language || (f.path.endsWith('.css') ? 'css' : f.path.endsWith('.html') ? 'html' : 'javascript'),
-            }))}
-            onApplyFixToFile={(filename, newContent) => {
-              setFileProject((current) => setFileContent(current, filename, newContent));
-            }}
           />
         </Suspense>
       )}

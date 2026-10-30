@@ -22,7 +22,6 @@ import FileTreeView, { FileTreeViewHandle } from './FileTreeView';
 import CodeAssistPanel from './CodeAssistPanel';
 import { GBAssistIcon } from '../icons/GBAssistIcon';
 import DependenciesPanel from '../DependenciesPanel';
-import CodeRabbitReviewModal from '../CodeRabbitReviewModal';
 import VoiceCommandPanel from '../VoiceCommandPanel';
 import SnapshotManagerModal from '../SnapshotManagerModal';
 import TerminalTab from '../Console/TerminalTab';
@@ -239,7 +238,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
   // Modals state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isCodeRabbitOpen, setIsCodeRabbitOpen] = useState(false);
   const [isVoiceCommandsOpen, setIsVoiceCommandsOpen] = useState(false);
   const [isSnapshotsOpen, setIsSnapshotsOpen] = useState(false);
   const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
@@ -1808,7 +1806,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         diagnostics={diagnostics}
         onOpenSnapshots={() => setIsSnapshotsOpen(true)}
         onOpenVoiceCommands={() => setIsVoiceCommandsOpen(true)}
-        onOpenCodeRabbit={() => setIsCodeRabbitOpen(true)}
         onResetContainer={handleResetContainer}
         onNewTerminal={handleNewTerminal}
         onToggleSplitTerminal={handleToggleSplitTerminal}
@@ -1937,21 +1934,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         }}
         onResetLayout={() => {
           setWorkbenchLayout(createDefaultWorkbenchLayout());
-        }}
-      />
-
-      <CodeRabbitReviewModal
-        isOpen={isCodeRabbitOpen}
-        onClose={() => setIsCodeRabbitOpen(false)}
-        files={project.files.map((f) => ({
-          filename: f.path,
-          content: f.content,
-          language: f.language,
-        }))}
-        onApplyFixToFile={(filePath, newContent) => {
-          onChangeFile(filePath, newContent);
-          void webcontainerService.syncFile(filePath, newContent);
-          toast.success(`Applied fix to ${filePath}`);
         }}
       />
 
