@@ -3047,8 +3047,6 @@ function App() {
         toast.success('Code formatted.');
       }
     },
-    { id: 'build-ai', title: 'Build with AI', section: 'AI', perform: () => setShowBuildFromPrompt(true) },
-    { id: 'screenshot-to-code', title: 'Screenshot to Code', section: 'AI', perform: () => setShowScreenshotToCode(true) },
     { id: 'explain-code', title: 'Explain Selected Code', section: 'AI', perform: () => handleSelectionOperation('explain') },
     { id: 'find-fix', title: 'Find and Fix', section: 'AI', perform: () => handleSelectionOperation('debug') },
     { id: 'optimize-code', title: 'Optimize Performance', section: 'AI', perform: () => handleSelectionOperation('optimize') },
@@ -3540,12 +3538,6 @@ function App() {
    * elsewhere in the app. Voice is an additional way in, never the only one.
    */
 
-  /** Opens Build with AI on a spoken description, awaiting confirmation. */
-  const openVoiceBuild = useCallback((promptText: string) => {
-    setVoiceBuildPrompt(promptText);
-    setShowBuildFromPrompt(true);
-  }, []);
-
   /** "Export as PNG / JPEG / SVG / HTML / ZIP", plus CodePen and JSFiddle. */
   const runVoiceExport = useCallback(
     async (target: VoiceExportTarget) => {
@@ -3750,35 +3742,10 @@ function App() {
         return;
 
       case 'build_open':
-        // No transcript to seed — open the modal as the button would.
-        setVoiceBuildPrompt('');
-        setShowBuildFromPrompt(true);
-        voiceCommandService.speak('Build with AI is open');
-        return;
-
       case 'build':
-        if (!param) return;
-        openVoiceBuild(toPromptText(param));
-        voiceCommandService.speak('Review the prompt, then generate');
+      case 'build_followup':
+        voiceCommandService.speak('Build with AI is no longer available');
         return;
-
-      case 'build_followup': {
-        if (!param) return;
-        /*
-         * Refinements extend the prompt in place when one is being composed;
-         * otherwise the phrase stands alone as a fresh prompt. Either way the
-         * user still confirms in the modal before anything is generated.
-         */
-        const addition = toPromptText(param);
-        setVoiceBuildPrompt((current) => {
-          const base = current.trim();
-          if (!base) return addition;
-          return `${base.replace(/[.!?]+$/, '')}. ${addition}`;
-        });
-        setShowBuildFromPrompt(true);
-        voiceCommandService.speak('Prompt updated');
-        return;
-      }
 
       case 'export':
         await runVoiceExport((param as VoiceExportTarget) ?? 'png');
@@ -4101,7 +4068,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4159,7 +4125,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4218,7 +4183,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4276,7 +4240,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4309,7 +4272,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4342,7 +4304,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4375,7 +4336,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4408,7 +4368,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4698,8 +4657,6 @@ function App() {
       <NavigationBar
         onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
         onRun={() => handleCommand('run')}
-        onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-        onOpenScreenshotToCode={() => setShowScreenshotToCode(true)}
         onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
         onClear={handleClearAll}
         onNewProject={handleNewProject}
