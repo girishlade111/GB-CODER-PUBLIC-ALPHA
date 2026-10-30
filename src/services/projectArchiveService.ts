@@ -160,7 +160,7 @@ ${injections.afterBody ? `    ${injections.afterBody}` : ''}
  * inlining them, so the archive is an editable project instead of one blob.
  */
 const buildLinkedHtml = (project: MultiFileProject, options: ArchiveOptions): string => {
-  const { html } = projectToTriple(project);
+  const { html, css, javascript } = projectToTriple(project);
   const title = options.projectName ?? 'GB Coder Project';
   const tags = libraryTags(options.externalLibraries);
   const injections = getInjections(options);
@@ -173,13 +173,13 @@ const buildLinkedHtml = (project: MultiFileProject, options: ArchiveOptions): st
     <title>${title}</title>
 ${tags.head}
 ${injections.head ? `    ${injections.head}` : ''}
-    <link rel="stylesheet" href="./${PLAIN_CSS_PATH}">
+    ${css.trim() ? `<link rel="stylesheet" href="./${PLAIN_CSS_PATH}">` : ''}
 </head>
 <body>
 ${injections.beforeBody ? `    ${injections.beforeBody}` : ''}
 ${html}
 ${tags.body}
-    <script src="./${PLAIN_JS_PATH}"></script>
+    ${javascript.trim() ? `<script src="./${PLAIN_JS_PATH}"></script>` : ''}
 ${injections.afterBody ? `    ${injections.afterBody}` : ''}
 </body>
 </html>
@@ -268,7 +268,7 @@ const buildViteIndexHtml = (
   entry: string,
   options: ArchiveOptions = {},
 ): string => {
-  const { html } = projectToTriple(project);
+  const { html, css, javascript } = projectToTriple(project);
   const title = options.projectName ?? 'GB Coder Project';
   const tags = libraryTags(options.externalLibraries);
   const injections = getInjections(options);
@@ -353,7 +353,25 @@ export const buildArchiveFiles = (
 ): ArchiveFile[] => {
   if (project.projectType === 'plain') {
     return [
-      { path: PLAIN_HTML_PATH, content: buildLinkedHtml(project, options) },
+    const { html, css, javascript } = projectToTriple(project);
+    const hasHtml = Boolean(html.trim());
+    const hasCss = Boolean(css.trim());
+    const hasJs = Boolean(javascript.trim());
+
+    const files: ArchiveFile[] = [];
+    if (hasHtml || (!hasCss && !hasJs)) {
+      files.push({ path: PLAIN_HTML_PATH, content: buildLinkedHtml(project, options) });
+    }
+    if (hasCss) {
+      files.push({ path: PLAIN_CSS_PATH, content: getFileContent(project, PLAIN_CSS_PATH) });
+    }
+    if (hasJs) {
+      files.push({ path: PLAIN_JS_PATH, content: getFileContent(project, PLAIN_JS_PATH) });
+    }
+    files.push({ path: 'README.md', content: buildReadme(project, options) });
+    return files;
+  }
+  const unusedPlain = [
       { path: PLAIN_CSS_PATH, content: getFileContent(project, PLAIN_CSS_PATH) },
       { path: PLAIN_JS_PATH, content: getFileContent(project, PLAIN_JS_PATH) },
       { path: 'README.md', content: buildReadme(project, options) },

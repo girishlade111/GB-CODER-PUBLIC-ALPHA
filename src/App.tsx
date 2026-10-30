@@ -14,7 +14,7 @@ import React, {
  * imported module". See src/utils/loadChunk.ts.
  */
 import { lazyWithRecovery, loadChunk } from './utils/loadChunk';
-import { Code2, Eye, Share2, Rocket, Github } from 'lucide-react';
+import { Code2, Eye, Share2, Download, Rocket, Github } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
 import AppSidebar from './components/AppSidebar';
@@ -2979,7 +2979,7 @@ function App() {
     }
   }, [project.currentProject?.name]);
 
-  const handleOpenExport = useCallback((tab: 'screenshot' | 'export' | 'share' = 'screenshot') => {
+  const handleOpenExport = useCallback((tab: 'screenshot' | 'export' | 'share' = 'export') => {
     setExportModalTab(tab);
     setShowExportShare(true);
   }, []);
@@ -4634,20 +4634,28 @@ function App() {
         isVoiceListening={voiceState.isListening}
         onToggleNavDrawer={() => setIsNavDrawerOpen((open) => !open)}
         isNavDrawerOpen={isNavDrawerOpen}
-        onOpenExport={() => handleOpenExport('screenshot')}
+        onOpenExport={() => handleOpenExport('export')}
+        onOpenShare={() => handleOpenExport('share')}
         onOpenDeploy={() => setShowDeploy(true)}
         onOpenGitHub={() => setShowGitHubSync(true)}
         customActions={
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* Export & Share is the only feature icon left in the top bar;
-                every other entry point now lives in the left sidebar. Below
-                1025px it moves into the toolbar's overflow menu, which calls
-                the same handler. */}
-            <Tooltip label="Export & Share" shortcut="⇧⌘E" className="hidden desktop:inline-flex">
+            <Tooltip label="Export" shortcut="⇧⌘E" className="hidden desktop:inline-flex">
               <button
-                onClick={() => handleOpenExport('screenshot')}
+                onClick={() => handleOpenExport('export')}
                 className={toolbarIconButtonClass}
-                title="Export & Share"
+                title="Export"
+                aria-label="Export"
+              >
+                <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
+            <Tooltip label="Share" shortcut="⇧⌘S" className="hidden desktop:inline-flex">
+              <button
+                onClick={() => handleOpenExport('share')}
+                className={toolbarIconButtonClass}
+                title="Share"
+                aria-label="Share"
               >
                 <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
