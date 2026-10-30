@@ -15,7 +15,6 @@ import {
   TerminalSquare,
   X,
 } from 'lucide-react';
-import Tooltip from './ui/Tooltip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface AppSidebarProps {
