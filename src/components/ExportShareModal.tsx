@@ -9,8 +9,8 @@ import {
   clampQuality, copyCaptureToClipboard, downloadCapture,
 } from '../services/captureService';
 import {
-  buildStandaloneHtml, createZipBlob, downloadBlob, estimateExportSize, formatBytes,
-  htmlFilename, zipFilename,
+  byteLength, buildStandaloneHtml, createZipBlob, downloadBlob, estimateExportSize, formatBytes,
+  htmlFilename,
 } from '../services/projectArchiveService';
 import {
   buildShareLink, openInCodePen, openInJsFiddle, prepareExternalExport,
@@ -36,14 +36,13 @@ interface ExportShareModalProps {
    * own — the id lives on the saved record, so it arrives as its own prop.
    */
   projectId?: string;
-  /** Tab to open on. Lets a shortcut jump straight to Screenshot. */
+  /** Tab to open on. Lets a shortcut jump straight to Screenshot or Export. */
   initialTab?: TabId;
 }
 
-const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
-  { id: 'screenshot', label: 'Screenshot', icon: <Camera className="h-4 w-4" /> },
-  { id: 'export', label: 'Export', icon: <Download className="h-4 w-4" /> },
+const SHARE_TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'share', label: 'Share', icon: <Share2 className="h-4 w-4" /> },
+  { id: 'screenshot', label: 'Screenshot', icon: <Camera className="h-4 w-4" /> },
 ];
 
 const rowClass =
@@ -58,7 +57,7 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
   resolvedVersions = {},
   projectName = 'gb-coder-project',
   projectId,
-  initialTab = 'screenshot',
+  initialTab = 'export',
 }) => {
   const [tab, setTab] = useState<TabId>(initialTab);
   const [busy, setBusy] = useState<string | null>(null);
@@ -77,11 +76,31 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
 
   const isFrameworkProject = project.projectType !== 'plain';
   const triple = useMemo(() => projectToTriple(project), [project]);
-  const isEmpty =
-    !isFrameworkProject &&
-    !triple.html.trim() &&
-    !triple.css.trim() &&
-    !triple.javascript.trim();
+
+  const writtenFiles = useMemo(() => {
+    if (isFrameworkProject) {
+      return project.files.filter((f) => f.content.trim().length > 0).map((f) => ({
+        name: f.path,
+        content: f.content,
+        mime: f.path.endsWith('.html') ? 'text/html' : f.path.endsWith('.css') ? 'text/css' : 'text/javascript',
+        label: f.path,
+      }));
+    }
+    const files: { name: string; content: string; mime: string; label: string }[] = [];
+    if (triple.html.trim()) {
+      files.push({ name: 'index.html', content: triple.html, mime: 'text/html', label: 'HTML (index.html)' });
+    }
+    if (triple.css.trim()) {
+      files.push({ name: 'style.css', content: triple.css, mime: 'text/css', label: 'CSS (style.css)' });
+    }
+    if (triple.javascript.trim()) {
+      files.push({ name: 'script.js', content: triple.javascript, mime: 'text/javascript', label: 'JavaScript (script.js)' });
+    }
+    return files;
+  }, [isFrameworkProject, project.files, triple]);
+
+  const isEmpty = writtenFiles.length === 0;
+  const isExportModal = initialTab === 'export';
 
   const archiveOptions = useMemo(
     () => ({ projectName, externalLibraries, resolvedVersions, includeInjections, projectId }),
@@ -178,7 +197,7 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
       const blob = await createZipBlob(project, archiveOptions, (progress) =>
         setZipPercent(progress.percent),
       );
-      downloadBlob(blob, zipFilename(projectName));
+      downloadBlob(blob, 'gb-coder.zip');
       toast.success(`ZIP downloaded (${formatBytes(blob.size)}).`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not create the archive.');
@@ -310,9 +329,6 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
       {/* Capture preview — confirm or retake before saving. */}
       <div className="overflow-hidden rounded-md border border-stroke-subtle bg-surface-canvas">
         {capture ? (
-          // Neutral letterbox: `object-contain` leaves bars around a portrait
-          // capture, and a white backing made a correct dark capture look like
-          // it had blank side panels.
           <img
             src={capture.dataUrl}
             alt="Captured preview"
@@ -384,76 +400,108 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
     </div>
   );
 
-  const renderExport = () => (
-    <div className="space-y-3">
-      <button type="button" onClick={handleExportHtml} className={rowClass}>
-        <FileCode className="h-4 w-4 shrink-0" />
-        <span className="min-w-0 flex-1">
-          <span className="block font-medium text-content-primary">Export as HTML</span>
-          <span className="block text-xs text-content-muted">
-            {isFrameworkProject
-              ? 'Framework projects export their markup shell — use ZIP for the full project.'
-              : 'One standalone file with inline styles and script.'}
-          </span>
-        </span>
-        {sizes && <span className="shrink-0 text-xs text-content-muted">{formatBytes(sizes.htmlBytes)}</span>}
-      </button>
+  const renderExport = () => {
+    const isSingleFile = writtenFiles.length === 1;
 
-      <button type="button" onClick={handleExportZip} disabled={busy === 'zip'} className={rowClass}>
-        {busy === 'zip' ? (
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-        ) : (
-          <FileArchive className="h-4 w-4 shrink-0" />
+    return (
+      <div className="space-y-3">
+        {isSingleFile && (
+          <button
+            type="button"
+            onClick={() => {
+              downloadBlob(writtenFiles[0].content, writtenFiles[0].name, writtenFiles[0].mime);
+              toast.success(`${writtenFiles[0].name} downloaded.`);
+            }}
+            className={rowClass}
+          >
+            <FileCode className="h-4 w-4 shrink-0 text-accent" />
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium text-content-primary">
+                Download {writtenFiles[0].name}
+              </span>
+              <span className="block text-xs text-content-muted">
+                Download single {writtenFiles[0].label} file directly
+              </span>
+            </span>
+            <span className="shrink-0 text-xs text-content-muted">
+              {formatBytes(byteLength(writtenFiles[0].content))}
+            </span>
+          </button>
         )}
-        <span className="min-w-0 flex-1">
-          <span className="block font-medium text-content-primary">Export as ZIP</span>
-          <span className="block text-xs text-content-muted">
-            {isFrameworkProject
-              ? `Full project tree with package.json and Vite config (${sizes?.fileCount ?? 0} files).`
-              : `index.html, style.css and script.js (${sizes?.fileCount ?? 0} files).`}
-          </span>
-        </span>
-        {sizes && (
-          <span className="shrink-0 text-xs text-content-muted">≈{formatBytes(sizes.zipBytes)}</span>
-        )}
-      </button>
 
-      {zipPercent !== null && (
-        <div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-overlay">
-            <div
-              className="h-full bg-accent transition-[width] duration-150"
-              style={{ width: `${zipPercent}%` }}
-            />
+        <button type="button" onClick={handleExportZip} disabled={busy === 'zip'} className={rowClass}>
+          {busy === 'zip' ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+          ) : (
+            <FileArchive className="h-4 w-4 shrink-0 text-accent" />
+          )}
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium text-content-primary">
+              {isSingleFile ? 'Download as ZIP (gb-coder.zip)' : 'Download All as ZIP (gb-coder.zip)'}
+            </span>
+            <span className="block text-xs text-content-muted">
+              {isSingleFile
+                ? 'Project files packaged into gb-coder.zip archive'
+                : `All files (${writtenFiles.map((f) => f.name).join(', ')}) bundled in a single ZIP archive.`}
+            </span>
+          </span>
+          {sizes && (
+            <span className="shrink-0 text-xs text-content-muted">≈{formatBytes(sizes.zipBytes)}</span>
+          )}
+        </button>
+
+        {!isSingleFile && triple.html.trim() && (
+          <button type="button" onClick={handleExportHtml} className={rowClass}>
+            <FileCode className="h-4 w-4 shrink-0" />
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium text-content-primary">Export as Standalone HTML</span>
+              <span className="block text-xs text-content-muted">
+                One standalone file with inlined CSS styles and JavaScript script.
+              </span>
+            </span>
+            {sizes && (
+              <span className="shrink-0 text-xs text-content-muted">{formatBytes(sizes.htmlBytes)}</span>
+            )}
+          </button>
+        )}
+
+        {zipPercent !== null && (
+          <div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-overlay">
+              <div
+                className="h-full bg-accent transition-[width] duration-150"
+                style={{ width: `${zipPercent}%` }}
+              />
+            </div>
+            <p className="mt-1 text-xs text-content-muted">Compressing… {zipPercent}%</p>
           </div>
-          <p className="mt-1 text-xs text-content-muted">Compressing… {zipPercent}%</p>
+        )}
+
+        {isFrameworkProject && (
+          <p className="flex gap-2 rounded-md border border-stroke-subtle bg-surface-overlay p-3 text-xs text-content-muted">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            Your CDN imports are written into package.json as real npm dependencies, pinned to the
+            versions the preview used. Run <code className="font-mono text-content-secondary">npm install</code> after
+            unzipping.
+          </p>
+        )}
+
+        <div className="mt-4 flex items-center gap-2 rounded-md border border-stroke-subtle bg-surface-overlay px-3 py-2.5">
+          <input
+            type="checkbox"
+            id="include-injections-export"
+            checked={includeInjections}
+            onChange={(e) => setIncludeInjections(e.target.checked)}
+            className="h-4 w-4 rounded border-stroke-subtle bg-surface-base text-accent focus:ring-accent"
+          />
+          <label htmlFor="include-injections-export" className="flex flex-col cursor-pointer">
+            <span className="text-sm font-medium text-content-primary">Include custom injections</span>
+            <span className="text-xs text-content-muted">Embeds your active injections (like analytics or fonts) into the exported files</span>
+          </label>
         </div>
-      )}
-
-      {isFrameworkProject && (
-        <p className="flex gap-2 rounded-md border border-stroke-subtle bg-surface-overlay p-3 text-xs text-content-muted">
-          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          Your CDN imports are written into package.json as real npm dependencies, pinned to the
-          versions the preview used. Run <code className="font-mono text-content-secondary">npm install</code> after
-          unzipping.
-        </p>
-      )}
-
-      <div className="mt-4 flex items-center gap-2 rounded-md border border-stroke-subtle bg-surface-overlay px-3 py-2.5">
-        <input
-          type="checkbox"
-          id="include-injections-export"
-          checked={includeInjections}
-          onChange={(e) => setIncludeInjections(e.target.checked)}
-          className="h-4 w-4 rounded border-stroke-subtle bg-surface-base text-accent focus:ring-accent"
-        />
-        <label htmlFor="include-injections-export" className="flex flex-col cursor-pointer">
-          <span className="text-sm font-medium text-content-primary">Include custom injections</span>
-          <span className="text-xs text-content-muted">Embeds your active injections (like analytics or fonts) into the exported files</span>
-        </label>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderShare = () => (
     <div className="space-y-3">
@@ -523,14 +571,16 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
         <div className="flex items-start justify-between gap-4 border-b border-stroke-subtle p-4">
           <div className="flex items-start gap-3">
             <div className="rounded-md bg-accent-subtle p-2 text-accent-hover">
-              <Share2 className="h-5 w-5" />
+              {isExportModal ? <Download className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
             </div>
             <div>
-              <h2 className="font-sans text-lg font-medium text-content-primary">Export &amp; Share</h2>
+              <h2 className="font-sans text-lg font-medium text-content-primary">
+                {isExportModal ? 'Export' : 'Share'}
+              </h2>
               <p className="mt-0.5 text-xs text-content-muted">
-                {isFrameworkProject
-                  ? `${project.projectType === 'react' ? 'React' : 'Vue'} project · ${project.files.length} files`
-                  : 'Plain HTML/CSS/JS project'}
+                {isExportModal
+                  ? (isFrameworkProject ? `${project.projectType === 'react' ? 'React' : 'Vue'} project · ${project.files.length} files` : 'Download your project files')
+                  : (isFrameworkProject ? `${project.projectType === 'react' ? 'React' : 'Vue'} project · ${project.files.length} files` : 'Share live preview or capture snapshot')}
               </p>
             </div>
           </div>
@@ -538,39 +588,41 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({
             type="button"
             onClick={onClose}
             className="rounded-md p-2 text-content-secondary transition-colors hover:bg-white/5 hover:text-content-primary"
-            aria-label="Close export and share"
+            aria-label={`Close ${isExportModal ? 'export' : 'share'}`}
             title="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div role="tablist" aria-label="Export and share" className="flex items-center border-b border-stroke-subtle px-2">
-          {TABS.map((entry) => (
-            <button
-              key={entry.id}
-              role="tab"
-              aria-selected={tab === entry.id}
-              onClick={() => setTab(entry.id)}
-              className={`-mb-[1px] flex items-center gap-2 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                tab === entry.id
-                  ? 'border-accent text-content-primary'
-                  : 'border-transparent text-content-muted hover:text-content-primary'
-              }`}
-            >
-              {entry.icon}
-              {entry.label}
-            </button>
-          ))}
-        </div>
+        {!isExportModal && (
+          <div role="tablist" aria-label="Share options" className="flex items-center border-b border-stroke-subtle px-2">
+            {SHARE_TABS.map((entry) => (
+              <button
+                key={entry.id}
+                role="tab"
+                aria-selected={tab === entry.id}
+                onClick={() => setTab(entry.id)}
+                className={`-mb-[1px] flex items-center gap-2 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+                  tab === entry.id
+                    ? 'border-accent text-content-primary'
+                    : 'border-transparent text-content-muted hover:text-content-primary'
+                }`}
+              >
+                {entry.icon}
+                {entry.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="max-h-[60vh] overflow-y-auto p-4">
           {isEmpty
             ? renderEmptyState()
-            : tab === 'screenshot'
-              ? renderScreenshot()
-              : tab === 'export'
-                ? renderExport()
+            : isExportModal
+              ? renderExport()
+              : tab === 'screenshot'
+                ? renderScreenshot()
                 : renderShare()}
         </div>
       </div>
