@@ -15,7 +15,6 @@ import {
   ChevronRight,
   RotateCcw,
   Sliders,
-  Sparkles,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import FileTreeView, { FileTreeViewHandle } from './FileTreeView';
@@ -2027,7 +2026,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             id: 'workbench.view.codeAssist',
             title: 'View: Focus GB Assist',
             section: 'View',
-            icon: <Sparkles className="w-4 h-4 text-indigo-400" />,
+            icon: <GBAssistIcon className="w-4 h-4" strokeWidth={1.5} />,
             perform: () => {
               setWorkbenchLayout((prev) => ({
                 ...prev,
