@@ -9,7 +9,7 @@
 .panel {
   background: var(--surface);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius);
 }
 .panel--sunk {
   background: var(--surface-soft);
@@ -47,8 +47,8 @@
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(46% 42% at 22% 18%, rgb(23 102 68 / 0.10), transparent 70%),
-    radial-gradient(38% 38% at 82% 6%, rgb(120 178 148 / 0.16), transparent 72%);
+    radial-gradient(46% 42% at 22% 18%, color-mix(in srgb, var(--primary) 7%, transparent), transparent 70%),
+    radial-gradient(38% 38% at 82% 6%, color-mix(in srgb, var(--chart-2) 9%, transparent), transparent 72%);
   filter: blur(6px);
 }
 
@@ -111,7 +111,7 @@
   transition: opacity 0.35s ease;
   background: radial-gradient(
     circle at var(--spot-x, 50%) var(--spot-y, 50%),
-    rgb(19 98 64 / 0.13),
+    color-mix(in srgb, var(--foreground) 6%, transparent),
     transparent 52%
   );
   pointer-events: none;

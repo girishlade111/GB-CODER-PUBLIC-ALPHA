@@ -135,7 +135,7 @@
   border-bottom: 1px solid var(--code-border);
   font: 12px/1.4 ui-monospace, monospace;
   color: var(--code-muted);
-  background: rgba(21, 43, 35, 0.85);
+  background: var(--surface-soft);
 }
 .sample-filename {
   display: flex;
@@ -148,13 +148,13 @@
   color: var(--code-ghost);
   padding: 0.25rem 0.6rem;
   min-height: 28px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
 }
 .sample-code .ui-button-ghost:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: var(--surface-soft);
+  color: var(--text-primary);
 }
 .sample-code pre {
   padding: 1.25rem 1.25rem 2.5rem;
@@ -181,7 +181,7 @@
   bottom: 0.65rem;
   inset-inline: 1.25rem;
   font-size: 0.75rem;
-  color: #a4ddbd;
+  color: var(--primary);
   pointer-events: none;
   font-weight: 600;
 }
