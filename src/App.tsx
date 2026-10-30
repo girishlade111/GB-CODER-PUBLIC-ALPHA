@@ -85,7 +85,6 @@ import type { DiffFile } from './components/AiDiffModal';
 
 // Lazy-loaded modal components (only shown when their show* state is true)
 const AiDiffModal = lazyWithRecovery(() => import('./components/AiDiffModal'));
-const AIChatAssistant = lazyWithRecovery(() => import('./components/AIChatAssistant'));
 const VoiceCommandPanel = lazyWithRecovery(() => import('./components/VoiceCommandPanel'));
 const TemplateSelectorModal = lazyWithRecovery(() => import('./components/TemplateSelectorModal'));
 const CodeStatsDashboard = lazyWithRecovery(() => import('./components/CodeStatsDashboard'));
