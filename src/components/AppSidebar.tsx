@@ -227,7 +227,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
 
     return (
       <li key={item.id} className={!isExpanded ? 'flex justify-center compact:block' : undefined}>
-        {button}
+        <Tooltip
+          label={tooltipLabel}
+          side="right"
+          disabled={isExpanded && !item.disabled}
+          className={isExpanded ? 'w-full' : undefined}
+        >
+          {button}
+        </Tooltip>
       </li>
     );
   };
@@ -295,15 +302,16 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
           </button>
         ) : (
           <div className="flex justify-center compact:hidden">
-            <button
-              type="button"
-              onClick={() => setIsExpanded(true)}
-              title="Expand sidebar"
-              className="mt-1 flex h-9 w-9 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-[var(--sidebar-accent)] hover:text-[var(--foreground)]"
-              aria-label="Expand sidebar"
-            >
-              <PanelLeftOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />
-            </button>
+            <Tooltip label="Expand sidebar" side="right">
+              <button
+                type="button"
+                onClick={() => setIsExpanded(true)}
+                className="mt-1 flex h-9 w-9 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-[var(--sidebar-accent)] hover:text-[var(--foreground)]"
+                aria-label="Expand sidebar"
+              >
+                <PanelLeftOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />
+              </button>
+            </Tooltip>
           </div>
         )}
       </div>
