@@ -352,7 +352,7 @@ export const buildArchiveFiles = (
   options: ArchiveOptions = {},
 ): ArchiveFile[] => {
   if (project.projectType === 'plain') {
-    return [
+
     const { html, css, javascript } = projectToTriple(project);
     const hasHtml = Boolean(html.trim());
     const hasCss = Boolean(css.trim());
