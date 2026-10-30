@@ -275,40 +275,25 @@ export default {
       //   sans   → body, navigation, buttons, labels (StyreneB, Inter)
       //   mono   → every code surface (JetBrains Mono)
       fontFamily: {
-        // Display: Copernicus and Tiempos Headline are licensed, so the stack
-        // leads with them and falls through to Cormorant Garamond, which
-        // DESIGN.md names as the closest open-source approximation.
         serif: [
+          'Georgia',
           "'Cormorant Garamond'",
-          "'Copernicus'",
-          "'Tiempos Headline'",
-          "'EB Garamond'",
-          'Garamond',
-          '"Times New Roman"',
           'serif',
         ],
         sans: [
+          'Geist',
           'Inter',
-          "'StyreneB'",
           '-apple-system',
           'BlinkMacSystemFont',
           '"Segoe UI"',
           'Roboto',
-          '"Helvetica Neue"',
-          'Helvetica',
-          'Arial',
           'sans-serif',
         ],
         mono: [
+          "'Geist Mono'",
           "'JetBrains Mono'",
           "'Fira Code'",
           'ui-monospace',
-          'SFMono-Regular',
-          'Menlo',
-          'Monaco',
-          'Consolas',
-          '"Liberation Mono"',
-          '"Courier New"',
           'monospace',
         ],
       },
@@ -353,13 +338,13 @@ export default {
       // 12px cards & IDE panes · 16px large · pill for timeline pills/badges.
       borderRadius: {
         none: '0px',
-        xs: '4px',
-        sm: '6px',
-        DEFAULT: '8px',
-        md: '8px',
-        lg: '12px',
-        xl: '16px',
-        '2xl': '16px',
+        xs: 'calc(var(--radius) * 0.5)',
+        sm: 'calc(var(--radius) * 0.75)',
+        DEFAULT: 'var(--radius)',
+        md: 'var(--radius)',
+        lg: 'calc(var(--radius) * 1.5)',
+        xl: 'calc(var(--radius) * 2)',
+        '2xl': 'calc(var(--radius) * 2)',
         pill: '9999px',
       },
 
