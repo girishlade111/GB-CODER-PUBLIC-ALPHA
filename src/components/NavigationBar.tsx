@@ -6,6 +6,7 @@ import {
   Save,
   FileText,
   Share2,
+  Download,
   Trash2,
   FilePlus,
   Rocket,
@@ -43,6 +44,7 @@ interface NavigationBarProps {
    * the overflow menu is a second trigger rather than a second implementation.
    */
   onOpenExport?: () => void;
+  onOpenShare?: () => void;
   /**
    * Publishes the project to Vercel or Netlify.
    *
@@ -85,6 +87,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   onToggleNavDrawer,
   isNavDrawerOpen = false,
   onOpenExport,
+  onOpenShare,
   onOpenDeploy,
   onOpenGitHub,
 }) => {
