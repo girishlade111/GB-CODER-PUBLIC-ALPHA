@@ -3,7 +3,6 @@ import {
   Files,
   Search,
   Package,
-  Sparkles,
   GitBranch,
   TerminalSquare,
   Settings,
@@ -13,6 +12,7 @@ import {
   Database,
 } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
+import { GBAssistIcon } from '../icons/GBAssistIcon';
 import { ViewId } from '../../services/workbench/workbenchTypes';
 
 interface WorkbenchActivityBarProps {
@@ -139,9 +139,9 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             {isSidebarOpen && activeViewId === 'code-assist' && (
               <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--foreground)]" />
             )}
-            <Sparkles
+            <GBAssistIcon
               className={`h-5 w-5 ${
-                isCodeAssistGenerating ? 'text-[var(--primary)] animate-spin' : ''
+                isCodeAssistGenerating ? 'text-[var(--primary)] animate-pulse' : ''
               }`}
               strokeWidth={1.5}
             />

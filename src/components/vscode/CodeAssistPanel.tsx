@@ -44,6 +44,7 @@ import { ContextBuilder } from '../../services/ai/contextBuilder';
 import { AssistContextComposer } from './AssistContextComposer';
 import { AiProviderSettingsModal } from './AiProviderSettingsModal';
 import { AiMonacoDiffModal } from './AiMonacoDiffModal';
+import { GBAssistIcon } from '../icons/GBAssistIcon';
 
 interface CodeAssistPanelProps {
   project: MultiFileProject;
@@ -458,10 +459,8 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
         ) : activeSession?.messages.length === 0 && !state.isGenerating ? (
           /* Empty Initial State */
           <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--chart-1)] text-black shadow-lg shadow-yellow-500/10">
-              <div className="font-mono text-xl font-black tracking-tighter leading-tight">
-                GB<br />AI
-              </div>
+            <div className="flex h-14 w-14 items-center justify-center text-[var(--foreground)]">
+              <GBAssistIcon size={52} strokeWidth={1.5} className="h-12 w-12" />
             </div>
 
             <div className="max-w-xs space-y-1">
