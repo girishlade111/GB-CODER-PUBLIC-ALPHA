@@ -89,7 +89,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   onOpenTemplates,
   onOpenImport,
   onOpenVSCodeMode,
-  onOpenAIChat,
   onOpenVoiceCommands,
   onOpenStatistics,
   onOpenInjection,
