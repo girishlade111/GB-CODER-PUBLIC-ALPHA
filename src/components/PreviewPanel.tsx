@@ -475,7 +475,7 @@ ${importMapHTML}
   }, [refreshPreview]);
 
   // Refresh preview with throttle (max 1 per previewDelay ms) - HTML/CSS always update, JS only if autoRunJS is true
-  const jsForPreview = autoRunJS ? javascript : '';
+  const jsForPreview = javascript;
   const isInitialMount = useRef(true);
   const lastRunTime = useRef<number>(0);
   const pendingTimeout = useRef<NodeJS.Timeout | null>(null);
