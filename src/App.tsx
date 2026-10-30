@@ -4417,7 +4417,6 @@ function App() {
                 onExit={handleExitFullStack}
                 onAddImport={handleAddToFullStackProject}
                 onOpenDependencies={() => setShowDependencies(true)}
-                onOpenAIChat={() => setShowAIChat(true)}
                 onOpenVoiceCommands={() => setShowVoiceCommands(true)}
                 onOpenProjects={() => void handleReturnToDashboard()}
                 fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
