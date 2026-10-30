@@ -1,6 +1,5 @@
 import React from 'react';
 import NavigationBar from '../components/NavigationBar';
-import Footer from '../components/ui/Footer';
 import ExternalLibraryManager from '../components/ExternalLibraryManager';
 import PrivacyPolicyPage from '../components/pages/PrivacyPolicyPage';
 import TermsOfServicePage from '../components/pages/TermsOfServicePage';
@@ -58,7 +57,6 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
             <div className="flex-1">
                 {pageComponent}
             </div>
-            <Footer />
             <ExternalLibraryManager
                 isOpen={showExternalLibraryManager}
                 onClose={() => setCurrentView('editor')}

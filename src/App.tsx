@@ -20,7 +20,6 @@ import NavigationBar from './components/NavigationBar';
 import AppSidebar from './components/AppSidebar';
 import EditorPanel from './components/EditorPanel';
 import TabbedRightPanel from './components/TabbedRightPanel';
-import Footer from './components/ui/Footer';
 import Tooltip from './components/ui/Tooltip';
 import LazyFallback from './components/ui/LazyFallback';
 import DropZoneOverlay from './components/DropZoneOverlay';
@@ -176,7 +175,6 @@ import { useCodeSelection } from './hooks/useCodeSelection';
 import { useSelectionOperations } from './hooks/useSelectionOperations';
 import { useProject } from './hooks/useProject';
 import { useSettings } from './hooks/useSettings';
-import { useFocusMode } from './hooks/useFocusMode';
 import { useProgressiveLoad } from './hooks/useProgressiveLoad';
 import { useCodeWriter } from './hooks/useCodeWriter';
 import { useProjectBundle } from './hooks/useProjectBundle';
@@ -886,7 +884,6 @@ function App() {
   const { settings, updateSettings, getFontFamilyCSS } = useSettings();
 
   // Focus Mode
-  const { focusMode } = useFocusMode();
 
   // Project Management
   const project = useProject(html, css, javascript, externalLibraries);
@@ -4097,7 +4094,6 @@ function App() {
             <AboutPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
 
         {/* External Library Manager for About page - Phase 3 */}
         {isPhase3Ready && (
@@ -4155,7 +4151,6 @@ function App() {
             <DocumentationPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
 
         {/* External Library Manager for Documentation page - Phase 3 */}
         {isPhase3Ready && (
@@ -4212,7 +4207,6 @@ function App() {
             <CodeHistoryPage selectionHistory={selectionHistory} />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
 
         {/* External Library Manager for History page - Phase 3 */}
         {isPhase3Ready && (
@@ -4256,7 +4250,6 @@ function App() {
             <PrivacyPolicyPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
       </div>
     );
   }
@@ -4288,7 +4281,6 @@ function App() {
             <TermsOfServicePage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
       </div>
     );
   }
@@ -4320,7 +4312,6 @@ function App() {
             <CookiePolicyPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
       </div>
     );
   }
@@ -4352,7 +4343,6 @@ function App() {
             <DisclaimerPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
       </div>
     );
   }
@@ -4384,7 +4374,6 @@ function App() {
             <ContactPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
       </div>
     );
   }
@@ -4627,7 +4616,7 @@ function App() {
     <div
       /* `compact:pb-14` reserves the strip the fixed Code/Preview bar occupies
          so it never covers the footer or the bottom of the active pane. */
-      className="min-h-screen flex flex-col bg-surface-canvas compact:pb-14"
+      className="h-screen flex flex-col bg-surface-canvas overflow-hidden compact:pb-14"
       /*
        * Window-wide drop target. Only the handlers live here; the code that can
        * read a drop is fetched on the first one.
@@ -4714,7 +4703,7 @@ function App() {
 
 
       {/* Main Content — left rail + workspace */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/*
           Drawer backdrop. Only ever rendered while the drawer is open, and the
           drawer can only open below 1025px, so desktop never sees this node.
@@ -4778,7 +4767,7 @@ function App() {
           </Suspense>
         )}
 
-        <div className={`grid flex-1 min-w-0 gap-3 px-4 py-4 lg:gap-4 lg:px-6 lg:py-5 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`} data-testid="workspace-grid">
+        <div className={`grid flex-1 min-w-0 gap-3 px-3 py-3 lg:gap-3 lg:px-4 lg:py-3 overflow-hidden ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`} data-testid="workspace-grid">
           {/*
             Left column: the three fixed panels for plain projects, or the
             tabbed multi-file editor for React/Vue. Plain mode is unchanged.
@@ -4788,7 +4777,7 @@ function App() {
             // column (whose three fixed-height editors give the grid row its
             // height), this column has no intrinsic height of its own.
             <div
-              className={`flex h-full w-full flex-col min-h-[calc(100vh-11rem)] ${
+              className={`flex h-full w-full flex-col h-full min-h-0 ${
                 mobilePane === 'preview' ? 'compact:hidden' : ''
               }`}
               data-testid="code-column"
@@ -4808,7 +4797,7 @@ function App() {
             </div>
           ) : (
           <div
-            className={`flex flex-col space-y-3 w-full min-h-0 ${
+            className={`flex flex-col space-y-3 w-full min-h-0 h-full overflow-y-auto pr-1 ${
               mobilePane === 'preview' ? 'compact:hidden' : ''
             }`}
             data-testid="code-column"
@@ -5029,14 +5018,6 @@ function App() {
           Preview
         </button>
       </div>
-
-      {/* Footer */}
-      <Footer
-        focusMode={focusMode}
-        errorCount={validation.summary.errors}
-        warningCount={validation.summary.warnings}
-        onOpenValidator={() => setRightPanelRequest({ tab: 'console', nonce: Date.now() })}
-      />
 
       {/* External Library Manager - Phase 3 */}
       {isPhase3Ready && (
