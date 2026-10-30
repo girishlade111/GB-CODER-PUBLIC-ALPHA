@@ -83,7 +83,6 @@ import type { DetectedProjectKind as DetectedKind } from './services/import/proj
 // ===== NEW FEATURES IMPORTS =====
 import { Toaster, toast } from 'react-hot-toast';
 import type { DiffFile } from './components/AiDiffModal';
-import type { VisionFramework } from './services/visionCodeService';
 
 // Lazy-loaded modal components (only shown when their show* state is true)
 const AiDiffModal = lazyWithRecovery(() => import('./components/AiDiffModal'));
@@ -92,8 +91,6 @@ const VoiceCommandPanel = lazyWithRecovery(() => import('./components/VoiceComma
 const TemplateSelectorModal = lazyWithRecovery(() => import('./components/TemplateSelectorModal'));
 const CodeStatsDashboard = lazyWithRecovery(() => import('./components/CodeStatsDashboard'));
 const CustomInjectionManager = lazyWithRecovery(() => import('./components/CustomInjectionManager'));
-const BuildFromPromptModal = lazyWithRecovery(() => import('./components/BuildFromPromptModal'));
-const ScreenshotToCodeModal = lazyWithRecovery(() => import('./components/ScreenshotToCodeModal'));
 const WelcomeTourModal = lazyWithRecovery(() => import('./components/WelcomeTourModal'));
 
 /*

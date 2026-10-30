@@ -8,11 +8,9 @@ import {
   FileText,
   Share2,
   Trash2,
-  Wand2,
   FilePlus,
   Mic,
   MicOff,
-  Scan,
   Rocket,
   Github,
 } from 'lucide-react';
@@ -24,7 +22,7 @@ import LadeStackLogo from './LadeStackLogo';
 interface NavigationBarProps {
   onAutoSaveToggle: () => void;
   onRun: () => void;
-  onOpenBuildFromPrompt: () => void;
+  onOpenBuildFromPrompt?: () => void;
   /** Screenshot → Code. Optional so legal/doc pages can omit the trigger. */
   onOpenScreenshotToCode?: () => void;
   onExternalLibraryManagerToggle: () => void;
@@ -77,8 +75,8 @@ const NAV_LINK = 'text-sm font-medium';
 const NavigationBar: React.FC<NavigationBarProps> = ({
   onAutoSaveToggle,
   onRun,
-  onOpenBuildFromPrompt,
-  onOpenScreenshotToCode,
+  onOpenBuildFromPrompt: _onOpenBuildFromPrompt,
+  onOpenScreenshotToCode: _onOpenScreenshotToCode,
   onClear,
   onNewProject,
   onNavigateHome,
