@@ -890,18 +890,11 @@ ${importMapHTML}
               <Eye className="h-6 w-6 text-content-muted" />
             </div>
             <p className="text-sm font-medium text-content-secondary">
-              Start typing or use Build with AI to generate code
+              Start typing to build your project
             </p>
-            <p className="text-xs text-content-muted mb-4">
+            <p className="text-xs text-content-muted">
               Your live preview will appear here as you type
             </p>
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))}
-              className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-content-primary rounded-lg transition-colors text-sm font-medium"
-            >
-              <Sparkles className="w-4 h-4" />
-              Build with AI
-            </button>
           </div>
         )}
         
