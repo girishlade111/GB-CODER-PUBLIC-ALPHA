@@ -4711,7 +4711,6 @@ function App() {
           onOpenTemplates={() => setShowTemplates(true)}
           onOpenImport={() => setShowImport(true)}
           onOpenVSCodeMode={handleEnterVSCodeMode}
-          onOpenAIChat={() => setShowAIChat(true)}
           onOpenVoiceCommands={() => setShowVoiceCommands(true)}
           onOpenStatistics={() => setShowStats(true)}
           onOpenInjection={() => setShowInjectionManager(true)}
@@ -5131,19 +5130,6 @@ function App() {
         </Suspense>
       )}
 
-      {/* AI Chat Assistant */}
-      {showAIChat && (
-        <Suspense fallback={null}>
-          <AIChatAssistant
-            isOpen={showAIChat}
-            onClose={() => setShowAIChat(false)}
-            html={html}
-            css={css}
-            javascript={javascript}
-            externalLibraries={externalLibraries}
-          />
-        </Suspense>
-      )}
 
       {/* Voice Command Panel */}
       {showVoiceCommands && (
