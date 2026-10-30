@@ -1,41 +1,42 @@
 ---
 import {
-  SUPPORTED_LANGUAGES,
-  DEFAULT_LANGUAGE,
-  type SupportedLanguage,
-} from '../i18n/languages';
+	SUPPORTED_LANGUAGES,
+	DEFAULT_LANGUAGE,
+	type SupportedLanguage,
+} from "../i18n/languages";
 import {
-  getCanonicalUrl,
-  getAlternateLinks,
-  safeJsonLd,
-  SITE_ORIGIN,
-} from '../i18n/utils';
+	getCanonicalUrl,
+	getAlternateLinks,
+	safeJsonLd,
+	SITE_ORIGIN,
+} from "../i18n/utils";
 
 interface Props {
-  title: string;
-  description: string;
-  lang?: string;
-  basePath?: string;
-  ogType?: 'website' | 'article';
-  publishedDate?: string;
-  author?: string;
-  structuredData?: Record<string, unknown>[];
-  isLegalPage?: boolean;
+	title: string;
+	description: string;
+	lang?: string;
+	basePath?: string;
+	ogType?: "website" | "article";
+	publishedDate?: string;
+	author?: string;
+	structuredData?: Record<string, unknown>[];
+	isLegalPage?: boolean;
 }
 
 const {
-  title,
-  description,
-  lang = DEFAULT_LANGUAGE,
-  basePath = '',
-  ogType = 'website',
-  publishedDate,
-  author = 'Girish Lade',
-  structuredData = [],
-  isLegalPage = false,
+	title,
+	description,
+	lang = DEFAULT_LANGUAGE,
+	basePath = "",
+	ogType = "website",
+	publishedDate,
+	author = "Girish Lade",
+	structuredData = [],
+	isLegalPage = false,
 } = Astro.props;
 
-const currentLangMeta = SUPPORTED_LANGUAGES[lang] || SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
+const currentLangMeta =
+	SUPPORTED_LANGUAGES[lang] || SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 const canonicalUrl = getCanonicalUrl(lang, basePath);
 
 // Reciprocal hreflangs: Only emit when multilingual equivalents exist.
@@ -44,69 +45,94 @@ const alternateLinks = isLegalPage ? [] : getAlternateLinks(basePath);
 
 // Default Organization & SoftwareApplication JSON-LD
 const defaultJsonLd: Record<string, unknown>[] = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'GB Coder by LadeStack',
-    url: SITE_ORIGIN,
-    logo: `${SITE_ORIGIN}/tghjkl.jpeg`,
-    founder: {
-      '@type': 'Person',
-      name: 'Girish Lade',
-      sameAs: [
-        'https://github.com/girishlade111',
-        'https://www.linkedin.com/in/girish-lade-075bba201/',
-        'https://www.instagram.com/girish_lade_/',
-        'https://codepen.io/Girish-Lade-the-looper',
-      ],
-    },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'GB Coder',
-    url: SITE_ORIGIN,
-    inLanguage: currentLangMeta.htmlLang,
-    description: description,
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
-    name: 'GB Coder',
-    operatingSystem: 'Any (Web Browser)',
-    applicationCategory: 'DeveloperApplication',
-    applicationSubCategory: 'Web Development Studio',
-    description: description,
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
-    featureList: [
-      'In-Browser Monaco Code Editor',
-      'Real Node.js WebContainer Micro-OS',
-      'Synchronized Live DOM Preview',
-      'React and Vue Framework Starters',
-      'Local-First IndexedDB Persistence',
-      'Cryptographic ZIP Backup and Export',
-      'GB Assist AI Coding Companion',
-    ],
-    author: {
-      '@type': 'Person',
-      name: 'Girish Lade',
-    },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    itemListElement: [
-      { '@type': 'SiteNavigationElement', position: 1, name: 'Features', url: `${SITE_ORIGIN}/features` },
-      { '@type': 'SiteNavigationElement', position: 2, name: 'Documentation', url: `${SITE_ORIGIN}/docs` },
-      { '@type': 'SiteNavigationElement', position: 3, name: 'Blog & Articles', url: `${SITE_ORIGIN}/blog` },
-      { '@type': 'SiteNavigationElement', position: 4, name: 'About', url: `${SITE_ORIGIN}/about` },
-      { '@type': 'SiteNavigationElement', position: 5, name: 'Sitemap', url: `${SITE_ORIGIN}/sitemap` },
-    ],
-  },
+	{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		name: "GB Coder by LadeStack",
+		url: SITE_ORIGIN,
+		logo: `${SITE_ORIGIN}/apple-touch-icon.png`,
+		founder: {
+			"@type": "Person",
+			name: "Girish Lade",
+			sameAs: [
+				"https://github.com/girishlade111",
+				"https://www.linkedin.com/in/girish-lade-075bba201/",
+				"https://www.instagram.com/girish_lade_/",
+				"https://codepen.io/Girish-Lade-the-looper",
+			],
+		},
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "WebSite",
+		name: "GB Coder",
+		url: SITE_ORIGIN,
+		inLanguage: currentLangMeta.htmlLang,
+		description: description,
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "SoftwareApplication",
+		name: "GB Coder",
+		operatingSystem: "Any (Web Browser)",
+		applicationCategory: "DeveloperApplication",
+		applicationSubCategory: "Web Development Studio",
+		description: description,
+		offers: {
+			"@type": "Offer",
+			price: "0",
+			priceCurrency: "USD",
+		},
+		featureList: [
+			"In-Browser Monaco Code Editor",
+			"Real Node.js WebContainer Micro-OS",
+			"Synchronized Live DOM Preview",
+			"React and Vue Framework Starters",
+			"Local-First IndexedDB Persistence",
+			"Cryptographic ZIP Backup and Export",
+			"GB Assist AI Coding Companion",
+		],
+		author: {
+			"@type": "Person",
+			name: "Girish Lade",
+		},
+	},
+	{
+		"@context": "https://schema.org",
+		"@type": "ItemList",
+		itemListElement: [
+			{
+				"@type": "SiteNavigationElement",
+				position: 1,
+				name: "Features",
+				url: `${SITE_ORIGIN}/features`,
+			},
+			{
+				"@type": "SiteNavigationElement",
+				position: 2,
+				name: "Documentation",
+				url: `${SITE_ORIGIN}/docs`,
+			},
+			{
+				"@type": "SiteNavigationElement",
+				position: 3,
+				name: "Blog & Articles",
+				url: `${SITE_ORIGIN}/blog`,
+			},
+			{
+				"@type": "SiteNavigationElement",
+				position: 4,
+				name: "About",
+				url: `${SITE_ORIGIN}/about`,
+			},
+			{
+				"@type": "SiteNavigationElement",
+				position: 5,
+				name: "Sitemap",
+				url: `${SITE_ORIGIN}/sitemap`,
+			},
+		],
+	},
 ];
 
 const allStructuredData = [...defaultJsonLd, ...structuredData];
@@ -157,8 +183,12 @@ const allStructuredData = [...defaultJsonLd, ...structuredData];
 <meta name="twitter:image" content={`${SITE_ORIGIN}/og-image.png`} />
 <meta name="twitter:image:alt" content="GB Coder — browser-based development studio by LadeStack" />
 
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="apple-touch-icon" href="/og-image.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
 <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 <!-- Structured Data (JSON-LD) -->
 {allStructuredData.map((schema) => (

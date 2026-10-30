@@ -412,12 +412,15 @@ li {
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  background: var(--primary);
-  color: var(--primary-foreground);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary-foreground) 14%, transparent);
+  background: transparent;
+  overflow: hidden;
+}
+.site-footer .brand-badge-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius);
+  display: block;
 }
 .site-footer .brand-text {
   display: flex;

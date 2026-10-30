@@ -1,29 +1,33 @@
 ---
-import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/languages';
-import { getLocalizedPath } from '../i18n/utils';
-import { getNav } from '../i18n/navigation';
-import Icon from './ui/Icon.astro';
+import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from "../i18n/languages";
+import { getLocalizedPath } from "../i18n/utils";
+import { getNav } from "../i18n/navigation";
+import Icon from "./ui/Icon.astro";
 
 interface Props {
-  lang?: string;
-  basePath?: string;
-  isLegalPage?: boolean;
+	lang?: string;
+	basePath?: string;
+	isLegalPage?: boolean;
 }
 
-const { lang = DEFAULT_LANGUAGE, basePath = '', isLegalPage = false } = Astro.props;
+const {
+	lang = DEFAULT_LANGUAGE,
+	basePath = "",
+	isLegalPage = false,
+} = Astro.props;
 const nav = getNav(lang);
 
 // Compute links for current language
-const homeUrl = getLocalizedPath(lang, '');
-const featuresUrl = getLocalizedPath(lang, 'features');
-const docsUrl = getLocalizedPath(lang, 'docs');
-const blogUrl = getLocalizedPath(lang, 'blog');
-const aboutUrl = getLocalizedPath(lang, 'about');
-const contactUrl = getLocalizedPath(lang, 'contact');
+const homeUrl = getLocalizedPath(lang, "");
+const featuresUrl = getLocalizedPath(lang, "features");
+const docsUrl = getLocalizedPath(lang, "docs");
+const blogUrl = getLocalizedPath(lang, "blog");
+const aboutUrl = getLocalizedPath(lang, "about");
+const contactUrl = getLocalizedPath(lang, "contact");
 
 // Legal links: strictly point to authoritative English canonical URLs
-const privacyUrl = '/privacy-policy';
-const termsUrl = '/terms-and-conditions';
+const privacyUrl = "/privacy-policy";
+const termsUrl = "/terms-and-conditions";
 ---
 
 <footer class="site-footer">
@@ -32,7 +36,9 @@ const termsUrl = '/terms-and-conditions';
       <!-- Col 1: Brand & Positioning -->
       <div class="footer-col brand-col">
         <a href={homeUrl} class="footer-brand" aria-label="GB Coder Homepage">
-          <div class="brand-badge">GB</div>
+          <div class="brand-badge">
+            <img src="/apple-touch-icon.png" alt="" class="brand-badge-img" width="34" height="34" />
+          </div>
           <div class="brand-text">
             <span class="brand-title">GB Coder</span>
             <span class="brand-sub">LadeStack</span>

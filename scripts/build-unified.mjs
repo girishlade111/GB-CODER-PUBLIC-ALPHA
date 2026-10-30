@@ -120,6 +120,11 @@ if (existsSync(ROOT_SW_SOURCE)) {
 }
 
 // D. Copy public root assets
+const rootAssetsToCopy = ['favicon.ico', 'favicon.svg', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png', 'android-chrome-192x192.png', 'android-chrome-512x512.png', 'site.webmanifest', 'manifest.json', 'gbcoder-logo.png'];
+for (const asset of rootAssetsToCopy) {
+  const p = join(ROOT_DIR, 'public', asset);
+  if (existsSync(p)) cpSync(p, join(FINAL_DIST, asset));
+}
 const rootFavicon = join(ROOT_DIR, 'public', 'favicon.ico');
 if (existsSync(rootFavicon)) {
   cpSync(rootFavicon, join(FINAL_DIST, 'favicon.ico'));

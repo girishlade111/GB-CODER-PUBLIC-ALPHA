@@ -1,48 +1,55 @@
 ---
-import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/languages';
-import { getLocalizedPath } from '../i18n/utils';
-import { getNav } from '../i18n/navigation';
-import Icon from './ui/Icon.astro';
+import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from "../i18n/languages";
+import { getLocalizedPath } from "../i18n/utils";
+import { getNav } from "../i18n/navigation";
+import Icon from "./ui/Icon.astro";
 
 interface Props {
-  lang?: string;
-  basePath?: string;
-  isLegalPage?: boolean;
+	lang?: string;
+	basePath?: string;
+	isLegalPage?: boolean;
 }
 
-const { lang = DEFAULT_LANGUAGE, basePath = '', isLegalPage = false } = Astro.props;
+const {
+	lang = DEFAULT_LANGUAGE,
+	basePath = "",
+	isLegalPage = false,
+} = Astro.props;
 const nav = getNav(lang);
-const currentLangMeta = SUPPORTED_LANGUAGES[lang] || SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
+const currentLangMeta =
+	SUPPORTED_LANGUAGES[lang] || SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 
 // Compute links for current language
-const homeUrl = getLocalizedPath(lang, '');
-const featuresUrl = getLocalizedPath(lang, 'features');
-const docsUrl = getLocalizedPath(lang, 'docs');
-const blogUrl = getLocalizedPath(lang, 'blog');
-const aboutUrl = getLocalizedPath(lang, 'about');
-const contactUrl = getLocalizedPath(lang, 'contact');
+const homeUrl = getLocalizedPath(lang, "");
+const featuresUrl = getLocalizedPath(lang, "features");
+const docsUrl = getLocalizedPath(lang, "docs");
+const blogUrl = getLocalizedPath(lang, "blog");
+const aboutUrl = getLocalizedPath(lang, "about");
+const contactUrl = getLocalizedPath(lang, "contact");
 
 // Normalize basePath for active link styling
-const cleanBase = basePath.replace(/^\/+|\/+$/g, '');
-const isFeatures = cleanBase === 'features';
-const isDocs = cleanBase.startsWith('docs');
-const isBlog = cleanBase.startsWith('blog');
-const isAbout = cleanBase === 'about';
-const isContact = cleanBase === 'contact';
+const cleanBase = basePath.replace(/^\/+|\/+$/g, "");
+const isFeatures = cleanBase === "features";
+const isDocs = cleanBase.startsWith("docs");
+const isBlog = cleanBase.startsWith("blog");
+const isAbout = cleanBase === "about";
+const isContact = cleanBase === "contact";
 
 const links = [
-  { href: featuresUrl, label: nav.features, active: isFeatures },
-  { href: docsUrl, label: nav.docs, active: isDocs },
-  { href: blogUrl, label: nav.blog, active: isBlog },
-  { href: aboutUrl, label: nav.about, active: isAbout },
-  { href: contactUrl, label: nav.contact, active: isContact },
+	{ href: featuresUrl, label: nav.features, active: isFeatures },
+	{ href: docsUrl, label: nav.docs, active: isDocs },
+	{ href: blogUrl, label: nav.blog, active: isBlog },
+	{ href: aboutUrl, label: nav.about, active: isAbout },
+	{ href: contactUrl, label: nav.contact, active: isContact },
 ];
 ---
 
 <header class="site-header">
   <div class="nav-container">
     <a href={homeUrl} class="brand" aria-label="GB Coder — home">
-      <span class="brand-badge" aria-hidden="true">GB</span>
+      <span class="brand-badge" aria-hidden="true">
+        <img src="/apple-touch-icon.png" alt="" class="brand-badge-img" width="34" height="34" />
+      </span>
       <span class="brand-text">
         <span class="brand-title">GB Coder</span>
         <span class="brand-sub">LadeStack</span>
@@ -192,18 +199,19 @@ const links = [
     display: grid;
     place-items: center;
     border-radius: var(--radius);
-    background: var(--primary);
-    color: var(--primary-foreground);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary-foreground) 14%, transparent);
-    transition: background 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    background: transparent;
+    overflow: hidden;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .brand-badge-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: var(--radius);
+    display: block;
   }
   .brand:hover .brand-badge {
-    background: var(--accent);
-    color: var(--accent-foreground);
-    transform: translateY(-1px);
+    transform: translateY(-1px) scale(1.05);
   }
   .brand-text {
     display: flex;

@@ -35,18 +35,11 @@ no third-party illustration enters the build.
 - **Usage:** `og:image`, `og:image:width`, `og:image:height`,
   `og:image:type`, `twitter:image` and `apple-touch-icon`.
 
-## `tghjkl.jpeg`
+## `gbcoder-logo.png` & Favicon Suite
 
-- **Size / format:** 736 × 745 JPEG, ≈16 KB.
-- **Origin:** retained unchanged from the repository root. It predates the
-  current design system and its upstream provenance is not recorded anywhere
-  in this repository.
-- **Usage:** referenced only as the `Organization.logo` identifier in the
-  JSON-LD graph. It is not used as an Open Graph card, not displayed on any
-  page and not used as a decorative image.
-- **Note:** it is a near-square raster in a slot that expects a mark. If a
-  dedicated brand mark is produced later, replace this reference and remove
-  the file in the same change.
+- **Size / format:** High-resolution brand logo PNG and multi-resolution favicon suite (`favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png`, `android-chrome-192x192.png`, `android-chrome-512x512.png`, `favicon.svg`).
+- **Origin:** Official GB Coder brand identity asset.
+- **Usage:** Brand logo rendered across marketing navigation header, footer, IDE navigation bar, VS Code mode workbench title bar, and browser tab favicons / PWA manifest.
 
 ## Fonts
 
