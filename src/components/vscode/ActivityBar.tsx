@@ -110,7 +110,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             {activeTab === 'code-assist' && (
               <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--foreground)]" />
             )}
-            <Sparkles className="h-5 w-5" strokeWidth={1.5} />
+            <Sparkles className={`h-5 w-5 ${isCodeAssistGenerating ? 'animate-spin text-[var(--primary)]' : ''}`} strokeWidth={1.5} />
           </button>
         </Tooltip>
 
@@ -175,7 +175,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             {activeTab === 'ports' && (
               <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--foreground)]" />
             )}
-            <Radio className="h-5 w-5" strokeWidth={1.5} />
+            <Radio className={`h-5 w-5 ${serverRunning ? 'text-emerald-400' : ''}`} strokeWidth={1.5} />
           </button>
         </Tooltip>
       </div>
