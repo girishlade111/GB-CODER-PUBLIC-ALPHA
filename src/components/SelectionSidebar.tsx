@@ -22,7 +22,28 @@ interface SelectionSidebarProps {
 const LadeStackLoader: React.FC = () => {
     return (
         <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-10 h-10 border-2 border-stroke-dark border-t-accent rounded-full animate-spin mb-4" />
+            {/* Modern Orbital Emblem */}
+            <div className="relative flex items-center justify-center w-12 h-12 mb-4">
+                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-amber-500 border-r-amber-400/60 animate-spin" />
+                <div
+                    className="absolute inset-1.5 rounded-full border border-dashed border-slate-600/50 animate-spin"
+                    style={{ animationDirection: 'reverse', animationDuration: '4s' }}
+                />
+                <div className="w-7 h-7 rounded-lg bg-surface-overlay border border-amber-500/40 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.25)]">
+                    <svg
+                        className="w-4 h-4 text-amber-400"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <polyline points="16 18 22 12 16 6" />
+                        <polyline points="8 6 2 12 8 18" />
+                    </svg>
+                </div>
+            </div>
             <div className="text-center">
                 <h3 className="text-[15px] font-semibold text-content-on-dark">
                     Lade Stack AI
@@ -32,7 +53,7 @@ const LadeStackLoader: React.FC = () => {
                 </p>
             </div>
             <div className="w-44 h-1 bg-product-elevated border border-stroke-dark rounded-full mt-4 overflow-hidden">
-                <div className="h-full bg-accent rounded-full animate-progress" />
+                <div className="h-full bg-gradient-to-r from-amber-500 via-amber-300 to-amber-500 rounded-full animate-progress" />
             </div>
         </div>
     );
