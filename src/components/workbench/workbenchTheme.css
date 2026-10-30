@@ -209,7 +209,12 @@
   color: var(--foreground) !important;
 }
 
-/* Activity bar active indicators & glowing dots */
-[data-testid="vscode-mode"] .shadow-\[0_0_8px_rgba\(99\,102\,241\,0\.6\)\] {
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4) !important;
+/* Activity bar: Antigravity IDE & VS Code minimal styling */
+[data-testid="vscode-activity-bar"] button {
+  border-radius: 0 !important;
+  background-color: transparent !important;
+}
+
+[data-testid="vscode-activity-bar"] button:hover {
+  background-color: transparent !important;
 }
