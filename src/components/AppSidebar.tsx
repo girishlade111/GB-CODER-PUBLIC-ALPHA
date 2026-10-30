@@ -151,12 +151,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       onClick: onOpenVSCodeMode,
     },
     {
-      id: 'ai-chat',
-      label: 'AI Chat',
-      icon: <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-      onClick: onOpenAIChat,
-    },
-    {
       id: 'voice',
       label: 'Voice Commands',
       icon: <Mic className="h-[18px] w-[18px]" strokeWidth={1.5} />,
