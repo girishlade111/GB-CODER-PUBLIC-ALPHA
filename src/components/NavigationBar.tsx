@@ -9,8 +9,6 @@ import {
   Share2,
   Trash2,
   FilePlus,
-  Mic,
-  MicOff,
   Rocket,
   Github,
 } from 'lucide-react';
@@ -83,8 +81,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   currentProjectType = 'plain',
   autoSaveEnabled,
   customActions,
-  onToggleVoice,
-  isVoiceListening = false,
+  onToggleVoice: _onToggleVoice,
+  isVoiceListening: _isVoiceListening = false,
   onToggleNavDrawer,
   isNavDrawerOpen = false,
   onOpenExport,
@@ -197,49 +195,14 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 </button>
               </Tooltip>
 
-              {/*
-                * Voice: icon-only so it slots into the existing toolbar rhythm
-                * without competing with Run / Build with AI for width. Every
-                * action it reaches is still available manually.
-                */}
-              {onToggleVoice && (
-                <Tooltip
-                  label={isVoiceListening ? 'Stop listening' : 'Voice commands'}
-                  /* Secondary action: moves into the overflow menu at ≤1024px so
-                     Run and Build with AI keep the width they need. */
-                  className="hidden desktop:inline-flex"
-                >
-                  <button
-                    onClick={onToggleVoice}
-                    className={`${iconButton} relative p-2 ${
-                      isVoiceListening ? 'bg-danger-subtle text-danger' : ''
-                    }`}
-                    title={isVoiceListening ? 'Stop listening' : 'Voice commands'}
-                    aria-label={isVoiceListening ? 'Stop listening' : 'Start voice commands'}
-                    aria-pressed={isVoiceListening}
-                  >
-                    {isVoiceListening ? (
-                      <>
-                        <span className="absolute inset-1 animate-voice-ring rounded-full bg-danger/20" />
-                        <Mic className="relative h-4 w-4 sm:h-5 sm:w-5" />
-                      </>
-                    ) : (
-                      <MicOff className="h-4 w-4 sm:h-5 sm:w-5" />
-                    )}
-                  </button>
-                </Tooltip>
-              )}
-
               {/* Custom Actions */}
               {customActions}
 
               {/*
                 Overflow menu for secondary actions at ≤1024px. It re-triggers
-                the same `onToggleVoice` / `onOpenExport` handlers the desktop
-                toolbar uses — no duplicated feature logic, just a second
-                trigger surface that fits a narrow bar.
+                the same handlers the desktop toolbar uses.
               */}
-              {(onToggleVoice || onOpenExport || onOpenDeploy || onOpenGitHub) && (
+              {(onOpenExport || onOpenDeploy || onOpenGitHub) && (
                 <div className="relative hidden compact:block" ref={overflowRef}>
                   <button
                     onClick={() => setIsOverflowOpen((open) => !open)}
@@ -255,23 +218,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   {isOverflowOpen && (
                     <div className={`${menuSurface} w-56`} data-testid="nav-overflow-menu">
                       <div className="py-1">
-                        {onToggleVoice && (
-                          <button
-                            onClick={() => {
-                              onToggleVoice();
-                              setIsOverflowOpen(false);
-                            }}
-                            className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left ${NAV_LINK} text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary`}
-                          >
-                            {isVoiceListening ? (
-                              <Mic className="h-4 w-4 text-danger" />
-                            ) : (
-                              <MicOff className="h-4 w-4" />
-                            )}
-                            {isVoiceListening ? 'Stop listening' : 'Voice commands'}
-                          </button>
-                        )}
-
                         {onOpenExport && (
                           <button
                             onClick={() => {
