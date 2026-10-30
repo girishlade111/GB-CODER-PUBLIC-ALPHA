@@ -372,12 +372,6 @@ export const buildArchiveFiles = (
     return files;
   }
 
-
-      { path: PLAIN_JS_PATH, content: getFileContent(project, PLAIN_JS_PATH) },
-      { path: 'README.md', content: buildReadme(project, options) },
-    ];
-  }
-
   const projectType = project.projectType as Exclude<ProjectType, 'plain'>;
   const entry = project.entry ?? (projectType === 'react' ? 'main.jsx' : 'main.js');
 
