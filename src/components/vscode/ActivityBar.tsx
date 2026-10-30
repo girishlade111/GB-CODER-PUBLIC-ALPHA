@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Files,
   Search,
-  Sparkles,
   GitBranch,
   Radio,
   Sliders,
@@ -12,6 +11,7 @@ import {
   Package,
 } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
+import { GBAssistIcon } from '../icons/GBAssistIcon';
 
 export type ActivityBarTab =
   | 'explorer'
@@ -110,7 +110,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             {activeTab === 'code-assist' && (
               <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--foreground)]" />
             )}
-            <Sparkles className={`h-5 w-5 ${isCodeAssistGenerating ? 'animate-spin text-[var(--primary)]' : ''}`} strokeWidth={1.5} />
+            <GBAssistIcon className={`h-5 w-5 ${isCodeAssistGenerating ? 'animate-pulse text-[var(--primary)]' : ''}`} strokeWidth={1.5} />
           </button>
         </Tooltip>
 
