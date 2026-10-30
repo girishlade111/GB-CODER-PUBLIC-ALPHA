@@ -260,10 +260,6 @@ const DESKTOP_MIN_WIDTH = 1025;
 const subscribeToVoice = (onStoreChange: () => void) => voiceCommandService.subscribe(onStoreChange);
 const getVoiceSnapshot = () => voiceCommandService.getState();
 
-/** Turns a dictated phrase into a sentence-cased AI prompt. */
-const toPromptText = (spoken: string): string =>
-  spoken.charAt(0).toUpperCase() + spoken.slice(1);
-
 /** Voice action -> the selection operation it maps onto. */
 const VOICE_SELECTION_OPERATIONS: Record<string, SelectionOperationType> = {
   explain: 'explain',
