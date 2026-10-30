@@ -697,7 +697,6 @@ function App() {
   const [showGitHubSync, setShowGitHubSync] = useState<boolean>(false);
 
   // ===== NEW FEATURES STATE =====
-  const [showAIChat, setShowAIChat] = useState(false);
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
   /**
    * Voice-driven request to focus a right-hand panel. The nonce makes repeat
