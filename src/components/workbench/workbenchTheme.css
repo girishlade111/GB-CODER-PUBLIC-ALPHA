@@ -4,17 +4,17 @@
  */
 
 :root {
-  --wb-canvas: #181A20;
-  --wb-surface-secondary: #20232B;
-  --wb-surface-elevated: #262A33;
-  --wb-border-subtle: #343945;
-  --wb-border-focus: #6366F1;
-  --wb-text-primary: #E5E9F1;
-  --wb-text-secondary: #9AA4B5;
-  --wb-text-muted: #697487;
-  --wb-accent: #6366F1;
-  --wb-accent-hover: #4F46E5;
-  --wb-active-indicator: #6366F1;
+  --wb-canvas: var(--background, oklch(0 0 0));
+  --wb-surface-secondary: var(--sidebar, oklch(0.18 0 0));
+  --wb-surface-elevated: var(--card, oklch(0.14 0 0));
+  --wb-border-subtle: var(--border, oklch(0.26 0 0));
+  --wb-border-focus: var(--ring, oklch(0.72 0 0));
+  --wb-text-primary: var(--foreground, oklch(1.00 0 0));
+  --wb-text-secondary: var(--muted-foreground, oklch(0.72 0 0));
+  --wb-text-muted: var(--muted-foreground, oklch(0.72 0 0));
+  --wb-accent: var(--primary, oklch(1.00 0 0));
+  --wb-accent-hover: var(--accent, oklch(0.32 0 0));
+  --wb-active-indicator: var(--primary, oklch(1.00 0 0));
 }
 
 .wb-canvas {
