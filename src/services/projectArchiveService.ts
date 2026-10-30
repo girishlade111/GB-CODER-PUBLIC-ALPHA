@@ -268,7 +268,7 @@ const buildViteIndexHtml = (
   entry: string,
   options: ArchiveOptions = {},
 ): string => {
-  const { html, css, javascript } = projectToTriple(project);
+  const { html } = projectToTriple(project);
   const title = options.projectName ?? 'GB Coder Project';
   const tags = libraryTags(options.externalLibraries);
   const injections = getInjections(options);
@@ -353,7 +353,7 @@ export const buildArchiveFiles = (
 ): ArchiveFile[] => {
   if (project.projectType === 'plain') {
 
-    const { html, css, javascript } = projectToTriple(project);
+    const { html } = projectToTriple(project);
     const hasHtml = Boolean(html.trim());
     const hasCss = Boolean(css.trim());
     const hasJs = Boolean(javascript.trim());
