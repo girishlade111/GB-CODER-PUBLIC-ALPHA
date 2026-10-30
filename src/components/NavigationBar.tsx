@@ -4,7 +4,6 @@ import {
   MoreVertical,
   PanelLeft,
   Save,
-  Play,
   FileText,
   Share2,
   Trash2,
@@ -19,7 +18,7 @@ import LadeStackLogo from './LadeStackLogo';
 
 interface NavigationBarProps {
   onAutoSaveToggle: () => void;
-  onRun: () => void;
+  onRun?: () => void;
   onOpenBuildFromPrompt?: () => void;
   /** Screenshot → Code. Optional so legal/doc pages can omit the trigger. */
   onOpenScreenshotToCode?: () => void;
@@ -72,7 +71,7 @@ const NAV_LINK = 'text-sm font-medium';
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
   onAutoSaveToggle,
-  onRun,
+  onRun: _onRun,
   onOpenBuildFromPrompt: _onOpenBuildFromPrompt,
   onOpenScreenshotToCode: _onOpenScreenshotToCode,
   onClear,
@@ -181,20 +180,8 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               </div>
             </div>
 
-            {/* Right side - Run, Build with AI, Export, project menu */}
+            {/* Right side - Export, project menu, actions */}
             <div className="flex min-w-0 flex-shrink-0 items-center gap-1.5 sm:gap-2">
-              <Tooltip label="Run">
-                <button
-                  onClick={onRun}
-                  className={`${iconButton} ${NAV_LINK} compact:min-h-[44px] compact:min-w-[44px] compact:justify-center gap-2 border border-stroke bg-surface-canvas px-3 py-2`}
-                  title="Run"
-                  aria-label="Run"
-                >
-                  <Play className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="hidden lg:inline">Run</span>
-                </button>
-              </Tooltip>
-
               {/* Custom Actions */}
               {customActions}
 
