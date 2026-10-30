@@ -706,11 +706,7 @@ function App() {
 
   // ===== NEW FEATURES STATE =====
   const [showAIChat, setShowAIChat] = useState(false);
-  const [showBuildFromPrompt, setShowBuildFromPrompt] = useState(false);
-  const [showScreenshotToCode, setShowScreenshotToCode] = useState(false);
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
-  /** Transcript routed into Build with AI, awaiting the user's confirmation. */
-  const [voiceBuildPrompt, setVoiceBuildPrompt] = useState('');
   /**
    * Voice-driven request to focus a right-hand panel. The nonce makes repeat
    * requests for the same tab distinguishable, so saying "open console" twice
@@ -3398,32 +3394,6 @@ function App() {
     }
   }, [html, css, javascript, setFileProject, setHtml, setCss, setJavascript, codeHistory]);
 
-  const handleBuildFromPrompt = useCallback(async (newHtml: string, newCss: string, newJavascript: string) => {
-    setDiffData({
-      isOpen: true,
-      title: 'Review Build with AI',
-      files: [
-        { path: 'index.html', original: html, suggested: newHtml, language: 'html' },
-        { path: 'styles.css', original: css, suggested: newCss, language: 'css' },
-        { path: 'script.js', original: javascript, suggested: newJavascript, language: 'javascript' },
-      ],
-      onApplyFile: (path: string) => {
-        if (path === 'index.html') setHtml(newHtml);
-        if (path === 'styles.css') setCss(newCss);
-        if (path === 'script.js') setJavascript(newJavascript);
-      },
-      onApplyAll: () => {
-        codeHistory.saveState({ html, css, javascript }, 'Built from prompt');
-        clearConsole();
-        setHtml(newHtml);
-        setCss(newCss);
-        setJavascript(newJavascript);
-        toast.success('Built from prompt! Edit freely or generate again.');
-        setDiffData(null);
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [html, css, javascript, codeHistory, clearConsole]);
 
 
   const loadInjections = useCallback(() => {
