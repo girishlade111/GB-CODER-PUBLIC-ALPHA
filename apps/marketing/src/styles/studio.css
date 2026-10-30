@@ -277,9 +277,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--primary);
-  color: #fff;
+  color: var(--primary-foreground);
   font-size: 0.8rem;
   font-weight: 650;
   padding: 0.5rem 1rem;
