@@ -95,7 +95,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
         </Tooltip>
 
         {/* Code Assist (AI Assistant & Builder) */}
-        <Tooltip label="Code Assist (Build With AI)" side="right">
+        <Tooltip label="GB Assist" side="right">
           <button
             type="button"
             onClick={() => onChangeTab('code-assist')}

@@ -77,7 +77,6 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ isOpen, o
         {
             category: 'AI Tools',
             shortcuts: [
-                { keys: 'Ctrl/Cmd+Shift+A', description: 'Build with AI', customizable: true },
                 { keys: 'Ctrl/Cmd+Shift+X', description: 'Explain selected code', customizable: true },
                 { keys: 'Ctrl/Cmd+Shift+F', description: 'Find and Fix', customizable: true },
             ],
