@@ -19,6 +19,7 @@ import {
 import toast from 'react-hot-toast';
 import FileTreeView, { FileTreeViewHandle } from './FileTreeView';
 import CodeAssistPanel from './CodeAssistPanel';
+import { GBAssistIcon } from '../icons/GBAssistIcon';
 import DependenciesPanel from '../DependenciesPanel';
 import CodeRabbitReviewModal from '../CodeRabbitReviewModal';
 import VoiceCommandPanel from '../VoiceCommandPanel';
