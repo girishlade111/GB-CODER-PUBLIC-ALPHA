@@ -236,7 +236,7 @@
   height: 7px;
   background: var(--primary);
   border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(23, 102, 68, 0.25);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 25%, transparent);
   display: inline-block;
 }
 .output-canvas {
@@ -244,7 +244,7 @@
   display: grid;
   align-items: center;
   padding: 2rem;
-  background: radial-gradient(circle at 50% 50%, rgba(19, 98, 64, 0.03) 0%, transparent 80%), var(--surface);
+  background: var(--surface);
 }
 /* The sample output is an open composition on the preview surface, not a
    card inside a card. Flattening it keeps the hierarchy honest. */
