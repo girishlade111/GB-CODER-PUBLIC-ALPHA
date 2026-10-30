@@ -482,7 +482,7 @@ export const downloadBlob = (content: Blob | string, filename: string, mimeType?
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
-export const zipFilename = (projectName?: string): string => `${sanitizeProjectName(projectName)}.zip`;
+export const zipFilename = (_projectName?: string): string => 'gb-coder.zip';
 
 export const htmlFilename = (projectName?: string): string =>
   `${sanitizeProjectName(projectName)}.html`;
