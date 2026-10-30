@@ -31,7 +31,7 @@ const LadeStackLoader: React.FC = () => {
                 />
                 <div className="w-7 h-7 rounded-lg bg-surface-overlay border border-white/20 flex items-center justify-center shadow-[0_0_12px_rgba(255,255,255,0.2)]">
                     <svg
-                        className="w-4 h-4 text-amber-400"
+                        className="w-4 h-4 text-white"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -53,7 +53,7 @@ const LadeStackLoader: React.FC = () => {
                 </p>
             </div>
             <div className="w-44 h-1 bg-product-elevated border border-stroke-dark rounded-full mt-4 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-amber-500 via-amber-300 to-amber-500 rounded-full animate-progress" />
+                <div className="h-full bg-gradient-to-r from-white/20 via-white to-white/20 rounded-full animate-progress" />
             </div>
         </div>
     );
