@@ -44,3 +44,4 @@ export const GBAssistIcon: React.FC<GBAssistIconProps> = ({
 };
 
 export default GBAssistIcon;
+
