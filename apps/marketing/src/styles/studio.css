@@ -354,12 +354,12 @@
 }
 .counter-button {
   border: 1px solid var(--primary);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 0.6rem 1.1rem;
   font-size: 0.85rem;
   font-weight: 650;
   background: var(--primary);
-  color: #fff;
+  color: var(--primary-foreground);
   cursor: pointer;
   min-height: 42px;
   transition: background 0.15s ease, border-color 0.15s ease;
@@ -369,7 +369,7 @@
 }
 .counter-reset-button {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 0.6rem 0.9rem;
   font-size: 0.8rem;
   font-weight: 600;
