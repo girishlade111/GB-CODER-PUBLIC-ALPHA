@@ -8,6 +8,7 @@ import {
   TerminalSquare,
   ExternalLink,
   Minimize2,
+  Maximize2,
   FolderArchive,
   FolderDown,
   Search,
@@ -1052,6 +1053,17 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // F11: Full Screen
+      if (e.key === 'F11') {
+        e.preventDefault();
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+        return;
+      }
+
       // Ctrl/Cmd + Shift + P: Command Palette
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
         e.preventDefault();
@@ -1958,11 +1970,78 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       {/* Command Palette */}
       <CommandPalette
         isOpen={isCommandPaletteOpen}
+        quickInputPosition={workbenchLayout.quickInputPosition ?? 'center'}
         onClose={() => {
           setIsCommandPaletteOpen(false);
           setTimeout(() => editorRef.current?.focus(), 20);
         }}
         actions={[
+          {
+            id: 'workbench.action.customizeLayout',
+            title: 'View: Customize Layout...',
+            section: 'View',
+            icon: <Sliders className="w-4 h-4 text-sky-400" />,
+            perform: () => {
+              window.dispatchEvent(new CustomEvent('workbench:customize-layout'));
+            },
+          },
+          {
+            id: 'workbench.action.toggleZenMode',
+            title: 'View: Toggle Zen Mode',
+            section: 'View',
+            shortcut: 'Ctrl+K Z',
+            icon: <Maximize2 className="w-4 h-4 text-emerald-400" />,
+            perform: () => {
+              setWorkbenchLayout((prev) => {
+                const willBeZen = !prev.modes?.zenMode;
+                if (willBeZen) {
+                  toast('Entered Zen Mode (Ctrl+K Z to exit)', { icon: '🧘' });
+                }
+                return {
+                  ...prev,
+                  activityBar: { visible: !willBeZen },
+                  primarySidebar: { ...prev.primarySidebar, visible: !willBeZen },
+                  secondarySidebar: { ...prev.secondarySidebar, visible: !willBeZen },
+                  bottomPanel: { ...prev.bottomPanel, visible: !willBeZen },
+                  statusBar: { visible: !willBeZen },
+                  modes: {
+                    zenMode: willBeZen,
+                    centeredLayout: willBeZen,
+                  },
+                };
+              });
+            },
+          },
+          {
+            id: 'workbench.action.toggleFullScreen',
+            title: 'View: Toggle Full Screen',
+            section: 'View',
+            shortcut: 'F11',
+            icon: <Maximize2 className="w-4 h-4 text-amber-400" />,
+            perform: () => {
+              if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+              } else {
+                document.exitFullscreen().catch(() => {});
+              }
+            },
+          },
+          {
+            id: 'workbench.action.toggleCenteredLayout',
+            title: 'View: Toggle Centered Layout',
+            section: 'View',
+            icon: <Columns className="w-4 h-4 text-indigo-400" />,
+            perform: () => {
+              setWorkbenchLayout((prev) => ({
+                ...prev,
+                modes: {
+                  ...prev.modes,
+                  zenMode: Boolean(prev.modes?.zenMode),
+                  centeredLayout: !prev.modes?.centeredLayout,
+                },
+              }));
+            },
+          },
           {
             id: 'workbench.action.quickOpen',
             title: 'File: Quick Open...',

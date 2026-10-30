@@ -91,6 +91,13 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
   // Separate persistent user layout state from temporary responsive overrides
   const [responsiveSecondaryOverride, setResponsiveSecondaryOverride] = useState<boolean | null>(null);
   const [responsivePrimaryOverride, setResponsivePrimaryOverride] = useState<boolean | null>(null);
+  const [isCustomizeLayoutOpen, setIsCustomizeLayoutOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpen = () => setIsCustomizeLayoutOpen(true);
+    window.addEventListener('workbench:customize-layout', handleOpen);
+    return () => window.removeEventListener('workbench:customize-layout', handleOpen);
+  }, []);
 
   // Restore desktop layout when viewport expands (> 900px for secondary, > 640px for primary)
   useEffect(() => {

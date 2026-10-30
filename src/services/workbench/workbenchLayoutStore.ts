@@ -273,7 +273,7 @@ export function loadWorkbenchLayout(): WorkbenchLayoutState {
         visible: typeof parsed.statusBar?.visible === 'boolean' ? parsed.statusBar.visible : true,
       },
       primarySidebarPosition: parsed.primarySidebarPosition === 'right' ? 'right' : 'left',
-      panelAlignment: ['left', 'right', 'center', 'justify'].includes(parsed.panelAlignment) ? parsed.panelAlignment : 'center',
+      panelAlignment: (typeof parsed.panelAlignment === 'string' && ['left', 'right', 'center', 'justify'].includes(parsed.panelAlignment)) ? (parsed.panelAlignment as any) : 'center',
       quickInputPosition: parsed.quickInputPosition === 'top' ? 'top' : 'center',
       modes: {
         zenMode: Boolean(parsed.modes?.zenMode),

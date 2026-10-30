@@ -4,7 +4,6 @@ import {
   X,
   Eye,
   Maximize2,
-  Minimize2,
   ArrowUp,
   CircleDot,
   Check,
@@ -210,7 +209,6 @@ export const CustomizeLayoutModal: React.FC<CustomizeLayoutModalProps> = ({
   onUpdateLayout,
   onResetLayout,
 }) => {
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
 
   useEffect(() => {
