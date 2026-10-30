@@ -73,12 +73,6 @@ interface SidebarItem {
   disabledReason?: string;
 }
 
-interface SidebarSection {
-  id: string;
-  /** Shown as a heading when the rail is expanded. */
-  label: string;
-  items: SidebarItem[];
-}
 
 /**
  * Left rail navigation — the single entry point for every editor feature.
@@ -111,101 +105,83 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
 
   const panelsUnavailable = 'Needs a wider window';
 
-  const sections: SidebarSection[] = [
+  const items: SidebarItem[] = [
     {
-      id: 'project',
-      label: 'Project',
-      items: [
-        {
-          /*
-           * First in the rail: it is the way *out* of the current project, and
-           * burying the exit under the tools that belong to it reads as a
-           * dead end.
-           */
-          id: 'projects',
-          label: 'All Projects',
-          icon: <Layers className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-          onClick: onOpenProjects,
-        },
-        {
-          id: 'files',
-          label: 'Files',
-          icon: <Files className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-          onClick: onToggleFiles,
-          isActive: isFilesOpen,
-          disabled: !canDockPanels,
-          disabledReason: panelsUnavailable,
-        },
-        {
-          id: 'dependencies',
-          label: 'Dependencies',
-          icon: <Package className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-          onClick: onToggleDependencies,
-          isActive: isDependenciesOpen,
-          disabled: !canDockPanels,
-          disabledReason: panelsUnavailable,
-        },
-        {
-          id: 'templates',
-          label: 'Templates',
-          icon: <LayoutTemplate className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-          onClick: onOpenTemplates,
-        },
-        {
-          id: 'import',
-          label: 'Import',
-          icon: <FolderInput className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-          onClick: onOpenImport,
-        },
-        {
-          id: 'vscode-mode',
-          label: 'VS Code Mode & Sandbox',
-          icon: <TerminalSquare className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-          onClick: onOpenVSCodeMode,
-        },
-      ],
+      /*
+       * First in the rail: it is the way *out* of the current project, and
+       * burying the exit under the tools that belong to it reads as a
+       * dead end.
+       */
+      id: 'projects',
+      label: 'All Projects',
+      icon: <Layers className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenProjects,
     },
     {
-      id: 'ai',
-      label: 'AI',
-      items: [
-        {
-          id: 'ai-chat',
-          label: 'AI Chat',
-          icon: <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-          onClick: onOpenAIChat,
-        },
-        {
-          id: 'voice',
-          label: 'Voice Commands',
-          icon: <Mic className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-          onClick: onOpenVoiceCommands,
-        },
-      ],
+      id: 'files',
+      label: 'Files',
+      icon: <Files className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onToggleFiles,
+      isActive: isFilesOpen,
+      disabled: !canDockPanels,
+      disabledReason: panelsUnavailable,
     },
     {
-      id: 'tools',
-      label: 'Tools',
-      items: [
-        {
-          id: 'statistics',
-          label: 'Statistics',
-          icon: <Activity className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-          onClick: onOpenStatistics,
-        },
-        {
-          id: 'injection',
-          label: 'Code Injection',
-          icon: <Code2 className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-          onClick: onOpenInjection,
-        },
-        {
-          id: 'snapshots',
-          label: 'Snapshots',
-          icon: <History className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-          onClick: onOpenSnapshots,
-        },
-      ],
+      id: 'dependencies',
+      label: 'Dependencies',
+      icon: <Package className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onToggleDependencies,
+      isActive: isDependenciesOpen,
+      disabled: !canDockPanels,
+      disabledReason: panelsUnavailable,
+    },
+    {
+      id: 'templates',
+      label: 'Templates',
+      icon: <LayoutTemplate className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenTemplates,
+    },
+    {
+      id: 'import',
+      label: 'Import',
+      icon: <FolderInput className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenImport,
+    },
+    {
+      id: 'vscode-mode',
+      label: 'VS Code Mode & Sandbox',
+      icon: <TerminalSquare className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenVSCodeMode,
+    },
+    {
+      id: 'ai-chat',
+      label: 'AI Chat',
+      icon: <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenAIChat,
+    },
+    {
+      id: 'voice',
+      label: 'Voice Commands',
+      icon: <Mic className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenVoiceCommands,
+    },
+    {
+      id: 'statistics',
+      label: 'Statistics',
+      icon: <Activity className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenStatistics,
+    },
+    {
+      id: 'injection',
+      label: 'Code Injection',
+      icon: <Code2 className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenInjection,
+    },
+    {
+      id: 'snapshots',
+      label: 'Snapshots',
+      icon: <History className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenSnapshots,
     },
   ];
 
@@ -308,23 +284,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       </div>
 
       <nav className="flex-1 px-1.5 py-2">
-        {sections.map((section, index) => (
-          <div key={section.id} className={index > 0 ? 'mt-2' : undefined}>
-            <h2
-              className={`font-sans mb-1 px-2 text-[10px] font-medium uppercase tracking-wide text-[var(--muted-foreground)] ${
-                isExpanded ? '' : 'hidden compact:block'
-              }`}
-            >
-              {section.label}
-            </h2>
-            {/* Collapsed desktop rail: a subtle rule stands in for the group heading.
-                The drawer shows the real heading instead. */}
-            {!isExpanded && index > 0 && (
-              <div className="mx-1.5 my-2 border-t border-[var(--border)] compact:hidden" />
-            )}
-            <ul className="flex flex-col gap-1">{section.items.map(renderItem)}</ul>
-          </div>
-        ))}
+        <ul className="flex flex-col gap-1">{items.map(renderItem)}</ul>
       </nav>
 
       <div className="border-t border-[var(--border)] px-1.5 py-2">
