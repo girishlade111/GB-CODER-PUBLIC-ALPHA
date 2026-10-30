@@ -176,9 +176,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   ];
 
   const renderItem = (item: SidebarItem) => {
+    const tooltipLabel = item.disabled
+      ? `${item.label} — ${item.disabledReason ?? 'unavailable'}`
+      : item.label;
+
     const button = (
       <button
         type="button"
+        title={!isExpanded || item.disabled ? tooltipLabel : undefined}
         onClick={
           item.disabled
             ? undefined
@@ -219,23 +224,11 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       </button>
     );
 
-    const tooltipLabel = item.disabled
-      ? `${item.label} — ${item.disabledReason ?? 'unavailable'}`
-      : item.label;
-
-    // The collapsed rail has no visible labels, so tooltips carry them. When
-    // expanded, only disabled items still need the extra explanation.
-    if (!isExpanded || item.disabled) {
-      return (
-        <li key={item.id} className="flex justify-center compact:block">
-          <Tooltip label={tooltipLabel} side="right">
-            {button}
-          </Tooltip>
-        </li>
-      );
-    }
-
-    return <li key={item.id}>{button}</li>;
+    return (
+      <li key={item.id} className={!isExpanded ? 'flex justify-center compact:block' : undefined}>
+        {button}
+      </li>
+    );
   };
 
   return (
@@ -249,7 +242,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         Rendered at every breakpoint: it is now the only route to these
         features, so hiding it on small screens would make them unreachable.
       */
-      className={`sticky top-14 flex h-[calc(100vh-4rem)] shrink-0 flex-col self-start overflow-y-auto border-r border-[var(--border)] bg-[var(--sidebar)] transition-[width] duration-200 ease-out sm:top-16 ${
+      className={`sticky top-14 flex h-[calc(100vh-4rem)] shrink-0 flex-col self-start overflow-y-auto overflow-x-hidden border-r border-[var(--border)] bg-[var(--sidebar)] transition-[width] duration-200 ease-out sm:top-16 ${
         isExpanded ? 'w-52' : 'w-12'
       } compact:fixed compact:bottom-0 compact:left-0 compact:z-40 compact:h-auto compact:w-[min(18rem,82vw)] compact:shadow-elevated-lg compact:transition-transform ${
         isDrawerOpen ? 'compact:translate-x-0' : 'compact:-translate-x-full'
@@ -300,16 +293,17 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
             <span className="truncate">Collapse</span>
           </button>
         ) : (
-          <Tooltip label="Expand sidebar" side="right" className="flex justify-center compact:hidden">
+          <div className="flex justify-center compact:hidden">
             <button
               type="button"
               onClick={() => setIsExpanded(true)}
-              className="mt-1 flex h-9 w-9 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-[var(--sidebar-accent)] hover:text-[var(--foreground)] compact:hidden"
+              title="Expand sidebar"
+              className="mt-1 flex h-9 w-9 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-[var(--sidebar-accent)] hover:text-[var(--foreground)]"
               aria-label="Expand sidebar"
             >
               <PanelLeftOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />
             </button>
-          </Tooltip>
+          </div>
         )}
       </div>
     </aside>
