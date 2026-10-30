@@ -1381,10 +1381,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       switch (viewId) {
         case 'explorer':
           return (
-            <div className="flex h-full w-full flex-col overflow-hidden bg-[#20232B] select-none">
+            <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--sidebar)] select-none">
               {/* Explorer Action Header */}
-              <div className="flex shrink-0 items-center justify-between border-b border-[#343945] px-3 py-1.5 select-none bg-[#20232B]">
-                <span className="text-[11px] font-bold tracking-wider uppercase text-[#9AA4B5]">
+              <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-3 py-1.5 select-none bg-[var(--sidebar)]">
+                <span className="text-[11px] font-bold tracking-wider uppercase text-[var(--muted-foreground)]">
                   Explorer
                 </span>
                 <div className="flex items-center gap-0.5">
@@ -1394,7 +1394,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       onClick={() => treeRef.current?.startNewFile()}
                       aria-label="New File"
                       data-testid="explorer-new-file"
-                      className="rounded p-1 text-[#9AA4B5] hover:bg-white/10 hover:text-white"
+                      className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white"
                     >
                       <FilePlus className="h-3.5 w-3.5" />
                     </button>
@@ -1405,7 +1405,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       onClick={() => treeRef.current?.startNewFolder()}
                       aria-label="New Folder"
                       data-testid="explorer-new-folder"
-                      className="rounded p-1 text-[#9AA4B5] hover:bg-white/10 hover:text-white"
+                      className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white"
                     >
                       <FolderPlus className="h-3.5 w-3.5" />
                     </button>
@@ -1416,7 +1416,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       onClick={() => treeRef.current?.collapseAll()}
                       aria-label="Collapse All Folders"
                       data-testid="explorer-collapse-all"
-                      className="rounded p-1 text-[#9AA4B5] hover:bg-white/10 hover:text-white"
+                      className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white"
                     >
                       <FolderArchive className="h-3.5 w-3.5" />
                     </button>
@@ -1427,7 +1427,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       onClick={() => folderInputRef.current?.click()}
                       aria-label="Load Folder"
                       data-testid="explorer-load-folder"
-                      className="rounded p-1 text-[#9AA4B5] hover:bg-white/10 hover:text-white"
+                      className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white"
                     >
                       <FolderDown className="h-3.5 w-3.5" />
                     </button>
@@ -1444,21 +1444,21 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 onDrop={handleExplorerDrop}
               >
                 {/* INFO Accordion */}
-                <div className="border-b border-[#343945]/60">
+                <div className="border-b border-[var(--border)]/60">
                   <button
                     type="button"
                     onClick={() => setIsInfoOpen(!isInfoOpen)}
-                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[#9AA4B5] hover:bg-white/5 hover:text-white uppercase select-none"
+                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[var(--muted-foreground)] hover:bg-white/5 hover:text-white uppercase select-none"
                   >
                     {isInfoOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                     Info
                   </button>
                   {isInfoOpen && (
-                    <div className="px-5 py-2 text-[11px] text-[#9AA4B5] space-y-1 bg-[#181A20]">
-                      <p><span className="text-[#697487]">Framework:</span> React + Vite</p>
-                      <p><span className="text-[#697487]">Runtime:</span> In-Browser WebContainer</p>
-                      <p><span className="text-[#697487]">Files:</span> {project.files.length} loaded</p>
-                      <p><span className="text-[#697487]">Cost:</span> $0.00 (Local-First Compute)</p>
+                    <div className="px-5 py-2 text-[11px] text-[var(--muted-foreground)] space-y-1 bg-[var(--background)]">
+                      <p><span className="text-[var(--muted-foreground)]">Framework:</span> React + Vite</p>
+                      <p><span className="text-[var(--muted-foreground)]">Runtime:</span> In-Browser WebContainer</p>
+                      <p><span className="text-[var(--muted-foreground)]">Files:</span> {project.files.length} loaded</p>
+                      <p><span className="text-[var(--muted-foreground)]">Cost:</span> $0.00 (Local-First Compute)</p>
                     </div>
                   )}
                 </div>
@@ -1468,11 +1468,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsProjectRootOpen(!isProjectRootOpen)}
-                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[#E5E9F1] hover:bg-white/5 uppercase select-none"
+                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[var(--foreground)] hover:bg-white/5 uppercase select-none"
                   >
                     {isProjectRootOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                     <span className="truncate">{projectName}</span>
-                    <span className="ml-auto rounded bg-[#181A20] px-1 text-[9px] text-[#697487]">
+                    <span className="ml-auto rounded bg-[var(--background)] px-1 text-[9px] text-[var(--muted-foreground)]">
                       {project.files.length}
                     </span>
                   </button>
@@ -1495,34 +1495,34 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 </div>
 
                 {/* OUTLINE Accordion */}
-                <div className="border-t border-[#343945]/60">
+                <div className="border-t border-[var(--border)]/60">
                   <button
                     type="button"
                     onClick={() => setIsOutlineOpen(!isOutlineOpen)}
-                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[#9AA4B5] hover:bg-white/5 hover:text-white uppercase select-none"
+                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[var(--muted-foreground)] hover:bg-white/5 hover:text-white uppercase select-none"
                   >
                     {isOutlineOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                     Outline
                   </button>
                   {isOutlineOpen && (
-                    <div className="px-5 py-2 text-[11px] text-[#697487] italic bg-[#181A20]">
+                    <div className="px-5 py-2 text-[11px] text-[var(--muted-foreground)] italic bg-[var(--background)]">
                       {activePath ? `Active symbol structure: ${activePath}` : 'No symbols to display'}
                     </div>
                   )}
                 </div>
 
                 {/* TIMELINE Accordion */}
-                <div className="border-t border-[#343945]/60">
+                <div className="border-t border-[var(--border)]/60">
                   <button
                     type="button"
                     onClick={() => setIsTimelineOpen(!isTimelineOpen)}
-                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[#9AA4B5] hover:bg-white/5 hover:text-white uppercase select-none"
+                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[var(--muted-foreground)] hover:bg-white/5 hover:text-white uppercase select-none"
                   >
                     {isTimelineOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                     Timeline
                   </button>
                   {isTimelineOpen && (
-                    <div className="px-5 py-2 text-[11px] text-[#697487] italic bg-[#181A20]">
+                    <div className="px-5 py-2 text-[11px] text-[var(--muted-foreground)] italic bg-[var(--background)]">
                       Workspace file history active
                     </div>
                   )}
@@ -1578,7 +1578,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
         case 'packages':
           return (
-            <div className="flex h-full w-full flex-col overflow-hidden bg-[#20232B]">
+            <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--sidebar)]">
               <DependenciesPanel
                 project={project}
                 resolvedPackages={[]}
@@ -1634,7 +1634,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
         case 'terminal':
           return (
-            <div className="h-full w-full overflow-hidden bg-[#181A20]" data-testid="terminal-container">
+            <div className="h-full w-full overflow-hidden bg-[var(--background)]" data-testid="terminal-container">
               <TerminalTab
                 project={project}
                 resolvedPackages={[]}
@@ -1659,17 +1659,17 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
         case 'ports':
           return (
-            <div className="flex h-full flex-col p-4 text-xs bg-[#181A20] text-[#E5E9F1]">
-              <span className="font-bold tracking-wider uppercase text-[#9AA4B5] mb-2">Ports & Endpoints</span>
-              <div className="rounded border border-[#343945] bg-[#20232B] p-3 mt-2">
+            <div className="flex h-full flex-col p-4 text-xs bg-[var(--background)] text-[var(--foreground)]">
+              <span className="font-bold tracking-wider uppercase text-[var(--muted-foreground)] mb-2">Ports & Endpoints</span>
+              <div className="rounded border border-[var(--border)] bg-[var(--sidebar)] p-3 mt-2">
                 <div className="flex items-center gap-2">
                   <span className={`h-2 w-2 rounded-full ${webcontainer.startupStage === 'ready' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
                   <span className="font-semibold text-white">Vite Development Server</span>
                 </div>
-                <p className="text-[#9AA4B5] text-[11px] mt-1.5 font-mono">
+                <p className="text-[var(--muted-foreground)] text-[11px] mt-1.5 font-mono">
                   Port: {webcontainer.serverPort || 5173}
                 </p>
-                <p className="text-[#697487] text-[10px] truncate mt-0.5 font-mono">
+                <p className="text-[var(--muted-foreground)] text-[10px] truncate mt-0.5 font-mono">
                   URL: {webcontainer.serverUrl || `http://localhost:${webcontainer.serverPort || 5173}/`}
                 </p>
               </div>
@@ -1677,7 +1677,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           );
 
         default:
-          return <div className="p-4 text-[#697487]">Panel content not found.</div>;
+          return <div className="p-4 text-[var(--muted-foreground)]">Panel content not found.</div>;
       }
     },
     [
@@ -1807,11 +1807,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       {/* Fullscreen Preview Overlay */}
       {isPreviewFullscreen && activePreview && (
         <div
-          className="fixed inset-0 z-50 flex flex-col bg-[#181A20] text-white shadow-2xl"
+          className="fixed inset-0 z-50 flex flex-col bg-[var(--background)] text-white shadow-2xl"
           role="dialog"
           aria-label="Fullscreen Live Preview"
         >
-          <header className="flex h-10 shrink-0 items-center justify-between border-b border-[#343945] bg-[#20232B] px-4">
+          <header className="flex h-10 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-4">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               <span className="font-semibold text-xs text-white truncate">
@@ -1827,7 +1827,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 type="button"
                 onClick={() => void handleReloadPreview()}
                 disabled={isReloadingPreview || !activePreview?.url}
-                className="flex items-center gap-1.5 rounded px-2.5 py-1 text-xs bg-[#262A33] hover:bg-[#343945] text-gray-200 transition-colors"
+                className="flex items-center gap-1.5 rounded px-2.5 py-1 text-xs bg-[var(--card)] hover:bg-[var(--muted)] text-gray-200 transition-colors"
                 title="Reload preview"
                 data-testid="fullscreen-preview-reload-btn"
               >
@@ -1840,7 +1840,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               <button
                 type="button"
                 onClick={handleOpenInNewTab}
-                className="flex items-center gap-1.5 rounded px-2.5 py-1 text-xs bg-[#262A33] hover:bg-[#343945] text-gray-200 transition-colors"
+                className="flex items-center gap-1.5 rounded px-2.5 py-1 text-xs bg-[var(--card)] hover:bg-[var(--muted)] text-gray-200 transition-colors"
                 title="Open in new tab"
                 data-testid="fullscreen-preview-open-new-tab-btn"
               >
@@ -1851,7 +1851,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               <button
                 type="button"
                 onClick={() => setIsPreviewFullscreen(false)}
-                className="flex items-center gap-1.5 rounded bg-[#6366F1] hover:bg-[#4F46E5] px-3 py-1 text-xs font-semibold text-white transition-colors"
+                className="flex items-center gap-1.5 rounded bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-white transition-colors"
                 title="Exit Fullscreen (Esc)"
               >
                 <Minimize2 className="h-3.5 w-3.5" />

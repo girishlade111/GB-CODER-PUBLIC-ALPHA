@@ -44,9 +44,9 @@ export const WorkbenchViewContainer: React.FC<WorkbenchViewContainerProps> = ({
   const targetContainers = activeDef.allowedContainers.filter((c) => c !== containerId);
 
   return (
-    <div className="flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#20232B] text-xs">
+    <div className="flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--sidebar)] text-xs">
       {/* Container Header */}
-      <div className="flex h-9 shrink-0 items-center justify-between border-b border-[#343945] px-2.5 select-none bg-[#20232B]">
+      <div className="flex h-9 shrink-0 items-center justify-between border-b border-[var(--border)] px-2.5 select-none bg-[var(--sidebar)]">
         {/* Title or Tab Switcher */}
         <div className="flex items-center gap-1.5 min-w-0">
           {availableViews.length > 1 ? (
@@ -61,8 +61,8 @@ export const WorkbenchViewContainer: React.FC<WorkbenchViewContainerProps> = ({
                     onClick={() => onSelectView(vid)}
                     className={`rounded px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
                       isSelected
-                        ? 'text-[#E5E9F1] bg-white/10'
-                        : 'text-[#697487] hover:text-[#9AA4B5] hover:bg-white/5'
+                        ? 'text-[var(--foreground)] bg-white/10'
+                        : 'text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)] hover:bg-white/5'
                     }`}
                   >
                     {def.title}
@@ -71,7 +71,7 @@ export const WorkbenchViewContainer: React.FC<WorkbenchViewContainerProps> = ({
               })}
             </div>
           ) : (
-            <span className="text-[11px] font-bold tracking-wider uppercase text-[#9AA4B5] truncate">
+            <span className="text-[11px] font-bold tracking-wider uppercase text-[var(--muted-foreground)] truncate">
               {activeDef.title || containerTitle}
             </span>
           )}
@@ -88,7 +88,7 @@ export const WorkbenchViewContainer: React.FC<WorkbenchViewContainerProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowMoveMenu((prev) => !prev)}
-                  className="rounded p-1 text-[#697487] hover:text-[#E5E9F1] hover:bg-white/10 transition-colors"
+                  className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/10 transition-colors"
                   aria-label="Move view"
                 >
                   <ArrowRightLeft className="h-3 w-3" />
@@ -97,10 +97,10 @@ export const WorkbenchViewContainer: React.FC<WorkbenchViewContainerProps> = ({
 
               {showMoveMenu && (
                 <div
-                  className="absolute right-0 top-full mt-1 w-48 rounded-md border border-[#343945] bg-[#262A33] p-1 shadow-xl z-50 text-left"
+                  className="absolute right-0 top-full mt-1 w-48 rounded-md border border-[var(--border)] bg-[var(--card)] p-1 shadow-xl z-50 text-left"
                   data-testid="move-view-menu"
                 >
-                  <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#697487]">
+                  <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
                     Move {activeDef.title} To...
                   </div>
                   {targetContainers.map((target) => (
@@ -111,9 +111,9 @@ export const WorkbenchViewContainer: React.FC<WorkbenchViewContainerProps> = ({
                         onMoveView(activeViewId, target);
                         setShowMoveMenu(false);
                       }}
-                      className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-[11px] text-[#9AA4B5] hover:bg-white/10 hover:text-[#E5E9F1] transition-colors"
+                      className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-[11px] text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)] transition-colors"
                     >
-                      <ArrowRightLeft className="h-3 w-3 text-[#6366F1]" />
+                      <ArrowRightLeft className="h-3 w-3 text-[var(--primary)]" />
                       <span>{CONTAINER_NAMES[target]}</span>
                     </button>
                   ))}
@@ -128,7 +128,7 @@ export const WorkbenchViewContainer: React.FC<WorkbenchViewContainerProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded p-1 text-[#697487] hover:text-[#E5E9F1] hover:bg-white/10 transition-colors"
+                className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/10 transition-colors"
                 aria-label="Hide Panel"
               >
                 <X className="h-3 w-3" />

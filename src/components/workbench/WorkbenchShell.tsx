@@ -190,7 +190,7 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
 
   return (
     <div
-      className="flex h-full min-h-0 flex-col overflow-hidden bg-[#181A20] text-[#E5E9F1]"
+      className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)] font-sans"
       data-testid="vscode-mode"
     >
       {/* ── Title Bar ── */}
@@ -304,7 +304,7 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
         />
 
         {/* Center: Editor Area + Docked Bottom Panel */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#181A20]">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--background)]">
           {/* Editor Area */}
           <WorkbenchEditorArea {...editorAreaProps} />
 

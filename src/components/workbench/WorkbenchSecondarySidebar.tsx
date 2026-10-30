@@ -60,7 +60,7 @@ export const WorkbenchSecondarySidebar: React.FC<WorkbenchSecondarySidebarProps>
       role="region"
       aria-label="Secondary Sidebar"
       style={{ width: `${width}px` }}
-      className="relative flex shrink-0 flex-col overflow-hidden border-l border-[#343945] bg-[#20232B] text-xs select-none z-10"
+      className="relative flex shrink-0 flex-col overflow-hidden border-l border-[var(--border)] bg-[var(--sidebar)] text-xs select-none z-10"
       data-testid="vscode-right-panel"
     >
       {/* Resize Handle (Left Border) */}
@@ -69,7 +69,7 @@ export const WorkbenchSecondarySidebar: React.FC<WorkbenchSecondarySidebarProps>
         aria-orientation="vertical"
         aria-label="Resize Secondary Sidebar"
         onPointerDown={handlePointerDown}
-        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-[#6366F1] active:bg-[#6366F1] transition-colors z-20"
+        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-[var(--primary)] active:bg-[var(--primary)] transition-colors z-20"
         data-testid="secondary-sidebar-resizer"
       />
 

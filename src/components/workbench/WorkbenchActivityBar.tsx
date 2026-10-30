@@ -46,7 +46,7 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
 }) => {
   return (
     <aside
-      className="flex w-12 shrink-0 flex-col items-center justify-between border-r border-[#343945] bg-[#181A20] py-2 select-none z-10"
+      className="flex w-12 shrink-0 flex-col items-center justify-between border-r border-[var(--border)] bg-[var(--sidebar)] py-2 select-none z-10"
       data-testid="vscode-activity-bar"
     >
       {/* Top Group: Primary Views */}
@@ -61,12 +61,12 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-explorer"
             className={`relative flex h-10 w-full items-center justify-center transition-colors rounded-sm ${
               isSidebarOpen && activeViewId === 'explorer'
-                ? 'text-[#E5E9F1] bg-white/10'
-                : 'text-[#697487] hover:text-[#E5E9F1] hover:bg-white/5'
+                ? 'text-[var(--foreground)] bg-white/10'
+                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5'
             }`}
           >
             {isSidebarOpen && activeViewId === 'explorer' && (
-              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-[#6366F1] rounded-r shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-[var(--primary)] rounded-r shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
             )}
             <Files className="h-5 w-5" />
           </button>
@@ -82,12 +82,12 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-search"
             className={`relative flex h-10 w-full items-center justify-center transition-colors rounded-sm ${
               isSidebarOpen && activeViewId === 'search'
-                ? 'text-[#E5E9F1] bg-white/10'
-                : 'text-[#697487] hover:text-[#E5E9F1] hover:bg-white/5'
+                ? 'text-[var(--foreground)] bg-white/10'
+                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5'
             }`}
           >
             {isSidebarOpen && activeViewId === 'search' && (
-              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-[#6366F1] rounded-r shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-[var(--primary)] rounded-r shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
             )}
             <Search className="h-5 w-5" />
           </button>
@@ -103,18 +103,18 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-source-control"
             className={`relative flex h-10 w-full items-center justify-center transition-colors rounded-sm ${
               isSidebarOpen && activeViewId === 'source-control'
-                ? 'text-[#E5E9F1] bg-white/10'
-                : 'text-[#697487] hover:text-[#E5E9F1] hover:bg-white/5'
+                ? 'text-[var(--foreground)] bg-white/10'
+                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5'
             }`}
           >
             {isSidebarOpen && activeViewId === 'source-control' && (
-              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-[#6366F1] rounded-r shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-[var(--primary)] rounded-r shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
             )}
             <GitBranch className="h-5 w-5" />
             {dirtyCount > 0 && (
               <span
                 data-testid="source-control-badge"
-                className="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#6366F1] px-1 text-[9px] font-bold text-white shadow-sm"
+                className="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--primary)] px-1 text-[9px] font-bold text-white shadow-sm"
               >
                 {dirtyCount}
               </span>
@@ -132,16 +132,16 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-code-assist"
             className={`relative flex h-10 w-full items-center justify-center transition-colors rounded-sm ${
               isSidebarOpen && activeViewId === 'code-assist'
-                ? 'text-[#E5E9F1] bg-white/10'
-                : 'text-[#697487] hover:text-[#E5E9F1] hover:bg-white/5'
+                ? 'text-[var(--foreground)] bg-white/10'
+                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5'
             }`}
           >
             {isSidebarOpen && activeViewId === 'code-assist' && (
-              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-[#6366F1] rounded-r shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-[var(--primary)] rounded-r shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
             )}
             <Sparkles
               className={`h-5 w-5 ${
-                isCodeAssistGenerating ? 'text-[#6366F1] animate-spin' : ''
+                isCodeAssistGenerating ? 'text-[var(--primary)] animate-spin' : ''
               }`}
             />
           </button>
@@ -157,12 +157,12 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-packages"
             className={`relative flex h-10 w-full items-center justify-center transition-colors rounded-sm ${
               isSidebarOpen && activeViewId === 'packages'
-                ? 'text-[#E5E9F1] bg-white/10'
-                : 'text-[#697487] hover:text-[#E5E9F1] hover:bg-white/5'
+                ? 'text-[var(--foreground)] bg-white/10'
+                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5'
             }`}
           >
             {isSidebarOpen && activeViewId === 'packages' && (
-              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-[#6366F1] rounded-r shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+              <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-[var(--primary)] rounded-r shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
             )}
             <Package className="h-5 w-5" />
           </button>
@@ -170,7 +170,7 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
       </div>
 
       {/* Bottom Group: Tools, Terminal, Settings */}
-      <div className="flex flex-col items-center gap-1 w-full border-t border-[#343945]/60 pt-2">
+      <div className="flex flex-col items-center gap-1 w-full border-t border-[var(--border)]/60 pt-2">
         {/* Toggle Terminal Panel */}
         <Tooltip label="Toggle Terminal (Ctrl+`)" side="right">
           <button
@@ -181,8 +181,8 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-terminal"
             className={`flex h-9 w-full items-center justify-center rounded-sm transition-colors ${
               isTerminalOpen
-                ? 'text-[#6366F1] bg-white/10'
-                : 'text-[#697487] hover:text-[#E5E9F1] hover:bg-white/5'
+                ? 'text-[var(--primary)] bg-white/10'
+                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5'
             }`}
           >
             <TerminalSquare className="h-4 w-4" />
@@ -197,7 +197,7 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
               onClick={onOpenSnapshots}
               aria-label="Snapshots"
               data-testid="activity-bar-snapshots"
-              className="flex h-9 w-full items-center justify-center rounded-sm text-[#697487] hover:text-[#E5E9F1] hover:bg-white/5 transition-colors"
+              className="flex h-9 w-full items-center justify-center rounded-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
             >
               <Database className="h-4 w-4" />
             </button>
@@ -212,7 +212,7 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
               onClick={onOpenVoiceCommands}
               aria-label="Voice Commands"
               data-testid="activity-bar-voice"
-              className="flex h-9 w-full items-center justify-center rounded-sm text-[#697487] hover:text-[#E5E9F1] hover:bg-white/5 transition-colors"
+              className="flex h-9 w-full items-center justify-center rounded-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
             >
               <Mic className="h-4 w-4" />
             </button>
@@ -227,7 +227,7 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
               onClick={onOpenCodeRabbit}
               aria-label="Code Review"
               data-testid="activity-bar-coderabbit"
-              className="flex h-9 w-full items-center justify-center rounded-sm text-[#697487] hover:text-[#E5E9F1] hover:bg-white/5 transition-colors"
+              className="flex h-9 w-full items-center justify-center rounded-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
             >
               <Bug className="h-4 w-4" />
             </button>
@@ -242,7 +242,7 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
               onClick={onResetContainer}
               aria-label="Remount Filesystem"
               data-testid="activity-bar-reset"
-              className="flex h-9 w-full items-center justify-center rounded-sm text-[#697487] hover:text-[#E5E9F1] hover:bg-white/5 transition-colors"
+              className="flex h-9 w-full items-center justify-center rounded-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
             >
               <RotateCcw className="h-4 w-4" />
             </button>
@@ -256,7 +256,7 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             onClick={onOpenSettings}
             aria-label="Settings"
             data-testid="activity-bar-settings"
-            className="flex h-9 w-full items-center justify-center rounded-sm text-[#697487] hover:text-[#E5E9F1] hover:bg-white/5 transition-colors"
+            className="flex h-9 w-full items-center justify-center rounded-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
           >
             <Settings className="h-4 w-4" />
           </button>

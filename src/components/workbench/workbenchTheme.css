@@ -1,6 +1,6 @@
 /**
- * GB Coder — Phase 2 Workbench Theme Tokens
- * Professional dark IDE palette inspired by VS Code & Antigravity
+ * GB Coder — Workbench & Advance IDE Theme Bridge
+ * Maps Advance IDE & VS Code Mode to OKLCH tokens and Geist typography.
  */
 
 :root {
@@ -17,6 +17,7 @@
   --wb-active-indicator: var(--primary, oklch(1.00 0 0));
 }
 
+/* Semantic utility classes */
 .wb-canvas {
   background-color: var(--wb-canvas);
   color: var(--wb-text-primary);
@@ -52,8 +53,163 @@
 
 .wb-bg-accent {
   background-color: var(--wb-accent);
+  color: var(--primary-foreground, oklch(0 0 0));
 }
 
 .wb-bg-accent:hover {
   background-color: var(--wb-accent-hover);
+}
+
+/* ── Typography Enforcement in Advance IDE ── */
+[data-testid="vscode-mode"],
+[data-testid="vscode-mode"] * {
+  font-family: var(--font-sans, Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+}
+
+[data-testid="vscode-mode"] code,
+[data-testid="vscode-mode"] pre,
+[data-testid="vscode-mode"] kbd,
+[data-testid="vscode-mode"] .font-mono {
+  font-family: var(--font-mono, "Geist Mono", monospace);
+}
+
+/* ── Universal Surface Overrides for Advance IDE ── */
+[data-testid="vscode-mode"] {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+/* Base Canvas & Deep Editor Surfaces */
+[data-testid="vscode-mode"] .bg-\[\#181A20\],
+[data-testid="vscode-mode"] .bg-\[\#11131c\],
+[data-testid="vscode-mode"] .bg-\[\#111220\],
+[data-testid="vscode-mode"] .bg-\[\#12131c\],
+[data-testid="vscode-mode"] .bg-\[\#121318\],
+[data-testid="vscode-mode"] .bg-\[\#12131f\],
+[data-testid="vscode-mode"] .bg-\[\#13141f\],
+[data-testid="vscode-mode"] .bg-\[\#141520\],
+[data-testid="vscode-mode"] .bg-\[\#141522\],
+[data-testid="vscode-mode"] .bg-\[\#141622\],
+[data-testid="vscode-mode"] .bg-\[\#141624\],
+[data-testid="vscode-mode"] .bg-\[\#151622\],
+[data-testid="vscode-mode"] .bg-\[\#161723\],
+[data-testid="vscode-mode"] .bg-\[\#161826\],
+[data-testid="vscode-mode"] .bg-\[\#181824\],
+[data-testid="vscode-mode"] .bg-\[\#181926\],
+[data-testid="vscode-mode"] .bg-\[\#181a29\],
+[data-testid="vscode-mode"] .bg-\[\#0e0f17\],
+[data-testid="vscode-mode"] .bg-\[\#0f101a\],
+[data-testid="vscode-mode"] .bg-\[\#10121a\],
+[data-testid="vscode-mode"] .bg-\[\#1e1e1e\],
+.bg-\[\#181A20\] {
+  background-color: var(--background) !important;
+}
+
+/* Secondary Surfaces: Activity Bar, Sidebars, Header, Status Bar, Panel Headers */
+[data-testid="vscode-mode"] .bg-\[\#20232B\],
+[data-testid="vscode-mode"] .bg-\[\#141524\],
+[data-testid="vscode-mode"] .bg-\[\#18192c\],
+[data-testid="vscode-mode"] .bg-\[\#151624\],
+[data-testid="vscode-mode"] .bg-\[\#1a1b2e\],
+[data-testid="vscode-mode"] .bg-\[\#1e2030\],
+[data-testid="vscode-mode"] .bg-\[\#1e2133\],
+[data-testid="vscode-mode"] .bg-\[\#202130\],
+[data-testid="vscode-mode"] .bg-\[\#232431\],
+[data-testid="vscode-mode"] .bg-\[\#252526\],
+.bg-\[\#20232B\] {
+  background-color: var(--sidebar) !important;
+}
+
+/* Elevated Surfaces: Modals, Dropdowns, Cards, Input Containers */
+[data-testid="vscode-mode"] .bg-\[\#262A33\],
+[data-testid="vscode-mode"] .bg-\[\#161824\],
+[data-testid="vscode-mode"] .bg-\[\#2d2d30\],
+.bg-\[\#262A33\] {
+  background-color: var(--card) !important;
+}
+
+/* Interactive Hover States */
+[data-testid="vscode-mode"] .hover\:bg-\[\#262A33\]:hover,
+[data-testid="vscode-mode"] .hover\:bg-\[\#343945\]:hover,
+[data-testid="vscode-mode"] .hover\:bg-\[\#2d2d30\]:hover,
+[data-testid="vscode-mode"] .hover\:bg-\[\#4F46E5\]:hover,
+[data-testid="vscode-mode"] .hover\:bg-\[\#18192c\]:hover {
+  background-color: var(--accent) !important;
+}
+
+/* Borders and Separators */
+[data-testid="vscode-mode"] .border-\[\#343945\],
+[data-testid="vscode-mode"] .border-\[\#2A2E39\],
+[data-testid="vscode-mode"] .border-\[\#1e2235\],
+[data-testid="vscode-mode"] .border-\[\#2e3046\],
+[data-testid="vscode-mode"] .border-\[\#26283d\],
+[data-testid="vscode-mode"] .border-\[\#24273b\],
+[data-testid="vscode-mode"] .border-\[\#222538\],
+[data-testid="vscode-mode"] .border-\[\#262636\],
+[data-testid="vscode-mode"] .border-\[\#262940\],
+[data-testid="vscode-mode"] .border-\[\#282a3e\],
+[data-testid="vscode-mode"] .border-\[\#282a3f\],
+[data-testid="vscode-mode"] .border-\[\#333652\],
+.border-\[\#343945\],
+.border-\[\#2A2E39\] {
+  border-color: var(--border) !important;
+}
+
+/* Primary Text */
+[data-testid="vscode-mode"] .text-\[\#E5E9F1\],
+[data-testid="vscode-mode"] .text-slate-100,
+[data-testid="vscode-mode"] .text-slate-200,
+.text-\[\#E5E9F1\] {
+  color: var(--foreground) !important;
+}
+
+/* Secondary & Muted Text */
+[data-testid="vscode-mode"] .text-\[\#9AA4B5\],
+[data-testid="vscode-mode"] .text-\[\#697487\],
+[data-testid="vscode-mode"] .text-\[\#b8b5ad\],
+[data-testid="vscode-mode"] .text-slate-400,
+[data-testid="vscode-mode"] .text-slate-500,
+.text-\[\#9AA4B5\],
+.text-\[\#697487\] {
+  color: var(--muted-foreground) !important;
+}
+
+/* Primary Accent & CTAs */
+[data-testid="vscode-mode"] .bg-\[\#6366F1\],
+[data-testid="vscode-mode"] .bg-\[\#4F46E5\],
+[data-testid="vscode-mode"] .bg-indigo-600,
+[data-testid="vscode-mode"] .bg-indigo-500,
+.bg-\[\#6366F1\] {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+[data-testid="vscode-mode"] .text-\[\#6366F1\],
+[data-testid="vscode-mode"] .text-indigo-400,
+[data-testid="vscode-mode"] .text-indigo-500,
+.text-\[\#6366F1\] {
+  color: var(--primary) !important;
+}
+
+[data-testid="vscode-mode"] .border-t-\[\#6366F1\],
+.border-t-\[\#6366F1\] {
+  border-top-color: var(--primary) !important;
+}
+
+[data-testid="vscode-mode"] .border-\[\#6366F1\],
+.border-\[\#6366F1\] {
+  border-color: var(--primary) !important;
+}
+
+/* Active tab indicator in Editor Area */
+[data-testid="vscode-tab"][aria-selected="true"],
+[data-testid="vscode-split-tab"][aria-selected="true"] {
+  border-top-color: var(--primary) !important;
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+/* Activity bar active indicators & glowing dots */
+[data-testid="vscode-mode"] .shadow-\[0_0_8px_rgba\(99\,102\,241\,0\.6\)\] {
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4) !important;
 }

@@ -64,7 +64,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
 
   return (
     <header
-      className="flex h-9 shrink-0 items-center justify-between border-b border-[#343945] bg-[#181A20] px-2.5 text-xs text-[#E5E9F1] select-none z-20"
+      className="flex h-9 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--background)] px-2.5 text-xs text-[var(--foreground)] select-none z-20"
       data-testid="vscode-topbar"
     >
       {/* Left: Branding & Navigation */}
@@ -79,10 +79,10 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
           <LadeStackLogo size={18} subtitle="IDE" />
         </div>
 
-        <div className="hidden md:flex items-center gap-0.5 ml-1 text-[#697487]">
+        <div className="hidden md:flex items-center gap-0.5 ml-1 text-[var(--muted-foreground)]">
           <button
             type="button"
-            className="rounded p-0.5 hover:text-[#E5E9F1] hover:bg-white/5 transition-colors"
+            className="rounded p-0.5 hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
             title="Navigate back"
             aria-label="Back"
           >
@@ -90,7 +90,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
           </button>
           <button
             type="button"
-            className="rounded p-0.5 hover:text-[#E5E9F1] hover:bg-white/5 transition-colors"
+            className="rounded p-0.5 hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
             title="Navigate forward"
             aria-label="Forward"
           >
@@ -99,9 +99,9 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
         </div>
 
         {/* Project Breadcrumb */}
-        <div className="hidden sm:flex items-center text-[11px] text-[#9AA4B5] font-mono ml-1 truncate max-w-[200px]">
-          <span className="text-[#697487]">gb-coder /</span>
-          <span className="text-[#E5E9F1] font-medium ml-1 truncate">{projectName}</span>
+        <div className="hidden sm:flex items-center text-[11px] text-[var(--muted-foreground)] font-mono ml-1 truncate max-w-[200px]">
+          <span className="text-[var(--muted-foreground)]">gb-coder /</span>
+          <span className="text-[var(--foreground)] font-medium ml-1 truncate">{projectName}</span>
         </div>
       </div>
 
@@ -116,17 +116,17 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
             onOpenQuickOpen();
           }
         }}
-        className="flex items-center gap-2 rounded border border-[#343945] bg-[#20232B] px-2.5 py-1 text-[11px] text-[#9AA4B5] shadow-inner hover:border-[#6366F1]/50 hover:text-[#E5E9F1] transition-all cursor-pointer w-64 md:w-80 justify-between select-none"
+        className="flex items-center gap-2 rounded border border-[var(--border)] bg-[var(--sidebar)] px-2.5 py-1 text-[11px] text-[var(--muted-foreground)] shadow-inner hover:border-[var(--ring)] hover:text-[var(--foreground)] transition-all cursor-pointer w-64 md:w-80 justify-between select-none"
         title="Quick Open / Search Files (Ctrl+P / Ctrl+Shift+P)"
         aria-label="Quick Open / Command Search"
       >
         <div className="flex items-center gap-1.5 truncate">
-          <Search className="h-3 w-3 text-[#697487] shrink-0" />
+          <Search className="h-3 w-3 text-[var(--muted-foreground)] shrink-0" />
           <span className="truncate font-mono text-[11px]">
             {projectName} — Search files (Ctrl+P)
           </span>
         </div>
-        <kbd className="hidden sm:inline-block rounded border border-white/10 bg-white/5 px-1 py-0.2 text-[9px] text-[#697487] font-mono">
+        <kbd className="hidden sm:inline-block rounded border border-white/10 bg-white/5 px-1 py-0.2 text-[9px] text-[var(--muted-foreground)] font-mono">
           Ctrl+P
         </kbd>
       </div>
@@ -135,7 +135,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
       <div className="flex items-center gap-1.5">
         {/* WebContainer Status Badge */}
         {webcontainerState.isSupported && (
-          <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-[#20232B] border border-[#343945] px-2 py-0.5 text-[10px]">
+          <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-[var(--sidebar)] border border-[var(--border)] px-2 py-0.5 text-[10px]">
             {webcontainerState.serverUrl ? (
               <>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -168,24 +168,24 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
             <button
               type="button"
               onClick={() => setShowPresetsMenu((prev) => !prev)}
-              className="flex items-center gap-1 rounded bg-[#20232B] hover:bg-[#262A33] px-2 py-1 text-[11px] text-[#9AA4B5] hover:text-[#E5E9F1] border border-[#343945] transition-colors"
+              className="flex items-center gap-1 rounded bg-[var(--sidebar)] hover:bg-[var(--card)] px-2 py-1 text-[11px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)] transition-colors"
               aria-label="Layout Presets"
               data-testid="workbench-preset-button"
             >
-              <Layout className="h-3 w-3 text-[#697487]" />
+              <Layout className="h-3 w-3 text-[var(--muted-foreground)]" />
               <span className="hidden xl:inline text-[10px] font-medium">
                 {PRESET_LABELS[layoutState.currentPreset]?.label || 'Preset'}
               </span>
-              <ChevronDown className="h-2.5 w-2.5 text-[#697487]" />
+              <ChevronDown className="h-2.5 w-2.5 text-[var(--muted-foreground)]" />
             </button>
           </Tooltip>
 
           {showPresetsMenu && (
             <div
-              className="absolute right-0 top-full mt-1 w-52 rounded-md border border-[#343945] bg-[#20232B] p-1 shadow-xl z-50 text-left"
+              className="absolute right-0 top-full mt-1 w-52 rounded-md border border-[var(--border)] bg-[var(--sidebar)] p-1 shadow-xl z-50 text-left"
               data-testid="workbench-presets-menu"
             >
-              <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#697487]">
+              <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
                 Workbench Presets
               </div>
               {(Object.keys(PRESET_LABELS) as LayoutPresetId[]).map((preset) => {
@@ -202,17 +202,17 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
                     }}
                     className={`flex w-full items-start justify-between rounded px-2 py-1.5 text-xs transition-colors ${
                       isSelected
-                        ? 'bg-[#6366F1]/20 text-[#E5E9F1]'
-                        : 'text-[#9AA4B5] hover:bg-white/5 hover:text-[#E5E9F1]'
+                        ? 'bg-[var(--accent)] text-[var(--foreground)]'
+                        : 'text-[var(--muted-foreground)] hover:bg-white/5 hover:text-[var(--foreground)]'
                     }`}
                     data-testid={`preset-option-${preset.toLowerCase()}`}
                   >
                     <div>
                       <div className="font-medium text-[11px] flex items-center gap-1">
                         {info.label}
-                        {isSelected && <Check className="h-3 w-3 text-[#6366F1]" />}
+                        {isSelected && <Check className="h-3 w-3 text-[var(--primary)]" />}
                       </div>
-                      <div className="text-[9px] text-[#697487] leading-tight">{info.desc}</div>
+                      <div className="text-[9px] text-[var(--muted-foreground)] leading-tight">{info.desc}</div>
                     </div>
                   </button>
                 );
@@ -222,7 +222,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
         </div>
 
         {/* Layout Panel Toggles */}
-        <div className="flex items-center rounded bg-[#20232B] border border-[#343945] p-0.5">
+        <div className="flex items-center rounded bg-[var(--sidebar)] border border-[var(--border)] p-0.5">
           <Tooltip label="Toggle Primary Sidebar (Ctrl+B)" side="bottom">
             <button
               type="button"
@@ -232,8 +232,8 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
               data-testid="toggle-primary-sidebar-btn"
               className={`rounded p-1 transition-colors ${
                 layoutState.primarySidebar.visible
-                  ? 'text-[#6366F1] bg-white/5'
-                  : 'text-[#697487] hover:text-[#E5E9F1]'
+                  ? 'text-[var(--primary)] bg-white/5'
+                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
               }`}
             >
               <PanelLeft className="h-3 w-3" />
@@ -249,8 +249,8 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
               data-testid="toggle-bottom-panel-btn"
               className={`rounded p-1 transition-colors ${
                 layoutState.bottomPanel.visible
-                  ? 'text-[#6366F1] bg-white/5'
-                  : 'text-[#697487] hover:text-[#E5E9F1]'
+                  ? 'text-[var(--primary)] bg-white/5'
+                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
               }`}
             >
               <PanelBottom className="h-3 w-3" />
@@ -266,8 +266,8 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
               data-testid="toggle-secondary-sidebar-btn"
               className={`rounded p-1 transition-colors ${
                 layoutState.secondarySidebar.visible
-                  ? 'text-[#6366F1] bg-white/5'
-                  : 'text-[#697487] hover:text-[#E5E9F1]'
+                  ? 'text-[var(--primary)] bg-white/5'
+                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
               }`}
             >
               <PanelRight className="h-3 w-3" />
@@ -283,7 +283,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
               void navigator.clipboard?.writeText(window.location.href);
               toast.success('Workspace URL copied to clipboard!');
             }}
-            className="rounded p-1 text-[#9AA4B5] hover:text-[#E5E9F1] hover:bg-white/5 transition-colors"
+            className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
             aria-label="Share Project"
             data-testid="workbench-share-btn"
           >
@@ -296,7 +296,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
           <button
             type="button"
             onClick={onOpenSettings}
-            className="rounded p-1 text-[#9AA4B5] hover:text-[#E5E9F1] hover:bg-white/5 transition-colors"
+            className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
             aria-label="Workbench Settings"
             data-testid="workbench-settings-btn"
           >
@@ -310,7 +310,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
             <button
               type="button"
               onClick={onExit}
-              className="rounded p-1 text-[#9AA4B5] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+              className="rounded p-1 text-[var(--muted-foreground)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
               aria-label="Exit Mode"
               data-testid="workbench-exit-btn"
             >

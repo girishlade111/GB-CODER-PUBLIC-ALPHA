@@ -84,7 +84,7 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
       role="region"
       aria-label="Bottom Panel"
       style={{ height: effectiveHeight }}
-      className={`relative flex shrink-0 flex-col overflow-hidden border-t border-[#343945] bg-[#181A20] text-xs select-none z-10 ${
+      className={`relative flex shrink-0 flex-col overflow-hidden border-t border-[var(--border)] bg-[var(--background)] text-xs select-none z-10 ${
         isMaximized ? 'absolute inset-x-0 bottom-6 top-9 z-30' : ''
       }`}
       data-testid="vscode-terminal-dock"
@@ -96,13 +96,13 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
           aria-orientation="horizontal"
           aria-label="Resize Bottom Panel"
           onPointerDown={handlePointerDown}
-          className="absolute left-0 right-0 top-0 h-1 cursor-row-resize hover:bg-[#6366F1] active:bg-[#6366F1] transition-colors z-20"
+          className="absolute left-0 right-0 top-0 h-1 cursor-row-resize hover:bg-[var(--primary)] active:bg-[var(--primary)] transition-colors z-20"
           data-testid="bottom-panel-resizer"
         />
       )}
 
       {/* Panel Header Tabs */}
-      <div className="flex h-8 shrink-0 items-center justify-between border-b border-[#343945] bg-[#20232B] px-2.5">
+      <div className="flex h-8 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-2.5">
         <div className="flex items-center gap-1 overflow-x-auto py-0.5">
           {availableViews.map((vid) => {
             const def = getViewDefinition(vid);
@@ -114,8 +114,8 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
                 onClick={() => onSelectView(vid)}
                 className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
                   isSelected
-                    ? 'text-[#E5E9F1] bg-white/10'
-                    : 'text-[#697487] hover:text-[#9AA4B5] hover:bg-white/5'
+                    ? 'text-[var(--foreground)] bg-white/10'
+                    : 'text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)] hover:bg-white/5'
                 }`}
                 data-testid={`bottom-tab-${vid}`}
               >
@@ -146,7 +146,7 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
                   <button
                     type="button"
                     onClick={onNewTerminal}
-                    className="rounded p-1 text-[#697487] hover:text-[#E5E9F1] hover:bg-white/10 transition-colors"
+                    className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/10 transition-colors"
                     aria-label="New Terminal"
                     data-testid="terminal-new-btn"
                   >
@@ -160,7 +160,7 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
                   <button
                     type="button"
                     onClick={onToggleSplitTerminal}
-                    className="rounded p-1 text-[#697487] hover:text-[#E5E9F1] hover:bg-white/10 transition-colors"
+                    className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/10 transition-colors"
                     aria-label="Split Terminal"
                     data-testid="terminal-split-btn"
                   >
@@ -176,7 +176,7 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
             <button
               type="button"
               onClick={onToggleMaximize}
-              className="rounded p-1 text-[#697487] hover:text-[#E5E9F1] hover:bg-white/10 transition-colors"
+              className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/10 transition-colors"
               aria-label={isMaximized ? 'Restore Panel' : 'Maximize Panel'}
               data-testid="bottom-panel-maximize-btn"
             >
@@ -189,7 +189,7 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="rounded p-1 text-[#697487] hover:text-[#E5E9F1] hover:bg-white/10 transition-colors"
+              className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/10 transition-colors"
               aria-label="Close Panel"
               data-testid="bottom-panel-close-btn"
             >
@@ -200,7 +200,7 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
       </div>
 
       {/* Panel Content Body */}
-      <div className="min-h-0 flex-1 overflow-hidden relative bg-[#181A20]">
+      <div className="min-h-0 flex-1 overflow-hidden relative bg-[var(--background)]">
         {renderViewContent(activeViewId)}
       </div>
     </div>

@@ -71,9 +71,9 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
   onFullscreen,
 }) => {
   return (
-    <div className="flex h-full w-full min-h-0 flex-col overflow-hidden bg-[#181A20] select-none">
+    <div className="flex h-full w-full min-h-0 flex-col overflow-hidden bg-[var(--background)] select-none">
       {/* Live Preview Address Bar / Controls */}
-      <div className="flex h-8 shrink-0 items-center justify-between border-b border-[#343945] bg-[#20232B] px-2 text-xs">
+      <div className="flex h-8 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-2 text-xs">
         {/* Navigation & Reload */}
         <div className="flex items-center gap-0.5 shrink-0">
           <button
@@ -89,10 +89,10 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
             }
             className={`rounded p-1 transition-colors ${
               !activePreview?.url
-                ? 'text-[#697487] cursor-not-allowed'
+                ? 'text-[var(--muted-foreground)] cursor-not-allowed'
                 : isReloadingPreview
                 ? 'text-cyan-400 bg-white/5 cursor-wait'
-                : 'text-[#9AA4B5] hover:bg-white/10 hover:text-[#E5E9F1]'
+                : 'text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)]'
             }`}
             data-testid="preview-reload-btn"
           >
@@ -104,7 +104,7 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               disabled
               aria-disabled="true"
               aria-label="Back"
-              className="rounded p-1 text-[#697487] cursor-not-allowed"
+              className="rounded p-1 text-[var(--muted-foreground)] cursor-not-allowed"
             >
               <ChevronLeft className="h-3 w-3" />
             </button>
@@ -115,7 +115,7 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               disabled
               aria-disabled="true"
               aria-label="Forward"
-              className="rounded p-1 text-[#697487] cursor-not-allowed"
+              className="rounded p-1 text-[var(--muted-foreground)] cursor-not-allowed"
             >
               <ChevronRight className="h-3 w-3" />
             </button>
@@ -124,7 +124,7 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
 
         {/* URL Pill */}
         <div
-          className="flex min-w-0 flex-1 items-center gap-1.5 rounded border border-[#343945] bg-[#181A20] px-2 py-0.5 text-[10px] text-[#E5E9F1] font-mono shadow-inner mx-1.5 group cursor-pointer hover:border-[#6366F1]/50 transition-all truncate"
+          className="flex min-w-0 flex-1 items-center gap-1.5 rounded border border-[var(--border)] bg-[var(--background)] px-2 py-0.5 text-[10px] text-[var(--foreground)] font-mono shadow-inner mx-1.5 group cursor-pointer hover:border-[var(--ring)] transition-all truncate"
           onClick={() => {
             if (!activePreview?.url && !webcontainerState.serverPort) {
               toast('Development server is offline. No URL to copy.', { icon: 'ℹ️' });
@@ -151,10 +151,10 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
         >
           <Lock
             className={`h-2.5 w-2.5 shrink-0 ${
-              activePreview?.url || webcontainerState.serverPort ? 'text-emerald-400' : 'text-[#697487]'
+              activePreview?.url || webcontainerState.serverPort ? 'text-emerald-400' : 'text-[var(--muted-foreground)]'
             }`}
           />
-          <span className="truncate text-[#E5E9F1]">
+          <span className="truncate text-[var(--foreground)]">
             {activePreview?.url
               ? activePreview.url.replace(/^https?:\/\//, '')
               : webcontainerState.serverPort
@@ -162,7 +162,7 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               : 'Server Offline'}
           </span>
           {(activePreview?.url || webcontainerState.serverPort) && (
-            <span className="ml-auto opacity-0 group-hover:opacity-100 text-[#697487] hover:text-[#E5E9F1] shrink-0">
+            <span className="ml-auto opacity-0 group-hover:opacity-100 text-[var(--muted-foreground)] hover:text-[var(--foreground)] shrink-0">
               {copiedUrl ? <Check className="h-2.5 w-2.5 text-emerald-400" /> : <Copy className="h-2.5 w-2.5" />}
             </span>
           )}
@@ -171,13 +171,13 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
         {/* Right Actions: Viewport mode, Popout, Maximize, Fullscreen */}
         <div className="flex items-center gap-1 shrink-0">
           {/* Responsive Device Viewport Toggles */}
-          <div className="hidden sm:flex items-center rounded bg-[#181A20] border border-[#343945] p-0.5">
+          <div className="hidden sm:flex items-center rounded bg-[var(--background)] border border-[var(--border)] p-0.5">
             <button
               type="button"
               onClick={() => setDeviceViewport('desktop')}
               title="Desktop (100% Fluid)"
               className={`rounded p-0.5 transition-colors ${
-                deviceViewport === 'desktop' ? 'bg-[#6366F1] text-white' : 'text-[#9AA4B5] hover:text-white'
+                deviceViewport === 'desktop' ? 'bg-[var(--primary)] text-white' : 'text-[var(--muted-foreground)] hover:text-white'
               }`}
             >
               <Monitor className="h-3 w-3" />
@@ -187,7 +187,7 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               onClick={() => setDeviceViewport('tablet')}
               title="Tablet Viewport (768px)"
               className={`rounded p-0.5 transition-colors ${
-                deviceViewport === 'tablet' ? 'bg-[#6366F1] text-white' : 'text-[#9AA4B5] hover:text-white'
+                deviceViewport === 'tablet' ? 'bg-[var(--primary)] text-white' : 'text-[var(--muted-foreground)] hover:text-white'
               }`}
             >
               <Tablet className="h-3 w-3" />
@@ -197,7 +197,7 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               onClick={() => setDeviceViewport('mobile')}
               title="Mobile Viewport (375px)"
               className={`rounded p-0.5 transition-colors ${
-                deviceViewport === 'mobile' ? 'bg-[#6366F1] text-white' : 'text-[#9AA4B5] hover:text-white'
+                deviceViewport === 'mobile' ? 'bg-[var(--primary)] text-white' : 'text-[var(--muted-foreground)] hover:text-white'
               }`}
             >
               <Smartphone className="h-3 w-3" />
@@ -220,8 +220,8 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               }
               className={`rounded p-1 transition-colors ${
                 !activePreview?.url
-                  ? 'text-[#697487] cursor-not-allowed'
-                  : 'text-[#9AA4B5] hover:bg-white/10 hover:text-white'
+                  ? 'text-[var(--muted-foreground)] cursor-not-allowed'
+                  : 'text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white'
               }`}
               data-testid="preview-open-new-tab-btn"
             >
@@ -235,7 +235,7 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               <button
                 type="button"
                 onClick={onMaximizeWidth}
-                className="rounded p-1 text-[#9AA4B5] hover:bg-white/10 hover:text-white transition-colors"
+                className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white transition-colors"
               >
                 <Columns className="h-3 w-3" />
               </button>
@@ -248,7 +248,7 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               <button
                 type="button"
                 onClick={onFullscreen}
-                className="rounded p-1 text-[#9AA4B5] hover:bg-white/10 hover:text-white transition-colors"
+                className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white transition-colors"
               >
                 <Maximize2 className="h-3 w-3" />
               </button>
@@ -258,14 +258,14 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
       </div>
 
       {/* Body */}
-      <div className="min-h-0 flex-1 overflow-hidden relative bg-[#181A20]">
+      <div className="min-h-0 flex-1 overflow-hidden relative bg-[var(--background)]">
         {activePreview?.url ? (
           <div
             className={`h-full w-full flex items-center justify-center ${
               deviceViewport === 'mobile'
-                ? 'p-4 bg-[#121318]'
+                ? 'p-4 bg-[var(--background)]'
                 : deviceViewport === 'tablet'
-                ? 'p-2 bg-[#121318]'
+                ? 'p-2 bg-[var(--background)]'
                 : ''
             }`}
           >

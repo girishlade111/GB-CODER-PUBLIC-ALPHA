@@ -97,21 +97,21 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
     const segments = path.split('/');
     return (
       <div
-        className="flex h-6 shrink-0 items-center gap-1 border-b border-[#343945] bg-[#181A20] px-3 text-[11px] text-[#697487] select-none"
+        className="flex h-6 shrink-0 items-center gap-1 border-b border-[var(--border)] bg-[var(--background)] px-3 text-[11px] text-[var(--muted-foreground)] select-none"
         data-testid="editor-breadcrumb"
       >
-        <FolderTree className="h-3 w-3 text-[#697487]" />
+        <FolderTree className="h-3 w-3 text-[var(--muted-foreground)]" />
         {segments.map((segment, index) => {
           const isLast = index === segments.length - 1;
           return (
             <React.Fragment key={index}>
-              {index > 0 && <ChevronRight className="h-2.5 w-2.5 text-[#697487]" />}
+              {index > 0 && <ChevronRight className="h-2.5 w-2.5 text-[var(--muted-foreground)]" />}
               <span
                 className={
-                  isLast ? 'text-[#E5E9F1] font-medium flex items-center gap-1' : 'hover:text-[#9AA4B5] cursor-pointer'
+                  isLast ? 'text-[var(--foreground)] font-medium flex items-center gap-1' : 'hover:text-[var(--muted-foreground)] cursor-pointer'
                 }
               >
-                {isLast && <FileCode className="h-3 w-3 text-[#6366F1]" />}
+                {isLast && <FileCode className="h-3 w-3 text-[var(--primary)]" />}
                 {segment}
               </span>
             </React.Fragment>
@@ -216,12 +216,12 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
 
     return (
       <div
-        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#181A20]"
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--background)]"
         data-testid={testId}
       >
         {/* Tabbar */}
         <div
-          className="flex h-9 shrink-0 items-stretch justify-between border-b border-[#343945] bg-[#20232B]"
+          className="flex h-9 shrink-0 items-stretch justify-between border-b border-[var(--border)] bg-[var(--sidebar)]"
           data-testid={isSecondary ? 'vscode-split-tabbar-container' : 'vscode-tabbar-container'}
         >
           {/* Tabs */}
@@ -242,17 +242,17 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
                   data-testid={isSecondary ? 'vscode-split-tab' : 'vscode-tab'}
                   data-path={path}
                   onClick={() => onSelectTab(group.id, path)}
-                  className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-[#343945] border-t-2 px-3 py-1 text-xs select-none ${
+                  className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-[var(--border)] border-t-2 px-3 py-1 text-xs select-none ${
                     isActive
-                      ? 'border-t-[#6366F1] bg-[#181A20] text-[#E5E9F1] font-medium'
-                      : 'border-t-transparent text-[#9AA4B5] hover:bg-white/5 hover:text-[#E5E9F1]'
+                      ? 'border-t-[var(--primary)] bg-[var(--background)] text-[var(--foreground)] font-medium'
+                      : 'border-t-transparent text-[var(--muted-foreground)] hover:bg-white/5 hover:text-[var(--foreground)]'
                   }`}
                   title={path}
                 >
                   <span className="max-w-[12rem] truncate">{name}</span>
                   {isDirty && (
                     <span
-                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#E5E9F1]"
+                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--foreground)]"
                       data-testid="tab-dirty-dot"
                       title="Unsaved changes"
                     />
@@ -262,7 +262,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
                     onClick={(event) => onCloseTab(group.id, path, event)}
                     aria-label={`Close ${name}`}
                     data-testid={isSecondary ? 'vscode-split-tab-close' : 'vscode-tab-close'}
-                    className="rounded p-0.5 opacity-0 transition-opacity hover:bg-white/10 group-hover:opacity-100 text-[#697487] hover:text-[#E5E9F1]"
+                    className="rounded p-0.5 opacity-0 transition-opacity hover:bg-white/10 group-hover:opacity-100 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -272,13 +272,13 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
           </div>
 
           {/* Group Controls */}
-          <div className="flex shrink-0 items-center px-1.5 border-l border-[#343945] bg-[#20232B] gap-1">
+          <div className="flex shrink-0 items-center px-1.5 border-l border-[var(--border)] bg-[var(--sidebar)] gap-1">
             {layout.mode === 'split' && group.activePath && (
               <Tooltip label="Move Tab to Other Group" side="bottom">
                 <button
                   type="button"
                   onClick={() => onMoveTabToOtherGroup(group.activePath!, group.id)}
-                  className="p-1 rounded text-[#697487] hover:bg-white/10 hover:text-[#E5E9F1] transition-colors"
+                  className="p-1 rounded text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)] transition-colors"
                   aria-label="Move Tab to Other Group"
                 >
                   <ArrowRightLeft className="h-3.5 w-3.5" />
@@ -291,7 +291,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
                 <button
                   type="button"
                   onClick={() => onSplitEditor('vertical')}
-                  className="p-1 rounded text-xs transition-colors flex items-center gap-1 text-[#697487] hover:bg-white/10 hover:text-[#E5E9F1]"
+                  className="p-1 rounded text-xs transition-colors flex items-center gap-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)]"
                   aria-label="Split Editor Right"
                 >
                   <Columns className="h-3.5 w-3.5" />
@@ -313,7 +313,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
                     onClick={() =>
                       onSplitEditor(layout.splitDirection === 'vertical' ? 'horizontal' : 'vertical')
                     }
-                    className="p-1 rounded text-[#697487] hover:bg-white/10 hover:text-[#E5E9F1] transition-colors"
+                    className="p-1 rounded text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)] transition-colors"
                   >
                     {layout.splitDirection === 'vertical' ? (
                       <Rows className="h-3.5 w-3.5" />
@@ -328,7 +328,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
                     <button
                       type="button"
                       onClick={onCloseSplit}
-                      className="p-1 rounded text-[#697487] hover:bg-white/10 hover:text-[#E5E9F1] transition-colors"
+                      className="p-1 rounded text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)] transition-colors"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -347,7 +347,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
 
         {/* Monaco Editor Container */}
         <div
-          className="flex min-h-0 flex-1 flex-col overflow-hidden relative bg-[#181A20]"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden relative bg-[var(--background)]"
           data-testid={isSecondary ? 'vscode-editor-scroll-secondary' : 'vscode-editor-scroll'}
         >
           {activeFile ? (
@@ -376,7 +376,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
               />
             )
           ) : (
-            <div className="grid h-full place-items-center text-xs text-[#697487] select-none">
+            <div className="grid h-full place-items-center text-xs text-[var(--muted-foreground)] select-none">
               Select a file from the explorer to begin editing.
             </div>
           )}
@@ -414,7 +414,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
           role="separator"
           aria-orientation={layout.splitDirection}
           onPointerDown={handleSplitResizeDown}
-          className={`shrink-0 bg-[#343945] hover:bg-[#6366F1] active:bg-[#6366F1] transition-colors z-10 flex items-center justify-center select-none ${
+          className={`shrink-0 bg-[var(--border)] hover:bg-[var(--primary)] active:bg-[var(--primary)] transition-colors z-10 flex items-center justify-center select-none ${
             isVertical ? 'w-1 cursor-col-resize h-full' : 'h-1 cursor-row-resize w-full'
           }`}
           title="Drag to resize editor panes"
@@ -438,7 +438,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
     <main
       role="region"
       aria-label="Editor"
-      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#181A20]"
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--background)]"
     >
       {renderGroup(group1, false, 'vscode-pane-single')}
     </main>

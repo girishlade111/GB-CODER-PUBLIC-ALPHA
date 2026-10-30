@@ -2,82 +2,119 @@ import type { Monaco } from '@monaco-editor/react';
 import './monacoWorkers';
 
 export const GB_CODER_MONACO_THEME = 'gb-coder-product';
+export const GB_CODER_MONACO_THEME_LIGHT = 'gb-coder-product-light';
 
 /**
- * Registers the single DESIGN.md Monaco theme.
- *
- * DESIGN.md puts the product's own chrome — code editors above all — on the
- * dark warm-navy product surface rather than on the cream canvas. The editor is
- * the one surface in the app a user stares at for an hour, so it takes the
- * navy; everything around it stays cream.
- *
- * Syntax colours are drawn from the documented palette only: coral for
- * keywords and tags, teal for strings, amber for numbers and functions, the
- * muted tone for comments. No hue appears here that isn't in DESIGN.md.
- *
- * There is no light variant — the system defines one surface for code, so
- * there is no theme switching to do.
- *
- * Shared by every editor surface (plain-mode panels, multi-file pane, VS Code
- * mode) so whichever mounts first, the theme exists.
+ * Registers the OKLCH Design System Monaco editor themes (Dark & Light).
+ * Grounded in pure pitch black (#000000) and pure crisp white (#ffffff),
+ * with chart-1 amber and chart-2 indigo accents matching the OKLCH token spec.
  */
 export const defineGbCoderTheme = (monaco: Monaco): void => {
+  // ── Dark Mode Theme (Default / Pro IDE) ──
   monaco.editor.defineTheme(GB_CODER_MONACO_THEME, {
     base: 'vs-dark',
     inherit: true,
     rules: [
-      { token: '', foreground: 'faf9f5', background: '181715' },
-      { token: 'comment', foreground: '6f6b63', fontStyle: 'italic' },
-      { token: 'keyword', foreground: 'cc785c' },
-      { token: 'string', foreground: '5db8a6' },
-      { token: 'number', foreground: 'e8a55a' },
-      { token: 'type', foreground: 'e8c9b4' },
-      { token: 'tag', foreground: 'cc785c' },
-      { token: 'attribute.name', foreground: 'e8c9b4' },
-      { token: 'attribute.value', foreground: '5db8a6' },
-      { token: 'function', foreground: 'e8a55a' },
-      { token: 'variable', foreground: 'faf9f5' },
-      { token: 'delimiter', foreground: 'a09d96' },
-      { token: 'operator', foreground: 'a09d96' },
-      { token: 'regexp', foreground: '5db8a6' },
-      { token: 'constant', foreground: 'e8a55a' },
+      { token: '', foreground: 'ffffff', background: '000000' },
+      { token: 'comment', foreground: '727272', fontStyle: 'italic' },
+      { token: 'keyword', foreground: 'ffffff', fontStyle: 'bold' },
+      { token: 'string', foreground: 'fbbf24' },
+      { token: 'number', foreground: '818cf8' },
+      { token: 'type', foreground: 'e5e7eb' },
+      { token: 'tag', foreground: 'ffffff', fontStyle: 'bold' },
+      { token: 'attribute.name', foreground: 'adadad' },
+      { token: 'attribute.value', foreground: 'fbbf24' },
+      { token: 'function', foreground: 'ffffff' },
+      { token: 'variable', foreground: 'ffffff' },
+      { token: 'delimiter', foreground: '8a8a8a' },
+      { token: 'operator', foreground: '8a8a8a' },
+      { token: 'regexp', foreground: 'fbbf24' },
+      { token: 'constant', foreground: '818cf8' },
     ],
     colors: {
-      'editor.background': '#181715',
-      'editor.foreground': '#faf9f5',
-      'editorLineNumber.foreground': '#5c5952',
-      'editorLineNumber.activeForeground': '#a09d96',
-      'editor.lineHighlightBackground': '#1f1e1b',
-      'editor.selectionBackground': '#cc785c3d',
-      'editor.inactiveSelectionBackground': '#cc785c1f',
-      'editor.selectionHighlightBackground': '#cc785c26',
-      'editorCursor.foreground': '#cc785c',
-      'editorIndentGuide.background1': '#2a2825',
-      'editorIndentGuide.activeBackground1': '#4a4640',
-      'editorWidget.background': '#252320',
-      'editorWidget.border': '#3a3631',
-      'editorSuggestWidget.background': '#252320',
-      'editorSuggestWidget.border': '#3a3631',
-      'editorSuggestWidget.selectedBackground': '#1f1e1b',
-      'editorHoverWidget.background': '#252320',
-      'editorHoverWidget.border': '#3a3631',
-      // Inline AI ghost text. Monaco inherits its own (too bright to read as
-      // provisional); these pull it back to the muted comment tone so a
-      // suggestion is clearly not-yet-code without disappearing into the gutter.
-      'editorGhostText.foreground': '#6f6b63',
-      'editorInlineSuggest.background': '#181715',
-      'editorGhostText.beforeBackground': '#2a2825',
-      'editorGutter.background': '#181715',
-      'editorGutter.modifiedBackground': '#cc785c66',
-      'minimap.background': '#181715',
-      'scrollbarSlider.background': '#faf9f514',
-      'scrollbarSlider.hoverBackground': '#faf9f52e',
-      'scrollbarSlider.activeBackground': '#faf9f545',
+      'editor.background': '#000000',
+      'editor.foreground': '#ffffff',
+      'editorLineNumber.foreground': '#484848',
+      'editorLineNumber.activeForeground': '#ffffff',
+      'editor.lineHighlightBackground': '#121212',
+      'editor.selectionBackground': '#ffffff2b',
+      'editor.inactiveSelectionBackground': '#ffffff14',
+      'editor.selectionHighlightBackground': '#ffffff1c',
+      'editorCursor.foreground': '#ffffff',
+      'editorIndentGuide.background1': '#1c1c1c',
+      'editorIndentGuide.activeBackground1': '#383838',
+      'editorWidget.background': '#141414',
+      'editorWidget.border': '#383838',
+      'editorSuggestWidget.background': '#141414',
+      'editorSuggestWidget.border': '#383838',
+      'editorSuggestWidget.selectedBackground': '#242424',
+      'editorHoverWidget.background': '#141414',
+      'editorHoverWidget.border': '#383838',
+      'editorGhostText.foreground': '#727272',
+      'editorInlineSuggest.background': '#000000',
+      'editorGhostText.beforeBackground': '#1c1c1c',
+      'editorGutter.background': '#000000',
+      'editorGutter.modifiedBackground': '#ffffff40',
+      'minimap.background': '#000000',
+      'scrollbarSlider.background': '#ffffff14',
+      'scrollbarSlider.hoverBackground': '#ffffff2b',
+      'scrollbarSlider.activeBackground': '#ffffff40',
+    },
+  });
+
+  // ── Light Mode Theme ──
+  monaco.editor.defineTheme(GB_CODER_MONACO_THEME_LIGHT, {
+    base: 'vs',
+    inherit: true,
+    rules: [
+      { token: '', foreground: '000000', background: 'fcfcfc' },
+      { token: 'comment', foreground: '767676', fontStyle: 'italic' },
+      { token: 'keyword', foreground: '000000', fontStyle: 'bold' },
+      { token: 'string', foreground: 'b45309' },
+      { token: 'number', foreground: '4338ca' },
+      { token: 'type', foreground: '374151' },
+      { token: 'tag', foreground: '000000', fontStyle: 'bold' },
+      { token: 'attribute.name', foreground: '4b5563' },
+      { token: 'attribute.value', foreground: 'b45309' },
+      { token: 'function', foreground: '000000' },
+      { token: 'variable', foreground: '000000' },
+      { token: 'delimiter', foreground: '6b7280' },
+      { token: 'operator', foreground: '6b7280' },
+      { token: 'regexp', foreground: 'b45309' },
+      { token: 'constant', foreground: '4338ca' },
+    ],
+    colors: {
+      'editor.background': '#fcfcfc',
+      'editor.foreground': '#000000',
+      'editorLineNumber.foreground': '#a3a3a3',
+      'editorLineNumber.activeForeground': '#000000',
+      'editor.lineHighlightBackground': '#f4f4f4',
+      'editor.selectionBackground': '#0000001a',
+      'editor.inactiveSelectionBackground': '#0000000d',
+      'editor.selectionHighlightBackground': '#00000012',
+      'editorCursor.foreground': '#000000',
+      'editorIndentGuide.background1': '#e5e5e5',
+      'editorIndentGuide.activeBackground1': '#a3a3a3',
+      'editorWidget.background': '#ffffff',
+      'editorWidget.border': '#e5e5e5',
+      'editorSuggestWidget.background': '#ffffff',
+      'editorSuggestWidget.border': '#e5e5e5',
+      'editorSuggestWidget.selectedBackground': '#f0f0f0',
+      'editorHoverWidget.background': '#ffffff',
+      'editorHoverWidget.border': '#e5e5e5',
+      'editorGhostText.foreground': '#767676',
+      'editorInlineSuggest.background': '#fcfcfc',
+      'editorGhostText.beforeBackground': '#f0f0f0',
+      'editorGutter.background': '#fcfcfc',
+      'editorGutter.modifiedBackground': '#00000040',
+      'minimap.background': '#fcfcfc',
+      'scrollbarSlider.background': '#00000014',
+      'scrollbarSlider.hoverBackground': '#00000024',
+      'scrollbarSlider.activeBackground': '#00000038',
     },
   });
 };
 
-export const monacoThemeFor = (_isDark?: boolean): string => {
-  void _isDark;
-  return GB_CODER_MONACO_THEME;
+export const monacoThemeFor = (isDark = true): string => {
+  return isDark ? GB_CODER_MONACO_THEME : GB_CODER_MONACO_THEME_LIGHT;
 };
