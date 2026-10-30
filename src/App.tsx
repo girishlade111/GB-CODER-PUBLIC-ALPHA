@@ -3631,9 +3631,6 @@ function App() {
         case 'snippets':
           setShowSnippets(true);
           return 'Snippets';
-        case 'ai-chat':
-          setShowAIChat(true);
-          return 'AI Chat';
         case 'shortcuts':
           setShowKeyboardShortcuts(true);
           return 'Keyboard shortcuts';
