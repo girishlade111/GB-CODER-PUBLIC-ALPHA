@@ -192,7 +192,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                 Overflow menu for secondary actions at ≤1024px. It re-triggers
                 the same handlers the desktop toolbar uses.
               */}
-              {(onOpenExport || onOpenDeploy || onOpenGitHub) && (
+              {(onOpenExport || onOpenShare || onOpenDeploy || onOpenGitHub) && (
                 <div className="relative hidden compact:block" ref={overflowRef}>
                   <button
                     onClick={() => setIsOverflowOpen((open) => !open)}
@@ -216,8 +216,21 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                             }}
                             className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left ${NAV_LINK} text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary`}
                           >
+                            <Download className="h-4 w-4" />
+                            Export
+                          </button>
+                        )}
+
+                        {onOpenShare && (
+                          <button
+                            onClick={() => {
+                              onOpenShare();
+                              setIsOverflowOpen(false);
+                            }}
+                            className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left ${NAV_LINK} text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary`}
+                          >
                             <Share2 className="h-4 w-4" />
-                            Export &amp; Share
+                            Share
                           </button>
                         )}
 
