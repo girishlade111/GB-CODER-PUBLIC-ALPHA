@@ -428,7 +428,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
         className={`w-full text-left flex items-center justify-between p-2.5 rounded-lg border transition-all cursor-pointer group ${
           isSelected
             ? 'border-cyan-500/50 bg-cyan-950/20 text-white'
-            : 'border-[#26283d] bg-[#18192c]/40 hover:bg-[#18192c] hover:border-slate-700 text-slate-300'
+            : 'border-[var(--border)] bg-[var(--sidebar)]/40 hover:bg-[var(--sidebar)] hover:border-slate-700 text-slate-300'
         }`}
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -1104,14 +1104,14 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="flex w-full max-w-2xl flex-col max-h-[85vh] rounded-xl border border-[#2e3046] bg-[#141524] shadow-2xl overflow-hidden text-slate-200 animate-in fade-in zoom-in-95 duration-150">
+      <div className="flex w-full max-w-2xl flex-col max-h-[85vh] rounded-xl border border-[var(--border)] bg-[var(--background)] shadow-2xl overflow-hidden text-slate-200 animate-in fade-in zoom-in-95 duration-150">
         {/* ══════════════════════════════════════════════════════════════
             VIEW A: PROVIDER DISCOVERY DIRECTORY
            ══════════════════════════════════════════════════════════════ */}
         {currentView === 'directory' && (
           <>
             {/* Header */}
-            <div className="flex h-12 shrink-0 items-center justify-between border-b border-[#2e3046] bg-[#18192c] px-4">
+            <div className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-4">
               <div className="flex items-center gap-2">
                 <Sliders className="h-4 w-4 text-cyan-400" />
                 <h2 id="ai-provider-modal-title" className="text-sm font-semibold tracking-wide text-white">
@@ -1130,7 +1130,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
             </div>
 
             {/* Search Bar */}
-            <div className="border-b border-[#26283d] bg-[#111220] p-3">
+            <div className="border-b border-[var(--border)] bg-[var(--sidebar)] p-3">
               <div className="relative flex items-center">
                 <Search className="absolute left-3 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
                 <input
@@ -1140,7 +1140,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search providers..."
                   data-testid="provider-search-input"
-                  className="w-full rounded-md border border-[#2e3046] bg-[#18192c] pl-8 pr-8 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full rounded-md border border-[var(--border)] bg-[var(--sidebar)] pl-8 pr-8 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[var(--ring)]"
                 />
                 {searchQuery && (
                   <button
@@ -1155,7 +1155,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
             </div>
 
             {/* Category Filter Tabs */}
-            <div className="flex items-center gap-1.5 border-b border-[#26283d] bg-[#111220] px-3 py-1.5 overflow-x-auto text-[11px]">
+            <div className="flex items-center gap-1.5 border-b border-[var(--border)] bg-[var(--sidebar)] px-3 py-1.5 overflow-x-auto text-[11px]">
               {[
                 { id: 'all', label: 'All' },
                 { id: 'popular', label: 'Popular (Tier A)' },
@@ -1232,7 +1232,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between border-t border-[#2e3046] bg-[#18192c] px-4 py-3">
+            <div className="flex items-center justify-between border-t border-[var(--border)] bg-[var(--sidebar)] px-4 py-3">
               <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
                 <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
                 <span>API keys are held in memory and never sent to external servers.</span>
@@ -1254,7 +1254,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
         {currentView === 'config' && (
           <>
             {/* Header */}
-            <div className="flex h-12 shrink-0 items-center justify-between border-b border-[#2e3046] bg-[#18192c] px-4">
+            <div className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-4">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -1407,8 +1407,8 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                       placeholder="e.g. myprovider"
                       data-testid="custom-provider-id-input"
                       className={`w-full rounded-md border ${
-                        formErrors.id ? 'border-rose-500' : 'border-[#2e3046]'
-                      } bg-[#12131c] px-3 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500 disabled:opacity-60`}
+                        formErrors.id ? 'border-rose-500' : 'border-[var(--border)]'
+                      } bg-[var(--background)] px-3 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[var(--ring)] disabled:opacity-60`}
                     />
                     {formErrors.id ? (
                       <p className="text-[10px] text-rose-400">{formErrors.id}</p>
@@ -1438,8 +1438,8 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                       placeholder="e.g. My AI Provider"
                       data-testid="custom-provider-name-input"
                       className={`w-full rounded-md border ${
-                        formErrors.name ? 'border-rose-500' : 'border-[#2e3046]'
-                      } bg-[#12131c] px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500`}
+                        formErrors.name ? 'border-rose-500' : 'border-[var(--border)]'
+                      } bg-[var(--background)] px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-[var(--ring)]`}
                     />
                     {formErrors.name && <p className="text-[10px] text-rose-400">{formErrors.name}</p>}
                   </div>
@@ -1464,8 +1464,8 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                       placeholder="https://api.example.com/v1"
                       data-testid="custom-provider-url-input"
                       className={`w-full rounded-md border ${
-                        formErrors.baseUrl ? 'border-rose-500' : 'border-[#2e3046]'
-                      } bg-[#12131c] px-3 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500`}
+                        formErrors.baseUrl ? 'border-rose-500' : 'border-[var(--border)]'
+                      } bg-[var(--background)] px-3 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[var(--ring)]`}
                     />
                     {formErrors.baseUrl ? (
                       <p className="text-[10px] text-rose-400">{formErrors.baseUrl}</p>
@@ -1499,7 +1499,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                       setDiagnosticResult(null);
                     }}
                     placeholder={providerRegistry.getProvider(selectedProviderId).defaultBaseUrl}
-                    className="w-full rounded-md border border-[#2e3046] bg-[#12131c] px-3 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                    className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[var(--ring)]"
                   />
                   {selectedProviderId === 'openai' && (
                     <p className="text-[10px] text-slate-500">
@@ -1527,7 +1527,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                           type="checkbox"
                           checked={authorizedDestinationConfirmed}
                           onChange={(e) => setAuthorizedDestinationConfirmed(e.target.checked)}
-                          className="rounded border-amber-500 bg-[#12131c] text-cyan-500 focus:ring-0"
+                          className="rounded border-amber-500 bg-[var(--background)] text-cyan-500 focus:ring-0"
                         />
                         <span>I explicitly authorize sending credentials for "{selectedProviderId}" to <strong className="font-mono">{currentBaseUrlOrigin}</strong></span>
                       </label>
@@ -1580,7 +1580,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                       }}
                       placeholder={`Enter API key for ${customDisplayName || activeProviderObj?.name || 'provider'}...`}
                       data-testid="ai-provider-api-key-input"
-                      className="w-full rounded-md border border-[#2e3046] bg-[#12131c] pl-3 pr-20 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                      className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] pl-3 pr-20 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[var(--ring)]"
                     />
                     <div className="absolute right-2 flex items-center gap-1">
                       <button
@@ -1696,7 +1696,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                       type="checkbox"
                       checked={persistInSession}
                       onChange={(e) => setPersistInSession(e.target.checked)}
-                      className="rounded border-[#2e3046] bg-[#12131c] text-cyan-500 focus:ring-0"
+                      className="rounded border-[var(--border)] bg-[var(--background)] text-cyan-500 focus:ring-0"
                     />
                     <span>Remember key for this browser session (cleared on tab close)</span>
                   </label>
@@ -1707,7 +1707,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                   MODELS SECTION
                  ───────────────────────────────────────────────────────────── */}
               {isCustomMode ? (
-                <div className="space-y-3 border-t border-[#26283d] pt-3">
+                <div className="space-y-3 border-t border-[var(--border)] pt-3">
                   <div className="flex items-center justify-between gap-2">
                     <div>
                       <label className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
@@ -1786,7 +1786,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
 
                   {/* Discovered Models Drawer */}
                   {discoveredModels.length > 0 && (
-                    <div className="rounded-lg border border-cyan-800/40 bg-[#141624] p-3 space-y-2.5 shadow-xl">
+                    <div className="rounded-lg border border-cyan-800/40 bg-[var(--card)] p-3 space-y-2.5 shadow-xl">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold text-white">Discovered Models</span>
@@ -1841,12 +1841,12 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                           onChange={(e) => setDiscoveredSearchQuery(e.target.value)}
                           placeholder="Search fetched models (e.g. mistral, codestral)..."
                           data-testid="discovered-models-search-input"
-                          className="w-full rounded border border-[#2e3046] bg-[#0e0f17] pl-7 pr-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                          className="w-full rounded border border-[var(--border)] bg-[var(--background)] pl-7 pr-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-[var(--ring)]"
                         />
                       </div>
 
                       {/* Scrollable Discovered List */}
-                      <div className="max-h-48 overflow-y-auto space-y-1 pr-1 divide-y divide-white/5 border border-white/5 rounded p-1 bg-[#0f101a]">
+                      <div className="max-h-48 overflow-y-auto space-y-1 pr-1 divide-y divide-white/5 border border-white/5 rounded p-1 bg-[var(--sidebar)]">
                         {discoveredModels
                           .filter((m) => {
                             const q = discoveredSearchQuery.trim().toLowerCase();
@@ -1877,7 +1877,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                                       setSelectedDiscoveredIds(next);
                                     }}
                                     data-testid={`discovered-model-checkbox-${m.id}`}
-                                    className="rounded border-[#2e3046] bg-[#12131c] text-cyan-500 focus:ring-0"
+                                    className="rounded border-[var(--border)] bg-[var(--background)] text-cyan-500 focus:ring-0"
                                   />
                                   <div className="truncate">
                                     <div className="font-mono text-xs font-medium text-white truncate">{m.id}</div>
@@ -1938,8 +1938,8 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                               placeholder="Model ID (e.g. mistral-small-latest or llama-3.3-70b)"
                               data-testid={`custom-model-id-input-${idx}`}
                               className={`w-full rounded-md border ${
-                                formErrors[`model_${idx}`] ? 'border-rose-500' : 'border-[#2e3046]'
-                              } bg-[#12131c] px-2.5 py-1.5 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500`}
+                                formErrors[`model_${idx}`] ? 'border-rose-500' : 'border-[var(--border)]'
+                              } bg-[var(--background)] px-2.5 py-1.5 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[var(--ring)]`}
                             />
                             {formErrors[`model_${idx}`] && (
                               <p className="text-[9px] text-rose-400 pt-0.5">
@@ -1954,7 +1954,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                               onChange={(e) => handleUpdateCustomModel(idx, 'name', e.target.value)}
                               placeholder="Display Name (optional)"
                               data-testid={`custom-model-name-input-${idx}`}
-                              className="w-full rounded-md border border-[#2e3046] bg-[#12131c] px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                              className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-[var(--ring)]"
                             />
                           </div>
                           <button
@@ -1982,7 +1982,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                     <button type="button" data-testid="fetch-builtin-models-btn" onClick={handleFetchModels} disabled={isFetchingModels}
                       className="rounded border border-cyan-500/40 px-3 py-2 text-cyan-300">{isFetchingModels ? 'Fetching…' : 'Fetch Models'}</button>
                     <input aria-label="Search models" value={discoveredSearchQuery} onChange={(e) => setDiscoveredSearchQuery(e.target.value)}
-                      placeholder="Search model name or ID" className="w-full bg-[#12131c] p-2 border border-[#2e3046] rounded" />
+                      placeholder="Search model name or ID" className="w-full bg-[var(--background)] p-2 border border-[var(--border)] rounded" />
                     {fetchModelsError && <p role="alert" className="text-rose-300">{fetchModelsError}</p>}
                     {fetchModelsSuccess && <p role="status">{fetchModelsSuccess} Catalog listing does not guarantee inference access.</p>}
                   </>}
@@ -1997,7 +1997,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                     aria-label="Selected model"
                     value={selectedModelId}
                     onChange={(e) => setSelectedModelId(e.target.value)}
-                    className="w-full rounded-md border border-[#2e3046] bg-[#12131c] px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
+                    className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-xs text-white focus:outline-none focus:border-[var(--ring)]"
                   >
                     {!models.some((m) => m.id === selectedModelId) && <option value={selectedModelId}>{selectedModelId || 'Select a model'} — unavailable</option>}
                     {models.filter((m) => m.id === selectedModelId || `${m.id} ${m.name}`.toLowerCase().includes(discoveredSearchQuery.toLowerCase())).slice(0, 150).map((m) => (
@@ -2013,7 +2013,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                   CUSTOM HEADERS SECTION
                  ───────────────────────────────────────────────────────────── */}
               {isCustomMode && (
-                <div className="space-y-2 border-t border-[#26283d] pt-3">
+                <div className="space-y-2 border-t border-[var(--border)] pt-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <label className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
@@ -2047,7 +2047,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                             onChange={(e) => handleUpdateCustomHeader(idx, 'name', e.target.value)}
                             placeholder="Header Name (e.g. X-Custom-Auth)"
                             data-testid={`custom-header-name-input-${idx}`}
-                            className="flex-1 rounded-md border border-[#2e3046] bg-[#12131c] px-2.5 py-1.5 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                            className="flex-1 rounded-md border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[var(--ring)]"
                           />
                           <input
                             type={h.isSecret ? 'password' : 'text'}
@@ -2055,7 +2055,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                             onChange={(e) => handleUpdateCustomHeader(idx, 'value', e.target.value)}
                             placeholder="Header Value"
                             data-testid={`custom-header-value-input-${idx}`}
-                            className="flex-1 rounded-md border border-[#2e3046] bg-[#12131c] px-2.5 py-1.5 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                            className="flex-1 rounded-md border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[var(--ring)]"
                           />
                           <button
                             type="button"
@@ -2089,7 +2089,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                   ADVANCED CONFIGURATION (COLLAPSIBLE)
                  ───────────────────────────────────────────────────────────── */}
               {isCustomMode && (
-                <div className="border-t border-[#26283d] pt-2">
+                <div className="border-t border-[var(--border)] pt-2">
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
@@ -2112,7 +2112,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                           type="number"
                           value={customContextWindow}
                           onChange={(e) => setCustomContextWindow(Number(e.target.value) || 32000)}
-                          className="w-full rounded-md border border-[#2e3046] bg-[#12131c] px-2.5 py-1.5 text-xs text-white font-mono"
+                          className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-white font-mono"
                         />
                       </div>
                       <div>
@@ -2123,7 +2123,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                           type="number"
                           value={customMaxTokens}
                           onChange={(e) => setCustomMaxTokens(Number(e.target.value) || 4096)}
-                          className="w-full rounded-md border border-[#2e3046] bg-[#12131c] px-2.5 py-1.5 text-xs text-white font-mono"
+                          className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-white font-mono"
                         />
                       </div>
                       <div className="col-span-2 pt-1">
@@ -2136,7 +2136,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                               setCustomToolCalling(supported);
                               setCustomModels((prev) => prev.map((model) => ({ ...model, supportsToolCalling: supported })));
                             }}
-                            className="rounded border-[#2e3046] bg-[#12131c] text-cyan-500 focus:ring-0"
+                            className="rounded border-[var(--border)] bg-[var(--background)] text-cyan-500 focus:ring-0"
                           />
                           <span>Supports native OpenAI structured tool calling (Agent Mode)</span>
                         </label>
@@ -2149,7 +2149,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
               {/* ─────────────────────────────────────────────────────────────
                   TEST PROBE & CONSENT DISCLOSURE
                  ───────────────────────────────────────────────────────────── */}
-              <div className="rounded-lg border border-[#26283d] bg-[#111220] p-3 space-y-2">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--sidebar)] p-3 space-y-2">
                 <div className="flex items-start gap-2">
                   <Key className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
                   <div className="space-y-1">
@@ -2163,7 +2163,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
                         checked={probeConsent}
                         onChange={(e) => setProbeConsent(e.target.checked)}
                         data-testid="test-probe-consent-checkbox"
-                        className="rounded border-[#2e3046] bg-[#12131c] text-cyan-500 focus:ring-0"
+                        className="rounded border-[var(--border)] bg-[var(--background)] text-cyan-500 focus:ring-0"
                       />
                       <span>Authorize live test probe (stream: false, max 5 tokens)</span>
                     </label>
@@ -2206,7 +2206,7 @@ export const AiProviderSettingsModal: React.FC<AiProviderSettingsModalProps> = (
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between border-t border-[#2e3046] bg-[#18192c] px-4 py-3">
+            <div className="flex items-center justify-between border-t border-[var(--border)] bg-[var(--sidebar)] px-4 py-3">
               <div className="flex items-center gap-2">
                 <button
                   type="button"

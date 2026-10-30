@@ -90,9 +90,9 @@ export const AiMonacoDiffModal: React.FC<AiMonacoDiffModalProps> = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="flex h-[90vh] w-full max-w-6xl flex-col rounded-xl border border-[#2e3046] bg-[#141524] shadow-2xl overflow-hidden text-slate-200 animate-in fade-in zoom-in-95 duration-150">
+      <div className="flex h-[90vh] w-full max-w-6xl flex-col rounded-xl border border-[var(--border)] bg-[var(--background)] shadow-2xl overflow-hidden text-slate-200 animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="flex h-12 shrink-0 items-center justify-between border-b border-[#2e3046] bg-[#18192c] px-4">
+        <div className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-4">
           <div className="flex items-center gap-3">
             <FileCode className="h-4 w-4 text-cyan-400" />
             <h2 className="text-sm font-semibold tracking-wide text-white">
@@ -130,7 +130,7 @@ export const AiMonacoDiffModal: React.FC<AiMonacoDiffModalProps> = ({
 
         {/* Multi-File Tab Bar (if multiple files) */}
         {proposals.length > 1 && (
-          <div className="flex border-b border-[#26283d] bg-[#111220] px-3 pt-1.5 gap-1 overflow-x-auto">
+          <div className="flex border-b border-[var(--border)] bg-[var(--sidebar)] px-3 pt-1.5 gap-1 overflow-x-auto">
             {proposals.map((edit, idx) => {
               const isSelected = idx === selectedIndex;
               return (
@@ -140,7 +140,7 @@ export const AiMonacoDiffModal: React.FC<AiMonacoDiffModalProps> = ({
                   onClick={() => setSelectedIndex(idx)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-t-md text-xs font-mono transition-colors border-t border-x ${
                     isSelected
-                      ? 'bg-[#18192c] text-white border-[#2e3046] border-b-transparent -mb-px'
+                      ? 'bg-[var(--sidebar)] text-white border-[var(--border)] border-b-transparent -mb-px'
                       : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-white/5'
                   }`}
                 >
@@ -155,7 +155,7 @@ export const AiMonacoDiffModal: React.FC<AiMonacoDiffModalProps> = ({
         )}
 
         {/* Sub-Header: Active File Details & Actions */}
-        <div className="flex items-center justify-between border-b border-[#26283d] bg-[#151624] px-4 py-2">
+        <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-4 py-2">
           <div className="flex items-center gap-2">
             <span className="font-mono text-xs font-semibold text-slate-100">{currentEdit.path}</span>
             <span className={`rounded px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-wider ${
@@ -203,7 +203,7 @@ export const AiMonacoDiffModal: React.FC<AiMonacoDiffModalProps> = ({
         </div>
 
         {/* Monaco Diff Viewer Area */}
-        <div className="relative min-h-0 flex-1 bg-[#1e1e1e]">
+        <div className="relative min-h-0 flex-1 bg-[var(--background)]">
           <LocalDiffEditor
             original={currentEdit.originalContent}
             modified={currentEdit.newContent}

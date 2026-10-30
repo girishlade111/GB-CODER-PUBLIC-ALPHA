@@ -79,7 +79,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
 
   return (
     <div
-      className="flex h-full w-full flex-col items-center justify-center bg-[#13141f] p-8 text-center select-none"
+      className="flex h-full w-full flex-col items-center justify-center bg-[var(--background)] p-8 text-center select-none"
       data-testid="stackblitz-startup-loader"
     >
       {/* Glowing StackBlitz Lightbulb with Lightning Filament */}
@@ -152,7 +152,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
       </p>
 
       {/* Step Checklist matching professional IDE runtime states */}
-      <div className="mt-8 flex w-full max-w-xs flex-col gap-3 rounded-xl border border-white/10 bg-[#181926]/90 p-4 shadow-xl backdrop-blur-sm text-left">
+      <div className="mt-8 flex w-full max-w-xs flex-col gap-3 rounded-xl border border-white/10 bg-[var(--sidebar)]/90 p-4 shadow-xl backdrop-blur-sm text-left">
         {/* Step 1: Booting WebContainer */}
         <div className="flex items-center gap-2.5 text-xs">
           {step1Error ? (
@@ -275,7 +275,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
             type="button"
             onClick={onInstallDependencies}
             disabled={operationPending || isBooting || isMounting}
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1e2030] px-3 py-1.5 text-xs font-medium text-slate-300 shadow-sm transition hover:bg-[#282a3f] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[var(--sidebar)] px-3 py-1.5 text-xs font-medium text-slate-300 shadow-sm transition hover:bg-[var(--card)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="loader-install-deps-btn"
           >
             <Download className="h-3.5 w-3.5 text-slate-300" />
@@ -302,7 +302,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
             className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium shadow-sm transition ${
               isError
                 ? 'border-amber-500/30 bg-amber-950/60 text-amber-300 hover:bg-amber-900/80 hover:text-white'
-                : 'border-white/10 bg-[#1e2030] text-slate-300 hover:bg-[#282a3f] hover:text-white'
+                : 'border-white/10 bg-[var(--sidebar)] text-slate-300 hover:bg-[var(--card)] hover:text-white'
             }`}
             data-testid="loader-restart-btn"
           >
@@ -314,7 +314,7 @@ export const StackBlitzStartupLoader: React.FC<StackBlitzStartupLoaderProps> = (
           <button
             type="button"
             onClick={onOpenTerminal}
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1e2030] px-3 py-1.5 text-xs font-medium text-slate-300 shadow-sm transition hover:bg-[#282a3f] hover:text-white"
+            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[var(--sidebar)] px-3 py-1.5 text-xs font-medium text-slate-300 shadow-sm transition hover:bg-[var(--card)] hover:text-white"
             data-testid="loader-view-terminal-btn"
           >
             <TerminalSquare className="h-3.5 w-3.5 text-cyan-400" />

@@ -349,10 +349,10 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       convertEol: false,
       scrollback: 3000,
       theme: {
-        background: '#0c0d14',
-        foreground: '#f8fafc',
-        cursor: '#818cf8',
-        selectionBackground: 'rgba(99, 102, 241, 0.35)',
+        background: '#000000',
+        foreground: '#ffffff',
+        cursor: '#ffffff',
+        selectionBackground: 'rgba(255, 255, 255, 0.25)',
         black: '#13151f',
         red: '#f43f5e',
         green: '#10b981',
@@ -453,9 +453,9 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       convertEol: false,
       scrollback: 3000,
       theme: {
-        background: '#090a0f',
-        foreground: '#f8fafc',
-        cursor: '#818cf8',
+        background: '#000000',
+        foreground: '#ffffff',
+        cursor: '#ffffff',
       },
     });
 
@@ -602,9 +602,9 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-[#0d0f17] text-slate-300">
+    <div className="flex flex-col h-full min-h-0 bg-[var(--background)] text-slate-300">
       {/* Multi-Terminal Header Bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#1e2235] bg-[#090a0f] flex-shrink-0 select-none">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0 select-none">
         <div className="flex items-center gap-2 overflow-x-auto min-w-0">
           {/* Mode Badge */}
           <div className="flex items-center gap-1.5 mr-2 shrink-0">
@@ -634,7 +634,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
                   onClick={() => terminalSessionManager.setActiveSessionId(s.id)}
                   className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border transition-colors shrink-0 ${
                     activeSessionId === s.id
-                      ? 'bg-[#1e2235] text-cyan-300 border-cyan-500/40 shadow-sm'
+                      ? 'bg-[var(--card)] text-cyan-300 border-cyan-500/40 shadow-sm'
                       : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-white/5'
                   }`}
                   data-testid={`terminal-session-tab-${s.id}`}
@@ -687,7 +687,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
             <>
               <button
                 onClick={() => sendCommand('npm install --prefer-offline')}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-[#161926] hover:bg-[#222638] text-slate-200 border border-[#2a2f45] transition-colors"
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-[var(--card)] hover:bg-[var(--accent)] text-slate-200 border border-[var(--border)] transition-colors"
                 title="Run 'npm install' in active terminal"
                 data-testid="terminal-quick-install-btn"
               >
@@ -721,7 +721,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
           <button
             onClick={() => sendCommand('help')}
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-[#161926] hover:bg-[#222638] text-slate-300 border border-[#2a2f45] transition-colors"
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-[var(--card)] hover:bg-[var(--accent)] text-slate-300 border border-[var(--border)] transition-colors"
             title="Display commands help cheat sheet"
           >
             <HelpCircle className="h-2.5 w-2.5 text-cyan-400" />
@@ -745,7 +745,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         <div
           ref={hostRef}
           className={`h-full min-h-0 overflow-hidden px-2 py-1 ${
-            splitSessionId ? 'w-1/2 border-r border-[#1e2235]' : 'w-full'
+            splitSessionId ? 'w-1/2 border-r border-[var(--border)]' : 'w-full'
           }`}
           data-testid="terminal-primary-viewport"
         />
@@ -754,7 +754,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         {splitSessionId && (
           <div
             ref={splitHostRef}
-            className="w-1/2 h-full min-h-0 overflow-hidden px-2 py-1 bg-[#090a0f]"
+            className="w-1/2 h-full min-h-0 overflow-hidden px-2 py-1 bg-[var(--sidebar)]"
             data-testid="terminal-split-viewport"
           />
         )}

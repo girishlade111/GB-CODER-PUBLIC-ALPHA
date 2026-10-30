@@ -48,7 +48,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
 }) => {
   return (
     <aside
-      className="flex w-12 shrink-0 flex-col items-center justify-between border-r border-[#1e2235] bg-[#11131c] py-2 select-none z-10"
+      className="flex w-12 shrink-0 flex-col items-center justify-between border-r border-[var(--border)] bg-[var(--background)] py-2 select-none z-10"
       data-testid="vscode-activity-bar"
     >
       {/* Top Group: Primary Navigation Panels & Tools */}
@@ -111,7 +111,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             )}
             <Sparkles className="h-5 w-5 text-cyan-400" />
             {isCodeAssistGenerating && (
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-cyan-400 ring-2 ring-[#181824] animate-ping" />
+              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-cyan-400 ring-2 ring-[var(--border)] animate-ping" />
             )}
           </button>
         </Tooltip>
@@ -154,7 +154,7 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
             )}
             <Radio className="h-5 w-5" />
             {serverRunning && (
-              <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-[#181824] animate-pulse" />
+              <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-[var(--border)] animate-pulse" />
             )}
           </button>
         </Tooltip>
