@@ -12,7 +12,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings as SettingsIcon,
-  Sparkles,
   TerminalSquare,
   X,
 } from 'lucide-react';
@@ -41,7 +40,6 @@ interface AppSidebarProps {
    * manual way in, a plain, React or Vue project could never reach them.
    */
   onOpenVSCodeMode: () => void;
-  onOpenAIChat: () => void;
   onOpenVoiceCommands: () => void;
   onOpenStatistics: () => void;
   onOpenInjection: () => void;
