@@ -76,13 +76,13 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
 
   return (
     <div
-      className="flex h-full flex-col bg-[#141622] text-xs text-slate-300 font-mono select-none overflow-hidden"
+      className="flex h-full flex-col bg-[var(--background)] text-xs text-slate-300 font-mono select-none overflow-hidden"
       data-testid="problems-panel"
       role="region"
       aria-label="Workspace Problems"
     >
       {/* Top Filter and Search Bar */}
-      <div className="flex shrink-0 items-center justify-between border-b border-[#222538] bg-[#11131c] px-3 py-1.5 gap-2">
+      <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-3 py-1.5 gap-2">
         {/* Severity filter buttons */}
         <div className="flex items-center gap-1 font-sans text-[11px]">
           <button
@@ -90,7 +90,7 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
             onClick={() => setSelectedSeverity('all')}
             className={`rounded px-2 py-0.5 transition-colors ${
               selectedSeverity === 'all'
-                ? 'bg-indigo-600 text-white font-medium'
+                ? 'bg-[var(--primary)] text-[var(--primary-foreground)] font-medium'
                 : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
             }`}
           >
@@ -143,13 +143,13 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
             onChange={(e) => setFilterText(e.target.value)}
             placeholder="Filter problems..."
             aria-label="Filter problems"
-            className="w-full rounded bg-[#181a29] border border-[#262940] pl-7 pr-2 py-0.5 text-[11px] text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            className="w-full rounded bg-[var(--input)] border border-[var(--border)] pl-7 pr-2 py-0.5 text-[11px] text-white placeholder-slate-500 focus:outline-none focus:border-[var(--ring)]"
           />
         </div>
       </div>
 
       {/* Scope Disclaimer Banner */}
-      <div className="shrink-0 px-3 py-1 bg-[#10121a] border-b border-[#1e2235] text-[10px] text-slate-500 flex items-center justify-between font-sans">
+      <div className="shrink-0 px-3 py-1 bg-[var(--background)] border-b border-[var(--border)] text-[10px] text-slate-500 flex items-center justify-between font-sans">
         <span>Diagnostics Scope: Open Monaco editor models & container runtime errors</span>
         <span>{filteredItems.length} displayed</span>
       </div>
@@ -173,9 +173,9 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
         )}
 
         {Object.entries(groupedByFile).map(([filePath, items]) => (
-          <div key={filePath} className="rounded border border-[#222538] bg-[#161826] overflow-hidden">
+          <div key={filePath} className="rounded border border-[var(--border)] bg-[var(--background)] overflow-hidden">
             {/* File Group Header */}
-            <div className="flex items-center justify-between px-2.5 py-1 bg-[#12131f] border-b border-[#222538] text-[11px] font-sans font-medium text-slate-300">
+            <div className="flex items-center justify-between px-2.5 py-1 bg-[var(--sidebar)] border-b border-[var(--border)] text-[11px] font-sans font-medium text-slate-300">
               <div className="flex items-center gap-1.5 truncate">
                 <FileCode className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
                 <span className="truncate">{filePath}</span>
@@ -186,7 +186,7 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
             </div>
 
             {/* Diagnostic items */}
-            <div className="divide-y divide-[#1e2133]">
+            <div className="divide-y divide-[var(--border)]">
               {items.map((item) => {
                 const isError = item.severity === 'error';
                 const isWarning = item.severity === 'warning';

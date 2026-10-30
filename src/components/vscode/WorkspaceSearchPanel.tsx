@@ -195,13 +195,13 @@ export const WorkspaceSearchPanel: React.FC<WorkspaceSearchPanelProps> = ({
 
   return (
     <div
-      className="flex h-full flex-col bg-[#181824] text-xs text-slate-300 select-none overflow-hidden"
+      className="flex h-full flex-col bg-[var(--sidebar)] text-xs text-slate-300 select-none overflow-hidden"
       data-testid="workspace-search-panel"
       role="region"
       aria-label="Workspace Search"
     >
       {/* Top Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-[#262636] px-3 py-2">
+      <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-3 py-2">
         <span className="font-semibold uppercase tracking-wider text-slate-400 text-[11px]">
           Search
         </span>
@@ -230,7 +230,7 @@ export const WorkspaceSearchPanel: React.FC<WorkspaceSearchPanelProps> = ({
       </div>
 
       {/* Search & Replace Form Container */}
-      <div className="shrink-0 p-2.5 space-y-2 border-b border-[#262636]">
+      <div className="shrink-0 p-2.5 space-y-2 border-b border-[var(--border)]">
         {/* Search Input Row */}
         <div className="relative flex items-center gap-1.5">
           <button
@@ -255,8 +255,8 @@ export const WorkspaceSearchPanel: React.FC<WorkspaceSearchPanelProps> = ({
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search (files & contents)..."
               aria-label="Search query"
-              className={`w-full rounded border bg-[#12131c] pl-2.5 pr-20 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 ${
-                error ? 'border-rose-500 focus:ring-rose-500' : 'border-[#262636] focus:border-indigo-500 focus:ring-indigo-500'
+              className={`w-full rounded border bg-[var(--background)] pl-2.5 pr-20 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 ${
+                error ? 'border-rose-500 focus:ring-rose-500' : 'border-[var(--border)] focus:border-[var(--ring)] focus:ring-[var(--ring)]'
               }`}
             />
             {query && (
@@ -280,7 +280,7 @@ export const WorkspaceSearchPanel: React.FC<WorkspaceSearchPanelProps> = ({
                   aria-label="Match Case"
                   className={`rounded p-1 transition-colors ${
                     caseSensitive
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
                       : 'text-slate-400 hover:bg-white/10 hover:text-slate-200'
                   }`}
                 >
@@ -296,7 +296,7 @@ export const WorkspaceSearchPanel: React.FC<WorkspaceSearchPanelProps> = ({
                   aria-label="Match Whole Word"
                   className={`rounded p-1 transition-colors ${
                     wholeWord
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
                       : 'text-slate-400 hover:bg-white/10 hover:text-slate-200'
                   }`}
                 >
@@ -312,7 +312,7 @@ export const WorkspaceSearchPanel: React.FC<WorkspaceSearchPanelProps> = ({
                   aria-label="Use Regular Expression"
                   className={`rounded p-1 transition-colors ${
                     useRegex
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
                       : 'text-slate-400 hover:bg-white/10 hover:text-slate-200'
                   }`}
                 >
@@ -341,7 +341,7 @@ export const WorkspaceSearchPanel: React.FC<WorkspaceSearchPanelProps> = ({
                 onChange={(e) => setReplaceQuery(e.target.value)}
                 placeholder="Replace with..."
                 aria-label="Replace term"
-                className="w-full rounded border border-[#262636] bg-[#12131c] px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
               />
               {replaceQuery && (
                 <button
@@ -398,8 +398,8 @@ export const WorkspaceSearchPanel: React.FC<WorkspaceSearchPanelProps> = ({
 
         {/* Recent searches drop-down pill list */}
         {showRecentSearches && recentSearches.length > 0 && (
-          <div className="rounded bg-[#12131c] border border-[#262636] p-2 space-y-1">
-            <div className="flex items-center justify-between text-[10px] text-slate-500 pb-1 border-b border-[#262636]">
+          <div className="rounded bg-[var(--background)] border border-[var(--border)] p-2 space-y-1">
+            <div className="flex items-center justify-between text-[10px] text-slate-500 pb-1 border-b border-[var(--border)]">
               <span>Recent queries</span>
               <button
                 type="button"
@@ -466,7 +466,7 @@ export const WorkspaceSearchPanel: React.FC<WorkspaceSearchPanelProps> = ({
           return (
             <div
               key={fileResult.path}
-              className="rounded border border-transparent hover:border-[#262636] overflow-hidden"
+              className="rounded border border-transparent hover:border-[var(--border)] overflow-hidden"
             >
               {/* File Header */}
               <div
@@ -581,7 +581,7 @@ export const WorkspaceSearchPanel: React.FC<WorkspaceSearchPanelProps> = ({
           aria-labelledby="replace-confirm-title"
         >
           <div
-            className="w-full max-w-md rounded-xl border border-slate-700 bg-[#161824] p-5 shadow-2xl text-left"
+            className="w-full max-w-md rounded-xl border border-slate-700 bg-[var(--card)] p-5 shadow-2xl text-left"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -617,7 +617,7 @@ export const WorkspaceSearchPanel: React.FC<WorkspaceSearchPanelProps> = ({
                 </div>
               </div>
 
-              <div className="max-h-32 overflow-y-auto space-y-1 rounded bg-[#10121a] p-2 border border-slate-800 text-[11px] text-slate-400">
+              <div className="max-h-32 overflow-y-auto space-y-1 rounded bg-[var(--background)] p-2 border border-slate-800 text-[11px] text-slate-400">
                 <p className="font-semibold text-slate-500 pb-1">Affected Files:</p>
                 {results.map((r) => (
                   <div key={r.path} className="flex justify-between">
