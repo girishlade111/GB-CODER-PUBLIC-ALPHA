@@ -38,6 +38,7 @@ interface WorkbenchEditorAreaProps {
   onSplitEditorMount?: (editor: monacoEditor.editor.IStandaloneCodeEditor, monaco: any) => void;
   monacoLanguageForPath: (path: string) => string;
   isDark?: boolean;
+  isCenteredLayout?: boolean;
   monacoOptions?: monacoEditor.editor.IStandaloneEditorConstructionOptions;
 }
 
@@ -61,6 +62,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
   onSplitEditorMount,
   monacoLanguageForPath,
   isDark = true,
+  isCenteredLayout = false,
   monacoOptions,
 }) => {
   const isSplitDraggingRef = useRef(false);
@@ -396,7 +398,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
         aria-label="Editor"
         className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${
           isVertical ? 'flex-row' : 'flex-col'
-        }`}
+        } ${isCenteredLayout ? 'max-w-5xl mx-auto w-full border-x border-[var(--border)]' : ''}`}
         data-testid="vscode-editor-panes"
       >
         {/* Primary Pane */}
@@ -438,7 +440,9 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
     <main
       role="region"
       aria-label="Editor"
-      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--background)]"
+      className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--background)] ${
+        isCenteredLayout ? 'max-w-5xl mx-auto w-full border-x border-[var(--border)]' : ''
+      }`}
     >
       {renderGroup(group1, false, 'vscode-pane-single')}
     </main>

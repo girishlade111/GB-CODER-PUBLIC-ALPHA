@@ -26,6 +26,7 @@ interface WorkbenchBottomPanelProps {
   onClose: () => void;
   onResize: (newHeight: number) => void;
   renderViewContent: (viewId: ViewId) => React.ReactNode;
+  panelAlignment?: 'left' | 'right' | 'center' | 'justify';
   diagnostics?: { errorCount: number; warningCount: number };
   onNewTerminal?: () => void;
   onToggleSplitTerminal?: () => void;
@@ -44,6 +45,7 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
   onClose,
   onResize,
   renderViewContent,
+  panelAlignment = 'center',
   diagnostics = { errorCount: 0, warningCount: 0 },
   onNewTerminal,
   onToggleSplitTerminal,
@@ -79,13 +81,22 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
 
   const effectiveHeight = isMaximized ? 'calc(100% - 36px)' : `${height}px`;
 
+  const alignmentClass =
+    !isMaximized && panelAlignment === 'center'
+      ? 'w-full max-w-[85%] mx-auto border-x border-[var(--border)]'
+      : !isMaximized && panelAlignment === 'left'
+      ? 'w-full max-w-[75%] mr-auto border-r border-[var(--border)]'
+      : !isMaximized && panelAlignment === 'right'
+      ? 'w-full max-w-[75%] ml-auto border-l border-[var(--border)]'
+      : 'w-full';
+
   return (
     <div
       role="region"
       aria-label="Bottom Panel"
       style={{ height: effectiveHeight }}
-      className={`relative flex shrink-0 flex-col overflow-hidden border-t border-[var(--border)] bg-[var(--background)] text-xs select-none z-10 ${
-        isMaximized ? 'absolute inset-x-0 bottom-6 top-9 z-30' : ''
+      className={`relative flex shrink-0 flex-col overflow-hidden border-t border-[var(--border)] bg-[var(--background)] text-xs select-none z-10 ${alignmentClass} ${
+        isMaximized ? 'absolute inset-x-0 bottom-6 top-9 z-30 w-full max-w-full' : ''
       }`}
       data-testid="vscode-terminal-dock"
     >
@@ -103,7 +114,9 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
 
       {/* Panel Header Tabs */}
       <div className="flex h-8 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-2.5">
-        <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+        <div className={`flex items-center gap-1 overflow-x-auto py-0.5 ${
+          panelAlignment === 'center' ? 'mx-auto' : panelAlignment === 'right' ? 'ml-auto' : ''
+        }`}>
           {availableViews.map((vid) => {
             const def = getViewDefinition(vid);
             const isSelected = vid === activeViewId;

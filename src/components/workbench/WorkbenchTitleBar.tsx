@@ -26,6 +26,7 @@ interface WorkbenchTitleBarProps {
   onToggleSecondarySidebar: () => void;
   onToggleBottomPanel: () => void;
   onApplyPreset: (preset: LayoutPresetId) => void;
+  onOpenCustomizeLayout?: () => void;
   onOpenQuickOpen: () => void;
   onOpenCommandPalette: () => void;
   onOpenSettings: () => void;
@@ -54,6 +55,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
   onToggleSecondarySidebar,
   onToggleBottomPanel,
   onApplyPreset,
+  onOpenCustomizeLayout,
   onOpenQuickOpen,
   onOpenSettings,
   onOpenProjects,
@@ -217,12 +219,65 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
                   </button>
                 );
               })}
+              {onOpenCustomizeLayout && (
+                <div className="mt-1 border-t border-[var(--border)] pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPresetsMenu(false);
+                      onOpenCustomizeLayout();
+                    }}
+                    className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-xs text-sky-400 hover:bg-white/5 transition-colors font-medium"
+                    data-testid="preset-customize-layout-option"
+                  >
+                    <svg
+                      className="h-3 w-3"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="1.5" y="2" width="13" height="12" rx="1.5" />
+                      <line x1="5.5" y1="2" x2="5.5" y2="14" />
+                      <line x1="5.5" y1="6" x2="14.5" y2="6" />
+                    </svg>
+                    <span>Customize Layout...</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Layout Panel Toggles */}
         <div className="flex items-center rounded bg-[var(--sidebar)] border border-[var(--border)] p-0.5">
+          {onOpenCustomizeLayout && (
+            <Tooltip label="Customize Layout" side="bottom">
+              <button
+                type="button"
+                onClick={onOpenCustomizeLayout}
+                aria-label="Customize Layout"
+                data-testid="customize-layout-btn"
+                className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
+              >
+                <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="1.5" y="2" width="13" height="12" rx="1.5" />
+                  <line x1="5.5" y1="2" x2="5.5" y2="14" />
+                  <line x1="5.5" y1="6" x2="14.5" y2="6" />
+                </svg>
+              </button>
+            </Tooltip>
+          )}
           <Tooltip label="Toggle Primary Sidebar (Ctrl+B)" side="bottom">
             <button
               type="button"

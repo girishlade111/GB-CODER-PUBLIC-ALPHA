@@ -74,6 +74,17 @@ export function createDefaultWorkbenchLayout(): WorkbenchLayoutState {
     },
     currentPreset: 'DEFAULT',
     settings: { ...DEFAULT_WORKBENCH_SETTINGS },
+    menuBar: { visible: true },
+    activityBar: { visible: true },
+    secondaryActivityBar: { visible: false },
+    statusBar: { visible: true },
+    primarySidebarPosition: 'left',
+    panelAlignment: 'center',
+    quickInputPosition: 'center',
+    modes: {
+      zenMode: false,
+      centeredLayout: false,
+    },
   };
 }
 
@@ -248,6 +259,25 @@ export function loadWorkbenchLayout(): WorkbenchLayoutState {
       settings: {
         ...DEFAULT_WORKBENCH_SETTINGS,
         ...(parsed.settings || {}),
+      },
+      menuBar: {
+        visible: typeof parsed.menuBar?.visible === 'boolean' ? parsed.menuBar.visible : true,
+      },
+      activityBar: {
+        visible: typeof parsed.activityBar?.visible === 'boolean' ? parsed.activityBar.visible : true,
+      },
+      secondaryActivityBar: {
+        visible: typeof parsed.secondaryActivityBar?.visible === 'boolean' ? parsed.secondaryActivityBar.visible : false,
+      },
+      statusBar: {
+        visible: typeof parsed.statusBar?.visible === 'boolean' ? parsed.statusBar.visible : true,
+      },
+      primarySidebarPosition: parsed.primarySidebarPosition === 'right' ? 'right' : 'left',
+      panelAlignment: ['left', 'right', 'center', 'justify'].includes(parsed.panelAlignment) ? parsed.panelAlignment : 'center',
+      quickInputPosition: parsed.quickInputPosition === 'top' ? 'top' : 'center',
+      modes: {
+        zenMode: Boolean(parsed.modes?.zenMode),
+        centeredLayout: Boolean(parsed.modes?.centeredLayout),
       },
     };
   } catch (error) {

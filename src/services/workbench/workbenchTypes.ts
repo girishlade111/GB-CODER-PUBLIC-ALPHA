@@ -65,6 +65,15 @@ export interface WorkbenchSettings {
   density: 'compact' | 'comfortable';
 }
 
+export type PrimarySidebarPosition = 'left' | 'right';
+export type PanelAlignment = 'left' | 'right' | 'center' | 'justify';
+export type QuickInputPosition = 'top' | 'center';
+
+export interface WorkbenchModes {
+  zenMode: boolean;
+  centeredLayout: boolean;
+}
+
 export interface WorkbenchLayoutState {
   version: 2;
   primarySidebar: {
@@ -87,4 +96,22 @@ export interface WorkbenchLayoutState {
   editorLayout: EditorLayoutState;
   currentPreset: LayoutPresetId;
   settings: WorkbenchSettings;
+
+  // Customize Layout (Google Antigravity & VS Code parity)
+  menuBar?: {
+    visible: boolean;
+  };
+  activityBar?: {
+    visible: boolean;
+  };
+  secondaryActivityBar?: {
+    visible: boolean;
+  };
+  statusBar?: {
+    visible: boolean;
+  };
+  primarySidebarPosition?: PrimarySidebarPosition;
+  panelAlignment?: PanelAlignment;
+  quickInputPosition?: QuickInputPosition;
+  modes?: WorkbenchModes;
 }
