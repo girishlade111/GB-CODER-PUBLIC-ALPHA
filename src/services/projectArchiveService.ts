@@ -371,7 +371,7 @@ export const buildArchiveFiles = (
     files.push({ path: 'README.md', content: buildReadme(project, options) });
     return files;
   }
-  const unusedPlain = [
+
       { path: PLAIN_CSS_PATH, content: getFileContent(project, PLAIN_CSS_PATH) },
       { path: PLAIN_JS_PATH, content: getFileContent(project, PLAIN_JS_PATH) },
       { path: 'README.md', content: buildReadme(project, options) },
