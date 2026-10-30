@@ -283,7 +283,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         Rendered at every breakpoint: it is now the only route to these
         features, so hiding it on small screens would make them unreachable.
       */
-      className={`sticky top-14 flex h-full shrink-0 flex-col self-start overflow-y-auto border-r border-[var(--border)] bg-[var(--sidebar)] transition-[width] duration-200 ease-out sm:top-16 ${
+      className={`sticky top-14 flex h-[calc(100vh-4rem)] shrink-0 flex-col self-start overflow-y-auto border-r border-[var(--border)] bg-[var(--sidebar)] transition-[width] duration-200 ease-out sm:top-16 ${
         isExpanded ? 'w-52' : 'w-12'
       } compact:fixed compact:bottom-0 compact:left-0 compact:z-40 compact:h-auto compact:w-[min(18rem,82vw)] compact:shadow-elevated-lg compact:transition-transform ${
         isDrawerOpen ? 'compact:translate-x-0' : 'compact:-translate-x-full'

@@ -169,7 +169,6 @@ import { useAutoSave } from './hooks/useAutoSave';
 import { useSnapshots } from './hooks/useSnapshots';
 import SessionRecoveryModal from './components/SessionRecoveryModal';
 import SnapshotManagerModal from './components/SnapshotManagerModal';
-import StatusBar from './components/StatusBar';
 import { snapshotService, SnapshotProjectState } from './services/snapshotService';
 import { useCodeSelection } from './hooks/useCodeSelection';
 import { useSelectionOperations } from './hooks/useSelectionOperations';
@@ -4616,7 +4615,7 @@ function App() {
     <div
       /* `compact:pb-14` reserves the strip the fixed Code/Preview bar occupies
          so it never covers the footer or the bottom of the active pane. */
-      className="h-screen flex flex-col bg-surface-canvas overflow-hidden compact:pb-14"
+      className="min-h-screen flex flex-col bg-surface-canvas compact:pb-14"
       /*
        * Window-wide drop target. Only the handlers live here; the code that can
        * read a drop is fetched on the first one.
@@ -4703,7 +4702,7 @@ function App() {
 
 
       {/* Main Content — left rail + workspace */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 min-h-0">
         {/*
           Drawer backdrop. Only ever rendered while the drawer is open, and the
           drawer can only open below 1025px, so desktop never sees this node.
@@ -4767,7 +4766,7 @@ function App() {
           </Suspense>
         )}
 
-        <div className={`grid flex-1 min-w-0 gap-3 px-3 py-3 lg:gap-3 lg:px-4 lg:py-3 overflow-hidden ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`} data-testid="workspace-grid">
+        <div className={`grid flex-1 min-w-0 gap-3 px-4 py-4 lg:gap-4 lg:px-6 lg:py-5 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} h-full`} data-testid="workspace-grid">
           {/*
             Left column: the three fixed panels for plain projects, or the
             tabbed multi-file editor for React/Vue. Plain mode is unchanged.
@@ -4777,7 +4776,7 @@ function App() {
             // column (whose three fixed-height editors give the grid row its
             // height), this column has no intrinsic height of its own.
             <div
-              className={`flex h-full w-full flex-col h-full min-h-0 ${
+              className={`flex h-full w-full flex-col min-h-[calc(100vh-11rem)] ${
                 mobilePane === 'preview' ? 'compact:hidden' : ''
               }`}
               data-testid="code-column"
@@ -4797,7 +4796,7 @@ function App() {
             </div>
           ) : (
           <div
-            className={`flex flex-col space-y-3 w-full min-h-0 h-full overflow-y-auto pr-1 ${
+            className={`flex flex-col space-y-3 w-full min-h-0 ${
               mobilePane === 'preview' ? 'compact:hidden' : ''
             }`}
             data-testid="code-column"
@@ -5272,8 +5271,6 @@ function App() {
           />
         </Suspense>
       )}
-      
-      <StatusBar />
       <SnapshotManagerModal
         isOpen={showSnapshotManager}
         onClose={() => setShowSnapshotManager(false)}
