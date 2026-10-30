@@ -145,12 +145,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       onClick: onOpenImport,
     },
     {
-      id: 'vscode-mode',
-      label: 'VS Code Mode & Sandbox',
-      icon: <TerminalSquare className="h-[18px] w-[18px]" strokeWidth={1.5} />,
-      onClick: onOpenVSCodeMode,
-    },
-    {
       id: 'voice',
       label: 'Voice Commands',
       icon: <Mic className="h-[18px] w-[18px]" strokeWidth={1.5} />,
@@ -173,6 +167,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       label: 'Snapshots',
       icon: <History className="h-[18px] w-[18px]" strokeWidth={1.5} />,
       onClick: onOpenSnapshots,
+    },
+    {
+      id: 'vscode-mode',
+      label: 'VS Code Mode & Sandbox',
+      icon: <TerminalSquare className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenVSCodeMode,
     },
   ];
 
