@@ -51,50 +51,34 @@
 
   <!-- Loading screen (removed after React mounts) -->
   <div id="loading" class="gb-loader-root">
-    <div class="gb-loader-backdrop"></div>
-    <div class="gb-loader-container">
-      <!-- Artistic Orbital Tech Emblem -->
-      <div class="gb-loader-emblem">
-        <!-- Outer Glowing Shimmer Ring -->
-        <div class="gb-ring-outer"></div>
-        <!-- Middle Dashed Tech Orbit -->
-        <div class="gb-ring-middle"></div>
-        <!-- Inner Radiant Glass Chamber -->
-        <div class="gb-core">
-          <div class="gb-core-glow"></div>
-          <!-- Stylized Code Bracket Matrix Icon -->
-          <svg class="gb-core-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="16 18 22 12 16 6"></polyline>
-            <polyline points="8 6 2 12 8 18"></polyline>
-            <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
-          </svg>
-        </div>
+    <div class="gb-loader-ambient"></div>
+    <div class="gb-loader-card">
+      <!-- Official App Logo Emblem -->
+      <div class="gb-emblem-frame">
+        <img src="/apple-touch-icon.png" alt="GB Coder" width="56" height="56" class="gb-emblem-image" />
       </div>
 
-      <!-- Brand Wordmark & Badge -->
-      <div class="gb-brand-line">
+      <!-- Executive Brand Wordmark & Badge -->
+      <div class="gb-brand-row">
         <span class="gb-brand-lead">LadeStack</span>
-        <span class="gb-brand-divider">/</span>
+        <span class="gb-brand-slash">/</span>
         <span class="gb-brand-title">GB Coder</span>
         <span class="gb-brand-badge">IDE</span>
       </div>
 
-      <!-- Dynamic High-Tech Progress Beam -->
+      <!-- Linear Enterprise Progress Track -->
       <div class="gb-progress-track">
-        <div class="gb-progress-beam"></div>
+        <div class="gb-progress-fill"></div>
       </div>
 
-      <!-- Monospace Status & Shimmer Dots -->
-      <div class="gb-status-line">
-        <span class="gb-status-dot"></span>
-        <span class="gb-status-text">INITIALIZING WORKSPACE</span>
-      </div>
+      <!-- Understated Executive Status -->
+      <span class="gb-status-caption">Loading workspace…</span>
     </div>
   </div>
 
   <style>
     /* =====================================================================
-       GB CODER — MODERN ARTISTIC BOOT LOADER
+       GB CODER — ENTERPRISE-GRADE EXECUTIVE LOADER
        ===================================================================== */
     .gb-loader-root {
       position: fixed;
@@ -105,211 +89,156 @@
       background: #000000;
       z-index: 99999;
       overflow: hidden;
-      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease-out;
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease-out;
       user-select: none;
       -webkit-user-select: none;
     }
 
-    /* Ambient Spatial Depth Backdrop */
-    .gb-loader-backdrop {
+    /* Soft Luxury Ambient Vignette */
+    .gb-loader-ambient {
       position: absolute;
       inset: 0;
-      background:
-        radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%),
-        radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-      background-size: 100% 100%, 28px 28px;
+      background: radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.035) 0%, transparent 65%);
       pointer-events: none;
     }
 
-    .gb-loader-container {
+    .gb-loader-card {
       position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
       z-index: 1;
-      padding: 24px;
     }
 
-    /* Central Emblem Assembly */
-    .gb-loader-emblem {
+    /* Official Brand Logo Emblem Frame */
+    .gb-emblem-frame {
       position: relative;
-      width: 96px;
-      height: 96px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 24px;
-    }
-
-    /* Outer Radiant Orbit Ring */
-    .gb-ring-outer {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 2px solid transparent;
-      border-top-color: #ffffff;
-      border-right-color: rgba(255, 255, 255, 0.65);
-      border-bottom-color: rgba(255, 255, 255, 0.12);
-      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.45));
-      animation: gb-spin-cw 2.4s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-    }
-
-    /* Middle Counter-Rotating Tech Track */
-    .gb-ring-middle {
-      position: absolute;
-      inset: 10px;
-      border-radius: 50%;
-      border: 1px dashed rgba(255, 255, 255, 0.2);
-      border-left-color: rgba(255, 255, 255, 0.85);
-      animation: gb-spin-ccw 4.8s linear infinite;
-    }
-
-    /* Inner Glassmorphic Chamber */
-    .gb-core {
-      position: relative;
-      width: 52px;
-      height: 52px;
+      width: 56px;
+      height: 56px;
       border-radius: 14px;
-      background: linear-gradient(135deg, rgba(28, 28, 32, 0.85) 0%, rgba(10, 10, 12, 0.95) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow:
-        0 4px 20px rgba(0, 0, 0, 0.8),
-        0 0 16px rgba(255, 255, 255, 0.06),
-        inset 0 1px 1px rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background: #0c0d10;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 16px 36px -4px rgba(0, 0, 0, 0.8),
+        0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 0 24px -2px rgba(255, 255, 255, 0.06);
+      margin-bottom: 20px;
+      overflow: hidden;
+      animation: gb-emblem-pulse 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
 
-    .gb-core-glow {
-      position: absolute;
-      inset: -4px;
-      border-radius: 18px;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
-      animation: gb-pulse 2.2s ease-in-out infinite;
-      z-index: -1;
-    }
-
-    .gb-core-icon {
-      width: 24px;
-      height: 24px;
-      color: #ffffff;
-      filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
+    .gb-emblem-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 13px;
     }
 
     /* Brand Wordmark */
-    .gb-brand-line {
+    .gb-brand-row {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       font-family: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 17px;
+      font-size: 14px;
       line-height: 1;
-      letter-spacing: -0.3px;
-      margin-bottom: 16px;
+      letter-spacing: -0.015em;
+      margin-bottom: 18px;
     }
 
     .gb-brand-lead {
-      color: #e4e4e7;
-      font-weight: 600;
+      color: #71717a;
+      font-weight: 500;
     }
 
-    .gb-brand-divider {
-      color: #52525b;
+    .gb-brand-slash {
+      color: #3f3f46;
       font-weight: 400;
+      font-size: 12px;
     }
 
     .gb-brand-title {
-      font-weight: 700;
+      font-weight: 600;
       color: #ffffff;
-      letter-spacing: -0.2px;
+      letter-spacing: -0.015em;
     }
 
     .gb-brand-badge {
       display: inline-flex;
       align-items: center;
-      padding: 2.5px 7px;
-      font-size: 10px;
+      padding: 2px 5.5px;
+      font-size: 9px;
       font-weight: 600;
-      letter-spacing: 1px;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      background: rgba(255, 255, 255, 0.08);
-      color: #f4f4f5;
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.06);
+      color: #a1a1aa;
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 4px;
-      margin-left: 4px;
+      margin-left: 3px;
     }
 
-    /* Progress Track & Luminous Beam */
+    /* Enterprise Linear Progress Track (Linear/Stripe Style) */
     .gb-progress-track {
       position: relative;
-      width: 190px;
+      width: 130px;
       height: 2px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       border-radius: 99px;
       overflow: hidden;
       margin-bottom: 14px;
     }
 
-    .gb-progress-beam {
+    .gb-progress-fill {
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 70px;
-      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.25) 35%, #ffffff 70%, rgba(255, 255, 255, 0.9) 90%, transparent 100%);
+      width: 45%;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 30%, #ffffff 70%, rgba(255, 255, 255, 0.4) 100%);
       border-radius: 99px;
-      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.7));
-      animation: gb-sweep 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      animation: gb-progress-slide 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
     }
 
-    /* Status Monospace Line */
-    .gb-status-line {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-family: 'Geist Mono', 'JetBrains Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
-      font-size: 10.5px;
-      letter-spacing: 1.8px;
-      color: #a1a1aa;
-      text-transform: uppercase;
-      animation: gb-fade 2s ease-in-out infinite;
+    /* Understated Executive Caption */
+    .gb-status-caption {
+      font-family: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 11.5px;
+      letter-spacing: -0.005em;
+      color: #52525b;
+      font-weight: 400;
     }
 
-    .gb-status-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: #ffffff;
-      box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+    /* Animations */
+    @keyframes gb-emblem-pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 
+          0 16px 36px -4px rgba(0, 0, 0, 0.8),
+          0 0 0 1px rgba(255, 255, 255, 0.04),
+          0 0 20px -2px rgba(255, 255, 255, 0.04);
+      }
+      50% {
+        transform: scale(1.02);
+        box-shadow: 
+          0 20px 40px -4px rgba(0, 0, 0, 0.9),
+          0 0 0 1px rgba(255, 255, 255, 0.08),
+          0 0 32px -2px rgba(255, 255, 255, 0.1);
+      }
     }
 
-    /* Keyframe Choreography */
-    @keyframes gb-spin-cw {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes gb-spin-ccw {
-      0% { transform: rotate(360deg); }
-      100% { transform: rotate(0deg); }
-    }
-
-    @keyframes gb-pulse {
-      0%, 100% { opacity: 0.4; transform: scale(0.92); }
-      50% { opacity: 0.9; transform: scale(1.08); }
-    }
-
-    @keyframes gb-sweep {
-      0% { left: -70px; }
-      100% { left: 190px; }
-    }
-
-    @keyframes gb-fade {
-      0%, 100% { opacity: 0.7; }
-      50% { opacity: 1; }
+    @keyframes gb-progress-slide {
+      0% {
+        left: -45%;
+      }
+      100% {
+        left: 100%;
+      }
     }
   </style>
 

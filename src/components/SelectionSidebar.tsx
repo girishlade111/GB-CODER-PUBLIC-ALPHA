@@ -22,28 +22,8 @@ interface SelectionSidebarProps {
 const LadeStackLoader: React.FC = () => {
     return (
         <div className="flex flex-col items-center justify-center py-12">
-            {/* Modern Orbital Emblem */}
-            <div className="relative flex items-center justify-center w-12 h-12 mb-4">
-                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-white border-r-white/60 animate-spin" />
-                <div
-                    className="absolute inset-1.5 rounded-full border border-dashed border-slate-600/50 animate-spin"
-                    style={{ animationDirection: 'reverse', animationDuration: '4s' }}
-                />
-                <div className="w-7 h-7 rounded-lg bg-surface-overlay border border-white/20 flex items-center justify-center shadow-[0_0_12px_rgba(255,255,255,0.2)]">
-                    <svg
-                        className="w-4 h-4 text-white"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    >
-                        <polyline points="16 18 22 12 16 6" />
-                        <polyline points="8 6 2 12 8 18" />
-                    </svg>
-                </div>
-            </div>
+            {/* Enterprise Minimalist Hairline Spinner */}
+            <div className="w-6 h-6 rounded-full border-[1.5px] border-white/10 border-t-white animate-spin mb-3.5" />
             <div className="text-center">
                 <h3 className="text-[15px] font-semibold text-content-on-dark">
                     Lade Stack AI
