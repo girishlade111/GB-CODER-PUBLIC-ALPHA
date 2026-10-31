@@ -160,8 +160,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ projectType, workspace, onC
   };
 
   return (
-    <div className="flex h-full w-60 shrink-0 flex-col border-r border-stroke-subtle bg-surface-base">
-      <div className="flex items-center justify-between border-b border-stroke-subtle px-3 py-2">
+    <div className="sticky top-14 sm:top-16 flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] self-start w-60 shrink-0 flex-col overflow-hidden border-r border-stroke-subtle bg-surface-base">
+      <div className="flex shrink-0 items-center justify-between border-b border-stroke-subtle px-3 py-2">
         <div className="min-w-0">
           <h2 className="font-sans text-xs font-medium uppercase tracking-wide text-content-secondary">Files</h2>
           <p className="truncate text-[11px] text-content-muted">{PROJECT_TYPE_LABEL[projectType]}</p>
@@ -190,17 +190,17 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ projectType, workspace, onC
         </div>
       </div>
 
-      <ul className="flex-1 overflow-y-auto p-1">
+      <ul className="flex-1 min-h-0 overflow-y-auto p-1">
         {workspace.files.map(renderFile)}
         {draftPath !== null && renderDraftInput()}
       </ul>
 
       {error && (
-        <p className="border-t border-stroke-subtle px-3 py-2 text-[11px] text-red-300">{error}</p>
+        <p className="shrink-0 border-t border-stroke-subtle px-3 py-2 text-[11px] text-red-300">{error}</p>
       )}
 
       {projectType === 'plain' && (
-        <p className="border-t border-stroke-subtle px-3 py-2 text-[11px] text-content-muted">
+        <p className="shrink-0 border-t border-stroke-subtle px-3 py-2 text-[11px] text-content-muted">
           Plain projects use these three files. Start a React or Vue project to add your own.
         </p>
       )}

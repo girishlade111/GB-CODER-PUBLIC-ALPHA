@@ -4730,8 +4730,8 @@ function App() {
         />
 
         {showFileExplorer && !isMobile && (
-          <Suspense fallback={<LazyFallback label="Files" variant="panel" />}>
-  <FileExplorer
+          <Suspense fallback={<div className="sticky top-14 sm:top-16 flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] self-start w-60 shrink-0"><LazyFallback label="Files" variant="panel" /></div>}>
+            <FileExplorer
               projectType={fileProject.projectType}
               workspace={workspace}
               onClose={() => setShowFileExplorer(false)}
@@ -4740,8 +4740,8 @@ function App() {
         )}
 
         {showDependencies && !isMobile && (
-          <Suspense fallback={<LazyFallback label="Dependencies" variant="panel" />}>
-            <div className="flex h-full w-80 sm:w-96 shrink-0 flex-col overflow-hidden border-r border-stroke-subtle">
+          <Suspense fallback={<div className="sticky top-14 sm:top-16 flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] self-start w-80 sm:w-96 shrink-0"><LazyFallback label="Dependencies" variant="panel" /></div>}>
+            <div className="sticky top-14 sm:top-16 flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] self-start w-80 sm:w-96 shrink-0 flex-col overflow-hidden border-r border-stroke-subtle bg-surface-base">
               <DependenciesPanel
                 project={fileProject}
                 resolvedPackages={projectBundle.resolvedPackages}
