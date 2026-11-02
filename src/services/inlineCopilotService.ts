@@ -22,6 +22,7 @@
 
 import type * as MonacoApi from 'monaco-editor/esm/vs/editor/editor.api';
 import { SETTINGS_STORAGE_KEY, type AppSettings } from '../hooks/useSettings';
+import { keyManager } from './ai/keyManager';
 
 type Monaco = typeof MonacoApi;
 type TextModel = MonacoApi.editor.ITextModel;
@@ -533,11 +534,10 @@ class InlineCopilotService {
           language: context.language,
           fileName: context.fileName,
           /*
-           * Fall back to the same public key the screenshot-to-code feature uses,
-           * so a local install without a server-side GEMINI_API_KEY still works.
-           * An empty string is sent as absent and the server then requires its own.
+           * Use user-configured BYOK Gemini key if present, otherwise omit
+           * and let serverless endpoint handle authentication.
            */
-          apiKey: import.meta.env.VITE_GEMINI_API_KEY || undefined,
+          apiKey: keyManager.getApiKey('gemini') || undefined,
         }),
         signal: controller.signal,
       });

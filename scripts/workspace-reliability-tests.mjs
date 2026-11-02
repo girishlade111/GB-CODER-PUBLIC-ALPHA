@@ -307,7 +307,7 @@ describe('Phase 2.1A — defect reproduction (W-tests: red before fix)', () => {
     const [delRes, copy] = await Promise.all([deleteProject(proj.id), duplicateProject(proj.id)]);
     assert.equal(copy, null);
     assert.equal((await listProjects()).length, before - 1);
-    assert.equal(delRes, undefined);
+    assert.equal(delRes, true);
   });
 
   test('W07c: duplicating a nonexistent project creates nothing', async () => {

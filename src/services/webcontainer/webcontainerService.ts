@@ -742,11 +742,17 @@ class WebContainerManager {
     this.shellSpawnPromise = null;
     this.instance = null;
     this.bootPromise = null;
-    if (shared.__GBCODER_WEBCONTAINER_INSTANCE__ === container) shared.__GBCODER_WEBCONTAINER_INSTANCE__ = null;
-    if (shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__ === pendingBoot) shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__ = null;
+    shared.__GBCODER_WEBCONTAINER_INSTANCE__ = null;
+    shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__ = null;
     // The public API invalidates the filesystem and all descendant processes.
     // A pending old boot tears itself down before releasing the next boot.
-    container?.teardown();
+    if (container) {
+      try {
+        container.teardown();
+      } catch (e) {
+        console.warn('[WebContainer] Error during container teardown:', e);
+      }
+    }
     this.runtimeRetirement = Promise.all([
       this.runtimeRetirement,
       pendingBoot?.then(
@@ -1248,7 +1254,12 @@ class WebContainerManager {
     await this.runtimeRetirement;
     if (generation !== this.runtimeGeneration) throw new Error('Project changed before boot');
     // 1. Check local instance
-    if (this.instance) return this.instance;
+    if (this.instance && !(this.instance as unknown as { _tornDown?: boolean })._tornDown) {
+      return this.instance;
+    }
+    if (this.instance) {
+      this.instance = null;
+    }
 
     // 2. Check globally shared or static WebContainer._instance (e.g. across HMR)
     const existing = (
@@ -1257,7 +1268,7 @@ class WebContainerManager {
       }
     ).__GBCODER_WEBCONTAINER_INSTANCE__;
 
-    if (existing) {
+    if (existing && !(existing as unknown as { _tornDown?: boolean })._tornDown) {
       this.instance = existing;
       (
         globalThis as unknown as {
@@ -1267,6 +1278,9 @@ class WebContainerManager {
       this.setupServerListeners(existing);
       this.updateState({ status: 'ready', error: null, runtimeError: null });
       return existing;
+    }
+    if (existing) {
+      (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer | null }).__GBCODER_WEBCONTAINER_INSTANCE__ = null;
     }
 
     // 3. Check ongoing boot promise locally or on globalThis
@@ -1327,12 +1341,14 @@ class WebContainerManager {
         if (
           message.includes('Only a single WebContainer instance can be booted')
         ) {
-          const recovered = (
-            globalThis as unknown as {
-              __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer;
-            }
-          ).__GBCODER_WEBCONTAINER_INSTANCE__;
-          if (recovered) {
+          const recovered =
+            (WebContainer as unknown as { _instance?: WebContainer })._instance ??
+            (
+              globalThis as unknown as {
+                __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer;
+              }
+            ).__GBCODER_WEBCONTAINER_INSTANCE__;
+          if (recovered && !(recovered as unknown as { _tornDown?: boolean })._tornDown) {
             this.instance = recovered;
             (
               globalThis as unknown as {

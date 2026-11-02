@@ -754,7 +754,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           f.path === conflict.path ? { ...f, content: conflict.monacoContent } : f,
         );
         projectFilesMirrorRef.current = updatedFiles;
-        await saveProjectFiles(targetProjectId, updatedFiles);
+        const saveRes = await saveProjectFiles(targetProjectId, updatedFiles);
+        if (!saveRes.persisted) {
+          toast.error('Failed to save project changes to local database.');
+        }
 
         onChangeFile(conflict.path, conflict.monacoContent);
         await webcontainerService.syncFile(conflict.path, conflict.monacoContent, targetProjectId);
@@ -843,7 +846,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         if (isDeletion) {
           const updatedFiles = projectFilesMirrorRef.current.filter((f) => f.path !== conflict.path);
           projectFilesMirrorRef.current = updatedFiles;
-          await saveProjectFiles(targetProjectId, updatedFiles);
+          const saveRes = await saveProjectFiles(targetProjectId, updatedFiles);
+          if (!saveRes.persisted) {
+            toast.error('Failed to save project changes to local database.');
+          }
 
           const container = webcontainerService.getInstance();
           if (container) {
@@ -875,7 +881,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             f.path === conflict.path ? { ...f, content: conflict.externalContent } : f,
           );
           projectFilesMirrorRef.current = updatedFiles;
-          await saveProjectFiles(targetProjectId, updatedFiles);
+          const saveRes = await saveProjectFiles(targetProjectId, updatedFiles);
+          if (!saveRes.persisted) {
+            toast.error('Failed to save project changes to local database.');
+          }
 
           if (activePathMirrorRef.current === conflict.path && editorRef.current) {
             const model = editorRef.current.getModel();

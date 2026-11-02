@@ -1,9 +1,13 @@
-import { ProjectFile } from '../../types/files';
+import type { ProjectFile } from '../../types/files';
 
 export type PackageManagerType = 'npm' | 'pnpm' | 'yarn';
+export type PackageManagerSource = 'packageManager-field' | 'lockfile' | 'default';
 
 export interface ProjectCommandInfo {
   packageManager: PackageManagerType;
+  packageManagerSource: PackageManagerSource;
+  packageManagerVersion?: string | null;
+  runtimeWarning?: string | null;
   hasManifest: boolean;
   packageJson: Record<string, unknown> | null;
   scripts: Record<string, string>;
@@ -38,16 +42,21 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
 
   const hasConflictingLockfiles = lockfiles.length > 1;
   let packageManager: PackageManagerType = 'npm';
+  let packageManagerSource: PackageManagerSource = 'default';
+  let packageManagerVersion: string | null = null;
   let detectedLockfile: string | null = null;
 
   if (lockfiles.includes('pnpm-lock.yaml')) {
     packageManager = 'pnpm';
+    packageManagerSource = 'lockfile';
     detectedLockfile = 'pnpm-lock.yaml';
   } else if (lockfiles.includes('yarn.lock')) {
     packageManager = 'yarn';
+    packageManagerSource = 'lockfile';
     detectedLockfile = 'yarn.lock';
   } else if (lockfiles.includes('package-lock.json')) {
     packageManager = 'npm';
+    packageManagerSource = 'lockfile';
     detectedLockfile = 'package-lock.json';
   }
 
@@ -59,11 +68,23 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
   if (manifestFile?.content) {
     try {
       packageJson = JSON.parse(manifestFile.content);
-      if (packageJson && typeof packageJson === 'object' && 'scripts' in packageJson) {
-        const rawScripts = packageJson.scripts as Record<string, unknown>;
-        for (const [key, value] of Object.entries(rawScripts || {})) {
-          if (typeof value === 'string') {
-            scripts[key] = value;
+      if (packageJson && typeof packageJson === 'object') {
+        if ('scripts' in packageJson) {
+          const rawScripts = packageJson.scripts as Record<string, unknown>;
+          for (const [key, value] of Object.entries(rawScripts || {})) {
+            if (typeof value === 'string') {
+              scripts[key] = value;
+            }
+          }
+        }
+
+        // Check packageManager field (e.g. "pnpm@8.6.0", "yarn@1.22.19", "npm@10.2.0")
+        if (typeof packageJson.packageManager === 'string') {
+          const match = packageJson.packageManager.trim().match(/^(npm|pnpm|yarn)(?:@(.*))?$/i);
+          if (match) {
+            packageManager = match[1].toLowerCase() as PackageManagerType;
+            packageManagerSource = 'packageManager-field';
+            packageManagerVersion = match[2] || null;
           }
         }
       }
@@ -74,6 +95,13 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
 
   const hasManifest = manifestFile !== undefined;
   const isStaticProject = !hasManifest && files.some((f) => /\.(html|css|js)$/i.test(f.path));
+
+  // Diagnostic warning for pnpm in WebContainer runtime
+  let runtimeWarning: string | null = null;
+  if (packageManager === 'pnpm') {
+    runtimeWarning =
+      'pnpm project detected. WebContainer runtime executes npm commands natively; if pnpm encounters runtime limitations, npm may be used without modifying project lockfiles.';
+  }
 
   // 3. Resolve dev command
   let devCommand: string | null = null;
@@ -103,6 +131,9 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
 
   return {
     packageManager,
+    packageManagerSource,
+    packageManagerVersion,
+    runtimeWarning,
     hasManifest,
     packageJson,
     scripts,

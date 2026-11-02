@@ -202,15 +202,8 @@ class KeyManager {
       }
     }
 
-    // Optional environment fallback for local dev if configured
-    if (provider === 'gemini') {
-      const meta = import.meta as unknown as { env?: Record<string, string | undefined> };
-      const envKey = meta.env?.VITE_GEMINI_API_KEY;
-      if (typeof envKey === 'string' && envKey.trim()) {
-        return cleanApiKey(envKey);
-      }
-    }
-
+    // Strict BYOK: never read private operator keys from client-side environment variables
+    // to prevent baking private API keys into compiled production JavaScript bundles.
     return '';
   }
 

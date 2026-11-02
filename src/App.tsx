@@ -64,6 +64,7 @@ import {
   updateProjectEditorPreference,
   writeActiveProjectId,
 } from './services/projects/projectDatabase';
+import { storagePersistenceService } from './services/storagePersistenceService';
 /*
  * Not lazy, deliberately. The dashboard is the first screen on a cold start, so
  * deferring it would trade a smaller bundle for a spinner on the one view
@@ -2701,7 +2702,11 @@ function App() {
         pendingProjectSaveRef.current = null;
       }
 
-      await deleteProjectRecord(record.id);
+      const deleted = await deleteProjectRecord(record.id);
+      if (!deleted) {
+        toast.error(`Could not delete "${record.name}". Storage operation failed.`);
+        return;
+      }
       setProjects((current) => current.filter((item) => item.id !== record.id));
 
       // Re-check identity AFTER the await: a concurrent project-open could have changed
@@ -2947,7 +2952,7 @@ function App() {
     };
   }, [flushProjectSave, activeProjectId, fullStackProject, vsCodeReturn]);
 
-  /* Non-blocking storage warnings (e.g. quota limit reached). */
+  /* Non-blocking storage warnings (e.g. quota limit reached) and persistence request. */
   useEffect(() => {
     const handleStorageWarning = (e: Event) => {
       const detail = (e as CustomEvent<StorageWarningDetail>).detail;
@@ -2959,6 +2964,7 @@ function App() {
     };
 
     window.addEventListener(STORAGE_WARNING_EVENT, handleStorageWarning);
+    void storagePersistenceService.requestStoragePersistence();
     return () => window.removeEventListener(STORAGE_WARNING_EVENT, handleStorageWarning);
   }, []);
 

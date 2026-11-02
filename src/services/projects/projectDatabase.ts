@@ -37,17 +37,50 @@ import { languageForPath } from '../../types/files';
 
 export const STORAGE_WARNING_EVENT = 'gb-coder:storage-warning';
 
+export type StorageErrorCode =
+  | 'STORAGE_UNAVAILABLE'
+  | 'STORAGE_QUOTA_EXCEEDED'
+  | 'STORAGE_TRANSACTION_FAILED'
+  | 'STORAGE_DATABASE_OPEN_FAILED'
+  | 'STORAGE_OPERATION_ABORTED';
+
+export class StorageError extends Error {
+  public readonly code: StorageErrorCode;
+  public readonly quotaExceeded: boolean;
+
+  constructor(code: StorageErrorCode, message: string, quotaExceeded = false) {
+    super(message);
+    this.name = 'StorageError';
+    this.code = code;
+    this.quotaExceeded = quotaExceeded;
+  }
+}
+
+let lastStorageError: StorageError | null = null;
+export const getLastStorageError = (): StorageError | null => lastStorageError;
+export const clearLastStorageError = (): void => {
+  lastStorageError = null;
+};
+
 export interface StorageWarningDetail {
   reason: string;
   quotaExceeded?: boolean;
+  code?: StorageErrorCode;
 }
 
-const dispatchStorageWarning = (reason: string, quotaExceeded = false): void => {
+const dispatchStorageWarning = (
+  reason: string,
+  quotaExceeded = false,
+  code?: StorageErrorCode,
+): void => {
+  const resolvedCode =
+    code || (quotaExceeded ? 'STORAGE_QUOTA_EXCEEDED' : 'STORAGE_TRANSACTION_FAILED');
+  lastStorageError = new StorageError(resolvedCode, reason, quotaExceeded);
   if (typeof window !== 'undefined') {
     try {
       window.dispatchEvent(
         new CustomEvent<StorageWarningDetail>(STORAGE_WARNING_EVENT, {
-          detail: { reason, quotaExceeded },
+          detail: { reason, quotaExceeded, code: resolvedCode },
         }),
       );
     } catch {
@@ -142,6 +175,7 @@ const createId = (): string => {
 const openDatabase = (): Promise<IDBDatabase | null> =>
   new Promise((resolve) => {
     if (typeof indexedDB === 'undefined') {
+      dispatchStorageWarning('IndexedDB unavailable or blocked', false, 'STORAGE_UNAVAILABLE');
       resolve(null);
       return;
     }
@@ -150,6 +184,7 @@ const openDatabase = (): Promise<IDBDatabase | null> =>
     try {
       request = indexedDB.open(DB_NAME, DB_VERSION);
     } catch {
+      dispatchStorageWarning('IndexedDB open threw error', false, 'STORAGE_DATABASE_OPEN_FAILED');
       resolve(null);
       return;
     }
@@ -172,8 +207,14 @@ const openDatabase = (): Promise<IDBDatabase | null> =>
     };
 
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => resolve(null);
-    request.onblocked = () => resolve(null);
+    request.onerror = () => {
+      dispatchStorageWarning('Failed to open database', false, 'STORAGE_DATABASE_OPEN_FAILED');
+      resolve(null);
+    };
+    request.onblocked = () => {
+      dispatchStorageWarning('Database open blocked', false, 'STORAGE_DATABASE_OPEN_FAILED');
+      resolve(null);
+    };
   });
 
 /**
@@ -212,7 +253,7 @@ const withTransaction = <T>(
 ): Promise<T | null> =>
   openDatabase().then((db) => {
     if (!db) {
-      dispatchStorageWarning('IndexedDB unavailable or blocked');
+      dispatchStorageWarning('IndexedDB unavailable or blocked', false, 'STORAGE_UNAVAILABLE');
       return null;
     }
 
@@ -222,7 +263,11 @@ const withTransaction = <T>(
         transaction = db.transaction(storeNames, mode);
       } catch (err) {
         const isQuota = (err as Error)?.name === 'QuotaExceededError';
-        dispatchStorageWarning(isQuota ? 'Storage quota exceeded' : 'Transaction failed', isQuota);
+        dispatchStorageWarning(
+          isQuota ? 'Storage quota exceeded' : 'Transaction failed',
+          isQuota,
+          isQuota ? 'STORAGE_QUOTA_EXCEEDED' : 'STORAGE_TRANSACTION_FAILED',
+        );
         db.close();
         resolve(null);
         return;
@@ -241,11 +286,15 @@ const withTransaction = <T>(
       transaction.onerror = () => {
         const error = transaction.error;
         const isQuota = error?.name === 'QuotaExceededError';
-        dispatchStorageWarning(isQuota ? 'Storage quota exceeded' : (error?.message || 'Storage write failed'), isQuota);
+        dispatchStorageWarning(
+          isQuota ? 'Storage quota exceeded' : (error?.message || 'Storage write failed'),
+          isQuota,
+          isQuota ? 'STORAGE_QUOTA_EXCEEDED' : 'STORAGE_TRANSACTION_FAILED',
+        );
         settle(null);
       };
       transaction.onabort = () => {
-        dispatchStorageWarning('Transaction aborted');
+        dispatchStorageWarning('Transaction aborted', false, 'STORAGE_OPERATION_ABORTED');
         settle(null);
       };
 
@@ -499,23 +548,26 @@ export const touchProject = (id: string): Promise<ProjectRecord | null> =>
  * this project. A failed or aborted transaction resolves `null` and preserves
  * the pointer; a pointer naming any other project is left untouched.
  */
-export const deleteProject = (id: string): Promise<void> =>
+export const deleteProject = (id: string): Promise<boolean> =>
   enqueue(() =>
-    withTransaction<void>([PROJECTS_STORE, FILES_STORE], 'readwrite', async (transaction) => {
+    withTransaction<boolean>([PROJECTS_STORE, FILES_STORE], 'readwrite', async (transaction) => {
       transaction.objectStore(PROJECTS_STORE).delete(id);
 
       const index = transaction.objectStore(FILES_STORE).index(PROJECT_ID_INDEX);
       const keys = await awaitRequest(index.getAllKeys(id) as IDBRequest<IDBValidKey[]>);
       const files = transaction.objectStore(FILES_STORE);
       for (const key of keys) files.delete(key);
+      return true;
     }),
   ).then((res) => {
-    // withTransaction resolves its work value (undefined) on commit and null
+    // withTransaction resolves its work value (true) on commit and null
     // on any failure — never treat failure as a successful deletion.
     if (res !== null) {
       if (readActiveProjectId() === id) writeActiveProjectId(null);
       notifyProjectsUpdated();
+      return true;
     }
+    return false;
   });
 
 /**
