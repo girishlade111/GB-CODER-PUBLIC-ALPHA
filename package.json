@@ -78,7 +78,7 @@
     "@vercel/analytics": "^1.6.1",
     "@vue/compiler-sfc": "3.5.40",
     "@webcontainer/api": "^1.6.4",
-    "axios": "^1.13.6",
+    "axios": "^1.20.0",
     "diff": "^5.2.0",
     "e2b": "^2.37.0",
     "esbuild-wasm": "0.25.10",
@@ -101,7 +101,7 @@
   },
   "devDependencies": {
     "playwright": "1.62.0",
-    "astro": "^5.4.2",
+    "astro": "^7.4.4",
     "@eslint/js": "^9.9.1",
     "@types/diff": "^7.0.2",
     "@types/react": "^18.3.5",
