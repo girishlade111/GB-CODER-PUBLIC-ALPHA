@@ -1,0 +1,146 @@
+{
+  "scope": "Phase B.4.4 Stage 2 Vue binary dependency restoration; Phase Zero campaign reconciliation; no product integration",
+  "head": "30804ea3e3f94814b46b7a9934fb477f91354615",
+  "status": "B4_4_STAGE_2_VUE_BLOCKED",
+  "stopConditionTriggered": true,
+  "stopConditionReason": "Phase Zero campaign reconciliation revealed an unreported startup and repeated campaign across task-365 (1 boot, FAIL) and task-405 (2 boots, PASS) during Stage 1.2.2.",
+  "reconciliationAudit": {
+    "totalBootsAcrossAttempts": 3,
+    "tasks": [
+      {
+        "taskId": "task-365",
+        "description": "Stage 1.2.2 initial run",
+        "boots": 1,
+        "role": "producer",
+        "status": "FAIL",
+        "exitCode": 1,
+        "elapsedMs": 22417,
+        "error": "SyntaxError: missing ) after argument list in producer-permission-diagnostics due to unescaped multiline string in jsh node -e",
+        "cleanedUp": true,
+        "orphanedResources": 0
+      },
+      {
+        "taskId": "task-405",
+        "description": "Stage 1.2.2 re-run after inline script refactor to node_modules/.b4-4-diag.cjs",
+        "boots": 2,
+        "role": "producer + consumer",
+        "status": "PASS",
+        "exitCode": 0,
+        "elapsedMs": 48194,
+        "producerElapsedMs": 14547,
+        "consumerElapsedMs": 33647,
+        "consumerRealDomMs": 33634,
+        "marker": "B44_REACT_A",
+        "cleanedUp": true,
+        "orphanedResources": 0
+      }
+    ],
+    "historicalReportOmission": {
+      "report": "reports/ANTIGRAVITY_B4_4_STAGE_1_2_2_EXECUTABLE_PERMISSIONS.md",
+      "reportedBoots": 2,
+      "reportedRetries": 0,
+      "omissionSummary": "The report accounted strictly for task-405 and omitted task-365 and the manual retry event."
+    }
+  },
+  "stage2Execution": {
+    "attempted": false,
+    "bootsExecuted": 0,
+    "targetFixture": "Vue B",
+    "targetMarker": "B44_VUE_B",
+    "awaitingOwnerAuthorization": true
+  },
+  "offlineTests": {
+    "total": 85,
+    "passed": 85,
+    "failed": 0,
+    "suites": [
+      {
+        "name": "stage0.mjs",
+        "passed": 41,
+        "failed": 0
+      },
+      {
+        "name": "test-stage1-1.mjs",
+        "passed": 10,
+        "failed": 0
+      },
+      {
+        "name": "test-stage1-2.mjs",
+        "passed": 10,
+        "failed": 0
+      },
+      {
+        "name": "test-stage1-2-1.mjs",
+        "passed": 12,
+        "failed": 0
+      },
+      {
+        "name": "test-stage1-2-2.mjs",
+        "passed": 12,
+        "failed": 0
+      }
+    ]
+  },
+  "identity": [
+    {
+      "path": "scripts/.tmp-b4-4/policy.mjs",
+      "sha256": "044622a796cd19587b7a12950fce5a0ffaf71994b653bb52c8282bd93d105b82"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/browser.mjs",
+      "sha256": "c38368ac53721c7bf0940db3acfaf2a1fc7dbd0b73865695cbb4a9a64eb4d03d"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/run.mjs",
+      "sha256": "460490b563bc99014c41b7cc57aa81dcf3d5ba6b2c65ae3b4bd5572d5bbbe4b3"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/fixtures.json",
+      "sha256": "b20447d0a8b754938271826e3d75150d0db49d2c38bf924b35d70d44036e683a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/prepare.mjs",
+      "sha256": "fb0218775e296902774d0b1ecc31a741648ed23c70758959645dcb3b7b76edf6"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/bundle.js",
+      "sha256": "4cb2ab8b246a367ffc74766bfe2ff913d55635581a0f7d8c84b85ae89fb0462a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/stage0.mjs",
+      "sha256": "4678060c9338d8a1c5d52c167b81ac8a55d5d5bd745fd2cad1d5ea2772c1b328"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-1.mjs",
+      "sha256": "4d9c2e650f243ea5c3c6642749556ed6cf8094b97c2cfa4b1850c53d96a8e57f"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-2.mjs",
+      "sha256": "d74835ea76de29f2e9255115ff3f1ec2bc9d0819ce73b956447d8cb9e69070ee"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-2-1.mjs",
+      "sha256": "b80cae69dca5ddd10b625841bc57ae918409981e5a0ef48daf94841ec5c923b5"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-2-2.mjs",
+      "sha256": "95264251ffa5eb1436c0cd5511392f3ab2cbdce4694b1f1bfe2d04ac58827ad7"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package.json",
+      "sha256": "270a46f542ce8b01523fda3f5bd7333ad28734446815c0750c980f9162503570"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package-lock.json",
+      "sha256": "2d49b9349752521c344fe0d5091f46eabfd4718c7f6c52f3df92fdf6b8f61734"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package.json",
+      "sha256": "82bb171c0deb4422bf7a259b2497127d06f8213fa25bec2fcfd464e53e404b7a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package-lock.json",
+      "sha256": "e0a32ce64578f02feea91775c0b9d56b8cae869dd41424e1b096954fa8d9bedb"
+    }
+  ]
+}

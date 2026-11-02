@@ -1,0 +1,289 @@
+{
+  "base": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app",
+  "credential": "existing shared credential; not created or revoked",
+  "pages": [
+    {
+      "console": [
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792038518783
+        },
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792038524944
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://nr.staticblitz.com/rollup",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@types/estree",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/postcss",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@types/babel__core",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/scheduler",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/vite",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/react-dom",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/react",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/yallist",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/react-refresh",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@vitejs/plugin-react",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/loose-envify",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/js-tokens",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/esbuild",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/nanoid",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/picocolors",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/core",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/debug",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/ms",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/json5",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/semver",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/gensync",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/types",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/helper-string-parser",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/helper-validator-identifier",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/parser",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/helpers",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/template",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/code-frame",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/traverse",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/generator",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@jridgewell/trace-mapping",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@jridgewell/gen-mapping",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/jsesc",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@jridgewell/resolve-uri",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@jridgewell/sourcemap-codec",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/helper-globals",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/convert-source-map",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/helper-module-transforms",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@jridgewell/remapping",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/helper-module-imports",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/helper-compilation-targets",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/browserslist",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/caniuse-lite",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/node-releases",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/electron-to-chromium",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/update-browserslist-db",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/escalade",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/baseline-browser-mapping",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/compat-data",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/helper-validator-option",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@types/babel__template",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@types/babel__traverse",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@types/babel__generator",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@rolldown/pluginutils",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/plugin-transform-react-jsx-self",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/plugin-transform-react-jsx-source",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/@babel/helper-plugin-utils",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/lru-cache",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/react",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "url": "https://nr.staticblitz.com/react",
+          "error": "net::ERR_CONNECTION_RESET"
+        }
+      ],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app/app",
+          "at": 1792038506775
+        },
+        {
+          "url": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app/app/projects/wc-proj-a/ide",
+          "at": 1792038507577
+        }
+      ]
+    }
+  ],
+  "http": [
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    }
+  ],
+  "telemetry": []
+}

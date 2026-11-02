@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import toast from 'react-hot-toast';
-import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package, RotateCcw, Laptop, ChevronDown, ZoomIn, Smartphone as MobileIcon, Sparkles, ShieldAlert, QrCode } from 'lucide-react';
+import { RefreshCw, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, X, Play, Eye, Package, RotateCcw, Laptop, ChevronDown, ZoomIn, Smartphone as MobileIcon, ShieldAlert, QrCode } from 'lucide-react';
 import { JSEditorMode } from '../types';
 import { MOUNT_ELEMENT_ID, ProjectType } from '../types/files';
 import { externalLibraryService } from '../services/externalLibraryService';
@@ -475,7 +475,7 @@ ${importMapHTML}
   }, [refreshPreview]);
 
   // Refresh preview with throttle (max 1 per previewDelay ms) - HTML/CSS always update, JS only if autoRunJS is true
-  const jsForPreview = autoRunJS ? javascript : '';
+  const jsForPreview = javascript;
   const isInitialMount = useRef(true);
   const lastRunTime = useRef<number>(0);
   const pendingTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -890,18 +890,11 @@ ${importMapHTML}
               <Eye className="h-6 w-6 text-content-muted" />
             </div>
             <p className="text-sm font-medium text-content-secondary">
-              Start typing or use Build with AI to generate code
+              Start typing to build your project
             </p>
-            <p className="text-xs text-content-muted mb-4">
+            <p className="text-xs text-content-muted">
               Your live preview will appear here as you type
             </p>
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))}
-              className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-content-primary rounded-lg transition-colors text-sm font-medium"
-            >
-              <Sparkles className="w-4 h-4" />
-              Build with AI
-            </button>
           </div>
         )}
         

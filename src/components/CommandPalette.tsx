@@ -20,6 +20,7 @@ export interface CommandPaletteProps {
   onSelectFile?: (path: string) => void;
   initialMode?: 'commands' | 'files';
   recentFiles?: string[];
+  quickInputPosition?: 'top' | 'center';
 }
 
 interface PaletteDisplayItem {
@@ -40,6 +41,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
   onSelectFile,
   initialMode = 'commands',
   recentFiles: propRecentFiles,
+  quickInputPosition = 'center',
 }) => {
   const [query, setQuery] = useState(initialMode === 'files' ? '' : '>');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -318,7 +320,9 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[12vh] bg-black/60 backdrop-blur-sm"
+      className={`fixed inset-0 z-[100] flex justify-center bg-black/60 backdrop-blur-sm ${
+        quickInputPosition === 'center' ? 'items-center' : 'items-start pt-8 sm:pt-[8vh]'
+      }`}
       onClick={onClose}
       role="dialog"
       aria-modal="true"

@@ -1,0 +1,39 @@
+---
+/**
+ * GB Coder — command palette impression.
+ * Adapted from Kibo UI's command-menu composition. Static and decorative:
+ * it illustrates the search surface of the editor, it does not execute.
+ */
+import Icon from '../ui/Icon.astro';
+
+interface Props {
+  placeholder?: string;
+  hint?: string;
+}
+
+const { placeholder = 'Search files, commands, docs', hint = '↵' } = Astro.props;
+
+const commands = [
+  { icon: 'file' as const, label: 'Open File…', trailing: '⌘P' },
+  { icon: 'terminal' as const, label: 'Run: npm run dev', trailing: '⌘↵' },
+  { icon: 'search' as const, label: 'Find in Workspace', trailing: '⌘F' },
+  { icon: 'package' as const, label: 'Install Package', trailing: '⇧⌘P' },
+];
+---
+
+<div class="palette">
+  <div class="palette__input">
+    <Icon name="search" size={15} />
+    <span>{placeholder}</span>
+    <kbd>ESC</kbd>
+  </div>
+  <ul class="palette__list">
+    {commands.map((cmd, index) => (
+      <li class="palette__item" data-active={index === 0 ? 'true' : undefined}>
+        <Icon name={cmd.icon} size={14} />
+        <span>{cmd.label}</span>
+        <span class="palette__hint">{cmd.trailing}</span>
+      </li>
+    ))}
+  </ul>
+</div>

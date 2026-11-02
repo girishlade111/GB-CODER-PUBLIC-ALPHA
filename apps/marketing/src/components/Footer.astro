@@ -1,28 +1,33 @@
 ---
-import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/languages';
-import { getLocalizedPath } from '../i18n/utils';
-import { getNav } from '../i18n/navigation';
+import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from "../i18n/languages";
+import { getLocalizedPath } from "../i18n/utils";
+import { getNav } from "../i18n/navigation";
+import Icon from "./ui/Icon.astro";
 
 interface Props {
-  lang?: string;
-  basePath?: string;
-  isLegalPage?: boolean;
+	lang?: string;
+	basePath?: string;
+	isLegalPage?: boolean;
 }
 
-const { lang = DEFAULT_LANGUAGE, basePath = '', isLegalPage = false } = Astro.props;
+const {
+	lang = DEFAULT_LANGUAGE,
+	basePath = "",
+	isLegalPage = false,
+} = Astro.props;
 const nav = getNav(lang);
 
 // Compute links for current language
-const homeUrl = getLocalizedPath(lang, '');
-const featuresUrl = getLocalizedPath(lang, 'features');
-const docsUrl = getLocalizedPath(lang, 'docs');
-const blogUrl = getLocalizedPath(lang, 'blog');
-const aboutUrl = getLocalizedPath(lang, 'about');
-const contactUrl = getLocalizedPath(lang, 'contact');
+const homeUrl = getLocalizedPath(lang, "");
+const featuresUrl = getLocalizedPath(lang, "features");
+const docsUrl = getLocalizedPath(lang, "docs");
+const blogUrl = getLocalizedPath(lang, "blog");
+const aboutUrl = getLocalizedPath(lang, "about");
+const contactUrl = getLocalizedPath(lang, "contact");
 
 // Legal links: strictly point to authoritative English canonical URLs
-const privacyUrl = '/privacy-policy';
-const termsUrl = '/terms-and-conditions';
+const privacyUrl = "/privacy-policy";
+const termsUrl = "/terms-and-conditions";
 ---
 
 <footer class="site-footer">
@@ -31,7 +36,9 @@ const termsUrl = '/terms-and-conditions';
       <!-- Col 1: Brand & Positioning -->
       <div class="footer-col brand-col">
         <a href={homeUrl} class="footer-brand" aria-label="GB Coder Homepage">
-          <div class="brand-badge">GB</div>
+          <div class="brand-badge">
+            <img src="/apple-touch-icon.png" alt="" class="brand-badge-img" width="34" height="34" />
+          </div>
           <div class="brand-text">
             <span class="brand-title">GB Coder</span>
             <span class="brand-sub">LadeStack</span>
@@ -40,6 +47,10 @@ const termsUrl = '/terms-and-conditions';
         <p class="brand-tagline">
           The browser-first web development studio. Instant prototyping, WebContainer full-stack runtime, and local-first data privacy.
         </p>
+        <div class="footer-privacy-badge">
+          <span class="privacy-dot" aria-hidden="true"></span>
+          <span>Client-Side Architecture • 100% Local-First</span>
+        </div>
       </div>
 
       <!-- Col 2: Product Links -->
@@ -49,7 +60,7 @@ const termsUrl = '/terms-and-conditions';
           <li><a href={featuresUrl}>{nav.features}</a></li>
           <li><a href={docsUrl}>{nav.docs}</a></li>
           <li><a href={blogUrl}>{nav.blog}</a></li>
-          <li><a href="/app/projects">{nav.app}</a></li>
+          <li><a href="/app/projects">{nav.app} <Icon name="arrow-up-right" size={12} /></a></li>
         </ul>
       </div>
 
@@ -59,8 +70,8 @@ const termsUrl = '/terms-and-conditions';
         <ul class="footer-list">
           <li><a href={aboutUrl}>{nav.about}</a></li>
           <li><a href={contactUrl}>{nav.contact}</a></li>
-          <li><a href="https://ladestack.in" target="_blank" rel="noopener noreferrer">LadeStack.in ↗</a></li>
-          <li><a href="https://github.com/girishlade111" target="_blank" rel="noopener noreferrer">GitHub ↗</a></li>
+          <li><a href="https://ladestack.in" target="_blank" rel="noopener noreferrer">LadeStack.in <Icon name="arrow-up-right" size={12} /></a></li>
+          <li><a href="https://github.com/girishlade111" target="_blank" rel="noopener noreferrer">GitHub <Icon name="arrow-up-right" size={12} /></a></li>
         </ul>
       </div>
 
@@ -70,6 +81,7 @@ const termsUrl = '/terms-and-conditions';
         <ul class="footer-list">
           <li><a href={privacyUrl}>{nav.privacy}</a></li>
           <li><a href={termsUrl}>{nav.terms}</a></li>
+          <li><a href="/sitemap">Sitemap Directory</a></li>
         </ul>
         <p class="legal-notice">{nav.legalNotice}</p>
       </div>
@@ -105,169 +117,24 @@ const termsUrl = '/terms-and-conditions';
 </footer>
 
 <style>
-  .site-footer {
-    border-top: 1px solid var(--border);
-    background: var(--canvas);
-    padding: 4rem 1.5rem 2.5rem;
-    margin-top: auto;
-  }
-
-  .footer-container {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .footer-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: 2.5rem;
-    margin-bottom: 3rem;
-  }
-
-  .brand-col {
-    max-width: 360px;
-  }
-
-  .footer-brand {
+  .footer-privacy-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.75rem;
-    text-decoration: none;
-    margin-bottom: 1rem;
-  }
-
-  .brand-badge {
-    width: 32px;
-    height: 32px;
-    background: var(--accent-terracotta);
-    color: #ffffff;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 700;
-    font-size: 0.9rem;
-  }
-
-  .brand-text {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
-  }
-
-  .brand-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.4rem;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    padding: 0.35rem 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 9999px;
+    font-size: 0.74rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--primary);
   }
-
-  .brand-sub {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-
-  .brand-tagline {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
-  }
-
-  .col-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-primary);
-    margin-bottom: 1rem;
-  }
-
-  .footer-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-  }
-
-  .footer-list a {
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: color 0.15s;
-  }
-
-  .footer-list a:hover {
-    color: var(--text-primary);
-  }
-
-  .legal-notice {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    line-height: 1.4;
-    margin-top: 0.75rem;
-  }
-
-  .footer-lang-strip {
-    border-top: 1px solid var(--border-subtle);
-    border-bottom: 1px solid var(--border-subtle);
-    padding: 1.25rem 0;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.25rem;
-  }
-
-  .lang-strip-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .lang-strip-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1.25rem;
-    list-style: none;
-  }
-
-  .lang-strip-link {
-    font-size: 0.825rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-    transition: color 0.15s;
-  }
-
-  .lang-strip-link:hover {
-    color: var(--text-primary);
-  }
-
-  .lang-strip-link.active {
-    color: var(--accent-terracotta);
-    font-weight: 600;
-  }
-
-  .footer-bottom {
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.825rem;
-  }
-
-  @media (max-width: 860px) {
-    .footer-grid {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  @media (max-width: 520px) {
-    .footer-grid {
-      grid-template-columns: 1fr;
-      gap: 2rem;
-    }
+  .privacy-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: inline-block;
   }
 </style>

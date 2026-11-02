@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { X, Settings as SettingsIcon, Database, Trash2, Upload } from 'lucide-react';
 import { useSettings, EditorFontFamily, ThemeVariant, AI_PROVIDERS, type AIProviderId } from '../hooks/useSettings';
-import { useFocusMode } from '../hooks/useFocusMode';
 import { VOICE_LANGUAGES } from '../services/voiceCommandService';
 import { useSnapshots } from '../hooks/useSnapshots';
 
@@ -15,7 +14,6 @@ const voiceSynthesisSupported = typeof window !== 'undefined' && 'speechSynthesi
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     const { settings, updateSettings, resetSettings, getFontFamilyCSS } = useSettings();
-    const { focusMode, toggleFocusMode } = useFocusMode();
     const { storageUsage, cleanUpOldSnapshots, importProject } = useSnapshots();
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -316,28 +314,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         </div>
                     </div>
 
-                    {/* CodeRabbit AI */}
-                    <div>
-                        <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
-                            CodeRabbit AI Scanner
-                        </div>
-                        <div className="rounded-lg border border-stroke-dark bg-product p-4">
-                            <div className="text-[13.5px] font-medium text-content-on-dark mb-1">
-                                API Key
-                            </div>
-                            <input
-                                type="password"
-                                value={settings.codeRabbitApiKey || ''}
-                                onChange={(e) => updateSettings({ codeRabbitApiKey: e.target.value })}
-                                placeholder="Enter your CodeRabbit / Gemini API Key..."
-                                className="w-full px-3 py-1.5 text-[13px] font-mono rounded-md bg-product-elevated border border-stroke-dark text-content-on-dark focus:border-accent outline-none transition-colors"
-                            />
-                            <p className="text-[12.5px] text-content-on-dark-soft mt-2">
-                                Used by the AI bug scanner to audit project code for logic issues and security vulnerabilities.
-                            </p>
-                        </div>
-                    </div>
-
                     {/* Voice Commands */}
                     <div>
                         <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
@@ -474,40 +450,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                 >
                                     <Upload className="w-3.5 h-3.5 text-content-on-dark-soft" />
                                     Import Project
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Layout Settings */}
-                    <div>
-                        <div className="text-[12.5px] font-medium text-content-on-dark-soft mb-2.5">
-                            Layout
-                        </div>
-                        <div className="rounded-lg border border-stroke-dark bg-product overflow-hidden">
-                            <div className="flex items-center justify-between p-4">
-                                <div>
-                                    <div className="text-[13.5px] font-medium text-content-on-dark">
-                                        Show Footer
-                                    </div>
-                                    <p className="text-[12.5px] text-content-on-dark-soft max-w-md mt-0.5">
-                                        Toggle footer visibility. When hidden, the workspace fills the viewport.
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    role="switch"
-                                    aria-checked={!focusMode}
-                                    onClick={toggleFocusMode}
-                                    className={`relative ml-4 w-9 h-5 rounded-full transition-colors ${
-                                        !focusMode ? 'bg-teal' : 'bg-product-active'
-                                    }`}
-                                >
-                                    <div
-                                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-content-on-dark rounded-full transition-transform ${
-                                            !focusMode ? 'translate-x-4' : 'translate-x-0'
-                                        }`}
-                                    />
                                 </button>
                             </div>
                         </div>

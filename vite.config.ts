@@ -214,6 +214,8 @@ function localApiPlugin(): Plugin {
         } catch (err: unknown) {
           console.error(`[local-api-handler] error on ${urlPath}:`, err);
           if (!res.headersSent) {
+            const { wantsStatusHtml, sendStatusPage } = require('./api/_lib/status-response.cjs');
+            if (wantsStatusHtml(req)) { sendStatusPage(res, 500); return; }
             res.statusCode = 500;
             res.setHeader('Content-Type', 'application/json');
             /*
@@ -244,7 +246,17 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'tghjkl.jpeg'],
+      includeAssets: [
+        'favicon.ico',
+        'favicon-16x16.png',
+        'favicon-32x32.png',
+        'apple-touch-icon.png',
+        'android-chrome-192x192.png',
+        'android-chrome-512x512.png',
+        'favicon.svg',
+        'robots.txt',
+        'gbcoder-logo.png',
+      ],
       manifest: {
         name: 'GB Coder',
         short_name: 'GB Coder',
@@ -259,6 +271,16 @@ export default defineConfig({
             src: '/app/favicon.ico',
             sizes: '64x64 32x32 24x24 16x16',
             type: 'image/x-icon',
+          },
+          {
+            src: '/app/android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/app/android-chrome-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
           },
         ],
       },

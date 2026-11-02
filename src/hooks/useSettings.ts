@@ -62,8 +62,6 @@ export interface AppSettings {
      * that quietly spends the user's quota.
      */
     inlineCopilotEnabled: boolean;
-    /** CodeRabbit AI API Key for bug & error detection */
-    codeRabbitApiKey: string;
     /** AI Provider for Build with AI and Editor features */
     aiProvider: AIProviderId;
     /** Optional custom API keys */
@@ -83,7 +81,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
     voiceContinuous: false,
     voiceLanguage: 'en-US',
     inlineCopilotEnabled: false,
-    codeRabbitApiKey: import.meta.env.VITE_CODERABBIT_API_KEY || '',
     aiProvider: 'inception',
     inceptionApiKey: '',
     atriaApiKey: '',

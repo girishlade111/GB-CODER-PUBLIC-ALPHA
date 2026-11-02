@@ -1,0 +1,39 @@
+[
+  {
+    "name": "actual App file creation reaches IndexedDB",
+    "status": "PASS"
+  },
+  {
+    "name": "actual App rename updates tree and persisted paths",
+    "status": "PASS"
+  },
+  {
+    "name": "case collision create rejection suppresses phantom tab and success toast",
+    "status": "PASS"
+  },
+  {
+    "name": "physical rename rejection preserves App tree and IndexedDB paths",
+    "status": "PASS"
+  },
+  {
+    "name": "physical delete rejection preserves dialog, App tree, and IndexedDB paths",
+    "status": "PASS"
+  },
+  {
+    "name": "actual App delete updates tree and persisted paths",
+    "status": "PASS"
+  },
+  {
+    "name": "actual App folder rename preserves descendants",
+    "status": "PASS"
+  },
+  {
+    "name": "reload retains authoritative project paths",
+    "status": "PASS"
+  },
+  {
+    "name": "browser acceptance",
+    "status": "FAIL",
+    "error": "locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.monaco-editor').first() to be visible\u001b[22m\n\n    at C:\\Users\\Girish Lade\\OneDrive\\Desktop\\GB-CODER-PUBLIC-ALPHA\\scripts\\e2e-codex-file-operations.mjs:128:48"
+  }
+]

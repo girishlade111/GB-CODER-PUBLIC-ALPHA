@@ -1,7 +1,19 @@
 ---
 import Site from '../../layouts/Site.astro';
+import '../../styles/studio.css';
 import { getHomeContent } from '../../i18n/home';
 import { getLocalizedPath } from '../../i18n/utils';
+import { getStudioContent } from '../../i18n/studio';
+import { getBlogContent, getAllArticleSlugs } from '../../i18n/blog';
+import { getNav } from '../../i18n/navigation';
+import { getUi } from '../../i18n/ui';
+import StudioDemo from '../StudioDemo.tsx';
+import AssistShowcase from '../AssistShowcase.astro';
+import Icon from '../ui/Icon.astro';
+import Marquee from '../visuals/Marquee.astro';
+import StudioFrame from '../visuals/StudioFrame.astro';
+import CommandPalette from '../visuals/CommandPalette.astro';
+import EnvironmentSwitch from '../visuals/EnvironmentSwitch.astro';
 
 interface Props {
   lang?: string;
@@ -9,440 +21,845 @@ interface Props {
 
 const { lang = 'en' } = Astro.props;
 const content = getHomeContent(lang);
+const studio = getStudioContent(lang);
+const blog = getBlogContent(lang);
+const nav = getNav(lang);
+const ui = getUi(lang);
 
 const featuresUrl = getLocalizedPath(lang, 'features');
 const docsUrl = getLocalizedPath(lang, 'docs');
 const blogUrl = getLocalizedPath(lang, 'blog');
+
+const techStack = [
+  'HTML5',
+  'CSS3',
+  'JavaScript',
+  'TypeScript',
+  'React 18',
+  'Vue 3',
+  'Vite',
+  'Node.js',
+  'WebContainers',
+  'Monaco',
+  'IndexedDB',
+  'ZIP',
+];
+
+const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download'] as const;
 ---
 
-<Site
-  title={content.metaTitle}
-  description={content.metaDescription}
-  lang={lang}
-  basePath=""
->
+<Site title={content.metaTitle} description={content.metaDescription} lang={lang} basePath="">
   <!-- Hero Section -->
-  <section class="hero-section">
-    <div class="hero-container">
-      <span class="hero-tag">{content.heroTag}</span>
-      <h1 class="hero-title">{content.heroTitle}</h1>
-      <p class="hero-description">{content.heroDescription}</p>
-
-      <div class="hero-actions">
-        <a href="/app/projects" class="cta-button cta-primary" id="heroStartBtn">
-          {content.ctaPrimary}
-        </a>
-        <a href={featuresUrl} class="cta-secondary" id="heroFeaturesBtn">
-          {content.ctaSecondary} &rarr;
-        </a>
+  <section class="home-opening canvas-backdrop">
+    <div class="opening-copy">
+      <div class="hero-header-block">
+        <h1>{studio.title}</h1>
       </div>
+      <div class="opening-aside">
+        <p class="hero-lead">{studio.intro}</p>
+        <div class="opening-actions">
+          <a href="/app/projects" class="cta-button" id="heroStartBtn">
+            {content.ctaPrimary}
+            <Icon name="arrow-right" size={16} />
+          </a>
+          <a href={featuresUrl} class="ui-button ui-button-outline" id="heroFeaturesBtn">
+            {content.ctaSecondary}
+          </a>
+        </div>
+        <span class="opening-note">
+          <Icon name="shield" size={13} />
+          {studio.noSetup}
+        </span>
+      </div>
+    </div>
+
+    <!-- Live Interactive Studio Stage -->
+    <div class="studio-wrapper">
+      <StudioDemo client:load labels={studio} launchLabel={nav.openEditor} />
     </div>
   </section>
 
-  <!-- Architecture Comparison: Static vs Advanced -->
-  <section class="arch-section">
-    <div class="section-container">
-      <div class="section-header">
-        <h2>{content.architectureHeading}</h2>
-        <p>{content.architectureSub}</p>
-      </div>
-
-      <div class="arch-grid">
-        <div class="arch-card">
-          <div class="arch-badge">Static Prototyping</div>
-          <h3>{content.staticCardTitle}</h3>
-          <p>{content.staticCardDesc}</p>
-          <div class="arch-footer">
-            <a href={`${docsUrl}#static-workflow`} class="card-link">
-              Read Static Workflow Docs &rarr;
-            </a>
-          </div>
-        </div>
-
-        <div class="arch-card highlighted">
-          <div class="arch-badge accent">Full-Stack Micro-OS</div>
-          <h3>{content.advancedCardTitle}</h3>
-          <p>{content.advancedCardDesc}</p>
-          <div class="arch-footer">
-            <a href={`${docsUrl}#webcontainer-terminal`} class="card-link">
-              Explore WebContainer Architecture &rarr;
-            </a>
-          </div>
-        </div>
-      </div>
+  <!-- Technology marquee -->
+  <section class="stack-band" aria-label={ui.marqueeLabel}>
+    <div class="stack-band__inner">
+      <span class="stack-band__label">{ui.marqueeLabel}</span>
+      <Marquee items={techStack} label={ui.marqueeLabel} />
     </div>
   </section>
 
-  <!-- Feature Highlights Grid -->
-  <section class="features-highlight-section">
+  <!-- Step-by-step workflow: ruled editorial steps -->
+  <section class="workflow-section section-container">
+    <div class="section-intro">
+      <div>
+        <h2>{studio.workflow}</h2>
+      </div>
+      <a href={docsUrl} class="text-link">{nav.docs} <Icon name="arrow-up-right" size={14} /></a>
+    </div>
+
+    <ol class="workflow-steps">
+      {studio.steps.map((step, i) => (
+        <li class="workflow-step">
+          <span class="workflow-step__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+          <h3>{step}</h3>
+          <p>{studio.stepText[i]}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <!-- Environments: interactive switcher + descriptions -->
+  <section class="environments-section">
     <div class="section-container">
-      <div class="section-header">
+      <div class="section-intro">
+        <div>
+          <h2>{content.architectureHeading}</h2>
+          <p class="section-sub">{content.architectureSub}</p>
+        </div>
+      </div>
+
+      <EnvironmentSwitch
+        label={ui.envLabel}
+        staticLabel={ui.envStatic}
+        containerLabel={ui.envContainer}
+      />
+
+      <dl class="environment-notes">
+        <div class="environment-note">
+          <dt>{content.staticCardTitle}</dt>
+          <dd>{content.staticCardDesc}</dd>
+        </div>
+        <div class="environment-note">
+          <dt>{content.advancedCardTitle}</dt>
+          <dd>{content.advancedCardDesc}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Capabilities bento -->
+  <section class="capabilities-section section-container">
+    <div class="section-intro">
+      <div>
         <h2>{content.featuresHeading}</h2>
-        <p>{content.featuresSub}</p>
-      </div>
-
-      <div class="feature-grid">
-        {content.features.map((feat) => (
-          <div class="feature-card">
-            <h3>{feat.title}</h3>
-            <p>{feat.desc}</p>
-          </div>
-        ))}
-      </div>
-
-      <div class="features-nav-link-row">
-        <a href={featuresUrl} class="view-all-features-btn">
-          View All Platform Features &amp; Technical Capabilities &rarr;
-        </a>
+        <p class="section-sub">{content.featuresSub}</p>
       </div>
     </div>
+
+    <div class="bento">
+      {content.features.map((feat, idx) => (
+        <article
+          class:list={[
+            'bento__cell',
+            'spotlight',
+            idx === 0 || idx === 1 || idx === 5 ? 'bento__cell--half' : 'bento__cell--third',
+          ]}
+        >
+          <span class="bento__icon"><Icon name={capabilityIcons[idx] ?? 'sparkles'} size={19} /></span>
+          <h3 class="bento__title">{feat.title}</h3>
+          <p class="bento__desc">{feat.desc}</p>
+        </article>
+      ))}
+      <a href={featuresUrl} class="bento__cell bento__cell--half bento__cta spotlight">
+        <span class="bento__icon"><Icon name="arrow-up-right" size={19} /></span>
+        <h3 class="bento__title">{content.ctaSecondary}</h3>
+        <p class="bento__desc">{content.featuresSub}</p>
+      </a>
+    </div>
+
+    <!-- AI Pair Programmer Showcase -->
+    <AssistShowcase lang={lang} />
   </section>
 
-  <!-- Runtime & Browser Compatibility -->
-  <section class="runtime-section">
+  <!-- Inside the studio: the real workspace -->
+  <section class="studio-proof-section">
     <div class="section-container">
-      <div class="runtime-box">
-        <div class="runtime-content">
-          <h2>{content.runtimeHeading}</h2>
-          <p class="runtime-sub">{content.runtimeSub}</p>
-          <p class="runtime-text">{content.runtimeP1}</p>
-          <p class="runtime-text">{content.runtimeP2}</p>
+      <div class="section-intro">
+        <div>
+          <h2>{ui.insideStudio.replace(/[.。！!]+$/, '')}</h2>
+          <p class="section-sub">{ui.insideStudioSub}</p>
         </div>
-        <div class="runtime-sidebar">
-          <h4>Supported Modern Browsers</h4>
-          <ul class="browser-list">
-            <li><strong>Google Chrome</strong> (v92+)</li>
-            <li><strong>Microsoft Edge</strong> (v92+)</li>
-            <li><strong>Brave Browser</strong> (Hardware-Accelerated)</li>
-            <li><strong>Mozilla Firefox</strong> (v79+ with SharedArrayBuffer)</li>
-            <li><strong>Apple Safari</strong> (Static Editor Universal Support)</li>
+      </div>
+
+      <div class="studio-proof">
+        <div class="studio-proof__frame">
+          <StudioFrame
+            path={`workspace / react-starter`}
+            fileName="App.jsx"
+            activeFile="App.jsx"
+          />
+        </div>
+        <div class="studio-proof__palette">
+          <CommandPalette placeholder={ui.palettePlaceholder} />
+          <ul class="studio-proof__notes">
+            <li><Icon name="folder" size={14} /> {ui.explorerLabel}</li>
+            <li><Icon name="search" size={14} /> {ui.palettePlaceholder}</li>
+            <li><Icon name="eye" size={14} /> {studio.preview}</li>
           </ul>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Final Launch CTA -->
-  <section class="final-cta-section">
-    <div class="section-container text-center">
-      <h2>{content.ctaFinalHeading}</h2>
-      <p class="cta-final-sub">{content.ctaFinalSub}</p>
-      <div class="cta-row">
-        <a href="/app/projects" class="cta-button cta-lg">
-          {content.ctaFinalBtn}
-        </a>
+  <!-- Real-World Use Cases Section -->
+  <section class="usecases-section">
+    <div class="section-container">
+      <div class="section-intro">
+        <div>
+          <h2>{studio.uses}</h2>
+        </div>
       </div>
+      <div class="usecases">
+        {studio.useTitles.map((title, i) => (
+          <article class="usecase-card">
+            <div class:list={['usecase-art', `usecase-art-${i}`]} aria-hidden="true">
+              {i === 0 ? (
+                <div class="layout-study">
+                  <span class="study-bar-1" />
+                  <span class="study-bar-2" />
+                  <span class="study-bar-3" />
+                </div>
+              ) : i === 1 ? (
+                <div class="code-study">
+                  <span class="code-bracket">&lt;idea&gt;</span>
+                  <span class="code-inner">try → test → learn</span>
+                  <span class="code-bracket">&lt;/idea&gt;</span>
+                </div>
+              ) : (
+                <div class="project-study">
+                  <span class="tree-root">src/</span>
+                  <span class="tree-file">├ App.jsx</span>
+                  <span class="tree-folder">├ components/</span>
+                  <span class="tree-file">└ style.css</span>
+                </div>
+              )}
+            </div>
+            <div class="usecase-text">
+              <h3>{title}</h3>
+              <p>{studio.useText[i]}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Engineering Journal & Guides -->
+  <section class="journal-section section-container">
+    <div class="section-intro">
+      <div>
+        <h2>{studio.guides}</h2>
+      </div>
+      <a href={blogUrl} class="text-link">{studio.allGuides} <Icon name="arrow-up-right" size={14} /></a>
+    </div>
+
+    <div class="journal-list">
+      {getAllArticleSlugs().map((slug) => {
+        const article = blog.articles[slug];
+        return (
+          <article class="journal-row">
+            <div class="journal-row__meta">
+              <span class="journal-category">{article.tags[0]}</span>
+              <span class="journal-date">{article.date}</span>
+            </div>
+            <div class="journal-row__body">
+              <h3>
+                <a href={getLocalizedPath(lang, `blog/${slug}`)}>{article.title}</a>
+              </h3>
+              <p>{article.description}</p>
+            </div>
+            <a
+              href={getLocalizedPath(lang, `blog/${slug}`)}
+              class="journal-row__arrow"
+              aria-label={blog.readArticleLabel}
+            >
+              <Icon name="arrow-up-right" size={16} />
+            </a>
+          </article>
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- Browser Compatibility Note -->
+  <aside class="compatibility section-container">
+    <div class="compat-content">
+      <h2 class="compat-heading">
+        <span class="compat-icon" aria-hidden="true"><Icon name="globe" size={20} /></span>
+        {studio.support}
+      </h2>
+      <p>{studio.supportText}</p>
+    </div>
+    <a href={`${docsUrl}#troubleshooting`} class="text-link">
+      {nav.docs} <Icon name="arrow-up-right" size={14} />
+    </a>
+  </aside>
+
+  <!-- Final Call to Action -->
+  <section class="closing-section">
+    <div class="section-container closing-content">
+      <div class="closing-text">
+        <h2>{content.ctaFinalHeading}</h2>
+        <p>{content.ctaFinalSub}</p>
+      </div>
+      <a href="/app/projects" class="cta-button cta-hero">
+        {content.ctaFinalBtn}
+        <Icon name="arrow-right" size={17} />
+      </a>
     </div>
   </section>
 </Site>
 
+<script>
+  // Pointer-tracked spotlight for bento cells (Aceternity pattern).
+  document.querySelectorAll<HTMLElement>('.spotlight').forEach((el) => {
+    el.addEventListener('pointermove', (event) => {
+      const rect = el.getBoundingClientRect();
+      el.style.setProperty('--spot-x', `${event.clientX - rect.left}px`);
+      el.style.setProperty('--spot-y', `${event.clientY - rect.top}px`);
+    });
+  });
+</script>
+
 <style>
-  .hero-section {
-    padding: 5rem 1.5rem 4rem;
-    text-align: center;
+  .section-container {
+    max-width: 1248px;
+    padding-inline: 1.5rem;
+    margin-inline: auto;
   }
 
-  .hero-container {
-    max-width: 900px;
-    margin: 0 auto;
+  /* --- Hero ------------------------------------------------------------ */
+  .home-opening {
+    max-width: 1248px;
+    margin-inline: auto;
+    padding: 4.5rem 1.5rem 3.5rem;
   }
-
-  .hero-title {
-    font-size: clamp(2.5rem, 5.5vw, 4.25rem);
-    line-height: 1.1;
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
+  .opening-copy {
+    display: grid;
+    grid-template-columns: 1.15fr 0.95fr;
+    gap: 4rem;
+    align-items: end;
+    margin-bottom: 3rem;
   }
-
-  .hero-description {
-    font-size: clamp(1.05rem, 2vw, 1.25rem);
-    color: var(--text-secondary);
-    max-width: 720px;
-    margin: 0 auto 2.5rem;
-    line-height: 1.6;
-  }
-
-  .hero-actions {
+  .hero-header-block {
     display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+  h1 {
+    font-size: clamp(3rem, 5.5vw, 4.8rem);
+    font-weight: 550;
+    line-height: 1.04;
+    letter-spacing: -0.04em;
+    color: var(--text-primary);
+    max-width: 12ch;
+  }
+  .opening-aside {
+    max-width: 460px;
+    padding-bottom: 0.35rem;
+  }
+  .hero-lead {
+    font-size: 1.12rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin: 0;
+  }
+  .opening-actions {
+    display: flex;
+    align-items: center;
     gap: 1rem;
-    justify-content: center;
     flex-wrap: wrap;
+    margin-top: 1.75rem;
   }
-
-  .cta-primary {
-    padding: 0.85rem 2rem;
-    font-size: 1.05rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 14px rgba(204, 120, 92, 0.25);
-  }
-
-  .cta-secondary {
+  .opening-note {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    background: transparent;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 1.35rem;
+  }
+  .text-link {
     color: var(--text-primary);
-    border: 1px solid var(--border);
+    font-size: 0.85rem;
+    font-weight: 650;
     text-decoration: none;
-    font-weight: 500;
-    font-size: 1.05rem;
-    padding: 0.85rem 1.75rem;
-    border-radius: 8px;
-    transition: background-color 0.2s, border-color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0;
+    transition: color 0.15s ease;
+  }
+  .text-link:hover {
+    color: var(--primary);
+  }
+  .studio-wrapper {
+    position: relative;
+    margin-top: 1rem;
   }
 
-  .cta-secondary:hover {
+  /* --- Technology band ------------------------------------------------- */
+  .stack-band {
+    border-block: 1px solid var(--border-subtle);
     background: var(--surface);
-    border-color: var(--text-muted);
   }
-
-  .section-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
-  }
-
-  .section-header {
-    text-align: center;
-    margin-bottom: 3.5rem;
-  }
-
-  .section-header h2 {
-    font-size: 2.25rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .section-header p {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-  }
-
-  /* Architecture Section */
-  .arch-section {
-    padding: 4.5rem 0;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .arch-grid {
+  .stack-band__inner {
+    max-width: 1248px;
+    margin-inline: auto;
+    padding: 1.5rem 1.5rem;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
     gap: 2rem;
   }
+  .stack-band__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
 
-  .arch-card {
-    background: var(--canvas);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    padding: 2.25rem;
+  /* --- Workflow: ruled steps ------------------------------------------- */
+  .workflow-section,
+  .capabilities-section,
+  .journal-section {
+    padding-top: 6.5rem;
+    padding-bottom: 6.5rem;
+  }
+  .section-intro {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 3rem;
+    margin-bottom: 3.25rem;
+  }
+  .section-intro > div {
     display: flex;
     flex-direction: column;
+    gap: 1rem;
   }
-
-  .arch-card.highlighted {
-    border-color: rgba(204, 120, 92, 0.4);
-    background: #ffffff;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  .section-intro h2 {
+    font-size: clamp(2rem, 3.3vw, 2.85rem);
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    max-width: 22ch;
+    margin: 0;
   }
-
-  .arch-badge {
-    align-self: flex-start;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: 0.25rem 0.65rem;
-    border-radius: 4px;
-    background: var(--border-subtle);
+  .section-sub {
+    max-width: 52ch;
     color: var(--text-secondary);
-    margin-bottom: 1rem;
+    font-size: 1rem;
+    line-height: 1.65;
+    margin: 0;
   }
-
-  .arch-badge.accent {
-    background: rgba(204, 120, 92, 0.12);
-    color: var(--accent-terracotta);
-  }
-
-  .arch-card h3 {
-    font-size: 1.5rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .arch-card p {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-    flex: 1;
-  }
-
-  .arch-footer {
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-subtle);
-  }
-
-  .card-link {
-    color: var(--accent-terracotta);
-    font-weight: 600;
-    font-size: 0.95rem;
-    text-decoration: none;
-    transition: color 0.15s;
-  }
-
-  .card-link:hover {
-    color: var(--accent-hover);
-  }
-
-  /* Feature Highlight Grid */
-  .features-highlight-section {
-    padding: 5rem 0 4.5rem;
-  }
-
-  .feature-grid {
+  .workflow-steps {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--border);
+  }
+  .workflow-step {
+    padding: 2rem 2.5rem 2.25rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+    position: relative;
+  }
+  .workflow-step + .workflow-step {
+    padding-left: 2.5rem;
+    border-left: 1px solid var(--border-subtle);
+  }
+  .workflow-step__num {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    margin-bottom: 1.1rem;
+  }
+  .workflow-step h3 {
+    font-size: 1.15rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.65rem;
+    line-height: 1.25;
+  }
+  .workflow-step p {
+    font-size: 0.93rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    margin: 0;
+    max-width: 34ch;
+  }
+
+  /* --- Environments ---------------------------------------------------- */
+  .environments-section {
+    background: var(--surface-soft);
+    padding: 6.5rem 0;
+    border-block: 1px solid var(--border-subtle);
+  }
+  .environment-notes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.5rem;
+    margin: 3rem 0 0;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .environment-note dt {
+    font-size: 1.1rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+  .environment-note dd {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.65;
+    text-wrap: pretty;
+    max-width: 52ch;
+  }
+
+  /* --- Capabilities bento ---------------------------------------------- */
+  .capabilities-section .bento {
+    margin-bottom: 4rem;
+  }
+  .bento__cta {
+    text-decoration: none;
+    justify-content: center;
+    background: var(--surface-soft);
+  }
+  .bento__cta:hover {
+    background: var(--surface-soft);
+  }
+  .bento__cta .bento__title {
+    color: var(--primary);
+  }
+  .bento__cta .bento__desc {
+    display: none;
+  }
+
+  /* --- Studio proof ---------------------------------------------------- */
+  .studio-proof-section {
+    padding: 6.5rem 0;
+    background: var(--surface);
+    border-block: 1px solid var(--border-subtle);
+  }
+  .studio-proof {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+  .studio-proof__palette {
+    display: flex;
+    flex-direction: column;
     gap: 1.5rem;
   }
-
-  .feature-card {
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    padding: 2rem;
-    transition: transform 0.2s, border-color 0.2s;
-  }
-
-  .feature-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--border);
-  }
-
-  .feature-card h3 {
-    font-size: 1.25rem;
-    margin-bottom: 0.6rem;
-  }
-
-  .feature-card p {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.55;
-  }
-
-  .features-nav-link-row {
-    margin-top: 2.5rem;
-    text-align: center;
-  }
-
-  .view-all-features-btn {
-    display: inline-block;
-    color: var(--accent-terracotta);
-    font-weight: 600;
-    font-size: 1rem;
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border: 1px solid rgba(204, 120, 92, 0.25);
-    border-radius: 6px;
-    transition: background-color 0.2s, border-color 0.2s;
-  }
-
-  .view-all-features-btn:hover {
-    background: rgba(204, 120, 92, 0.08);
-    border-color: var(--accent-terracotta);
-  }
-
-  /* Runtime Section */
-  .runtime-section {
-    padding: 4rem 0;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-  }
-
-  .runtime-box {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 3rem;
-    background: var(--canvas);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    padding: 2.5rem;
-  }
-
-  .runtime-content h2 {
-    font-size: 1.75rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .runtime-sub {
-    font-weight: 500;
-    color: var(--accent-terracotta);
-    margin-bottom: 1rem;
-  }
-
-  .runtime-text {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 1rem;
-  }
-
-  .runtime-sidebar {
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    padding: 1.5rem;
-  }
-
-  .runtime-sidebar h4 {
-    font-size: 0.95rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-primary);
-    margin-bottom: 1rem;
-  }
-
-  .browser-list {
+  .studio-proof__notes {
     list-style: none;
+    display: grid;
+    gap: 0.75rem;
+    padding: 1.5rem 0 0;
+    margin: 0;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+  .studio-proof__notes li {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .studio-proof__notes svg {
+    color: var(--primary);
+  }
+
+  /* --- Use cases ------------------------------------------------------- */
+  .usecases-section {
+    padding: 6.5rem 0;
+    background: var(--canvas);
+    border-block: 1px solid var(--border-subtle);
+  }
+  .usecases {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+  }
+  .usecase-card {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--surface);
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    transition: border-color 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .usecase-card:hover {
+    border-color: var(--border);
+    transform: translateY(-3px);
+  }
+  .usecase-art {
+    height: 180px;
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    background: var(--surface-soft);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .usecase-art-1 {
+    background: #f1f5f2;
+  }
+  .usecase-art-2 {
+    background: #e4ede7;
+  }
+  .layout-study {
+    width: 170px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    transform: rotate(-4deg);
+  }
+  .study-bar-1 {
+    grid-column: 1/-1;
+    height: 46px;
+    background: #9bbca7;
+    border-radius: 6px;
+  }
+  .study-bar-2,
+  .study-bar-3 {
+    height: 38px;
+    background: #ffffff;
+    border-radius: 4px;
+  }
+  .code-study,
+  .project-study {
+    font: 12px/1.8 ui-monospace, monospace;
+    color: var(--primary);
+    display: grid;
+  }
+  .code-bracket {
+    color: var(--text-muted);
+  }
+  .code-inner {
+    font-weight: 600;
+    padding-left: 1rem;
+  }
+  .usecase-text {
+    padding: 1.75rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .usecase-text h3 {
+    font-size: 1.15rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6rem;
+  }
+  .usecase-text p {
     font-size: 0.9rem;
     color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
   }
 
-  .browser-list strong {
-    color: var(--text-primary);
-  }
-
-  /* Final CTA Section */
-  .final-cta-section {
-    padding: 5rem 0;
+  /* --- Journal: ruled rows --------------------------------------------- */
+  .journal-list {
     border-top: 1px solid var(--border);
   }
-
-  .text-center {
-    text-align: center;
+  .journal-row {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr) auto;
+    gap: 2.5rem;
+    align-items: start;
+    padding: 2.1rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background 0.25s ease;
   }
-
-  .final-cta-section h2 {
-    font-size: 2.25rem;
+  .journal-row:hover {
+    background: var(--surface);
+  }
+  .journal-row__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+  .journal-category {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary);
+    background: var(--surface-soft);
+    padding: 0.22rem 0.55rem;
+    border-radius: 4px;
+  }
+  .journal-date {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  .journal-row__body h3 {
+    font-size: clamp(1.15rem, 1.8vw, 1.5rem);
+    letter-spacing: -0.025em;
+    line-height: 1.25;
     margin-bottom: 0.5rem;
   }
-
-  .cta-final-sub {
-    font-size: 1.1rem;
+  .journal-row__body h3 a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .journal-row__body h3 a:hover {
+    color: var(--primary);
+  }
+  .journal-row__body p {
+    font-size: 0.92rem;
     color: var(--text-secondary);
-    margin-bottom: 2rem;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 68ch;
+  }
+  .journal-row__arrow {
+    color: var(--text-muted);
+    display: inline-flex;
+    padding-top: 0.2rem;
+    transition: color 0.2s ease, transform 0.2s ease;
+  }
+  .journal-row:hover .journal-row__arrow {
+    color: var(--primary);
+    transform: translate(2px, -2px);
   }
 
-  .cta-lg {
-    padding: 0.9rem 2.5rem;
+  /* --- Compatibility --------------------------------------------------- */
+  .compatibility {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: center;
+    padding: 2.25rem 2.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    margin-bottom: 6.5rem;
+  }
+  .compat-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .compat-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background: var(--surface-soft);
+    display: grid;
+    place-items: center;
+    color: var(--primary);
+  }
+  .compat-content h2 {
     font-size: 1.1rem;
-    border-radius: 8px;
+    margin-bottom: 0.35rem;
+  }
+  .compat-content p {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin: 0;
+    max-width: 60ch;
   }
 
-  @media (max-width: 860px) {
-    .arch-grid, .runtime-box {
+  /* --- Closing --------------------------------------------------------- */
+  .closing-section {
+    background:
+      radial-gradient(70% 140% at 12% 0%, rgba(23, 102, 68, 0.08), transparent 62%),
+      var(--surface);
+    border-top: 1px solid var(--border-subtle);
+    padding: 6.5rem 0;
+  }
+  .closing-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+  }
+  .closing-text h2 {
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    margin-bottom: 0.75rem;
+  }
+  .closing-text p {
+    font-size: 1.12rem;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+  .cta-hero {
+    padding: 0.85rem 1.85rem;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  /* --- Responsive ------------------------------------------------------ */
+  @media (max-width: 1000px) {
+    .opening-copy {
       grid-template-columns: 1fr;
       gap: 2rem;
+      align-items: start;
+    }
+    .studio-proof {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .closing-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .stack-band__inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .workflow-steps,
+    .usecases,
+    .environment-notes {
+      grid-template-columns: 1fr;
+    }
+    .workflow-step + .workflow-step {
+      padding-left: 0;
+      border-left: 0;
+    }
+    .workflow-step {
+      padding: 1.75rem 0;
+    }
+    .journal-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.9rem;
+      position: relative;
+      padding-right: 2.5rem;
+    }
+    .journal-row__meta {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .journal-row__arrow {
+      position: absolute;
+      top: 2.1rem;
+      right: 0;
+    }
+    .compatibility {
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+      padding: 1.75rem;
+    }
+    h1 {
+      font-size: clamp(2.8rem, 12vw, 4.2rem);
+      max-width: 13ch;
     }
   }
 </style>

@@ -1,0 +1,147 @@
+{
+  "startedAt": "2026-10-15T18:31:53.268Z",
+  "target": {
+    "previewUrl": "https://gb-coder-public-alpha-pi5x68n5c.vercel.app",
+    "deploymentId": "dpl_AFEUZZ5JjEkNo2kTHkmFjbn5SSR2",
+    "expectedSha": "22fc4c0ee908cf5768ebbdb1525f472eed0294f4",
+    "expectedBranch": "phase-2.2-webcontainer-reliability",
+    "productionUrl": "https://code.ladestack.in"
+  },
+  "deploymentIntegrity": {
+    "status": "PASS",
+    "checks": [
+      {
+        "name": "Vercel Deployment Identity & Readiness",
+        "deploymentId": "dpl_AFEUZZ5JjEkNo2kTHkmFjbn5SSR2",
+        "readyState": "READY",
+        "commitSha": "22fc4c0ee908cf5768ebbdb1525f472eed0294f4",
+        "branch": "phase-2.2-webcontainer-reliability",
+        "url": "gb-coder-public-alpha-pi5x68n5c.vercel.app",
+        "status": "PASS"
+      }
+    ]
+  },
+  "productionIsolation": {
+    "status": "PASS",
+    "checks": [
+      {
+        "name": "Live Production HTTP 200 & Isolation",
+        "status": "PASS",
+        "statusCode": 200,
+        "server": "Vercel"
+      }
+    ]
+  },
+  "routesIntegrity": {
+    "status": "PASS",
+    "routes": [
+      {
+        "path": "/",
+        "status": "PASS",
+        "httpStatus": 200
+      },
+      {
+        "path": "/about",
+        "status": "PASS",
+        "httpStatus": 200
+      },
+      {
+        "path": "/contact",
+        "status": "PASS",
+        "httpStatus": 200
+      },
+      {
+        "path": "/privacy-policy",
+        "status": "PASS",
+        "httpStatus": 200
+      },
+      {
+        "path": "/terms-and-conditions",
+        "status": "PASS",
+        "httpStatus": 200
+      },
+      {
+        "path": "/app",
+        "status": "PASS",
+        "httpStatus": 200,
+        "coop": "same-origin",
+        "coep": "require-corp"
+      },
+      {
+        "path": "/app/projects",
+        "status": "PASS",
+        "httpStatus": 200,
+        "coop": "same-origin",
+        "coep": "require-corp"
+      },
+      {
+        "path": "/ide",
+        "status": "PASS",
+        "httpStatus": 200,
+        "coop": "same-origin",
+        "coep": "require-corp"
+      }
+    ]
+  },
+  "advancedIDE": {
+    "status": "PASS",
+    "bootBudget": {
+      "max": 3,
+      "actual": 3
+    },
+    "samples": [
+      {
+        "index": 1,
+        "project": "RC React A",
+        "status": "PASS",
+        "initialDomMs": 65619,
+        "restartDomMs": 16377,
+        "boots": 1,
+        "totalMounts": 2,
+        "restartMounts": 1
+      },
+      {
+        "index": 2,
+        "project": "RC Vue B",
+        "status": "PASS",
+        "domMs": 48030,
+        "isolation": {
+          "reactAbsent": true,
+          "vuePresent": true
+        }
+      },
+      {
+        "index": 3,
+        "project": "RC React A (Switchback)",
+        "status": "PASS",
+        "domMs": 42883,
+        "isolation": {
+          "vueAbsent": true,
+          "reactPresent": true
+        }
+      }
+    ]
+  },
+  "existingReliability": {
+    "status": "PASS",
+    "checks": [
+      {
+        "name": "IndexedDB Data Safety & Persistence",
+        "status": "PASS",
+        "details": {
+          "reactPersisted": true,
+          "vuePersisted": true,
+          "totalFiles": 10
+        }
+      },
+      {
+        "name": "Dashboard Reload Safety (Zero Unprompted Boots)",
+        "status": "PASS",
+        "bootsOnDashboard": 0
+      }
+    ]
+  },
+  "verdict": "GB_CODER_RELEASE_CANDIDATE_ACCEPTED",
+  "errors": [],
+  "completedAt": "2026-10-15T18:35:04.230Z"
+}

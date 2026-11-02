@@ -1,0 +1,3 @@
+const {execFileSync}=require('node:child_process');
+const cli='C:/Users/Girish Lade/AppData/Local/npm-cache/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js';
+try {const raw=execFileSync(process.execPath,[cli,'--scope','girishlade111-gmailcoms-projects','api','/v9/projects/prj_Cbyer1VtBwQwrqRVCFhNOUERJFiD?teamId=team_0KwVxrmoybIMrA9NiwTV5FLY','--method','GET'],{encoding:'utf8',stdio:['ignore','pipe','pipe']});const p=JSON.parse(raw);console.log(JSON.stringify({projectId:p.id,name:p.name,existingAutomationCredentials:Object.values(p.protectionBypass||{}).filter(x=>x.scope==='automation-bypass').length}));}catch(e){console.log(JSON.stringify({error:'CLI_PROJECT_LOOKUP_FAILED',status:e.status}));process.exitCode=1;}

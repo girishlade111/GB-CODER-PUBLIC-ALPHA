@@ -1,0 +1,1338 @@
+{
+  "base": "https://gb-coder-public-alpha-ccyelci13.vercel.app",
+  "credential": "existing shared credential; not created or revoked",
+  "pages": [
+    {
+      "console": [
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018560091
+        },
+        {
+          "type": "warning",
+          "text": "[Contextify] [WARNING] running source code in new context",
+          "at": 1792018560819
+        },
+        {
+          "type": "warning",
+          "text": "The resource https://w-corp-staticblitz.com/fetch.worker.2ed8f36d.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+          "at": 1792018595633
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connecting...",
+          "at": 1792018596234
+        },
+        {
+          "type": "debug",
+          "text": "[vite] connected.",
+          "at": 1792018596244
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [
+        {
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://v1tthl7i6y5ju5dym3txp279ll6s3h-khov--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app",
+          "at": 1792018552813
+        },
+        {
+          "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+          "at": 1792018553096
+        }
+      ]
+    }
+  ],
+  "http": [
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    }
+  ],
+  "telemetry": [
+    {
+      "stage": "application_dom_loaded",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app",
+      "at": 1792018552809,
+      "navigationMs": 528.6850000023842
+    },
+    {
+      "stage": "application_dom_loaded",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018553094,
+      "navigationMs": 239.79500000178814
+    },
+    {
+      "stage": "boot_promise_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018553557,
+      "navigationMs": 702.2199999988079
+    },
+    {
+      "stage": "boot_promise_resolved",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018557246,
+      "navigationMs": 4391.784999996424,
+      "durationMs": 3689.545000001788
+    },
+    {
+      "stage": "runtime_instance_available",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018557283,
+      "navigationMs": 4428.865000009537
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018560889,
+      "navigationMs": 8034.600000008941
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018589937,
+      "navigationMs": 37082.609999999404,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018589981,
+      "navigationMs": 37126.78000000119
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018589981,
+      "navigationMs": 37126.97500000894,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590040,
+      "navigationMs": 37185.189999997616
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590040,
+      "navigationMs": 37185.48000000417,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590081,
+      "navigationMs": 37227.03000000119
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590082,
+      "navigationMs": 37227.189999997616,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590132,
+      "navigationMs": 37277.16500000656
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590132,
+      "navigationMs": 37277.40000000596,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590196,
+      "navigationMs": 37341.885000005364
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590197,
+      "navigationMs": 37342.10500000417,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590232,
+      "navigationMs": 37377.21999999881
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590232,
+      "navigationMs": 37377.43000000715,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590281,
+      "navigationMs": 37426.885000005364
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590282,
+      "navigationMs": 37427.36500000954,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590331,
+      "navigationMs": 37477.00500001013
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590332,
+      "navigationMs": 37477.34499999881,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590382,
+      "navigationMs": 37527.210000008345
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590382,
+      "navigationMs": 37527.42000000179,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590433,
+      "navigationMs": 37578.66500000656
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590433,
+      "navigationMs": 37578.86500000954,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590481,
+      "navigationMs": 37626.659999996424
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590481,
+      "navigationMs": 37626.82999999821,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590531,
+      "navigationMs": 37676.64499999583
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590531,
+      "navigationMs": 37676.814999997616,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590582,
+      "navigationMs": 37727.57999999821
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590582,
+      "navigationMs": 37727.784999996424,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590631,
+      "navigationMs": 37776.875
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590632,
+      "navigationMs": 37777.109999999404,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590681,
+      "navigationMs": 37826.70499999821
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590681,
+      "navigationMs": 37826.86500000954,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590742,
+      "navigationMs": 37887.310000002384
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590742,
+      "navigationMs": 37887.49000000954,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590790,
+      "navigationMs": 37935.085000008345
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590790,
+      "navigationMs": 37935.284999996424,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590837,
+      "navigationMs": 37982.25500001013
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590837,
+      "navigationMs": 37982.38000001013,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590881,
+      "navigationMs": 38026.875
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590881,
+      "navigationMs": 38027.07000000775,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590932,
+      "navigationMs": 38077.935000002384
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590933,
+      "navigationMs": 38078.17000000179,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590981,
+      "navigationMs": 38126.65500000119
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018590981,
+      "navigationMs": 38126.784999996424,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591041,
+      "navigationMs": 38186.510000005364
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591041,
+      "navigationMs": 38186.685000002384,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591082,
+      "navigationMs": 38227.57500000298
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591082,
+      "navigationMs": 38227.86500000954,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591131,
+      "navigationMs": 38276.95000000298
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591132,
+      "navigationMs": 38277.15500000119,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591184,
+      "navigationMs": 38329.75500001013
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591185,
+      "navigationMs": 38330.90000000596,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591232,
+      "navigationMs": 38377.47500000894
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591232,
+      "navigationMs": 38377.689999997616,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591294,
+      "navigationMs": 38439.17499999702
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591294,
+      "navigationMs": 38439.35500000417,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591331,
+      "navigationMs": 38476.840000003576
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591331,
+      "navigationMs": 38477.04500000179,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591381,
+      "navigationMs": 38527.04999999702
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591382,
+      "navigationMs": 38527.25500001013,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591431,
+      "navigationMs": 38577.00500001013
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591432,
+      "navigationMs": 38577.28000000119,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591481,
+      "navigationMs": 38626.625
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591481,
+      "navigationMs": 38626.76999999583,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591531,
+      "navigationMs": 38676.57999999821
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591531,
+      "navigationMs": 38676.73000000417,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591582,
+      "navigationMs": 38727.835000008345
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591582,
+      "navigationMs": 38728.07000000775,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591637,
+      "navigationMs": 38782.90000000596
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591637,
+      "navigationMs": 38783.03000000119,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591683,
+      "navigationMs": 38828.15000000596
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591683,
+      "navigationMs": 38828.29999999702,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591731,
+      "navigationMs": 38876.689999997616
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591731,
+      "navigationMs": 38876.93000000715,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591794,
+      "navigationMs": 38939.15000000596
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591794,
+      "navigationMs": 38939.28000000119,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591831,
+      "navigationMs": 38976.64499999583
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591831,
+      "navigationMs": 38976.85000000894,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591889,
+      "navigationMs": 39034.10500000417
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591889,
+      "navigationMs": 39034.20000000298,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591931,
+      "navigationMs": 39076.685000002384
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591931,
+      "navigationMs": 39076.885000005364,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591981,
+      "navigationMs": 39126.62000000477
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018591981,
+      "navigationMs": 39126.77500000596,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592031,
+      "navigationMs": 39176.77500000596
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592031,
+      "navigationMs": 39176.984999999404,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592082,
+      "navigationMs": 39228
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592083,
+      "navigationMs": 39228.20499999821,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592131,
+      "navigationMs": 39276.57000000775
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592131,
+      "navigationMs": 39276.75,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592183,
+      "navigationMs": 39328.66500000656
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592183,
+      "navigationMs": 39328.79500000179,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592232,
+      "navigationMs": 39377.234999999404
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592232,
+      "navigationMs": 39377.465000003576,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592281,
+      "navigationMs": 39426.939999997616
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592282,
+      "navigationMs": 39427.564999997616,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592331,
+      "navigationMs": 39477.07500000298
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592332,
+      "navigationMs": 39477.26999999583,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592394,
+      "navigationMs": 39539.340000003576
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592394,
+      "navigationMs": 39539.590000003576,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592431,
+      "navigationMs": 39576.534999996424
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592431,
+      "navigationMs": 39576.689999997616,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592485,
+      "navigationMs": 39630.310000002384
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592485,
+      "navigationMs": 39630.5,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592533,
+      "navigationMs": 39678.59499999881
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592533,
+      "navigationMs": 39678.73000000417,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592596,
+      "navigationMs": 39741.96999999881
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592597,
+      "navigationMs": 39742.19500000775,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592632,
+      "navigationMs": 39777.57999999821
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592632,
+      "navigationMs": 39777.79500000179,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592683,
+      "navigationMs": 39828.95000000298
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592684,
+      "navigationMs": 39829.15000000596,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592731,
+      "navigationMs": 39876.94500000775
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592732,
+      "navigationMs": 39877.12000000477,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592781,
+      "navigationMs": 39926.734999999404
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592781,
+      "navigationMs": 39926.92499999702,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592832,
+      "navigationMs": 39977.310000002384
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592832,
+      "navigationMs": 39977.465000003576,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592881,
+      "navigationMs": 40026.640000000596
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592881,
+      "navigationMs": 40026.840000003576,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592942,
+      "navigationMs": 40087.810000002384
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592942,
+      "navigationMs": 40087.91500000656,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592989,
+      "navigationMs": 40134.51999999583
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018592989,
+      "navigationMs": 40134.65000000596,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593036,
+      "navigationMs": 40181.10500000417
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593036,
+      "navigationMs": 40181.29000000656,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593083,
+      "navigationMs": 40228.55500000715
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593083,
+      "navigationMs": 40228.765000000596,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593131,
+      "navigationMs": 40276.60500000417
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593131,
+      "navigationMs": 40276.734999999404,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593183,
+      "navigationMs": 40328.125
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593183,
+      "navigationMs": 40328.26999999583,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593239,
+      "navigationMs": 40384.55500000715
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593239,
+      "navigationMs": 40384.65500000119,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593286,
+      "navigationMs": 40431.625
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593286,
+      "navigationMs": 40431.734999999404,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593331,
+      "navigationMs": 40476.86500000954
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593332,
+      "navigationMs": 40477.090000003576,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593381,
+      "navigationMs": 40526.74000000954
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593381,
+      "navigationMs": 40526.95000000298,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593433,
+      "navigationMs": 40578.765000000596
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593433,
+      "navigationMs": 40578.960000008345,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593482,
+      "navigationMs": 40627.98000000417
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593483,
+      "navigationMs": 40628.185000002384,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593531,
+      "navigationMs": 40676.710000008345
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593531,
+      "navigationMs": 40676.95000000298,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593587,
+      "navigationMs": 40732.135000005364
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593587,
+      "navigationMs": 40732.310000002384,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593633,
+      "navigationMs": 40778.310000002384
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593633,
+      "navigationMs": 40778.54999999702,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593684,
+      "navigationMs": 40829.24500000477
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593684,
+      "navigationMs": 40829.390000000596,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593732,
+      "navigationMs": 40878.07500000298
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593733,
+      "navigationMs": 40878.65500000119,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593783,
+      "navigationMs": 40928.79500000179
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593783,
+      "navigationMs": 40928.96999999881,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593833,
+      "navigationMs": 40978.46999999881
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593833,
+      "navigationMs": 40978.67499999702,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593882,
+      "navigationMs": 41027.99000000954
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593883,
+      "navigationMs": 41028.185000002384,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593932,
+      "navigationMs": 41077.42000000179
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593932,
+      "navigationMs": 41077.659999996424,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593981,
+      "navigationMs": 41126.65000000596
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018593981,
+      "navigationMs": 41126.810000002384,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594031,
+      "navigationMs": 41176.92499999702
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594032,
+      "navigationMs": 41177.5,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594085,
+      "navigationMs": 41231.04999999702
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594086,
+      "navigationMs": 41231.47500000894,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594131,
+      "navigationMs": 41276.810000002384
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594131,
+      "navigationMs": 41276.99000000954,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594186,
+      "navigationMs": 41332.01999999583
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594187,
+      "navigationMs": 41332.24500000477,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594232,
+      "navigationMs": 41377.59499999881
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594232,
+      "navigationMs": 41377.79500000179,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594282,
+      "navigationMs": 41427.99500000477
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594283,
+      "navigationMs": 41428.32000000775,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594331,
+      "navigationMs": 41476.810000002384
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594331,
+      "navigationMs": 41476.98000000417,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594381,
+      "navigationMs": 41527
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594382,
+      "navigationMs": 41527.22500000894,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594431,
+      "navigationMs": 41576.710000008345
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594431,
+      "navigationMs": 41576.960000008345,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594495,
+      "navigationMs": 41640.25
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594495,
+      "navigationMs": 41640.38000001013,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594531,
+      "navigationMs": 41676.60500000417
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594531,
+      "navigationMs": 41676.75500001013,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594583,
+      "navigationMs": 41728.25500001013
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594583,
+      "navigationMs": 41728.534999996424,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "npm_install_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594632,
+      "navigationMs": 41777.189999997616
+    },
+    {
+      "stage": "npm_completion_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594632,
+      "navigationMs": 41777.41500000656,
+      "text": "added 61 packages in 28s"
+    },
+    {
+      "stage": "vite_ready_text_observed",
+      "url": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-proj-a/ide",
+      "at": 1792018594765,
+      "navigationMs": 41910.74500000477,
+      "reportedMs": 2745
+    }
+  ]
+}

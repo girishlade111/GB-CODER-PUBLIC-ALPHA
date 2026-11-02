@@ -1,0 +1,215 @@
+{
+  "timestamp": "2026-10-14T22:54:54.656Z",
+  "results": [
+    {
+      "testId": "WC-RB-001",
+      "name": "React Project A Startup & Live Preview",
+      "status": "PASS",
+      "details": {
+        "previewUrl": "https://v1tthl7i6y5ju5dym3txp279ll6s3h-khov--5173--2ed8f36d.local-corp.webcontainer-api.io",
+        "renderedText": "WC-PROJECT-A"
+      },
+      "timestamp": "2026-10-14T22:49:41.483Z"
+    },
+    {
+      "testId": "WC-RB-002",
+      "name": "Project A -> Dashboard Navigation & Disassociation",
+      "status": "PASS",
+      "details": {
+        "activeProjectCleared": true,
+        "previewUnmounted": true,
+        "dashboardUrl": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects"
+      },
+      "timestamp": "2026-10-14T22:49:43.138Z"
+    },
+    {
+      "testId": "WC-RB-003",
+      "name": "Dashboard -> Project B Isolation & Rendering",
+      "status": "PASS",
+      "details": {
+        "previewUrl": "https://v1tthl7i6y5ju5dym3txp279ll6s3h-khov-g5e750hs--5173--2ed8f36d.local-corp.webcontainer-api.io",
+        "renderedText": "WC-PROJECT-B",
+        "crossContaminationAbsent": true
+      },
+      "timestamp": "2026-10-14T22:50:32.843Z"
+    },
+    {
+      "testId": "WC-RB-004",
+      "name": "In-app project switching (B -> A -> B -> A)",
+      "status": "PASS",
+      "details": {
+        "performanceMeasurements": [
+          {
+            "phase": "React initial startup",
+            "readinessMs": 77750,
+            "terminal": "  VITE v5.4.21  ready in 4673 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n "
+          },
+          {
+            "phase": "A->B Vue startup through dashboard",
+            "readinessMs": 49701,
+            "terminal": "  VITE v5.4.21  ready in 3146 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n "
+          },
+          {
+            "phase": "B->A",
+            "readinessMs": 44011,
+            "installCompletions": 0,
+            "terminal": "  VITE v5.4.21  ready in 2625 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n "
+          },
+          {
+            "phase": "A->B",
+            "readinessMs": 39574,
+            "installCompletions": 0,
+            "terminal": "  VITE v5.4.21  ready in 2903 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n "
+          },
+          {
+            "phase": "B->A",
+            "readinessMs": 36504,
+            "installCompletions": 1,
+            "terminal": "server...\n❯ npm install --prefer-offline && npm run dev\nadded 61 packages in 22s\n> dev\n> vite\n  VITE v5.4.21  ready in 2623 ms"
+          }
+        ]
+      },
+      "timestamp": "2026-10-14T22:52:32.936Z"
+    },
+    {
+      "testId": "WC-RB-007",
+      "name": "Empty Project Transition (0 files, 0 installs, 0 servers)",
+      "status": "PASS",
+      "details": {
+        "fileCount": 0
+      },
+      "timestamp": "2026-10-14T22:52:41.010Z"
+    },
+    {
+      "testId": "WC-RB-008",
+      "name": "Manifest-less Project Transition",
+      "status": "PASS",
+      "details": {
+        "fileCount": 2
+      },
+      "timestamp": "2026-10-14T22:52:47.862Z"
+    },
+    {
+      "testId": "WC-RB-009",
+      "name": "Browser Back / Forward Navigation",
+      "status": "PASS",
+      "details": {
+        "currentUrl": "https://gb-coder-public-alpha-ccyelci13.vercel.app/app/projects/wc-nav-2/ide"
+      },
+      "timestamp": "2026-10-14T22:52:53.981Z"
+    },
+    {
+      "testId": "WC-FS-001",
+      "name": "Monaco Edits (Debounce & FIFO Coordination)",
+      "status": "PASS",
+      "details": {
+        "editConfirmed": true
+      },
+      "timestamp": "2026-10-14T22:53:48.552Z"
+    },
+    {
+      "testId": "WC-FS-002",
+      "name": "Real React HMR Live Preview Hot-Update",
+      "status": "PASS",
+      "details": {
+        "hmrText": "FS-SYNC-V2"
+      },
+      "timestamp": "2026-10-14T22:53:48.552Z"
+    },
+    {
+      "testId": "WC-FS-010",
+      "name": "Refresh and Storage Consistency",
+      "status": "PASS",
+      "details": {
+        "storedPath": "src/main.jsx"
+      },
+      "timestamp": "2026-10-14T22:53:49.885Z"
+    },
+    {
+      "testId": "WC-FS-003",
+      "name": "Vue SFC Live HMR Hot-Update",
+      "status": "PASS",
+      "details": {
+        "renderedText": "VUE-HMR-V2"
+      },
+      "timestamp": "2026-10-14T22:54:26.950Z"
+    },
+    {
+      "testId": "WC-MAN-001",
+      "name": "Nested Monorepo Manifest (Zero Invalid Root Install)",
+      "status": "PASS",
+      "details": {
+        "noRootSynthesis": true,
+        "noEnoentCrash": true
+      },
+      "timestamp": "2026-10-14T22:54:39.956Z"
+    },
+    {
+      "testId": "WC-MAN-004",
+      "name": "Explicit Manifest Without Dependencies (Idle Shell)",
+      "status": "PASS",
+      "details": {
+        "isIdle": true
+      },
+      "timestamp": "2026-10-14T22:54:53.469Z"
+    }
+  ],
+  "passed": 13,
+  "failed": 0,
+  "performanceMeasurements": [
+    {
+      "phase": "React initial startup",
+      "readinessMs": 77750,
+      "terminal": "  VITE v5.4.21  ready in 4673 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n "
+    },
+    {
+      "phase": "A->B Vue startup through dashboard",
+      "readinessMs": 49701,
+      "terminal": "  VITE v5.4.21  ready in 3146 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n "
+    },
+    {
+      "phase": "B->A",
+      "readinessMs": 44011,
+      "installCompletions": 0,
+      "terminal": "  VITE v5.4.21  ready in 2625 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n "
+    },
+    {
+      "phase": "A->B",
+      "readinessMs": 39574,
+      "installCompletions": 0,
+      "terminal": "  VITE v5.4.21  ready in 2903 ms\n  ➜  Local:   http://localhost:5173/\n  ➜  Network: use --host to expose\n  ➜  press h + enter to show help\n "
+    },
+    {
+      "phase": "B->A",
+      "readinessMs": 36504,
+      "installCompletions": 1,
+      "terminal": "server...\n❯ npm install --prefer-offline && npm run dev\nadded 61 packages in 22s\n> dev\n> vite\n  VITE v5.4.21  ready in 2623 ms"
+    }
+  ],
+  "logs": [
+    "[2026-10-14T22:48:22.105Z] ================================================================",
+    "[2026-10-14T22:48:22.109Z] GB CODER — PHASE 2.2 STAGE B.1 REAL-BROWSER VERIFICATION HARNESS",
+    "[2026-10-14T22:48:22.109Z] ================================================================",
+    "[2026-10-14T22:48:22.257Z] \n--- GROUP 1: WC-001 Project-Scoped Dev Server Lifecycle ---",
+    "[2026-10-14T22:49:41.483Z] [PASS] WC-RB-001: React Project A Startup & Live Preview",
+    "[2026-10-14T22:49:43.138Z] [PASS] WC-RB-002: Project A -> Dashboard Navigation & Disassociation",
+    "[2026-10-14T22:50:32.843Z] [PASS] WC-RB-003: Dashboard -> Project B Isolation & Rendering",
+    "[2026-10-14T22:52:32.936Z] [PASS] WC-RB-004: In-app project switching (B -> A -> B -> A)",
+    "[2026-10-14T22:52:41.010Z] [PASS] WC-RB-007: Empty Project Transition (0 files, 0 installs, 0 servers)",
+    "[2026-10-14T22:52:47.862Z] [PASS] WC-RB-008: Manifest-less Project Transition",
+    "[2026-10-14T22:52:53.981Z] [PASS] WC-RB-009: Browser Back / Forward Navigation",
+    "[2026-10-14T22:52:54.010Z] \n--- GROUP 2: WC-007 File Synchronization & HMR ---",
+    "[2026-10-14T22:53:41.335Z] Executing typing updates in Monaco editor...",
+    "[2026-10-14T22:53:45.500Z] Waiting for Vite HMR hot-update in preview frame...",
+    "[2026-10-14T22:53:48.552Z] [PASS] WC-FS-001: Monaco Edits (Debounce & FIFO Coordination)",
+    "[2026-10-14T22:53:48.552Z] [PASS] WC-FS-002: Real React HMR Live Preview Hot-Update",
+    "[2026-10-14T22:53:49.885Z] [PASS] WC-FS-010: Refresh and Storage Consistency",
+    "[2026-10-14T22:54:26.950Z] [PASS] WC-FS-003: Vue SFC Live HMR Hot-Update",
+    "[2026-10-14T22:54:27.012Z] \n--- GROUP 3: WC-002 Root Manifest Correctness ---",
+    "[2026-10-14T22:54:39.956Z] [PASS] WC-MAN-001: Nested Monorepo Manifest (Zero Invalid Root Install)",
+    "[2026-10-14T22:54:53.469Z] [PASS] WC-MAN-004: Explicit Manifest Without Dependencies (Idle Shell)",
+    "[2026-10-14T22:54:54.656Z] \n================================================================",
+    "[2026-10-14T22:54:54.656Z] SUMMARY: 13 Scenarios Executed | 13 PASSED | 0 FAILED",
+    "[2026-10-14T22:54:54.656Z] ================================================================"
+  ]
+}

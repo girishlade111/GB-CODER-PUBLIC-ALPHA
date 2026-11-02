@@ -1,0 +1,289 @@
+{
+  "results": [
+    {
+      "name": "dashboard opens",
+      "status": "PASS"
+    },
+    {
+      "name": "new Static Editor project created through UI",
+      "status": "PASS",
+      "detail": {
+        "id": "e7a50fe6-e514-43c1-8828-74151d0bbcfa"
+      }
+    },
+    {
+      "name": "HTML CSS and JavaScript Monaco instances mounted",
+      "status": "PASS"
+    },
+    {
+      "name": "Static Editor acceptance",
+      "status": "FAIL",
+      "error": "Error: Timeout: real html keyboard input reaches project storage\n    at poll (file:///C:/Users/Girish%20Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/scripts/e2e-phase2-2-static-editor.mjs:18:9)\n    at async file:///C:/Users/Girish%20Lade/OneDrive/Desktop/GB-CODER-PUBLIC-ALPHA/scripts/e2e-phase2-2-static-editor.mjs:73:5"
+    }
+  ],
+  "console": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    },
+    {
+      "type": "warning",
+      "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+    }
+  ],
+  "pageErrors": [
+    {
+      "message": "Could not find source file: 'inmemory://model/3'.",
+      "stack": "Uncaught (in promise) Error: Could not find source file: 'inmemory://model/3'.\n    at _handleReplyMessage (https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.js:600:27089)\n    at _handleMessage (https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.js:600:26659)\n    at handleMessage (https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.js:600:26314)\n    at <anonymous> (https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.js:600:28505)\n    at S.onmessage (https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.js:600:35224)"
+    }
+  ],
+  "failedRequests": [
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "type": "script",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "responses": [
+    {
+      "url": "http://127.0.0.1:42991/app/projects",
+      "status": 200,
+      "type": "document",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/monaco-editor-D-rZRwvS.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/registerSW.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-9YeJx23x.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/_vercel/insights/script.js",
+      "status": 404,
+      "type": "script",
+      "mime": "text/html; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/NewProjectModal-DtWV25XA.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SnippetsSidebar-BbrkIjdt.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExtensionsMarketplace-iqKzvJHT.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ExternalLibraryManager-C1Mz29Vu.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/SettingsModal-UI0_q6A3.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/CodeRabbitReviewModal-Cv7tu1ud.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/KeyboardShortcutsHelp-D-Sz4j_C.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/index-DkgW0of7.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/HistoryPanel-DTbwELnK.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.css",
+      "status": 200,
+      "type": "stylesheet",
+      "mime": "text/css; charset=utf-8",
+      "fromServiceWorker": false
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/language/html/htmlMode.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/basic-languages/html/html.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/language/css/cssMode.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/basic-languages/css/css.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/language/typescript/tsMode.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/basic-languages/javascript/javascript.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/html.worker-DBrQM3vp.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    },
+    {
+      "url": "http://127.0.0.1:42991/app/assets/typescript-compiler-CRYeikrG.js",
+      "status": 200,
+      "type": "script",
+      "mime": "application/javascript; charset=utf-8",
+      "fromServiceWorker": true
+    }
+  ],
+  "projectId": "e7a50fe6-e514-43c1-8828-74151d0bbcfa",
+  "bodyText": "LadeStack\n/\nGB Coder\nIDE\nRun\nRun\nVoice commands\nBuild with AI\nBuild with AI\nCodeRabbit AI\nCodeRabbit AI Bug Scanner\nScreenshot to Code\nScreenshot to Code\nExport & Share\n⇧⌘E\nDeploy to Vercel or Netlify\nPush to or pull from GitHub\nProject menu\nAll Projects\nFiles\nDependencies\nTemplates\nImport\nVS Code Mode & Sandbox\nAI Chat\nCodeRabbit AI Bug Scanner\nVoice Commands\nStatistics\nCode Injection\nSnapshots\nSettings\nExpand sidebar\nHTML\nindex.html\nHTML\n1\n1\n2\n<!doctype html>\n<html><body><h1 id=\"closure\">STATIC_HTML_EXACT</h1></body></html>\nCSS\nstyle.css\nCSS\nType css here\n1\nJavaScript\nscript.js\nJAVASCRIPT\nJS\nTS\nJSX\nTSX\nType javascript here\n1\nLive Preview\nConsole\nLive Preview\nFull Width\nUA\nPlain HTML/CSS/JS\nSaved 15:03\n0\n1\n|\nAbout\nDocumentation\nContact\n|\nPrivacy\nTerms\nCookies\nDisclaimer\nc 2024 GB Coder. Created by Girish Lade in Mumbai, India.\nCopilot: Disabled\nSaved",
+  "serviceWorker": {
+    "controller": "http://127.0.0.1:42991/app/sw.js",
+    "registrations": [
+      "http://127.0.0.1:42991/app/"
+    ]
+  }
+}

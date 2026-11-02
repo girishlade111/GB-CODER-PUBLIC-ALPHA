@@ -1,0 +1,94 @@
+{
+  "base": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app",
+  "credential": "existing shared credential; not created or revoked",
+  "pages": [
+    {
+      "console": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.",
+          "at": 1792038474619
+        },
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.",
+          "at": 1792038474645
+        },
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.",
+          "at": 1792038476158
+        },
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.",
+          "at": 1792038477455
+        },
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.",
+          "at": 1792038478738
+        },
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.",
+          "at": 1792038479040
+        },
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.",
+          "at": 1792038480775
+        },
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.",
+          "at": 1792038483725
+        },
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.",
+          "at": 1792038488670
+        }
+      ],
+      "pageErrors": [
+        "Failed to read the 'localStorage' property from 'Window': Access is denied for this document."
+      ],
+      "failedRequests": [
+        {
+          "url": "https://stackblitz.com/headless?version=1.6.4",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "timings": [
+        {
+          "url": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app/app/projects",
+          "at": 1792038472709
+        },
+        {
+          "url": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app/app/projects/7120e26c-fdb0-4fa1-9c05-ac131cac6c15/editor",
+          "at": 1792038480699
+        },
+        {
+          "url": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app/app/projects",
+          "at": 1792038483055
+        },
+        {
+          "url": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app/app/projects",
+          "at": 1792038485016
+        },
+        {
+          "url": "https://gb-coder-public-alpha-g1c7qkmuj.vercel.app/app/projects/7120e26c-fdb0-4fa1-9c05-ac131cac6c15/editor",
+          "at": 1792038488322
+        }
+      ]
+    }
+  ],
+  "http": [
+    {
+      "path": "/app/projects",
+      "status": 307,
+      "mime": "text/plain"
+    }
+  ],
+  "telemetry": []
+}

@@ -1,0 +1,11 @@
+[
+  {
+    "name": "actual App file creation reaches IndexedDB",
+    "status": "PASS"
+  },
+  {
+    "name": "browser acceptance",
+    "status": "FAIL",
+    "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"tree-file\"][data-path=\"scratch/item.txt\"]') to be visible\u001b[22m\n\n    at C:\\Users\\Girish Lade\\OneDrive\\Desktop\\GB-CODER-PUBLIC-ALPHA\\scripts\\.tmp-stage-b3-files-folders.mjs:74:33"
+  }
+]

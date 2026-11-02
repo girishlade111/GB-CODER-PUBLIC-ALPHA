@@ -1,0 +1,8 @@
+---
+import StatusDocument from '../layouts/StatusDocument.astro';
+const code = Number(Astro.params.code);
+if (!Number.isInteger(code) || code < 400 || code >= 600) return new Response('Only error responses are supported.', { status: 404 });
+Astro.response.status = code;
+if (code === 429) Astro.response.headers.set('Retry-After', '30');
+---
+<StatusDocument code={code} />

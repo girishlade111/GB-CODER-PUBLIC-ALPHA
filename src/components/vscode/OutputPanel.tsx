@@ -109,13 +109,13 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ activeProjectId }) => 
 
   return (
     <div
-      className="flex h-full flex-col bg-[#141622] text-xs font-mono text-slate-300 select-none overflow-hidden"
+      className="flex h-full flex-col bg-[var(--background)] text-xs font-mono text-slate-300 select-none overflow-hidden"
       data-testid="output-panel"
       role="region"
       aria-label="Output Console"
     >
       {/* Top Header Actions & Category Selector */}
-      <div className="flex shrink-0 items-center justify-between border-b border-[#222538] bg-[#11131c] px-3 py-1.5 gap-2">
+      <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-3 py-1.5 gap-2">
         {/* Category Tabs */}
         <div className="flex items-center gap-1 font-sans text-[11px]">
           {(['all', 'system', 'server', 'runtime', 'build', 'fs'] as const).map((cat) => (
@@ -125,7 +125,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ activeProjectId }) => 
               onClick={() => setSelectedCategory(cat)}
               className={`rounded px-2 py-0.5 capitalize transition-colors ${
                 selectedCategory === cat
-                  ? 'bg-indigo-600 text-white font-medium'
+                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)] font-medium'
                   : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
               }`}
             >
@@ -144,7 +144,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ activeProjectId }) => 
               onChange={(e) => setSearchFilter(e.target.value)}
               placeholder="Search output..."
               aria-label="Search output"
-              className="w-full rounded bg-[#181a29] border border-[#262940] pl-7 pr-2 py-0.5 text-[11px] text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              className="w-full rounded bg-[var(--input)] border border-[var(--border)] pl-7 pr-2 py-0.5 text-[11px] text-white placeholder-slate-500 focus:outline-none focus:border-[var(--ring)]"
             />
           </div>
 
@@ -203,7 +203,7 @@ export const OutputPanel: React.FC<OutputPanelProps> = ({ activeProjectId }) => 
       </div>
 
       {/* Footer Info */}
-      <div className="shrink-0 px-3 py-1 bg-[#10121a] border-t border-[#1e2235] text-[10px] text-slate-500 flex items-center justify-between font-sans">
+      <div className="shrink-0 px-3 py-1 bg-[var(--background)] border-t border-[var(--border)] text-[10px] text-slate-500 flex items-center justify-between font-sans">
         <span>Channel: {selectedCategory.toUpperCase()} | Bounded Buffer: Max 500 lines</span>
         <span>{filteredLogs.length} entries</span>
       </div>

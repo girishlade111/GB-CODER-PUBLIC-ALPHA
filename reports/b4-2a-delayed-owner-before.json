@@ -1,0 +1,97 @@
+{
+  "results": [
+    {
+      "name": "A retires, B owns proof/operation: old rejection is consumed without mutation",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "B retires on return to A: delayed rejection cannot corrupt new A",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "full teardown: rejection cannot alter detached runtime or diagnostics",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "replacement shell in same runtime keeps proof, operation and manual input",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "runtime-instance replacement rejects an old shell even without a generation change",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "runtime replacement during delayed spawn cannot lend its owner to the old process",
+      "status": "FAIL",
+      "error": "Old shell changed state\n+ actual - expected\n\n+ '{\"status\":\"running\",\"isSupported\":false,\"serverUrl\":null,\"serverPort\":null,\"activeServers\":[],\"error\":\"Shell exit status unknown\",\"startupStage\":\"error\",\"previewStatus\":\"idle\",\"runtimeError\":{\"phase\":\"general\",\"message\":\"The shell exit promise rejected; child-process status is unknown. Inspect the terminal, or return to Projects and reopen before retrying.\",\"timestamp\":1792053324088,\"recoverable\":true,\"retryAction\":\"reboot_container\"},\"sessionEpoch\":9,\"activeProjectId\":\"delayed-spawn-owner\"}'\n- '{\"status\":\"running\",\"isSupported\":false,\"serverUrl\":null,\"serverPort\":null,\"activeServers\":[],\"error\":null,\"startupStage\":\"idle\",\"previewStatus\":\"idle\",\"runtimeError\":null,\"sessionEpoch\":9,\"activeProjectId\":\"delayed-spawn-owner\"}'\n",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "project identity mismatch alone consumes rejection without a current-project mutation",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "active automatic shell rejects: unknown outcome, no proof or duplicate startup",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "completion hint then rejected exit cannot accept a late server event as installed proof",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "current shell survives a session restart: rejection belongs to the current epoch",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "stale automatic-operation epoch cannot authorize active-owner rejection mutations",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "manual shell rejection after a completed attempt gets a new sanitized record",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "prior inferred failure remains preserved when the same shell subsequently rejects",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "fulfilled numeric shell exit 0 keeps its existing handling",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "fulfilled numeric exit 0 during automatic startup does not fabricate npm exit",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "fulfilled numeric shell exit 7 keeps its existing handling",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "fulfilled numeric exit 7 during automatic startup does not fabricate npm exit",
+      "status": "PASS",
+      "unhandledRejections": 0
+    },
+    {
+      "name": "same-runtime manual reconnect retains the existing shell and forwards input",
+      "status": "PASS",
+      "unhandledRejections": 0
+    }
+  ],
+  "unhandledRejections": 0,
+  "derivedRejections": 0
+}

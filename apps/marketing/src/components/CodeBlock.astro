@@ -1,11 +1,16 @@
 ---
+import Icon from './ui/Icon.astro';
+import { getUi } from '../i18n/ui';
+
 interface Props {
   code: string;
   lang?: string;
   filename?: string;
+  locale?: string;
 }
 
-const { code, lang = 'text', filename } = Astro.props;
+const { code, lang = 'text', filename, locale = 'en' } = Astro.props;
+const ui = getUi(locale);
 
 function escapeHtml(str: string): string {
   return str
@@ -19,7 +24,11 @@ function escapeHtml(str: string): string {
 const escapedCode = escapeHtml(code);
 ---
 
-<div class="code-block-wrapper">
+<div
+  class="code-block-wrapper"
+  data-copy-label={ui.copy}
+  data-copied-label={ui.copied}
+>
   {filename && (
     <div class="code-block-header">
       <span class="code-filename">{filename}</span>
@@ -28,28 +37,37 @@ const escapedCode = escapeHtml(code);
   )}
   <div class="code-container">
     <pre class="code-pre"><code class={`language-${lang}`} set:html={escapedCode} /></pre>
-    <button class="copy-btn" aria-label="Copy code to clipboard">
-      <span class="copy-text">Copy</span>
+    <button type="button" class="copy-btn" aria-label={ui.copy}>
+      <Icon name="copy" size={13} />
+      <span class="copy-text">{ui.copy}</span>
     </button>
   </div>
 </div>
 
-<script is:inline>
-  document.querySelectorAll('.copy-btn').forEach((btn) => {
+<script>
+  document.querySelectorAll<HTMLElement>('.code-block-wrapper').forEach((wrapper) => {
+    const btn = wrapper.querySelector<HTMLButtonElement>('.copy-btn');
+    if (!btn) return;
+
+    const copyLabel = wrapper.dataset.copyLabel ?? 'Copy';
+    const copiedLabel = wrapper.dataset.copiedLabel ?? 'Copied';
+
     btn.addEventListener('click', async () => {
-      const code = btn.closest('.code-container')?.querySelector('code')?.textContent || '';
+      const code = wrapper.querySelector('code')?.textContent || '';
+      const span = btn.querySelector('.copy-text');
+      const announce = () => {
+        if (!span) return;
+        span.textContent = copiedLabel;
+        setTimeout(() => {
+          span.textContent = copyLabel;
+        }, 2000);
+      };
+
       try {
         await navigator.clipboard.writeText(code);
-        const span = btn.querySelector('.copy-text');
-        if (span) {
-          const original = span.textContent;
-          span.textContent = 'Copied!';
-          setTimeout(() => {
-            span.textContent = original;
-          }, 2000);
-        }
+        announce();
       } catch {
-        // Fallback for restricted contexts
+        // Fallback for headless Playwright and restricted clipboard contexts
         const textarea = document.createElement('textarea');
         textarea.value = code;
         textarea.style.position = 'fixed';
@@ -58,11 +76,7 @@ const escapedCode = escapeHtml(code);
         textarea.select();
         try {
           document.execCommand('copy');
-          const span = btn.querySelector('.copy-text');
-          if (span) {
-            span.textContent = 'Copied!';
-            setTimeout(() => { span.textContent = 'Copy'; }, 2000);
-          }
+          announce();
         } finally {
           document.body.removeChild(textarea);
         }
@@ -73,10 +87,10 @@ const escapedCode = escapeHtml(code);
 
 <style>
   .code-block-wrapper {
-    margin: 1.25rem 0;
-    border-radius: 8px;
-    background: #1e1e1e;
-    border: 1px solid #333333;
+    margin: 1.5rem 0;
+    border-radius: var(--radius-lg);
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
     overflow: hidden;
   }
 
@@ -84,32 +98,39 @@ const escapedCode = escapeHtml(code);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 1rem;
-    background: #252526;
-    border-bottom: 1px solid #333333;
-    font-size: 0.8rem;
-    color: #9cdcfe;
-    font-family: 'JetBrains Mono', monospace;
+    gap: 1rem;
+    padding: 0.55rem 1.25rem;
+    background: rgba(21, 43, 35, 0.85);
+    border-bottom: 1px solid var(--code-border);
+    font-size: 0.75rem;
+    color: var(--code-muted);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+
+  .code-filename {
+    font-weight: 600;
   }
 
   .code-lang-tag {
-    color: #888888;
+    color: var(--code-dim);
     text-transform: uppercase;
     font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
   }
 
   .code-container {
     position: relative;
-    padding: 1rem;
+    padding: 1.25rem;
     overflow-x: auto;
   }
 
   .code-pre {
     margin: 0;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.875rem;
-    line-height: 1.6;
-    color: #d4d4d4;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--code-text);
     white-space: pre;
     tab-size: 2;
   }
@@ -117,20 +138,31 @@ const escapedCode = escapeHtml(code);
   .copy-btn {
     position: absolute;
     top: 0.75rem;
-    right: 0.75rem;
-    padding: 0.3rem 0.65rem;
-    background: rgba(255, 255, 255, 0.1);
-    color: #cccccc;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    font-size: 0.75rem;
+    inset-inline-end: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 30px;
+    padding: 0.2rem 0.6rem;
+    background: rgb(255 255 255 / 0.05);
+    color: var(--code-ghost);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: var(--radius-sm);
+    font-size: 0.72rem;
     cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: background-color 0.2s, color 0.2s;
+    font-family: var(--font-display);
+    font-weight: 600;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   }
 
   .copy-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgb(255 255 255 / 0.12);
     color: #ffffff;
+    border-color: rgb(255 255 255 / 0.24);
+  }
+
+  .copy-btn:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 </style>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Editor, { loader, type EditorProps } from '@monaco-editor/react';
+import Editor, { DiffEditor, loader, type EditorProps, type DiffEditorProps } from '@monaco-editor/react';
 
 let initialization: Promise<void> | null = null;
 
@@ -35,4 +35,24 @@ export default function LocalMonacoEditor(props: EditorProps) {
     </div>;
   }
   return <Editor {...props} />;
+}
+
+export function LocalDiffEditor(props: DiffEditorProps) {
+  const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void initialize().then(() => { if (active) setReady(true); }).catch((error) => {
+      console.error('[DiffEditor] Could not load Monaco:', error);
+      if (active) setFailed(true);
+    });
+    return () => { active = false; };
+  }, []);
+  if (!ready) {
+    return <div role="status" style={{ height: props.height ?? '100%', width: props.width ?? '100%' }}
+      className="flex items-center justify-center text-sm text-content-muted">
+      {failed ? 'Could not load diff view. Reload to retry.' : 'Loading diff view…'}
+    </div>;
+  }
+  return <DiffEditor {...props} />;
 }

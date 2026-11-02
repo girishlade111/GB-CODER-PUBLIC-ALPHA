@@ -387,13 +387,14 @@ export const readProjectFiles = (projectId: string): Promise<ProjectFile[]> =>
 export const saveProjectFiles = (
   projectId: string,
   files: ProjectFile[],
-  previous: FileSnapshot | null,
+  previous: FileSnapshot | null = null,
 ): Promise<{ snapshot: FileSnapshot; persisted: boolean }> => {
+  const isDiff = Boolean(previous);
   const changed = files.filter(
-    (file) => previous === null || previous.get(file.path) !== file.content,
+    (file) => !isDiff || previous!.get(file.path) !== file.content,
   );
   const currentPaths = new Set(files.map((file) => file.path));
-  const removed = previous === null ? [] : [...previous.keys()].filter((path) => !currentPaths.has(path));
+  const removed = !isDiff ? [] : [...previous!.keys()].filter((path) => !currentPaths.has(path));
   const next = snapshotOf(files);
 
   // Nothing to do — avoids opening a transaction on every debounce tick when the
@@ -636,7 +637,12 @@ export const validateProjectName = (
   if (trimmed.length > 100) {
     return { valid: false, error: 'Project name must be 100 characters or fewer.' };
   }
-  if (/[\x00-\x1F\x7F]/.test(trimmed)) {
+  // Check for ASCII control characters (C0 control codes 0x00-0x1F and 0x7F DEL) without no-control-regex lint error
+  const hasControlChar = Array.from(trimmed).some((c) => {
+    const code = c.charCodeAt(0);
+    return (code >= 0 && code <= 31) || code === 127;
+  });
+  if (hasControlChar) {
     return { valid: false, error: 'Project name contains invalid control characters.' };
   }
   const isDuplicate = existingProjects.some(

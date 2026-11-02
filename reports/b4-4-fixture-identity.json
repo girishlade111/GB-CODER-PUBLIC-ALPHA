@@ -1,0 +1,46 @@
+{
+  "react": {
+    "project": "A",
+    "incarnation": "synthetic-react-1",
+    "marker": "B44_REACT_A",
+    "manifestSha": "270a46f542ce8b01523fda3f5bd7333ad28734446815c0750c980f9162503570",
+    "lockSha": "2d49b9349752521c344fe0d5091f46eabfd4718c7f6c52f3df92fdf6b8f61734",
+    "configSha": "3daf3a13ce77c3496d91c502fe2947bfac45f93bb2b60360fa1a86a1dddb8e39",
+    "packages": 64,
+    "scriptPackages": [
+      {
+        "path": "node_modules/esbuild",
+        "version": "0.21.5",
+        "execution": "disabled by ignore-scripts"
+      },
+      {
+        "path": "node_modules/fsevents",
+        "version": "2.3.3",
+        "execution": "disabled by ignore-scripts"
+      }
+    ],
+    "nativeToolingJustification": "Vite tooling only: esbuild/rollup platform helpers generated in WebContainer, never copied from host. All lifecycle scripts disabled, no arbitrary native addons; exact Node/npm/platform/API compatibility and actual Vite execution required. No cross-engine portability assumption."
+  },
+  "vue": {
+    "project": "B",
+    "incarnation": "synthetic-vue-1",
+    "marker": "B44_VUE_B",
+    "manifestSha": "82bb171c0deb4422bf7a259b2497127d06f8213fa25bec2fcfd464e53e404b7a",
+    "lockSha": "e0a32ce64578f02feea91775c0b9d56b8cae869dd41424e1b096954fa8d9bedb",
+    "configSha": "3daf3a13ce77c3496d91c502fe2947bfac45f93bb2b60360fa1a86a1dddb8e39",
+    "packages": 78,
+    "scriptPackages": [
+      {
+        "path": "node_modules/esbuild",
+        "version": "0.21.5",
+        "execution": "disabled by ignore-scripts"
+      },
+      {
+        "path": "node_modules/fsevents",
+        "version": "2.3.3",
+        "execution": "disabled by ignore-scripts"
+      }
+    ],
+    "nativeToolingJustification": "Vite tooling only: esbuild/rollup platform helpers generated in WebContainer, never copied from host. All lifecycle scripts disabled, no arbitrary native addons; exact Node/npm/platform/API compatibility and actual Vite execution required. No cross-engine portability assumption."
+  }
+}

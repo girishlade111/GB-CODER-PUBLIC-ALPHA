@@ -7,13 +7,46 @@
  * to the preview pane via the 'server-ready' event.
  */
 
-import { WebContainer, FileSystemTree } from '@webcontainer/api';
+import { WebContainer, FileSystemTree, WebContainerProcess, SpawnOptions } from '@webcontainer/api';
 import { ProjectFile, ProjectType } from '../../types/files';
 import { webcontainerPerf } from './webcontainerPerf';
 import { StartupDiagnostics } from './startupDiagnostics';
 import { StartupOutputParser } from './startupOutput';
 import { FileSyncCoordinator, type FlushResult } from './fileSyncCoordinator';
+import { webcontainerWatcher } from './webcontainerWatcher';
+import { devServerManager } from './devServerManager';
+import { terminalSessionManager, type TerminalSessionSummary } from './terminalSessionManager';
 export { FileSyncCoordinator, type FlushResult };
+
+export type WebContainerWriteErrorCode =
+  | 'RUNTIME_UNAVAILABLE'
+  | 'WRONG_PROJECT'
+  | 'INVALID_PATH'
+  | 'FILESYSTEM_WRITE_FAILED'
+  | 'PERSISTENCE_FAILED'
+  | 'STALE_REVISION'
+  | 'RECOVERY_REQUIRED';
+
+export class WebContainerWriteError extends Error {
+  public readonly code: WebContainerWriteErrorCode;
+  public readonly path: string;
+  public readonly projectId?: string;
+
+  constructor(
+    code: WebContainerWriteErrorCode,
+    message: string,
+    path: string,
+    projectId?: string,
+    cause?: unknown,
+  ) {
+    super(message);
+    this.name = 'WebContainerWriteError';
+    this.code = code;
+    this.path = path;
+    this.projectId = projectId;
+    if (cause) (this as any).cause = cause;
+  }
+}
 
 /**
  * Optimized npm configuration for WebContainer:
@@ -492,7 +525,7 @@ class WebContainerManager {
   private fileSyncCoordinator = new FileSyncCoordinator({
     debounceMs: 200,
     rawWrite: async (cleanPath, content) => {
-      const container = this.instance;
+      const container = this.getInstance();
       const generation = this.runtimeGeneration;
       if (!container) throw new Error('WebContainer is not mounted');
       const dirIndex = cleanPath.lastIndexOf('/');
@@ -704,6 +737,8 @@ class WebContainerManager {
     const pendingBoot = this.bootPromise ?? shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__;
     this.cleanupServerListeners();
     this.terminateShell();
+    terminalSessionManager.teardownAll();
+    webcontainerWatcher.stop();
     this.shellSpawnPromise = null;
     this.instance = null;
     this.bootPromise = null;
@@ -1079,6 +1114,7 @@ class WebContainerManager {
         error: null,
         runtimeError: null,
       });
+      devServerManager.handleServerReady(port, url);
       webcontainerPerf.recordTiming('server_ready', 0, {
         port,
         url,
@@ -1180,6 +1216,7 @@ class WebContainerManager {
             startupStage: nextServer ? 'ready' : 'idle',
             previewStatus: nextServer ? 'loading' : 'idle',
           });
+          devServerManager.handlePortClose(port);
         } else {
           this.updateState({ activeServers: updated });
         }
@@ -1441,6 +1478,12 @@ class WebContainerManager {
       this.diagnostics.record(diagnosticAttempt, 'mount', 'succeeded', {
         durationMs: Date.now() - mountStarted,
       });
+      this.updateState({
+        startupStage: 'runtime_ready',
+        status: 'ready',
+        error: null,
+        runtimeError: null,
+      });
       return true;
     } catch (err) {
       if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) return false;
@@ -1643,11 +1686,142 @@ class WebContainerManager {
     content: string,
     projectId?: string,
   ): Promise<void> {
+    console.warn(`[webcontainerService] syncFile path=${path} projectId=${projectId} activeProjectId=${this.activeProjectId}`);
+    webcontainerWatcher.markInternallySynced(path, content);
     this.fileSyncCoordinator.queueSync(
       path,
       content,
       projectId ?? this.activeProjectId,
     );
+  }
+
+  public getInstance(): WebContainer | null {
+    return (
+      this.instance ??
+      (globalThis as unknown as { __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer })
+        .__GBCODER_WEBCONTAINER_INSTANCE__ ??
+      null
+    );
+  }
+
+  /**
+   * Reads a file directly from the WebContainer filesystem.
+   */
+  public async readFile(path: string): Promise<string> {
+    const cleanPath = path.replace(/\\/g, '/').replace(/^\/+/, '').trim();
+    let container = this.getInstance();
+    if (!container) {
+      const pendingBoot =
+        this.bootPromise ??
+        (globalThis as unknown as { __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<WebContainer> })
+          .__GBCODER_WEBCONTAINER_BOOT_PROMISE__;
+      if (pendingBoot) {
+        try {
+          container = await pendingBoot;
+        } catch {
+          container = null;
+        }
+      }
+    }
+
+    if (!container) {
+      throw new WebContainerWriteError(
+        'RUNTIME_UNAVAILABLE',
+        'WebContainer runtime is not booted or unavailable. Read cannot be completed.',
+        cleanPath,
+      );
+    }
+    return await container.fs.readFile(cleanPath, 'utf-8');
+  }
+
+  /**
+   * Writes directly to the WebContainer filesystem immediately.
+   * Enforces strict failure semantics: throws WebContainerWriteError if
+   * runtime is unavailable, project is mismatched, path is invalid, or VFS write fails.
+   */
+  public async writeFile(path: string, content: string, projectId?: string): Promise<void> {
+    if (!path || typeof path !== 'string' || path.trim() === '') {
+      throw new WebContainerWriteError(
+        'INVALID_PATH',
+        'Cannot write to empty or invalid path',
+        path || '',
+        projectId,
+      );
+    }
+
+    const cleanPath = path.replace(/\\/g, '/').replace(/^\/+/, '').trim();
+    if (cleanPath.startsWith('../') || cleanPath.includes('/../')) {
+      throw new WebContainerWriteError(
+        'INVALID_PATH',
+        `Path traversal forbidden: "${cleanPath}"`,
+        cleanPath,
+        projectId,
+      );
+    }
+
+    if (projectId && this.activeProjectId && projectId !== this.activeProjectId) {
+      throw new WebContainerWriteError(
+        'WRONG_PROJECT',
+        `Write rejected: target projectId "${projectId}" does not match active projectId "${this.activeProjectId}"`,
+        cleanPath,
+        projectId,
+      );
+    }
+
+    let container = this.getInstance();
+    if (!container) {
+      const pendingBoot =
+        this.bootPromise ??
+        (globalThis as unknown as { __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<WebContainer> })
+          .__GBCODER_WEBCONTAINER_BOOT_PROMISE__;
+      if (pendingBoot) {
+        try {
+          container = await pendingBoot;
+        } catch {
+          container = null;
+        }
+      }
+    }
+
+    if (!container) {
+      throw new WebContainerWriteError(
+        'RUNTIME_UNAVAILABLE',
+        'WebContainer runtime is not booted or unavailable. Write cannot be completed.',
+        cleanPath,
+        projectId,
+      );
+    }
+
+    const dirIndex = cleanPath.lastIndexOf('/');
+    if (dirIndex !== -1) {
+      const dir = cleanPath.slice(0, dirIndex);
+      try {
+        await container.fs.mkdir(dir, { recursive: true });
+      } catch (err: unknown) {
+        if ((err as { code?: string })?.code !== 'EEXIST') {
+          throw new WebContainerWriteError(
+            'FILESYSTEM_WRITE_FAILED',
+            `Failed to create directory "${dir}": ${(err as Error)?.message || 'unknown error'}`,
+            cleanPath,
+            projectId,
+            err,
+          );
+        }
+      }
+    }
+
+    try {
+      await container.fs.writeFile(cleanPath, content);
+      console.log('[webcontainerService] writeFile finished for:', cleanPath);
+    } catch (err: unknown) {
+      throw new WebContainerWriteError(
+        'FILESYSTEM_WRITE_FAILED',
+        `Failed to write file "${cleanPath}" to WebContainer: ${(err as Error)?.message || 'unknown error'}`,
+        cleanPath,
+        projectId,
+        err,
+      );
+    }
   }
 
   /**
@@ -2081,28 +2255,127 @@ class WebContainerManager {
   }
 
   /**
+   * Spawns an agent-owned process with lifecycle hooks and direct WebContainerProcess reference.
+   * Handles pre-spawn and mid-spawn AbortSignal cancellation to prevent orphan processes.
+   */
+  public async spawnAgentProcess(
+    command: string,
+    args: string[] = [],
+    options?: {
+      cwd?: string;
+      signal?: AbortSignal;
+      onOutput?: (chunk: string) => void;
+      onSpawn?: (process: WebContainerProcess) => void;
+    }
+  ): Promise<{
+    process: WebContainerProcess;
+    exitPromise: Promise<number>;
+  }> {
+    if (options?.signal?.aborted) {
+      throw new Error('Command execution was cancelled before start.');
+    }
+
+    const container = await this.boot();
+
+    if (options?.signal?.aborted) {
+      throw new Error('Command execution was cancelled before spawn.');
+    }
+
+    const spawnOptions: SpawnOptions = {};
+    if (options?.cwd && options.cwd !== '.' && options.cwd !== './') {
+      spawnOptions.cwd = options.cwd;
+    }
+
+    const process = await container.spawn(command, args, spawnOptions);
+
+    if (options?.signal?.aborted) {
+      try {
+        process.kill();
+      } catch {}
+      throw new Error('Command execution was cancelled before spawn completed.');
+    }
+
+    if (options?.onSpawn) {
+      options.onSpawn(process);
+    }
+
+    if (options?.onOutput) {
+      process.output.pipeTo(
+        new WritableStream({
+          write(chunk) {
+            options.onOutput!(chunk);
+          },
+        }),
+      ).catch(() => {});
+    }
+
+    return {
+      process,
+      exitPromise: process.exit,
+    };
+  }
+
+  /**
    * Runs a one-off command inside the container and waits for exit code.
    */
   public async runCommand(
     command: string,
     args: string[] = [],
     onOutput?: (chunk: string) => void,
-  ): Promise<{ exitCode: number }> {
-    const container = await this.boot();
-    const process = await container.spawn(command, args);
-
-    if (onOutput) {
-      process.output.pipeTo(
-        new WritableStream({
-          write(chunk) {
-            onOutput(chunk);
-          },
-        }),
-      ).catch(() => {});
+    options?: {
+      cwd?: string;
+      signal?: AbortSignal;
+      onSpawn?: (process: WebContainerProcess) => void;
     }
+  ): Promise<{ exitCode: number }> {
+    const { exitPromise } = await this.spawnAgentProcess(command, args, {
+      cwd: options?.cwd,
+      signal: options?.signal,
+      onOutput,
+      onSpawn: options?.onSpawn,
+    });
 
-    const exitCode = await process.exit;
+    const exitCode = await exitPromise;
     return { exitCode };
+  }
+
+  /** Multi-terminal session management */
+  public async createTerminalSession(options?: {
+    title?: string;
+    cols?: number;
+    rows?: number;
+    onData?: (data: string) => void;
+  }) {
+    const container = await this.boot();
+    return terminalSessionManager.createSession(container, options);
+  }
+
+  public getTerminalSession(id: string) {
+    return terminalSessionManager.getSession(id);
+  }
+
+  public listTerminalSessions(): TerminalSessionSummary[] {
+    return terminalSessionManager.listSessions();
+  }
+
+  public closeTerminalSession(id: string): void {
+    terminalSessionManager.closeSession(id);
+  }
+
+  public writeToTerminalSession(id: string, data: string): boolean {
+    return terminalSessionManager.writeToSession(id, data);
+  }
+
+  public resizeTerminalSession(id: string, cols: number, rows: number): void {
+    terminalSessionManager.resizeSession(id, cols, rows);
+  }
+
+  public onTerminalSessionData(id: string, onData: (chunk: string) => void): () => void {
+    return terminalSessionManager.subscribeSession(id, onData);
+  }
+
+  public subscribeTerminalSessions(listener: () => void): () => void {
+    return terminalSessionManager.subscribe(listener);
   }
 }
 

@@ -1,0 +1,449 @@
+{
+  "states": [
+    {
+      "at": 1792059556062,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": null,
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059557076,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059558099,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059559112,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059560122,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059561151,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059562160,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059563165,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059564182,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059565189,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059566196,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059567200,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059568217,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059569227,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059570229,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059571235,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059572245,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059573255,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059574270,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059575274,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059576286,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059577292,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059578305,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059579317,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059580327,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059581344,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059582356,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059583367,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059584374,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059585380,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    },
+    {
+      "at": 1792059586386,
+      "registrations": [
+        {
+          "scope": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/",
+          "installing": {
+            "state": "installing",
+            "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js"
+          },
+          "waiting": null,
+          "active": null
+        }
+      ]
+    }
+  ],
+  "failedRequests": [],
+  "responses": [
+    {
+      "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/sw.js",
+      "status": 200
+    },
+    {
+      "url": "https://gb-coder-public-alpha-6l37qqpda.vercel.app/app/workbox-d4f8be5c.js",
+      "status": 200
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "status": "FAIL"
+}

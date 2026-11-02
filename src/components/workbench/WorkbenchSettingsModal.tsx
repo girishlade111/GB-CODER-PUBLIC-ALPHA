@@ -1,0 +1,275 @@
+import React, { useEffect, useRef } from 'react';
+import { X, RotateCcw, Keyboard, Sliders } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { WorkbenchSettings } from '../../services/workbench/workbenchTypes';
+
+interface WorkbenchSettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  settings: WorkbenchSettings;
+  onUpdateSettings: (newSettings: Partial<WorkbenchSettings>) => void;
+  onResetLayout: () => void;
+}
+
+const SHORTCUTS = [
+  { key: 'Ctrl + Shift + P', label: 'Command Palette' },
+  { key: 'Ctrl + P', label: 'Quick Open / Find File' },
+  { key: 'Ctrl + B', label: 'Toggle Primary Sidebar' },
+  { key: 'Ctrl + J', label: 'Toggle Bottom Panel' },
+  { key: 'Ctrl + `', label: 'Toggle Terminal Panel' },
+  { key: 'Ctrl + Shift + E', label: 'Focus Explorer' },
+  { key: 'Ctrl + Shift + F', label: 'Focus Search' },
+  { key: 'Ctrl + S', label: 'Save File & Persist' },
+];
+
+export const WorkbenchSettingsModal: React.FC<WorkbenchSettingsModalProps> = ({
+  isOpen,
+  onClose,
+  settings,
+  onUpdateSettings,
+  onResetLayout,
+}) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      previouslyFocusedElementRef.current = document.activeElement;
+    }
+
+    const focusTimer = setTimeout(() => {
+      dialogRef.current?.focus();
+    }, 20);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+
+      // Accessible Tab / Shift+Tab focus trapping
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length > 0) {
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => {
+      clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKeyDown, true);
+      if (previouslyFocusedElementRef.current && typeof previouslyFocusedElementRef.current.focus === 'function') {
+        setTimeout(() => {
+          previouslyFocusedElementRef.current?.focus();
+        }, 10);
+      }
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      ref={dialogRef}
+      tabIndex={-1}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="workbench-settings-title"
+      aria-label="Workbench Settings"
+      data-testid="workbench-settings-dialog"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 outline-none"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="flex w-full max-w-2xl flex-col rounded-lg border border-[var(--border)] bg-[var(--sidebar)] shadow-2xl text-[var(--foreground)] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        {/* Header */}
+        <div className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--border)] px-4 bg-[var(--background)]">
+          <div className="flex items-center gap-2">
+            <Sliders className="h-4 w-4 text-[var(--primary)]" />
+            <h2 id="workbench-settings-title" className="text-sm font-semibold tracking-wide">
+              Workbench Settings & Shortcuts
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/10 transition-colors"
+            aria-label="Close settings"
+            data-testid="close-settings-btn"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex max-h-[75vh] flex-col overflow-y-auto p-5 space-y-6 text-xs">
+          {/* Editor Preferences */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">
+              Editor Preferences
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Font Size */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-medium text-[var(--muted-foreground)]">Font Size (px)</label>
+                <input
+                  type="number"
+                  min={10}
+                  max={24}
+                  value={settings.fontSize}
+                  onChange={(e) => onUpdateSettings({ fontSize: Number(e.target.value) || 13 })}
+                  className="rounded border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none"
+                />
+              </div>
+
+              {/* Line Height */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-medium text-[var(--muted-foreground)]">Line Height (px)</label>
+                <input
+                  type="number"
+                  min={16}
+                  max={36}
+                  value={settings.lineHeight}
+                  onChange={(e) => onUpdateSettings({ lineHeight: Number(e.target.value) || 20 })}
+                  className="rounded border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none"
+                />
+              </div>
+
+              {/* Tab Size */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-medium text-[var(--muted-foreground)]">Tab Size (spaces)</label>
+                <select
+                  value={settings.tabSize}
+                  onChange={(e) => onUpdateSettings({ tabSize: Number(e.target.value) || 2 })}
+                  className="rounded border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none"
+                >
+                  <option value={2}>2 Spaces</option>
+                  <option value={4}>4 Spaces</option>
+                  <option value={8}>8 Spaces</option>
+                </select>
+              </div>
+
+              {/* Terminal Font Size */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-medium text-[var(--muted-foreground)]">Terminal Font Size</label>
+                <input
+                  type="number"
+                  min={10}
+                  max={22}
+                  value={settings.terminalFontSize}
+                  onChange={(e) => onUpdateSettings({ terminalFontSize: Number(e.target.value) || 13 })}
+                  className="rounded border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none"
+                />
+              </div>
+
+              {/* Word Wrap */}
+              <div className="flex items-center justify-between col-span-1 sm:col-span-2 rounded border border-[var(--border)] bg-[var(--background)] px-3 py-2">
+                <div>
+                  <div className="font-medium text-[var(--foreground)]">Word Wrap</div>
+                  <div className="text-[10px] text-[var(--muted-foreground)]">Wrap long code lines in editor</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.wordWrap}
+                  onChange={(e) => onUpdateSettings({ wordWrap: e.target.checked })}
+                  className="h-4 w-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--ring)]"
+                />
+              </div>
+
+              {/* Minimap */}
+              <div className="flex items-center justify-between col-span-1 sm:col-span-2 rounded border border-[var(--border)] bg-[var(--background)] px-3 py-2">
+                <div>
+                  <div className="font-medium text-[var(--foreground)]">Editor Minimap</div>
+                  <div className="text-[10px] text-[var(--muted-foreground)]">Show code overview scroll preview on right side</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.minimap}
+                  onChange={(e) => onUpdateSettings({ minimap: e.target.checked })}
+                  className="h-4 w-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--ring)]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Keyboard Shortcuts */}
+          <div>
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">
+              <Keyboard className="h-3.5 w-3.5" />
+              <span>Keyboard Shortcuts</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {SHORTCUTS.map((item) => (
+                <div
+                  key={item.key}
+                  className="flex items-center justify-between rounded border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5"
+                >
+                  <span className="text-[var(--muted-foreground)] truncate">{item.label}</span>
+                  <kbd className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-[var(--foreground)] shrink-0">
+                    {item.key}
+                  </kbd>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Layout Reset */}
+          <div className="border-t border-[var(--border)] pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-[var(--foreground)]">Reset Workbench Layout</div>
+                <div className="text-[10px] text-[var(--muted-foreground)]">
+                  Restore default 4-pane layout, panel widths, and docked view positions
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm('Reset all panel positions, sizes, and presets to default?')) {
+                    onResetLayout();
+                    toast.success('Workbench layout reset to defaults');
+                    onClose();
+                  }
+                }}
+                className="flex items-center gap-1.5 rounded border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-300 hover:bg-rose-500/20 transition-colors"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Reset to Default</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex h-12 shrink-0 items-center justify-end border-t border-[var(--border)] bg-[var(--background)] px-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded bg-[var(--primary)] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[var(--accent)] transition-colors"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

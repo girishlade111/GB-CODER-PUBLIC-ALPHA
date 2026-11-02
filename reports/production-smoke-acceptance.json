@@ -1,0 +1,48 @@
+{
+  "startedAt": "2026-10-15T18:49:35.782Z",
+  "target": "https://code.ladestack.in",
+  "deployment": {
+    "id": "dpl_ByvafFyo7BnboKJapb99bfTBqPiB",
+    "commit": "b1b7960d870cf1b3da37cd80181ee91609c7be6b",
+    "branch": "main",
+    "readyState": "READY"
+  },
+  "checks": [
+    {
+      "name": "Landing Page Load & CTA",
+      "status": "PASS",
+      "title": "GB Coder — In-Browser IDE & Code Studio | LadeStack"
+    },
+    {
+      "name": "Dashboard Load & Security Isolation",
+      "status": "PASS",
+      "crossOriginIsolated": true,
+      "SharedArrayBuffer": true
+    },
+    {
+      "name": "COOP/COEP Cross-Origin Isolation",
+      "status": "PASS"
+    },
+    {
+      "name": "IDE Route (/ide) Load",
+      "status": "PASS"
+    },
+    {
+      "name": "IndexedDB Schema Compatibility",
+      "status": "PASS",
+      "stores": [
+        "projectFiles",
+        "projects"
+      ]
+    },
+    {
+      "name": "Zero Critical Errors",
+      "status": "PASS"
+    }
+  ],
+  "networkFailures": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "verdict": "GB_CODER_PRODUCTION_RELEASE_SUCCESS",
+  "completedAt": "2026-10-15T18:49:38.174Z"
+}

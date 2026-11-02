@@ -1,0 +1,60 @@
+diff --git a/scripts/.tmp-b4-2a-service-before.ts b/src/services/webcontainer/webcontainerService.ts
+index bf53a23..51d09df 100644
+--- a/scripts/.tmp-b4-2a-service-before.ts
++++ b/src/services/webcontainer/webcontainerService.ts
+@@ -1911,6 +1911,7 @@ class WebContainerManager {
+       // Clean up previous shell if any
+       this.terminateShell();
+ 
++      const shellOwner = this.captureStartupOwner();
+       const process = await container.spawn('jsh', {
+         terminal: {
+           cols: options.cols,
+@@ -1999,6 +2000,47 @@ class WebContainerManager {
+             activeServers: [],
+           });
+         }
++      }, () => {
++        // A persistent jsh can span session restarts. Validate its runtime
++        // owner and the current operation's epoch, not its original epoch.
++        const owner = this.automaticStartup?.owner ?? this.captureStartupOwner();
++        if (
++          !this.isRuntimeOwner(shellOwner) ||
++          !this.isStartupOwner(owner) ||
++          this.shellProcess !== process
++        ) return; // Retired/superseded rejection: never mutate the next owner.
++
++        // A finished attempt is immutable; retain it and record the new event
++        // separately. Never persist the arbitrary rejection payload.
++        if (owner.projectId && this.diagnostics.snapshot().find(
++          attempt => attempt.id === this.diagnosticAttempt,
++        )?.state !== 'running') {
++          this.diagnosticAttempt = this.diagnostics.begin(
++            owner.projectId, owner.epoch, owner.generation,
++          );
++        }
++        this.diagnostics.record(this.diagnosticAttempt, 'shell', 'unknown', { code: 'UNKNOWN' });
++        this.diagnostics.finish(this.diagnosticAttempt, 'unknown');
++        if (this.startupWatchdog) clearTimeout(this.startupWatchdog);
++        this.startupWatchdog = null;
++        this.shellProcess = null;
++        this.shellWriter = null;
++        this.isDevServerActive = false;
++        this.isDevServerStartingState = false;
++        this.isShellPromptReady = false;
++        this.updateState({
++          startupStage: 'error',
++          error: 'Shell exit status unknown',
++          runtimeError: {
++            phase: 'general',
++            message: 'The shell exit promise rejected; child-process status is unknown. Inspect the terminal, or return to Projects and reopen before retrying.',
++            timestamp: Date.now(),
++            recoverable: true,
++            retryAction: 'reboot_container',
++          },
++        });
++        // Retain an owned automatic operation: rejection proves no child exit
++        // code and must not unlock a duplicate install or automatic retry.
+       });
+ 
+       this.updateState({ status: 'running' });

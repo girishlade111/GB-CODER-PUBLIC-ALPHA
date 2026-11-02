@@ -297,7 +297,7 @@ const TreeRow: React.FC<RowProps> = ({
             onKeyDown={handleRenameKeyDown}
             onBlur={() => onCommitRename(node.path, renameVal)}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 min-w-0 bg-[#252526] text-white px-1 py-0.5 text-xs rounded border border-accent outline-none shadow-sm"
+            className="flex-1 min-w-0 bg-[var(--input)] text-white px-1 py-0.5 text-xs rounded border border-accent outline-none shadow-sm"
           />
         ) : (
           <span className="truncate flex-1">{node.name}</span>
@@ -417,7 +417,7 @@ const InlineDraftInput: React.FC<InlineDraftInputProps> = ({
         onChange={(e) => setVal(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={() => onCommit(val)}
-        className="flex-1 min-w-0 bg-[#252526] text-white px-1.5 py-0.5 text-xs rounded border border-accent outline-none shadow-sm"
+        className="flex-1 min-w-0 bg-[var(--input)] text-white px-1.5 py-0.5 text-xs rounded border border-accent outline-none shadow-sm"
       />
     </div>
   );
@@ -714,7 +714,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
         {/* ── Right-Click Context Menu ── */}
         {contextMenu && (
           <div
-            className="fixed z-[100] min-w-[170px] overflow-hidden rounded-md border border-[#24273b] bg-[#161824] py-1 shadow-2xl text-xs text-slate-200"
+            className="fixed z-[100] min-w-[170px] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--card)] py-1 shadow-2xl text-xs text-slate-200"
             style={{ top: contextMenu.y, left: contextMenu.x }}
             role="menu"
             onClick={(e) => e.stopPropagation()}
@@ -751,7 +751,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                     <FolderPlus className="h-3.5 w-3.5 text-amber-400" />
                     New Folder...
                   </button>
-                  <div className="my-1 border-t border-[#24273b]" />
+                  <div className="my-1 border-t border-[var(--border)]" />
                   <button
                     type="button"
                     role="menuitem"
@@ -782,7 +782,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                     </span>
                     <span className="text-[10px] text-red-400/80 font-mono">Del</span>
                   </button>
-                  <div className="my-1 border-t border-[#24273b]" />
+                  <div className="my-1 border-t border-[var(--border)]" />
                   <button
                     type="button"
                     role="menuitem"
@@ -828,7 +828,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                       <span className="text-[10px] text-vsc-textMuted font-mono">Ctrl+\</span>
                     </button>
                   )}
-                  <div className="my-1 border-t border-[#24273b]" />
+                  <div className="my-1 border-t border-[var(--border)]" />
                   <button
                     type="button"
                     role="menuitem"
@@ -872,7 +872,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                     </span>
                     <span className="text-[10px] text-red-400/80 font-mono">Del</span>
                   </button>
-                  <div className="my-1 border-t border-[#24273b]" />
+                  <div className="my-1 border-t border-[var(--border)]" />
                   <button
                     type="button"
                     role="menuitem"
@@ -926,7 +926,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                   <FolderPlus className="h-3.5 w-3.5 text-amber-400" />
                   New Folder...
                 </button>
-                <div className="my-1 border-t border-[#24273b]" />
+                <div className="my-1 border-t border-[var(--border)]" />
                 <button
                   type="button"
                   role="menuitem"
@@ -953,14 +953,14 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
             onClick={() => setDeleteTarget(null)}
           >
             <div
-              className="w-full max-w-sm rounded-lg border border-[#24273b] bg-[#1e1e1e] p-4 shadow-2xl text-white"
+              className="w-full max-w-sm rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 shadow-2xl text-white"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-2.5 text-red-400 mb-2 font-semibold text-sm">
                 <Trash2 className="h-4 w-4" />
                 Delete {deleteTarget.isDirectory ? 'Folder' : 'File'}
               </div>
-              <p className="text-xs text-[#b8b5ad] leading-relaxed">
+              <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
                 Are you sure you want to permanently delete{' '}
                 <span className="font-semibold text-white">'{deleteTarget.name}'</span>?
                 {deleteTarget.isDirectory && (
@@ -973,7 +973,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
                 <button
                   type="button"
                   onClick={() => setDeleteTarget(null)}
-                  className="rounded px-3 py-1.5 text-xs font-medium text-[#b8b5ad] hover:bg-[#2d2d30] hover:text-white transition-colors"
+                  className="rounded px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-white transition-colors"
                 >
                   Cancel
                 </button>

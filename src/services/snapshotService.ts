@@ -194,8 +194,17 @@ class SnapshotService {
       throw new Error(`Snapshot limit of ${MAX_SNAPSHOTS} reached. Please delete some before creating new ones.`);
     }
 
+    const snapshotId = (() => {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+          return crypto.randomUUID();
+        }
+      } catch {}
+      return `snap-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    })();
+
     const newSnapshot: Snapshot = {
-      id: crypto.randomUUID(),
+      id: snapshotId,
       name,
       timestamp: new Date().toISOString(),
       isAuto,

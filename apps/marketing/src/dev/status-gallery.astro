@@ -1,0 +1,49 @@
+---
+import StatusDocument from '../layouts/StatusDocument.astro';
+import StatusCodeGroup from './StatusCodeGroup.astro';
+import { STATUS_CLASSES, STATUS_CODES, getStatusConfig } from '../../../../src/components/status/status-config';
+const selected = Number(Astro.params.code || 404);
+const code = getStatusConfig(selected).code;
+const themeParam = Astro.url.searchParams.get('theme');
+const theme = themeParam === 'dark' || themeParam === 'light' ? themeParam : 'auto';
+const timerDemo = Astro.url.searchParams.get('timer') === 'on';
+const status = getStatusConfig(code);
+---
+<StatusDocument code={code} theme={theme} redirect={timerDemo && status.class === 3 ? { href: '/__status/200', seconds: 8 } : undefined} autoRetry={timerDemo && (code === 503 || code === 504) ? { seconds: 10, maxAttempts: 3 } : undefined} retryAfterSeconds={5}>
+<div slot="toolbar" class="gallery-toolbar" data-gallery-theme={theme}>
+  <div><a href="/__status">Status gallery</a><span>Development only · screens are demonstrations</span></div>
+  <form action="/__status" id="status-switcher">
+    <label>Status <select name="code" id="gallery-code">{STATUS_CODES.map(item => <option value={item} selected={code === item}>{item} · {getStatusConfig(item).reason}</option>)}</select></label>
+    <label>Theme <select name="theme" id="gallery-theme"><option value="auto" selected={theme === 'auto'}>System</option><option value="light" selected={theme === 'light'}>Light</option><option value="dark" selected={theme === 'dark'}>Dark</option></select></label>
+    <label class="gallery-timer"><input type="checkbox" name="timer" value="on" checked={timerDemo} /> Demo countdowns</label>
+    <button type="submit">Preview</button>
+  </form>
+  <nav aria-label="All status codes">{Object.entries(STATUS_CLASSES).map(([group, info]) => <StatusCodeGroup group={Number(group)} name={info.name} selected={code} theme={theme} />)}</nav>
+</div>
+</StatusDocument>
+<script>
+  document.getElementById('status-switcher')?.addEventListener('submit', event => {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    const values = new FormData(form);
+    window.location.assign(`/__status/${values.get('code')}?theme=${values.get('theme')}${values.get('timer') ? '&timer=on' : ''}`);
+  });
+</script>
+<style>
+  .gallery-toolbar { --gallery-bg: var(--muted, oklch(0.97 0 0)); --gallery-field: var(--card, oklch(1.00 0 0)); --gallery-text: var(--foreground, oklch(0 0 0)); --gallery-muted: var(--muted-foreground, oklch(0.44 0 0)); --gallery-rule: var(--border, oklch(0.92 0 0)); --gallery-link: var(--primary, oklch(0 0 0)); padding: 1rem 1.5rem; background: var(--gallery-bg); color: var(--gallery-text); border-bottom: 1px solid var(--gallery-rule); font: .8rem/1.5 var(--font-sans, Geist, sans-serif); }
+  .gallery-toolbar[data-gallery-theme='dark'] { --gallery-bg: oklch(0.23 0 0); --gallery-field: oklch(0.14 0 0); --gallery-text: oklch(1.00 0 0); --gallery-muted: oklch(0.72 0 0); --gallery-rule: oklch(0.26 0 0); --gallery-link: oklch(1.00 0 0); color-scheme: dark; }
+  @media (prefers-color-scheme: dark) { .gallery-toolbar[data-gallery-theme='auto'] { --gallery-bg: oklch(0.23 0 0); --gallery-field: oklch(0.14 0 0); --gallery-text: oklch(1.00 0 0); --gallery-muted: oklch(0.72 0 0); --gallery-rule: oklch(0.26 0 0); --gallery-link: oklch(1.00 0 0); color-scheme: dark; } }
+  .gallery-toolbar > div, form { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+  .gallery-toolbar > div > a { color: inherit; font-weight: 750; }
+  .gallery-toolbar > div > span { color: var(--gallery-muted); }
+  form { margin-block: .75rem; }
+  label { display: flex; align-items: center; gap: .5rem; }
+  select, button { max-width: 100%; min-height: 44px; padding: .4rem .7rem; background: var(--gallery-field); color: inherit; border: 1px solid var(--gallery-rule); border-radius: 6px; font: inherit; }
+  nav { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; }
+  nav :global(details > div) { display: flex; flex-wrap: wrap; max-width: 30rem; }
+  nav :global(summary) { min-height: 44px; cursor: pointer; display: flex; align-items: center; }
+  nav :global(details a) { display: grid; place-items: center; min-width: 44px; min-height: 44px; color: var(--gallery-link); text-underline-offset: 4px; }
+  nav :global([aria-current]) { font-weight: 800; }
+  :focus-visible { outline: 2px solid var(--gallery-link); outline-offset: 3px; }
+  @media (max-width: 600px) { form, label { align-items: stretch; } label { flex-direction: column; width: 100%; } .gallery-timer { flex-direction: row; align-items: center; } }
+</style>

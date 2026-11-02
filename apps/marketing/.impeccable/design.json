@@ -1,0 +1,538 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-20T13:18:22.419Z",
+  "title": "Design System: GB Coder Marketing",
+  "extensions": {
+    "colorMeta": {
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "tonalRamp": [
+          "oklch(15% 0.00412 157.18)",
+          "oklch(26% 0.00412 157.18)",
+          "oklch(38% 0.00412 157.18)",
+          "oklch(49% 0.00412 157.18)",
+          "oklch(61% 0.00412 157.18)",
+          "oklch(72% 0.00412 157.18)",
+          "oklch(84% 0.00412 157.18)",
+          "oklch(95% 0.00412 157.18)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.00)",
+          "oklch(26% 0.00000 0.00)",
+          "oklch(38% 0.00000 0.00)",
+          "oklch(49% 0.00000 0.00)",
+          "oklch(61% 0.00000 0.00)",
+          "oklch(72% 0.00000 0.00)",
+          "oklch(84% 0.00000 0.00)",
+          "oklch(95% 0.00000 0.00)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "surface-soft": {
+        "role": "neutral",
+        "displayName": "Surface Soft",
+        "tonalRamp": [
+          "oklch(15% 0.01077 158.84)",
+          "oklch(26% 0.01077 158.84)",
+          "oklch(38% 0.01077 158.84)",
+          "oklch(49% 0.01077 158.84)",
+          "oklch(61% 0.01077 158.84)",
+          "oklch(72% 0.01077 158.84)",
+          "oklch(84% 0.01077 158.84)",
+          "oklch(95% 0.01077 158.84)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(15% 0.01773 159.07)",
+          "oklch(26% 0.01773 159.07)",
+          "oklch(38% 0.01773 159.07)",
+          "oklch(49% 0.01773 159.07)",
+          "oklch(61% 0.01773 159.07)",
+          "oklch(72% 0.01773 159.07)",
+          "oklch(84% 0.01773 159.07)",
+          "oklch(95% 0.01773 159.07)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "border-subtle": {
+        "role": "neutral",
+        "displayName": "Border Subtle",
+        "tonalRamp": [
+          "oklch(15% 0.01085 158.83)",
+          "oklch(26% 0.01085 158.83)",
+          "oklch(38% 0.01085 158.83)",
+          "oklch(49% 0.01085 158.83)",
+          "oklch(61% 0.01085 158.83)",
+          "oklch(72% 0.01085 158.83)",
+          "oklch(84% 0.01085 158.83)",
+          "oklch(95% 0.01085 158.83)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Text Primary",
+        "tonalRamp": [
+          "oklch(15% 0.03388 166.89)",
+          "oklch(26% 0.03388 166.89)",
+          "oklch(38% 0.03388 166.89)",
+          "oklch(49% 0.03388 166.89)",
+          "oklch(61% 0.03388 166.89)",
+          "oklch(72% 0.03388 166.89)",
+          "oklch(84% 0.03388 166.89)",
+          "oklch(95% 0.03388 166.89)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Text Secondary",
+        "tonalRamp": [
+          "oklch(15% 0.02714 160.87)",
+          "oklch(26% 0.02714 160.87)",
+          "oklch(38% 0.02714 160.87)",
+          "oklch(49% 0.02714 160.87)",
+          "oklch(61% 0.02714 160.87)",
+          "oklch(72% 0.02714 160.87)",
+          "oklch(84% 0.02714 160.87)",
+          "oklch(95% 0.02714 160.87)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Text Muted",
+        "tonalRamp": [
+          "oklch(15% 0.02461 158.04)",
+          "oklch(26% 0.02461 158.04)",
+          "oklch(38% 0.02461 158.04)",
+          "oklch(49% 0.02461 158.04)",
+          "oklch(61% 0.02461 158.04)",
+          "oklch(72% 0.02461 158.04)",
+          "oklch(84% 0.02461 158.04)",
+          "oklch(95% 0.02461 158.04)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "text-faint": {
+        "role": "neutral",
+        "displayName": "Text Faint",
+        "tonalRamp": [
+          "oklch(15% 0.02461 158.04)",
+          "oklch(26% 0.02461 158.04)",
+          "oklch(38% 0.02461 158.04)",
+          "oklch(49% 0.02461 158.04)",
+          "oklch(61% 0.02461 158.04)",
+          "oklch(72% 0.02461 158.04)",
+          "oklch(84% 0.02461 158.04)",
+          "oklch(95% 0.02461 158.04)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Primary",
+        "tonalRamp": [
+          "oklch(15% 0.09318 159.86)",
+          "oklch(26% 0.09318 159.86)",
+          "oklch(38% 0.09318 159.86)",
+          "oklch(49% 0.09318 159.86)",
+          "oklch(61% 0.09318 159.86)",
+          "oklch(72% 0.09318 159.86)",
+          "oklch(84% 0.09318 159.86)",
+          "oklch(95% 0.09318 159.86)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Accent Hover",
+        "tonalRamp": [
+          "oklch(15% 0.07414 160.89)",
+          "oklch(26% 0.07414 160.89)",
+          "oklch(38% 0.07414 160.89)",
+          "oklch(49% 0.07414 160.89)",
+          "oklch(61% 0.07414 160.89)",
+          "oklch(72% 0.07414 160.89)",
+          "oklch(84% 0.07414 160.89)",
+          "oklch(95% 0.07414 160.89)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "code-bg": {
+        "role": "neutral",
+        "displayName": "Code Bg",
+        "tonalRamp": [
+          "oklch(15% 0.03215 168.52)",
+          "oklch(26% 0.03215 168.52)",
+          "oklch(38% 0.03215 168.52)",
+          "oklch(49% 0.03215 168.52)",
+          "oklch(61% 0.03215 168.52)",
+          "oklch(72% 0.03215 168.52)",
+          "oklch(84% 0.03215 168.52)",
+          "oklch(95% 0.03215 168.52)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "code-text": {
+        "role": "neutral",
+        "displayName": "Code Text",
+        "tonalRamp": [
+          "oklch(15% 0.01738 159.11)",
+          "oklch(26% 0.01738 159.11)",
+          "oklch(38% 0.01738 159.11)",
+          "oklch(49% 0.01738 159.11)",
+          "oklch(61% 0.01738 159.11)",
+          "oklch(72% 0.01738 159.11)",
+          "oklch(84% 0.01738 159.11)",
+          "oklch(95% 0.01738 159.11)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Surface Raised",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0)",
+          "oklch(26% 0.00000 0)",
+          "oklch(38% 0.00000 0)",
+          "oklch(49% 0.00000 0)",
+          "oklch(61% 0.00000 0)",
+          "oklch(72% 0.00000 0)",
+          "oklch(84% 0.00000 0)",
+          "oklch(95% 0.00000 0)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      },
+      "accent-dark": {
+        "role": "primary",
+        "displayName": "Deep Forest",
+        "canonical": "#172e25",
+        "tonalRamp": [
+          "oklch(15% 0.00412 157.18)",
+          "oklch(26% 0.00412 157.18)",
+          "oklch(38% 0.00412 157.18)",
+          "oklch(49% 0.00412 157.18)",
+          "oklch(61% 0.00412 157.18)",
+          "oklch(72% 0.00412 157.18)",
+          "oklch(84% 0.00412 157.18)",
+          "oklch(95% 0.00412 157.18)"
+        ],
+        "rampProvenance": "Synthesized OKLCH exploration; not additional shipping color tokens."
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Home display",
+        "purpose": "The home title only. Everything else uses page-title or headline."
+      },
+      "headline": {
+        "displayName": "Section headline",
+        "purpose": "Marketing section titles."
+      },
+      "page-title": {
+        "displayName": "Reading page title",
+        "purpose": "General reading introductions."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Shared reading rhythm; long-form uses 1.85 line-height."
+      },
+      "button": {
+        "displayName": "Action label",
+        "purpose": "Shared CTA and button labels."
+      },
+      "code": {
+        "displayName": "Source",
+        "purpose": "Scrollable numbered source samples."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Navigation, column titles and status captions."
+      },
+      "display-mobile": {
+        "displayName": "Home display, small screens",
+        "purpose": "The home title below 700px. Same weight and tracking as the desktop display step, compressed to a 13-character measure."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lift",
+        "value": "0 1px 2px rgba(23, 46, 37, 0.04)",
+        "purpose": "Resting raised surfaces — bento cells, cards, fields."
+      },
+      {
+        "name": "hover",
+        "value": "0 4px 16px -2px rgba(23, 46, 37, 0.06), 0 1px 3px rgba(23, 46, 37, 0.03)",
+        "purpose": "A surface that answers the pointer."
+      },
+      {
+        "name": "float",
+        "value": "0 12px 32px -8px #172e251c, 0 2px 6px rgba(23, 46, 37, 0.03)",
+        "purpose": "Overlays — language menu, command palette."
+      },
+      {
+        "name": "stage",
+        "value": "0 24px 64px -16px rgba(23, 78, 55, 0.16), 0 2px 4px rgba(23, 46, 37, 0.04)",
+        "purpose": "The studio and IDE proof frames. At most one per viewport."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-exponential",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Default for reveals, the sliding tab indicator and stage transitions."
+      },
+      {
+        "name": "ease-standard",
+        "value": "0.18s ease-out",
+        "purpose": "Background and foreground transitions on controls."
+      },
+      {
+        "name": "ease-reveal",
+        "value": "0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The studio panel reveal when a tab changes."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "700px"
+      },
+      {
+        "name": "tablet",
+        "value": "1000px"
+      },
+      {
+        "name": "wide",
+        "value": "1500px"
+      }
+    ],
+    "focus": {
+      "ring": "2px solid #176644",
+      "offset": "5px",
+      "radius": "4px",
+      "note": "Every interactive element keeps a visible emerald focus ring."
+    },
+    "provenance": {
+      "mode": "scan",
+      "sources": [
+        "src/styles/site.css",
+        "src/styles/studio.css",
+        "src/components/pages/HomePage.astro",
+        "src/components/StudioDemo.tsx",
+        "src/components/AssistShowcase.astro",
+        "src/components/ui/button.tsx",
+        "src/components/ui/code-sample.tsx",
+        "src/components/pages/FeaturesPage.astro",
+        "src/components/pages/DocsPage.astro",
+        "src/components/pages/BlogIndexPage.astro",
+        "src/components/pages/BlogPostPage.astro",
+        "src/components/pages/ContactPage.astro",
+        "src/pages/sitemap.astro"
+      ],
+      "conceptRoll": "Not run; no seed key, decision comp or QUALITY BAR image exists.",
+      "authority": "Final implementation; screenshots may precede final source fixes.",
+      "raster": "Existing tghjkl.jpeg retained unchanged with provenance sidecar.",
+      "inputComponent": "No marketing text input exists; none synthesized.",
+      "reviewBoundary": "CTA foreground fix, removed promotional feature badges and title-before-taxonomy article order are captured; overridden legacy styles are not canonized.",
+      "rasters": "apps/marketing/public/og-image.png is generated in-repository with ffmpeg from the site tokens and carries its origin in apps/marketing/public/ASSETS.md. apps/marketing/public/tghjkl.jpeg is retained unchanged and is referenced only as the Organization.logo identifier."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single filled action. Emerald fill, white text, 6px radius.",
+      "html": "<button class=\"ds-btn-primary\">Start Coding <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"m13 6 6 6-6 6\"/></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 0.65rem; min-height: 46px; padding: 0.7rem 1.3rem; border: 1px solid transparent; border-radius: 6px; background: #176644; color: #ffffff; font: 650 0.88rem/1.4 \"Manrope Variable\", \"Segoe UI\", sans-serif; cursor: pointer; transition: background 0.18s ease-out, color 0.18s ease-out; } .ds-btn-primary:hover { background: #104c33; color: #ffffff; } .ds-btn-primary:focus-visible { outline: 2px solid #176644; outline-offset: 5px; border-radius: 4px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "The secondary action. Transparent fill, hairline border, forest ink text.",
+      "html": "<button class=\"ds-btn-outline\">Explore Features</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0.7rem 1.3rem; border: 1px solid #dfe7e2; border-radius: 6px; background: transparent; color: #172e25; font: 650 0.88rem/1.4 \"Manrope Variable\", \"Segoe UI\", sans-serif; cursor: pointer; transition: background 0.18s ease-out, color 0.18s ease-out; } .ds-btn-outline:hover { background: #e8f0eb; color: #172e25; } .ds-btn-outline:focus-visible { outline: 2px solid #176644; outline-offset: 5px; border-radius: 4px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Low-emphasis control used inside dark code chrome.",
+      "html": "<button class=\"ds-btn-ghost\">Copy</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0.35rem 0.65rem; border: 0; border-radius: 6px; background: transparent; color: #506258; font: 650 0.88rem/1.4 \"Manrope Variable\", \"Segoe UI\", sans-serif; cursor: pointer; transition: background 0.18s ease-out, color 0.18s ease-out; } .ds-btn-ghost:hover { background: #e8f0eb; color: #172e25; } .ds-btn-ghost:focus-visible { outline: 2px solid #176644; outline-offset: 5px; border-radius: 4px; }"
+    },
+    {
+      "name": "Primary Navigation",
+      "kind": "nav",
+      "refersTo": "navigation-primary",
+      "description": "The sticky canvas header. 44px targets, emerald active state.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav__link is-active\" href=\"#\">Features</a><a class=\"ds-nav__link\" href=\"#\">Docs</a><a class=\"ds-nav__link\" href=\"#\">Blog</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 1.65rem; } .ds-nav__link { display: inline-flex; align-items: center; min-height: 44px; color: #506258; font: 600 0.85rem/1.4 \"Manrope Variable\", \"Segoe UI\", sans-serif; text-decoration: none; transition: color 0.15s ease; } .ds-nav__link:hover, .ds-nav__link.is-active { color: #176644; } .ds-nav__link.is-active { text-decoration: underline; text-underline-offset: 8px; text-decoration-thickness: 2px; } .ds-nav__link:focus-visible { outline: 2px solid #176644; outline-offset: 5px; border-radius: 4px; }"
+    },
+    {
+      "name": "Article Tag",
+      "kind": "chip",
+      "refersTo": "article-tag",
+      "description": "A non-interactive taxonomy label in soft mint with emerald text.",
+      "html": "<span class=\"ds-tag\">GUIDE</span>",
+      "css": ".ds-tag { display: inline-block; padding: 0.2rem 0.55rem; border-radius: 4px; background: #e8f0eb; color: #176644; font: 600 0.75rem/1.4 \"Manrope Variable\", \"Segoe UI\", sans-serif; letter-spacing: 0; }"
+    },
+    {
+      "name": "Bento Cell",
+      "kind": "card",
+      "refersTo": "bento-cell",
+      "description": "A capability cell. White surface, hairline separation, pointer-tracked emerald spotlight.",
+      "html": "<article class=\"ds-bento\"><span class=\"ds-bento__icon\"><svg width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m16 18 6-6-6-6\"/><path d=\"m8 6-6 6 6 6\"/></svg></span><h3 class=\"ds-bento__title\">Monaco Code Editor</h3><p class=\"ds-bento__desc\">The same industry-grade editor behind VS Code, with TypeScript diagnostics and autocomplete.</p></article>",
+      "css": ".ds-bento { position: relative; isolation: isolate; background: #ffffff; padding: 1.9rem; border-radius: 14px; min-height: 180px; display: flex; flex-direction: column; gap: 0.65rem; } .ds-bento::before { content: \"\"; position: absolute; inset: 0; z-index: -1; border-radius: inherit; opacity: 0; transition: opacity 0.35s ease; background: radial-gradient(circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(19,98,64,0.13), transparent 52%); pointer-events: none; } .ds-bento:hover::before { opacity: 1; } .ds-bento__icon { color: #176644; display: inline-flex; } .ds-bento__title { margin: 0; font: 600 1.12rem/1.25 \"Manrope Variable\", \"Segoe UI\", sans-serif; letter-spacing: -0.02em; color: #172e25; } .ds-bento__desc { margin: 0; max-width: 46ch; color: #506258; font: 400 0.9rem/1.6 \"Manrope Variable\", \"Segoe UI\", sans-serif; }"
+    },
+    {
+      "name": "Studio Tabs",
+      "kind": "custom",
+      "refersTo": "tab-indicator",
+      "description": "The studio source switcher. A sliding white indicator over a soft-mint rail, driven by React Aria.",
+      "html": "<div class=\"ds-tabs\"><span class=\"ds-tabs__pill\"></span><button class=\"ds-tabs__tab is-selected\">HTML + CSS</button><button class=\"ds-tabs__tab\">React</button><button class=\"ds-tabs__tab\">Vue</button></div>",
+      "css": ".ds-tabs { position: relative; display: inline-flex; gap: 0.35rem; padding: 3px; border: 1px solid #dfe7e2; border-radius: 6px; background: #e8f0eb; } .ds-tabs__pill { position: absolute; top: 3px; left: 3px; width: 99px; height: 33px; border-radius: 6px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transform: translateX(0); transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1); } .ds-tabs__tab { position: relative; z-index: 1; padding: 0.4rem 0.85rem; border: 0; border-radius: 6px; background: transparent; color: #506258; font: 600 0.78rem/1.4 \"Manrope Variable\", \"Segoe UI\", sans-serif; cursor: pointer; transition: color 0.18s ease-out; } .ds-tabs__tab:hover { color: #172e25; } .ds-tabs__tab.is-selected { color: #176644; font-weight: 700; } .ds-tabs__tab:focus-visible { outline: 2px solid #176644; outline-offset: 5px; border-radius: 4px; }"
+    },
+    {
+      "name": "Code Sample",
+      "kind": "custom",
+      "refersTo": "code-sample",
+      "description": "The studio source pane. Dark code plane, tabular line numbers, ghost copy control.",
+      "html": "<div class=\"ds-code\"><div class=\"ds-code__head\"><span class=\"ds-code__file\">index.html</span><button class=\"ds-code__copy\">Copy</button></div><pre class=\"ds-code__pre\"><code>1  &lt;main class=\"idea\"&gt;\n2    &lt;h1&gt;Make room for good ideas.&lt;/h1&gt;\n3  &lt;/main&gt;</code></pre></div>",
+      "css": ".ds-code { background: #152b23; color: #e4f1e9; border-radius: 8px; overflow: hidden; font: 12px/1.85 ui-monospace, SFMono-Regular, Consolas, monospace; } .ds-code__head { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1.25rem; border-bottom: 1px solid #1c3629; color: #9cb8a9; } .ds-code__file { font-weight: 600; } .ds-code__copy { border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; background: rgba(255,255,255,0.05); color: #c9e0d3; font: 650 0.72rem/1.4 \"Manrope Variable\", \"Segoe UI\", sans-serif; padding: 0.25rem 0.6rem; cursor: pointer; } .ds-code__copy:hover { background: rgba(255,255,255,0.12); color: #ffffff; } .ds-code__copy:focus-visible { outline: 2px solid #176644; outline-offset: 5px; } .ds-code__pre { margin: 0; padding: 1.25rem; overflow: auto; }"
+    },
+    {
+      "name": "IDE Frame",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "The app proof. File tree, split editor and preview, composed in CSS.",
+      "html": "<div class=\"ds-ide\"><div class=\"ds-ide__bar\"><span class=\"ds-ide__path\">workspace / react-starter</span></div><div class=\"ds-ide__body\"><div class=\"ds-ide__side\">src<br/>App.jsx<br/>style.css</div><div class=\"ds-ide__edit\"><div class=\"ds-ide__code\">import { useState } from \"react\";</div><div class=\"ds-ide__preview\"><div class=\"ds-ide__bar-line\"></div><div class=\"ds-ide__line\"></div></div></div></div></div>",
+      "css": ".ds-ide { border: 1px solid #ccd9d1; border-radius: 14px; background: #ffffff; overflow: hidden; box-shadow: 0 24px 64px -16px rgba(23,78,55,0.16), 0 2px 4px rgba(23,46,37,0.04); } .ds-ide__bar { padding: 0.6rem 0.9rem; border-bottom: 1px solid #dfe7e2; background: #e8f0eb; color: #5d6d63; font: 12px/1 ui-monospace, monospace; } .ds-ide__body { display: grid; grid-template-columns: 190px minmax(0, 1fr); } .ds-ide__side { border-right: 1px solid #dfe7e2; padding: 0.85rem 0.6rem; color: #506258; font: 12px/1.5 ui-monospace, monospace; } .ds-ide__edit { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); } .ds-ide__code { background: #152b23; color: #e4f1e9; padding: 0.9rem; font: 11.5px/1.75 ui-monospace, monospace; } .ds-ide__preview { padding: 1.1rem; background: #ffffff; } .ds-ide__bar-line { height: 34px; border-radius: 6px; background: #dfeae3; margin-bottom: 0.55rem; } .ds-ide__line { height: 7px; border-radius: 3px; background: #c6d8cd; width: 62%; }"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "custom",
+      "refersTo": "button-outline",
+      "description": "The environment switcher. CSS-only radio group with a checked surface.",
+      "html": "<div class=\"ds-seg\"><label class=\"ds-seg__opt\"><input type=\"radio\" name=\"ds-env\" checked /><span>Static Editor</span></label><label class=\"ds-seg__opt\"><input type=\"radio\" name=\"ds-env\" /><span>WebContainer IDE</span></label></div>",
+      "css": ".ds-seg { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid #dfe7e2; border-radius: 999px; background: #e8f0eb; } .ds-seg__opt input { position: absolute; opacity: 0; width: 1px; height: 1px; } .ds-seg__opt span { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.42rem 0.95rem; border-radius: 999px; color: #506258; font: 650 0.82rem/1.4 \"Manrope Variable\", \"Segoe UI\", sans-serif; cursor: pointer; transition: color 0.2s ease, background 0.2s ease; } .ds-seg__opt input:checked + span { background: #ffffff; color: #176644; box-shadow: 0 1px 2px rgba(23,46,37,0.04); } .ds-seg__opt input:focus-visible + span { outline: 2px solid #176644; outline-offset: 3px; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "article-tag",
+      "description": "A blog taxonomy filter. Transparent outlined pill with forest ink text that becomes a solid emerald fill with white text when pressed.",
+      "html": "<button class=\"ds-chip\" aria-pressed=\"true\">WebContainers</button>\n<button class=\"ds-chip\" aria-pressed=\"false\">React</button>",
+      "css": ".ds-chip { font-size: 0.78rem; font-weight: 650; color: var(--text-secondary); background: transparent; border: 1px solid var(--border); border-radius: 9999px; padding: 0.32rem 0.8rem; min-height: 34px; cursor: pointer; }\n.ds-chip[aria-pressed='true'] { background: var(--primary); border-color: var(--primary); color: #fff; }"
+    },
+    {
+      "name": "Capability Row",
+      "kind": "custom",
+      "refersTo": "bento-cell",
+      "description": "A grouped feature. Icon plate, uppercase badge, title, summary and a bulleted proof list, ruled from the capability above it.",
+      "html": "<article class=\"ds-capability\"><span class=\"ds-capability__icon\">⌘</span><div class=\"ds-capability__body\"><span class=\"ds-capability__badge\">Industry standard</span><h3>Monaco Code Editor</h3><p>The exact editing engine powering VS Code.</p><ul><li>IntelliSense autocompletion</li></ul></div></article>",
+      "css": ".ds-capability { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 1.5rem; padding-bottom: 2.75rem; border-bottom: 1px solid var(--border-subtle); }\n.ds-capability__icon { width: 44px; height: 44px; display: grid; place-items: center; color: var(--primary); border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }\n.ds-capability__badge { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }"
+    },
+    {
+      "name": "Featured Guide",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "The promoted article on the blog index. A meta column on the left, title and summary on the right, ruled above and below.",
+      "html": "<article class=\"ds-featured\"><div class=\"ds-featured__meta\"><span class=\"ds-featured__label\">Featured guide</span></div><div class=\"ds-featured__body\"><h2>How GB Coder Works</h2><p>A complete tour of the studio.</p></div></article>",
+      "css": ".ds-featured { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 2.5rem; padding: 2.5rem 0 3rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }\n.ds-featured__label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Working Canvas",
+    "overview": "A browser development studio presented as a working canvas. Pale mineral mint space, deep forest ink and emerald actions let code and its visible result lead. The page is the proof: a real editor frame, a real command palette, a real file tree, a real live preview — each one composed in CSS rather than photographed.\n\nThe system is quiet by construction. Surfaces are separated by hairline rules and tonal fields, not by heavy cards. Reading rows stay open and ruled; filled rounded surfaces are reserved for things that behave like objects. One emerald accent carries every action, every selected state and every active rule, and it appears on less than a tenth of any screen.\n\nSelf-hosted Manrope keeps the voice modern and professional; a system monospace marks code, paths and measurements. Rounded controls are softly squared rather than pill-shaped, so the studio chrome reads as tooling and not as a consumer app.",
+    "keyCharacteristics": [
+      "App proof over marketing illustration",
+      "One mineral mint and emerald palette across every surface",
+      "Hairline rules and open rows instead of nested card stacks",
+      "A single drawn icon system: 24×24 grid, 1.75px stroke",
+      "Accessible tab semantics and keyboard selection in the studio"
+    ],
+    "rules": [
+      {
+        "name": "The Shared Palette Rule",
+        "body": "Every adapted library component consumes the marketing semantic tokens. A second palette never enters the site, and no component carries its own accent color.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Accent Rule",
+        "body": "Emerald is the only chroma. It marks actions, selection and active state, and nothing else. Its rarity is the point.",
+        "section": "colors"
+      },
+      {
+        "name": "The Hairline Rule",
+        "body": "Structure is expressed with 1px rules and tonal fields. A shadow alone never carries a layout decision.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tracking Floor Rule",
+        "body": "Headings never track below -0.035em. Body copy and labels track at zero.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Measure Rule",
+        "body": "Prose never exceeds 72 characters. A measure that gets wider is a measure that stops being read.",
+        "section": "typography"
+      },
+      {
+        "name": "The Ambient Rule",
+        "body": "Every shadow carries an offset and a soft blur. A zero-offset halo is decoration, not depth.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Restrained Shadow Rule",
+        "body": "At most one stage-level shadow is visible in a viewport. Shadows never stack.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Radius Language Rule",
+        "body": "Every radius comes from the documented scale. A new corner value is a design-system decision, not a local choice.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Still Surface Rule",
+        "body": "Nothing on the site moves on its own. The technology rail is a static wrapping row of chips, not a looping marquee; the studio preview dot is a fixed dot, not a pulse. Motion is reserved for what a reader caused: the studio tab indicator slides when a tab is chosen, and the panel cross-fades under it. Both are suppressed under prefers-reduced-motion.",
+        "section": "motion"
+      },
+      {
+        "name": "The Legible Microcopy Rule",
+        "body": "Functional text - labels, statuses, metadata, badges, table cells - never renders below 11px. Body copy never renders below 12px. The smallest step on the type ramp is 0.7rem (11.2px), which is exactly the floor.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do use the shared semantic tokens in every Astro page, React island and adapted library component.",
+      "Do draw icons from the shared registry so stroke weight never drifts.",
+      "Do keep white foregrounds on filled emerald calls to action, including links inside reading sections.",
+      "Do place titles before taxonomy metadata, and let a heading carry its own weight without a label above it.",
+      "Do preserve visible keyboard focus, real tab semantics and reduced-motion behavior.",
+      "Do preserve all nine languages, every article and every route when extending the system."
+    ],
+    "donts": [
+      "Don't reintroduce kickers, eyebrows or other labels above a heading.",
+      "Don't introduce a second accent, a second icon weight or a per-library palette.",
+      "Don't use emoji, Unicode glyphs or a second icon family as decoration.",
+      "Don't present illustrative code, the terminal study or the IDE frame as a live session.",
+      "Don't stack filled rounded surfaces inside each other; use rules for reading content.",
+      "Don't infer a visual identity for the separate application from this marketing system."
+    ]
+  }
+}

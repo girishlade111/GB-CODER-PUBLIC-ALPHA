@@ -22,7 +22,8 @@ interface SelectionSidebarProps {
 const LadeStackLoader: React.FC = () => {
     return (
         <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-10 h-10 border-2 border-stroke-dark border-t-accent rounded-full animate-spin mb-4" />
+            {/* Enterprise Minimalist Hairline Spinner */}
+            <div className="w-6 h-6 rounded-full border-[1.5px] border-white/10 border-t-white animate-spin mb-3.5" />
             <div className="text-center">
                 <h3 className="text-[15px] font-semibold text-content-on-dark">
                     Lade Stack AI
@@ -32,7 +33,7 @@ const LadeStackLoader: React.FC = () => {
                 </p>
             </div>
             <div className="w-44 h-1 bg-product-elevated border border-stroke-dark rounded-full mt-4 overflow-hidden">
-                <div className="h-full bg-accent rounded-full animate-progress" />
+                <div className="h-full bg-gradient-to-r from-white/20 via-white to-white/20 rounded-full animate-progress" />
             </div>
         </div>
     );

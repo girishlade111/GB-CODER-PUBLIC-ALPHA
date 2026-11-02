@@ -1,0 +1,127 @@
+---
+/**
+ * GB Coder — app proof frame.
+ * A faithful, static impression of the real workspace: project explorer,
+ * Monaco source pane, synchronised preview and runtime status.
+ * Adapted from Kibo UI's file-tree composition; structure kept, palette
+ * aligned to the marketing tokens.
+ */
+import Icon from '../ui/Icon.astro';
+
+interface Props {
+  path?: string;
+  fileName?: string;
+  activeFile?: string;
+  status?: string;
+}
+
+const {
+  path = 'workspace / react-starter',
+  fileName = 'App.jsx',
+  activeFile = 'App.jsx',
+  status = 'Instant Local Execution',
+} = Astro.props;
+
+const tree = [
+  { name: 'src', icon: 'folder' as const, depth: 0 },
+  { name: 'components', icon: 'folder' as const, depth: 1 },
+  { name: 'Counter.jsx', icon: 'file' as const, depth: 2 },
+  { name: 'App.jsx', icon: 'file' as const, depth: 1, active: true },
+  { name: 'main.jsx', icon: 'file' as const, depth: 1 },
+  { name: 'index.html', icon: 'file' as const, depth: 0 },
+  { name: 'package.json', icon: 'file' as const, depth: 0 },
+  { name: 'vite.config.js', icon: 'file' as const, depth: 0 },
+];
+
+const code = [
+  { n: 1, t: "import { useState } from 'react';" },
+  { n: 2, t: '' },
+  { n: 3, t: 'export default function App() {' },
+  { n: 4, t: '  const [count, setCount] = useState(0);' },
+  { n: 5, t: '' },
+  { n: 6, t: '  return (' },
+  { n: 7, t: '    <main className="card">' },
+  { n: 8, t: '      <h1>Hello, possibility.</h1>' },
+  { n: 9, t: '      <button onClick={() => setCount(c => c + 1)}>' },
+  { n: 10, t: '        Count: {count}' },
+  { n: 11, t: '      </button>' },
+  { n: 12, t: '    </main>' },
+  { n: 13, t: '  );' },
+  { n: 14, t: '}' },
+];
+---
+
+<div class="ide-frame">
+  <div class="ide-frame__bar">
+    <div class="ide-frame__dots" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+    <span class="ide-frame__path">{path}</span>
+    <span class="ide-frame__path" style="margin-left:auto">{fileName}</span>
+  </div>
+
+  <div class="ide-frame__body">
+    <div class="ide-frame__sidebar">
+      <p class="ide-frame__label">Explorer</p>
+      <ul class="ide-tree">
+        {tree.map((node) => (
+          <li data-depth={node.depth} data-active={node.active ? 'true' : undefined}>
+            <Icon name={node.icon} size={13} />
+            <span>{node.name}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="ide-frame__editor">
+      <div class="ide-frame__code">
+        <pre aria-label={fileName}>{code.map((line) => (
+          <div class="sample-line">
+            <span class="line-number">{line.n}</span>
+            <span class="sample-code-text">{line.t || ' '}</span>
+          </div>
+        ))}</pre>
+      </div>
+      <div class="ide-frame__preview">
+        <span class="ide-frame__preview-bar"></span>
+        <span class="ide-frame__preview-line"></span>
+        <span class="ide-frame__preview-line ide-frame__preview-line--short"></span>
+        <span class="ide-frame__preview-btn"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ide-frame__status">
+    <div class="ide-frame__status-list">
+      <span class="status-item"><Icon name="code" size={12} /> Monaco Editor</span>
+      <span class="status-item"><Icon name="zap" size={12} /> Vite v5.4</span>
+      <span class="status-item"><Icon name="box" size={12} /> WebContainer API</span>
+    </div>
+    <span class="status-runtime">{status}</span>
+  </div>
+</div>
+
+<style>
+  .ide-frame__code pre {
+    margin: 0;
+  }
+  .ide-frame__code .sample-line {
+    display: flex;
+    gap: 0.9rem;
+    padding-inline: 0.9rem;
+  }
+  .ide-frame__code .line-number {
+    color: var(--muted-foreground);
+    user-select: none;
+    min-width: 1.2em;
+    text-align: right;
+  }
+  .ide-frame__code .sample-code-text {
+    white-space: pre;
+  }
+  .status-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+</style>

@@ -1,0 +1,500 @@
+{
+  "scope": "Phase B.4.4 Stage 1.2 standalone binary dependency feasibility experiment; no product integration",
+  "head": "30804ea3e3f94814b46b7a9934fb477f91354615",
+  "identity": [
+    {
+      "path": "scripts/.tmp-b4-4/policy.mjs",
+      "sha256": "2273cb4dc26be2a60285ed9e87bb7ffd2ce3d33e450a868f921b23abe9239926"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/browser.mjs",
+      "sha256": "ea642be28179ed5fe5a410af8c2c86f44b57803200a962dd36bfbcb1f04df7b5"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/run.mjs",
+      "sha256": "ec1df8684f6221b6c4418c079544378d38d9bb2a36976c875708a59c902ffbdb"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/fixtures.json",
+      "sha256": "b20447d0a8b754938271826e3d75150d0db49d2c38bf924b35d70d44036e683a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-1.mjs",
+      "sha256": "4d9c2e650f243ea5c3c6642749556ed6cf8094b97c2cfa4b1850c53d96a8e57f"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-2.mjs",
+      "sha256": "d74835ea76de29f2e9255115ff3f1ec2bc9d0819ce73b956447d8cb9e69070ee"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package.json",
+      "sha256": "270a46f542ce8b01523fda3f5bd7333ad28734446815c0750c980f9162503570"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package-lock.json",
+      "sha256": "2d49b9349752521c344fe0d5091f46eabfd4718c7f6c52f3df92fdf6b8f61734"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package.json",
+      "sha256": "82bb171c0deb4422bf7a259b2497127d06f8213fa25bec2fcfd464e53e404b7a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package-lock.json",
+      "sha256": "e0a32ce64578f02feea91775c0b9d56b8cae869dd41424e1b096954fa8d9bedb"
+    }
+  ],
+  "apiVersion": "1.6.4",
+  "bundleSha256": "88faf8b88430effeebc0dc4b02bf262088c4cc4edf08e2912ff2ea687bb32bed",
+  "status": "B4_4_BINARY_NOT_FEASIBLE",
+  "startedAt": 1792065925613,
+  "budget": {
+    "maxBoots": 2,
+    "perObservationMs": 240000,
+    "campaignMs": 900000,
+    "captureMs": 10000,
+    "restoreValidationMs": 15000,
+    "retries": 0
+  },
+  "observations": [
+    {
+      "index": 1,
+      "role": "producer",
+      "project": "React A",
+      "start": 1792065926854,
+      "status": "FAIL",
+      "error": "page.evaluate: Error: Retired capture owner\n    at requireThat (http://127.0.0.1:42997/bundle.js:961:18)\n    at BinaryMemoryStore.publish (http://127.0.0.1:42997/bundle.js:1040:5)\n    at Object.begin (http://127.0.0.1:42997/bundle.js:1299:19)\n    at async <anonymous>:337:30",
+      "elapsedMs": 17487
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "failedRequests": [],
+  "httpErrors": [],
+  "progress": [
+    {
+      "at": 1792065931868,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "boot",
+      "elapsedMs": 5009
+    },
+    {
+      "at": 1792065936881,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "compatibility",
+      "elapsedMs": 10022
+    },
+    {
+      "at": 1792065941882,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "install",
+      "elapsedMs": 15024
+    }
+  ],
+  "bootCount": 1,
+  "browserVersion": "151.0.7922.34",
+  "campaignStartedAt": 1792065926851,
+  "error": "page.evaluate: Error: Retired capture owner\n    at requireThat (http://127.0.0.1:42997/bundle.js:961:18)\n    at BinaryMemoryStore.publish (http://127.0.0.1:42997/bundle.js:1040:5)\n    at Object.begin (http://127.0.0.1:42997/bundle.js:1299:19)\n    at async <anonymous>:337:30",
+  "browser": {
+    "api": "1.6.4",
+    "format": "binary",
+    "samples": [
+      {
+        "index": 1,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "producer",
+        "start": 1792065926858,
+        "status": "FAIL",
+        "phase": "capture",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792065935731,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react-producer\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065936601,
+            "durationMs": 871
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792065936602,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065938124,
+            "durationMs": 1522
+          },
+          {
+            "label": "clean-install",
+            "program": "npm",
+            "args": [
+              "ci",
+              "--ignore-scripts",
+              "--no-audit",
+              "--no-fund",
+              "--fetch-retries=0"
+            ],
+            "invokedAt": 1792065938134,
+            "output": "\r\nadded 14 packages in 4s\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065943259,
+            "durationMs": 5125
+          },
+          {
+            "label": "internal-symlink-probe",
+            "program": "node",
+            "args": [
+              "-e",
+              "require('fs').symlinkSync('.b4-4-byte-probe.bin','node_modules/.b4-4-internal-link')"
+            ],
+            "invokedAt": 1792065943311,
+            "output": "",
+            "exitCode": 0,
+            "exitAt": 1792065943828,
+            "durationMs": 517
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792065926862,
+            "label": "before-boot",
+            "pageJsHeapBytes": 1876362
+          },
+          {
+            "at": 1792065935731,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 7867197
+          },
+          {
+            "at": 1792065943829,
+            "label": "capture-before",
+            "pageJsHeapBytes": 8290848
+          },
+          {
+            "at": 1792065944162,
+            "label": "after-export",
+            "pageJsHeapBytes": 34577530
+          },
+          {
+            "at": 1792065944315,
+            "label": "capture-after",
+            "pageJsHeapBytes": 34582922
+          }
+        ],
+        "proof": false,
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 1,
+          "generation": 1,
+          "runtimeId": 1
+        },
+        "bootMs": 6673.425000011921,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react-producer",
+        "key": "b4e9aa4411ad9d6f32a15322d83a8caa6424c1b43c5c407cedf6a15bf5022ccf",
+        "installMs": 5125,
+        "installExit": 0,
+        "probeSha256": "785b0751fc2c53dc14a4ce3d800e69ef9ce1009eb327ccf458afe09c242c26c9",
+        "exportMs": 333.61500000953674,
+        "hashingMs": 152.38999998569489,
+        "binaryByteLength": 26268550,
+        "binarySha256": "707510358fdbe9ff61e3454a9341e6820b813fdd7709b981b697cb48870e0af8",
+        "captureMs": 486.3149999976158,
+        "captureJsHeapDelta": 26292178,
+        "error": "Error: Retired capture owner",
+        "failurePhase": "capture"
+      }
+    ],
+    "events": [
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792065936601
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792065938124
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "clean-install",
+        "code": 0,
+        "at": 1792065943259
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "internal-symlink-probe",
+        "code": 0,
+        "at": 1792065943828
+      }
+    ],
+    "memoryCoverage": "performance.memory.usedJSHeapSize with precise-memory flag: page JS heap only; excludes worker/Wasm/native memory; sampled checkpoints, not a guaranteed peak",
+    "bootCount": 1,
+    "retainedBinaryArtifact": null,
+    "runtimeInstances": 1,
+    "retiredRuntimeCount": 0
+  },
+  "cleanup": {
+    "api": "1.6.4",
+    "format": "binary",
+    "samples": [
+      {
+        "index": 1,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "producer",
+        "start": 1792065926858,
+        "status": "FAIL",
+        "phase": "capture",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792065935731,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react-producer\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065936601,
+            "durationMs": 871
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792065936602,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065938124,
+            "durationMs": 1522
+          },
+          {
+            "label": "clean-install",
+            "program": "npm",
+            "args": [
+              "ci",
+              "--ignore-scripts",
+              "--no-audit",
+              "--no-fund",
+              "--fetch-retries=0"
+            ],
+            "invokedAt": 1792065938134,
+            "output": "\r\nadded 14 packages in 4s\r\n",
+            "exitCode": 0,
+            "exitAt": 1792065943259,
+            "durationMs": 5125
+          },
+          {
+            "label": "internal-symlink-probe",
+            "program": "node",
+            "args": [
+              "-e",
+              "require('fs').symlinkSync('.b4-4-byte-probe.bin','node_modules/.b4-4-internal-link')"
+            ],
+            "invokedAt": 1792065943311,
+            "output": "",
+            "exitCode": 0,
+            "exitAt": 1792065943828,
+            "durationMs": 517
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792065926862,
+            "label": "before-boot",
+            "pageJsHeapBytes": 1876362
+          },
+          {
+            "at": 1792065935731,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 7867197
+          },
+          {
+            "at": 1792065943829,
+            "label": "capture-before",
+            "pageJsHeapBytes": 8290848
+          },
+          {
+            "at": 1792065944162,
+            "label": "after-export",
+            "pageJsHeapBytes": 34577530
+          },
+          {
+            "at": 1792065944315,
+            "label": "capture-after",
+            "pageJsHeapBytes": 34582922
+          },
+          {
+            "at": 1792065944390,
+            "label": "after-cleanup",
+            "pageJsHeapBytes": 34707685
+          }
+        ],
+        "proof": false,
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 1,
+          "generation": 1,
+          "runtimeId": 1
+        },
+        "bootMs": 6673.425000011921,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react-producer",
+        "key": "b4e9aa4411ad9d6f32a15322d83a8caa6424c1b43c5c407cedf6a15bf5022ccf",
+        "installMs": 5125,
+        "installExit": 0,
+        "probeSha256": "785b0751fc2c53dc14a4ce3d800e69ef9ce1009eb327ccf458afe09c242c26c9",
+        "exportMs": 333.61500000953674,
+        "hashingMs": 152.38999998569489,
+        "binaryByteLength": 26268550,
+        "binarySha256": "707510358fdbe9ff61e3454a9341e6820b813fdd7709b981b697cb48870e0af8",
+        "captureMs": 486.3149999976158,
+        "captureJsHeapDelta": 26292178,
+        "error": "Error: Retired capture owner",
+        "failurePhase": "capture"
+      }
+    ],
+    "events": [
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792065936601
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792065938124
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "clean-install",
+        "code": 0,
+        "at": 1792065943259
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "internal-symlink-probe",
+        "code": 0,
+        "at": 1792065943828
+      },
+      {
+        "type": "retire",
+        "sample": 1,
+        "at": 1792065944388
+      }
+    ],
+    "memoryCoverage": "performance.memory.usedJSHeapSize with precise-memory flag: page JS heap only; excludes worker/Wasm/native memory; sampled checkpoints, not a guaranteed peak",
+    "bootCount": 1,
+    "retainedBinaryArtifact": null,
+    "runtimeInstances": 1,
+    "retiredRuntimeCount": 1
+  },
+  "completedAt": 1792065946112,
+  "unexecutedObservations": 1,
+  "trackedStatusAfter": "",
+  "headAfter": "30804ea3e3f94814b46b7a9934fb477f91354615"
+}

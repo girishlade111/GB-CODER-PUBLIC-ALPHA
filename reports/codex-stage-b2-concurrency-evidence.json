@@ -1,0 +1,128 @@
+{
+  "timestamp": "2026-10-14T21:44:09.903Z",
+  "results": [
+    {
+      "testId": "C3",
+      "name": "Late Server Events & Epoch Protection",
+      "status": "PASS",
+      "details": {
+        "epochIncremented": true,
+        "staleEventsRejected": true,
+        "dashboardResetConfirmed": true
+      },
+      "timestamp": "2026-10-14T21:42:23.502Z"
+    },
+    {
+      "testId": "C4",
+      "name": "Process Termination & Port Disassociation",
+      "status": "PASS",
+      "details": {
+        "stateReset": true,
+        "serversCleared": true
+      },
+      "timestamp": "2026-10-14T21:42:23.504Z"
+    },
+    {
+      "testId": "C5",
+      "name": "Pending Write During Project Switch",
+      "status": "PASS",
+      "details": {
+        "pendingCancelled": true,
+        "crossProjectWritesPrevented": true
+      },
+      "timestamp": "2026-10-14T21:42:23.589Z"
+    },
+    {
+      "testId": "C6",
+      "name": "Pending Rename, Delete & Directory Rename Coordination",
+      "status": "PASS",
+      "details": {
+        "fileRenameMigrated": true,
+        "fileDeleteCancelled": true
+      },
+      "timestamp": "2026-10-14T21:42:23.591Z"
+    },
+    {
+      "testId": "C7",
+      "name": "Write Failure Propagation & Error Containment",
+      "status": "PASS",
+      "details": {
+        "errorContained": true,
+        "recoverySucceeded": true,
+        "noUnhandledRejection": true
+      },
+      "timestamp": "2026-10-14T21:42:23.591Z"
+    },
+    {
+      "testId": "C9",
+      "name": "Root Manifest Compatibility Matrix (7 Rules)",
+      "status": "PASS",
+      "details": {
+        "rootManifestDetected": true,
+        "nestedManifestIsolated": true,
+        "emptyProjectClean": true,
+        "invalidJsonTolerated": true
+      },
+      "timestamp": "2026-10-14T21:42:23.592Z"
+    },
+    {
+      "testId": "C1",
+      "name": "Project Switch During npm Install",
+      "status": "PASS",
+      "details": {
+        "switchedMidInstall": true,
+        "zeroCrossProjectWrites": true,
+        "newProjectIntact": true
+      },
+      "timestamp": "2026-10-14T21:42:43.122Z"
+    },
+    {
+      "testId": "C2",
+      "name": "Project Switch During Dev Server Startup",
+      "status": "PASS",
+      "details": {
+        "lateStartupContained": true,
+        "dashboardClean": true
+      },
+      "timestamp": "2026-10-14T21:43:11.153Z"
+    },
+    {
+      "testId": "C8",
+      "name": "Final Source Equality (Monaco, IDB, Wasm FS, Preview DOM)",
+      "status": "PASS",
+      "details": {
+        "previewDomMatched": true,
+        "idbStorageMatched": true,
+        "monacoBufferMatched": true,
+        "targetMarker": "C8-SOURCE-EQUALITY-VERIFIED"
+      },
+      "timestamp": "2026-10-14T21:44:05.636Z"
+    }
+  ],
+  "passed": 9,
+  "failed": 0,
+  "logs": [
+    "[2026-10-14T21:42:23.501Z] ================================================================",
+    "[2026-10-14T21:42:23.501Z] GB CODER — PHASE 2.2 STAGE B.2 CONCURRENCY EVIDENCE CLOSURE",
+    "[2026-10-14T21:42:23.501Z] ================================================================",
+    "[2026-10-14T21:42:23.502Z] \n=== SECTION 1: DETERMINISTIC SERVICE CONCURRENCY & ISOLATION (C3, C4, C5, C6, C7, C9) ===",
+    "[2026-10-14T21:42:23.502Z] [PASS] C3: Late Server Events & Epoch Protection",
+    "[2026-10-14T21:42:23.504Z] [PASS] C4: Process Termination & Port Disassociation",
+    "[2026-10-14T21:42:23.589Z] [PASS] C5: Pending Write During Project Switch",
+    "[2026-10-14T21:42:23.591Z] [PASS] C6: Pending Rename, Delete & Directory Rename Coordination",
+    "[2026-10-14T21:42:23.591Z] [PASS] C7: Write Failure Propagation & Error Containment",
+    "[2026-10-14T21:42:23.592Z] [PASS] C9: Root Manifest Compatibility Matrix (7 Rules)",
+    "[2026-10-14T21:42:23.592Z] \n=== SECTION 2: REAL-BROWSER CONCURRENCY & INTEGRITY (C1, C2, C4, C8) ===",
+    "[2026-10-14T21:42:23.597Z] Starting preview server on port 42985",
+    "[2026-10-14T21:42:25.587Z] Waiting for npm install to begin in C1...",
+    "[2026-10-14T21:42:36.813Z] Switching to C1-Proj-Plain mid-install...",
+    "[2026-10-14T21:42:43.122Z] [PASS] C1: Project Switch During npm Install",
+    "[2026-10-14T21:43:07.925Z] Navigating to dashboard during server startup in C2...",
+    "[2026-10-14T21:43:11.153Z] [PASS] C2: Project Switch During Dev Server Startup",
+    "[2026-10-14T21:44:03.432Z] Waiting for preview frame to render TARGET_MARKER...",
+    "[2026-10-14T21:44:05.636Z] [PASS] C8: Final Source Equality (Monaco, IDB, Wasm FS, Preview DOM)",
+    "[2026-10-14T21:44:09.903Z] \n================================================================",
+    "[2026-10-14T21:44:09.903Z] STAGE B.2 CONCURRENCY SUMMARY: 9 Scenarios | 9 PASSED | 0 FAILED",
+    "[2026-10-14T21:44:09.903Z] ================================================================"
+  ]
+}

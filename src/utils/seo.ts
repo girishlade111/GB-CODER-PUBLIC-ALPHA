@@ -55,7 +55,7 @@ export const defaultSEO: SEOConfig = {
     'test code snippets online'
   ],
   canonicalUrl: 'https://gbcoder.com/',
-  ogImage: 'https://gbcoder.com/tghjkl.jpeg',
+  ogImage: 'https://gbcoder.com/gbcoder-logo.png',
   author: 'Girish Lade'
 };
 
@@ -73,8 +73,8 @@ export const generateStructuredData = () => {
       "name": "GB Coder",
       "alternateName": ["GB Coder - AI Code Editor", "GB Coder Online IDE"],
       "url": "https://gbcoder.com",
-      "logo": "https://gbcoder.com/favicon.ico",
-      "image": "https://gbcoder.com/tghjkl.jpeg",
+      "logo": "https://gbcoder.com/apple-touch-icon.png",
+      "image": "https://gbcoder.com/gbcoder-logo.png",
       "description": defaultSEO.description,
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Any",
@@ -138,7 +138,7 @@ export const generateStructuredData = () => {
       "@type": "Organization",
       "name": "GB Coder",
       "url": "https://gbcoder.com",
-      "logo": "https://gbcoder.com/favicon.ico",
+      "logo": "https://gbcoder.com/apple-touch-icon.png",
       "description": "AI-powered online code editor for web developers",
       "founder": {
         "@type": "Person",
@@ -175,7 +175,7 @@ export const generateStructuredData = () => {
         "ratingCount": "150"
       },
       "featureList": "AI code suggestions, Live preview, External libraries, Auto-save",
-      "screenshot": "https://gbcoder.com/tghjkl.jpeg",
+      "screenshot": "https://gbcoder.com/gbcoder-logo.png",
       "downloadUrl": "https://gbcoder.com",
       "softwareVersion": "2.0.0",
       "author": {

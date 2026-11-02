@@ -367,7 +367,7 @@ const DependenciesPanel: React.FC<DependenciesPanelProps> = ({
   };
 
   return (
-    <div className="flex h-full w-full flex-col bg-surface-base text-content-primary">
+    <div className="flex h-full w-full flex-col min-h-0 overflow-hidden bg-surface-base text-content-primary">
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b border-stroke-subtle px-3 py-2.5">
         <div className="flex items-center gap-2">
@@ -465,7 +465,7 @@ const DependenciesPanel: React.FC<DependenciesPanelProps> = ({
       {activeTab === 'installed' && (
         <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
           {/* Quick Manual Pin Bar */}
-          <div className="border-b border-stroke-subtle p-2.5 bg-surface-overlay/20">
+          <div className="shrink-0 border-b border-stroke-subtle p-2.5 bg-surface-overlay/20">
             <div className="flex gap-1.5">
               <input
                 value={manualDraft}
@@ -493,7 +493,7 @@ const DependenciesPanel: React.FC<DependenciesPanelProps> = ({
           </div>
 
           {/* Installed List */}
-          <div className="flex-1 overflow-y-auto p-2">
+          <div className="flex-1 min-h-0 overflow-y-auto p-2">
             {installedItems.length === 0 ? (
               <div className="px-3 py-8 text-center">
                 <Package className="mx-auto mb-2 h-7 w-7 text-content-muted opacity-40" />
@@ -570,7 +570,7 @@ const DependenciesPanel: React.FC<DependenciesPanelProps> = ({
       {activeTab === 'search' && (
         <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
           {/* Search Box */}
-          <div className="border-b border-stroke-subtle p-2.5 space-y-2">
+          <div className="shrink-0 border-b border-stroke-subtle p-2.5 space-y-2">
             <div className="relative flex items-center">
               <Search className="absolute left-2.5 h-3.5 w-3.5 text-content-muted" />
               <input
@@ -624,7 +624,7 @@ const DependenciesPanel: React.FC<DependenciesPanelProps> = ({
           </div>
 
           {/* Results / Curated List */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+          <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2">
             {searchQuery.trim() ? (
               /* Live Search Results */
               searchResults.length === 0 && !isSearching ? (
@@ -810,7 +810,7 @@ const DependenciesPanel: React.FC<DependenciesPanelProps> = ({
               </span>
             )}
           </div>
-          <div className="flex-1 overflow-auto mt-2 rounded bg-surface-overlay/80 p-3 font-mono text-xs text-content-primary">
+          <div className="flex-1 min-h-0 overflow-auto mt-2 rounded bg-surface-overlay/80 p-3 font-mono text-xs text-content-primary">
             <pre className="whitespace-pre">
               {pkgJsonFile
                 ? pkgJsonFile.content

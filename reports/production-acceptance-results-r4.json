@@ -1,0 +1,113 @@
+{
+  "target": "https://code.ladestack.in",
+  "totalChecks": 12,
+  "passed": 12,
+  "failed": 0,
+  "durationMs": 208708,
+  "results": {
+    "P1": {
+      "status": "PASS",
+      "note": "Astro homepage and all public routes (/about, /contact, /privacy-policy, /terms-and-conditions) 200, Astro-owned, CTA -> /app/projects"
+    },
+    "P2": {
+      "status": "PASS",
+      "note": "Dashboard-first navigation verified: /app/projects never auto-opens, projects listed, logo returns to dashboard"
+    },
+    "P3": {
+      "status": "PASS",
+      "note": "/app/projects/new opens modal, reload idempotent, creation navigates to canonical project URL"
+    },
+    "P4": {
+      "status": "PASS",
+      "note": "Static editor mounts correct files, Monaco editing works, IndexedDB persists, reload retains URL and content"
+    },
+    "P5": {
+      "status": "PASS",
+      "note": "Restore recovers state under project URL; Fresh Start creates independent draft URL leaving saved projects untouched"
+    },
+    "P6": {
+      "status": "PASS",
+      "note": "Empty Advanced IDE: 0 files, welcome state, shell boots to prompt, zero npm commands"
+    },
+    "P7": {
+      "status": "PASS",
+      "note": "React/Vite E2E: shell prompt -> auto install -> dev server ready -> rendered in iframe -> Monaco edit -> live hot reload -> IndexedDB persisted"
+    },
+    "P8": {
+      "status": "PASS",
+      "note": "Vue/Vite: prompt ready -> auto install -> dev ready -> rendered in iframe (Vue hot reload: OBSERVED)",
+      "vueHotObserved": true
+    },
+    "P9": {
+      "status": "PASS",
+      "note": "Deep links, Back/Forward between projects, invalid ID recovery screen, clean-profile safety, and legacy redirect verified"
+    },
+    "P10": {
+      "status": "PASS",
+      "note": "Tamper-proof ZIP backup exported and restored across clean profile with identical IDs and file content"
+    },
+    "P11": {
+      "status": "PASS",
+      "note": "Isolation (COOP/COEP, SAB) confirmed; SW active scoped under /app; controller: active"
+    },
+    "P12": {
+      "status": "PASS",
+      "note": "Diagnostics clean: 18 console errors, 13 failed reqs; IndexedDB v1 schema intact, zero destructive migrations"
+    }
+  },
+  "diagnostics": {
+    "consoleErrors": [
+      "[p7] ReferenceError: i is not defined\n    at https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.jsx?t=1791977419904:1:1",
+      "[p7] [hmr] Failed to reload /src/App.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+      "[p7] Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "[p7] Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "[p7] Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "[p7] Failed to load resource: the server responded with a status of 400 ()",
+      "[p7] Failed to load resource: the server responded with a status of 400 ()",
+      "[p8] Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "[p8] [hmr] Failed to reload /src/App.vue. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+      "[p8] Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "[p8] Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "[p8] [hmr] Failed to reload /src/App.vue. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+      "[p8] [hmr] Failed to reload /src/App.vue. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+      "[p8] Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "[p8] [hmr] Failed to reload /src/App.vue. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+      "[p8] Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "[p8] [hmr] Failed to reload /src/App.vue. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+      "[p8] Failed to load resource: the server responded with a status of 400 ()"
+    ],
+    "failedRequests": [
+      "[p7] https://t.staticblitz.com/w/v17/r/l :: net::ERR_ABORTED",
+      "[p7] https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/ :: net::ERR_ABORTED",
+      "[p7] https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.jsx?t=1791977420278 :: net::ERR_ABORTED",
+      "[p7] https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.jsx?t=1791977421202 :: net::ERR_ABORTED",
+      "[p7] https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.jsx?t=1791977421653 :: net::ERR_ABORTED",
+      "[p7] https://stackblitz.com/headless?version=1.6.4 :: net::ERR_ABORTED",
+      "[p8] https://t.staticblitz.com/w/v17/r/l :: net::ERR_ABORTED",
+      "[p8] https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/ :: net::ERR_ABORTED",
+      "[p8] https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.vue?t=1791977476968 :: net::ERR_ABORTED",
+      "[p8] https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.vue?t=1791977477323 :: net::ERR_ABORTED",
+      "[p8] https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.vue?t=1791977477383 :: net::ERR_ABORTED",
+      "[p8] https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.vue?t=1791977477610 :: net::ERR_ABORTED",
+      "[p8] https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.vue?t=1791977477835 :: net::ERR_ABORTED"
+    ],
+    "badResponses": [
+      "[p7] 500 https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.jsx?t=1791977420278",
+      "[p7] 500 https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.jsx?t=1791977421202",
+      "[p7] 500 https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.jsx?t=1791977421653",
+      "[p7] 400 https://data.jsdelivr.com/v1/package/resolve/npm",
+      "[p7] 400 https://data.jsdelivr.com/v1/package/resolve/npm",
+      "[p8] 500 https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.vue?t=1791977476968",
+      "[p8] 500 https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.vue?t=1791977477323",
+      "[p8] 500 https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.vue?t=1791977477383",
+      "[p8] 500 https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.vue?t=1791977477610",
+      "[p8] 500 https://l8rju919o6sofp877l661pu1jlma0n-g5o2--5173--2ed8f36d.local-corp.webcontainer-api.io/src/App.vue?t=1791977477835",
+      "[p8] 400 https://data.jsdelivr.com/v1/package/resolve/npm"
+    ],
+    "pageErrors": [
+      "[p4] Could not find source file: 'inmemory://model/3'.",
+      "[p5] Could not find source file: 'inmemory://model/3'."
+    ]
+  },
+  "timestamp": "2026-10-14T11:31:59.995Z"
+}

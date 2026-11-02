@@ -1,0 +1,262 @@
+{
+  "method": "official routing-utils compilation plus local HTTP filesystem/rewrites model; not deployed Vercel",
+  "results": [
+    {
+      "url": "/app",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/app/",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/app/projects",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/app/projects/synthetic-id/editor",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/app/projects/synthetic-id/ide",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/app/projects/synthetic-id/editor/",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/app/ide",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/app/editor",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/ide",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/preview-popout",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/preview/synthetic-id",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/mpreview/synthetic-id",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 5071
+    },
+    {
+      "url": "/app/assets/stage-b3-missing.js",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/assets/stage-b3-missing.css",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/assets/missing.worker.js",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/workbox-missing.js",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/assets/nested/missing.js",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/assets/missing.js.map",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/assets/extensionless",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/assets",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/missing.mjs",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/missing.wasm",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/missing.js/",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/missing.CSS",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/icons/missing.png",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/sw-missing.js?version=1",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/manifest-missing.webmanifest",
+      "status": 404,
+      "mime": "text/plain",
+      "bytes": 9
+    },
+    {
+      "url": "/app/assets/index-CPPqHR0c.js",
+      "status": 200,
+      "mime": "application/javascript",
+      "bytes": 16492
+    },
+    {
+      "url": "/app/assets/editor-DyBcksZr.css",
+      "status": 200,
+      "mime": "text/css",
+      "bytes": 130921
+    },
+    {
+      "url": "/app/assets/editor.main-DSHhwRJ8.js",
+      "status": 200,
+      "mime": "application/javascript",
+      "bytes": 3298251
+    },
+    {
+      "url": "/app/assets/html.worker-DBrQM3vp.js",
+      "status": 200,
+      "mime": "application/javascript",
+      "bytes": 671125
+    },
+    {
+      "url": "/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "mime": "application/javascript",
+      "bytes": 1008508
+    },
+    {
+      "url": "/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "mime": "application/javascript",
+      "bytes": 6011990
+    },
+    {
+      "url": "/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "mime": "application/javascript",
+      "bytes": 229915
+    },
+    {
+      "url": "/app/sw.js",
+      "status": 200,
+      "mime": "application/javascript",
+      "bytes": 9936
+    },
+    {
+      "url": "/app/manifest.webmanifest",
+      "status": 200,
+      "mime": "application/manifest+json",
+      "bytes": 321
+    },
+    {
+      "url": "/app/assets/favicon-CZsOJf9v.ico",
+      "status": 200,
+      "mime": "image/x-icon",
+      "bytes": 15406
+    },
+    {
+      "url": "/api/stage-b3-missing",
+      "status": 404,
+      "mime": "application/json",
+      "bytes": 31
+    },
+    {
+      "url": "/api/health",
+      "status": 200,
+      "mime": "application/json",
+      "bytes": 598
+    },
+    {
+      "url": "/",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 6248
+    },
+    {
+      "url": "/about/",
+      "status": 200,
+      "mime": "text/html",
+      "bytes": 6489
+    },
+    {
+      "url": "/_astro/about.0sme1yUn.css",
+      "status": 200,
+      "mime": "text/css",
+      "bytes": 5064
+    }
+  ],
+  "before": {
+    "url": "/app/assets/stage-b3-missing.js",
+    "status": 200,
+    "spaHtml": true
+  }
+}

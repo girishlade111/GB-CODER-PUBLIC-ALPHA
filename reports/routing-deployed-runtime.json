@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-10-15T04:32:30.727Z",
+  "results": [
+    {
+      "testId": "WC-RB-001_004",
+      "name": "Dev Server Lifecycle Scenarios",
+      "status": "FAIL",
+      "details": {
+        "error": "terminal timeout waiting for Project A Vite ready (/ready in \\d+\\s?ms/i)"
+      },
+      "timestamp": "2026-10-15T04:32:28.271Z"
+    }
+  ],
+  "passed": 0,
+  "failed": 1,
+  "performanceMeasurements": [],
+  "logs": [
+    "[2026-10-15T04:28:25.456Z] ================================================================",
+    "[2026-10-15T04:28:25.461Z] GB CODER — PHASE 2.2 STAGE B.1 REAL-BROWSER VERIFICATION HARNESS",
+    "[2026-10-15T04:28:25.461Z] ================================================================",
+    "[2026-10-15T04:28:25.693Z] \n--- GROUP 1: WC-001 Project-Scoped Dev Server Lifecycle ---",
+    "[2026-10-15T04:32:28.281Z] [FAIL] WC-RB-001_004: Dev Server Lifecycle Scenarios",
+    "[2026-10-15T04:32:28.751Z] FATAL ERROR IN HARNESS: terminal timeout waiting for Project A Vite ready (/ready in \\d+\\s?ms/i)",
+    "[2026-10-15T04:32:30.726Z] \n================================================================",
+    "[2026-10-15T04:32:30.727Z] SUMMARY: 1 Scenarios Executed | 0 PASSED | 1 FAILED",
+    "[2026-10-15T04:32:30.727Z] ================================================================"
+  ]
+}

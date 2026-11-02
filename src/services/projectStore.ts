@@ -14,8 +14,12 @@ class ProjectStore {
      * Generate a unique project ID (UUID format for Supabase compatibility)
      */
     private generateId(): string {
-        // Use crypto.randomUUID() for Supabase-compatible UUID format
-        return crypto.randomUUID();
+        try {
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+        } catch {}
+        return `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
     }
 
     /**

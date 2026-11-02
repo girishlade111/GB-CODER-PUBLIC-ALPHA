@@ -14,6 +14,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const app = express();
+const { sendStatusPage, wantsStatusHtml } = require('../api/_lib/status-response.cjs');
 const server = http.createServer(app);
 
 const ALLOWED_ORIGINS = [
@@ -130,6 +131,7 @@ app.all('/api/*', async (req, res) => {
         } catch (err) {
             console.error(`Error in /api/${route}:`, err);
             if (!res.headersSent) {
+                if (wantsStatusHtml(req)) return sendStatusPage(res, 500);
                 // Constant message: a failed require() embeds the absolute path of
                 // the file it could not find, which would make this dispatcher a
                 // filesystem oracle. The detail is in the log above.
@@ -137,8 +139,18 @@ app.all('/api/*', async (req, res) => {
             }
         }
     } else {
+        if (wantsStatusHtml(req)) return sendStatusPage(res, 404);
         res.status(404).json({ error: 'API route not found.' });
     }
+});
+
+// Browser requests receive the same recovery surface; API consumers retain JSON.
+app.use((error, req, res, next) => {
+    console.error('[server] Request failed:', error.message);
+    if (res.headersSent) return next(error);
+    const code = Number.isInteger(error.status) && error.status >= 400 && error.status < 600 ? error.status : 500;
+    if (wantsStatusHtml(req)) return sendStatusPage(res, code);
+    res.status(code).json({ error: 'The request could not be completed.' });
 });
 
 // WebSocket server for terminal connections (unattached to server until origin check)

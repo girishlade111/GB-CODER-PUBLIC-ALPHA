@@ -1,0 +1,673 @@
+{
+  "verdict": "PHASE_B4_FINAL_LOCAL_BLOCKED",
+  "reason": "Retired shell exit-promise rejection escapes production fulfillment-only handler and surfaces as uncaught Process aborted page error on both switches.",
+  "campaignStatus": "COMPLETED",
+  "observations": [
+    {
+      "index": 1,
+      "workflow": "fresh-A",
+      "status": "PASS",
+      "domMarker": "B4_REACT_A",
+      "domMs": 70654,
+      "bootMs": 7661,
+      "mountMs": 13,
+      "shellSpawnMs": 10,
+      "installHintMs": 49203,
+      "viteReportedMs": 4481,
+      "serverReadyMs": 68161,
+      "serverToDomMs": 2493,
+      "owner": {
+        "projectId": "b4-a",
+        "epoch": 1,
+        "generation": 1
+      },
+      "runtimeId": 1,
+      "commandDispatches": 1,
+      "assetConnectionResets": 0,
+      "requestFailures": [
+        {
+          "at": 1792051184466,
+          "kind": "failed",
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "resourceType": "fetch",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "at": 1792051240998,
+          "kind": "failed",
+          "url": "https://huk2yfexjzna4glayxojlgniumhs2x-dg1p--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "resourceType": "document",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "consoleErrors": [
+        {
+          "at": 1792051241598,
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ],
+      "pageErrors": [],
+      "assertions": {
+        "owner": {
+          "projectId": "b4-a",
+          "epoch": 1,
+          "generation": 1
+        },
+        "sourceHashes": [
+          {
+            "path": "package.json",
+            "sha256": "563ae7bd77b40a447e2e66f8791aee0cdea75eb2b2772f41c24daebf5dd5b42f"
+          },
+          {
+            "path": "vite.config.js",
+            "sha256": "0ea84b4e2909b04e4c1cb1b92392a9f85bcb46605472763b15935d3498ba8ed3"
+          },
+          {
+            "path": "index.html",
+            "sha256": "16d72d551f0272876484e66a670bdad5cb9e26d35fffe9c55bdf461c38abeddf"
+          },
+          {
+            "path": "src/main.jsx",
+            "sha256": "66a3f104f253b5aeb5aa2f5c428b5cc5f0ad3b9261941c44374ea9916c3ea794"
+          }
+        ],
+        "otherProjectPathsAbsent": [
+          "src/main.js",
+          "src/App.vue",
+          "src/style.css"
+        ],
+        "installedProof": true,
+        "subsequentInstallRequired": false,
+        "diagnosticAllowlist": true,
+        "authoritativeSourcesExact": true,
+        "previousRuntimeDifferent": null,
+        "generationAdvanced": null
+      }
+    },
+    {
+      "index": 2,
+      "workflow": "fresh-A",
+      "status": "PASS",
+      "domMarker": "B4_REACT_A",
+      "domMs": 60562,
+      "bootMs": 6260,
+      "mountMs": 8,
+      "shellSpawnMs": 13,
+      "installHintMs": 42062,
+      "viteReportedMs": 4731,
+      "serverReadyMs": 57644,
+      "serverToDomMs": 2918,
+      "owner": {
+        "projectId": "b4-a",
+        "epoch": 1,
+        "generation": 1
+      },
+      "runtimeId": 1,
+      "commandDispatches": 1,
+      "assetConnectionResets": 0,
+      "requestFailures": [
+        {
+          "at": 1792051255138,
+          "kind": "failed",
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "resourceType": "fetch",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "at": 1792051303782,
+          "kind": "failed",
+          "url": "https://huk2yfexjzna4glayxojlgniumhs2x-dg1p--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "resourceType": "document",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "consoleErrors": [
+        {
+          "at": 1792051304448,
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ],
+      "pageErrors": [],
+      "assertions": {
+        "owner": {
+          "projectId": "b4-a",
+          "epoch": 1,
+          "generation": 1
+        },
+        "sourceHashes": [
+          {
+            "path": "package.json",
+            "sha256": "563ae7bd77b40a447e2e66f8791aee0cdea75eb2b2772f41c24daebf5dd5b42f"
+          },
+          {
+            "path": "vite.config.js",
+            "sha256": "0ea84b4e2909b04e4c1cb1b92392a9f85bcb46605472763b15935d3498ba8ed3"
+          },
+          {
+            "path": "index.html",
+            "sha256": "16d72d551f0272876484e66a670bdad5cb9e26d35fffe9c55bdf461c38abeddf"
+          },
+          {
+            "path": "src/main.jsx",
+            "sha256": "66a3f104f253b5aeb5aa2f5c428b5cc5f0ad3b9261941c44374ea9916c3ea794"
+          }
+        ],
+        "otherProjectPathsAbsent": [
+          "src/main.js",
+          "src/App.vue",
+          "src/style.css"
+        ],
+        "installedProof": true,
+        "subsequentInstallRequired": false,
+        "diagnosticAllowlist": true,
+        "authoritativeSourcesExact": true,
+        "previousRuntimeDifferent": null,
+        "generationAdvanced": null
+      }
+    },
+    {
+      "index": 3,
+      "workflow": "fresh-B",
+      "status": "PASS",
+      "domMarker": "B4_VUE_B",
+      "domMs": 47699,
+      "bootMs": 4836,
+      "mountMs": 11,
+      "shellSpawnMs": 48,
+      "installHintMs": 30323,
+      "viteReportedMs": 4609,
+      "serverReadyMs": 45638,
+      "serverToDomMs": 2061,
+      "owner": {
+        "projectId": "b4-b",
+        "epoch": 1,
+        "generation": 1
+      },
+      "runtimeId": 1,
+      "commandDispatches": 1,
+      "assetConnectionResets": 0,
+      "requestFailures": [
+        {
+          "at": 1792051319809,
+          "kind": "failed",
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "resourceType": "fetch",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "at": 1792051355286,
+          "kind": "failed",
+          "url": "https://huk2yfexjzna4glayxojlgniumhs2x-dg1p--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "resourceType": "document",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "consoleErrors": [
+        {
+          "at": 1792051355931,
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ],
+      "pageErrors": [],
+      "assertions": {
+        "owner": {
+          "projectId": "b4-b",
+          "epoch": 1,
+          "generation": 1
+        },
+        "sourceHashes": [
+          {
+            "path": "package.json",
+            "sha256": "3852a42cafd558ee9b1efa6f7cbe3599a2ea494104c498e60859a388be0950bf"
+          },
+          {
+            "path": "vite.config.js",
+            "sha256": "97133045dcb8a0a89896b48e2d6b3902573aa6ac879ee99dc8e0511e063f44e5"
+          },
+          {
+            "path": "index.html",
+            "sha256": "750aa43b6395b0c22f2886911a0139a5d6d04d5ea6ee5436d18badfd1a5b220e"
+          },
+          {
+            "path": "src/main.js",
+            "sha256": "fc77d6694de55892ab09e6957b93c62c0c1b1e0d99803099f4d16755f2540810"
+          },
+          {
+            "path": "src/App.vue",
+            "sha256": "7f1c5ac3ebb776bf826d177b93382f5a51534d0f7d2b4428f6a5952558b913d5"
+          },
+          {
+            "path": "src/style.css",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "otherProjectPathsAbsent": [
+          "src/main.jsx"
+        ],
+        "installedProof": true,
+        "subsequentInstallRequired": false,
+        "diagnosticAllowlist": true,
+        "authoritativeSourcesExact": true,
+        "previousRuntimeDifferent": null,
+        "generationAdvanced": null
+      }
+    },
+    {
+      "index": 4,
+      "workflow": "fresh-B",
+      "status": "PASS",
+      "domMarker": "B4_VUE_B",
+      "domMs": 39428,
+      "bootMs": 7637,
+      "mountMs": 7,
+      "shellSpawnMs": 5,
+      "installHintMs": 22570,
+      "viteReportedMs": 2844,
+      "serverReadyMs": 37224,
+      "serverToDomMs": 2204,
+      "owner": {
+        "projectId": "b4-b",
+        "epoch": 1,
+        "generation": 1
+      },
+      "runtimeId": 1,
+      "commandDispatches": 1,
+      "assetConnectionResets": 0,
+      "requestFailures": [
+        {
+          "at": 1792051370189,
+          "kind": "failed",
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "resourceType": "fetch",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "at": 1792051397332,
+          "kind": "failed",
+          "url": "https://huk2yfexjzna4glayxojlgniumhs2x-dg1p--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "resourceType": "document",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "consoleErrors": [
+        {
+          "at": 1792051397863,
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ],
+      "pageErrors": [],
+      "assertions": {
+        "owner": {
+          "projectId": "b4-b",
+          "epoch": 1,
+          "generation": 1
+        },
+        "sourceHashes": [
+          {
+            "path": "package.json",
+            "sha256": "3852a42cafd558ee9b1efa6f7cbe3599a2ea494104c498e60859a388be0950bf"
+          },
+          {
+            "path": "vite.config.js",
+            "sha256": "97133045dcb8a0a89896b48e2d6b3902573aa6ac879ee99dc8e0511e063f44e5"
+          },
+          {
+            "path": "index.html",
+            "sha256": "750aa43b6395b0c22f2886911a0139a5d6d04d5ea6ee5436d18badfd1a5b220e"
+          },
+          {
+            "path": "src/main.js",
+            "sha256": "fc77d6694de55892ab09e6957b93c62c0c1b1e0d99803099f4d16755f2540810"
+          },
+          {
+            "path": "src/App.vue",
+            "sha256": "7f1c5ac3ebb776bf826d177b93382f5a51534d0f7d2b4428f6a5952558b913d5"
+          },
+          {
+            "path": "src/style.css",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "otherProjectPathsAbsent": [
+          "src/main.jsx"
+        ],
+        "installedProof": true,
+        "subsequentInstallRequired": false,
+        "diagnosticAllowlist": true,
+        "authoritativeSourcesExact": true,
+        "previousRuntimeDifferent": null,
+        "generationAdvanced": null
+      }
+    },
+    {
+      "index": 5,
+      "workflow": "A-B-A-0",
+      "status": "PASS",
+      "domMarker": "B4_REACT_A",
+      "domMs": 62421,
+      "bootMs": 4244,
+      "mountMs": 11,
+      "shellSpawnMs": 5,
+      "installHintMs": 47767,
+      "viteReportedMs": 3307,
+      "serverReadyMs": 59912,
+      "serverToDomMs": 2509,
+      "owner": {
+        "projectId": "b4-a",
+        "epoch": 1,
+        "generation": 1
+      },
+      "runtimeId": 1,
+      "commandDispatches": 1,
+      "assetConnectionResets": 0,
+      "requestFailures": [
+        {
+          "at": 1792051409175,
+          "kind": "failed",
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "resourceType": "fetch",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "at": 1792051460929,
+          "kind": "failed",
+          "url": "https://huk2yfexjzna4glayxojlgniumhs2x-dg1p--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "resourceType": "document",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "consoleErrors": [
+        {
+          "at": 1792051461477,
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ],
+      "pageErrors": [],
+      "assertions": {
+        "owner": {
+          "projectId": "b4-a",
+          "epoch": 1,
+          "generation": 1
+        },
+        "sourceHashes": [
+          {
+            "path": "package.json",
+            "sha256": "563ae7bd77b40a447e2e66f8791aee0cdea75eb2b2772f41c24daebf5dd5b42f"
+          },
+          {
+            "path": "vite.config.js",
+            "sha256": "0ea84b4e2909b04e4c1cb1b92392a9f85bcb46605472763b15935d3498ba8ed3"
+          },
+          {
+            "path": "index.html",
+            "sha256": "16d72d551f0272876484e66a670bdad5cb9e26d35fffe9c55bdf461c38abeddf"
+          },
+          {
+            "path": "src/main.jsx",
+            "sha256": "66a3f104f253b5aeb5aa2f5c428b5cc5f0ad3b9261941c44374ea9916c3ea794"
+          }
+        ],
+        "otherProjectPathsAbsent": [
+          "src/main.js",
+          "src/App.vue",
+          "src/style.css"
+        ],
+        "installedProof": true,
+        "subsequentInstallRequired": false,
+        "diagnosticAllowlist": true,
+        "authoritativeSourcesExact": true,
+        "previousRuntimeDifferent": null,
+        "generationAdvanced": null
+      }
+    },
+    {
+      "index": 6,
+      "workflow": "A-B-A-1",
+      "status": "PASS",
+      "domMarker": "B4_VUE_B",
+      "domMs": 47219,
+      "bootMs": 6959,
+      "mountMs": 6,
+      "shellSpawnMs": 3,
+      "installHintMs": 29689,
+      "viteReportedMs": 2962,
+      "serverReadyMs": 45054,
+      "serverToDomMs": 2165,
+      "owner": {
+        "projectId": "b4-b",
+        "epoch": 3,
+        "generation": 3
+      },
+      "runtimeId": 2,
+      "commandDispatches": 1,
+      "assetConnectionResets": 0,
+      "requestFailures": [
+        {
+          "at": 1792051477222,
+          "kind": "failed",
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "resourceType": "fetch",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "at": 1792051510260,
+          "kind": "failed",
+          "url": "https://huk2yfexjzna4glayxojlgniumhs2x-dg1p-puneqig6--5173--2ed8f36d.local-corp.webcontainer-api.io/",
+          "resourceType": "document",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "consoleErrors": [
+        {
+          "at": 1792051511043,
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ],
+      "pageErrors": [
+        {
+          "at": 1792051464779,
+          "message": "Process aborted"
+        }
+      ],
+      "assertions": {
+        "owner": {
+          "projectId": "b4-b",
+          "epoch": 3,
+          "generation": 3
+        },
+        "sourceHashes": [
+          {
+            "path": "package.json",
+            "sha256": "3852a42cafd558ee9b1efa6f7cbe3599a2ea494104c498e60859a388be0950bf"
+          },
+          {
+            "path": "vite.config.js",
+            "sha256": "97133045dcb8a0a89896b48e2d6b3902573aa6ac879ee99dc8e0511e063f44e5"
+          },
+          {
+            "path": "index.html",
+            "sha256": "750aa43b6395b0c22f2886911a0139a5d6d04d5ea6ee5436d18badfd1a5b220e"
+          },
+          {
+            "path": "src/main.js",
+            "sha256": "fc77d6694de55892ab09e6957b93c62c0c1b1e0d99803099f4d16755f2540810"
+          },
+          {
+            "path": "src/App.vue",
+            "sha256": "7f1c5ac3ebb776bf826d177b93382f5a51534d0f7d2b4428f6a5952558b913d5"
+          },
+          {
+            "path": "src/style.css",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "otherProjectPathsAbsent": [
+          "src/main.jsx"
+        ],
+        "installedProof": true,
+        "subsequentInstallRequired": false,
+        "diagnosticAllowlist": true,
+        "authoritativeSourcesExact": true,
+        "previousRuntimeDifferent": true,
+        "generationAdvanced": true
+      }
+    },
+    {
+      "index": 7,
+      "workflow": "A-B-A-2",
+      "status": "PASS",
+      "domMarker": "B4_REACT_A",
+      "domMs": 40333,
+      "bootMs": 493,
+      "mountMs": 6,
+      "shellSpawnMs": 5,
+      "installHintMs": 30561,
+      "viteReportedMs": 2610,
+      "serverReadyMs": 37038,
+      "serverToDomMs": 3295,
+      "owner": {
+        "projectId": "b4-a",
+        "epoch": 5,
+        "generation": 5
+      },
+      "runtimeId": 3,
+      "commandDispatches": 1,
+      "assetConnectionResets": 0,
+      "requestFailures": [
+        {
+          "at": 1792051516679,
+          "kind": "failed",
+          "url": "https://t.staticblitz.com/w/v17/r/l",
+          "resourceType": "fetch",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "consoleErrors": [
+        {
+          "at": 1792051552646,
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        }
+      ],
+      "pageErrors": [
+        {
+          "at": 1792051513217,
+          "message": "Process aborted"
+        }
+      ],
+      "assertions": {
+        "owner": {
+          "projectId": "b4-a",
+          "epoch": 5,
+          "generation": 5
+        },
+        "sourceHashes": [
+          {
+            "path": "package.json",
+            "sha256": "563ae7bd77b40a447e2e66f8791aee0cdea75eb2b2772f41c24daebf5dd5b42f"
+          },
+          {
+            "path": "vite.config.js",
+            "sha256": "0ea84b4e2909b04e4c1cb1b92392a9f85bcb46605472763b15935d3498ba8ed3"
+          },
+          {
+            "path": "index.html",
+            "sha256": "16d72d551f0272876484e66a670bdad5cb9e26d35fffe9c55bdf461c38abeddf"
+          },
+          {
+            "path": "src/main.jsx",
+            "sha256": "66a3f104f253b5aeb5aa2f5c428b5cc5f0ad3b9261941c44374ea9916c3ea794"
+          }
+        ],
+        "otherProjectPathsAbsent": [
+          "src/main.js",
+          "src/App.vue",
+          "src/style.css"
+        ],
+        "installedProof": true,
+        "subsequentInstallRequired": false,
+        "diagnosticAllowlist": true,
+        "authoritativeSourcesExact": true,
+        "previousRuntimeDifferent": true,
+        "generationAdvanced": true
+      }
+    }
+  ],
+  "controls": [
+    {
+      "status": "PASS",
+      "durationMs": 312,
+      "assertions": {
+        "sameProject": true,
+        "sameEpoch": true,
+        "sameGeneration": true,
+        "sameRuntime": true,
+        "sameShell": true,
+        "noNewSpawn": true,
+        "noNewInstall": true,
+        "manualInputForwarded": true,
+        "installedProofPreserved": true
+      }
+    }
+  ],
+  "totalObservationMs": 368316,
+  "failures": 0,
+  "cancellationRejections": [
+    {
+      "processIndex": 0,
+      "rejection": "Error: Process aborted",
+      "rejectedAt": 1792051464762,
+      "teardownAt": 1792051464697,
+      "rejectionAfterTeardownMs": 65,
+      "pageErrorAt": 1792051464779,
+      "pageErrorAfterTeardownMs": 82
+    },
+    {
+      "processIndex": 1,
+      "rejection": "Error: Process aborted",
+      "rejectedAt": 1792051513211,
+      "teardownAt": 1792051513176,
+      "rejectionAfterTeardownMs": 35,
+      "pageErrorAt": 1792051513217,
+      "pageErrorAfterTeardownMs": 41
+    }
+  ],
+  "identity": {
+    "at": 1792051556379,
+    "head": "546e74c084387d007b0312b9fbd69a9f6a6b55f1",
+    "sourceTreeSha256": "9aa028bae95c4617696c80ce69ba31dbd225d4cb17b1856db47396b98087a6de",
+    "sourceFileCount": 265,
+    "distTreeSha256": "1b59033702e1c23b0fc746c1c55631312a57eba87fe49ca4eaef99d15e9ebdb5",
+    "distFileCount": 177,
+    "manifestSha256": "533ed39ff395a42c218ac02fe598961b1e87e57f32e3e478d494551c69f0cc0d",
+    "sourceHashes": [
+      {
+        "path": "src/services/webcontainer/webcontainerService.ts",
+        "sha256": "68a43f07d35717fe039aee61437983bf2c6ac67cbf45d8ff4b3b641d40b2cb7b"
+      },
+      {
+        "path": "src/services/webcontainer/startupDiagnostics.ts",
+        "sha256": "8da90c307167598c6e2da5a508dce73fc2e4a8289fc73751b189f5f206d4a967"
+      },
+      {
+        "path": "src/services/webcontainer/startupOutput.ts",
+        "sha256": "ce88e369ba1823a64adfa0a090047d5f76535e7ac6f6ef64c269567c0a04033a"
+      },
+      {
+        "path": "src/components/Console/TerminalTab.tsx",
+        "sha256": "fa75d18483a1a322ac69ab6624b8e98be8c5f3a9affaa62175aeaf3fed678bb4"
+      },
+      {
+        "path": "src/components/vscode/StackBlitzStartupLoader.tsx",
+        "sha256": "c0e5b3dd35226945335855922872d0379475e697c009c94d36b88360d4ee51ca"
+      },
+      {
+        "path": "src/components/vscode/VSCodeMode.tsx",
+        "sha256": "2be0d924aa4f31e4b3da0f4cdf760a4053181183bb824fd804bb0fc2e8ee7adc"
+      }
+    ],
+    "checkedJs": 151
+  },
+  "identityChecks": 16,
+  "evidenceSha256": "c49bc475a5c4bf83d26dc49d8e713ba9e0c0daa107196dda689a5cfdef8316d5",
+  "harnessSha256": "cf603cd519815b2c97c56054071a72987ffd6f86a0b55d879d5fd7ad10d59da3"
+}

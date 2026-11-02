@@ -1,0 +1,1271 @@
+{
+  "scope": "Phase B.4.4 Stage 1.2.1 standalone binary dependency artifact ownership fix and cross-runtime restoration experiment; no product integration",
+  "head": "30804ea3e3f94814b46b7a9934fb477f91354615",
+  "identity": [
+    {
+      "path": "scripts/.tmp-b4-4/policy.mjs",
+      "sha256": "2273cb4dc26be2a60285ed9e87bb7ffd2ce3d33e450a868f921b23abe9239926"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/browser.mjs",
+      "sha256": "911136d12766ec95c61535f35f46a9b1094cbfb69b4fdb4407fdd6a93dc4975b"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/run.mjs",
+      "sha256": "a2471ea55e2ea2807bd2ce5f2e5c069904f332e722547a88beeddb43c1d884bf"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/fixtures.json",
+      "sha256": "b20447d0a8b754938271826e3d75150d0db49d2c38bf924b35d70d44036e683a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-1.mjs",
+      "sha256": "4d9c2e650f243ea5c3c6642749556ed6cf8094b97c2cfa4b1850c53d96a8e57f"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-2.mjs",
+      "sha256": "d74835ea76de29f2e9255115ff3f1ec2bc9d0819ce73b956447d8cb9e69070ee"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/test-stage1-2-1.mjs",
+      "sha256": "b80cae69dca5ddd10b625841bc57ae918409981e5a0ef48daf94841ec5c923b5"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package.json",
+      "sha256": "270a46f542ce8b01523fda3f5bd7333ad28734446815c0750c980f9162503570"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/react/package-lock.json",
+      "sha256": "2d49b9349752521c344fe0d5091f46eabfd4718c7f6c52f3df92fdf6b8f61734"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package.json",
+      "sha256": "82bb171c0deb4422bf7a259b2497127d06f8213fa25bec2fcfd464e53e404b7a"
+    },
+    {
+      "path": "scripts/.tmp-b4-4/vue/package-lock.json",
+      "sha256": "e0a32ce64578f02feea91775c0b9d56b8cae869dd41424e1b096954fa8d9bedb"
+    }
+  ],
+  "apiVersion": "1.6.4",
+  "bundleSha256": "d5c33a12de344e6a7e3a6a62bfb357e850a4357a43b05d62e4296507e00c09a7",
+  "status": "B4_4_BINARY_ROUNDTRIP_FAIL",
+  "startedAt": 1792067238058,
+  "budget": {
+    "maxBoots": 2,
+    "perObservationMs": 240000,
+    "campaignMs": 900000,
+    "captureMs": 10000,
+    "restoreValidationMs": 15000,
+    "retries": 0
+  },
+  "observations": [
+    {
+      "index": 1,
+      "role": "producer",
+      "project": "React A",
+      "start": 1792067239726,
+      "status": "PASS",
+      "completedAt": 1792067256417,
+      "elapsedMs": 16691
+    },
+    {
+      "index": 2,
+      "role": "consumer",
+      "project": "React A",
+      "start": 1792067256447,
+      "status": "FAIL",
+      "error": "240-second consumer observation deadline exceeded",
+      "elapsedMs": 240031
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "failedRequests": [],
+  "httpErrors": [],
+  "progress": [
+    {
+      "at": 1792067244741,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "boot",
+      "elapsedMs": 5009
+    },
+    {
+      "at": 1792067249751,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "install",
+      "elapsedMs": 10015
+    },
+    {
+      "at": 1792067254748,
+      "bootCount": 1,
+      "index": 1,
+      "phase": "install",
+      "elapsedMs": 15016
+    },
+    {
+      "at": 1792067259758,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "boot",
+      "elapsedMs": 3305
+    },
+    {
+      "at": 1792067264771,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "boot",
+      "elapsedMs": 8318
+    },
+    {
+      "at": 1792067269820,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "restore",
+      "elapsedMs": 13368
+    },
+    {
+      "at": 1792067274785,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 18332
+    },
+    {
+      "at": 1792067279798,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 23346
+    },
+    {
+      "at": 1792067284802,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 28349
+    },
+    {
+      "at": 1792067289807,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 33355
+    },
+    {
+      "at": 1792067294825,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 38372
+    },
+    {
+      "at": 1792067299836,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 43381
+    },
+    {
+      "at": 1792067304849,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 48397
+    },
+    {
+      "at": 1792067309858,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 53406
+    },
+    {
+      "at": 1792067314868,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 58416
+    },
+    {
+      "at": 1792067319876,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 63423
+    },
+    {
+      "at": 1792067324886,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 68434
+    },
+    {
+      "at": 1792067329895,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 73442
+    },
+    {
+      "at": 1792067334902,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 78450
+    },
+    {
+      "at": 1792067339907,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 83455
+    },
+    {
+      "at": 1792067344910,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 88458
+    },
+    {
+      "at": 1792067349925,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 93473
+    },
+    {
+      "at": 1792067354938,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 98485
+    },
+    {
+      "at": 1792067359950,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 103497
+    },
+    {
+      "at": 1792067364958,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 108505
+    },
+    {
+      "at": 1792067369966,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 113513
+    },
+    {
+      "at": 1792067374979,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 118523
+    },
+    {
+      "at": 1792067379988,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 123536
+    },
+    {
+      "at": 1792067385010,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 128558
+    },
+    {
+      "at": 1792067390118,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 133663
+    },
+    {
+      "at": 1792067395016,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 138563
+    },
+    {
+      "at": 1792067400024,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 143571
+    },
+    {
+      "at": 1792067405034,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 148581
+    },
+    {
+      "at": 1792067410044,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 153591
+    },
+    {
+      "at": 1792067415048,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 158595
+    },
+    {
+      "at": 1792067420072,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 163611
+    },
+    {
+      "at": 1792067425065,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 168612
+    },
+    {
+      "at": 1792067430078,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 173626
+    },
+    {
+      "at": 1792067435093,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 178640
+    },
+    {
+      "at": 1792067440092,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 183639
+    },
+    {
+      "at": 1792067445107,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 188653
+    },
+    {
+      "at": 1792067450113,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 193661
+    },
+    {
+      "at": 1792067455127,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 198675
+    },
+    {
+      "at": 1792067460128,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 203676
+    },
+    {
+      "at": 1792067465141,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 208689
+    },
+    {
+      "at": 1792067470207,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 213701
+    },
+    {
+      "at": 1792067475173,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 218720
+    },
+    {
+      "at": 1792067480178,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 223726
+    },
+    {
+      "at": 1792067485178,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 228727
+    },
+    {
+      "at": 1792067490179,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 233727
+    },
+    {
+      "at": 1792067495189,
+      "bootCount": 2,
+      "index": 2,
+      "phase": "server",
+      "elapsedMs": 238738
+    }
+  ],
+  "bootCount": 2,
+  "browserVersion": "151.0.7922.34",
+  "campaignStartedAt": 1792067239725,
+  "browser": {
+    "api": "1.6.4",
+    "format": "binary",
+    "samples": [
+      {
+        "index": 1,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "producer",
+        "start": 1792067239731,
+        "status": "PASS",
+        "phase": "producer-complete",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792067247588,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react-producer\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067248391,
+            "durationMs": 805
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792067248393,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067249692,
+            "durationMs": 1299
+          },
+          {
+            "label": "clean-install",
+            "program": "npm",
+            "args": [
+              "ci",
+              "--ignore-scripts",
+              "--no-audit",
+              "--no-fund",
+              "--fetch-retries=0"
+            ],
+            "invokedAt": 1792067249697,
+            "output": "\r\nadded 14 packages in 4s\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067255220,
+            "durationMs": 5523
+          },
+          {
+            "label": "internal-symlink-probe",
+            "program": "node",
+            "args": [
+              "-e",
+              "require('fs').symlinkSync('.b4-4-byte-probe.bin','node_modules/.b4-4-internal-link')"
+            ],
+            "invokedAt": 1792067255231,
+            "output": "",
+            "exitCode": 0,
+            "exitAt": 1792067255928,
+            "durationMs": 697
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792067239735,
+            "label": "before-boot",
+            "pageJsHeapBytes": 1876391
+          },
+          {
+            "at": 1792067247588,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 7849630
+          },
+          {
+            "at": 1792067255928,
+            "label": "capture-before",
+            "pageJsHeapBytes": 8266013
+          },
+          {
+            "at": 1792067256272,
+            "label": "after-export",
+            "pageJsHeapBytes": 34553223
+          },
+          {
+            "at": 1792067256401,
+            "label": "capture-after",
+            "pageJsHeapBytes": 34558615
+          },
+          {
+            "at": 1792067256452,
+            "label": "after-cleanup",
+            "pageJsHeapBytes": 34287986
+          }
+        ],
+        "proof": false,
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 1,
+          "generation": 1,
+          "runtimeId": 1
+        },
+        "bootMs": 5205.1050000190735,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react-producer",
+        "key": "b4e9aa4411ad9d6f32a15322d83a8caa6424c1b43c5c407cedf6a15bf5022ccf",
+        "installMs": 5523,
+        "installExit": 0,
+        "probeSha256": "785b0751fc2c53dc14a4ce3d800e69ef9ce1009eb327ccf458afe09c242c26c9",
+        "exportMs": 344.47500002384186,
+        "hashingMs": 128.44999998807907,
+        "binaryByteLength": 26268550,
+        "binarySha256": "707510358fdbe9ff61e3454a9341e6820b813fdd7709b981b697cb48870e0af8",
+        "captureMs": 473.125,
+        "captureJsHeapDelta": 26292706,
+        "totalMs": 16681
+      },
+      {
+        "index": 2,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "consumer",
+        "start": 1792067256452,
+        "status": "FAIL",
+        "phase": "server",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792067267796,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react-consumer\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067268613,
+            "durationMs": 817
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792067268613,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067269724,
+            "durationMs": 1111
+          },
+          {
+            "label": "dependency-execution",
+            "program": "node",
+            "args": [
+              "-e",
+              "const r=require('react');console.log(r.version);const v=require('vite/package.json');console.log(v.version);"
+            ],
+            "invokedAt": 1792067270150,
+            "output": "18.3.1\r\n5.4.21\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067270814,
+            "durationMs": 664
+          },
+          {
+            "label": "vite-bin-execution",
+            "program": "node",
+            "args": [
+              "node_modules/vite/bin/vite.js",
+              "--version"
+            ],
+            "invokedAt": 1792067270814,
+            "output": "vite/5.4.21 linux-x64 node-v22.22.3\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067273869,
+            "durationMs": 3055
+          },
+          {
+            "label": "dev-server",
+            "program": "npm",
+            "args": [
+              "run",
+              "dev"
+            ],
+            "invokedAt": 1792067273869,
+            "output": "\r\n> gb-b4-4-react@1.0.0 dev\r\n> vite --host 0.0.0.0 --port 5173 --strictPort\r\n\r\njsh: spawn vite EACCES\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067275807
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792067256452,
+            "label": "before-boot",
+            "pageJsHeapBytes": 34289762
+          },
+          {
+            "at": 1792067267796,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 38559986
+          },
+          {
+            "at": 1792067269729,
+            "label": "restore-before",
+            "pageJsHeapBytes": 38756818
+          },
+          {
+            "at": 1792067270095,
+            "label": "after-mount",
+            "pageJsHeapBytes": 65085192
+          },
+          {
+            "at": 1792067270150,
+            "label": "restore-after",
+            "pageJsHeapBytes": 64920352
+          }
+        ],
+        "proof": false,
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 2,
+          "generation": 2,
+          "runtimeId": 2
+        },
+        "bootMs": 8763.439999997616,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react-consumer",
+        "key": "b4e9aa4411ad9d6f32a15322d83a8caa6424c1b43c5c407cedf6a15bf5022ccf",
+        "preRestoreValidationMs": 90.00499999523163,
+        "cloneMs": 29.44999998807907,
+        "mountMs": 243.25999999046326,
+        "restoredTopLevelCount": 20,
+        "postRestoreValidationMs": 54.74000000953674,
+        "restoreMs": 421.0400000214577,
+        "packageExecution": {
+          "exit": 0,
+          "output": "18.3.1\r\n5.4.21"
+        },
+        "viteExecutable": {
+          "exit": 0,
+          "output": "vite/5.4.21 linux-x64 node-v22.22.3"
+        },
+        "devInvokedAt": 1792067273869,
+        "error": "Error: server-ready observation deadline exceeded; underlying operation not cancelled",
+        "failurePhase": "server"
+      }
+    ],
+    "events": [
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792067248391
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792067249692
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "clean-install",
+        "code": 0,
+        "at": 1792067255220
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "internal-symlink-probe",
+        "code": 0,
+        "at": 1792067255928
+      },
+      {
+        "type": "retire",
+        "sample": 1,
+        "at": 1792067256451
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792067268613
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792067269724
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "dependency-execution",
+        "code": 0,
+        "at": 1792067270814
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "vite-bin-execution",
+        "code": 0,
+        "at": 1792067273869
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "dev-server",
+        "code": 0,
+        "at": 1792067275807
+      }
+    ],
+    "memoryCoverage": "performance.memory.usedJSHeapSize with precise-memory flag: page JS heap only; excludes worker/Wasm/native memory; sampled checkpoints, not a guaranteed peak",
+    "bootCount": 2,
+    "retainedBinaryArtifact": null,
+    "runtimeInstances": 2,
+    "retiredRuntimeCount": 1
+  },
+  "error": "240-second consumer observation deadline exceeded",
+  "cleanup": {
+    "api": "1.6.4",
+    "format": "binary",
+    "samples": [
+      {
+        "index": 1,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "producer",
+        "start": 1792067239731,
+        "status": "PASS",
+        "phase": "producer-complete",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792067247588,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react-producer\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067248391,
+            "durationMs": 805
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792067248393,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067249692,
+            "durationMs": 1299
+          },
+          {
+            "label": "clean-install",
+            "program": "npm",
+            "args": [
+              "ci",
+              "--ignore-scripts",
+              "--no-audit",
+              "--no-fund",
+              "--fetch-retries=0"
+            ],
+            "invokedAt": 1792067249697,
+            "output": "\r\nadded 14 packages in 4s\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067255220,
+            "durationMs": 5523
+          },
+          {
+            "label": "internal-symlink-probe",
+            "program": "node",
+            "args": [
+              "-e",
+              "require('fs').symlinkSync('.b4-4-byte-probe.bin','node_modules/.b4-4-internal-link')"
+            ],
+            "invokedAt": 1792067255231,
+            "output": "",
+            "exitCode": 0,
+            "exitAt": 1792067255928,
+            "durationMs": 697
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792067239735,
+            "label": "before-boot",
+            "pageJsHeapBytes": 1876391
+          },
+          {
+            "at": 1792067247588,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 7849630
+          },
+          {
+            "at": 1792067255928,
+            "label": "capture-before",
+            "pageJsHeapBytes": 8266013
+          },
+          {
+            "at": 1792067256272,
+            "label": "after-export",
+            "pageJsHeapBytes": 34553223
+          },
+          {
+            "at": 1792067256401,
+            "label": "capture-after",
+            "pageJsHeapBytes": 34558615
+          },
+          {
+            "at": 1792067256452,
+            "label": "after-cleanup",
+            "pageJsHeapBytes": 34287986
+          }
+        ],
+        "proof": false,
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 1,
+          "generation": 1,
+          "runtimeId": 1
+        },
+        "bootMs": 5205.1050000190735,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react-producer",
+        "key": "b4e9aa4411ad9d6f32a15322d83a8caa6424c1b43c5c407cedf6a15bf5022ccf",
+        "installMs": 5523,
+        "installExit": 0,
+        "probeSha256": "785b0751fc2c53dc14a4ce3d800e69ef9ce1009eb327ccf458afe09c242c26c9",
+        "exportMs": 344.47500002384186,
+        "hashingMs": 128.44999998807907,
+        "binaryByteLength": 26268550,
+        "binarySha256": "707510358fdbe9ff61e3454a9341e6820b813fdd7709b981b697cb48870e0af8",
+        "captureMs": 473.125,
+        "captureJsHeapDelta": 26292706,
+        "totalMs": 16681
+      },
+      {
+        "index": 2,
+        "kind": "react",
+        "project": "A",
+        "incarnation": "synthetic-react-1",
+        "role": "consumer",
+        "start": 1792067256452,
+        "status": "FAIL",
+        "phase": "server",
+        "processes": [
+          {
+            "label": "node-compatibility",
+            "program": "node",
+            "args": [
+              "-e",
+              "console.log(JSON.stringify({versions:process.versions,platform:process.platform,arch:process.arch,workdir:process.cwd()}))"
+            ],
+            "invokedAt": 1792067267796,
+            "output": "{\"versions\":{\"node\":\"22.22.3\",\"acorn\":\"8.16.0\",\"ada\":\"2.9.2\",\"amaro\":\"1.1.8\",\"ares\":\"1.34.6\",\"brotli\":\"1.1.0\",\"cjs_module_lexer\":\"2.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.3.1\",\"modules\":\"127\",\"napi\":\"10\",\"nbytes\":\"0.1.3\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.64.0\",\"openssl\":\"3.5.6\",\"simdjson\":\"4.5.0\",\"simdutf\":\"6.4.2\",\"sqlite\":\"3.51.3\",\"tz\":\"2026a\",\"undici\":\"6.24.1\",\"unicode\":\"17.0\",\"uv\":\"1.51.0\",\"uvwasi\":\"0.0.23\",\"v8\":\"12.4.254.21-node.56\",\"zlib\":\"1.3.1-470d3a2\",\"zstd\":\"1.5.7\",\"webcontainer\":\"2ed8f36d\"},\"platform\":\"linux\",\"arch\":\"x64\",\"workdir\":\"/home/gb-b4-4-react-consumer\"}\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067268613,
+            "durationMs": 817
+          },
+          {
+            "label": "npm-version",
+            "program": "npm",
+            "args": [
+              "--version"
+            ],
+            "invokedAt": 1792067268613,
+            "output": "10.8.2\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067269724,
+            "durationMs": 1111
+          },
+          {
+            "label": "dependency-execution",
+            "program": "node",
+            "args": [
+              "-e",
+              "const r=require('react');console.log(r.version);const v=require('vite/package.json');console.log(v.version);"
+            ],
+            "invokedAt": 1792067270150,
+            "output": "18.3.1\r\n5.4.21\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067270814,
+            "durationMs": 664
+          },
+          {
+            "label": "vite-bin-execution",
+            "program": "node",
+            "args": [
+              "node_modules/vite/bin/vite.js",
+              "--version"
+            ],
+            "invokedAt": 1792067270814,
+            "output": "vite/5.4.21 linux-x64 node-v22.22.3\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067273869,
+            "durationMs": 3055
+          },
+          {
+            "label": "dev-server",
+            "program": "npm",
+            "args": [
+              "run",
+              "dev"
+            ],
+            "invokedAt": 1792067273869,
+            "output": "\r\n> gb-b4-4-react@1.0.0 dev\r\n> vite --host 0.0.0.0 --port 5173 --strictPort\r\n\r\njsh: spawn vite EACCES\r\n",
+            "exitCode": 0,
+            "exitAt": 1792067275807
+          }
+        ],
+        "memory": [
+          {
+            "at": 1792067256452,
+            "label": "before-boot",
+            "pageJsHeapBytes": 34289762
+          },
+          {
+            "at": 1792067267796,
+            "label": "after-boot-and-mount",
+            "pageJsHeapBytes": 38559986
+          },
+          {
+            "at": 1792067269729,
+            "label": "restore-before",
+            "pageJsHeapBytes": 38756818
+          },
+          {
+            "at": 1792067270095,
+            "label": "after-mount",
+            "pageJsHeapBytes": 65085192
+          },
+          {
+            "at": 1792067270150,
+            "label": "restore-after",
+            "pageJsHeapBytes": 64920352
+          },
+          {
+            "at": 1792067496560,
+            "label": "after-cleanup",
+            "pageJsHeapBytes": 29849455
+          }
+        ],
+        "proof": false,
+        "owner": {
+          "project": "A",
+          "incarnation": "synthetic-react-1",
+          "epoch": 2,
+          "generation": 2,
+          "runtimeId": 2
+        },
+        "bootMs": 8763.439999997616,
+        "freshInstance": true,
+        "compatibility": {
+          "versions": {
+            "node": "22.22.3",
+            "acorn": "8.16.0",
+            "ada": "2.9.2",
+            "amaro": "1.1.8",
+            "ares": "1.34.6",
+            "brotli": "1.1.0",
+            "cjs_module_lexer": "2.2.0",
+            "cldr": "48.0",
+            "icu": "78.2",
+            "llhttp": "9.3.1",
+            "modules": "127",
+            "napi": "10",
+            "nbytes": "0.1.3",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.64.0",
+            "openssl": "3.5.6",
+            "simdjson": "4.5.0",
+            "simdutf": "6.4.2",
+            "sqlite": "3.51.3",
+            "tz": "2026a",
+            "undici": "6.24.1",
+            "unicode": "17.0",
+            "uv": "1.51.0",
+            "uvwasi": "0.0.23",
+            "v8": "12.4.254.21-node.56",
+            "zlib": "1.3.1-470d3a2",
+            "zstd": "1.5.7",
+            "webcontainer": "2ed8f36d"
+          },
+          "platform": "linux",
+          "arch": "x64",
+          "npm": "10.8.2",
+          "api": "1.6.4"
+        },
+        "workdir": "/home/gb-b4-4-react-consumer",
+        "key": "b4e9aa4411ad9d6f32a15322d83a8caa6424c1b43c5c407cedf6a15bf5022ccf",
+        "preRestoreValidationMs": 90.00499999523163,
+        "cloneMs": 29.44999998807907,
+        "mountMs": 243.25999999046326,
+        "restoredTopLevelCount": 20,
+        "postRestoreValidationMs": 54.74000000953674,
+        "restoreMs": 421.0400000214577,
+        "packageExecution": {
+          "exit": 0,
+          "output": "18.3.1\r\n5.4.21"
+        },
+        "viteExecutable": {
+          "exit": 0,
+          "output": "vite/5.4.21 linux-x64 node-v22.22.3"
+        },
+        "devInvokedAt": 1792067273869,
+        "error": "Error: server-ready observation deadline exceeded; underlying operation not cancelled",
+        "failurePhase": "server"
+      }
+    ],
+    "events": [
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792067248391
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792067249692
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "clean-install",
+        "code": 0,
+        "at": 1792067255220
+      },
+      {
+        "type": "process_exit",
+        "sample": 1,
+        "label": "internal-symlink-probe",
+        "code": 0,
+        "at": 1792067255928
+      },
+      {
+        "type": "retire",
+        "sample": 1,
+        "at": 1792067256451
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "node-compatibility",
+        "code": 0,
+        "at": 1792067268613
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "npm-version",
+        "code": 0,
+        "at": 1792067269724
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "dependency-execution",
+        "code": 0,
+        "at": 1792067270814
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "vite-bin-execution",
+        "code": 0,
+        "at": 1792067273869
+      },
+      {
+        "type": "process_exit",
+        "sample": 2,
+        "label": "dev-server",
+        "code": 0,
+        "at": 1792067275807
+      },
+      {
+        "type": "retire",
+        "sample": 2,
+        "at": 1792067496546
+      }
+    ],
+    "memoryCoverage": "performance.memory.usedJSHeapSize with precise-memory flag: page JS heap only; excludes worker/Wasm/native memory; sampled checkpoints, not a guaranteed peak",
+    "bootCount": 2,
+    "retainedBinaryArtifact": null,
+    "runtimeInstances": 2,
+    "retiredRuntimeCount": 2
+  },
+  "completedAt": 1792067498323,
+  "unexecutedObservations": 0,
+  "trackedStatusAfter": "",
+  "headAfter": "30804ea3e3f94814b46b7a9934fb477f91354615"
+}

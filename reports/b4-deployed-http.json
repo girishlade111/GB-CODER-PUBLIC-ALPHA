@@ -1,0 +1,342 @@
+{
+  "base": "https://gb-coder-public-alpha-6l37qqpda.vercel.app",
+  "deploymentId": "dpl_AJLZJp924BvwnZAf1KyZmnQYgttS",
+  "sha": "30804ea3e3f94814b46b7a9934fb477f91354615",
+  "startedAt": 1792059338118,
+  "results": [
+    {
+      "path": "/app/projects",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/app",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/app/",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/app/projects/b4-synthetic/editor",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/app/projects/b4-synthetic/ide",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/ide",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/preview-popout",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/preview/b4-synthetic",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/mpreview/b4-synthetic",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "bytes": 4974,
+      "appShell": true
+    },
+    {
+      "path": "/app/assets/b4-missing.js",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/b4-missing.css",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/b4-missing.worker.js",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/workbox-b4-missing.js",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/nested/b4-missing.js",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/b4-missing.js.map",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/b4-missing.mjs",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/b4-missing.wasm",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/b4-extensionless",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/sw-b4-missing.js?version=1",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/manifest-b4-missing.webmanifest",
+      "status": 404,
+      "mime": "text/html; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1686,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/favicon-CZsOJf9v.ico",
+      "status": 200,
+      "mime": "image/vnd.microsoft.icon",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 23592,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/index-C37nZEU3.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 351159,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/diff-tools-jL4TUV4t.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 17905,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/react-core-DuNX43A_.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 226016,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/monaco-react-Ca62xTzh.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 13866,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/index-CUWFNwLG.css",
+      "status": 200,
+      "mime": "text/css; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 103483,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/editor.main-WEPbdCb_.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 3298251,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/html.worker-DBrQM3vp.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 671125,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/css.worker-_FarIx0Q.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 1008508,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/ts.worker-Df1lW6KJ.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 6011990,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/editor.worker-CSVMSH1C.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 229915,
+      "appShell": false
+    },
+    {
+      "path": "/app/assets/webcontainerService-Bw2Pb0Ah.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 53485,
+      "appShell": false
+    },
+    {
+      "path": "/app/sw.js",
+      "status": 200,
+      "mime": "application/javascript; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 9936,
+      "appShell": false
+    },
+    {
+      "path": "/app/manifest.webmanifest",
+      "status": 200,
+      "mime": "application/manifest+json; charset=utf-8",
+      "coop": "same-origin",
+      "coep": "require-corp",
+      "bytes": 321,
+      "appShell": false
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "mime": "application/json; charset=utf-8",
+      "bytes": 608,
+      "appShell": false
+    },
+    {
+      "path": "/api/b4-missing",
+      "status": 404,
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 79,
+      "appShell": false
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "bytes": 6411,
+      "appShell": false
+    },
+    {
+      "path": "/about/",
+      "status": 200,
+      "mime": "text/html; charset=utf-8",
+      "bytes": 6489,
+      "appShell": false
+    }
+  ],
+  "servicePath": "/app/assets/webcontainerService-Bw2Pb0Ah.js",
+  "serviceSha256": "5fb12a85fef46947e21c35aa8fa78955ec53a46787a4303f093040e72d21b4ee",
+  "status": "PASS",
+  "completedAt": 1792059355118
+}

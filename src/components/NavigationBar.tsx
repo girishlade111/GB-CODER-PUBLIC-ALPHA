@@ -4,16 +4,11 @@ import {
   MoreVertical,
   PanelLeft,
   Save,
-  Play,
   FileText,
   Share2,
+  Download,
   Trash2,
-  Wand2,
   FilePlus,
-  Mic,
-  MicOff,
-  Bug,
-  Scan,
   Rocket,
   Github,
 } from 'lucide-react';
@@ -24,9 +19,8 @@ import LadeStackLogo from './LadeStackLogo';
 
 interface NavigationBarProps {
   onAutoSaveToggle: () => void;
-  onRun: () => void;
-  onOpenBuildFromPrompt: () => void;
-  onOpenCodeRabbit?: () => void;
+  onRun?: () => void;
+  onOpenBuildFromPrompt?: () => void;
   /** Screenshot → Code. Optional so legal/doc pages can omit the trigger. */
   onOpenScreenshotToCode?: () => void;
   onExternalLibraryManagerToggle: () => void;
@@ -50,6 +44,7 @@ interface NavigationBarProps {
    * the overflow menu is a second trigger rather than a second implementation.
    */
   onOpenExport?: () => void;
+  onOpenShare?: () => void;
   /**
    * Publishes the project to Vercel or Netlify.
    *
@@ -78,21 +73,21 @@ const NAV_LINK = 'text-sm font-medium';
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
   onAutoSaveToggle,
-  onRun,
-  onOpenBuildFromPrompt,
-  onOpenCodeRabbit,
-  onOpenScreenshotToCode,
+  onRun: _onRun,
+  onOpenBuildFromPrompt: _onOpenBuildFromPrompt,
+  onOpenScreenshotToCode: _onOpenScreenshotToCode,
   onClear,
   onNewProject,
   onNavigateHome,
   currentProjectType = 'plain',
   autoSaveEnabled,
   customActions,
-  onToggleVoice,
-  isVoiceListening = false,
+  onToggleVoice: _onToggleVoice,
+  isVoiceListening: _isVoiceListening = false,
   onToggleNavDrawer,
   isNavDrawerOpen = false,
   onOpenExport,
+  onOpenShare,
   onOpenDeploy,
   onOpenGitHub,
 }) => {
@@ -188,108 +183,16 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               </div>
             </div>
 
-            {/* Right side - Run, Build with AI, Export, project menu */}
+            {/* Right side - Export, project menu, actions */}
             <div className="flex min-w-0 flex-shrink-0 items-center gap-1.5 sm:gap-2">
-              <Tooltip label="Run">
-                <button
-                  onClick={onRun}
-                  className={`${iconButton} ${NAV_LINK} compact:min-h-[44px] compact:min-w-[44px] compact:justify-center gap-2 border border-stroke bg-surface-canvas px-3 py-2`}
-                  title="Run"
-                  aria-label="Run"
-                >
-                  <Play className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="hidden lg:inline">Run</span>
-                </button>
-              </Tooltip>
-
-              {/*
-                * Voice: icon-only so it slots into the existing toolbar rhythm
-                * without competing with Run / Build with AI for width. Every
-                * action it reaches is still available manually.
-                */}
-              {onToggleVoice && (
-                <Tooltip
-                  label={isVoiceListening ? 'Stop listening' : 'Voice commands'}
-                  /* Secondary action: moves into the overflow menu at ≤1024px so
-                     Run and Build with AI keep the width they need. */
-                  className="hidden desktop:inline-flex"
-                >
-                  <button
-                    onClick={onToggleVoice}
-                    className={`${iconButton} relative p-2 ${
-                      isVoiceListening ? 'bg-danger-subtle text-danger' : ''
-                    }`}
-                    title={isVoiceListening ? 'Stop listening' : 'Voice commands'}
-                    aria-label={isVoiceListening ? 'Stop listening' : 'Start voice commands'}
-                    aria-pressed={isVoiceListening}
-                  >
-                    {isVoiceListening ? (
-                      <>
-                        <span className="absolute inset-1 animate-voice-ring rounded-full bg-danger/20" />
-                        <Mic className="relative h-4 w-4 sm:h-5 sm:w-5" />
-                      </>
-                    ) : (
-                      <MicOff className="h-4 w-4 sm:h-5 sm:w-5" />
-                    )}
-                  </button>
-                </Tooltip>
-              )}
-
-              {/* button-primary — the one place coral is spent on a single element. */}
-              <Tooltip label="Build with AI">
-                <button
-                  onClick={onOpenBuildFromPrompt}
-                  className={`inline-flex items-center justify-center gap-2 rounded-md border border-accent bg-accent px-3 py-2.5 ${NAV_LINK} text-accent-fg transition-colors hover:border-accent-hover hover:bg-accent-hover compact:min-h-[44px] compact:min-w-[44px]`}
-                  title="Build with AI"
-                  aria-label="Build with AI"
-                >
-                  <Wand2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="hidden lg:inline">Build with AI</span>
-                </button>
-              </Tooltip>
-
-              {/* button-secondary — cream fill, hairline outline. */}
-              {onOpenCodeRabbit && (
-                <Tooltip label="CodeRabbit AI Bug Scanner">
-                  <button
-                    onClick={onOpenCodeRabbit}
-                    className={`inline-flex items-center justify-center gap-2 rounded-md border border-stroke bg-surface-canvas px-3 py-2 ${NAV_LINK} text-content-primary transition-colors hover:bg-surface-hover compact:min-h-[44px] compact:min-w-[44px]`}
-                    title="CodeRabbit AI Bug Scanner"
-                    aria-label="CodeRabbit AI Bug Scanner"
-                  >
-                    <Bug className="h-4 w-4 text-accent sm:h-5 sm:w-5" />
-                    <span className="hidden xl:inline">CodeRabbit AI</span>
-                  </button>
-                </Tooltip>
-              )}
-
-              {/* button-secondary — icon-only: Screenshot to Code is a peer of
-                  Build with AI, and a second labelled coral CTA would compete
-                  with it for width. The label lives in the tooltip. */}
-              {onOpenScreenshotToCode && (
-                <Tooltip label="Screenshot to Code">
-                  <button
-                    onClick={onOpenScreenshotToCode}
-                    className={`inline-flex items-center justify-center gap-2 rounded-md border border-stroke bg-surface-canvas px-3 py-2 ${NAV_LINK} text-content-primary transition-colors hover:bg-surface-hover compact:min-h-[44px] compact:min-w-[44px]`}
-                    title="Screenshot to Code"
-                    aria-label="Screenshot to Code"
-                  >
-                    <Scan className="h-4 w-4 text-accent sm:h-5 sm:w-5" />
-                    <span className="hidden xl:inline">Screenshot to Code</span>
-                  </button>
-                </Tooltip>
-              )}
-
               {/* Custom Actions */}
               {customActions}
 
               {/*
                 Overflow menu for secondary actions at ≤1024px. It re-triggers
-                the same `onToggleVoice` / `onOpenExport` handlers the desktop
-                toolbar uses — no duplicated feature logic, just a second
-                trigger surface that fits a narrow bar.
+                the same handlers the desktop toolbar uses.
               */}
-              {(onToggleVoice || onOpenExport || onOpenDeploy || onOpenGitHub) && (
+              {(onOpenExport || onOpenShare || onOpenDeploy || onOpenGitHub) && (
                 <div className="relative hidden compact:block" ref={overflowRef}>
                   <button
                     onClick={() => setIsOverflowOpen((open) => !open)}
@@ -305,23 +208,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   {isOverflowOpen && (
                     <div className={`${menuSurface} w-56`} data-testid="nav-overflow-menu">
                       <div className="py-1">
-                        {onToggleVoice && (
-                          <button
-                            onClick={() => {
-                              onToggleVoice();
-                              setIsOverflowOpen(false);
-                            }}
-                            className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left ${NAV_LINK} text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary`}
-                          >
-                            {isVoiceListening ? (
-                              <Mic className="h-4 w-4 text-danger" />
-                            ) : (
-                              <MicOff className="h-4 w-4" />
-                            )}
-                            {isVoiceListening ? 'Stop listening' : 'Voice commands'}
-                          </button>
-                        )}
-
                         {onOpenExport && (
                           <button
                             onClick={() => {
@@ -330,8 +216,21 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                             }}
                             className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left ${NAV_LINK} text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary`}
                           >
+                            <Download className="h-4 w-4" />
+                            Export
+                          </button>
+                        )}
+
+                        {onOpenShare && (
+                          <button
+                            onClick={() => {
+                              onOpenShare();
+                              setIsOverflowOpen(false);
+                            }}
+                            className={`flex min-h-[44px] w-full items-center gap-3 px-4 text-left ${NAV_LINK} text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary`}
+                          >
                             <Share2 className="h-4 w-4" />
-                            Export &amp; Share
+                            Share
                           </button>
                         )}
 

@@ -1,3 +1,4 @@
+import { getAssistContent } from './assist';
 export interface HomeFeatureItem {
   title: string;
   desc: string;
@@ -483,5 +484,5 @@ export const HOME_TRANSLATIONS: Record<string, HomeTranslations> = {
 };
 
 export function getHomeContent(lang: string): HomeTranslations {
-  return HOME_TRANSLATIONS[lang] || HOME_TRANSLATIONS.en;
+  return { ...(HOME_TRANSLATIONS[lang] || HOME_TRANSLATIONS.en), featuresSub: getAssistContent(lang).localNote };
 }

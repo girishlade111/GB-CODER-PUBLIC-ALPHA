@@ -1,0 +1,745 @@
+{
+  "samples": [
+    {
+      "index": 1,
+      "variant": "baseline",
+      "workflow": "cold-A",
+      "target": "A",
+      "status": "PASS",
+      "observationMs": 70786,
+      "documentMs": 67,
+      "bootMs": 13999,
+      "publicMountMs": 10,
+      "installHintMs": 42057,
+      "viteReportedMs": 2849,
+      "serverReadyMs": 67527,
+      "serverToDomMs": 3259,
+      "domMs": 70786,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 2,
+      "variant": "baseline",
+      "workflow": "cold-A",
+      "target": "A",
+      "status": "PASS",
+      "observationMs": 58597,
+      "documentMs": 62,
+      "bootMs": 8741,
+      "publicMountMs": 7,
+      "installHintMs": 37201,
+      "viteReportedMs": 4265,
+      "serverReadyMs": 55575,
+      "serverToDomMs": 3022,
+      "domMs": 58597,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 3,
+      "variant": "baseline",
+      "workflow": "cold-B",
+      "target": "B",
+      "status": "PASS",
+      "observationMs": 39438,
+      "documentMs": 62,
+      "bootMs": 3798,
+      "publicMountMs": 11,
+      "installHintMs": 19618,
+      "viteReportedMs": 5603,
+      "serverReadyMs": 35614,
+      "serverToDomMs": 3824,
+      "domMs": 39438,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 4,
+      "variant": "baseline",
+      "workflow": "cold-B",
+      "target": "B",
+      "status": "PASS",
+      "observationMs": 38439,
+      "documentMs": 76,
+      "bootMs": 4001,
+      "publicMountMs": 29,
+      "installHintMs": 21607,
+      "viteReportedMs": 3637,
+      "serverReadyMs": 36625,
+      "serverToDomMs": 1814,
+      "domMs": 38439,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 5,
+      "variant": "baseline",
+      "workflow": "cycle-ABA-0",
+      "target": "A",
+      "status": "PASS",
+      "observationMs": 57980,
+      "documentMs": 60,
+      "bootMs": 4899,
+      "publicMountMs": 9,
+      "installHintMs": 41898,
+      "viteReportedMs": 3154,
+      "serverReadyMs": 55651,
+      "serverToDomMs": 2329,
+      "domMs": 57980,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 6,
+      "variant": "baseline",
+      "workflow": "cycle-ABA-1",
+      "target": "B",
+      "status": "PASS",
+      "observationMs": 35914,
+      "documentMs": null,
+      "bootMs": 7176,
+      "publicMountMs": 9,
+      "installHintMs": 16405,
+      "viteReportedMs": 3250,
+      "serverReadyMs": 33307,
+      "serverToDomMs": 2607,
+      "domMs": 35914,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 7,
+      "variant": "baseline",
+      "workflow": "cycle-ABA-2",
+      "target": "A",
+      "status": "PASS",
+      "observationMs": 48406,
+      "documentMs": null,
+      "bootMs": 1823,
+      "publicMountMs": 9,
+      "installHintMs": 36198,
+      "viteReportedMs": 3368,
+      "serverReadyMs": 46026,
+      "serverToDomMs": 2380,
+      "domMs": 48406,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 8,
+      "variant": "baseline",
+      "workflow": "cycle-ABA-0",
+      "target": "A",
+      "status": "PASS",
+      "observationMs": 60922,
+      "documentMs": 61,
+      "bootMs": 4624,
+      "publicMountMs": 10,
+      "installHintMs": 44954,
+      "viteReportedMs": 2933,
+      "serverReadyMs": 57866,
+      "serverToDomMs": 3056,
+      "domMs": 60922,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 9,
+      "variant": "baseline",
+      "workflow": "cycle-ABA-1",
+      "target": "B",
+      "status": "PASS",
+      "observationMs": 42124,
+      "documentMs": null,
+      "bootMs": 6711,
+      "publicMountMs": 5,
+      "installHintMs": 20260,
+      "viteReportedMs": 3782,
+      "serverReadyMs": 36086,
+      "serverToDomMs": 6038,
+      "domMs": 42124,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 10,
+      "variant": "baseline",
+      "workflow": "cycle-ABA-2",
+      "target": "A",
+      "status": "PASS",
+      "observationMs": 40956,
+      "documentMs": null,
+      "bootMs": 481,
+      "publicMountMs": 12,
+      "installHintMs": 30739,
+      "viteReportedMs": 3148,
+      "serverReadyMs": 38340,
+      "serverToDomMs": 2616,
+      "domMs": 40956,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 11,
+      "variant": "candidate",
+      "workflow": "cold-A",
+      "target": "A",
+      "status": "PASS",
+      "observationMs": 60855,
+      "documentMs": 54,
+      "bootMs": 7169,
+      "publicMountMs": 8,
+      "installHintMs": 42760,
+      "viteReportedMs": 2934,
+      "serverReadyMs": 57915,
+      "serverToDomMs": 2940,
+      "domMs": 60855,
+      "resetRequests": [],
+      "hmr": {
+        "status": "PASS",
+        "marker": "B4_REACT_HMR"
+      }
+    },
+    {
+      "index": 12,
+      "variant": "candidate",
+      "workflow": "cold-A",
+      "target": "A",
+      "status": "FAIL",
+      "observationMs": 240093,
+      "documentMs": 104,
+      "bootMs": 37658,
+      "publicMountMs": 9,
+      "installHintMs": null,
+      "viteReportedMs": null,
+      "serverReadyMs": null,
+      "serverToDomMs": null,
+      "domMs": null,
+      "resetRequests": [
+        {
+          "at": 1792044658825,
+          "url": "https://w-corp-staticblitz.com/full_bin_index.2ed8f36d",
+          "error": "net::ERR_CONNECTION_RESET"
+        }
+      ],
+      "hmr": null
+    },
+    {
+      "index": 13,
+      "variant": "candidate",
+      "workflow": "cold-B",
+      "target": "B",
+      "status": "PASS",
+      "observationMs": 104254,
+      "documentMs": 44,
+      "bootMs": 60207,
+      "publicMountMs": 9,
+      "installHintMs": 35337,
+      "viteReportedMs": 2648,
+      "serverReadyMs": 101956,
+      "serverToDomMs": 2298,
+      "domMs": 104254,
+      "resetRequests": [],
+      "hmr": {
+        "status": "PASS",
+        "marker": "B4_VUE_HMR"
+      }
+    },
+    {
+      "index": 14,
+      "variant": "candidate",
+      "workflow": "cold-B",
+      "target": "B",
+      "status": "FAIL",
+      "observationMs": 240041,
+      "documentMs": 55,
+      "bootMs": 3611,
+      "publicMountMs": 5,
+      "installHintMs": 35929,
+      "viteReportedMs": null,
+      "serverReadyMs": null,
+      "serverToDomMs": null,
+      "domMs": null,
+      "resetRequests": [
+        {
+          "at": 1792045048036,
+          "url": "https://huk2yfexjzna4glayxojlgniumhs2x-dg1p.w-corp-staticblitz.com/blitz.2ed8f36d.js",
+          "error": "net::ERR_CONNECTION_RESET"
+        },
+        {
+          "at": 1792045048037,
+          "url": "https://huk2yfexjzna4glayxojlgniumhs2x-dg1p.w-corp-staticblitz.com/blitz.2ed8f36d.js",
+          "error": "net::ERR_CONNECTION_RESET"
+        }
+      ],
+      "hmr": null
+    },
+    {
+      "index": 15,
+      "variant": "candidate",
+      "workflow": "cycle-ABA-0",
+      "target": "A",
+      "status": "PASS",
+      "observationMs": 43589,
+      "documentMs": 52,
+      "bootMs": 3701,
+      "publicMountMs": 9,
+      "installHintMs": 32376,
+      "viteReportedMs": 2122,
+      "serverReadyMs": 41671,
+      "serverToDomMs": 1918,
+      "domMs": 43589,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 16,
+      "variant": "candidate",
+      "workflow": "cycle-ABA-1",
+      "target": "B",
+      "status": "PASS",
+      "observationMs": 41473,
+      "documentMs": null,
+      "bootMs": 6482,
+      "publicMountMs": 5,
+      "installHintMs": 24208,
+      "viteReportedMs": 2802,
+      "serverReadyMs": 39039,
+      "serverToDomMs": 2434,
+      "domMs": 41473,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 17,
+      "variant": "candidate",
+      "workflow": "cycle-ABA-2",
+      "target": "A",
+      "status": "PASS",
+      "observationMs": 37521,
+      "documentMs": null,
+      "bootMs": 2358,
+      "publicMountMs": 4,
+      "installHintMs": 27643,
+      "viteReportedMs": 2005,
+      "serverReadyMs": 35783,
+      "serverToDomMs": 1738,
+      "domMs": 37521,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 18,
+      "variant": "candidate",
+      "workflow": "cycle-ABA-0",
+      "target": "A",
+      "status": "PASS",
+      "observationMs": 35898,
+      "documentMs": 63,
+      "bootMs": 3025,
+      "publicMountMs": 8,
+      "installHintMs": 24800,
+      "viteReportedMs": 1774,
+      "serverReadyMs": 33822,
+      "serverToDomMs": 2076,
+      "domMs": 35898,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 19,
+      "variant": "candidate",
+      "workflow": "cycle-ABA-1",
+      "target": "B",
+      "status": "PASS",
+      "observationMs": 31082,
+      "documentMs": null,
+      "bootMs": 6966,
+      "publicMountMs": 10,
+      "installHintMs": 14911,
+      "viteReportedMs": 2485,
+      "serverReadyMs": 29277,
+      "serverToDomMs": 1805,
+      "domMs": 31082,
+      "resetRequests": [],
+      "hmr": null
+    },
+    {
+      "index": 20,
+      "variant": "candidate",
+      "workflow": "cycle-ABA-2",
+      "target": "A",
+      "status": "PASS",
+      "observationMs": 38253,
+      "documentMs": null,
+      "bootMs": 346,
+      "publicMountMs": 5,
+      "installHintMs": 30289,
+      "viteReportedMs": 2068,
+      "serverReadyMs": 36356,
+      "serverToDomMs": 1897,
+      "domMs": 38253,
+      "resetRequests": [],
+      "hmr": null
+    }
+  ],
+  "groups": [
+    {
+      "variant": "baseline",
+      "group": "all",
+      "attempts": 10,
+      "passed": 10,
+      "failed": 0,
+      "cancelled": 0,
+      "successfulDom": {
+        "n": 10,
+        "medianMs": 45265,
+        "minMs": 35914,
+        "maxMs": 70786
+      },
+      "observation": {
+        "n": 10,
+        "medianMs": 45265,
+        "minMs": 35914,
+        "maxMs": 70786
+      },
+      "boot": {
+        "n": 10,
+        "medianMs": 4761.5,
+        "minMs": 481,
+        "maxMs": 13999
+      },
+      "installHint": {
+        "n": 10,
+        "medianMs": 33468.5,
+        "minMs": 16405,
+        "maxMs": 44954
+      },
+      "viteReported": {
+        "n": 10,
+        "medianMs": 3309,
+        "minMs": 2849,
+        "maxMs": 5603
+      }
+    },
+    {
+      "variant": "baseline",
+      "group": "cold-A",
+      "attempts": 2,
+      "passed": 2,
+      "failed": 0,
+      "cancelled": 0,
+      "successfulDom": {
+        "n": 2,
+        "medianMs": 64691.5,
+        "minMs": 58597,
+        "maxMs": 70786
+      },
+      "observation": {
+        "n": 2,
+        "medianMs": 64691.5,
+        "minMs": 58597,
+        "maxMs": 70786
+      },
+      "boot": {
+        "n": 2,
+        "medianMs": 11370,
+        "minMs": 8741,
+        "maxMs": 13999
+      },
+      "installHint": {
+        "n": 2,
+        "medianMs": 39629,
+        "minMs": 37201,
+        "maxMs": 42057
+      },
+      "viteReported": {
+        "n": 2,
+        "medianMs": 3557,
+        "minMs": 2849,
+        "maxMs": 4265
+      }
+    },
+    {
+      "variant": "baseline",
+      "group": "cold-B",
+      "attempts": 2,
+      "passed": 2,
+      "failed": 0,
+      "cancelled": 0,
+      "successfulDom": {
+        "n": 2,
+        "medianMs": 38938.5,
+        "minMs": 38439,
+        "maxMs": 39438
+      },
+      "observation": {
+        "n": 2,
+        "medianMs": 38938.5,
+        "minMs": 38439,
+        "maxMs": 39438
+      },
+      "boot": {
+        "n": 2,
+        "medianMs": 3899.5,
+        "minMs": 3798,
+        "maxMs": 4001
+      },
+      "installHint": {
+        "n": 2,
+        "medianMs": 20612.5,
+        "minMs": 19618,
+        "maxMs": 21607
+      },
+      "viteReported": {
+        "n": 2,
+        "medianMs": 4620,
+        "minMs": 3637,
+        "maxMs": 5603
+      }
+    },
+    {
+      "variant": "baseline",
+      "group": "cycle",
+      "attempts": 6,
+      "passed": 6,
+      "failed": 0,
+      "cancelled": 0,
+      "successfulDom": {
+        "n": 6,
+        "medianMs": 45265,
+        "minMs": 35914,
+        "maxMs": 60922
+      },
+      "observation": {
+        "n": 6,
+        "medianMs": 45265,
+        "minMs": 35914,
+        "maxMs": 60922
+      },
+      "boot": {
+        "n": 6,
+        "medianMs": 4761.5,
+        "minMs": 481,
+        "maxMs": 7176
+      },
+      "installHint": {
+        "n": 6,
+        "medianMs": 33468.5,
+        "minMs": 16405,
+        "maxMs": 44954
+      },
+      "viteReported": {
+        "n": 6,
+        "medianMs": 3202,
+        "minMs": 2933,
+        "maxMs": 3782
+      }
+    },
+    {
+      "variant": "candidate",
+      "group": "all",
+      "attempts": 10,
+      "passed": 8,
+      "failed": 2,
+      "cancelled": 0,
+      "successfulDom": {
+        "n": 8,
+        "medianMs": 39863,
+        "minMs": 31082,
+        "maxMs": 104254
+      },
+      "observation": {
+        "n": 10,
+        "medianMs": 42531,
+        "minMs": 31082,
+        "maxMs": 240093
+      },
+      "boot": {
+        "n": 10,
+        "medianMs": 5091.5,
+        "minMs": 346,
+        "maxMs": 60207
+      },
+      "installHint": {
+        "n": 9,
+        "medianMs": 30289,
+        "minMs": 14911,
+        "maxMs": 42760
+      },
+      "viteReported": {
+        "n": 8,
+        "medianMs": 2303.5,
+        "minMs": 1774,
+        "maxMs": 2934
+      }
+    },
+    {
+      "variant": "candidate",
+      "group": "cold-A",
+      "attempts": 2,
+      "passed": 1,
+      "failed": 1,
+      "cancelled": 0,
+      "successfulDom": {
+        "n": 1,
+        "medianMs": 60855,
+        "minMs": 60855,
+        "maxMs": 60855
+      },
+      "observation": {
+        "n": 2,
+        "medianMs": 150474,
+        "minMs": 60855,
+        "maxMs": 240093
+      },
+      "boot": {
+        "n": 2,
+        "medianMs": 22413.5,
+        "minMs": 7169,
+        "maxMs": 37658
+      },
+      "installHint": {
+        "n": 1,
+        "medianMs": 42760,
+        "minMs": 42760,
+        "maxMs": 42760
+      },
+      "viteReported": {
+        "n": 1,
+        "medianMs": 2934,
+        "minMs": 2934,
+        "maxMs": 2934
+      }
+    },
+    {
+      "variant": "candidate",
+      "group": "cold-B",
+      "attempts": 2,
+      "passed": 1,
+      "failed": 1,
+      "cancelled": 0,
+      "successfulDom": {
+        "n": 1,
+        "medianMs": 104254,
+        "minMs": 104254,
+        "maxMs": 104254
+      },
+      "observation": {
+        "n": 2,
+        "medianMs": 172147.5,
+        "minMs": 104254,
+        "maxMs": 240041
+      },
+      "boot": {
+        "n": 2,
+        "medianMs": 31909,
+        "minMs": 3611,
+        "maxMs": 60207
+      },
+      "installHint": {
+        "n": 2,
+        "medianMs": 35633,
+        "minMs": 35337,
+        "maxMs": 35929
+      },
+      "viteReported": {
+        "n": 1,
+        "medianMs": 2648,
+        "minMs": 2648,
+        "maxMs": 2648
+      }
+    },
+    {
+      "variant": "candidate",
+      "group": "cycle",
+      "attempts": 6,
+      "passed": 6,
+      "failed": 0,
+      "cancelled": 0,
+      "successfulDom": {
+        "n": 6,
+        "medianMs": 37887,
+        "minMs": 31082,
+        "maxMs": 43589
+      },
+      "observation": {
+        "n": 6,
+        "medianMs": 37887,
+        "minMs": 31082,
+        "maxMs": 43589
+      },
+      "boot": {
+        "n": 6,
+        "medianMs": 3363,
+        "minMs": 346,
+        "maxMs": 6966
+      },
+      "installHint": {
+        "n": 6,
+        "medianMs": 26221.5,
+        "minMs": 14911,
+        "maxMs": 32376
+      },
+      "viteReported": {
+        "n": 6,
+        "medianMs": 2095,
+        "minMs": 1774,
+        "maxMs": 2802
+      }
+    }
+  ],
+  "controls": [
+    {
+      "variant": "baseline",
+      "index": 1,
+      "start": 1792042184583,
+      "status": "PASS",
+      "state": {
+        "same": true,
+        "installs": 3
+      },
+      "durationMs": 1721
+    },
+    {
+      "variant": "baseline",
+      "index": 2,
+      "start": 1792042331690,
+      "status": "PASS",
+      "state": {
+        "same": true,
+        "installs": 3
+      },
+      "durationMs": 1720
+    },
+    {
+      "variant": "candidate",
+      "index": 3,
+      "start": 1792045350754,
+      "status": "PASS",
+      "state": {
+        "same": true,
+        "installs": 3
+      },
+      "durationMs": 1642
+    },
+    {
+      "variant": "candidate",
+      "index": 4,
+      "start": 1792045459162,
+      "status": "PASS",
+      "state": {
+        "same": true,
+        "installs": 3
+      },
+      "durationMs": 1707
+    }
+  ],
+  "totalObservationMs": 1366621,
+  "limitations": [
+    "Failures are retained; successful-DOM summaries exclude censored failures explicitly.",
+    "No p95, SLA or causal performance regression claim.",
+    "Panel visibility controls do not force a component remount; true shell reconnection is tested separately through the production service."
+  ]
+}

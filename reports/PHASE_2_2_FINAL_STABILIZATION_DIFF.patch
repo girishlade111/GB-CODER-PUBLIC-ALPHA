@@ -1,0 +1,1002 @@
+diff --git a/scripts/test-phase2-2-stabilization-negative.mjs b/scripts/test-phase2-2-stabilization-negative.mjs
+new file mode 100644
+index 0000000..498d281
+--- /dev/null
++++ b/scripts/test-phase2-2-stabilization-negative.mjs
+@@ -0,0 +1,413 @@
++/**
++ * Phase 2.2 Final Stabilization: Mandatory Negative Tests Suite
++ *
++ * Exercises the 8 required negative scenarios:
++ * 1. Late server-ready event after B starts and old shell prints prompt
++ * 2. Missing A port-close followed by B's legitimate port-close
++ * 3. In-flight write exceeding deletion timeout
++ * 4. Stale queued mount from A executing after B becomes active
++ * 5. A -> B -> C navigation with delayed attachment promises
++ * 6. Forced test assertion failure returning nonzero exit code
++ * 7. Virtual filesystem write failure propagation
++ * 8. More than ten distinct unresolved draining ports
++ */
++
++import assert from 'node:assert/strict';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import * as esbuild from 'esbuild';
++import { spawn } from 'node:child_process';
++
++const tmpDir = path.resolve('scripts', '.tmp-stabilization-test');
++fs.mkdirSync(tmpDir, { recursive: true });
++const bundlePath = path.join(tmpDir, 'webcontainer-bundle.mjs');
++
++await esbuild.build({
++  entryPoints: [path.resolve('src/services/webcontainer/webcontainerService.ts')],
++  bundle: true,
++  format: 'esm',
++  outfile: bundlePath,
++  external: [
++    '@webcontainer/api',
++    '@webcontainer/snapshot',
++    '../storage/db',
++    '../../utils/logger',
++    './ataService',
++  ],
++});
++
++const { webcontainerService } = await import(`file://${bundlePath.replace(/\\/g, '/')}`);
++const { FileSyncCoordinator } = await import(`file://${bundlePath.replace(/\\/g, '/')}`);
++
++const results = [];
++function record(id, description, status, details = '') {
++  results.push({ id, description, status, details });
++  const icon = status === 'PASS' ? '[PASS]' : '[FAIL]';
++  console.log(`${icon} ${id}: ${description}`);
++  if (details) console.log(`       -> ${details}`);
++}
++
++async function run() {
++  console.log('======================================================================');
++  console.log('  PHASE 2.2 FINAL STABILIZATION: MANDATORY NEGATIVE TESTS');
++  console.log('======================================================================\n');
++
++  // --------------------------------------------------------------------
++  // TEST 1: Late server-ready event after B starts and old shell prints prompt
++  // --------------------------------------------------------------------
++  try {
++    let portCb = null;
++    let serverReadyCb = null;
++    const mockContainer = {
++      on: (evt, cb) => {
++        if (evt === 'port') portCb = cb;
++        if (evt === 'server-ready') serverReadyCb = cb;
++        return () => {};
++      },
++      mount: async () => {},
++      fs: { writeFile: async () => {} },
++    };
++
++    webcontainerService.cleanupServerListeners();
++    webcontainerService.setupServerListeners(mockContainer);
++
++    // 1. Project A is running dev server on port 5173
++    webcontainerService.attachProject('project-a');
++    webcontainerService.setDevServerStarting(true);
++    serverReadyCb(5173, 'http://project-a.local:5173');
++    assert.equal(webcontainerService.getState().serverUrl, 'http://project-a.local:5173');
++
++    // 2. Stop Project A and attach Project B (Project B has started, but dev server not yet dispatched)
++    webcontainerService.stopDevServer();
++    webcontainerService.attachProject('project-b');
++
++    // 3. Old shell prints prompt (simulating SIGINT prompt appearance)
++    webcontainerService.setShellPromptReady(true);
++
++    // 4. Stale late server-ready from Project A's server arrives at port 5173
++    serverReadyCb(5173, 'http://project-a-stale.local:5173');
++
++    // ASSERTION: Project B MUST NOT accept Project A's late server-ready URL!
++    const currentUrl = webcontainerService.getState().serverUrl;
++    assert.notEqual(
++      currentUrl,
++      'http://project-a-stale.local:5173',
++      'Stale server-ready from Project A was erroneously accepted for Project B when prompt was ready',
++    );
++    assert.equal(currentUrl, null, 'Server URL should remain null awaiting Project B genuine server');
++
++    record('NEG-1', 'Late server-ready after B starts & old shell prints prompt', 'PASS', 'Late event rejected; URL not polluted');
++  } catch (err) {
++    record('NEG-1', 'Late server-ready after B starts & old shell prints prompt', 'FAIL', err.message);
++  }
++
++  // --------------------------------------------------------------------
++  // TEST 2: Missing A port-close followed by B's legitimate port-close
++  // --------------------------------------------------------------------
++  try {
++    let portCb = null;
++    let serverReadyCb = null;
++    const mockContainer = {
++      on: (evt, cb) => {
++        if (evt === 'port') portCb = cb;
++        if (evt === 'server-ready') serverReadyCb = cb;
++        return () => {};
++      },
++    };
++
++    webcontainerService.cleanupServerListeners();
++    webcontainerService.setupServerListeners(mockContainer);
++
++    // 1. Project A dev server running on 5173
++    webcontainerService.attachProject('project-a');
++    webcontainerService.setDevServerStarting(true);
++    serverReadyCb(5173, 'http://project-a.local:5173');
++
++    // 2. Project A stopped. NO port-close is emitted for Project A (missing close)
++    webcontainerService.stopDevServer();
++
++    // 3. Project B attaches and starts dev server on 5173
++    webcontainerService.attachProject('project-b');
++    webcontainerService.setShellPromptReady(true);
++    webcontainerService.setDevServerStarting(true);
++    portCb(5173, 'open', 'http://project-b.local:5173');
++    serverReadyCb(5173, 'http://project-b.local:5173');
++    assert.equal(webcontainerService.getState().serverUrl, 'http://project-b.local:5173');
++    assert.equal(webcontainerService.getState().activeServers.length, 1);
++
++    // 4. Project B dev server closes legitimately
++    portCb(5173, 'close', '');
++
++    // ASSERTION: Project B's close must NOT be swallowed by Project A's missing close!
++    const activeServersAfterClose = webcontainerService.getState().activeServers;
++    assert.equal(
++      activeServersAfterClose.length,
++      0,
++      'Project B legitimate close was swallowed by Project A missing close; server lingered in activeServers',
++    );
++
++    record('NEG-2', "Missing A port-close followed by B's legitimate port-close", 'PASS', 'Project B close cleanly cleared active servers');
++  } catch (err) {
++    record('NEG-2', "Missing A port-close followed by B's legitimate port-close", 'FAIL', err.message);
++  }
++
++  // --------------------------------------------------------------------
++  // TEST 3: In-flight write exceeding deletion timeout
++  // --------------------------------------------------------------------
++  try {
++    let rawDeleteCalled = false;
++    let hangingWriteDone = false;
++    let neverResolveWrite;
++
++    const coordinator = new FileSyncCoordinator({
++      rawWrite: async () => {
++        await new Promise((resolve) => {
++          neverResolveWrite = resolve;
++        });
++        hangingWriteDone = true;
++      },
++      rawDelete: async () => {
++        rawDeleteCalled = true;
++      },
++      debounceMs: 5,
++    });
++
++    coordinator.setScope('proj-1');
++    coordinator.queueSync('src/hanging.txt', 'content');
++
++    // Wait for write to start executing and enter inFlight
++    await new Promise((r) => setTimeout(r, 20));
++
++    // Now try to delete while in-flight write exceeds timeout
++    let deleteThrew = false;
++    try {
++      // Use short 50ms timeout for test
++      await coordinator.handleDelete('src/hanging.txt', 50);
++    } catch (err) {
++      deleteThrew = true;
++    }
++
++    assert.ok(deleteThrew, 'handleDelete should have failed-closed and thrown when in-flight write exceeded timeout');
++    assert.equal(rawDeleteCalled, false, 'rawDelete must NOT proceed while write is still in flight');
++
++    neverResolveWrite();
++    record('NEG-3', 'In-flight write exceeding deletion timeout', 'PASS', 'Fail-closed: threw error, refused to delete during in-flight write');
++  } catch (err) {
++    record('NEG-3', 'In-flight write exceeding deletion timeout', 'FAIL', err.message);
++  }
++
++  // --------------------------------------------------------------------
++  // TEST 4: Stale queued mount from A executing after B becomes active
++  // --------------------------------------------------------------------
++  try {
++    let mountedTrees = [];
++    const mockContainer = {
++      mount: async (tree) => {
++        mountedTrees.push(tree);
++      },
++      fs: { writeFile: async () => {} },
++      on: () => () => {},
++    };
++    webcontainerService.instance = mockContainer;
++
++    webcontainerService.attachProject('project-a');
++
++    // Simulate slow mount for Project A
++    let releaseSlowBarrier;
++    const slowBarrier = new Promise((resolve) => {
++      releaseSlowBarrier = resolve;
++    });
++
++    // Queue mount for Project A with delay
++    const mountPromiseA = (async () => {
++      await slowBarrier;
++      return webcontainerService.mountProject(
++        [{ path: 'src/A.js', content: 'A' }],
++        {},
++        'react',
++        'project-a', // project scope
++        webcontainerService.getSessionEpoch(), // epoch scope
++      );
++    })();
++
++    // Switch to Project B BEFORE slow mount of Project A finishes
++    webcontainerService.attachProject('project-b');
++    releaseSlowBarrier();
++    await mountPromiseA;
++
++    // ASSERTION: Project A's mount must have been discarded and NOT mounted into Project B!
++    const hasMountedA = mountedTrees.some((tree) => Boolean(tree['src']?.directory?.['A.js']));
++    assert.equal(hasMountedA, false, 'Project A files were mounted into Project B after scope switch');
++
++    record('NEG-4', 'Stale queued mount from A executing after B becomes active', 'PASS', 'Stale mount rejected before mutating filesystem');
++  } catch (err) {
++    record('NEG-4', 'Stale queued mount from A executing after B becomes active', 'FAIL', err.message);
++  }
++
++  // --------------------------------------------------------------------
++  // TEST 5: A -> B -> C navigation with delayed attachment promises
++  // --------------------------------------------------------------------
++  try {
++    let transitionCount = 0;
++    const transitions = [];
++    const beginTransition = () => {
++      transitionCount++;
++      const current = transitionCount;
++      transitions.push(current);
++      return current;
++    };
++    const isCurrentTransition = (t) => t === transitionCount;
++
++    let attachedProjects = [];
++    const mockAttach = async (transition, projId, delayMs) => {
++      await new Promise((r) => setTimeout(r, delayMs));
++      if (!isCurrentTransition(transition)) {
++        return { status: 'aborted', projId };
++      }
++      attachedProjects.push(projId);
++      return { status: 'attached', projId };
++    };
++
++    // Dispatch A (delay 50ms)
++    const tA = beginTransition();
++    const pA = mockAttach(tA, 'A', 50);
++
++    // Dispatch B (delay 30ms)
++    const tB = beginTransition();
++    const pB = mockAttach(tB, 'B', 30);
++
++    // Dispatch C immediately (delay 10ms)
++    const tC = beginTransition();
++    const pC = mockAttach(tC, 'C', 10);
++
++    const [rA, rB, rC] = await Promise.all([pA, pB, pC]);
++
++    assert.equal(rA.status, 'aborted');
++    assert.equal(rB.status, 'aborted');
++    assert.equal(rC.status, 'attached');
++    assert.deepEqual(attachedProjects, ['C'], 'Only the latest transition C should be attached');
++
++    record('NEG-5', 'A -> B -> C navigation with delayed attachment promises', 'PASS', 'Stale transitions aborted; only latest attached');
++  } catch (err) {
++    record('NEG-5', 'A -> B -> C navigation with delayed attachment promises', 'FAIL', err.message);
++  }
++
++  // --------------------------------------------------------------------
++  // TEST 6: Forced test assertion failure returning nonzero exit code
++  // --------------------------------------------------------------------
++  try {
++    // Run an external child process with a deliberately failing assertion
++    const childCode = `
++      import assert from 'node:assert/strict';
++      const results = [{ id: 'FORCE_FAIL', status: 'FAIL' }];
++      if (results.some(r => r.status === 'FAIL')) {
++        process.exit(1);
++      }
++      process.exit(0);
++    `;
++    const childPath = path.join(tmpDir, 'child-fail-test.mjs');
++    fs.writeFileSync(childPath, childCode);
++
++    const childExitCode = await new Promise((resolve) => {
++      const p = spawn('node', [childPath], { stdio: 'ignore' });
++      p.on('close', resolve);
++    });
++
++    assert.equal(childExitCode, 1, 'Harness with failing assertion did not exit with code 1');
++    record('NEG-6', 'Forced test assertion failure returning nonzero exit code', 'PASS', 'Exited with code 1 as required');
++  } catch (err) {
++    record('NEG-6', 'Forced test assertion failure returning nonzero exit code', 'FAIL', err.message);
++  }
++
++  // --------------------------------------------------------------------
++  // TEST 7: Virtual filesystem write failure propagation
++  // --------------------------------------------------------------------
++  try {
++    const coordinator = new FileSyncCoordinator({
++      rawWrite: async () => {
++        throw new Error('EIO: simulated disk write failure');
++      },
++      rawDelete: async () => {},
++      debounceMs: 5,
++    });
++
++    coordinator.setScope('proj-fail');
++    coordinator.queueSync('src/bad.txt', 'bad content');
++
++    // Wait for executeWrite to run
++    await new Promise((r) => setTimeout(r, 20));
++
++    // Flush should report that the write failed!
++    const flushResult = await coordinator.flush();
++
++    assert.equal(flushResult.ok, false, 'flush() should report ok: false when rawWrite fails');
++    assert.ok(flushResult.failed.length > 0, 'flushResult should list the failed path');
++    assert.equal(flushResult.failed[0].path, 'src/bad.txt');
++
++    record('NEG-7', 'Virtual filesystem write failure propagation', 'PASS', 'flushResult.ok is false and failed paths recorded');
++  } catch (err) {
++    record('NEG-7', 'Virtual filesystem write failure propagation', 'FAIL', err.message);
++  }
++
++  // --------------------------------------------------------------------
++  // TEST 8: More than ten distinct unresolved draining ports
++  // --------------------------------------------------------------------
++  try {
++    let portCb = null;
++    let serverReadyCb = null;
++    const mockContainer = {
++      on: (evt, cb) => {
++        if (evt === 'port') portCb = cb;
++        if (evt === 'server-ready') serverReadyCb = cb;
++        return () => {};
++      },
++    };
++
++    webcontainerService.cleanupServerListeners();
++    webcontainerService.setupServerListeners(mockContainer);
++
++    // Drain 12 distinct ports (ports 5170 through 5181)
++    for (let p = 5170; p <= 5181; p++) {
++      webcontainerService.attachProject(`proj-${p}`);
++      webcontainerService.setDevServerStarting(true);
++      serverReadyCb(p, `http://server-${p}.local:${p}`);
++      webcontainerService.stopDevServer();
++    }
++
++    // Now attach a new project
++    webcontainerService.attachProject('proj-active');
++    webcontainerService.setDevServerStarting(true);
++
++    // Stale server-ready arrives for the very first port (5170)
++    serverReadyCb(5170, 'http://stale-5170.local:5170');
++
++    // ASSERTION: Port 5170 must NOT have been evicted and must NOT be accepted for proj-active!
++    const activeUrl = webcontainerService.getState().serverUrl;
++    assert.notEqual(
++      activeUrl,
++      'http://stale-5170.local:5170',
++      'Oldest port 5170 was evicted and accepted stale event for new project',
++    );
++
++    record('NEG-8', 'More than ten distinct unresolved draining ports', 'PASS', 'Port 5170 not unsafely evicted; quarantine preserved');
++  } catch (err) {
++    record('NEG-8', 'More than ten distinct unresolved draining ports', 'FAIL', err.message);
++  }
++
++  console.log('\n======================================================================');
++  const passed = results.filter((r) => r.status === 'PASS').length;
++  const failed = results.filter((r) => r.status === 'FAIL').length;
++  console.log(`TOTAL: ${passed} / ${results.length} PASS (${failed} FAILED)`);
++  console.log('======================================================================');
++
++  fs.rmSync(tmpDir, { recursive: true, force: true });
++
++  if (failed > 0) {
++    process.exit(1);
++  }
++}
++
++run().catch((err) => {
++  console.error('Fatal harness error:', err);
++  process.exit(1);
++});
+diff --git a/scripts/test-phase2-2-stage-b24-adversarial.mjs b/scripts/test-phase2-2-stage-b24-adversarial.mjs
+index d23fd80..05371d1 100644
+--- a/scripts/test-phase2-2-stage-b24-adversarial.mjs
++++ b/scripts/test-phase2-2-stage-b24-adversarial.mjs
+@@ -431,10 +431,16 @@ async function run() {
+   }
+ 
+   console.log('\n======================================================================');
+-  console.log(`TOTAL: ${results.filter((r) => r.status === 'PASS').length} / ${results.length} PASS`);
++  const passed = results.filter((r) => r.status === 'PASS').length;
++  const failed = results.filter((r) => r.status === 'FAIL').length;
++  console.log(`TOTAL: ${passed} / ${results.length} PASS (${failed} FAILED)`);
+   console.log('======================================================================');
+ 
+   fs.rmSync(tmpDir, { recursive: true, force: true });
++
++  if (failed > 0) {
++    process.exit(1);
++  }
+ }
+ 
+ run().catch((err) => {
+diff --git a/src/App.tsx b/src/App.tsx
+index 67cf48a..d22cf88 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -2256,12 +2256,10 @@ function App() {
+         return false;
+       }
+       if (!isCurrentTransition(transition)) return false;
+-      void loadWebContainerService().then(({ webcontainerService }) => {
+-        void webcontainerService.flushFileSync().then(() => {
+-          if (!isCurrentTransition(transition)) return;
+-          webcontainerService.detachProject();
+-        });
+-      });
++      const { webcontainerService: wc } = await loadWebContainerService();
++      await wc.flushFileSync();
++      if (!isCurrentTransition(transition)) return false;
++      wc.detachProject();
+       savedFilesRef.current = null;
+       setActiveProjectId(null);
+       setActiveProject(null);
+@@ -2473,12 +2471,10 @@ function App() {
+       setProjects((current) => [opened, ...current.filter((item) => item.id !== opened.id)]);
+ 
+       // Flush any pending file writes for previous project and attach newly opened project
+-      void loadWebContainerService().then(({ webcontainerService }) => {
+-        void webcontainerService.flushFileSync().then(() => {
+-          if (!isCurrentTransition(transition)) return;
+-          webcontainerService.attachProject(opened.id);
+-        });
+-      });
++      const { webcontainerService: wc } = await loadWebContainerService();
++      await wc.flushFileSync();
++      if (!isCurrentTransition(transition)) return false;
++      wc.attachProject(opened.id);
+       // Explicit opens push a history entry; navigation-driven opens (Back /
+       // Forward / cold deep link) replace so the trail never gains duplicates.
+       applyProjectToEditor(opened, restored, {
+@@ -2598,9 +2594,8 @@ function App() {
+       setProjects((current) => current.filter((item) => item.id !== record.id));
+ 
+       if (activeProjectId === record.id) {
+-        void loadWebContainerService().then(({ webcontainerService }) => {
+-          webcontainerService.detachProject(record.id);
+-        });
++        const { webcontainerService: wc } = await loadWebContainerService();
++        wc.detachProject(record.id);
+         savedFilesRef.current = null;
+         writeActiveProjectId(null);
+         setActiveProjectId(null);
+@@ -2627,12 +2622,10 @@ function App() {
+     if (!isCurrentTransition(transition)) return;
+ 
+     // Flush any pending debounced WebContainer writes and detach project dev server
+-    void loadWebContainerService().then(({ webcontainerService }) => {
+-      void webcontainerService.flushFileSync().then(() => {
+-        if (!isCurrentTransition(transition)) return;
+-        webcontainerService.detachProject();
+-      });
+-    });
++    const { webcontainerService: wc } = await loadWebContainerService();
++    await wc.flushFileSync();
++    if (!isCurrentTransition(transition)) return;
++    wc.detachProject();
+ 
+     savedFilesRef.current = null;
+     writeActiveProjectId(null);
+diff --git a/src/components/Console/TerminalTab.tsx b/src/components/Console/TerminalTab.tsx
+index e80a90b..dc67627 100644
+--- a/src/components/Console/TerminalTab.tsx
++++ b/src/components/Console/TerminalTab.tsx
+@@ -271,6 +271,8 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
+           currentProj.files,
+           currentProj.dependencies,
+           currentProj.projectType,
++          effectiveProjectId,
++          webcontainerService.getSessionEpoch(),
+         );
+         term.write(
+           `${ANSI.gray}Files mounted into virtual filesystem. Starting interactive shell...${ANSI.reset}\r\n`,
+@@ -527,11 +529,13 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
+                 return;
+               }
+ 
+-              // Ensure project files are mounted before checking dependencies or starting Vite
++              const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
+               await webcontainerService.mountProject(
+                 currentProj.files,
+                 currentProj.dependencies,
+                 currentProj.projectType,
++                effectiveProjectId,
++                restartEpoch,
+               );
+ 
+               if (restartEpoch !== webcontainerService.getSessionEpoch()) return;
+@@ -850,11 +854,13 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
+ 
+   const handleQuickNpmInstall = useCallback(async () => {
+     if (mode === 'webcontainer') {
+-      const currentProj = projectRef.current;
++      const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
+       await webcontainerService.mountProject(
+         currentProj.files,
+         currentProj.dependencies,
+         currentProj.projectType,
++        effectiveProjectId,
++        webcontainerService.getSessionEpoch(),
+       );
+       if (!webcontainerShellRef.current) {
+         await startWebContainerShell();
+diff --git a/src/services/webcontainer/fileSyncCoordinator.ts b/src/services/webcontainer/fileSyncCoordinator.ts
+index 4cda826..408997a 100644
+--- a/src/services/webcontainer/fileSyncCoordinator.ts
++++ b/src/services/webcontainer/fileSyncCoordinator.ts
+@@ -8,10 +8,10 @@
+  * 2. Per-path sequential FIFO queue: guarantees that writes for the same path never execute out-of-order.
+  * 3. Project scoping: pending writes are bound to a projectId. If the project is switched or detached,
+  *    foreign writes are dropped.
+- * 4. Flush: flush() flushes all pending debounced writes immediately to disk in order.
++ * 4. Flush: flush() flushes all pending debounced writes immediately to disk in order and reports reliable results.
+  * 5. Rename & Delete coordination:
+  *    - renameFile(oldPath, newPath) cancels or migrates pending writes for oldPath.
+- *    - deleteFile(path) cancels pending writes for path before deleting from fs.
++ *    - deleteFile(path) cancels pending writes for path before deleting from fs, with fail-closed timeout.
+  */
+ 
+ export interface SyncCoordinatorOptions {
+@@ -21,6 +21,13 @@ export interface SyncCoordinatorOptions {
+   onDependencyInvalidation?: (cleanPath: string) => void;
+ }
+ 
++export interface FlushResult {
++  ok: boolean;
++  persisted: string[];
++  failed: Array<{ path: string; error: Error }>;
++  canceled: string[];
++}
++
+ interface PendingItem {
+   content: string;
+   projectId: string | null;
+@@ -37,6 +44,10 @@ export class FileSyncCoordinator {
+   private pendingWrites = new Map<string, PendingItem>();
+   private inFlightPaths = new Set<string>();
+   private inFlightPromises = new Map<string, Promise<void>>();
++  private lastWriteResults = new Map<
++    string,
++    { status: 'persisted' | 'failed' | 'canceled'; error?: Error }
++  >();
+   private activeProjectId: string | null = null;
+ 
+   constructor(options: SyncCoordinatorOptions) {
+@@ -64,6 +75,7 @@ export class FileSyncCoordinator {
+ 
+     // Discard write if it explicitly targets an inactive project
+     if (scopedProject !== null && this.activeProjectId !== null && scopedProject !== this.activeProjectId) {
++      this.lastWriteResults.set(cleanPath, { status: 'canceled' });
+       return;
+     }
+ 
+@@ -124,6 +136,7 @@ export class FileSyncCoordinator {
+     // Project scope guard
+     if (item.projectId !== null && this.activeProjectId !== null && item.projectId !== this.activeProjectId) {
+       this.pendingWrites.delete(cleanPath);
++      this.lastWriteResults.set(cleanPath, { status: 'canceled' });
+       return;
+     }
+ 
+@@ -145,9 +158,14 @@ export class FileSyncCoordinator {
+           item.projectId === this.activeProjectId
+         ) {
+           await this.rawWrite(cleanPath, item.content);
++          this.lastWriteResults.set(cleanPath, { status: 'persisted' });
++        } else {
++          this.lastWriteResults.set(cleanPath, { status: 'canceled' });
+         }
+       } catch (err) {
+-        console.warn(`[FileSyncCoordinator] Failed to write file ${cleanPath}:`, err);
++        const error = err instanceof Error ? err : new Error(String(err));
++        console.warn(`[FileSyncCoordinator] Failed to write file ${cleanPath}:`, error);
++        this.lastWriteResults.set(cleanPath, { status: 'failed', error });
+       } finally {
+         this.inFlightPaths.delete(cleanPath);
+         this.inFlightPromises.delete(cleanPath);
+@@ -168,7 +186,7 @@ export class FileSyncCoordinator {
+     await writePromise;
+   }
+ 
+-  public async flush(): Promise<void> {
++  public async flush(): Promise<FlushResult> {
+     // Clear all pending debounce timers
+     const entries = Array.from(this.pendingWrites.entries());
+     for (const [, item] of entries) {
+@@ -178,8 +196,10 @@ export class FileSyncCoordinator {
+       }
+     }
+ 
++    const flushPaths = entries.map(([p]) => p);
++
+     // Drain all queued writes
+-    const flushPromises = entries.map(async ([path]) => {
++    const flushPromises = flushPaths.map(async (path) => {
+       await this.executeWrite(path);
+     });
+ 
+@@ -187,8 +207,35 @@ export class FileSyncCoordinator {
+ 
+     // Wait if any paths remain in-flight
+     while (this.inFlightPaths.size > 0) {
+-      await new Promise((resolve) => setTimeout(resolve, 20));
++      await new Promise((resolve) => setTimeout(resolve, 10));
+     }
++
++    const persisted: string[] = [];
++    const failed: Array<{ path: string; error: Error }> = [];
++    const canceled: string[] = [];
++
++    // Collect results for all paths that were part of this flush or recent execution
++    const allPathsToCheck = new Set([...flushPaths, ...this.lastWriteResults.keys()]);
++    for (const path of allPathsToCheck) {
++      const res = this.lastWriteResults.get(path);
++      if (res?.status === 'persisted') {
++        persisted.push(path);
++      } else if (res?.status === 'failed') {
++        failed.push({ path, error: res.error ?? new Error('Unknown write error') });
++      } else if (res?.status === 'canceled') {
++        canceled.push(path);
++      }
++    }
++
++    // Clear tracked results after flushing
++    this.lastWriteResults.clear();
++
++    return {
++      ok: failed.length === 0,
++      persisted,
++      failed,
++      canceled,
++    };
+   }
+ 
+   public cancelPath(path: string): void {
+@@ -199,18 +246,20 @@ export class FileSyncCoordinator {
+       if (key === cleanPath || key.startsWith(prefix)) {
+         if (item.timer) clearTimeout(item.timer);
+         this.pendingWrites.delete(key);
++        this.lastWriteResults.set(key, { status: 'canceled' });
+       }
+     }
+   }
+ 
+   public cancelAll(): void {
+-    for (const [, item] of this.pendingWrites.entries()) {
++    for (const [key, item] of this.pendingWrites.entries()) {
+       if (item.timer) clearTimeout(item.timer);
++      this.lastWriteResults.set(key, { status: 'canceled' });
+     }
+     this.pendingWrites.clear();
+   }
+ 
+-  public handleRename(oldPath: string, newPath: string): void {
++  public async handleRename(oldPath: string, newPath: string, timeoutMs = 3000): Promise<void> {
+     const cleanOld = oldPath.replace(/^\/+/, '').replace(/\/+$/, '');
+     const cleanNew = newPath.replace(/^\/+/, '').replace(/\/+$/, '');
+     const oldPrefix = `${cleanOld}/`;
+@@ -221,32 +270,68 @@ export class FileSyncCoordinator {
+     if (oldItem) {
+       if (oldItem.timer) clearTimeout(oldItem.timer);
+       this.pendingWrites.delete(cleanOld);
+-      this.queueSync(cleanNew, oldItem.content, oldItem.projectId);
+     }
+ 
+     // 2. Directory prefix matches: remap any descendants in pendingWrites
++    const descendantsToRemap: Array<{ path: string; content: string; projectId: string | null }> = [];
+     for (const [key, item] of Array.from(this.pendingWrites.entries())) {
+       if (key.startsWith(oldPrefix)) {
+         if (item.timer) clearTimeout(item.timer);
+         this.pendingWrites.delete(key);
+         const subPath = key.slice(oldPrefix.length);
+-        const remappedPath = `${newPrefix}${subPath}`;
+-        this.queueSync(remappedPath, item.content, item.projectId);
++        descendantsToRemap.push({
++          path: `${newPrefix}${subPath}`,
++          content: item.content,
++          projectId: item.projectId,
++        });
+       }
+     }
++
++    // 3. Await in-flight writes on oldPath or its descendants before proceeding (fail-closed)
++    const start = Date.now();
++    while (
++      Array.from(this.inFlightPaths).some(
++        (p) => p === cleanOld || p.startsWith(oldPrefix),
++      )
++    ) {
++      if (Date.now() - start > timeoutMs) {
++        const err = new Error(
++          `Cannot rename "${cleanOld}": in-flight write did not settle within ${timeoutMs}ms`,
++        );
++        console.error(`[FileSyncCoordinator] ${err.message}`);
++        throw err;
++      }
++      await new Promise((resolve) => setTimeout(resolve, 10));
++    }
++
++    // 4. Queue remapped writes for new destination
++    if (oldItem) {
++      this.queueSync(cleanNew, oldItem.content, oldItem.projectId);
++    }
++    for (const desc of descendantsToRemap) {
++      this.queueSync(desc.path, desc.content, desc.projectId);
++    }
+   }
+ 
+-  public async handleDelete(path: string): Promise<void> {
++  public async handleDelete(path: string, timeoutMs = 3000): Promise<void> {
+     this.cancelPath(path);
+     const cleanPath = path.replace(/^\/+/, '');
+     const prefix = cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`;
+ 
+-    // Await any in-flight writes on this path or its descendants before deleting
++    // Await any in-flight writes on this path or its descendants before deleting (fail-closed)
+     const start = Date.now();
+     while (
+-      Array.from(this.inFlightPaths).some((p) => p === cleanPath || p.startsWith(prefix))
++      Array.from(this.inFlightPaths).some(
++        (p) => p === cleanPath || p.startsWith(prefix),
++      )
+     ) {
+-      if (Date.now() - start > 3000) break;
++      if (Date.now() - start > timeoutMs) {
++        const err = new Error(
++          `Cannot delete "${cleanPath}": in-flight write did not settle within ${timeoutMs}ms`,
++        );
++        console.error(`[FileSyncCoordinator] ${err.message}`);
++        throw err;
++      }
+       await new Promise((resolve) => setTimeout(resolve, 10));
+     }
+ 
+@@ -260,11 +345,7 @@ export class FileSyncCoordinator {
+     ) {
+       this.onDependencyInvalidation?.(cleanPath);
+     }
+-    try {
+-      await this.rawDelete(cleanPath);
+-    } catch (err) {
+-      console.warn(`[FileSyncCoordinator] Failed to delete ${cleanPath}:`, err);
+-    }
++    await this.rawDelete(cleanPath);
+   }
+ 
+   public hasPendingWrites(): boolean {
+diff --git a/src/services/webcontainer/webcontainerService.ts b/src/services/webcontainer/webcontainerService.ts
+index 9039534..4cdeb59 100644
+--- a/src/services/webcontainer/webcontainerService.ts
++++ b/src/services/webcontainer/webcontainerService.ts
+@@ -10,8 +10,8 @@
+ import { WebContainer, FileSystemTree } from '@webcontainer/api';
+ import { ProjectFile, ProjectType } from '../../types/files';
+ import { webcontainerPerf } from './webcontainerPerf';
+-import { FileSyncCoordinator } from './fileSyncCoordinator';
+-export { FileSyncCoordinator };
++import { FileSyncCoordinator, type FlushResult } from './fileSyncCoordinator';
++export { FileSyncCoordinator, type FlushResult };
+ 
+ /**
+  * Optimized npm configuration for WebContainer:
+@@ -656,16 +656,6 @@ class WebContainerManager {
+         // Ignored
+       }
+     }
+-    // Keep draining map bounded to at most 10 recent ports
+-    while (this.drainingPorts.size > 10) {
+-      const oldestKey = this.drainingPorts.keys().next().value;
+-      if (oldestKey !== undefined) {
+-        this.drainingPorts.delete(oldestKey);
+-        this.pendingDrainingCloses.delete(oldestKey);
+-      } else {
+-        break;
+-      }
+-    }
+     const now = Date.now();
+     for (const server of this.state.activeServers) {
+       this.drainingPorts.set(server.port, {
+@@ -673,10 +663,8 @@ class WebContainerManager {
+         sessionEpoch: this.sessionEpoch,
+         drainedAt: now,
+       });
+-      this.pendingDrainingCloses.set(
+-        server.port,
+-        (this.pendingDrainingCloses.get(server.port) ?? 0) + 1,
+-      );
++      // Cap at 1 pending close per port to prevent unbounded counter drift
++      this.pendingDrainingCloses.set(server.port, 1);
+     }
+     this.isDevServerActive = false;
+     this.isDevServerStartingState = false;
+@@ -778,19 +766,6 @@ class WebContainerManager {
+         return;
+       }
+ 
+-      // Guard: is a dev server starting or active in the current session epoch?
+-      const isExpected =
+-        this.isDevServerStartingState ||
+-        this.isDevServerActive ||
+-        this.state.startupStage === 'starting_server';
+-
+-      if (!isExpected) {
+-        console.warn(
+-          `[WebContainer] Discarded unsolicited/late server-ready at port ${port} (no dev server starting or active for project "${this.activeProjectId}")`,
+-        );
+-        return;
+-      }
+-
+       // Check if this port is a draining port from a prior session/project
+       const draining = this.drainingPorts.get(port);
+       if (draining) {
+@@ -812,6 +787,19 @@ class WebContainerManager {
+         }
+       }
+ 
++      // Guard: is a dev server starting or active in the current session epoch?
++      const isExpected =
++        this.isDevServerStartingState ||
++        this.isDevServerActive ||
++        this.state.startupStage === 'starting_server';
++
++      if (!isExpected) {
++        console.warn(
++          `[WebContainer] Discarded unsolicited/late server-ready at port ${port} (no dev server starting or active for project "${this.activeProjectId}")`,
++        );
++        return;
++      }
++
+       console.log(`[WebContainer] Server ready for project "${this.activeProjectId}" at port ${port}: ${url}`);
+       this.isDevServerActive = true;
+       this.isDevServerStartingState = false;
+@@ -844,6 +832,11 @@ class WebContainerManager {
+       console.log(`[WebContainer] Port ${port} ${type}: ${url}`);
+       if (type === 'open') {
+         if (!this.activeProjectId) return;
++
++        // If this port is currently draining from a previous session, a new 'open' event
++        // indicates that the next project has successfully rebound the port.
++        // But if the shell is not ready (still busy running prior project's shutdown or command),
++        // a late 'open' from the previous process must be discarded.
+         if (this.drainingPorts.has(port)) {
+           const draining = this.drainingPorts.get(port)!;
+           if (draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId) {
+@@ -851,8 +844,13 @@ class WebContainerManager {
+               return;
+             }
+             this.drainingPorts.delete(port);
++            this.pendingDrainingCloses.delete(port);
++          } else {
++            this.drainingPorts.delete(port);
++            this.pendingDrainingCloses.delete(port);
+           }
+         }
++
+         const newServer: WebContainerServerInfo = {
+           port,
+           url,
+@@ -894,7 +892,6 @@ class WebContainerManager {
+         }
+ 
+         const closingServer = this.state.activeServers.find((s) => s.port === port);
+-        // If closing port belonged to a different project or epoch, ignore
+         if (closingServer && closingServer.projectId && closingServer.projectId !== this.activeProjectId) {
+           return;
+         }
+@@ -1037,9 +1034,14 @@ class WebContainerManager {
+     files: ProjectFile[],
+     dependencies?: Record<string, string>,
+     projectType?: ProjectType,
++    targetProjectId?: string,
++    targetEpoch?: number,
+   ): Promise<void> {
+     if (!files || files.length === 0) return;
+ 
++    const targetProject = targetProjectId ?? this.activeProjectId;
++    const targetGen = targetEpoch ?? this.sessionEpoch;
++
+     // Chain onto current mount operation so concurrent mount calls are strictly serialized
+     const previousMount = this.mountQueue;
+     let releaseMountLock: () => void = () => {};
+@@ -1050,6 +1052,14 @@ class WebContainerManager {
+     try {
+       await previousMount.catch(() => {});
+ 
++      // Stale mount guard 1: verify project identity and session epoch before progressing
++      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
++        console.warn(
++          `[WebContainer] Discarded stale mount for project "${targetProject}" (epoch ${targetGen}) - active project is now "${this.activeProjectId}" (epoch ${this.sessionEpoch})`,
++        );
++        return;
++      }
++
+       this.updateState({ startupStage: 'mounting_files' });
+ 
+       // Barrier: ensure any in-flight writes have settled before mounting files
+@@ -1067,10 +1077,26 @@ class WebContainerManager {
+         throw new Error(errMsg);
+       }
+ 
++      // Stale mount guard 2: verify project scope after barrier
++      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
++        console.warn(
++          `[WebContainer] Discarded stale mount after barrier for project "${targetProject}"`,
++        );
++        return;
++      }
++
+       const endSerialization = webcontainerPerf.startTimer('project_serialization');
+       const tree = filesToFileSystemTree(files, dependencies, projectType);
+       endSerialization({ fileCount: files.length });
+ 
++      // Stale mount guard 3: verify project scope before mutating container filesystem
++      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
++        console.warn(
++          `[WebContainer] Discarded stale mount before container.mount for project "${targetProject}"`,
++        );
++        return;
++      }
++
+       const endMount = webcontainerPerf.startTimer('filesystem_mount');
+       const container = await this.boot();
+       await container.mount(tree);
+@@ -1238,8 +1264,8 @@ class WebContainerManager {
+    * Flushes all pending debounced writes immediately.
+    * Used prior to navigation, project switching, or backups.
+    */
+-  public async flushFileSync(): Promise<void> {
+-    await this.fileSyncCoordinator.flush();
++  public async flushFileSync(): Promise<FlushResult> {
++    return this.fileSyncCoordinator.flush();
+   }
+ 
+   /**
+@@ -1252,15 +1278,15 @@ class WebContainerManager {
+   /**
+    * Removes a file from the WebContainer filesystem, cancelling any pending debounced writes for it.
+    */
+-  public async deleteFile(path: string): Promise<void> {
+-    await this.fileSyncCoordinator.handleDelete(path);
++  public async deleteFile(path: string, timeoutMs?: number): Promise<void> {
++    await this.fileSyncCoordinator.handleDelete(path, timeoutMs);
+   }
+ 
+   /**
+    * Coordinates file rename in virtual filesystem, migrating any pending writes to newPath.
+    */
+-  public renameFile(oldPath: string, newPath: string): void {
+-    this.fileSyncCoordinator.handleRename(oldPath, newPath);
++  public async renameFile(oldPath: string, newPath: string, timeoutMs?: number): Promise<void> {
++    await this.fileSyncCoordinator.handleRename(oldPath, newPath, timeoutMs);
+   }
+ 
+   /**

@@ -1,0 +1,215 @@
+---
+import { getAssistContent } from '../i18n/assist';
+import { getStudioContent } from '../i18n/studio';
+
+interface Props {
+  lang?: string;
+}
+
+const { lang = 'en' } = Astro.props;
+const copy = getAssistContent(lang);
+const studio = getStudioContent(lang);
+---
+
+<section class="assist-showcase">
+  <div class="assist-description">
+    <h2>{copy.title}</h2>
+    <p>{copy.description}</p>
+    <p>{copy.review}</p>
+    <small class="assist-note">{copy.note}</small>
+  </div>
+
+  <figure class="assist-example">
+    <figcaption>
+      <div class="assist-window-title">
+        <span class="win-dot" aria-hidden="true"></span>
+        <strong>GB Assist</strong>
+      </div>
+      <span class="assist-demo-badge">{studio.demo}</span>
+    </figcaption>
+
+    <div class="assist-modes">
+      <span class="mode-active">Ask</span>
+      <span>Code</span>
+      <span>Debug</span>
+      <span>Plan</span>
+      <span>Agent</span>
+    </div>
+
+    <div class="assist-prompt">
+      <div class="prompt-author">You</div>
+      <div class="prompt-text">{copy.prompt}</div>
+    </div>
+
+    <div class="assist-proposal">
+      <div class="proposal-header">
+        <span class="proposal-file">{copy.proposal} · App.jsx</span>
+        <span class="proposal-status">{copy.reviewLabel}</span>
+      </div>
+      <pre><code><span class="code-kw">export default function</span> <span class="code-fn">App</span>() &#123;<br/>  <span class="code-kw">return</span> &lt;<span class="code-tag">h1</span>&gt;Hello, possibility.&lt;/<span class="code-tag">h1</span>&gt;;<br/>&#125;</code></pre>
+    </div>
+  </figure>
+</section>
+
+<style>
+  .assist-showcase {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: clamp(2.5rem, 6vw, 5rem);
+    align-items: center;
+    padding: 4.5rem 0 2rem;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 3.5rem;
+  }
+
+  .assist-description h2 {
+    font-size: clamp(2rem, 3.3vw, 3rem);
+    letter-spacing: -0.035em;
+    max-width: 18ch;
+    margin: 0 0 1.25rem;
+    line-height: 1.12;
+  }
+  .assist-description p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin: 0 0 1rem;
+    max-width: 48ch;
+    line-height: 1.65;
+  }
+  .assist-note {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    max-width: 50ch;
+    line-height: 1.55;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  /* --- Assistant window ------------------------------------------------ */
+  .assist-example {
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    min-width: 0;
+  }
+  figcaption {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.7rem 1.1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 0.78rem;
+    background: var(--surface-soft);
+  }
+  .assist-window-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .win-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    background: var(--primary);
+  }
+  .assist-demo-badge {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .assist-modes {
+    display: flex;
+    gap: 0.15rem;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface);
+  }
+  .assist-modes span {
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 0.3rem 0.75rem;
+    border-radius: 9999px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .assist-modes .mode-active {
+    background: var(--surface-soft);
+    color: var(--primary);
+  }
+
+  .assist-prompt {
+    margin: 1.25rem 1.25rem 1rem;
+    padding-inline-start: 0.9rem;
+    border-inline-start: 2px solid var(--primary);
+  }
+  .prompt-author {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+  }
+  .prompt-text {
+    font-size: 0.92rem;
+    color: var(--text-primary);
+    line-height: 1.55;
+  }
+
+  .assist-proposal {
+    padding: 0 1.25rem 1.25rem;
+  }
+  .proposal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+    font-size: 0.8rem;
+  }
+  .proposal-file {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    color: var(--text-muted);
+  }
+  .proposal-status {
+    color: var(--primary);
+    font-weight: 650;
+  }
+  pre {
+    margin: 0;
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 1.15rem 1.25rem;
+    border-radius: var(--radius-sm);
+    overflow: auto;
+    font: 12px/1.85 ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+  .code-kw { color: var(--chart-2); font-weight: 600; }
+  .code-fn { color: var(--code-text); }
+  .code-tag { color: var(--chart-1); }
+
+  @media (max-width: 800px) {
+    .assist-showcase {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+      padding-top: 3rem;
+    }
+    .assist-modes {
+      overflow-x: auto;
+      padding: 0.6rem 0.8rem;
+    }
+    .assist-description h2 {
+      max-width: 22ch;
+    }
+  }
+</style>

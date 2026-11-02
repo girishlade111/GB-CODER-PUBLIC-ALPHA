@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
-type TooltipSide = 'top' | 'bottom' | 'left' | 'right';
+export type TooltipSide = 'top' | 'bottom' | 'left' | 'right';
 
-interface TooltipProps {
+export interface TooltipProps {
   /** The visible tooltip text. Also used as the accessible label. */
   label: string;
   /** Optional keyboard shortcut rendered as a dim suffix. */
@@ -14,57 +15,169 @@ interface TooltipProps {
    * wrapper occupying a flex gap.
    */
   className?: string;
+  /** When true, disables tooltip rendering and hover triggers. */
+  disabled?: boolean;
   children: React.ReactElement;
 }
 
-const SIDE_CLASSES: Record<TooltipSide, string> = {
-  top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
-  bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
-  left: 'right-full top-1/2 -translate-y-1/2 mr-2',
-  right: 'left-full top-1/2 -translate-y-1/2 ml-2',
-};
+let lastTooltipDismissTime = 0;
 
 /**
- * Styled tooltip for icon-only controls.
+ * Styled portal tooltip for icon-only and interactive controls.
  *
- * Applies the same "label on hover" affordance the code selection toolbar uses,
- * but with product styling instead of the browser's native tooltip. The child's
- * `title` is removed so the native tooltip does not appear alongside this one,
- * and its text is promoted to `aria-label` when the child has none, keeping the
- * control announced to screen readers.
- *
- * Purely presentational — it never intercepts clicks or alters child behaviour.
+ * Renders into document.body to avoid z-index stacking issues, ancestor overflow
+ * clipping, and internal scrollbars.
  */
 const Tooltip: React.FC<TooltipProps> = ({
   label,
   shortcut,
   side = 'bottom',
   className = 'inline-flex',
+  disabled = false,
   children,
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const triggerRef = useRef<HTMLSpanElement>(null);
+  const timerRef = useRef<number | null>(null);
+
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const offset = 8;
+    let top = 0;
+    let left = 0;
+
+    switch (side) {
+      case 'right':
+        top = rect.top + rect.height / 2;
+        left = rect.right + offset;
+        break;
+      case 'left':
+        top = rect.top + rect.height / 2;
+        left = rect.left - offset;
+        break;
+      case 'top':
+        top = rect.top - offset;
+        left = rect.left + rect.width / 2;
+        break;
+      case 'bottom':
+      default:
+        top = rect.bottom + offset;
+        left = rect.left + rect.width / 2;
+        break;
+    }
+
+    if (typeof window !== 'undefined') {
+      top = Math.max(8, Math.min(top, window.innerHeight - 8));
+      left = Math.max(8, Math.min(left, window.innerWidth - 8));
+    }
+
+    setCoords({ top, left });
+  }, [side]);
+
+  const show = useCallback(() => {
+    if (disabled || !label) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    const now = Date.now();
+    const wasRecentlyActive = now - lastTooltipDismissTime < 300;
+    const delay = wasRecentlyActive ? 0 : 75;
+
+    if (delay === 0) {
+      updatePosition();
+      setIsOpen(true);
+    } else {
+      timerRef.current = window.setTimeout(() => {
+        updatePosition();
+        setIsOpen(true);
+      }, delay);
+    }
+  }, [disabled, label, updatePosition]);
+
+  const hide = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsOpen(false);
+    lastTooltipDismissTime = Date.now();
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleDismiss = () => hide();
+    window.addEventListener('scroll', handleDismiss, true);
+    window.addEventListener('resize', handleDismiss);
+    return () => {
+      window.removeEventListener('scroll', handleDismiss, true);
+      window.removeEventListener('resize', handleDismiss);
+    };
+  }, [isOpen, hide]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
   const childProps = children.props as Record<string, unknown>;
 
   const child = React.cloneElement(children, {
-    // Drop the native tooltip; this component renders the visible label.
     title: undefined,
     'aria-label': (childProps['aria-label'] as string | undefined) ?? label,
   } as Partial<typeof childProps>);
 
+  const getTransform = () => {
+    switch (side) {
+      case 'right':
+        return 'translateY(-50%)';
+      case 'left':
+        return 'translate(-100%, -50%)';
+      case 'top':
+        return 'translate(-50%, -100%)';
+      case 'bottom':
+      default:
+        return 'translateX(-50%)';
+    }
+  };
+
   return (
-    <span className={`group relative ${className}`}>
+    <span
+      ref={triggerRef}
+      className={`group relative ${className}`}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+    >
       {child}
-      <span
-        role="tooltip"
-        aria-hidden="true"
-        className={`pointer-events-none absolute z-[60] flex items-center gap-2 whitespace-nowrap rounded-md border border-stroke-subtle bg-surface-overlay px-2 py-1 text-xs font-medium text-content-primary opacity-0 shadow-elevated transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 ${SIDE_CLASSES[side]}`}
-      >
-        {label}
-        {shortcut && (
-          <kbd className="rounded-sm border border-stroke-subtle bg-surface-canvas px-1 font-mono text-[10px] text-content-muted">
-            {shortcut}
-          </kbd>
+      {isOpen &&
+        coords &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            role="tooltip"
+            aria-hidden="true"
+            style={{
+              position: 'fixed',
+              top: `${coords.top}px`,
+              left: `${coords.left}px`,
+              transform: getTransform(),
+              zIndex: 99999,
+            }}
+            className="pointer-events-none flex items-center gap-1.5 whitespace-nowrap rounded-md border border-[var(--border)] bg-[#18181b] px-2.5 py-1 text-xs font-medium text-white shadow-xl select-none"
+          >
+            <span>{label}</span>
+            {shortcut && (
+              <kbd className="rounded border border-neutral-700 bg-neutral-800 px-1 font-mono text-[10px] text-neutral-300">
+                {shortcut}
+              </kbd>
+            )}
+          </div>,
+          document.body
         )}
-      </span>
     </span>
   );
 };

@@ -1,21 +1,19 @@
 import React from 'react';
 import {
-  BarChart3,
-  FolderTree,
-  LayoutGrid,
+  Activity,
+  Code2,
+  Files,
+  FolderInput,
+  History,
+  Layers,
   LayoutTemplate,
-  MessageSquare,
   Mic,
   Package,
   PanelLeftClose,
   PanelLeftOpen,
-  PanelsTopLeft,
   Settings as SettingsIcon,
-  Upload,
+  TerminalSquare,
   X,
-  Zap,
-  Database,
-  Bug,
 } from 'lucide-react';
 import Tooltip from './ui/Tooltip';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -42,8 +40,6 @@ interface AppSidebarProps {
    * manual way in, a plain, React or Vue project could never reach them.
    */
   onOpenVSCodeMode: () => void;
-  onOpenAIChat: () => void;
-  onOpenCodeRabbit?: () => void;
   onOpenVoiceCommands: () => void;
   onOpenStatistics: () => void;
   onOpenInjection: () => void;
@@ -75,12 +71,6 @@ interface SidebarItem {
   disabledReason?: string;
 }
 
-interface SidebarSection {
-  id: string;
-  /** Shown as a heading when the rail is expanded. */
-  label: string;
-  items: SidebarItem[];
-}
 
 /**
  * Left rail navigation — the single entry point for every editor feature.
@@ -99,8 +89,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   onOpenTemplates,
   onOpenImport,
   onOpenVSCodeMode,
-  onOpenAIChat,
-  onOpenCodeRabbit,
   onOpenVoiceCommands,
   onOpenStatistics,
   onOpenInjection,
@@ -114,114 +102,89 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
 
   const panelsUnavailable = 'Needs a wider window';
 
-  const sections: SidebarSection[] = [
+  const items: SidebarItem[] = [
     {
-      id: 'project',
-      label: 'Project',
-      items: [
-        {
-          /*
-           * First in the rail: it is the way *out* of the current project, and
-           * burying the exit under the tools that belong to it reads as a
-           * dead end.
-           */
-          id: 'projects',
-          label: 'All Projects',
-          icon: <LayoutGrid className="h-5 w-5" />,
-          onClick: onOpenProjects,
-        },
-        {
-          id: 'files',
-          label: 'Files',
-          icon: <FolderTree className="h-5 w-5" />,
-          onClick: onToggleFiles,
-          isActive: isFilesOpen,
-          disabled: !canDockPanels,
-          disabledReason: panelsUnavailable,
-        },
-        {
-          id: 'dependencies',
-          label: 'Dependencies',
-          icon: <Package className="h-5 w-5" />,
-          onClick: onToggleDependencies,
-          isActive: isDependenciesOpen,
-          disabled: !canDockPanels,
-          disabledReason: panelsUnavailable,
-        },
-        {
-          id: 'templates',
-          label: 'Templates',
-          icon: <LayoutTemplate className="h-5 w-5" />,
-          onClick: onOpenTemplates,
-        },
-        {
-          id: 'import',
-          label: 'Import',
-          icon: <Upload className="h-5 w-5" />,
-          onClick: onOpenImport,
-        },
-        {
-          id: 'vscode-mode',
-          label: 'VS Code Mode & Sandbox',
-          icon: <PanelsTopLeft className="h-5 w-5" />,
-          onClick: onOpenVSCodeMode,
-        },
-      ],
+      /*
+       * First in the rail: it is the way *out* of the current project, and
+       * burying the exit under the tools that belong to it reads as a
+       * dead end.
+       */
+      id: 'projects',
+      label: 'All Projects',
+      icon: <Layers className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenProjects,
     },
     {
-      id: 'ai',
-      label: 'AI',
-      items: [
-        {
-          id: 'ai-chat',
-          label: 'AI Chat',
-          icon: <MessageSquare className="h-5 w-5" />,
-          onClick: onOpenAIChat,
-        },
-        {
-          id: 'coderabbit-ai',
-          label: 'CodeRabbit AI Bug Scanner',
-          icon: <Bug className="h-5 w-5 text-accent" />,
-          onClick: onOpenCodeRabbit,
-        },
-        {
-          id: 'voice',
-          label: 'Voice Commands',
-          icon: <Mic className="h-5 w-5" />,
-          onClick: onOpenVoiceCommands,
-        },
-      ],
+      id: 'files',
+      label: 'Files',
+      icon: <Files className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onToggleFiles,
+      isActive: isFilesOpen,
+      disabled: !canDockPanels,
+      disabledReason: panelsUnavailable,
     },
     {
-      id: 'tools',
-      label: 'Tools',
-      items: [
-        {
-          id: 'statistics',
-          label: 'Statistics',
-          icon: <BarChart3 className="h-5 w-5" />,
-          onClick: onOpenStatistics,
-        },
-        {
-          id: 'injection',
-          label: 'Code Injection',
-          icon: <Zap className="h-5 w-5" />,
-          onClick: onOpenInjection,
-        },
-        {
-          id: 'snapshots',
-          label: 'Snapshots',
-          icon: <Database className="h-5 w-5" />,
-          onClick: onOpenSnapshots,
-        },
-      ],
+      id: 'dependencies',
+      label: 'Dependencies',
+      icon: <Package className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onToggleDependencies,
+      isActive: isDependenciesOpen,
+      disabled: !canDockPanels,
+      disabledReason: panelsUnavailable,
+    },
+    {
+      id: 'templates',
+      label: 'Templates',
+      icon: <LayoutTemplate className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenTemplates,
+    },
+    {
+      id: 'import',
+      label: 'Import',
+      icon: <FolderInput className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenImport,
+    },
+    {
+      id: 'voice',
+      label: 'Voice Commands',
+      icon: <Mic className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenVoiceCommands,
+    },
+    {
+      id: 'statistics',
+      label: 'Statistics',
+      icon: <Activity className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenStatistics,
+    },
+    {
+      id: 'injection',
+      label: 'Code Injection',
+      icon: <Code2 className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenInjection,
+    },
+    {
+      id: 'snapshots',
+      label: 'Snapshots',
+      icon: <History className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenSnapshots,
+    },
+    {
+      id: 'vscode-mode',
+      label: 'VS Code Mode & Sandbox',
+      icon: <TerminalSquare className="h-[18px] w-[18px]" strokeWidth={1.5} />,
+      onClick: onOpenVSCodeMode,
     },
   ];
 
   const renderItem = (item: SidebarItem) => {
+    const tooltipLabel = item.disabled
+      ? `${item.label} — ${item.disabledReason ?? 'unavailable'}`
+      : item.label;
+
     const button = (
       <button
         type="button"
+        title={!isExpanded || item.disabled ? tooltipLabel : undefined}
         onClick={
           item.disabled
             ? undefined
@@ -234,27 +197,24 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         }
         disabled={item.disabled}
         aria-pressed={item.isActive}
-        /*
-          Accent left border marks the active item, per the design tokens. The
-          border is always present but transparent when inactive, so the label
-          never shifts horizontally on selection.
-
-          The `compact:` overrides make the collapsed rail lay itself out like
-          the expanded one inside the drawer — full-width rows with labels and a
-          44px minimum touch target — without a second component.
-        */
-        className={`flex w-full items-center rounded-md border-l-2 text-sm font-medium transition-colors compact:min-h-[44px] ${
+        className={`group relative flex items-center transition-colors compact:min-h-[44px] ${
           isExpanded
-            ? 'gap-3 pl-2.5 pr-3 py-2'
-            : 'justify-center px-2 py-2 compact:justify-start compact:gap-3 compact:pl-2.5 compact:pr-3'
+            ? 'w-full gap-3 rounded-md px-3 py-2 text-xs font-medium'
+            : 'h-9 w-9 justify-center rounded-md compact:w-full compact:justify-start compact:gap-3 compact:px-3 compact:text-xs compact:font-medium'
         } ${
           item.disabled
-            ? 'cursor-not-allowed border-transparent text-content-muted opacity-50'
+            ? 'cursor-not-allowed text-[var(--muted-foreground)] opacity-40'
             : item.isActive
-              ? 'border-accent bg-accent-subtle text-content-primary'
-              : 'border-transparent text-content-secondary hover:border-accent/40 hover:bg-surface-hover hover:text-content-primary'
+              ? 'bg-[var(--sidebar-accent)] text-[var(--foreground)]'
+              : 'text-[var(--muted-foreground)] hover:bg-[var(--sidebar-accent)]/50 hover:text-[var(--foreground)]'
         }`}
       >
+        {item.isActive && (
+          <span
+            className="absolute -left-1.5 top-1.5 bottom-1.5 w-[2px] rounded-r-sm bg-[var(--foreground)] compact:left-0"
+            aria-hidden="true"
+          />
+        )}
         <span className="flex shrink-0 items-center justify-center">{item.icon}</span>
         {/*
           Always rendered, then hidden with CSS when the desktop rail is
@@ -265,23 +225,18 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       </button>
     );
 
-    const tooltipLabel = item.disabled
-      ? `${item.label} — ${item.disabledReason ?? 'unavailable'}`
-      : item.label;
-
-    // The collapsed rail has no visible labels, so tooltips carry them. When
-    // expanded, only disabled items still need the extra explanation.
-    if (!isExpanded || item.disabled) {
-      return (
-        <li key={item.id}>
-          <Tooltip label={tooltipLabel} side="right">
-            {button}
-          </Tooltip>
-        </li>
-      );
-    }
-
-    return <li key={item.id}>{button}</li>;
+    return (
+      <li key={item.id} className={!isExpanded ? 'flex justify-center compact:block' : undefined}>
+        <Tooltip
+          label={tooltipLabel}
+          side="right"
+          disabled={isExpanded && !item.disabled}
+          className={isExpanded ? 'w-full' : undefined}
+        >
+          {button}
+        </Tooltip>
+      </li>
+    );
   };
 
   return (
@@ -295,8 +250,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         Rendered at every breakpoint: it is now the only route to these
         features, so hiding it on small screens would make them unreachable.
       */
-      className={`sticky top-14 flex h-[calc(100vh-4rem)] shrink-0 flex-col self-start overflow-y-auto border-r border-stroke-subtle bg-surface-base transition-[width] duration-200 ease-out sm:top-16 ${
-        isExpanded ? 'w-52' : 'w-[52px]'
+      className={`sticky top-14 flex h-[calc(100vh-4rem)] shrink-0 flex-col self-start overflow-y-auto overflow-x-hidden border-r border-[var(--border)] bg-[var(--sidebar)] transition-[width] duration-200 ease-out sm:top-16 ${
+        isExpanded ? 'w-52' : 'w-12'
       } compact:fixed compact:bottom-0 compact:left-0 compact:z-40 compact:h-auto compact:w-[min(18rem,82vw)] compact:shadow-elevated-lg compact:transition-transform ${
         isDrawerOpen ? 'compact:translate-x-0' : 'compact:-translate-x-full'
       }`}
@@ -305,46 +260,30 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         Drawer-only header. `display: none` above 1024px, so the desktop rail is
         byte-for-byte what it was.
       */}
-      <div className="hidden items-center justify-between border-b border-stroke-subtle px-3 py-2 compact:flex">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-content-muted">
+      <div className="hidden items-center justify-between border-b border-[var(--border)] px-3 py-2 compact:flex">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
           Menu
         </span>
         <button
           type="button"
           onClick={onCloseDrawer}
           aria-label="Close navigation menu"
-          className="flex h-11 w-11 items-center justify-center rounded-md text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-[var(--sidebar-accent)] hover:text-[var(--foreground)]"
         >
-          <X className="h-5 w-5" />
+          <X className="h-[18px] w-[18px]" strokeWidth={1.5} />
         </button>
       </div>
 
-      <nav className="flex-1 p-2">
-        {sections.map((section, index) => (
-          <div key={section.id} className={index > 0 ? 'mt-3' : undefined}>
-            <h2
-              className={`font-sans mb-1 px-3 text-[10px] font-medium uppercase tracking-wide text-content-muted ${
-                isExpanded ? '' : 'hidden compact:block'
-              }`}
-            >
-              {section.label}
-            </h2>
-            {/* Collapsed desktop rail: a rule stands in for the group heading.
-                The drawer shows the real heading instead. */}
-            {!isExpanded && index > 0 && (
-              <div className="mx-2 mb-2 border-t border-stroke-subtle compact:hidden" />
-            )}
-            <ul className="flex flex-col gap-1">{section.items.map(renderItem)}</ul>
-          </div>
-        ))}
+      <nav className="flex-1 px-1.5 py-2">
+        <ul className="flex flex-col gap-1">{items.map(renderItem)}</ul>
       </nav>
 
-      <div className="border-t border-stroke-subtle p-2">
+      <div className="border-t border-[var(--border)] px-1.5 py-2">
         <ul className="flex flex-col gap-1">
           {renderItem({
             id: 'settings',
             label: 'Settings',
-            icon: <SettingsIcon className="h-5 w-5" />,
+            icon: <SettingsIcon className="h-[18px] w-[18px]" strokeWidth={1.5} />,
             onClick: onOpenSettings,
           })}
         </ul>
@@ -355,22 +294,25 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
             onClick={() => setIsExpanded(false)}
             /* Rail width is fixed inside the drawer, so the rail collapse
                control is hidden there — the drawer closes instead. */
-            className="mt-1 flex w-full items-center gap-3 rounded-md border-l-2 border-transparent pl-2.5 pr-3 py-2 text-sm font-medium text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary compact:hidden"
+            className="mt-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--sidebar-accent)] hover:text-[var(--foreground)] compact:hidden"
             aria-label="Collapse sidebar"
           >
-            <PanelLeftClose className="h-5 w-5 shrink-0" />
+            <PanelLeftClose className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
             <span className="truncate">Collapse</span>
           </button>
         ) : (
-          <Tooltip label="Expand sidebar" side="right" className="inline-flex compact:hidden">
-            <button
-              type="button"
-              onClick={() => setIsExpanded(true)}
-              className="mt-1 flex w-full items-center justify-center rounded-md px-2 py-2 text-content-secondary transition-colors hover:bg-surface-hover hover:text-content-primary compact:hidden"
-            >
-              <PanelLeftOpen className="h-5 w-5" />
-            </button>
-          </Tooltip>
+          <div className="flex justify-center compact:hidden">
+            <Tooltip label="Expand sidebar" side="right">
+              <button
+                type="button"
+                onClick={() => setIsExpanded(true)}
+                className="mt-1 flex h-9 w-9 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-[var(--sidebar-accent)] hover:text-[var(--foreground)]"
+                aria-label="Expand sidebar"
+              >
+                <PanelLeftOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />
+              </button>
+            </Tooltip>
+          </div>
         )}
       </div>
     </aside>

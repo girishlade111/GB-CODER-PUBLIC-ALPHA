@@ -1,0 +1,56 @@
+{
+  "method": "Captured sanitized runtime history and synthetic source fixtures seeded in a fresh disposable dashboard context; public attach/detach writes a synthetic cancelled diagnostic attempt; two measured reloads, no WebContainer startup",
+  "pageErrors": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "observations": [
+    {
+      "reload": 1,
+      "attempts": 4,
+      "bytes": 3211,
+      "recordsExact": true,
+      "projects": [
+        {
+          "id": "b4-a",
+          "count": 4,
+          "exact": true
+        },
+        {
+          "id": "b4-b",
+          "count": 6,
+          "exact": true
+        }
+      ],
+      "boots": 0,
+      "hasRuntime": false
+    },
+    {
+      "reload": 2,
+      "attempts": 4,
+      "bytes": 3211,
+      "recordsExact": true,
+      "projects": [
+        {
+          "id": "b4-a",
+          "count": 4,
+          "exact": true
+        },
+        {
+          "id": "b4-b",
+          "count": 6,
+          "exact": true
+        }
+      ],
+      "boots": 0,
+      "hasRuntime": false
+    }
+  ],
+  "actualCompiledWriter": {
+    "status": "PASS",
+    "newAttemptState": "cancelled",
+    "attempts": 4,
+    "rawProjectIdExcluded": true,
+    "bootCount": 0
+  },
+  "status": "PASS"
+}

@@ -77,6 +77,7 @@ export class FileSyncCoordinator {
 
     // Discard write if it explicitly targets an inactive project
     if (scopedProject !== null && this.activeProjectId !== null && scopedProject !== this.activeProjectId) {
+      console.warn(`[FileSyncCoordinator] Write discarded: scopedProject=${scopedProject} !== activeProjectId=${this.activeProjectId}`);
       this.lastWriteResults.set(cleanPath, { status: 'canceled' });
       return;
     }

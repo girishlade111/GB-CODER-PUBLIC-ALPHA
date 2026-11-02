@@ -14,13 +14,12 @@ import React, {
  * imported module". See src/utils/loadChunk.ts.
  */
 import { lazyWithRecovery, loadChunk } from './utils/loadChunk';
-import { Code2, Eye, Share2, Rocket, Github } from 'lucide-react';
+import { Code2, Eye, Share2, Download, Rocket, Github } from 'lucide-react';
 // Phase 1: Critical components - loaded immediately (not lazy)
 import NavigationBar from './components/NavigationBar';
 import AppSidebar from './components/AppSidebar';
 import EditorPanel from './components/EditorPanel';
 import TabbedRightPanel from './components/TabbedRightPanel';
-import Footer from './components/ui/Footer';
 import Tooltip from './components/ui/Tooltip';
 import LazyFallback from './components/ui/LazyFallback';
 import DropZoneOverlay from './components/DropZoneOverlay';
@@ -83,17 +82,13 @@ import type { DetectedProjectKind as DetectedKind } from './services/import/proj
 // ===== NEW FEATURES IMPORTS =====
 import { Toaster, toast } from 'react-hot-toast';
 import type { DiffFile } from './components/AiDiffModal';
-import type { VisionFramework } from './services/visionCodeService';
 
 // Lazy-loaded modal components (only shown when their show* state is true)
 const AiDiffModal = lazyWithRecovery(() => import('./components/AiDiffModal'));
-const AIChatAssistant = lazyWithRecovery(() => import('./components/AIChatAssistant'));
 const VoiceCommandPanel = lazyWithRecovery(() => import('./components/VoiceCommandPanel'));
 const TemplateSelectorModal = lazyWithRecovery(() => import('./components/TemplateSelectorModal'));
 const CodeStatsDashboard = lazyWithRecovery(() => import('./components/CodeStatsDashboard'));
 const CustomInjectionManager = lazyWithRecovery(() => import('./components/CustomInjectionManager'));
-const BuildFromPromptModal = lazyWithRecovery(() => import('./components/BuildFromPromptModal'));
-const ScreenshotToCodeModal = lazyWithRecovery(() => import('./components/ScreenshotToCodeModal'));
 const WelcomeTourModal = lazyWithRecovery(() => import('./components/WelcomeTourModal'));
 
 /*
@@ -131,7 +126,7 @@ const LivePreviewPopoutPage = lazyWithRecovery(
 const ImportReviewModal = lazyWithRecovery(() => import('./components/ImportReviewModal'));
 import type { ImportConfirmationPayload } from './components/ImportReviewModal';
 const NewProjectModal = lazyWithRecovery(() => import('./components/projects/NewProjectModal'));
-import type { NewProjectTemplate, NewProjectSubmitPayload } from './components/projects/NewProjectModal';
+import type { NewProjectSubmitPayload } from './components/projects/NewProjectModal';
 
 /*
  * The full-stack feature (VS Code mode, sandbox panel, sandbox client, E2B
@@ -163,7 +158,6 @@ const DisclaimerPage = lazyWithRecovery(() => import('./components/pages/Disclai
 const ContactPage = lazyWithRecovery(() => import('./components/pages/ContactPage'));
 const ExtensionsMarketplace = lazyWithRecovery(() => import('./components/ExtensionsMarketplace'));
 const SettingsModal = lazyWithRecovery(() => import('./components/SettingsModal'));
-const CodeRabbitReviewModal = lazyWithRecovery(() => import('./components/CodeRabbitReviewModal'));
 const HistoryPanel = lazyWithRecovery(() => import('./components/HistoryPanel'));
 const KeyboardShortcutsHelp = lazyWithRecovery(() => import('./components/KeyboardShortcutsHelp'));
 const CommandPalette = lazyWithRecovery(() => import('./components/CommandPalette'));
@@ -174,13 +168,11 @@ import { useAutoSave } from './hooks/useAutoSave';
 import { useSnapshots } from './hooks/useSnapshots';
 import SessionRecoveryModal from './components/SessionRecoveryModal';
 import SnapshotManagerModal from './components/SnapshotManagerModal';
-import StatusBar from './components/StatusBar';
 import { snapshotService, SnapshotProjectState } from './services/snapshotService';
 import { useCodeSelection } from './hooks/useCodeSelection';
 import { useSelectionOperations } from './hooks/useSelectionOperations';
 import { useProject } from './hooks/useProject';
 import { useSettings } from './hooks/useSettings';
-import { useFocusMode } from './hooks/useFocusMode';
 import { useProgressiveLoad } from './hooks/useProgressiveLoad';
 import { useCodeWriter } from './hooks/useCodeWriter';
 import { useProjectBundle } from './hooks/useProjectBundle';
@@ -263,10 +255,6 @@ const DESKTOP_MIN_WIDTH = 1025;
  */
 const subscribeToVoice = (onStoreChange: () => void) => voiceCommandService.subscribe(onStoreChange);
 const getVoiceSnapshot = () => voiceCommandService.getState();
-
-/** Turns a dictated phrase into a sentence-cased AI prompt. */
-const toPromptText = (spoken: string): string =>
-  spoken.charAt(0).toUpperCase() + spoken.slice(1);
 
 /** Voice action -> the selection operation it maps onto. */
 const VOICE_SELECTION_OPERATIONS: Record<string, SelectionOperationType> = {
@@ -700,7 +688,6 @@ function App() {
   const [externalLibraries, setExternalLibraries] = useState<ExternalLibrary[]>([]);
   const [showExtensionsMarketplace, setShowExtensionsMarketplace] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [showCodeRabbitModal, setShowCodeRabbitModal] = useState<boolean>(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState<boolean>(false);
   const [showCommandPalette, setShowCommandPalette] = useState<boolean>(false);
   const [showExportShare, setShowExportShare] = useState<boolean>(false);
@@ -710,12 +697,7 @@ function App() {
   const [showGitHubSync, setShowGitHubSync] = useState<boolean>(false);
 
   // ===== NEW FEATURES STATE =====
-  const [showAIChat, setShowAIChat] = useState(false);
-  const [showBuildFromPrompt, setShowBuildFromPrompt] = useState(false);
-  const [showScreenshotToCode, setShowScreenshotToCode] = useState(false);
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
-  /** Transcript routed into Build with AI, awaiting the user's confirmation. */
-  const [voiceBuildPrompt, setVoiceBuildPrompt] = useState('');
   /**
    * Voice-driven request to focus a right-hand panel. The nonce makes repeat
    * requests for the same tab distinguishable, so saying "open console" twice
@@ -899,7 +881,6 @@ function App() {
   const { settings, updateSettings, getFontFamilyCSS } = useSettings();
 
   // Focus Mode
-  const { focusMode } = useFocusMode();
 
   // Project Management
   const project = useProject(html, css, javascript, externalLibraries);
@@ -1786,10 +1767,12 @@ function App() {
   const handleFullStackFileChange = useCallback((path: string, content: string) => {
     setFullStackProject((current) => {
       if (!current) return current;
-      return {
+      const next = {
         ...current,
         files: current.files.map((file) => (file.path === path ? { ...file, content } : file)),
       };
+      fullStackProjectRef.current = next;
+      return next;
     });
   }, []);
 
@@ -1813,11 +1796,20 @@ function App() {
     const safePath = checked.path;
     setFullStackProject((prev) => {
       if (!prev) return prev;
-      if (prev.files.some((f) => f.path === safePath)) return prev;
-      return {
+      if (prev.files.some((f) => f.path === safePath)) {
+        const next = {
+          ...prev,
+          files: prev.files.map((f) => (f.path === safePath ? { ...f, content } : f)),
+        };
+        fullStackProjectRef.current = next;
+        return next;
+      }
+      const next = {
         ...prev,
         files: [...prev.files, { path: safePath, content, language: languageForPath(safePath) }],
       };
+      fullStackProjectRef.current = next;
+      return next;
     });
     syncWebContainerFile(safePath, content);
     return true;
@@ -1873,21 +1865,28 @@ function App() {
 
   /** Deletes a file or directory in VS Code mode and removes from WebContainer VFS. */
   const handleFullStackDeleteFile = useCallback((path: string): boolean => {
+    const clean = path.replace(/\\/g, '/').replace(/^\/+/, '').trim();
+    if (!clean || clean === '.' || clean.startsWith('../')) return false;
+
     setFullStackProject((current) => {
       if (!current) return current;
-      const isExactFile = current.files.some((f) => f.path === path);
+      const isExactFile = current.files.some((f) => f.path === clean);
       if (isExactFile) {
-        return {
+        const next = {
           ...current,
-          files: current.files.filter((f) => f.path !== path),
+          files: current.files.filter((f) => f.path !== clean),
         };
+        fullStackProjectRef.current = next;
+        return next;
       }
       // Folder delete: remove all files starting with folder prefix
-      const folderPrefix = path.endsWith('/') ? path : `${path}/`;
-      return {
+      const folderPrefix = clean.endsWith('/') ? clean : `${clean}/`;
+      const next = {
         ...current,
         files: current.files.filter((f) => !f.path.startsWith(folderPrefix)),
       };
+      fullStackProjectRef.current = next;
+      return next;
     });
     return true;
   }, []);
@@ -2893,7 +2892,7 @@ function App() {
   const projectFilesToPersist = fullStackProject?.files ?? fileProject.files;
 
   useEffect(() => {
-    if (!activeProjectId || isOpeningProject) return;
+    if (!autoSaveEnabled || !activeProjectId || isOpeningProject) return;
     // A recovered-empty seed is a draft: never auto-persist the scaffold
     // itself. The first real edit swaps the array identity and persists.
     if (seededFilesRef.current && projectFilesToPersist === seededFilesRef.current) return;
@@ -2918,7 +2917,7 @@ function App() {
     }, PROJECT_SAVE_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [activeProjectId, isOpeningProject, projectFilesToPersist, flushProjectSave, markFlushedSaved]);
+  }, [autoSaveEnabled, activeProjectId, isOpeningProject, projectFilesToPersist, flushProjectSave, markFlushedSaved]);
 
   /*
    * Flush when the tab stops being visible.
@@ -2980,7 +2979,7 @@ function App() {
     }
   }, [project.currentProject?.name]);
 
-  const handleOpenExport = useCallback((tab: 'screenshot' | 'export' | 'share' = 'screenshot') => {
+  const handleOpenExport = useCallback((tab: 'screenshot' | 'export' | 'share' = 'export') => {
     setExportModalTab(tab);
     setShowExportShare(true);
   }, []);
@@ -3038,8 +3037,6 @@ function App() {
         toast.success('Code formatted.');
       }
     },
-    { id: 'build-ai', title: 'Build with AI', section: 'AI', perform: () => setShowBuildFromPrompt(true) },
-    { id: 'screenshot-to-code', title: 'Screenshot to Code', section: 'AI', perform: () => setShowScreenshotToCode(true) },
     { id: 'explain-code', title: 'Explain Selected Code', section: 'AI', perform: () => handleSelectionOperation('explain') },
     { id: 'find-fix', title: 'Find and Fix', section: 'AI', perform: () => handleSelectionOperation('debug') },
     { id: 'optimize-code', title: 'Optimize Performance', section: 'AI', perform: () => handleSelectionOperation('optimize') },
@@ -3186,8 +3183,17 @@ function App() {
   };
 
   const saveSnippet = (name: string, htmlCode: string, cssCode: string, jsCode: string, description?: string, tags?: string[], category?: string, type?: SnippetType, scope?: SnippetScope) => {
+    const snippetId = (() => {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+          return crypto.randomUUID();
+        }
+      } catch {}
+      return `snip-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    })();
+
     const snippet: CodeSnippet = {
-      id: crypto.randomUUID(),
+      id: snippetId,
       name,
       description,
       html: htmlCode,
@@ -3376,141 +3382,7 @@ function App() {
     }
   }, [html, css, javascript, setFileProject, setHtml, setCss, setJavascript, codeHistory]);
 
-  const handleBuildFromPrompt = useCallback(async (newHtml: string, newCss: string, newJavascript: string) => {
-    setDiffData({
-      isOpen: true,
-      title: 'Review Build with AI',
-      files: [
-        { path: 'index.html', original: html, suggested: newHtml, language: 'html' },
-        { path: 'styles.css', original: css, suggested: newCss, language: 'css' },
-        { path: 'script.js', original: javascript, suggested: newJavascript, language: 'javascript' },
-      ],
-      onApplyFile: (path: string) => {
-        if (path === 'index.html') setHtml(newHtml);
-        if (path === 'styles.css') setCss(newCss);
-        if (path === 'script.js') setJavascript(newJavascript);
-      },
-      onApplyAll: () => {
-        codeHistory.saveState({ html, css, javascript }, 'Built from prompt');
-        clearConsole();
-        setHtml(newHtml);
-        setCss(newCss);
-        setJavascript(newJavascript);
-        toast.success('Built from prompt! Edit freely or generate again.');
-        setDiffData(null);
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [html, css, javascript, codeHistory, clearConsole]);
 
-  /**
-   * Where screenshot-generated code should land.
-   *
-   * The three targets differ because the editor's destinations differ: plain mode
-   * has a fixed index.html and script.js, React mode has a component tree. The
-   * active file wins when its language already matches the generated code, so a
-   * screenshot never overwrites a file the user is looking at.
-   */
-  const resolveVisionTarget = useCallback(
-    (framework: VisionFramework): { path: string; language: string } => {
-      const active = workspace.activeFile;
-      const isPlain = fileProject.projectType === 'plain';
-
-      if (framework === 'react-tailwind') {
-        /*
-         * Plain mode has a fixed html/css/js triple and no .jsx file, so a React
-         * payload has to land in script.js. Writing App.jsx there would create a
-         * file the plain project cannot render or export.
-         */
-        if (isPlain) return { path: PLAIN_JS_PATH, language: 'javascript' };
-
-        // React or Vue mode: the component file, never the entry.
-        if (active?.language === 'jsx' || active?.language === 'tsx') {
-          return { path: workspace.activePath!, language: 'jsx' };
-        }
-        return {
-          path: fileProject.files.find((f) => f.path.endsWith('.jsx'))?.path ?? 'App.jsx',
-          language: 'jsx',
-        };
-      }
-
-      if (isPlain) return { path: PLAIN_HTML_PATH, language: 'html' };
-
-      if (active?.language === 'html') {
-        return { path: workspace.activePath!, language: 'html' };
-      }
-
-      return { path: 'index.html', language: 'html' };
-    },
-    [workspace.activeFile, workspace.activePath, fileProject],
-  );
-
-  /** Writes generated code straight to the resolved target, no diff step. */
-  const handleVisionInsert = useCallback(
-    (code: string, framework: VisionFramework) => {
-      const target = resolveVisionTarget(framework);
-
-      // A JSX payload into a plain project's script.js only renders if the JS
-      // editor is in JSX mode, so the mode follows the code.
-      if (framework === 'react-tailwind' && fileProject.projectType === 'plain') {
-        setJsEditorMode('jsx');
-      }
-
-      codeHistory.saveState({ html, css, javascript }, 'Generated from screenshot');
-      clearConsole();
-      workspace.updateFileContent(target.path, code);
-      workspace.openFile(target.path);
-      setShowScreenshotToCode(false);
-
-      /*
-       * A framework project previews its component tree, so an HTML fragment
-       * written into a sibling file is never rendered. Saying so is better than
-       * letting the user wonder why the preview did not change.
-       */
-      const isHtmlIntoFrameworkProject =
-        framework !== 'react-tailwind' && fileProject.projectType !== 'plain';
-
-      if (isHtmlIntoFrameworkProject) {
-        toast(`Written to ${target.path}. Switch to a plain project to preview it.`, {
-          icon: '⚠️',
-          duration: 5000,
-        });
-        return;
-      }
-
-      toast.success(`Code generated from screenshot into ${target.path}`);
-    },
-    [
-      resolveVisionTarget,
-      fileProject.projectType,
-      setJsEditorMode,
-      codeHistory,
-      html,
-      css,
-      javascript,
-      clearConsole,
-      workspace,
-    ],
-  );
-
-  /** Same code, but reviewed through the existing AiDiffModal first. */
-  const handleVisionCompare = useCallback(
-    (code: string, framework: VisionFramework) => {
-      const target = resolveVisionTarget(framework);
-      const current = getFileContent(fileProject, target.path);
-      setShowScreenshotToCode(false);
-      setDiffData({
-        isOpen: true,
-        title: 'Review Screenshot Conversion',
-        files: [
-          { path: target.path, original: current, suggested: code, language: target.language },
-        ],
-        onApplyFile: () => handleVisionInsert(code, framework),
-        onApplyAll: () => handleVisionInsert(code, framework),
-      });
-    },
-    [resolveVisionTarget, fileProject, handleVisionInsert],
-  );
 
   const loadInjections = useCallback(() => {
     setCustomInjections(customInjectionService.getCustomInjections(project.currentProject?.id));
@@ -3656,12 +3528,6 @@ function App() {
    * elsewhere in the app. Voice is an additional way in, never the only one.
    */
 
-  /** Opens Build with AI on a spoken description, awaiting confirmation. */
-  const openVoiceBuild = useCallback((promptText: string) => {
-    setVoiceBuildPrompt(promptText);
-    setShowBuildFromPrompt(true);
-  }, []);
-
   /** "Export as PNG / JPEG / SVG / HTML / ZIP", plus CodePen and JSFiddle. */
   const runVoiceExport = useCallback(
     async (target: VoiceExportTarget) => {
@@ -3765,9 +3631,6 @@ function App() {
         case 'snippets':
           setShowSnippets(true);
           return 'Snippets';
-        case 'ai-chat':
-          setShowAIChat(true);
-          return 'AI Chat';
         case 'shortcuts':
           setShowKeyboardShortcuts(true);
           return 'Keyboard shortcuts';
@@ -3866,35 +3729,10 @@ function App() {
         return;
 
       case 'build_open':
-        // No transcript to seed — open the modal as the button would.
-        setVoiceBuildPrompt('');
-        setShowBuildFromPrompt(true);
-        voiceCommandService.speak('Build with AI is open');
-        return;
-
       case 'build':
-        if (!param) return;
-        openVoiceBuild(toPromptText(param));
-        voiceCommandService.speak('Review the prompt, then generate');
+      case 'build_followup':
+        voiceCommandService.speak('Build with AI is no longer available');
         return;
-
-      case 'build_followup': {
-        if (!param) return;
-        /*
-         * Refinements extend the prompt in place when one is being composed;
-         * otherwise the phrase stands alone as a fresh prompt. Either way the
-         * user still confirms in the modal before anything is generated.
-         */
-        const addition = toPromptText(param);
-        setVoiceBuildPrompt((current) => {
-          const base = current.trim();
-          if (!base) return addition;
-          return `${base.replace(/[.!?]+$/, '')}. ${addition}`;
-        });
-        setShowBuildFromPrompt(true);
-        voiceCommandService.speak('Prompt updated');
-        return;
-      }
 
       case 'export':
         await runVoiceExport((param as VoiceExportTarget) ?? 'png');
@@ -4217,7 +4055,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4251,7 +4088,6 @@ function App() {
             <AboutPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
 
         {/* External Library Manager for About page - Phase 3 */}
         {isPhase3Ready && (
@@ -4275,7 +4111,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4310,7 +4145,6 @@ function App() {
             <DocumentationPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
 
         {/* External Library Manager for Documentation page - Phase 3 */}
         {isPhase3Ready && (
@@ -4334,7 +4168,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4368,7 +4201,6 @@ function App() {
             <CodeHistoryPage selectionHistory={selectionHistory} />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
 
         {/* External Library Manager for History page - Phase 3 */}
         {isPhase3Ready && (
@@ -4392,7 +4224,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4413,7 +4244,6 @@ function App() {
             <PrivacyPolicyPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
       </div>
     );
   }
@@ -4425,7 +4255,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4446,7 +4275,6 @@ function App() {
             <TermsOfServicePage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
       </div>
     );
   }
@@ -4458,7 +4286,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4479,7 +4306,6 @@ function App() {
             <CookiePolicyPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
       </div>
     );
   }
@@ -4491,7 +4317,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4512,7 +4337,6 @@ function App() {
             <DisclaimerPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
       </div>
     );
   }
@@ -4524,7 +4348,6 @@ function App() {
         <NavigationBar
           onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
           onRun={() => handleCommand('run')}
-          onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
               onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
             onClear={handleClearAll}
           onNavigateHome={activeProjectId ? () => void handleReturnToDashboard() : undefined}
@@ -4545,7 +4368,6 @@ function App() {
             <ContactPage />
           </Suspense>
         </div>
-        <Footer focusMode={focusMode} />
       </div>
     );
   }
@@ -4595,7 +4417,6 @@ function App() {
                 onExit={handleExitFullStack}
                 onAddImport={handleAddToFullStackProject}
                 onOpenDependencies={() => setShowDependencies(true)}
-                onOpenAIChat={() => setShowAIChat(true)}
                 onOpenVoiceCommands={() => setShowVoiceCommands(true)}
                 onOpenProjects={() => void handleReturnToDashboard()}
                 fontFamily={getFontFamilyCSS(settings.editorFontFamily)}
@@ -4615,18 +4436,7 @@ function App() {
         */}
 
 
-        {showAIChat && (
-          <Suspense fallback={null}>
-            <AIChatAssistant
-              isOpen={showAIChat}
-              onClose={() => setShowAIChat(false)}
-              html={html}
-              css={css}
-              javascript={javascript}
-              externalLibraries={externalLibraries}
-            />
-          </Suspense>
-        )}
+
 
         {showVoiceCommands && (
           <Suspense fallback={null}>
@@ -4814,9 +4624,6 @@ function App() {
       <NavigationBar
         onAutoSaveToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
         onRun={() => handleCommand('run')}
-        onOpenBuildFromPrompt={() => setShowBuildFromPrompt(true)}
-        onOpenCodeRabbit={() => setShowCodeRabbitModal(true)}
-        onOpenScreenshotToCode={() => setShowScreenshotToCode(true)}
         onExternalLibraryManagerToggle={handleExternalLibraryManagerToggle}
         onClear={handleClearAll}
         onNewProject={handleNewProject}
@@ -4827,20 +4634,28 @@ function App() {
         isVoiceListening={voiceState.isListening}
         onToggleNavDrawer={() => setIsNavDrawerOpen((open) => !open)}
         isNavDrawerOpen={isNavDrawerOpen}
-        onOpenExport={() => handleOpenExport('screenshot')}
+        onOpenExport={() => handleOpenExport('export')}
+        onOpenShare={() => handleOpenExport('share')}
         onOpenDeploy={() => setShowDeploy(true)}
         onOpenGitHub={() => setShowGitHubSync(true)}
         customActions={
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* Export & Share is the only feature icon left in the top bar;
-                every other entry point now lives in the left sidebar. Below
-                1025px it moves into the toolbar's overflow menu, which calls
-                the same handler. */}
-            <Tooltip label="Export & Share" shortcut="⇧⌘E" className="hidden desktop:inline-flex">
+            <Tooltip label="Export" shortcut="⇧⌘E" className="hidden desktop:inline-flex">
               <button
-                onClick={() => handleOpenExport('screenshot')}
+                onClick={() => handleOpenExport('export')}
                 className={toolbarIconButtonClass}
-                title="Export & Share"
+                title="Export"
+                aria-label="Export"
+              >
+                <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </Tooltip>
+            <Tooltip label="Share" shortcut="⇧⌘S" className="hidden desktop:inline-flex">
+              <button
+                onClick={() => handleOpenExport('share')}
+                className={toolbarIconButtonClass}
+                title="Share"
+                aria-label="Share"
               >
                 <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
@@ -4904,8 +4719,6 @@ function App() {
           onOpenTemplates={() => setShowTemplates(true)}
           onOpenImport={() => setShowImport(true)}
           onOpenVSCodeMode={handleEnterVSCodeMode}
-          onOpenAIChat={() => setShowAIChat(true)}
-          onOpenCodeRabbit={() => setShowCodeRabbitModal(true)}
           onOpenVoiceCommands={() => setShowVoiceCommands(true)}
           onOpenStatistics={() => setShowStats(true)}
           onOpenInjection={() => setShowInjectionManager(true)}
@@ -4917,8 +4730,8 @@ function App() {
         />
 
         {showFileExplorer && !isMobile && (
-          <Suspense fallback={<LazyFallback label="Files" variant="panel" />}>
-  <FileExplorer
+          <Suspense fallback={<div className="sticky top-14 sm:top-16 flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] self-start w-60 shrink-0"><LazyFallback label="Files" variant="panel" /></div>}>
+            <FileExplorer
               projectType={fileProject.projectType}
               workspace={workspace}
               onClose={() => setShowFileExplorer(false)}
@@ -4927,8 +4740,8 @@ function App() {
         )}
 
         {showDependencies && !isMobile && (
-          <Suspense fallback={<LazyFallback label="Dependencies" variant="panel" />}>
-            <div className="flex h-full w-80 sm:w-96 shrink-0 flex-col overflow-hidden border-r border-stroke-subtle">
+          <Suspense fallback={<div className="sticky top-14 sm:top-16 flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] self-start w-80 sm:w-96 shrink-0"><LazyFallback label="Dependencies" variant="panel" /></div>}>
+            <div className="sticky top-14 sm:top-16 flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] self-start w-80 sm:w-96 shrink-0 flex-col overflow-hidden border-r border-stroke-subtle bg-surface-base">
               <DependenciesPanel
                 project={fileProject}
                 resolvedPackages={projectBundle.resolvedPackages}
@@ -5195,14 +5008,6 @@ function App() {
         </button>
       </div>
 
-      {/* Footer */}
-      <Footer
-        focusMode={focusMode}
-        errorCount={validation.summary.errors}
-        warningCount={validation.summary.warnings}
-        onOpenValidator={() => setRightPanelRequest({ tab: 'console', nonce: Date.now() })}
-      />
-
       {/* External Library Manager - Phase 3 */}
       {isPhase3Ready && (
         <Suspense fallback={null}>
@@ -5221,24 +5026,6 @@ function App() {
           <SettingsModal
             isOpen={showSettings}
             onClose={() => setShowSettings(false)}
-          />
-        </Suspense>
-      )}
-
-      {/* CodeRabbit AI Bug Scanner Modal */}
-      {isPhase3Ready && (
-        <Suspense fallback={null}>
-          <CodeRabbitReviewModal
-            isOpen={showCodeRabbitModal}
-            onClose={() => setShowCodeRabbitModal(false)}
-            files={fileProject.files.map((f) => ({
-              filename: f.path,
-              content: f.content,
-              language: f.language || (f.path.endsWith('.css') ? 'css' : f.path.endsWith('.html') ? 'html' : 'javascript'),
-            }))}
-            onApplyFixToFile={(filename, newContent) => {
-              setFileProject((current) => setFileContent(current, filename, newContent));
-            }}
           />
         </Suspense>
       )}
@@ -5284,35 +5071,6 @@ function App() {
         </Suspense>
       )}
 
-      {/* Build from Prompt */}
-      {showBuildFromPrompt && (
-        <Suspense fallback={null}>
-          <BuildFromPromptModal
-            isOpen={showBuildFromPrompt}
-            onClose={() => {
-              setShowBuildFromPrompt(false);
-              // Drop the dictated prompt so opening the modal manually starts clean.
-              setVoiceBuildPrompt('');
-            }}
-            onGenerate={handleBuildFromPrompt}
-            projectContext={{ html, css, javascript }}
-            initialPrompt={voiceBuildPrompt}
-          />
-        </Suspense>
-      )}
-
-      {/* Screenshot to Code */}
-      {showScreenshotToCode && (
-        <Suspense fallback={null}>
-          <ScreenshotToCodeModal
-            isOpen={showScreenshotToCode}
-            onClose={() => setShowScreenshotToCode(false)}
-            onInsert={handleVisionInsert}
-            onCompare={handleVisionCompare}
-          />
-        </Suspense>
-      )}
-      
       {/* Export & Share */}
       {showExportShare && (
         <Suspense fallback={<LazyFallback label="Export & Share" variant="overlay" />}>
@@ -5380,19 +5138,6 @@ function App() {
         </Suspense>
       )}
 
-      {/* AI Chat Assistant */}
-      {showAIChat && (
-        <Suspense fallback={null}>
-          <AIChatAssistant
-            isOpen={showAIChat}
-            onClose={() => setShowAIChat(false)}
-            html={html}
-            css={css}
-            javascript={javascript}
-            externalLibraries={externalLibraries}
-          />
-        </Suspense>
-      )}
 
       {/* Voice Command Panel */}
       {showVoiceCommands && (
@@ -5503,8 +5248,6 @@ function App() {
           />
         </Suspense>
       )}
-      
-      <StatusBar />
       <SnapshotManagerModal
         isOpen={showSnapshotManager}
         onClose={() => setShowSnapshotManager(false)}

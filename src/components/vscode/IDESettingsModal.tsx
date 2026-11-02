@@ -30,14 +30,12 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
   const [inceptionKey, setInceptionKey] = useState(settings.inceptionApiKey || '');
   const [atriaKey, setAtriaKey] = useState(settings.atriaApiKey || '');
   const [nvidiaKey, setNvidiaKey] = useState(settings.nvidiaApiKey || '');
-  const [coderabbitKey, setCoderabbitKey] = useState(settings.codeRabbitApiKey || '');
 
   useEffect(() => {
     if (isOpen) {
       setInceptionKey(settings.inceptionApiKey || '');
       setAtriaKey(settings.atriaApiKey || '');
       setNvidiaKey(settings.nvidiaApiKey || '');
-      setCoderabbitKey(settings.codeRabbitApiKey || '');
     }
   }, [isOpen, settings]);
 
@@ -66,7 +64,6 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
       inceptionApiKey: inceptionKey.trim(),
       atriaApiKey: atriaKey.trim(),
       nvidiaApiKey: nvidiaKey.trim(),
-      codeRabbitApiKey: coderabbitKey.trim(),
     });
     toast.success('Settings & API keys saved successfully');
   };
@@ -80,11 +77,11 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
       <div
         role="dialog"
         aria-modal="true"
-        className="relative flex h-[560px] w-full max-w-3xl overflow-hidden rounded-xl border border-[#262636] bg-[#181824] shadow-2xl text-slate-200"
+        className="relative flex h-[560px] w-full max-w-3xl overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-2xl text-slate-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left Sidebar Tabs */}
-        <div className="w-52 shrink-0 border-r border-[#262636] bg-[#12131c] p-3 flex flex-col justify-between">
+        <div className="w-52 shrink-0 border-r border-[var(--border)] bg-[var(--background)] p-3 flex flex-col justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2 px-2 py-2 mb-2 text-white font-semibold text-sm">
               <Settings className="h-4 w-4 text-cyan-400" />
@@ -96,7 +93,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
               onClick={() => setActiveSection('editor')}
               className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors ${
                 activeSection === 'editor'
-                  ? 'bg-[#007acc] text-white'
+                  ? 'bg-[var(--primary)] text-white'
                   : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
               }`}
             >
@@ -109,7 +106,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
               onClick={() => setActiveSection('ai')}
               className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors ${
                 activeSection === 'ai'
-                  ? 'bg-[#007acc] text-white'
+                  ? 'bg-[var(--primary)] text-white'
                   : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
               }`}
             >
@@ -122,7 +119,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
               onClick={() => setActiveSection('voice')}
               className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors ${
                 activeSection === 'voice'
-                  ? 'bg-[#007acc] text-white'
+                  ? 'bg-[var(--primary)] text-white'
                   : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
               }`}
             >
@@ -135,7 +132,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
               onClick={() => setActiveSection('storage')}
               className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors ${
                 activeSection === 'storage'
-                  ? 'bg-[#007acc] text-white'
+                  ? 'bg-[var(--primary)] text-white'
                   : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
               }`}
             >
@@ -160,9 +157,9 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
         </div>
 
         {/* Right Content Area */}
-        <div className="flex flex-1 flex-col overflow-hidden bg-[#181824]">
+        <div className="flex flex-1 flex-col overflow-hidden bg-[var(--sidebar)]">
           {/* Header */}
-          <div className="flex h-12 shrink-0 items-center justify-between border-b border-[#262636] px-6">
+          <div className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--border)] px-6">
             <h3 className="font-semibold text-sm text-white capitalize">
               {activeSection === 'editor' && 'Editor Preferences'}
               {activeSection === 'ai' && 'AI Providers & Credentials'}
@@ -187,7 +184,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                   <select
                     value={settings.editorFontFamily}
                     onChange={(e) => updateSettings({ editorFontFamily: e.target.value as EditorFontFamily })}
-                    className="w-full rounded-md border border-[#262636] bg-[#12131c] px-3 py-2 text-white focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-white focus:border-[var(--ring)] focus:outline-none"
                   >
                     {fontOptions.map((f) => (
                       <option key={f} value={f}>
@@ -207,11 +204,11 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                     max={22}
                     value={settings.editorFontSize}
                     onChange={(e) => updateSettings({ editorFontSize: parseInt(e.target.value, 10) })}
-                    className="w-full accent-[#007acc]"
+                    className="w-full accent-[var(--primary)]"
                   />
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-[#262636] bg-[#141522] p-3">
+                <div className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--background)] p-3">
                   <div>
                     <p className="font-medium text-white">Auto Run JavaScript</p>
                     <p className="text-[11px] text-slate-400">Re-execute scripts automatically upon file edits</p>
@@ -220,11 +217,11 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                     type="checkbox"
                     checked={settings.autoRunJS}
                     onChange={(e) => updateSettings({ autoRunJS: e.target.checked })}
-                    className="h-4 w-4 accent-[#007acc]"
+                    className="h-4 w-4 accent-[var(--primary)]"
                   />
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-[#262636] bg-[#141522] p-3">
+                <div className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--background)] p-3">
                   <div>
                     <p className="font-medium text-white">Inline AI Ghost Text (Copilot)</p>
                     <p className="text-[11px] text-slate-400">Show intelligent code completions inside editor (Tab to accept)</p>
@@ -233,7 +230,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                     type="checkbox"
                     checked={settings.inlineCopilotEnabled}
                     onChange={(e) => updateSettings({ inlineCopilotEnabled: e.target.checked })}
-                    className="h-4 w-4 accent-[#007acc]"
+                    className="h-4 w-4 accent-[var(--primary)]"
                   />
                 </div>
               </>
@@ -251,8 +248,8 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                         onClick={() => updateSettings({ aiProvider: prov.id })}
                         className={`rounded-lg border p-3 text-left transition-all ${
                           settings.aiProvider === prov.id
-                            ? 'border-[#007acc] bg-[#007acc]/10 text-white shadow'
-                            : 'border-[#262636] bg-[#12131c] text-slate-400 hover:border-slate-600'
+                            ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-white shadow'
+                            : 'border-[var(--border)] bg-[var(--background)] text-slate-400 hover:border-slate-600'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -279,7 +276,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                       value={inceptionKey}
                       onChange={(e) => setInceptionKey(e.target.value)}
                       placeholder="sk-inception-..."
-                      className="w-full rounded border border-[#262636] bg-[#12131c] px-3 py-1.5 font-mono text-xs text-white focus:border-cyan-400 focus:outline-none"
+                      className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 font-mono text-xs text-white focus:border-[var(--ring)] focus:outline-none"
                     />
                   </div>
 
@@ -290,7 +287,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                       value={atriaKey}
                       onChange={(e) => setAtriaKey(e.target.value)}
                       placeholder="sk-atria-..."
-                      className="w-full rounded border border-[#262636] bg-[#12131c] px-3 py-1.5 font-mono text-xs text-white focus:border-cyan-400 focus:outline-none"
+                      className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 font-mono text-xs text-white focus:border-[var(--ring)] focus:outline-none"
                     />
                   </div>
 
@@ -301,25 +298,14 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                       value={nvidiaKey}
                       onChange={(e) => setNvidiaKey(e.target.value)}
                       placeholder="nvapi-..."
-                      className="w-full rounded border border-[#262636] bg-[#12131c] px-3 py-1.5 font-mono text-xs text-white focus:border-cyan-400 focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-400">CodeRabbit AI API Key (Bug Scanner)</label>
-                    <input
-                      type="password"
-                      value={coderabbitKey}
-                      onChange={(e) => setCoderabbitKey(e.target.value)}
-                      placeholder="cr-..."
-                      className="w-full rounded border border-[#262636] bg-[#12131c] px-3 py-1.5 font-mono text-xs text-white focus:border-cyan-400 focus:outline-none"
+                      className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 font-mono text-xs text-white focus:border-[var(--ring)] focus:outline-none"
                     />
                   </div>
 
                   <button
                     type="button"
                     onClick={handleSaveApiKeys}
-                    className="rounded bg-[#007acc] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0069b4] transition-colors mt-2"
+                    className="rounded bg-[var(--primary)] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[var(--accent)] transition-colors mt-2"
                   >
                     Save API Keys
                   </button>
@@ -334,7 +320,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                   <select
                     value={settings.voiceLanguage}
                     onChange={(e) => updateSettings({ voiceLanguage: e.target.value })}
-                    className="w-full rounded-md border border-[#262636] bg-[#12131c] px-3 py-2 text-white focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-white focus:border-[var(--ring)] focus:outline-none"
                   >
                     {VOICE_LANGUAGES.map((lang) => (
                       <option key={lang.code} value={lang.code}>
@@ -344,7 +330,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                   </select>
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-[#262636] bg-[#141522] p-3">
+                <div className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--background)] p-3">
                   <div>
                     <p className="font-medium text-white">Voice Spoken Feedback</p>
                     <p className="text-[11px] text-slate-400">Speak short vocal confirmations after recognized commands</p>
@@ -353,11 +339,11 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                     type="checkbox"
                     checked={settings.voiceFeedback}
                     onChange={(e) => updateSettings({ voiceFeedback: e.target.checked })}
-                    className="h-4 w-4 accent-[#007acc]"
+                    className="h-4 w-4 accent-[var(--primary)]"
                   />
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-[#262636] bg-[#141522] p-3">
+                <div className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--background)] p-3">
                   <div>
                     <p className="font-medium text-white">Continuous Voice Listening</p>
                     <p className="text-[11px] text-slate-400">Keep microphone open across multiple voice commands</p>
@@ -366,7 +352,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
                     type="checkbox"
                     checked={settings.voiceContinuous}
                     onChange={(e) => updateSettings({ voiceContinuous: e.target.checked })}
-                    className="h-4 w-4 accent-[#007acc]"
+                    className="h-4 w-4 accent-[var(--primary)]"
                   />
                 </div>
               </>
@@ -374,7 +360,7 @@ export const IDESettingsModal: React.FC<IDESettingsModalProps> = ({ isOpen, onCl
 
             {activeSection === 'storage' && (
               <>
-                <div className="rounded-lg border border-[#262636] bg-[#141522] p-4 space-y-2">
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-4 space-y-2">
                   <h4 className="font-semibold text-white text-xs">IndexedDB & Workspace Storage</h4>
                   <p className="text-[11px] text-slate-400">
                     Local project backups and snapshot cache: <span className="font-bold text-white">{formatBytes(storageUsage.usedBytes)} / {formatBytes(storageUsage.maxBytes)} ({storageUsage.percentage}% used)</span>

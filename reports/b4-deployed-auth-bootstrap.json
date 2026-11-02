@@ -1,0 +1,12 @@
+{
+  "status": 307,
+  "redirect": {
+    "origin": "https://gb-coder-public-alpha-6l37qqpda.vercel.app",
+    "path": "/app/projects",
+    "sameOrigin": true
+  },
+  "cookieNames": [
+    "_vercel_jwt"
+  ],
+  "bodyBytes": 15
+}

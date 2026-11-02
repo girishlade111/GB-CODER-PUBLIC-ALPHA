@@ -1,0 +1,308 @@
+/**
+ * Google Gemini Provider implementation using official @google/generative-ai SDK.
+ *
+ * Runs natively in browser environments with zero CORS friction.
+ */
+
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import {
+  AiModelInfo,
+  ChatCompletionChunk,
+  ConnectionDiagnosticResult,
+} from '../types.ts';
+import { IAiProvider, StreamChatOptions } from './baseProvider.ts';
+import { redactSecretsFromText } from './openaiCompatibleProvider.ts';
+
+export class GeminiProvider implements IAiProvider {
+  public readonly id = 'gemini' as const;
+  public readonly name = 'Google Gemini';
+  public readonly defaultBaseUrl = 'https://generativelanguage.googleapis.com';
+
+  private readonly defaultModels: AiModelInfo[] = [
+    {
+      id: 'gemini-2.5-flash',
+      name: 'Gemini 2.5 Flash',
+      provider: 'gemini',
+      contextWindow: 1048576,
+      description: 'Ultra-fast, cost-effective multimodal model with 1M context',
+      recommended: true,
+      supportsStreaming: true,
+    },
+    {
+      id: 'gemini-2.5-pro',
+      name: 'Gemini 2.5 Pro',
+      provider: 'gemini',
+      contextWindow: 2097152,
+      description: 'State-of-the-art coding and reasoning with 2M context',
+      recommended: false,
+      supportsStreaming: true,
+    },
+    {
+      id: 'gemini-1.5-flash',
+      name: 'Gemini 1.5 Flash',
+      provider: 'gemini',
+      contextWindow: 1048576,
+      description: 'Fast legacy Gemini 1.5 model',
+      recommended: false,
+      supportsStreaming: true,
+    },
+    {
+      id: 'gemini-1.5-pro',
+      name: 'Gemini 1.5 Pro',
+      provider: 'gemini',
+      contextWindow: 2097152,
+      description: 'High-capability reasoning legacy Gemini 1.5 model',
+      recommended: false,
+      supportsStreaming: true,
+    },
+  ];
+
+  public getAvailableModels(): AiModelInfo[] {
+    return this.defaultModels;
+  }
+
+  public async streamChat(
+    messages: Array<import('./baseProvider.ts').ProviderChatMessage | { role: 'user' | 'assistant' | 'system'; content: string }>,
+    options: StreamChatOptions,
+    onChunk: (chunk: ChatCompletionChunk) => void
+  ): Promise<{
+    fullContent: string;
+    reasoning?: string;
+    toolCalls?: import('../tools/types').ToolCallRecord[];
+    usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  }> {
+    if (!options.apiKey) {
+      throw new Error('API key required for Google Gemini. Please enter your Gemini API key in settings.');
+    }
+
+    const genAI = new GoogleGenerativeAI(options.apiKey);
+
+    // Extract system instructions if provided in system message
+    const systemMessage = messages.find((m) => m.role === 'system');
+    const systemInstruction = systemMessage ? systemMessage.content : undefined;
+
+    let toolsConfig: Array<{ functionDeclarations?: Array<{ name: string; description?: string; parameters?: any }> }> | undefined = undefined;
+    if (options.tools && options.tools.length > 0) {
+      toolsConfig = [
+        {
+          functionDeclarations: options.tools.map((t) => ({
+            name: t.name,
+            description: t.description,
+            parameters: t.parameters as any,
+          })),
+        },
+      ];
+    }
+
+    const model = genAI.getGenerativeModel({
+      model: options.model,
+      systemInstruction,
+      tools: toolsConfig as any,
+      generationConfig: {
+        temperature: options.temperature ?? 0.2,
+        maxOutputTokens: options.maxTokens,
+      },
+    });
+
+    // Convert messages to Gemini contents format
+    // Filter out system message since it was supplied via systemInstruction
+    const conversationMessages = messages.filter((m) => m.role !== 'system');
+
+    // Group into Gemini history with proper role mapping (user, model, function)
+    // CRITICAL: Group consecutive 'tool' messages into a single 'function' turn to prevent Gemini role-alternation errors
+    const contents: any[] = [];
+    for (const msg of conversationMessages as any[]) {
+      if (msg.role === 'tool') {
+        const functionResponsePart = {
+          functionResponse: {
+            name: msg.name || 'tool_response',
+            response: {
+              output: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content ?? ''),
+            },
+          },
+        };
+        const lastContent = contents[contents.length - 1];
+        if (lastContent && lastContent.role === 'function') {
+          lastContent.parts.push(functionResponsePart);
+        } else {
+          contents.push({
+            role: 'function',
+            parts: [functionResponsePart],
+          });
+        }
+      } else if (msg.role === 'assistant') {
+        const parts: any[] = [];
+        if (msg.content) {
+          parts.push({ text: msg.content });
+        }
+        if (msg.toolCalls && msg.toolCalls.length > 0) {
+          for (const tc of msg.toolCalls) {
+            parts.push({
+              functionCall: {
+                name: tc.toolName || tc.name,
+                args: tc.args || {},
+              },
+            });
+          }
+        }
+        if (parts.length === 0) {
+          parts.push({ text: '' });
+        }
+        contents.push({
+          role: 'model',
+          parts,
+        });
+      } else {
+        contents.push({
+          role: 'user',
+          parts: [{ text: msg.content || '' }],
+        });
+      }
+    }
+
+    if (options.signal?.aborted) {
+      throw new Error('Request was aborted.');
+    }
+
+    let fullContent = '';
+    let parsedUsage: { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined = undefined;
+    const toolCalls: import('../tools/types').ToolCallRecord[] = [];
+    const { ToolExecutor } = await import('../tools/toolExecutor.ts');
+
+    try {
+      const streamingResult = await model.generateContentStream({
+        contents,
+      });
+
+      for await (const chunk of streamingResult.stream) {
+        if (options.signal?.aborted) {
+          throw new Error('Generation aborted by user.');
+        }
+
+        // Safe text extraction: chunk.text() throws if chunk has only functionCall parts
+        let chunkText = '';
+        try {
+          chunkText = chunk.text();
+        } catch {
+          // Chunk contains only function calls or empty text
+        }
+
+        if (chunkText) {
+          fullContent += chunkText;
+          onChunk({ contentDelta: chunkText });
+        }
+
+        const funcCalls = chunk.functionCalls ? chunk.functionCalls() : undefined;
+        if (funcCalls && funcCalls.length > 0) {
+          for (const fc of funcCalls) {
+            const record = ToolExecutor.createToolCallRecord(fc.name, fc.args);
+            toolCalls.push(record);
+            onChunk({
+              toolCallDelta: {
+                id: record.id,
+                name: fc.name,
+                argumentsDelta: JSON.stringify(fc.args),
+              },
+            });
+          }
+        }
+      }
+
+      // Try to extract usageMetadata from response if available
+      try {
+        const resp = await streamingResult.response;
+        if (resp.usageMetadata) {
+          parsedUsage = {
+            promptTokens: resp.usageMetadata.promptTokenCount,
+            completionTokens: resp.usageMetadata.candidatesTokenCount,
+            totalTokens: resp.usageMetadata.totalTokenCount,
+          };
+          onChunk({ actualUsage: parsedUsage });
+        }
+      } catch {
+        // Usage metadata not available or response already consumed
+      }
+
+      onChunk({ isComplete: true });
+    } catch (err: unknown) {
+      if (options.signal?.aborted) {
+        throw new Error('Generation aborted by user.');
+      }
+      const rawMsg = err instanceof Error ? err.message : String(err);
+      const msg = redactSecretsFromText(rawMsg, options.apiKey);
+      if (msg.includes('API_KEY_INVALID') || msg.includes('403') || msg.includes('401')) {
+        throw new Error('Authentication Failed: Invalid Gemini API key. Please verify your key in Google AI Studio.');
+      }
+      if (msg.includes('RESOURCE_EXHAUSTED') || msg.includes('429') || msg.toLowerCase().includes('quota')) {
+        throw new Error(`Rate Limit / Quota Exceeded (429) on Google Gemini: ${msg}`);
+      }
+      throw new Error(`Gemini Error: ${msg}`);
+    }
+
+    return {
+      fullContent,
+      toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+      usage: parsedUsage,
+    };
+  }
+
+  public async testConnection(
+    apiKey: string,
+    _baseUrl?: string,
+    _modelId?: string,
+    _customHeaders?: Record<string, string>,
+    consentToInference?: boolean
+  ): Promise<ConnectionDiagnosticResult> {
+    const start = performance.now();
+    if (!apiKey) {
+      return {
+        success: false,
+        latencyMs: 0,
+        message: 'API key is required.',
+        errorCategory: 'auth',
+        suggestedAction: 'Please enter your Google Gemini API key.',
+      };
+    }
+
+    if (consentToInference === false) {
+      return {
+        success: true,
+        latencyMs: 0,
+        message: 'Gemini API key is configured. Authorize test probe to verify live inference.',
+      };
+    }
+
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const result = await model.generateContent('ping');
+      const response = await result.response;
+      const text = response.text();
+      const latencyMs = Math.round(performance.now() - start);
+
+      if (text) {
+        return {
+          success: true,
+          latencyMs,
+          message: `Connected successfully to Google Gemini (${latencyMs}ms).`,
+        };
+      }
+
+      return {
+        success: false,
+        latencyMs,
+        message: 'No response text received from Gemini.',
+      };
+    } catch (err: unknown) {
+      const latencyMs = Math.round(performance.now() - start);
+      const rawMsg = err instanceof Error ? err.message : String(err);
+      const msg = redactSecretsFromText(rawMsg, apiKey);
+      return {
+        success: false,
+        latencyMs,
+        message: `Connection failed: ${msg}`,
+        errorDetails: msg,
+      };
+    }
+  }
+}

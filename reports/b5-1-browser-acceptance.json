@@ -1,0 +1,87 @@
+{
+  "startedAt": "2026-10-15T16:43:54.619Z",
+  "environment": {
+    "node": "v26.4.0",
+    "platform": "win32",
+    "port": 42996
+  },
+  "budget": {
+    "maxBoots": 2,
+    "maxRestarts": 2,
+    "actualBoots": 1,
+    "actualRestarts": 1
+  },
+  "steps": [
+    {
+      "step": "Starting preview server",
+      "timestamp": 1792082634625,
+      "port": 42996
+    },
+    {
+      "step": "Launching headless chromium",
+      "timestamp": 1792082634639
+    },
+    {
+      "step": "Navigating to dashboard and seeding synthetic project",
+      "timestamp": 1792082635372
+    },
+    {
+      "step": "Opening synthetic project in VSCode Mode",
+      "timestamp": 1792082640405
+    },
+    {
+      "step": "Waiting for initial WebContainer startup and Preview DOM (B5_1_REACT_INITIAL)",
+      "timestamp": 1792082641204
+    },
+    {
+      "step": "Initial Preview DOM rendered successfully",
+      "timestamp": 1792082687372,
+      "durationMs": 46168
+    },
+    {
+      "step": "Initial mount diagnostics captured",
+      "timestamp": 1792082687387,
+      "mountCount": 1,
+      "bootCount": 1
+    },
+    {
+      "step": "Performing intentional synthetic edit in editor (B5_1_REACT_EDITED)",
+      "timestamp": 1792082687387
+    },
+    {
+      "step": "Triggering Restart Dev Server via toolbar action",
+      "timestamp": 1792082691953
+    },
+    {
+      "step": "Waiting for restarted Preview DOM to reflect edited marker (B5_1_REACT_EDITED)",
+      "timestamp": 1792082692023
+    },
+    {
+      "step": "Restarted Preview DOM rendered successfully",
+      "timestamp": 1792082696831,
+      "durationMs": 4873
+    },
+    {
+      "step": "Mount count analysis after restart",
+      "timestamp": 1792082696842,
+      "totalMounts": 2,
+      "mountsDuringRestart": 1,
+      "totalBoots": 1
+    },
+    {
+      "step": "Verifying terminal interactivity",
+      "timestamp": 1792082696842
+    },
+    {
+      "step": "Verifying IndexedDB storage integrity",
+      "timestamp": 1792082696853
+    },
+    {
+      "step": "All Phase B.5.1 browser acceptance criteria successfully satisfied",
+      "timestamp": 1792082696864
+    }
+  ],
+  "verdict": "B5_1_LOCAL_ACCEPTED",
+  "browserVersion": "151.0.7922.34",
+  "completedAt": "2026-10-15T16:44:56.865Z"
+}

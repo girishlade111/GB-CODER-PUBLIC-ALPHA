@@ -2,6 +2,7 @@
 import Site from '../../layouts/Site.astro';
 import Breadcrumbs from '../Breadcrumbs.astro';
 import CodeBlock from '../CodeBlock.astro';
+import Icon from '../ui/Icon.astro';
 import { getDocsContent } from '../../i18n/docs';
 import { getNav } from '../../i18n/navigation';
 import { getCanonicalUrl } from '../../i18n/utils';
@@ -48,7 +49,6 @@ const breadcrumbJsonLd = {
   <Breadcrumbs items={breadcrumbItems} lang={lang} />
 
   <section class="page-hero">
-    <span class="hero-tag">{content.heroTag}</span>
     <h1>{content.heroTitle}</h1>
     <p>{content.heroDescription}</p>
   </section>
@@ -57,17 +57,18 @@ const breadcrumbJsonLd = {
     <!-- Sticky Table of Contents Sidebar -->
     <aside class="docs-sidebar" aria-label="Documentation Table of Contents">
       <div class="sidebar-sticky">
-        <h3 class="toc-title">{content.tableOfContentsTitle}</h3>
+        <h2 class="toc-title">{content.tableOfContentsTitle}</h2>
         <nav class="toc-nav">
-          <ul class="toc-list">
-            {content.sections.map((section) => (
+          <ol class="toc-list">
+            {content.sections.map((section, index) => (
               <li>
                 <a href={`#${section.id}`} class="toc-link">
-                  {section.title}
+                  <span class="toc-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                  <span>{section.title}</span>
                 </a>
               </li>
             ))}
-          </ul>
+          </ol>
         </nav>
       </div>
     </aside>
@@ -88,6 +89,7 @@ const breadcrumbJsonLd = {
                 <p class="doc-text">{sub.content}</p>
                 {sub.codeSnippet && (
                   <CodeBlock
+                    locale={lang}
                     code={sub.codeSnippet}
                     lang={sub.codeLang || 'text'}
                   />
@@ -99,11 +101,14 @@ const breadcrumbJsonLd = {
       ))}
 
       <section class="docs-footer-cta">
-        <h2>{content.ctaHeading}</h2>
-        <p>{content.ctaSub}</p>
-        <div class="cta-row">
-          <a href="/app/projects" class="cta-button">{content.ctaBtn}</a>
+        <div>
+          <h2>{content.ctaHeading}</h2>
+          <p>{content.ctaSub}</p>
         </div>
+        <a href="/app/projects" class="cta-button">
+          <span>{content.ctaBtn}</span>
+          <Icon name="arrow-right" size={14} />
+        </a>
       </section>
     </article>
   </div>
@@ -111,40 +116,37 @@ const breadcrumbJsonLd = {
 
 <style>
   .docs-layout-container {
-    max-width: 1200px;
+    max-width: 1180px;
     margin: 0 auto;
-    padding: 0 1.5rem 5rem;
+    padding: 2.5rem 1.5rem 6rem;
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 3.5rem;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
     align-items: start;
   }
 
-  /* Table of Contents Sidebar */
+  /* --- Table of contents ------------------------------------------------ */
   .docs-sidebar {
     position: relative;
   }
 
   .sidebar-sticky {
     position: sticky;
-    top: 5rem;
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    padding: 1.5rem;
-    max-height: calc(100vh - 6rem);
+    top: 5.5rem;
+    max-height: calc(100vh - 6.5rem);
     overflow-y: auto;
+    padding-inline-end: 0.5rem;
   }
 
   .toc-title {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
     color: var(--text-muted);
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border-subtle);
+    margin: 0 0 0.9rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
   }
 
   .toc-list {
@@ -153,101 +155,150 @@ const breadcrumbJsonLd = {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
   }
 
   .toc-link {
-    display: block;
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding: 0.55rem 0;
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 0.9rem;
     line-height: 1.4;
-    transition: color 0.15s, transform 0.1s;
+    border-bottom: 1px solid var(--border-subtle);
+    transition: color 0.15s ease;
+  }
+
+  .toc-index {
+    font: 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
   }
 
   .toc-link:hover {
-    color: var(--accent-terracotta);
-    transform: translateX(2px);
+    color: var(--primary);
   }
 
-  /* Main Documentation Content */
+  /* --- Main content ----------------------------------------------------- */
   .docs-main-content {
     min-width: 0;
   }
 
   .doc-section {
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    padding: 2.5rem;
-    margin-bottom: 2.5rem;
-    scroll-margin-top: 5.5rem;
+    margin-bottom: 4rem;
+    scroll-margin-top: 6rem;
   }
 
   .section-title-wrap {
     margin-bottom: 2rem;
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
   }
 
   .section-title-wrap h2 {
-    font-size: 1.85rem;
-    margin-bottom: 0.4rem;
+    font-size: clamp(1.6rem, 2.8vw, 2.1rem);
+    letter-spacing: -0.03em;
+    margin: 0 0 0.5rem;
     color: var(--text-primary);
   }
 
   .section-desc {
     color: var(--text-muted);
     font-size: 1rem;
+    line-height: 1.6;
+    max-width: 68ch;
+    margin: 0;
   }
 
   .subsections-list {
     display: flex;
     flex-direction: column;
-    gap: 2.25rem;
+    gap: 2.5rem;
   }
 
   .doc-subsection h3 {
-    font-size: 1.25rem;
-    margin-bottom: 0.65rem;
+    font-size: 1.15rem;
+    letter-spacing: -0.015em;
+    margin: 0 0 0.6rem;
     color: var(--text-primary);
   }
 
   .doc-text {
     color: var(--text-secondary);
     font-size: 0.975rem;
-    line-height: 1.65;
+    line-height: 1.7;
+    max-width: 60ch;
+    margin: 0;
   }
 
+  /* --- Closing CTA ------------------------------------------------------ */
   .docs-footer-cta {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 3rem 2rem;
-    text-align: center;
-    margin-top: 3rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 0;
+    margin-top: 4rem;
   }
 
   .docs-footer-cta h2 {
-    font-size: 1.85rem;
-    margin-bottom: 0.5rem;
+    font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+    letter-spacing: -0.025em;
+    margin: 0 0 0.4rem;
   }
 
   .docs-footer-cta p {
     color: var(--text-secondary);
-    font-size: 1.05rem;
+    font-size: 0.98rem;
+    line-height: 1.6;
+    max-width: 54ch;
+    margin: 0;
+  }
+
+  .cta-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    white-space: nowrap;
   }
 
   @media (max-width: 960px) {
     .docs-layout-container {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 2rem;
     }
 
     .sidebar-sticky {
       position: static;
       max-height: none;
-      margin-bottom: 2rem;
+      padding-inline-end: 0;
+    }
+
+    .toc-list {
+      flex-flow: row wrap;
+      gap: 0.5rem;
+    }
+
+    .toc-link {
+      border-bottom: 0;
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .docs-layout-container {
+      padding-inline: 1.25rem;
+    }
+    .doc-section {
+      margin-bottom: 3rem;
     }
   }
 </style>
