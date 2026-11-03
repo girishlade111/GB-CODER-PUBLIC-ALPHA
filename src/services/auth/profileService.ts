@@ -6,7 +6,10 @@
  * - Users can only select and mutate their own profile records (auth.uid() = id).
  * - GitHub provider metadata is mapped into profile fields.
  * - Profile creation is idempotent: duplicate insertions are handled safely.
- * - Column update permissions are limited to display_name and avatar_url.
+ * - Column INSERT and UPDATE privileges are strictly limited to user-editable fields
+ *   (display_name, avatar_url).
+ * - Provider metadata (github_username, email) and timestamps (created_at, updated_at)
+ *   are managed server-side by database triggers and cannot be forged by clients.
  */
 import type { User } from '@supabase/supabase-js';
 import { getSupabaseClient } from './supabaseClient';
@@ -84,6 +87,9 @@ export const getProfile = async (userId: string): Promise<UserProfile | null> =>
  * Idempotently fetches an existing profile or creates one if it does not yet exist.
  * Fallbacks to an in-memory profile if database is unreachable so that the user's
  * session remains usable without interruption.
+ *
+ * Security constraint: Only inserts user-editable columns (id, display_name, avatar_url).
+ * Provider identity (github_username, email) and timestamps are set by database triggers.
  */
 export const getOrCreateProfile = async (user: User): Promise<UserProfile> => {
   const fallback = mapUserToProfileFields(user) as UserProfile;
@@ -100,15 +106,11 @@ export const getOrCreateProfile = async (user: User): Promise<UserProfile> => {
       return existing;
     }
 
-    // 2. Insert new profile record idempotently (ignore duplicates if trigger already ran)
-    const newRecord = {
+    // 2. Insert new profile record idempotently with safe client columns only
+    const newRecord: { id: string; display_name: string | null; avatar_url: string | null } = {
       id: user.id,
       display_name: fallback.display_name,
       avatar_url: fallback.avatar_url,
-      github_username: fallback.github_username,
-      email: fallback.email,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
 
     const { data, error } = await client
@@ -142,6 +144,7 @@ export interface UpdateProfileInput {
 /**
  * Updates editable profile fields for the authenticated user.
  * Strictly restricts mutations to display_name and avatar_url.
+ * updated_at timestamp is managed exclusively by the database trigger.
  */
 export const updateProfile = async (
   userId: string,
@@ -152,15 +155,18 @@ export const updateProfile = async (
     return { profile: null, error: 'Database client or user ID unavailable' };
   }
 
-  const payload: Record<string, unknown> = {
-    updated_at: new Date().toISOString(),
-  };
+  const payload: Record<string, string | null> = {};
 
   if (typeof updates.display_name === 'string') {
     payload.display_name = updates.display_name.trim();
   }
   if (typeof updates.avatar_url === 'string') {
     payload.avatar_url = updates.avatar_url.trim();
+  }
+
+  if (Object.keys(payload).length === 0) {
+    const current = await getProfile(userId);
+    return { profile: current, error: null };
   }
 
   try {
