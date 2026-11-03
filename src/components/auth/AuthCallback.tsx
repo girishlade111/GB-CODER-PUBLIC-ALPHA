@@ -13,6 +13,7 @@ import {
   getCurrentSession,
   sanitizeReturnPath,
   signInWithGitHub,
+  subscribeToAuthState,
 } from '../../services/auth/authService';
 import { navigateReplace, PROJECTS_ROUTE } from '../../utils/appRoutes';
 import LadeStackLogo from '../LadeStackLogo';
@@ -30,24 +31,38 @@ export const AuthCallback: React.FC<AuthCallbackProps> = ({ onSuccess, onFailure
   useEffect(() => {
     let isCancelled = false;
 
+    const url = typeof window !== 'undefined' ? new URL(window.location.href) : null;
+    const searchParams = url?.searchParams;
+    const hashParams = typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.hash.replace(/^#/, ''))
+      : null;
+
+    const returnToParam = searchParams?.get('returnTo') || hashParams?.get('returnTo');
+    const safeReturn = sanitizeReturnPath(returnToParam);
+    setReturnTarget(safeReturn);
+
+    // Subscribe to auth state updates to recover seamlessly if a delayed PKCE exchange completes
+    const unsubscribe = subscribeToAuthState((event, newSession) => {
+      if (isCancelled) return;
+      if (event === 'SIGNED_IN' && newSession?.user) {
+        setPhase('success');
+        onSuccess?.(safeReturn);
+        setTimeout(() => {
+          if (!isCancelled) {
+            navigateReplace(safeReturn);
+          }
+        }, 150);
+      }
+    });
+
     const processCallback = async () => {
       if (typeof window === 'undefined') return;
 
-      const url = new URL(window.location.href);
-      const searchParams = url.searchParams;
-
-      // Also check hash fragment in case provider returned fragment parameters
-      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-
-      const errorParam = searchParams.get('error') || hashParams.get('error');
+      const errorParam = searchParams?.get('error') || hashParams?.get('error');
       const errorDesc =
-        searchParams.get('error_description') ||
-        hashParams.get('error_description') ||
-        searchParams.get('error_code');
-
-      const returnToParam = searchParams.get('returnTo') || hashParams.get('returnTo');
-      const safeReturn = sanitizeReturnPath(returnToParam);
-      setReturnTarget(safeReturn);
+        searchParams?.get('error_description') ||
+        hashParams?.get('error_description') ||
+        searchParams?.get('error_code');
 
       if (errorParam) {
         const friendlyMessage =
@@ -64,7 +79,7 @@ export const AuthCallback: React.FC<AuthCallbackProps> = ({ onSuccess, onFailure
         return;
       }
 
-      const code = searchParams.get('code') || hashParams.get('code');
+      const code = searchParams?.get('code') || hashParams?.get('code');
 
       if (!code) {
         // If there's no code, check if the user already has an active session
@@ -128,6 +143,7 @@ export const AuthCallback: React.FC<AuthCallbackProps> = ({ onSuccess, onFailure
 
     return () => {
       isCancelled = true;
+      unsubscribe();
     };
   }, [onSuccess, onFailure]);
 

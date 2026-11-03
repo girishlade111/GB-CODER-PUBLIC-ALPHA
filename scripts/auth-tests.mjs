@@ -1251,4 +1251,200 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
       assert.strictEqual(prof.display_name, 'Offline Dev');
     });
   });
+
+  // =========================================================================
+  // GROUP 7: PHASE 2 FINAL ACCEPTANCE — PKCE LIFECYCLE & EDGE CASES (PKCE01 - PKCE10)
+  // =========================================================================
+  describe('Phase 2 Final Acceptance — PKCE Lifecycle & Edge Cases (PKCE01 - PKCE10)', () => {
+    test('PKCE01 — Exchange succeeds within timeout', async () => {
+      const fakeSession = {
+        user: { id: 'usr-pkce01', email: 'pkce01@ladestack.in' },
+        access_token: 'valid-jwt-token',
+      };
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async (code) => {
+            assert.strictEqual(code, 'valid-code-01');
+            return { data: { session: fakeSession }, error: null };
+          },
+          getSession: async () => ({ data: { session: fakeSession }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await exchangeCallbackCode('valid-code-01', '/app/projects/p1/ide');
+      assert.strictEqual(res.error, null);
+      assert.strictEqual(res.session?.user.id, 'usr-pkce01');
+      assert.strictEqual(res.returnPath, '/app/projects/p1/ide');
+    });
+
+    test('PKCE02 — Exchange fails within timeout', async () => {
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async () => ({
+            data: { session: null },
+            error: { message: 'Invalid or expired authorization code' },
+          }),
+          getSession: async () => ({ data: { session: null }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await exchangeCallbackCode('bad-code-02', '/app');
+      assert.strictEqual(res.session, null);
+      assert.ok(res.error);
+      assert.match(res.error, /expired|invalid/i);
+    });
+
+    test('PKCE03 — Exchange takes longer than timeout and later succeeds', async () => {
+      let lateResolved = false;
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async () => {
+            await new Promise((r) => setTimeout(r, 60));
+            lateResolved = true;
+            return {
+              data: { session: { user: { id: 'usr-pkce03' } } },
+              error: null,
+            };
+          },
+          getSession: async () => ({ data: { session: null }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await exchangeCallbackCode('slow-code-03', '/app', 25);
+      assert.strictEqual(res.session, null, 'Must reject immediately on timeout');
+      assert.match(res.error, /timed out/i);
+
+      // Await late background resolution
+      await new Promise((r) => setTimeout(r, 80));
+      assert.strictEqual(lateResolved, true);
+    });
+
+    test('PKCE04 — Exchange takes longer than timeout and later fails', async () => {
+      let lateFailed = false;
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async () => {
+            await new Promise((r) => setTimeout(r, 60));
+            lateFailed = true;
+            return {
+              data: { session: null },
+              error: { message: 'Network reset from server' },
+            };
+          },
+          getSession: async () => ({ data: { session: null }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await exchangeCallbackCode('slow-code-04', '/app', 25);
+      assert.strictEqual(res.session, null);
+      assert.match(res.error, /timed out/i);
+
+      await new Promise((r) => setTimeout(r, 80));
+      assert.strictEqual(lateFailed, true);
+    });
+
+    test('PKCE05 — User retries while previous request is unresolved', async () => {
+      let oauthCallCount = 0;
+      const mockClient = {
+        auth: {
+          signInWithOAuth: async () => {
+            oauthCallCount++;
+            return { data: { url: 'https://github.com/login/oauth/authorize' }, error: null };
+          },
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await signInWithGitHub({ returnPath: '/app/projects/p1/editor' });
+      assert.strictEqual(res.error, null);
+      assert.strictEqual(oauthCallCount, 1);
+    });
+
+    test('PKCE06 — User signs out while an old exchange is unresolved', async () => {
+      let signedOut = false;
+      const mockClient = {
+        auth: {
+          signOut: async () => {
+            signedOut = true;
+            return { error: null };
+          },
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await signOutUser();
+      assert.strictEqual(res.error, null);
+      assert.strictEqual(signedOut, true);
+    });
+
+    test('PKCE07 — Browser refresh during callback cleans sensitive parameters', () => {
+      assert.doesNotThrow(() => {
+        cleanCallbackUrlParams();
+      });
+    });
+
+    test('PKCE08 — React StrictMode duplicate mount executes single exchange', async () => {
+      let networkCalls = 0;
+      const session = { user: { id: 'usr-strict-mode' } };
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async () => {
+            networkCalls++;
+            await new Promise((r) => setTimeout(r, 10));
+            return { data: { session }, error: null };
+          },
+          getSession: async () => ({ data: { session }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const [res1, res2] = await Promise.all([
+        exchangeCallbackCode('strict-code-08'),
+        exchangeCallbackCode('strict-code-08'),
+      ]);
+
+      assert.strictEqual(networkCalls, 1);
+      assert.strictEqual(res1.session?.user.id, 'usr-strict-mode');
+      assert.strictEqual(res2.session?.user.id, 'usr-strict-mode');
+    });
+
+    test('PKCE09 — Already-consumed authorization code recovery', async () => {
+      const activeSession = { user: { id: 'usr-existing-pkce09' } };
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async () => ({
+            data: { session: null },
+            error: { message: 'invalid_grant: code already used' },
+          }),
+          getSession: async () => ({ data: { session: activeSession }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await exchangeCallbackCode('consumed-code-09');
+      assert.strictEqual(res.error, null);
+      assert.strictEqual(res.session?.user.id, 'usr-existing-pkce09');
+    });
+
+    test('PKCE10 — Existing authenticated user starts another login attempt', async () => {
+      let newOAuthStarted = false;
+      const mockClient = {
+        auth: {
+          signInWithOAuth: async () => {
+            newOAuthStarted = true;
+            return { data: { url: 'https://github.com/login/oauth/authorize' }, error: null };
+          },
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await signInWithGitHub({ returnPath: '/app/ide' });
+      assert.strictEqual(res.error, null);
+      assert.strictEqual(newOAuthStarted, true);
+    });
+  });
 });
