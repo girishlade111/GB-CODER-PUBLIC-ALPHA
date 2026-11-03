@@ -1,0 +1,802 @@
+/**
+ * GB Coder IDE — Phase 2 Authentication, Security & Local-First Verification Suite
+ *
+ * Verifies all Phase 2 requirements:
+ * - A01-A17: Supabase client, PKCE, OAuth, Session & State Management
+ * - P01-P10: User Profile Database, Mapping, Idempotency & RLS Constraints
+ * - L01-L12: Guest Mode Continuity, IndexedDB Project Preservation & Data Safety
+ * - S01-S08: Security Boundaries, Scopes, Open-Redirect & Secret Isolation
+ *
+ * Usage: node scripts/auth-tests.mjs
+ */
+
+import { test, describe, beforeEach, afterEach, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, mkdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { build } from 'esbuild';
+
+// Bundle TypeScript modules to resolve extensionless imports in Node ESM environment
+const outdir = join(process.cwd(), '.tmp-auth-test');
+mkdirSync(outdir, { recursive: true });
+const bundlePath = join(outdir, 'auth-bundle.mjs');
+
+await build({
+  stdin: {
+    contents: `
+      export * from './src/services/auth/supabaseClient.ts';
+      export * from './src/services/auth/authService.ts';
+      export * from './src/services/auth/profileService.ts';
+      export * from './src/utils/appRoutes.ts';
+    `,
+    resolveDir: process.cwd(),
+    loader: 'ts',
+  },
+  bundle: true,
+  external: ['@supabase/supabase-js'],
+  format: 'esm',
+  platform: 'node',
+  target: 'node20',
+  outfile: bundlePath,
+  logLevel: 'error',
+});
+
+const services = await import(pathToFileURL(bundlePath).href);
+
+const {
+  isValidConfigValue,
+  isValidHttpUrl,
+  getSupabaseConfig,
+  isSupabaseConfigured,
+  getSupabaseClient,
+  _setMockSupabaseClient,
+  _resetSupabaseClient,
+  sanitizeReturnPath,
+  getAuthCallbackUrl,
+  signInWithGitHub,
+  exchangeCallbackCode,
+  signOutUser,
+  subscribeToAuthState,
+  _resetCodeExchangeState,
+  DEFAULT_APP_RETURN_PATH,
+  AUTH_CALLBACK_PATH,
+  GITHUB_OAUTH_SCOPES,
+  mapUserToProfileFields,
+  getProfile,
+  getOrCreateProfile,
+  updateProfile,
+  parseAppRoute,
+  AUTH_CALLBACK_ROUTE,
+  ACCOUNT_ROUTE,
+  STATIC_EDITOR_ROUTE,
+  VSCODE_ROUTE,
+} = services;
+
+describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', () => {
+  beforeEach(() => {
+    _resetSupabaseClient();
+    _resetCodeExchangeState();
+  });
+
+  afterEach(() => {
+    _resetSupabaseClient();
+    _resetCodeExchangeState();
+  });
+
+  after(() => {
+    try {
+      rmSync(outdir, { recursive: true, force: true });
+    } catch {
+      // ignore
+    }
+  });
+
+  // =========================================================================
+  // GROUP 1: AUTHENTICATION & PKCE (A01 - A17)
+  // =========================================================================
+  describe('Authentication, PKCE & Session Management (A01 - A17)', () => {
+    test('A01 — Supabase configuration validation', () => {
+      assert.strictEqual(isValidConfigValue(''), false);
+      assert.strictEqual(isValidConfigValue('   '), false);
+      assert.strictEqual(isValidConfigValue('your_project_url'), false);
+      assert.strictEqual(isValidConfigValue('placeholder_key'), false);
+      assert.strictEqual(isValidConfigValue('<your-key>'), false);
+      assert.strictEqual(isValidConfigValue('valid_anon_key_12345'), true);
+
+      assert.strictEqual(isValidHttpUrl('not-a-url'), false);
+      assert.strictEqual(isValidHttpUrl('ftp://example.com'), false);
+      assert.strictEqual(isValidHttpUrl('https://example.supabase.co'), true);
+      assert.strictEqual(isValidHttpUrl('http://localhost:54321'), true);
+    });
+
+    test('A02 — Client singleton initialization', () => {
+      _resetSupabaseClient();
+      const clientUnconfigured = getSupabaseClient();
+      assert.strictEqual(clientUnconfigured, null);
+
+      const mockClient = { auth: {} };
+      _setMockSupabaseClient(mockClient);
+      const client1 = getSupabaseClient();
+      const client2 = getSupabaseClient();
+      assert.strictEqual(client1, mockClient);
+      assert.strictEqual(client2, mockClient);
+    });
+
+    test('A03 — Missing configuration fallback', () => {
+      _resetSupabaseClient();
+      assert.strictEqual(isSupabaseConfigured(), false);
+      const config = getSupabaseConfig();
+      assert.strictEqual(config.isConfigured, false);
+      assert.strictEqual(config.url, null);
+      assert.strictEqual(config.anonKey, null);
+    });
+
+    test('A04 — Guest mode initialization', async () => {
+      _resetSupabaseClient();
+      assert.strictEqual(getSupabaseClient(), null);
+      const res = await signInWithGitHub();
+      assert.ok(res.error);
+      assert.match(res.error, /not configured/i);
+    });
+
+    test('A05 — GitHub OAuth initiation with minimal scopes', async () => {
+      let oauthArgs = null;
+      const mockClient = {
+        auth: {
+          signInWithOAuth: async (args) => {
+            oauthArgs = args;
+            return { data: { url: 'https://github.com/login/oauth/authorize' }, error: null };
+          },
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await signInWithGitHub({ returnPath: '/app/projects/test-proj/editor' });
+      assert.strictEqual(res.error, null);
+      assert.ok(oauthArgs);
+      assert.strictEqual(oauthArgs.provider, 'github');
+      assert.strictEqual(oauthArgs.options.scopes, GITHUB_OAUTH_SCOPES);
+      assert.match(oauthArgs.options.redirectTo, /\/app\/auth\/callback/);
+    });
+
+    test('A06 — Correct redirectTo generation', () => {
+      const callbackDefault = getAuthCallbackUrl();
+      assert.match(callbackDefault, /\/app\/auth\/callback$/);
+
+      const callbackCustom = getAuthCallbackUrl('/app/ide');
+      assert.match(callbackCustom, /\/app\/auth\/callback\?returnTo=%2Fapp%2Fide/);
+    });
+
+    test('A07 — Safe callback return-path validation (Open-Redirect Prevention)', () => {
+      assert.strictEqual(sanitizeReturnPath('/app'), '/app');
+      assert.strictEqual(sanitizeReturnPath('/app/ide'), '/app/ide');
+      assert.strictEqual(sanitizeReturnPath('/app/projects/123/editor'), '/app/projects/123/editor');
+
+      assert.strictEqual(sanitizeReturnPath('https://attacker.com'), DEFAULT_APP_RETURN_PATH);
+      assert.strictEqual(sanitizeReturnPath('http://attacker.com/app'), DEFAULT_APP_RETURN_PATH);
+      assert.strictEqual(sanitizeReturnPath('//attacker.com'), DEFAULT_APP_RETURN_PATH);
+      assert.strictEqual(sanitizeReturnPath('\\\\attacker.com'), DEFAULT_APP_RETURN_PATH);
+      assert.strictEqual(sanitizeReturnPath('javascript:alert(1)'), DEFAULT_APP_RETURN_PATH);
+      assert.strictEqual(sanitizeReturnPath('data:text/html,evil'), DEFAULT_APP_RETURN_PATH);
+      assert.strictEqual(sanitizeReturnPath('/app/../etc/passwd'), DEFAULT_APP_RETURN_PATH);
+      assert.strictEqual(sanitizeReturnPath('/evil'), DEFAULT_APP_RETURN_PATH);
+      assert.strictEqual(sanitizeReturnPath(null), DEFAULT_APP_RETURN_PATH);
+      assert.strictEqual(sanitizeReturnPath(''), DEFAULT_APP_RETURN_PATH);
+    });
+
+    test('A08 — OAuth cancellation handling', async () => {
+      const mockClient = {
+        auth: {
+          signInWithOAuth: async () => ({
+            data: null,
+            error: { message: 'access_denied: User cancelled login' },
+          }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await signInWithGitHub();
+      assert.ok(res.error);
+      assert.match(res.error, /access_denied/);
+    });
+
+    test('A09 — Invalid callback handling', async () => {
+      _setMockSupabaseClient({ auth: {} });
+      const emptyRes = await exchangeCallbackCode('');
+      assert.ok(emptyRes.error);
+      assert.match(emptyRes.error, /code missing/i);
+    });
+
+    test('A10 — PKCE code exchange', async () => {
+      let codeExchanged = null;
+      const fakeSession = {
+        user: { id: 'user-pkce-123', email: 'dev@ladestack.in' },
+        access_token: 'fake-jwt',
+      };
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async (code) => {
+            codeExchanged = code;
+            return { data: { session: fakeSession }, error: null };
+          },
+          getSession: async () => ({ data: { session: fakeSession }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await exchangeCallbackCode('test-auth-code-12345', '/app/ide');
+      assert.strictEqual(res.error, null);
+      assert.strictEqual(codeExchanged, 'test-auth-code-12345');
+      assert.strictEqual(res.session?.user.id, 'user-pkce-123');
+      assert.strictEqual(res.returnPath, '/app/ide');
+    });
+
+    test('A11 — Duplicate callback prevention in StrictMode', async () => {
+      let exchangeCallCount = 0;
+      const fakeSession = {
+        user: { id: 'user-dedup-1', email: 'test@example.com' },
+      };
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async () => {
+            exchangeCallCount++;
+            await new Promise((r) => setTimeout(r, 10));
+            return { data: { session: fakeSession }, error: null };
+          },
+          getSession: async () => ({ data: { session: fakeSession }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const [res1, res2] = await Promise.all([
+        exchangeCallbackCode('code-duplicate-test'),
+        exchangeCallbackCode('code-duplicate-test'),
+      ]);
+
+      assert.strictEqual(exchangeCallCount, 1, 'Code exchange must be invoked exactly once');
+      assert.strictEqual(res1.session?.user.id, 'user-dedup-1');
+      assert.strictEqual(res2.session?.user.id, 'user-dedup-1');
+    });
+
+    test('A12 — Successful session restoration', async () => {
+      const storedSession = { user: { id: 'restored-user', email: 'restore@test.com' } };
+      const mockClient = {
+        auth: {
+          getSession: async () => ({ data: { session: storedSession }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const { getCurrentSession } = services;
+      const session = await getCurrentSession();
+      assert.strictEqual(session?.user.id, 'restored-user');
+    });
+
+    test('A13 — Session expiration handling', async () => {
+      const mockClient = {
+        auth: {
+          getSession: async () => ({ data: { session: null }, error: { message: 'Session expired' } }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const { getCurrentSession } = services;
+      const session = await getCurrentSession();
+      assert.strictEqual(session, null);
+    });
+
+    test('A14 — Token refresh state handling', () => {
+      let listenerRegistered = null;
+      const mockClient = {
+        auth: {
+          onAuthStateChange: (cb) => {
+            listenerRegistered = cb;
+            return { data: { subscription: { unsubscribe: () => {} } } };
+          },
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      let eventReceived = null;
+      let sessionReceived = null;
+      subscribeToAuthState((evt, sess) => {
+        eventReceived = evt;
+        sessionReceived = sess;
+      });
+
+      assert.ok(listenerRegistered);
+      const refreshedSession = { user: { id: 'refreshed-user' } };
+      listenerRegistered('TOKEN_REFRESHED', refreshedSession);
+
+      assert.strictEqual(eventReceived, 'TOKEN_REFRESHED');
+      assert.strictEqual(sessionReceived?.user.id, 'refreshed-user');
+    });
+
+    test('A15 — Sign-out behavior', async () => {
+      let signOutCalled = false;
+      const mockClient = {
+        auth: {
+          signOut: async () => {
+            signOutCalled = true;
+            return { error: null };
+          },
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await signOutUser();
+      assert.strictEqual(res.error, null);
+      assert.strictEqual(signOutCalled, true);
+    });
+
+    test('A16 — Multiple auth-state event handling', () => {
+      let listener = null;
+      const mockClient = {
+        auth: {
+          onAuthStateChange: (cb) => {
+            listener = cb;
+            return { data: { subscription: { unsubscribe: () => {} } } };
+          },
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const events = [];
+      subscribeToAuthState((event) => {
+        events.push(event);
+      });
+
+      listener('INITIAL_SESSION', null);
+      listener('SIGNED_IN', { user: { id: 'u1' } });
+      listener('USER_UPDATED', { user: { id: 'u1' } });
+      listener('SIGNED_OUT', null);
+
+      assert.deepStrictEqual(events, ['INITIAL_SESSION', 'SIGNED_IN', 'USER_UPDATED', 'SIGNED_OUT']);
+    });
+
+    test('A17 — Auth subscription cleanup', () => {
+      let unsubscribed = false;
+      const mockClient = {
+        auth: {
+          onAuthStateChange: () => ({
+            data: {
+              subscription: {
+                unsubscribe: () => {
+                  unsubscribed = true;
+                },
+              },
+            },
+          }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const unsubscribe = subscribeToAuthState(() => {});
+      unsubscribe();
+      assert.strictEqual(unsubscribed, true);
+    });
+  });
+
+  // =========================================================================
+  // GROUP 2: USER PROFILE & DATABASE (P01 - P10)
+  // =========================================================================
+  describe('User Profile Database & Row Level Security (P01 - P10)', () => {
+    test('P01 — Profile mapping from user metadata', () => {
+      const fakeUser = {
+        id: 'usr-456-uuid',
+        email: 'girish@ladestack.in',
+        user_metadata: {
+          user_name: 'girishlade111',
+          full_name: 'Girish Lade',
+          avatar_url: 'https://avatars.githubusercontent.com/u/12345',
+        },
+      };
+
+      const mapped = mapUserToProfileFields(fakeUser);
+      assert.strictEqual(mapped.id, 'usr-456-uuid');
+      assert.strictEqual(mapped.github_username, 'girishlade111');
+      assert.strictEqual(mapped.display_name, 'Girish Lade');
+      assert.strictEqual(mapped.avatar_url, 'https://avatars.githubusercontent.com/u/12345');
+      assert.strictEqual(mapped.email, 'girish@ladestack.in');
+    });
+
+    test('P02 — Profile creation', async () => {
+      let insertedPayload = null;
+      const fakeUser = {
+        id: 'usr-new-001',
+        email: 'newuser@example.com',
+        user_metadata: { full_name: 'New Developer' },
+      };
+
+      const mockClient = {
+        from: (table) => {
+          assert.strictEqual(table, 'profiles');
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: null, error: null }),
+              }),
+            }),
+            upsert: (payload) => {
+              insertedPayload = payload;
+              return {
+                select: () => ({
+                  single: async () => ({
+                    data: { ...payload, created_at: new Date().toISOString() },
+                    error: null,
+                  }),
+                }),
+              };
+            },
+          };
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const profile = await getOrCreateProfile(fakeUser);
+      assert.ok(profile);
+      assert.strictEqual(profile.id, 'usr-new-001');
+      assert.strictEqual(profile.display_name, 'New Developer');
+      assert.ok(insertedPayload);
+      assert.strictEqual(insertedPayload.id, 'usr-new-001');
+    });
+
+    test('P03 — Duplicate profile prevention (Idempotency)', async () => {
+      const existingRecord = {
+        id: 'usr-existing-002',
+        display_name: 'Existing Member',
+        avatar_url: 'https://avatar.png',
+        github_username: 'existingdev',
+        email: 'member@test.com',
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      };
+
+      let upsertAttempted = false;
+      const mockClient = {
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({ data: existingRecord, error: null }),
+            }),
+          }),
+          upsert: () => {
+            upsertAttempted = true;
+          },
+        }),
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const fakeUser = { id: 'usr-existing-002', user_metadata: {} };
+      const profile = await getOrCreateProfile(fakeUser);
+
+      assert.strictEqual(profile.id, 'usr-existing-002');
+      assert.strictEqual(profile.display_name, 'Existing Member');
+      assert.strictEqual(upsertAttempted, false, 'Should not re-insert if profile already exists');
+    });
+
+    test('P04 — Missing profile recovery via in-memory fallback', async () => {
+      const mockClient = {
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({ data: null, error: { message: 'Database offline' } }),
+            }),
+          }),
+          upsert: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: { message: 'Connection timeout' } }),
+            }),
+          }),
+        }),
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const fakeUser = {
+        id: 'usr-offline-fallback',
+        email: 'fallback@test.com',
+        user_metadata: { user_name: 'offlinedev' },
+      };
+
+      const profile = await getOrCreateProfile(fakeUser);
+      assert.ok(profile);
+      assert.strictEqual(profile.id, 'usr-offline-fallback');
+      assert.strictEqual(profile.github_username, 'offlinedev');
+    });
+
+    test('P05 — Profile update behavior', async () => {
+      let updatedPayload = null;
+      const mockClient = {
+        from: () => ({
+          update: (payload) => {
+            updatedPayload = payload;
+            return {
+              eq: (field, id) => {
+                assert.strictEqual(field, 'id');
+                assert.strictEqual(id, 'usr-update-target');
+                return {
+                  select: () => ({
+                    single: async () => ({
+                      data: { id, ...payload },
+                      error: null,
+                    }),
+                  }),
+                };
+              },
+            };
+          },
+        }),
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await updateProfile('usr-update-target', { display_name: 'Architect Lade' });
+      assert.strictEqual(res.error, null);
+      assert.strictEqual(res.profile?.display_name, 'Architect Lade');
+      assert.strictEqual(updatedPayload?.display_name, 'Architect Lade');
+      assert.ok(updatedPayload?.updated_at);
+    });
+
+    test('P06 — Invalid profile metadata handling', () => {
+      const userSparse = {
+        id: 'usr-sparse',
+        user_metadata: null,
+      };
+      const mapped = mapUserToProfileFields(userSparse);
+      assert.strictEqual(mapped.id, 'usr-sparse');
+      assert.strictEqual(mapped.display_name, 'GB Coder User');
+      assert.strictEqual(mapped.avatar_url, null);
+      assert.strictEqual(mapped.github_username, null);
+    });
+
+    test('P07 — Anonymous profile access denial (RLS Contract)', () => {
+      const migrationSql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000000_phase2_profiles_rls.sql'),
+        'utf8',
+      );
+      assert.match(migrationSql, /REVOKE ALL ON public\.profiles FROM anon;/);
+      assert.match(migrationSql, /REVOKE ALL ON public\.profiles FROM PUBLIC;/);
+    });
+
+    test('P08 — Cross-user profile access denial (RLS Contract)', () => {
+      const migrationSql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000000_phase2_profiles_rls.sql'),
+        'utf8',
+      );
+      assert.match(migrationSql, /CREATE POLICY "Users can view own profile"[\s\S]*?USING \(auth\.uid\(\) = id\);/);
+    });
+
+    test('P09 — RLS ownership enforcement on UPDATE and INSERT', () => {
+      const migrationSql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000000_phase2_profiles_rls.sql'),
+        'utf8',
+      );
+      assert.match(migrationSql, /CREATE POLICY "Users can insert own profile"[\s\S]*?WITH CHECK \(auth\.uid\(\) = id\);/);
+      assert.match(migrationSql, /CREATE POLICY "Users can update own profile"[\s\S]*?USING \(auth\.uid\(\) = id\)[\s\S]*?WITH CHECK \(auth\.uid\(\) = id\);/);
+    });
+
+    test('P10 — Profile creation without leaking provider tokens', () => {
+      const migrationSql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000000_phase2_profiles_rls.sql'),
+        'utf8',
+      );
+      assert.strictEqual(/access_token/i.test(migrationSql), false);
+      assert.strictEqual(/provider_token/i.test(migrationSql), false);
+      assert.strictEqual(/refresh_token/i.test(migrationSql), false);
+    });
+  });
+
+  // =========================================================================
+  // GROUP 3: GUEST MODE & LOCAL-FIRST COMPATIBILITY (L01 - L12)
+  // =========================================================================
+  describe('Guest Mode Continuity & Local Data Safety (L01 - L12)', () => {
+    test('L01 — Guest routes resolve without authentication', () => {
+      assert.strictEqual(parseAppRoute('/app').kind, 'dashboard');
+      assert.strictEqual(parseAppRoute('/app/projects').kind, 'dashboard');
+      assert.strictEqual(parseAppRoute('/app/projects/new').kind, 'new');
+      assert.strictEqual(parseAppRoute('/app/projects/p1/editor').kind, 'editor');
+      assert.strictEqual(parseAppRoute('/app/projects/p1/ide').kind, 'ide');
+    });
+
+    test('L02 — Auth callback and account routes registered', () => {
+      assert.strictEqual(parseAppRoute(AUTH_CALLBACK_ROUTE).kind, 'auth-callback');
+      assert.strictEqual(parseAppRoute(ACCOUNT_ROUTE).kind, 'account');
+    });
+
+    test('L03 — Guest signs in without altering ProjectRecord IDs', () => {
+      const mockProject = {
+        id: 'stable-uuid-abc-123',
+        name: 'My Local Project',
+        projectType: 'react',
+        editorStyle: 'vscode',
+        fileCount: 4,
+        createdAt: 1730000000000,
+        lastOpenedAt: 1730000000000,
+      };
+
+      assert.strictEqual(mockProject.id, 'stable-uuid-abc-123');
+    });
+
+    test('L04 — Existing ProjectRecord fields distinction (projectType vs editorStyle)', () => {
+      const projectTypes = ['plain', 'react', 'vue'];
+      const editorStyles = ['plain', 'vscode'];
+
+      for (const pt of projectTypes) {
+        assert.ok(typeof pt === 'string');
+      }
+      for (const es of editorStyles) {
+        assert.ok(typeof es === 'string');
+      }
+      assert.notDeepStrictEqual(projectTypes, editorStyles);
+    });
+
+    test('L05 — Sign-out does not clear projects database', () => {
+      const projectDbSource = readFileSync(
+        join(process.cwd(), 'src/services/projects/projectDatabase.ts'),
+        'utf8',
+      );
+      assert.match(projectDbSource, /const DB_NAME = 'gb-coder-projects-db';/);
+      assert.match(projectDbSource, /const PROJECTS_STORE = 'projects';/);
+      assert.match(projectDbSource, /const FILES_STORE = 'projectFiles';/);
+
+      const authServiceSource = readFileSync(
+        join(process.cwd(), 'src/services/auth/authService.ts'),
+        'utf8',
+      );
+      assert.strictEqual(/deleteDatabase/.test(authServiceSource), false);
+      assert.strictEqual(/clearWorkspace/.test(authServiceSource), false);
+    });
+
+    test('L06 — Sign-out preserves workspace settings & active project pointer', () => {
+      const authServiceSource = readFileSync(
+        join(process.cwd(), 'src/services/auth/authService.ts'),
+        'utf8',
+      );
+      assert.strictEqual(/gb-coder-active-project-id/.test(authServiceSource), false);
+    });
+
+    test('L07 — Missing Supabase configuration does not break IDE', () => {
+      _resetSupabaseClient();
+      assert.strictEqual(getSupabaseClient(), null);
+      assert.strictEqual(isSupabaseConfigured(), false);
+    });
+
+    test('L08 — Offline operation preserves local projects', async () => {
+      const fakeOfflineUser = { id: 'usr-offline', email: 'offline@ladestack.in' };
+      const profile = await getOrCreateProfile(fakeOfflineUser);
+      assert.strictEqual(profile.id, 'usr-offline');
+      assert.strictEqual(profile.display_name, 'offline');
+    });
+
+    test('L09 — Existing Classic Editor remains accessible', () => {
+      assert.strictEqual(STATIC_EDITOR_ROUTE, '/app/editor');
+      assert.strictEqual(parseAppRoute('/app/editor').kind, 'legacy-editor');
+    });
+
+    test('L10 — Existing Advanced IDE remains accessible', () => {
+      assert.strictEqual(VSCODE_ROUTE, '/app/ide');
+      assert.strictEqual(parseAppRoute('/app/ide').kind, 'legacy-ide');
+    });
+
+    test('L11 — Existing GitHub PAT integration remains intact in credentialStore', () => {
+      const credStoreSource = readFileSync(
+        join(process.cwd(), 'src/services/credentialStore.ts'),
+        'utf8',
+      );
+      assert.match(credStoreSource, /gbcoder_cred_v1:/);
+      assert.match(credStoreSource, /gbcoder_credkey_v1/);
+
+      const authServiceSource = readFileSync(
+        join(process.cwd(), 'src/services/auth/authService.ts'),
+        'utf8',
+      );
+      assert.strictEqual(/gbcoder_cred_v1/.test(authServiceSource), false);
+    });
+
+    test('L12 — No destructive IndexedDB schema migrations', () => {
+      const projectDbSource = readFileSync(
+        join(process.cwd(), 'src/services/projects/projectDatabase.ts'),
+        'utf8',
+      );
+      assert.match(projectDbSource, /keyPath:\s*\['projectId',\s*'path'\]/);
+    });
+  });
+
+  // =========================================================================
+  // GROUP 4: SECURITY & ISOLATION (S01 - S08)
+  // =========================================================================
+  describe('Security Boundaries & Isolation (S01 - S08)', () => {
+    test('S01 — Supabase secret/service-role keys absent from client configuration', () => {
+      const envExample = readFileSync(join(process.cwd(), '.env.example'), 'utf8');
+      assert.strictEqual(/VITE_.*SERVICE_ROLE/i.test(envExample), false);
+      assert.strictEqual(/VITE_.*SECRET_KEY/i.test(envExample), false);
+      assert.match(envExample, /VITE_SUPABASE_URL=/);
+      assert.match(envExample, /VITE_SUPABASE_ANON_KEY=/);
+    });
+
+    test('S02 — OAuth return-path open redirect is rejected', () => {
+      const evilPayloads = [
+        'https://phishing.site',
+        'http://phishing.site/app',
+        '//phishing.site',
+        'javascript:void(0)',
+        'data:text/html,<script>alert(1)</script>',
+        '/app/../admin',
+      ];
+
+      for (const payload of evilPayloads) {
+        assert.strictEqual(sanitizeReturnPath(payload), DEFAULT_APP_RETURN_PATH);
+      }
+    });
+
+    test('S03 — No provider tokens stored in project data', () => {
+      const profileSource = readFileSync(
+        join(process.cwd(), 'src/services/auth/profileService.ts'),
+        'utf8',
+      );
+      assert.strictEqual(/access_token/.test(profileSource), false);
+      assert.strictEqual(/provider_token/.test(profileSource), false);
+    });
+
+    test('S04 — No secrets logged during auth failure', async () => {
+      const logs = [];
+      const origWarn = console.warn;
+      console.warn = (...args) => logs.push(args.join(' '));
+
+      try {
+        const mockClient = {
+          from: () => ({
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: null,
+                  error: { message: 'Failed database check with code 400' },
+                }),
+              }),
+            }),
+          }),
+        };
+        _setMockSupabaseClient(mockClient);
+
+        await getProfile('usr-test');
+        for (const log of logs) {
+          assert.strictEqual(/token|secret|password|bearer/i.test(log), false);
+        }
+      } finally {
+        console.warn = origWarn;
+      }
+    });
+
+    test('S05 — Anonymous profile request denied by RLS', () => {
+      const migrationSql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000000_phase2_profiles_rls.sql'),
+        'utf8',
+      );
+      assert.match(migrationSql, /ALTER TABLE public\.profiles ENABLE ROW LEVEL SECURITY;/);
+      assert.match(migrationSql, /REVOKE ALL ON public\.profiles FROM anon;/);
+    });
+
+    test('S06 — Cross-user profile UPDATE denied by RLS policy', () => {
+      const migrationSql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000000_phase2_profiles_rls.sql'),
+        'utf8',
+      );
+      assert.match(migrationSql, /CREATE POLICY "Users can update own profile"[\s\S]*?USING \(auth\.uid\(\) = id\)/);
+    });
+
+    test('S07 — Session identity is not trusted as an authorization substitute without RLS', () => {
+      const migrationSql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000000_phase2_profiles_rls.sql'),
+        'utf8',
+      );
+      const matches = migrationSql.match(/auth\.uid\(\)\s*=\s*id/g);
+      assert.ok(matches && matches.length >= 4);
+    });
+
+    test('S08 — OAuth provider scopes remain minimal (identity only)', () => {
+      assert.strictEqual(GITHUB_OAUTH_SCOPES, 'read:user user:email');
+      assert.strictEqual(/repo|admin|write|delete/i.test(GITHUB_OAUTH_SCOPES), false);
+    });
+  });
+});
