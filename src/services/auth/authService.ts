@@ -240,11 +240,20 @@ export const exchangeCallbackCode = async (
 
   if (!pendingPromise) {
     pendingPromise = (async () => {
+      let isTimedOut = false;
       let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
 
       const exchangePromise = (async () => {
         try {
           const { data, error } = await client.auth.exchangeCodeForSession(sanitizedCode);
+          if (isTimedOut) {
+            console.warn('[AuthService] In-flight authorization code exchange completed after timeout');
+            return {
+              session: null,
+              error: 'Authorization code exchange timed out waiting for server response. Please try signing in again.',
+            };
+          }
+
           if (error) {
             // Check if code was already exchanged by an asynchronous attempt
             const lower = error.message.toLowerCase();
@@ -268,6 +277,12 @@ export const exchangeCallbackCode = async (
           completedCodes.add(sanitizedCode);
           return { session: data.session, error: null };
         } catch (err) {
+          if (isTimedOut) {
+            return {
+              session: null,
+              error: 'Authorization code exchange timed out waiting for server response.',
+            };
+          }
           const message = err instanceof Error ? err.message : 'Failed to exchange authorization code for session';
           return { session: null, error: message };
         }
@@ -275,6 +290,7 @@ export const exchangeCallbackCode = async (
 
       const timeoutPromise = new Promise<{ session: null; error: string }>((resolve) => {
         timeoutHandle = setTimeout(() => {
+          isTimedOut = true;
           resolve({
             session: null,
             error: 'Authorization code exchange timed out after 15 seconds. Please check your connection and try again.',

@@ -4,10 +4,11 @@
  * Coordinates session lifecycle, user profiles, guest mode continuity,
  * and authentication state changes.
  *
- * Hardened Phase 2.1 Behaviors:
+ * Hardened Phase 2.1 & 2.2 Behaviors:
  * - Purely synchronous onAuthStateChange handler (eliminates async/await deadlock risks).
  * - Race-condition and stale-profile prevention via request ID tokens.
- * - Profile fetching isolated into a dedicated lifecycle effect keyed to user.
+ * - Profile fetching isolated into a dedicated lifecycle effect keyed strictly to userId
+ *   (eliminates redundant PostgREST calls on token refresh or re-render).
  * - Immediate profile teardown on sign-out to prevent stale user profile leaks.
  */
 import React, {
@@ -71,7 +72,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
 
   const profileRequestIdRef = useRef<number>(0);
+  const userRef = useRef<User | null>(user);
+  userRef.current = user;
+
   const configured = useMemo(() => isSupabaseConfigured(), []);
+  const userId = user?.id;
 
   // Initialize session and restore authentication
   useEffect(() => {
@@ -146,19 +151,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [configured]);
 
   // Dedicated effect for asynchronous user profile fetching with request token cancellation.
-  // Prevents race conditions and stale profiles across fast login/logout transitions.
+  // Keyed strictly to userId so token refreshes and shallow user clones do NOT re-trigger
+  // redundant PostgREST queries.
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setProfile(null);
       return;
     }
+
+    const currentUser = userRef.current;
+    if (!currentUser) return;
 
     const currentReqId = ++profileRequestIdRef.current;
     let isCancelled = false;
 
     const fetchProfile = async () => {
       try {
-        const userProfile = await getOrCreateProfile(user);
+        const userProfile = await getOrCreateProfile(currentUser);
         if (!isCancelled && profileRequestIdRef.current === currentReqId) {
           setProfile(userProfile);
         }
@@ -174,7 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => {
       isCancelled = true;
     };
-  }, [user]);
+  }, [userId]);
 
   const signInWithGitHub = useCallback(
     async (returnPath?: string): Promise<{ error: string | null }> => {
@@ -218,17 +227,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const refreshProfile = useCallback(async (): Promise<void> => {
-    if (!user) return;
+    const currentUser = userRef.current;
+    if (!currentUser) return;
     const currentReqId = ++profileRequestIdRef.current;
     try {
-      const refreshed = await getOrCreateProfile(user);
+      const refreshed = await getOrCreateProfile(currentUser);
       if (profileRequestIdRef.current === currentReqId) {
         setProfile(refreshed);
       }
     } catch (err) {
       console.warn('[AuthProvider] Failed to refresh profile:', err);
     }
-  }, [user]);
+  }, []);
 
   const updateProfile = useCallback(
     async (updates: UpdateProfileInput): Promise<{ profile: UserProfile | null; error: string | null }> => {
