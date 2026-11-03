@@ -68,6 +68,14 @@ export class DevServerManager {
       serverPort: target.port,
       serverUrl: target.url,
     });
+    try {
+      webcontainerService.updateState({
+        serverPort: target.port,
+        serverUrl: target.url,
+      });
+    } catch {
+      // Ignore in mock or isolated test environments
+    }
     return true;
   }
 

@@ -16,6 +16,7 @@ import {
 import toast from 'react-hot-toast';
 import Tooltip from '../ui/Tooltip';
 import StackBlitzStartupLoader from '../vscode/StackBlitzStartupLoader';
+import { devServerManager } from '../../services/webcontainer/devServerManager';
 import {
   webcontainerService,
   ProjectStartupStage,
@@ -70,6 +71,13 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
   onMaximizeWidth,
   onFullscreen,
 }) => {
+  const devServerState = React.useSyncExternalStore(
+    (cb) => devServerManager.subscribe(cb),
+    () => devServerManager.getState(),
+    () => devServerManager.getState(),
+  );
+  const activePorts = devServerState.ports.filter((p) => p.active);
+
   return (
     <div className="flex h-full w-full min-h-0 flex-col overflow-hidden bg-[var(--background)] select-none">
       {/* Live Preview Address Bar / Controls */}
@@ -167,6 +175,39 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
             </span>
           )}
         </div>
+
+        {/* Multi-Port Selector (Phase 1H Finding D) */}
+        {activePorts.length > 1 && (
+          <div
+            role="tablist"
+            aria-label="Active dev server ports"
+            data-testid="preview-port-selector"
+            className="flex items-center rounded border border-[var(--border)] bg-[var(--background)] p-0.5 text-[10px] font-mono shrink-0 mx-1"
+          >
+            {activePorts.map((p) => {
+              const isSelected =
+                (devServerState.selectedPort ?? devServerState.serverPort ?? activePreview?.port) === p.port;
+              return (
+                <button
+                  key={p.port}
+                  type="button"
+                  role="tab"
+                  aria-selected={isSelected}
+                  data-testid={`preview-port-btn-${p.port}`}
+                  onClick={() => devServerManager.selectPort(p.port)}
+                  className={`px-1.5 py-0.5 rounded transition-colors ${
+                    isSelected
+                      ? 'bg-[var(--primary)] text-white font-semibold'
+                      : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5'
+                  }`}
+                  title={`Switch preview to port ${p.port}`}
+                >
+                  :{p.port}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Right Actions: Viewport mode, Popout, Maximize, Fullscreen */}
         <div className="flex items-center gap-1 shrink-0">

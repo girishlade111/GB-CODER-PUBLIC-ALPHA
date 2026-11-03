@@ -53,6 +53,7 @@ await build({
       export * from './src/services/webcontainer/nextjsDiagnostics.ts';
       export * from './src/services/webcontainer/astroDiagnostics.ts';
       export * from './src/services/webcontainer/angularDiagnostics.ts';
+      export * from './src/services/security/nextjsSecurityAudit.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',

@@ -6,6 +6,7 @@
  * imported code or performing network requests.
  */
 import { ProjectType } from '../../types/files';
+import { auditNextJsSecurity } from '../security/nextjsSecurityAudit';
 
 export type DetectedProjectKind = 'simple' | 'react' | 'vue' | 'fullstack';
 
@@ -529,9 +530,12 @@ export function detectFramework(entries: ManifestEntry[]): FrameworkDetectionRes
     const hasSwcWasm = depNames.includes('@next/swc-wasm-nodejs');
     const nextVersion = dependencies['next'] || '';
 
-    // Check for known vulnerable versions (< 16.4.4)
-    if (nextVersion && (/^(?:[~^]?1[0-5]\.|\^?14\.|\^?15\.)/.test(nextVersion) || (nextVersion.startsWith('16.') && nextVersion < '16.4.4'))) {
-      warnings.push('Next.js versions prior to 16.4.4 contain published security advisories (including critical GHSA-f82v-jwr5-mffw and GHSA-2xp9-vwfh-vxw4). Upgrade to a supported, security-patched release.');
+    // Phase 1H: Exact advisory-specific semver evaluation (Finding A)
+    if (nextVersion) {
+      const audit = auditNextJsSecurity(nextVersion);
+      if (audit.isVulnerable) {
+        warnings.push(audit.summary);
+      }
     }
 
     if (hasTurbo) {

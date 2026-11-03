@@ -1185,7 +1185,7 @@ class WebContainerManager {
     });
   }
 
-  private updateState(patch: Partial<WebContainerState>) {
+  public updateState(patch: Partial<WebContainerState>) {
     this.state = { ...this.state, ...patch };
     this.notify();
   }
