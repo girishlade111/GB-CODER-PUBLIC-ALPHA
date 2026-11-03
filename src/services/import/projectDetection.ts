@@ -523,22 +523,29 @@ export function detectFramework(entries: ManifestEntry[]): FrameworkDetectionRes
     projectType = 'react';
     requiresAdvancedMode = true;
 
-    // Phase 1E: Evaluate WebContainer Next.js compatibility
+    // Phase 1E.1: Evaluate WebContainer Next.js security and runtime compatibility
     const devScript = scripts['dev'] || '';
     const hasTurbo = devScript.includes('--turbo');
     const hasSwcWasm = depNames.includes('@next/swc-wasm-nodejs');
+    const nextVersion = dependencies['next'] || '';
+
+    // Check for known vulnerable versions (< 16.4.4)
+    if (nextVersion && (/^(?:[~^]?1[0-5]\.|\^?14\.|\^?15\.)/.test(nextVersion) || (nextVersion.startsWith('16.') && nextVersion < '16.4.4'))) {
+      warnings.push('Next.js versions prior to 16.4.4 contain published security advisories (including critical GHSA-f82v-jwr5-mffw and GHSA-2xp9-vwfh-vxw4). Upgrade to a supported, security-patched release.');
+    }
 
     if (hasTurbo) {
       runtimeSupport = 'unsupported';
-      warnings.push('Next.js Turbopack (--turbo) is not supported in WebContainers. Use standard "next dev" with Webpack and @next/swc-wasm-nodejs.');
+      warnings.push('Next.js Turbopack (--turbo) is not supported in WebContainers. Use standard "next dev --webpack" with Webpack and @next/swc-wasm-nodejs.');
     } else {
-      runtimeSupport = 'verified'; // Phase 1E: Verified via Webpack & WASM SWC
+      runtimeSupport = 'experimental'; // Phase 1E.1: Experimental runtime due to browser WebAssembly sandbox memory and execution limits
       evidence.push({
         label: 'Next.js WebContainer Runtime',
         detail: hasSwcWasm
-          ? 'Runs in WebContainer using Webpack and bundled @next/swc-wasm-nodejs compiler bindings.'
-          : 'Runs in WebContainer using Webpack and WASM SWC fallback.',
+          ? 'Runs in WebContainer in experimental mode using Webpack and bundled @next/swc-wasm-nodejs compiler bindings.'
+          : 'Runs in WebContainer in experimental mode using Webpack and WASM SWC fallback.',
       });
+      warnings.push('Next.js in browser WebContainers is experimental. Large dependency trees may cause high memory usage or long install times in the browser sandbox.');
     }
 
     evidence.push({

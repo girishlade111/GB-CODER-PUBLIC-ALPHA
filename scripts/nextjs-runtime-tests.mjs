@@ -68,16 +68,16 @@ describe('GB Coder Phase 1E — Genuine Next.js Runtime, SSR, API Routes & Live 
   });
 
   // T01: Genuine Next.js starter registration
-  test('T01: Genuine Next.js starter is registered in Unified Template Registry with ready status', () => {
+  test('T01: Genuine Next.js starter is registered in Unified Template Registry with experimental status', () => {
     const tpl = getUnifiedTemplate('nextjs-genuine-starter');
     assert.ok(tpl, 'nextjs-genuine-starter must be registered');
     assert.equal(tpl.framework, 'nextjs');
-    assert.equal(tpl.supportStatus, 'ready');
+    assert.equal(tpl.supportStatus, 'experimental');
     assert.equal(tpl.runtimeType, 'webcontainer');
     assert.equal(tpl.projectType, 'react');
     assert.equal(tpl.recommendedEditor, 'vscode');
     assert.equal(tpl.packageManager, 'npm');
-    assert.equal(tpl.badge, 'Genuine SSR');
+    assert.equal(tpl.badge, 'Experimental SSR');
     assert.ok(tpl.requiresBuildStep);
   });
 
@@ -97,9 +97,9 @@ describe('GB Coder Phase 1E — Genuine Next.js Runtime, SSR, API Routes & Live 
 
     // Verify dependencies
     const pkg = JSON.parse(files['package.json']);
-    assert.ok(pkg.dependencies.next, 'Must depend on real next');
-    assert.ok(pkg.dependencies['@next/swc-wasm-nodejs'], 'Must include @next/swc-wasm-nodejs for WebContainer');
-    assert.equal(pkg.scripts.dev, 'next dev');
+    assert.equal(pkg.dependencies.next, '16.4.4', 'Must use supported, security-patched Next.js 16.4.4');
+    assert.equal(pkg.dependencies['@next/swc-wasm-nodejs'], '16.4.4', 'Must include @next/swc-wasm-nodejs 16.4.4 for WebContainer');
+    assert.equal(pkg.scripts.dev, 'next dev --webpack');
   });
 
   // T03: Existing simulated template preservation
@@ -120,7 +120,7 @@ describe('GB Coder Phase 1E — Genuine Next.js Runtime, SSR, API Routes & Live 
   });
 
   // T04: Next.js framework detection
-  test('T04: Framework detection engine recognizes genuine Next.js App Router project', async () => {
+  test('T04: Framework detection engine recognizes genuine Next.js App Router project as experimental', async () => {
     const rawFiles = await generateTemplateFiles('nextjs-genuine-starter');
     const entries = Object.entries(rawFiles).map(([path, content]) => ({ path, content }));
     const result = detectFramework(entries);
@@ -128,7 +128,7 @@ describe('GB Coder Phase 1E — Genuine Next.js Runtime, SSR, API Routes & Live 
     assert.equal(result.primaryFramework, 'nextjs');
     assert.equal(result.displayName, 'Next.js');
     assert.equal(result.routerType, 'app-router');
-    assert.equal(result.runtimeSupport, 'verified');
+    assert.equal(result.runtimeSupport, 'experimental');
     assert.equal(result.projectType, 'react');
     assert.equal(result.requiresAdvancedMode, true);
     assert.ok(result.technologies.includes('nextjs'));
@@ -196,9 +196,9 @@ describe('GB Coder Phase 1E — Genuine Next.js Runtime, SSR, API Routes & Live 
     const rawFiles = await generateTemplateFiles('nextjs-genuine-starter');
     const pkg = JSON.parse(rawFiles['package.json']);
 
-    assert.equal(pkg.dependencies.next, '14.2.24');
-    assert.equal(pkg.dependencies['@next/swc-wasm-nodejs'], '14.2.24');
-    assert.ok(pkg.dependencies.react.includes('18'));
+    assert.equal(pkg.dependencies.next, '16.4.4');
+    assert.equal(pkg.dependencies['@next/swc-wasm-nodejs'], '16.4.4');
+    assert.ok(pkg.dependencies.react.includes('19'));
   });
 
   // T10: Actual next dev process starts
@@ -308,7 +308,8 @@ describe('GB Coder Phase 1E — Genuine Next.js Runtime, SSR, API Routes & Live 
     const fw = detectFramework(entries);
     assert.equal(fw.primaryFramework, 'nextjs');
     assert.equal(fw.routerType, 'pages-router');
-    assert.equal(fw.runtimeSupport, 'verified');
+    assert.equal(fw.runtimeSupport, 'experimental');
+    assert.ok(fw.warnings.some((w) => w.includes('published security advisories')));
   });
 
   // T18: CSS updates refresh correctly
@@ -490,8 +491,8 @@ Type error: Property 'nonExistent' does not exist on type 'HomePageProps'.
   test('T32: Tested Next.js version compatibility matrix is explicitly defined', () => {
     const rawFiles = BUILTIN_STATIC_TEMPLATES_CHECK();
     const pkg = JSON.parse(rawFiles['package.json']);
-    assert.equal(pkg.dependencies.next, '14.2.24');
-    assert.equal(pkg.dependencies['@next/swc-wasm-nodejs'], '14.2.24');
+    assert.equal(pkg.dependencies.next, '16.4.4');
+    assert.equal(pkg.dependencies['@next/swc-wasm-nodejs'], '16.4.4');
   });
 
   // T33: Non-compatible imported project reports warning
@@ -573,8 +574,8 @@ function BUILTIN_STATIC_TEMPLATES_CHECK() {
   return {
     'package.json': JSON.stringify({
       dependencies: {
-        next: '14.2.24',
-        '@next/swc-wasm-nodejs': '14.2.24',
+        next: '16.4.4',
+        '@next/swc-wasm-nodejs': '16.4.4',
       },
     }),
   };

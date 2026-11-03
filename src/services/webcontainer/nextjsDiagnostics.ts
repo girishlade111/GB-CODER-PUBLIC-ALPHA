@@ -65,7 +65,7 @@ export function diagnoseNextJsOutput(log: string): NextJsDiagnosticResult | null
       message:
         'Native platform SWC binaries cannot run in WebContainers. WebAssembly-compiled SWC bindings are required.',
       recoveryAction: 'Install @next/swc-wasm-nodejs matching your Next.js version as a project dependency.',
-      suggestedCommand: 'npm install --save-exact @next/swc-wasm-nodejs@14.2.24',
+      suggestedCommand: 'npm install --save-exact @next/swc-wasm-nodejs@16.4.4',
     };
   }
 
@@ -80,8 +80,8 @@ export function diagnoseNextJsOutput(log: string): NextJsDiagnosticResult | null
       title: 'Unsupported Node.js Version',
       message:
         'Installed Next.js version requires a different Node.js runtime version than provided by the current WebContainer instance.',
-      recoveryAction: 'Use Next.js 14.2.x which is fully verified on WebContainer Node.js 18/20.',
-      suggestedCommand: 'npm install next@14.2.24 react@^18.3.1 react-dom@^18.3.1',
+      recoveryAction: 'Use Next.js 16.4.x (Active LTS) which is supported on WebContainer Node.js 20/22.',
+      suggestedCommand: 'npm install next@16.4.4 react@^19.0.0 react-dom@^19.0.0',
     };
   }
 

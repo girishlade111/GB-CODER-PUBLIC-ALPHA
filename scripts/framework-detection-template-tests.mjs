@@ -160,7 +160,7 @@ describe('GB Coder Phase 1D — Framework Detection Engine & Unified Template In
     const res = detectFramework(entries);
     assert.equal(res.primaryFramework, 'nextjs');
     assert.equal(res.routerType, 'app-router');
-    assert.ok(['verified', 'not_implemented'].includes(res.runtimeSupport));
+    assert.ok(['verified', 'experimental', 'not_implemented'].includes(res.runtimeSupport));
     assert.equal(res.projectType, 'react');
     assert.equal(res.requiresAdvancedMode, true);
     assert.ok(res.technologies.includes('nextjs'));
@@ -184,7 +184,7 @@ describe('GB Coder Phase 1D — Framework Detection Engine & Unified Template In
     const res = detectFramework(entries);
     assert.equal(res.primaryFramework, 'nextjs');
     assert.equal(res.routerType, 'pages-router');
-    assert.ok(['verified', 'not_implemented'].includes(res.runtimeSupport));
+    assert.ok(['verified', 'experimental', 'not_implemented'].includes(res.runtimeSupport));
     assert.equal(res.projectType, 'react');
   });
 
@@ -420,7 +420,7 @@ describe('GB Coder Phase 1D — Framework Detection Engine & Unified Template In
       assert.ok(['plain', 'react', 'vue'].includes(tpl.projectType));
       assert.ok(['plain', 'vscode'].includes(tpl.recommendedEditor));
       assert.ok(['npm', 'pnpm', 'yarn'].includes(tpl.packageManager));
-      assert.ok(['ready', 'client_simulated', 'planned_phase_1e', 'planned_phase_1f', 'deprecated'].includes(tpl.supportStatus));
+      assert.ok(['ready', 'experimental', 'client_simulated', 'planned_phase_1e', 'planned_phase_1f', 'deprecated'].includes(tpl.supportStatus));
       assert.ok(['webcontainer', 'client-simulated', 'planned'].includes(tpl.runtimeType));
     }
   });
@@ -445,8 +445,8 @@ describe('GB Coder Phase 1D — Framework Detection Engine & Unified Template In
 
     const nextStarter = getUnifiedTemplate('nextjs-genuine-starter');
     assert.ok(nextStarter);
-    assert.ok(['ready', 'planned_phase_1e'].includes(nextStarter.supportStatus));
-    assert.equal(nextStarter.targetMilestone, 'Phase 1E');
+    assert.ok(['ready', 'experimental', 'planned_phase_1e'].includes(nextStarter.supportStatus));
+    assert.ok(nextStarter.targetMilestone.startsWith('Phase 1E'));
   });
 
   // T21: New project creation and persistence with framework metadata

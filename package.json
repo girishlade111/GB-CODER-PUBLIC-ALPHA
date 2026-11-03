@@ -75,7 +75,8 @@
     "audit:phase1d": "node scripts/framework-detection-template-tests.mjs",
     "audit:frameworks": "node scripts/framework-detection-template-tests.mjs",
     "audit:phase1e": "node scripts/nextjs-runtime-tests.mjs",
-    "audit:nextjs": "node scripts/nextjs-runtime-tests.mjs"
+    "audit:nextjs": "node scripts/nextjs-runtime-tests.mjs",
+    "audit:e2e:nextjs": "node scripts/e2e-nextjs-real-runtime.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

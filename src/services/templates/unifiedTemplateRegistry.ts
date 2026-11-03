@@ -32,6 +32,7 @@ export type TemplateFramework =
 
 export type TemplateSupportStatus =
   | 'ready'
+  | 'experimental'
   | 'client_simulated'
   | 'planned_phase_1e'
   | 'planned_phase_1f'
@@ -223,22 +224,22 @@ node bin/cli.js
         version: '0.1.0',
         private: true,
         scripts: {
-          dev: 'next dev',
+          dev: 'next dev --webpack',
           build: 'next build',
           start: 'next start',
           lint: 'next lint',
         },
         dependencies: {
-          next: '14.2.24',
-          react: '^18.3.1',
-          'react-dom': '^18.3.1',
-          '@next/swc-wasm-nodejs': '14.2.24',
+          next: '16.4.4',
+          react: '^19.0.0',
+          'react-dom': '^19.0.0',
+          '@next/swc-wasm-nodejs': '16.4.4',
         },
         devDependencies: {
-          '@types/node': '^20.11.0',
-          '@types/react': '^18.3.0',
-          '@types/react-dom': '^18.3.0',
-          typescript: '^5.4.0',
+          '@types/node': '^22.0.0',
+          '@types/react': '^19.0.0',
+          '@types/react-dom': '^19.0.0',
+          typescript: '^5.7.0',
         },
       },
       null,
@@ -797,25 +798,25 @@ const UNIFIED_TEMPLATES: Record<string, UnifiedTemplateDescriptor> = {
     runtimeNotes: 'Client-side React App Router emulation. Real WebContainer Next.js SSR planned for Phase 1E.',
   },
 
-  // --- Genuine Next.js App Router Starter (Phase 1E Verified) ---
+  // --- Genuine Next.js App Router Starter (Phase 1E.1 Security Remediated) ---
   'nextjs-genuine-starter': {
     id: 'nextjs-genuine-starter',
-    title: 'Next.js App Router (Node SSR)',
-    description: 'Genuine Next.js SSR, React Server & Client Components, and API Route Handlers running in WebContainer via Webpack & WASM SWC.',
+    title: 'Next.js 16 App Router (Node SSR)',
+    description: 'Experimental Next.js 16 App Router (Active LTS) in WebContainer using Webpack and WASM SWC. Subject to browser sandbox resource limits.',
     framework: 'nextjs',
     category: 'nextjs',
-    supportStatus: 'ready',
+    supportStatus: 'experimental',
     runtimeType: 'webcontainer',
     projectType: 'react',
     recommendedEditor: 'vscode',
     packageManager: 'npm',
-    targetMilestone: 'Phase 1E',
+    targetMilestone: 'Phase 1E.1',
     icon: '▲',
-    badge: 'Genuine SSR',
-    tags: ['nextjs', 'ssr', 'app-router', 'webcontainer', 'phase-1e'],
+    badge: 'Experimental SSR',
+    tags: ['nextjs', 'ssr', 'app-router', 'webcontainer', 'phase-1e1'],
     isOfficial: true,
     requiresBuildStep: true,
-    runtimeNotes: 'Genuine Next.js Node.js server engine in WebContainer via Webpack & WASM SWC.',
+    runtimeNotes: 'Experimental Next.js 16.4.4 runtime. Security-patched against CVEs. In-browser WebContainer npm install and compilation require significant browser resources and Webpack mode.',
   },
 
   // --- Planned Starter Slots (Phase 1F) ---
