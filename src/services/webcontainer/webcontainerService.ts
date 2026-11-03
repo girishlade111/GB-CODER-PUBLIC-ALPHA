@@ -71,16 +71,37 @@ export const OPTIMIZED_NPMRC = [
  * Computes a deterministic dependency fingerprint from project manifest and lockfiles.
  * Used to avoid redundant `npm install` cycles when opening or restarting the same project.
  */
+function canonicalizeJson(content: string): string {
+  try {
+    const parsed = JSON.parse(content);
+    const sortKeys = (val: unknown): unknown => {
+      if (val === null || typeof val !== 'object') return val;
+      if (Array.isArray(val)) return val.map(sortKeys);
+      const sortedObj: Record<string, unknown> = {};
+      for (const k of Object.keys(val as Record<string, unknown>).sort()) {
+        sortedObj[k] = sortKeys((val as Record<string, unknown>)[k]);
+      }
+      return sortedObj;
+    };
+    return JSON.stringify(sortKeys(parsed));
+  } catch {
+    return content;
+  }
+}
+
 export function computeDependencyFingerprint(
   files: ProjectFile[],
   extraDependencies?: Record<string, string>,
   projectType?: ProjectType,
 ): string {
-  // Full, order-stable inputs. This is an in-runtime invalidation token, not
-  // an integrity key or permission to reuse dependencies across runtimes.
+  // Full, order-stable inputs with canonicalized JSON keys for package manifests.
   const relevant = files
     .filter(f => ['package.json', 'package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock', '.npmrc'].includes(f.path.replace(/^\/+/, '')))
-    .map(f => [f.path.replace(/^\/+/, ''), f.content || ''])
+    .map(f => {
+      const clean = f.path.replace(/^\/+/, '');
+      const content = f.content || '';
+      return [clean, clean.endsWith('.json') ? canonicalizeJson(content) : content];
+    })
     .sort((a, b) => a[0].localeCompare(b[0]));
   const extra = Object.entries(extraDependencies || {}).sort(([a], [b]) => a.localeCompare(b));
   const input = JSON.stringify([relevant, extra, projectType || '']);
@@ -99,7 +120,18 @@ export type WebContainerStatus =
   | 'booting'
   | 'ready'
   | 'running'
-  | 'error';
+  | 'switching-project'
+  | 'stopping'
+  | 'stopped'
+  | 'error'
+  | 'recovering';
+
+export type RuntimeErrorCategory =
+  | 'process_failure'
+  | 'project_init_failure'
+  | 'runtime_instance_failure'
+  | 'environment_incompatibility'
+  | 'unrecoverable_session_failure';
 
 export type ProjectStartupStage =
   | 'idle'
@@ -116,6 +148,7 @@ export type PreviewStatus = 'idle' | 'loading' | 'ready' | 'error';
 export interface WebContainerRuntimeError {
   phase: 'boot' | 'mount' | 'install' | 'server' | 'preview' | 'general';
   message: string;
+  category?: RuntimeErrorCategory;
   details?: string;
   timestamp: number;
   recoverable: boolean;
@@ -341,6 +374,12 @@ class WebContainerManager {
   private shellWriter: WritableStreamDefaultWriter<string> | null = null;
   private serverListenersAttached = new WeakSet<WebContainer>();
   private eventUnsubscribers: Array<() => void> = [];
+  private tornDownInstances = new WeakSet<WebContainer>();
+  private isExplicitlyTornDown = false;
+
+  public isTornDown(): boolean {
+    return this.isExplicitlyTornDown;
+  }
   private shellSpawnPromise: Promise<{
     write: (data: string) => void;
     resize: (cols: number, rows: number) => void;
@@ -729,30 +768,83 @@ class WebContainerManager {
     this.invalidateDependencyCache();
     this.diagnostics.finish(this.diagnosticAttempt, 'cancelled');
     this.runtimeGeneration++;
+    this.sessionEpoch++;
+    this.cleanupServerListeners();
+    this.terminateShell();
+    if (this.activeProjectId) {
+      terminalSessionManager.teardownForProject(this.activeProjectId);
+    } else {
+      terminalSessionManager.teardownAll();
+    }
+    webcontainerWatcher.stop();
+    this.shellSpawnPromise = null;
+    this.resetProjectStartState();
+    this.isDevServerActive = false;
+    this.isDevServerStartingState = false;
+    this.isShellPromptReady = false;
+    this.devServerStartEpoch = null;
+    this.devServerStartProjectId = null;
+    devServerManager.reset();
+
+    // Server listeners rebind with the new runtimeGeneration
+    if (this.instance && !this.tornDownInstances.has(this.instance)) {
+      this.setupServerListeners(this.instance);
+    }
+
+    this.updateState({
+      status: this.instance ? 'ready' : (this.isSupported() ? 'idle' : 'unsupported'),
+      serverUrl: null,
+      serverPort: null,
+      activeServers: [],
+      startupStage: 'idle',
+      previewStatus: 'idle',
+      error: null,
+      runtimeError: null,
+      sessionEpoch: this.sessionEpoch,
+    });
+  }
+
+  /**
+   * Performs an explicit, complete teardown of the WebContainer runtime.
+   * Stops all owned processes, unmounts sessions, and shuts down the WebAssembly instance.
+   */
+  public async teardown(): Promise<void> {
+    if (this.state.status === 'stopped') return;
+    this.updateState({ status: 'stopping' });
+    this.clearAutomaticStartup();
+    this.invalidateDependencyCache();
+    this.diagnostics.finish(this.diagnosticAttempt, 'cancelled');
+    this.runtimeGeneration++;
+    this.sessionEpoch++;
+
     const shared = globalThis as unknown as {
       __GBCODER_WEBCONTAINER_INSTANCE__?: WebContainer | null;
       __GBCODER_WEBCONTAINER_BOOT_PROMISE__?: Promise<WebContainer> | null;
     };
     const container = this.instance ?? shared.__GBCODER_WEBCONTAINER_INSTANCE__;
     const pendingBoot = this.bootPromise ?? shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__;
+
     this.cleanupServerListeners();
     this.terminateShell();
     terminalSessionManager.teardownAll();
     webcontainerWatcher.stop();
+    devServerManager.reset();
     this.shellSpawnPromise = null;
     this.instance = null;
     this.bootPromise = null;
+    this.isExplicitlyTornDown = true;
     shared.__GBCODER_WEBCONTAINER_INSTANCE__ = null;
     shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__ = null;
-    // The public API invalidates the filesystem and all descendant processes.
-    // A pending old boot tears itself down before releasing the next boot.
+
     if (container) {
+      this.tornDownInstances.add(container);
       try {
         container.teardown();
       } catch (e) {
         console.warn('[WebContainer] Error during container teardown:', e);
       }
     }
+
     this.runtimeRetirement = Promise.all([
       this.runtimeRetirement,
       pendingBoot?.then(
@@ -760,20 +852,105 @@ class WebContainerManager {
         () => {},
       ),
     ]).then(() => {});
-    this.updateState({ status: this.isSupported() ? 'idle' : 'unsupported' });
+
+    this.updateState({
+      status: 'stopped',
+      serverUrl: null,
+      serverPort: null,
+      activeServers: [],
+      startupStage: 'idle',
+      previewStatus: 'idle',
+      error: null,
+      runtimeError: null,
+      sessionEpoch: this.sessionEpoch,
+    });
+  }
+
+  /**
+   * Safely switches project scope by first flushing pending filesystem writes.
+   * If the flush fails, the transition is aborted to prevent data loss.
+   */
+  public async transitionProject(nextProjectId: string): Promise<FlushResult> {
+    if (this.activeProjectId === nextProjectId) {
+      return { ok: true, persisted: [], failed: [], canceled: [] };
+    }
+    this.updateState({ status: 'switching-project' });
+    const flushResult = await this.fileSyncCoordinator.flush();
+    if (!flushResult.ok && flushResult.failed.length > 0) {
+      console.error(
+        '[WebContainer] Project transition aborted: pending writes failed to flush',
+        flushResult.failed,
+      );
+      this.updateState({
+        status: 'error',
+        error: `Project transition aborted: failed to flush ${flushResult.failed.length} file(s).`,
+        runtimeError: {
+          phase: 'mount',
+          message: 'Could not flush pending changes before switching projects.',
+          category: 'project_init_failure',
+          timestamp: Date.now(),
+          recoverable: true,
+          retryAction: 'reboot_container',
+        },
+      });
+      return flushResult;
+    }
+    this.attachProject(nextProjectId);
+    return flushResult;
+  }
+
+  /**
+   * Recovers runtime state according to failure classification without destructive data loss.
+   */
+  public async recoverRuntime(
+    action: 'restart_process' | 'remount_project' | 'reset_runtime' | 'persist_and_reload' = 'restart_process',
+  ): Promise<boolean> {
+    this.updateState({ status: 'recovering' });
+    try {
+      if (action === 'restart_process') {
+        return await devServerManager.restart();
+      } else if (action === 'remount_project') {
+        this.resetServerState();
+        this.setStartupStage('idle');
+        this.updateState({
+          status: this.instance ? 'ready' : (this.isSupported() ? 'idle' : 'unsupported'),
+          error: null,
+          runtimeError: null,
+        });
+        return true;
+      } else if (action === 'reset_runtime') {
+        this.terminateShell();
+        this.stopDevServer();
+        this.resetServerState();
+        this.invalidateDependencyCache();
+        this.updateState({
+          status: this.instance ? 'ready' : (this.isSupported() ? 'idle' : 'unsupported'),
+          error: null,
+          runtimeError: null,
+        });
+        return true;
+      } else if (action === 'persist_and_reload') {
+        await this.fileSyncCoordinator.flush();
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('[WebContainer] Recovery failed:', err);
+      this.updateState({ status: 'error' });
+      return false;
+    }
   }
 
   public attachProject(projectId: string): void {
     if (this.activeProjectId === projectId) return;
-    this.retireProjectRuntime();
 
-    // If another project was attached, cleanly tear down its dev server and pending writes
     if (this.activeProjectId !== null) {
-      this.sessionEpoch++;
-      this.resetProjectStartState();
+      this.updateState({ status: 'switching-project' });
       this.fileSyncCoordinator.cancelAll();
-    } else {
-      this.sessionEpoch++;
+      this.retireProjectRuntime();
     }
 
     this.activeProjectId = projectId;
@@ -787,6 +964,7 @@ class WebContainerManager {
     this.fileSyncCoordinator.setScope(projectId);
     this.updateState({
       activeProjectId: projectId,
+      status: this.instance ? 'ready' : (this.isSupported() ? 'idle' : 'unsupported'),
       serverUrl: null,
       serverPort: null,
       activeServers: [],
@@ -1120,7 +1298,7 @@ class WebContainerManager {
         error: null,
         runtimeError: null,
       });
-      devServerManager.handleServerReady(port, url);
+      devServerManager.handleServerReady(port, url, this.activeProjectId, this.sessionEpoch);
       webcontainerPerf.recordTiming('server_ready', 0, {
         port,
         url,
@@ -1206,7 +1384,14 @@ class WebContainerManager {
         const closingServer = this.state.activeServers.find(
           (s) => s.port === port,
         );
-        if (closingServer && closingServer.projectId && closingServer.projectId !== this.activeProjectId) {
+        if (
+          closingServer &&
+          ((closingServer.projectId && closingServer.projectId !== this.activeProjectId) ||
+            (closingServer.sessionEpoch && closingServer.sessionEpoch !== this.sessionEpoch))
+        ) {
+          return;
+        }
+        if (!closingServer) {
           return;
         }
 
@@ -1222,7 +1407,7 @@ class WebContainerManager {
             startupStage: nextServer ? 'ready' : 'idle',
             previewStatus: nextServer ? 'loading' : 'idle',
           });
-          devServerManager.handlePortClose(port);
+          devServerManager.handlePortClose(port, this.activeProjectId, this.sessionEpoch);
         } else {
           this.updateState({ activeServers: updated });
         }
@@ -1254,7 +1439,11 @@ class WebContainerManager {
     await this.runtimeRetirement;
     if (generation !== this.runtimeGeneration) throw new Error('Project changed before boot');
     // 1. Check local instance
-    if (this.instance && !(this.instance as unknown as { _tornDown?: boolean })._tornDown) {
+    if (
+      this.instance &&
+      !this.tornDownInstances.has(this.instance) &&
+      !(this.instance as unknown as { _tornDown?: boolean })._tornDown
+    ) {
       return this.instance;
     }
     if (this.instance) {
@@ -1268,7 +1457,11 @@ class WebContainerManager {
       }
     ).__GBCODER_WEBCONTAINER_INSTANCE__;
 
-    if (existing && !(existing as unknown as { _tornDown?: boolean })._tornDown) {
+    if (
+      existing &&
+      !this.tornDownInstances.has(existing) &&
+      !(existing as unknown as { _tornDown?: boolean })._tornDown
+    ) {
       this.instance = existing;
       (
         globalThis as unknown as {
@@ -1656,7 +1849,7 @@ class WebContainerManager {
     fingerprint: string,
     owner = this.captureStartupOwner(),
   ): boolean {
-    if (!owner.instance || !this.isStartupOwner(owner)) return false;
+    if ((this.instance && !owner.instance) || !this.isStartupOwner(owner)) return false;
     this.installedManifestFingerprint = fingerprint;
     this.installedOwner = owner;
     return true;
@@ -2360,18 +2553,24 @@ class WebContainerManager {
     title?: string;
     cols?: number;
     rows?: number;
+    projectId?: string | null;
+    epoch?: number;
     onData?: (data: string) => void;
   }) {
     const container = await this.boot();
-    return terminalSessionManager.createSession(container, options);
+    return terminalSessionManager.createSession(container, {
+      ...options,
+      projectId: options?.projectId !== undefined ? options.projectId : this.activeProjectId,
+      epoch: options?.epoch !== undefined ? options.epoch : this.sessionEpoch,
+    });
   }
 
   public getTerminalSession(id: string) {
     return terminalSessionManager.getSession(id);
   }
 
-  public listTerminalSessions(): TerminalSessionSummary[] {
-    return terminalSessionManager.listSessions();
+  public listTerminalSessions(projectId?: string): TerminalSessionSummary[] {
+    return terminalSessionManager.listSessions(projectId ?? this.activeProjectId ?? undefined);
   }
 
   public closeTerminalSession(id: string): void {

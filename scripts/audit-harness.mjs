@@ -33,6 +33,9 @@ await build({
       export * from './src/services/localShell.ts';
       export * from './src/services/webcontainer/webcontainerService.ts';
       export * from './src/services/webcontainer/webcontainerSupport.ts';
+      export * from './src/services/webcontainer/terminalSessionManager.ts';
+      export * from './src/services/webcontainer/devServerManager.ts';
+      export * from './src/services/webcontainer/fileSyncCoordinator.ts';
       export * from './src/services/preview/previewReloadService.ts';
       export * from './src/services/laminarService.ts';
       export * from './src/services/vscodeWorkspaceStore.ts';
@@ -253,11 +256,6 @@ function makeIndexedDB() {
             const tx = {
               mode,
               _aborted: false,
-              // Requests in flight. Real IndexedDB keeps a transaction alive
-              // while requests are pending and commits when none remain; the
-              // fake must do the same, otherwise a fixed-delay oncomplete can
-              // fire before a multi-step transaction's chained requests finish
-              // and resolve a stale null (commit race).
               _pending: 0,
               oncomplete: null,
               onerror: null,
@@ -276,9 +274,6 @@ function makeIndexedDB() {
               }, 0);
             };
             tx._scheduleCheck = scheduleCheck;
-            // Runs after the work function's synchronous prefix, which always
-            // creates at least one request (a requestless transaction commits
-            // at once, exactly like real IndexedDB).
             scheduleCheck();
             return tx;
           },
@@ -312,7 +307,5 @@ globalThis.window = globalThis.window ?? {
 globalThis.localStorage = memoryStorage;
 globalThis.indexedDB = memoryIndexedDB;
 
-// On Windows a bare absolute path is not a valid ESM specifier, so it has to be
-// converted to a file:// URL before dynamic import.
 export const services = await import(pathToFileURL(join(outdir, 'bundle.mjs')).href);
 export const cleanup = () => rmSync(outdir, { recursive: true, force: true });

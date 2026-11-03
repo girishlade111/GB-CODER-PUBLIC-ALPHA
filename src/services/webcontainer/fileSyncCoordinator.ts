@@ -59,6 +59,15 @@ export class FileSyncCoordinator {
     this.onDependencyInvalidation = options.onDependencyInvalidation;
   }
 
+  public async setScopeSafely(projectId: string | null): Promise<FlushResult> {
+    if (this.activeProjectId !== projectId) {
+      const flushResult = await this.flush();
+      this.activeProjectId = projectId;
+      return flushResult;
+    }
+    return { ok: true, persisted: [], failed: [], canceled: [] };
+  }
+
   public setScope(projectId: string | null): void {
     if (this.activeProjectId !== projectId) {
       // Discard all pending writes for the former project

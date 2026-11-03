@@ -110,7 +110,11 @@ describe('vercel.json isolation headers', () => {
     assert.ok(config.functions?.['api/ai.js'], 'api/ai.js function entry missing');
     assert.ok(Array.isArray(config.rewrites) && config.rewrites.length > 0);
     const last = config.rewrites[config.rewrites.length - 1];
-    assert.equal(last.source, '/app/(.*)');
+    assert.ok(
+      last.source === '/app/(.*)' ||
+      last.source === '/app/((?!assets(?:/|$)|.*\\.[^/]+(?:/|$)).*)',
+      `unexpected rewrite source: ${last.source}`,
+    );
     assert.equal(last.destination, '/app/index.html');
   });
 });

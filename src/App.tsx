@@ -2459,6 +2459,8 @@ function App() {
         const wcFlush = await wc.flushFileSync();
         if (!wcFlush.ok && wcFlush.failed.length > 0) {
           console.warn('[Navigation] Some pending writes failed to flush to WebContainer:', wcFlush.failed);
+          toast.error('Could not flush pending changes to WebContainer filesystem. Staying put to protect edits.');
+          return false;
         }
         if (!isCurrentTransition(transition)) return false;
 

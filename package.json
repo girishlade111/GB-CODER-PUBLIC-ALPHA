@@ -67,7 +67,9 @@
     "audit:inception": "node scripts/verify-inception-provider.mjs",
     "audit:e2e:inception": "node scripts/e2e-inception-provider-acceptance.mjs",
     "audit:e2e:boot": "node scripts/e2e-boot-recovery.mjs",
-    "audit:e2e:multi-provider": "node scripts/e2e-multi-provider-functional-acceptance.mjs"
+    "audit:e2e:multi-provider": "node scripts/e2e-multi-provider-functional-acceptance.mjs",
+    "audit:phase1b": "node scripts/webcontainer-lifecycle-hardening-tests.mjs",
+    "audit:lifecycle-hardening": "node scripts/webcontainer-lifecycle-hardening-tests.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

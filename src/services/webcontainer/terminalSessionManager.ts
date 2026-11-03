@@ -5,6 +5,8 @@ export interface TerminalSessionSummary {
   title: string;
   createdAt: number;
   isPromptReady: boolean;
+  projectId?: string | null;
+  epoch?: number;
 }
 
 export interface TerminalSession {
@@ -18,6 +20,8 @@ export interface TerminalSession {
   rows: number;
   createdAt: number;
   isPromptReady: boolean;
+  projectId?: string | null;
+  epoch?: number;
 }
 
 export class TerminalSessionManager {
@@ -50,7 +54,12 @@ export class TerminalSessionManager {
     }
   }
 
-  public listSessions(): TerminalSessionSummary[] {
+  public listSessions(projectId?: string): TerminalSessionSummary[] {
+    if (projectId) {
+      return this.cachedSummaries.filter(
+        (s) => !s.projectId || s.projectId === projectId,
+      );
+    }
     return this.cachedSummaries;
   }
 
@@ -60,16 +69,26 @@ export class TerminalSessionManager {
 
   public async getOrCreateSession(
     container: WebContainer,
-    options?: { title?: string; cols?: number; rows?: number },
+    options?: {
+      title?: string;
+      cols?: number;
+      rows?: number;
+      projectId?: string | null;
+      epoch?: number;
+    },
   ): Promise<TerminalSession> {
     if (this.activeSessionId) {
       const active = this.sessions.get(this.activeSessionId);
-      if (active) return active;
+      if (active && (!options?.projectId || active.projectId === options.projectId)) {
+        return active;
+      }
     }
-    const first = this.sessions.values().next().value;
-    if (first) {
-      this.activeSessionId = first.id;
-      return first;
+    const matching = Array.from(this.sessions.values()).find(
+      (s) => !options?.projectId || s.projectId === options.projectId,
+    );
+    if (matching) {
+      this.activeSessionId = matching.id;
+      return matching;
     }
     return this.createSession(container, options);
   }
@@ -80,6 +99,8 @@ export class TerminalSessionManager {
       title?: string;
       cols?: number;
       rows?: number;
+      projectId?: string | null;
+      epoch?: number;
       onData?: (data: string) => void;
     } = {},
   ): Promise<TerminalSession> {
@@ -87,6 +108,8 @@ export class TerminalSessionManager {
     const title = options.title || `Terminal ${this.sessions.size + 1}`;
     const cols = options.cols || 80;
     const rows = options.rows || 24;
+    const projectId = options.projectId ?? null;
+    const epoch = options.epoch ?? 0;
 
     const process = await container.spawn('jsh', {
       terminal: { cols, rows },
@@ -111,45 +134,50 @@ export class TerminalSessionManager {
       rows,
       createdAt: Date.now(),
       isPromptReady: false,
+      projectId,
+      epoch,
     };
 
     // Pipe process output to buffer and active listeners
-    void process.output.pipeTo(
-      new WritableStream({
-        write: (chunk: string) => {
-          outputBuffer.push(chunk);
-          if (outputBuffer.length > 500) {
-            outputBuffer.shift();
-          }
-
-          if (chunk.includes('❯') || /[$#❯]\s*$/.test(chunk)) {
-            session.isPromptReady = true;
-          }
-
-          dataListeners.forEach((listener) => {
-            try {
-              listener(chunk);
-            } catch {
-              // Ignore listener error
+    void process.output
+      .pipeTo(
+        new WritableStream({
+          write: (chunk: string) => {
+            outputBuffer.push(chunk);
+            if (outputBuffer.length > 500) {
+              outputBuffer.shift();
             }
-          });
-        },
-      }),
-    ).catch(() => {});
+
+            if (chunk.includes('❯') || /[$#❯]\s*$/.test(chunk)) {
+              session.isPromptReady = true;
+            }
+
+            dataListeners.forEach((listener) => {
+              try {
+                listener(chunk);
+              } catch {
+                // Ignore listener error
+              }
+            });
+          },
+        }),
+      )
+      .catch(() => {});
 
     // Handle process exit
-    void process.exit.then((exitCode) => {
-      console.log(`[TerminalSessionManager] Session ${id} exited with code ${exitCode}`);
-      // Notify listeners of process exit
-      const exitNotice = `\r\n\x1b[90m[Process completed with exit code ${exitCode}]\x1b[0m\r\n`;
-      dataListeners.forEach((l) => {
-        try {
-          l(exitNotice);
-        } catch {
-          // Ignored
-        }
-      });
-    }).catch(() => {});
+    void process.exit
+      .then((exitCode) => {
+        console.log(`[TerminalSessionManager] Session ${id} exited with code ${exitCode}`);
+        const exitNotice = `\r\n\x1b[90m[Process completed with exit code ${exitCode}]\x1b[0m\r\n`;
+        dataListeners.forEach((l) => {
+          try {
+            l(exitNotice);
+          } catch {
+            // Ignored
+          }
+        });
+      })
+      .catch(() => {});
 
     this.sessions.set(id, session);
     if (!this.activeSessionId) {
@@ -248,6 +276,28 @@ export class TerminalSessionManager {
     };
   }
 
+  public teardownForProject(projectId: string): void {
+    for (const [id, session] of Array.from(this.sessions.entries())) {
+      if (session.projectId === projectId) {
+        try {
+          session.writer.releaseLock();
+          session.process.kill();
+        } catch {
+          // Ignored
+        }
+        session.dataListeners.clear();
+        this.sessions.delete(id);
+        if (this.activeSessionId === id) this.activeSessionId = null;
+        if (this.splitSessionId === id) this.splitSessionId = null;
+      }
+    }
+    if (!this.activeSessionId) {
+      const remaining = Array.from(this.sessions.keys());
+      this.activeSessionId = remaining.length > 0 ? remaining[0] : null;
+    }
+    this.notify();
+  }
+
   public teardownAll(): void {
     for (const session of this.sessions.values()) {
       try {
@@ -276,6 +326,8 @@ export class TerminalSessionManager {
       title: s.title,
       createdAt: s.createdAt,
       isPromptReady: s.isPromptReady,
+      projectId: s.projectId,
+      epoch: s.epoch,
     }));
   }
 

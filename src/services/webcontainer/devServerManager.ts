@@ -11,6 +11,8 @@ export interface DevServerState {
   logs: string[];
   error: string | null;
   startedAt: number | null;
+  projectId?: string | null;
+  sessionEpoch?: number;
 }
 
 export class DevServerManager {
@@ -22,6 +24,8 @@ export class DevServerManager {
     logs: [],
     error: null,
     startedAt: null,
+    projectId: null,
+    sessionEpoch: 0,
   };
 
   private listeners = new Set<() => void>();
@@ -49,7 +53,12 @@ export class DevServerManager {
    * Starts the development server explicitly.
    * Prevents duplicate launches if a server is already starting or running.
    */
-  public async start(command = 'npm run dev', customSessionId?: string): Promise<boolean> {
+  public async start(
+    command = 'npm run dev',
+    customSessionId?: string,
+    targetProjectId?: string | null,
+    targetEpoch?: number,
+  ): Promise<boolean> {
     if (this.state.status === 'running' || this.state.status === 'starting') {
       console.warn('[DevServerManager] Dev server is already active or starting. Ignoring duplicate start.');
       return false;
@@ -69,6 +78,9 @@ export class DevServerManager {
       return false;
     }
 
+    const boundProject = targetProjectId !== undefined ? targetProjectId : webcontainerService.getActiveProjectId();
+    const boundEpoch = targetEpoch !== undefined ? targetEpoch : webcontainerService.getSessionEpoch();
+
     let sessionId = customSessionId;
     if (!sessionId) {
       // Find or create a terminal session for the dev server
@@ -76,6 +88,8 @@ export class DevServerManager {
       if (!session) {
         session = await terminalSessionManager.createSession(container, {
           title: 'Dev Server',
+          projectId: boundProject,
+          epoch: boundEpoch,
         });
       }
       sessionId = session.id;
@@ -88,9 +102,11 @@ export class DevServerManager {
       command,
       startedAt: Date.now(),
       error: null,
+      projectId: boundProject,
+      sessionEpoch: boundEpoch,
     });
 
-    webcontainerService.setDevServerStarting(true);
+    webcontainerService.setDevServerStarting(true, boundEpoch, boundProject ?? undefined);
 
     // Send command to the session
     const dispatched = terminalSessionManager.writeToSession(sessionId, `${command}\n`);
@@ -201,12 +217,44 @@ export class DevServerManager {
   /**
    * Called when WebContainer notifies of server-ready event.
    */
-  public handleServerReady(port: number, url: string): void {
+  public handleServerReady(
+    port: number,
+    url: string,
+    eventProjectId?: string | null,
+    eventEpoch?: number,
+  ): void {
+    // Stale event guards:
+    if (
+      eventProjectId !== undefined &&
+      eventProjectId !== null &&
+      this.state.projectId !== null &&
+      eventProjectId !== this.state.projectId
+    ) {
+      console.warn(
+        `[DevServerManager] Discarded stale server-ready from project "${eventProjectId}" (active is "${this.state.projectId}")`,
+      );
+      return;
+    }
+
+    if (
+      eventEpoch !== undefined &&
+      this.state.sessionEpoch !== undefined &&
+      this.state.sessionEpoch !== 0 &&
+      eventEpoch !== this.state.sessionEpoch
+    ) {
+      console.warn(
+        `[DevServerManager] Discarded server-ready from stale epoch ${eventEpoch} (current is ${this.state.sessionEpoch})`,
+      );
+      return;
+    }
+
     this.updateState({
       status: 'running',
       serverPort: port,
       serverUrl: url,
       error: null,
+      projectId: eventProjectId ?? this.state.projectId,
+      sessionEpoch: eventEpoch ?? this.state.sessionEpoch,
     });
     webcontainerService.setDevServerStarting(false);
   }
@@ -214,7 +262,11 @@ export class DevServerManager {
   /**
    * Called when a port closes.
    */
-  public handlePortClose(port: number): void {
+  public handlePortClose(
+    port: number,
+    eventProjectId?: string | null,
+    eventEpoch?: number,
+  ): void {
     this.portCloseListeners.forEach((l) => {
       try {
         l(port);
@@ -223,6 +275,31 @@ export class DevServerManager {
       }
     });
 
+    // Guard against late port close clearing a different project's preview
+    if (
+      eventProjectId !== undefined &&
+      eventProjectId !== null &&
+      this.state.projectId !== null &&
+      eventProjectId !== this.state.projectId
+    ) {
+      console.log(
+        `[DevServerManager] Discarded late port-close on port ${port} from project "${eventProjectId}" (active is "${this.state.projectId}")`,
+      );
+      return;
+    }
+
+    if (
+      eventEpoch !== undefined &&
+      this.state.sessionEpoch !== undefined &&
+      this.state.sessionEpoch !== 0 &&
+      eventEpoch !== this.state.sessionEpoch
+    ) {
+      console.log(
+        `[DevServerManager] Discarded late port-close on port ${port} from epoch ${eventEpoch} (current is ${this.state.sessionEpoch})`,
+      );
+      return;
+    }
+
     if (this.state.serverPort === port || this.state.serverPort === null) {
       this.updateState({
         status: 'stopped',
@@ -230,6 +307,28 @@ export class DevServerManager {
         serverPort: null,
       });
     }
+  }
+
+  public reset(): void {
+    this.state = {
+      status: 'idle',
+      serverUrl: null,
+      serverPort: null,
+      command: null,
+      logs: [],
+      error: null,
+      startedAt: null,
+      projectId: null,
+      sessionEpoch: 0,
+    };
+    this.devSessionId = null;
+    this.listeners.forEach((l) => {
+      try {
+        l();
+      } catch {
+        // Ignored
+      }
+    });
   }
 
   public recordLog(log: string): void {
