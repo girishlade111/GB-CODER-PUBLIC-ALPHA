@@ -530,10 +530,25 @@ export function detectFramework(entries: ManifestEntry[]): FrameworkDetectionRes
     const hasSwcWasm = depNames.includes('@next/swc-wasm-nodejs');
     const nextVersion = dependencies['next'] || '';
 
-    // Phase 1H: Exact advisory-specific semver evaluation (Finding A)
+    // Phase 1H.1: Inspect lockfile if present for resolved version
+    let resolvedNextVersion: string | undefined;
+    const lockEntry = entries.find(
+      (e) => e.path === 'package-lock.json' || e.path.endsWith('/package-lock.json')
+    );
+    if (lockEntry && lockEntry.content) {
+      try {
+        const lockParsed = JSON.parse(lockEntry.content);
+        resolvedNextVersion =
+          lockParsed.packages?.['node_modules/next']?.version ||
+          lockParsed.dependencies?.['next']?.version;
+      } catch {
+        // Ignored if lockfile is malformed
+      }
+    }
+
     if (nextVersion) {
-      const audit = auditNextJsSecurity(nextVersion);
-      if (audit.isVulnerable) {
+      const audit = auditNextJsSecurity(nextVersion, resolvedNextVersion);
+      if (audit.isVulnerable || audit.hasPotentialVulnerabilities) {
         warnings.push(audit.summary);
       }
     }

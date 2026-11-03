@@ -124,14 +124,16 @@ describe('GB Coder Phase 1G — Runtime Blocker Resolution & Acceptance Tests', 
       assert.equal(pkg.dependencies['@next/swc-wasm-nodejs'], pkg.dependencies['next']);
     });
 
-    test('N02: Next.js security classification accurately distinguishes patched vs vulnerable advisories on 14.2.24', () => {
-      // Phase 1H Finding A Correction:
+    test('N02: Next.js security classification accurately identifies affected advisories on 14.2.24', () => {
+      // Phase 1H.1 Advisory Corrections:
       // GHSA-f82v-jwr5-mffw (Middleware Auth Bypass) affected >= 14.0.0 < 14.2.25. Version 14.2.24 IS VULNERABLE.
-      // GHSA-2xp9-vwfh-vxw4 (AVIF RCE) affected < 14.2.21. Version 14.2.24 is PATCHED.
+      // GHSA-2xp9-vwfh-vxw4 (AVIF RCE) affected >= 10.0.0 < 15.5.24. Version 14.2.24 IS VULNERABLE.
+      // GHSA-2464-fhr4-w9xw (SVG RCE) affected >= 10.0.0 < 15.5.28. Version 14.2.24 IS VULNERABLE.
       const audit = services.auditNextJsSecurity('14.2.24');
       assert.equal(audit.isVulnerable, true, '14.2.24 is vulnerable to GHSA-f82v-jwr5-mffw');
       assert.ok(audit.advisories.some((a) => a.id === 'GHSA-f82v-jwr5-mffw'));
-      assert.ok(!audit.advisories.some((a) => a.id === 'GHSA-2xp9-vwfh-vxw4'));
+      assert.ok(audit.advisories.some((a) => a.id === 'GHSA-2xp9-vwfh-vxw4'));
+      assert.ok(audit.advisories.some((a) => a.id === 'GHSA-2464-fhr4-w9xw'));
     });
 
     test('N03: Next.js diagnostics captures Turbopack native binary incompatibility', () => {

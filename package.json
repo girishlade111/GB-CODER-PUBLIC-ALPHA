@@ -81,7 +81,10 @@
     "audit:astro-angular": "node scripts/astro-angular-runtime-tests.mjs",
     "audit:e2e:phase1f": "node scripts/e2e-astro-angular-runtime.mjs",
     "audit:phase1g": "node scripts/phase1g-runtime-tests.mjs",
-    "audit:e2e:phase1g": "node scripts/e2e-phase1g-acceptance.mjs"
+    "audit:e2e:phase1g": "node scripts/e2e-phase1g-acceptance.mjs",
+    "audit:phase1h": "node scripts/phase1h-security-acceptance-tests.mjs",
+    "audit:phase1h1": "node scripts/phase1h1-security-tests.mjs",
+    "audit:e2e:phase1h": "node scripts/e2e-phase1h-acceptance.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

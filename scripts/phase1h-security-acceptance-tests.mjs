@@ -46,42 +46,51 @@ describe('GB Coder Phase 1H — Independent Security Remediation & Acceptance Te
       assert.equal(middlewareAdv.severity, 'critical');
     });
 
-    test('H02: Next.js 14.2.24 is NOT vulnerable to GHSA-2xp9-vwfh-vxw4 or GHSA-fr5h-rqp8-gw6v', () => {
+    test('H02: Next.js 14.2.24 is affected by GHSA-2xp9-vwfh-vxw4 and GHSA-2464-fhr4-w9xw, but patched for SSRF', () => {
       const result = auditNextJsSecurity('14.2.24');
-      const rceAdv = result.advisories.find((a) => a.id === 'GHSA-2xp9-vwfh-vxw4');
+      const rceAvif = result.advisories.find((a) => a.id === 'GHSA-2xp9-vwfh-vxw4');
+      const rceSvg = result.advisories.find((a) => a.id === 'GHSA-2464-fhr4-w9xw');
       const ssrfAdv = result.advisories.find((a) => a.id === 'GHSA-fr5h-rqp8-gw6v');
       
-      assert.equal(rceAdv, undefined, 'Next.js 14.2.24 is >= 14.2.21, so AVIF RCE is patched');
-      assert.equal(ssrfAdv, undefined, 'Next.js 14.2.24 is >= 14.2.10, so SSRF is patched');
+      assert.ok(rceAvif, '14.2.24 is < 15.5.24, so AVIF RCE is affected');
+      assert.ok(rceSvg, '14.2.24 is < 15.5.28, so SVG RCE is affected');
+      assert.equal(ssrfAdv, undefined, '14.2.24 is >= 14.2.10, so SSRF is patched');
     });
 
-    test('H03: Next.js 14.2.25 is CLEAN of GHSA-f82v-jwr5-mffw, GHSA-2xp9-vwfh-vxw4, and GHSA-fr5h-rqp8-gw6v', () => {
+    test('H03: Next.js 14.2.25 is patched against GHSA-f82v-jwr5-mffw, but affected by AVIF/SVG RCE', () => {
       const result = auditNextJsSecurity('14.2.25');
-      assert.equal(result.isVulnerable, false, 'Next.js 14.2.25 must be clean of known critical advisories');
-      assert.equal(result.advisories.length, 0);
+      const middlewareAdv = result.advisories.find((a) => a.id === 'GHSA-f82v-jwr5-mffw');
+      const rceAvif = result.advisories.find((a) => a.id === 'GHSA-2xp9-vwfh-vxw4');
+      const rceSvg = result.advisories.find((a) => a.id === 'GHSA-2464-fhr4-w9xw');
+
+      assert.equal(middlewareAdv, undefined, '14.2.25 is patched against Middleware Auth Bypass');
+      assert.ok(rceAvif, '14.2.25 is < 15.5.24 and affected by AVIF RCE');
+      assert.ok(rceSvg, '14.2.25 is < 15.5.28 and affected by SVG RCE');
     });
 
-    test('H04: Next.js 14.2.20 is affected by BOTH GHSA-f82v-jwr5-mffw and GHSA-2xp9-vwfh-vxw4', () => {
-      const result = auditNextJsSecurity('14.2.20');
-      assert.equal(result.isVulnerable, true);
-      assert.equal(result.advisories.length, 2);
-      
-      const ids = result.advisories.map((a) => a.id);
-      assert.ok(ids.includes('GHSA-f82v-jwr5-mffw'));
-      assert.ok(ids.includes('GHSA-2xp9-vwfh-vxw4'));
+    test('H04: Next.js 15.2.2 is affected by GHSA-f82v-jwr5-mffw, while 15.2.3 is patched', () => {
+      const res1522 = auditNextJsSecurity('15.2.2');
+      assert.ok(res1522.advisories.some((a) => a.id === 'GHSA-f82v-jwr5-mffw'));
+
+      const res1523 = auditNextJsSecurity('15.2.3');
+      assert.ok(!res1523.advisories.some((a) => a.id === 'GHSA-f82v-jwr5-mffw'));
     });
 
-    test('H05: Next.js 15.0.2 is affected by both advisories; Next.js 15.1.7 is patched', () => {
-      const res1502 = auditNextJsSecurity('15.0.2');
-      assert.equal(res1502.isVulnerable, true);
-      assert.equal(res1502.advisories.length, 2);
+    test('H05: Next.js 15.5.24 patches AVIF RCE, and 15.5.28 patches SVG RCE', () => {
+      const res15523 = auditNextJsSecurity('15.5.23');
+      assert.ok(res15523.advisories.some((a) => a.id === 'GHSA-2xp9-vwfh-vxw4'));
 
-      const res1517 = auditNextJsSecurity('15.1.7');
-      assert.equal(res1517.isVulnerable, false);
-      assert.equal(res1517.advisories.length, 0);
+      const res15524 = auditNextJsSecurity('15.5.24');
+      assert.ok(!res15524.advisories.some((a) => a.id === 'GHSA-2xp9-vwfh-vxw4'));
+
+      const res15527 = auditNextJsSecurity('15.5.27');
+      assert.ok(res15527.advisories.some((a) => a.id === 'GHSA-2464-fhr4-w9xw'));
+
+      const res15528 = auditNextJsSecurity('15.5.28');
+      assert.ok(!res15528.advisories.some((a) => a.id === 'GHSA-2464-fhr4-w9xw'));
     });
 
-    test('H06: Next.js 16.4.4 starter version has zero known matching vulnerabilities', () => {
+    test('H06: Next.js 16.4.4 starter version has zero matching advisories among audited list', () => {
       const result = auditNextJsSecurity('16.4.4');
       assert.equal(result.isVulnerable, false);
       assert.equal(result.advisories.length, 0);

@@ -173,29 +173,29 @@ async function run() {
       );
     }
 
-    // 2. Finding A: Next.js Security Advisory Semver Evaluation
+    // 2. Finding A/B/C: Next.js Security Advisory Semver Evaluation (Phase 1H.1 Corrected)
     recordResult(
       'H-R02',
-      'GHSA-f82v-jwr5-mffw (Middleware Authorization Bypass) Semver Correction',
+      'GHSA-f82v-jwr5-mffw (Middleware Authorization Bypass) Semver Accuracy',
       'STATIC',
       'PASS',
-      'Advisory affects >=14.0.0 <14.2.25. Next.js 14.2.24 is evaluated as VULNERABLE. Patch is in 14.2.25 and 15.1.7.'
+      'Advisory affects >=12.0.0 <12.3.5, >=13.0.0 <13.5.9, >=14.0.0 <14.2.25, >=15.0.0 <15.2.3. Next.js 14.2.24 is AFFECTED; 14.2.25 and 15.2.3 are PATCHED.'
     );
 
     recordResult(
       'H-R03',
-      'GHSA-2xp9-vwfh-vxw4 (AVIF Remote Code Execution) Semver Validation',
+      'GHSA-2xp9-vwfh-vxw4 & GHSA-2464-fhr4-w9xw (Image Optimization AVIF & SVG RCE) Accuracy',
       'STATIC',
       'PASS',
-      'Advisory affects <14.2.21 and <15.0.3. Patched in 14.2.21 and 15.0.3. Next.js 14.2.24 is clean of this advisory.'
+      'AVIF RCE affects >=10.0.0 <15.5.24 & >=16.0.0 <16.3.3 (patched 15.5.24, 16.3.3). SVG RCE affects >=10.0.0 <15.5.28 & >=16.0.0 <16.4.1 (patched 15.5.28, 16.4.1).'
     );
 
     recordResult(
       'H-R04',
-      'Next.js Starter Version (16.4.4) Advisory Verification',
+      'Next.js Starter Version (16.4.4) Advisory Verification & Non-Universal Disclaimer',
       'STATIC',
       'PASS',
-      'Next.js 16.4.4 starter has zero known matching vulnerabilities across all advisories.'
+      'Next.js 16.4.4 starter has zero matching advisories among audited list. Accurately disclaims universal vulnerability-free claims.'
     );
 
     // 3. Finding D: Multi-Port Preview UI & State Parity
