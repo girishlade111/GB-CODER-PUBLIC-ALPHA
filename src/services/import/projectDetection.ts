@@ -1,20 +1,70 @@
 /**
- * Project-type detection.
+ * Project and framework type detection.
  *
- * Lives behind a dynamic import and is only reached from the import engine, so
- * none of this reaches the initial bundle. Pure and synchronous: it takes a
- * manifest of paths (plus the contents of the few files that actually carry
- * signal) and returns a classification with its reasoning, so the UI can show
- * *why* it guessed and let the user override it.
+ * Pure and synchronous: analyzes manifests, paths, configurations, and dependencies
+ * to produce deterministic, evidence-based framework recognition without executing
+ * imported code or performing network requests.
  */
 import { ProjectType } from '../../types/files';
 
 export type DetectedProjectKind = 'simple' | 'react' | 'vue' | 'fullstack';
 
+export type FrameworkId =
+  | 'vanilla'
+  | 'typescript'
+  | 'react'
+  | 'react-vite'
+  | 'vue'
+  | 'vue-vite'
+  | 'nextjs'
+  | 'astro'
+  | 'angular'
+  | 'svelte'
+  | 'sveltekit'
+  | 'express'
+  | 'node-cli'
+  | 'unknown';
+
+export type FrameworkRuntimeSupport =
+  | 'verified'         // Vanilla, React+Vite, Vue+Vite, Node-CLI
+  | 'experimental'     // Svelte, SvelteKit, Express
+  | 'not_implemented' // Genuine Next.js (Phase 1E), Astro (Phase 1F), Angular (Phase 1F)
+  | 'unsupported'      // Non-JS backend / Docker
+  | 'unverified';      // Unrecognized or missing manifest
+
+export interface FrameworkCapabilities {
+  supportsSSR: boolean;
+  supportsAPI: boolean;
+  supportsHMR: boolean;
+  requiresBuildStep: boolean;
+  recommendedEditor: 'plain' | 'vscode';
+  defaultPort: number;
+}
+
 /** A single piece of evidence, shown to the user in the override dialog. */
 export interface DetectionSignal {
   label: string;
   detail: string;
+}
+
+export interface FrameworkDetectionResult {
+  primaryFramework: FrameworkId;
+  displayName: string;
+  technologies: string[];
+  confidence: 'high' | 'medium' | 'low';
+  evidence: DetectionSignal[];
+  configFiles: string[];
+  manifestPath?: string | null;
+  workspaceRoot?: string | null;
+  packageManager: 'npm' | 'pnpm' | 'yarn';
+  runtimeSupport: FrameworkRuntimeSupport;
+  detectedScripts: Record<string, string>;
+  routerType?: 'app-router' | 'pages-router' | 'none';
+  warnings: string[];
+  conflicts: string[];
+  entry?: string;
+  projectType: ProjectType;
+  requiresAdvancedMode: boolean;
 }
 
 export interface DetectionResult {
@@ -29,6 +79,7 @@ export interface DetectionResult {
    * yet. Detection flags them; nothing tries to open them.
    */
   requiresAdvancedMode: boolean;
+  framework?: FrameworkDetectionResult;
 }
 
 /** One manifest entry. `content` is only needed for files that carry signal. */
@@ -39,9 +90,6 @@ export interface ManifestEntry {
 
 /**
  * Dependencies that mean a server is part of the project.
- *
- * Matched against both `dependencies` and `devDependencies`, because a project
- * with `nodemon` + `express` in dev deps is still full-stack.
  */
 const BACKEND_DEPENDENCIES = [
   'express',
@@ -110,11 +158,15 @@ const CLIENT_FOLDER_PATTERN = /(^|\/)(client|frontend|web|public|src)\//i;
 /** Next.js API routes make an otherwise-React project full-stack. */
 const NEXT_API_PATTERN = /(^|\/)(pages|app|src\/pages|src\/app)\/api\//i;
 
-interface PackageManifest {
+export interface PackageManifest {
+  name?: string;
+  version?: string;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   scripts?: Record<string, string>;
   main?: string;
+  packageManager?: string;
+  bin?: unknown;
 }
 
 /** Parses package.json defensively; a malformed one must not throw. */
@@ -136,125 +188,612 @@ const allDependencies = (manifest: PackageManifest | null): Record<string, strin
 const hasExtension = (paths: string[], extensions: string[]): boolean =>
   paths.some((path) => extensions.some((extension) => path.toLowerCase().endsWith(extension)));
 
+export const FRAMEWORK_LABELS: Record<FrameworkId, string> = {
+  vanilla: 'Static HTML/CSS/JS',
+  typescript: 'TypeScript',
+  react: 'React',
+  'react-vite': 'React + Vite',
+  vue: 'Vue',
+  'vue-vite': 'Vue + Vite',
+  nextjs: 'Next.js',
+  astro: 'Astro',
+  angular: 'Angular',
+  svelte: 'Svelte',
+  sveltekit: 'SvelteKit',
+  express: 'Express / Node.js',
+  'node-cli': 'Node.js CLI',
+  unknown: 'Web Project',
+};
+
+export const FRAMEWORK_CAPABILITIES: Record<FrameworkId, FrameworkCapabilities> = {
+  vanilla: {
+    supportsSSR: false,
+    supportsAPI: false,
+    supportsHMR: false,
+    requiresBuildStep: false,
+    recommendedEditor: 'plain',
+    defaultPort: 3000,
+  },
+  typescript: {
+    supportsSSR: false,
+    supportsAPI: false,
+    supportsHMR: false,
+    requiresBuildStep: true,
+    recommendedEditor: 'vscode',
+    defaultPort: 3000,
+  },
+  react: {
+    supportsSSR: false,
+    supportsAPI: false,
+    supportsHMR: true,
+    requiresBuildStep: true,
+    recommendedEditor: 'vscode',
+    defaultPort: 3000,
+  },
+  'react-vite': {
+    supportsSSR: false,
+    supportsAPI: false,
+    supportsHMR: true,
+    requiresBuildStep: true,
+    recommendedEditor: 'vscode',
+    defaultPort: 5173,
+  },
+  vue: {
+    supportsSSR: false,
+    supportsAPI: false,
+    supportsHMR: true,
+    requiresBuildStep: true,
+    recommendedEditor: 'vscode',
+    defaultPort: 3000,
+  },
+  'vue-vite': {
+    supportsSSR: false,
+    supportsAPI: false,
+    supportsHMR: true,
+    requiresBuildStep: true,
+    recommendedEditor: 'vscode',
+    defaultPort: 5173,
+  },
+  nextjs: {
+    supportsSSR: true,
+    supportsAPI: true,
+    supportsHMR: true,
+    requiresBuildStep: true,
+    recommendedEditor: 'vscode',
+    defaultPort: 3000,
+  },
+  astro: {
+    supportsSSR: true,
+    supportsAPI: true,
+    supportsHMR: true,
+    requiresBuildStep: true,
+    recommendedEditor: 'vscode',
+    defaultPort: 4321,
+  },
+  angular: {
+    supportsSSR: false,
+    supportsAPI: false,
+    supportsHMR: true,
+    requiresBuildStep: true,
+    recommendedEditor: 'vscode',
+    defaultPort: 4200,
+  },
+  svelte: {
+    supportsSSR: false,
+    supportsAPI: false,
+    supportsHMR: true,
+    requiresBuildStep: true,
+    recommendedEditor: 'vscode',
+    defaultPort: 5173,
+  },
+  sveltekit: {
+    supportsSSR: true,
+    supportsAPI: true,
+    supportsHMR: true,
+    requiresBuildStep: true,
+    recommendedEditor: 'vscode',
+    defaultPort: 5173,
+  },
+  express: {
+    supportsSSR: false,
+    supportsAPI: true,
+    supportsHMR: false,
+    requiresBuildStep: false,
+    recommendedEditor: 'vscode',
+    defaultPort: 3000,
+  },
+  'node-cli': {
+    supportsSSR: false,
+    supportsAPI: false,
+    supportsHMR: false,
+    requiresBuildStep: false,
+    recommendedEditor: 'vscode',
+    defaultPort: 3000,
+  },
+  unknown: {
+    supportsSSR: false,
+    supportsAPI: false,
+    supportsHMR: false,
+    requiresBuildStep: false,
+    recommendedEditor: 'plain',
+    defaultPort: 3000,
+  },
+};
+
 /**
- * Classifies a project.
- *
- * Order matters: full-stack is checked first because it is the most specific
- * and the most consequential to get wrong — silently loading a project whose
- * server half cannot run would leave the user debugging a broken app rather
- * than being told the truth.
+ * Performs comprehensive, evidence-based framework recognition.
  */
-export const detectProject = (entries: ManifestEntry[]): DetectionResult => {
-  const paths = entries.map((entry) => entry.path.replace(/^\.\//, ''));
-  const lowerPaths = paths.map((path) => path.toLowerCase());
-  const signals: DetectionSignal[] = [];
+export function detectFramework(entries: ManifestEntry[]): FrameworkDetectionResult {
+  const paths = entries.map((e) => e.path.replace(/^\.\//, '').replace(/^\/+/, ''));
+  const lowerPaths = paths.map((p) => p.toLowerCase());
+  const evidence: DetectionSignal[] = [];
+  const configFiles: string[] = [];
+  const warnings: string[] = [];
+  const conflicts: string[] = [];
+  const technologies: string[] = [];
 
-  const packageEntry = entries.find((entry) => /(^|\/)package\.json$/i.test(entry.path));
-  const manifest = parsePackageJson(packageEntry?.content);
+  // 1. Locate manifest(s)
+  const rootPackageEntry = entries.find((e) => {
+    const clean = e.path.replace(/^\.\//, '').replace(/^\/+/, '').toLowerCase();
+    return clean === 'package.json';
+  });
+
+  const allPackageEntries = entries.filter((e) => {
+    const clean = e.path.replace(/^\.\//, '').replace(/^\/+/, '').toLowerCase();
+    return clean.endsWith('package.json');
+  });
+
+  if (allPackageEntries.length > 1) {
+    warnings.push(`Monorepo or nested package.json manifests detected (${allPackageEntries.length} manifests found). GB Coder executes root workspace by default.`);
+  }
+
+  if (rootPackageEntry?.content) {
+    try {
+      const parsed = JSON.parse(rootPackageEntry.content);
+      if (!parsed || typeof parsed !== 'object') {
+        warnings.push('Failed to parse package.json: content is not a valid JSON object.');
+      }
+    } catch (err) {
+      warnings.push(`Failed to parse package.json: ${(err as Error).message}`);
+    }
+  }
+
+  const manifest = parsePackageJson(rootPackageEntry?.content);
   const dependencies = allDependencies(manifest);
-  const dependencyNames = Object.keys(dependencies);
+  const depNames = Object.keys(dependencies);
+  const scripts = manifest?.scripts || {};
 
-  /* ── Full-stack ─────────────────────────────────────────────────────── */
-
-  const backendDeps = BACKEND_DEPENDENCIES.filter((name) => dependencyNames.includes(name));
-  if (backendDeps.length > 0) {
-    signals.push({
-      label: 'Server dependencies',
-      detail: `package.json depends on ${backendDeps.slice(0, 3).join(', ')}.`,
-    });
+  // 2. Identify Package Manager
+  let packageManager: 'npm' | 'pnpm' | 'yarn' = 'npm';
+  if (lowerPaths.includes('pnpm-lock.yaml') || lowerPaths.includes('pnpm-lock.yml')) {
+    packageManager = 'pnpm';
+  } else if (lowerPaths.includes('yarn.lock')) {
+    packageManager = 'yarn';
+  } else if (manifest?.packageManager) {
+    if (manifest.packageManager.toLowerCase().startsWith('pnpm')) packageManager = 'pnpm';
+    else if (manifest.packageManager.toLowerCase().startsWith('yarn')) packageManager = 'yarn';
   }
 
-  for (const { pattern, label, detail } of BACKEND_FILE_PATTERNS) {
-    if (paths.some((path) => pattern.test(path))) signals.push({ label, detail });
+  // 3. Scan Config Files
+  const hasNextConfig = lowerPaths.some((p) => /^next\.config\.(js|mjs|ts)$/i.test(p));
+  if (hasNextConfig) configFiles.push('next.config');
+
+  const hasAstroConfig = lowerPaths.some((p) => /^astro\.config\.(mjs|js|ts)$/i.test(p));
+  if (hasAstroConfig) configFiles.push('astro.config');
+
+  const hasAngularJson = lowerPaths.includes('angular.json');
+  if (hasAngularJson) configFiles.push('angular.json');
+
+  const hasSvelteConfig = lowerPaths.some((p) => /^svelte\.config\.(js|ts|cjs)$/i.test(p));
+  if (hasSvelteConfig) configFiles.push('svelte.config');
+
+  const hasViteConfig = lowerPaths.some((p) => /^vite\.config\.(js|ts|mjs)$/i.test(p));
+  if (hasViteConfig) configFiles.push('vite.config');
+
+  const hasTsConfig = lowerPaths.includes('tsconfig.json');
+  if (hasTsConfig) configFiles.push('tsconfig.json');
+
+  // Multi-manifest monorepo detection
+  if (allPackageEntries.length > 1) {
+    warnings.push(`Monorepo structure detected (${allPackageEntries.length} manifests). Root workspace prioritized.`);
   }
 
-  if (lowerPaths.some((path) => NEXT_API_PATTERN.test(path))) {
-    signals.push({
-      label: 'Next.js API routes',
-      detail: 'An api/ route folder is present, which runs server-side.',
-    });
-  }
+  // 4. Framework Recognition with Precedence
 
-  /*
-   * A server file *and* a client folder together. Either alone is too weak: a
-   * bare `index.js` is normal in a plain project, and `src/` is normal in React.
-   */
-  const hasServerFile = lowerPaths.some(
-    (path) => SERVER_FILE_PATTERN.test(path) && !path.startsWith('src/'),
-  );
-  const hasClientFolder = lowerPaths.some((path) => CLIENT_FOLDER_PATTERN.test(path));
-  if (hasServerFile && hasClientFolder && backendDeps.length === 0) {
-    signals.push({
-      label: 'Split client/server layout',
-      detail: 'A server entry file sits beside a separate client folder.',
-    });
-  }
+  // NEXT.JS
+  const hasNextDep = depNames.includes('next');
+  const hasNextScript = Object.values(scripts).some((s) => /\bnext\s+(dev|build|start)\b/i.test(s));
+  const hasAppRouter = lowerPaths.some((p) => /(^|\/)(app|src\/app)\//i.test(p));
+  const hasPagesRouter = lowerPaths.some((p) => /(^|\/)(pages|src\/pages)\//i.test(p));
 
-  if (signals.length > 0) {
-    return {
-      kind: 'fullstack',
-      // One weak structural signal is a guess; a named backend dep is not.
-      confidence: backendDeps.length > 0 || signals.length > 1 ? 'high' : 'medium',
-      signals,
-      requiresAdvancedMode: true,
-      entry: manifest?.main,
-    };
-  }
+  const isNextJs = hasNextDep || hasNextConfig || (hasNextScript && (hasAppRouter || hasPagesRouter));
 
-  /* ── Vue ────────────────────────────────────────────────────────────── */
+  // ASTRO
+  const hasAstroDep = depNames.includes('astro');
+  const hasAstroFiles = lowerPaths.some((p) => p.endsWith('.astro'));
+  const hasAstroScript = Object.values(scripts).some((s) => /\bastro\s+(dev|build|preview)\b/i.test(s));
 
-  const hasVueDependency = dependencyNames.includes('vue');
+  const isAstro = hasAstroDep || hasAstroConfig || hasAstroFiles || hasAstroScript;
+
+  // ANGULAR
+  const hasAngularDep = depNames.some((d) => d.startsWith('@angular/'));
+  const isAngular = hasAngularJson || hasAngularDep;
+
+  // SVELTE / SVELTEKIT
+  const hasSvelteKitDep = depNames.includes('@sveltejs/kit');
+  const hasSvelteDep = depNames.includes('svelte');
+  const hasSvelteFiles = lowerPaths.some((p) => p.endsWith('.svelte'));
+  const hasRoutesFolder = lowerPaths.some((p) => /(^|\/)(src\/routes|routes)\//i.test(p));
+
+  const isSvelteKit = hasSvelteKitDep || (hasSvelteConfig && hasRoutesFolder);
+  const isSvelte = !isSvelteKit && (hasSvelteDep || hasSvelteFiles);
+
+  // VUE
+  const hasVueDep = depNames.includes('vue');
+  const hasVuePlugin = depNames.includes('@vitejs/plugin-vue');
   const hasVueFiles = hasExtension(lowerPaths, ['.vue']);
-  if (hasVueDependency || hasVueFiles) {
-    return {
-      kind: 'vue',
-      confidence: hasVueDependency && hasVueFiles ? 'high' : 'medium',
-      signals: [
-        hasVueDependency
-          ? { label: 'Vue dependency', detail: 'package.json depends on vue.' }
-          : { label: 'Vue components', detail: 'The project contains .vue files.' },
-      ],
-      requiresAdvancedMode: false,
-      entry: pickEntry(paths, ['src/main.js', 'src/main.ts', 'src/App.vue']),
-    };
+  const isVueVite = (hasVueDep || hasVueFiles) && (hasViteConfig || hasVuePlugin || depNames.includes('vite'));
+  const isVue = (hasVueDep || hasVueFiles) && !isVueVite;
+
+  // REACT
+  const hasReactDep = depNames.includes('react');
+  const hasReactPlugin = depNames.includes('@vitejs/plugin-react');
+  const hasJsx = hasExtension(lowerPaths, ['.jsx', '.tsx']);
+  const isReactVite = (hasReactDep || hasJsx) && (hasViteConfig || hasReactPlugin || depNames.includes('vite')) && !isNextJs;
+  const isReact = (hasReactDep || hasJsx) && !isReactVite && !isNextJs;
+
+  // EXPRESS / NODE BACKEND
+  const backendDepsFound = BACKEND_DEPENDENCIES.filter((d) => depNames.includes(d));
+  const hasNonJsBackend = BACKEND_FILE_PATTERNS.some(({ pattern }) => paths.some((p) => pattern.test(p)));
+  const isExpress = backendDepsFound.length > 0 && !isNextJs && !isAstro && !isReactVite && !isVueVite;
+
+  // TYPESCRIPT
+  const isTypeScript =
+    (hasTsConfig || hasExtension(lowerPaths, ['.ts'])) &&
+    !isNextJs &&
+    !isAngular &&
+    !isReact &&
+    !isReactVite &&
+    !isVue &&
+    !isVueVite &&
+    !isSvelte &&
+    !isSvelteKit &&
+    !isAstro;
+
+  // NODE CLI
+  const hasBinField = Boolean(manifest?.bin);
+  const isNodeCli =
+    Boolean(rootPackageEntry) &&
+    !isNextJs &&
+    !isAstro &&
+    !isAngular &&
+    !isReact &&
+    !isReactVite &&
+    !isVue &&
+    !isVueVite &&
+    !isTypeScript &&
+    (hasBinField || depNames.length > 0);
+
+  // SERVER & CLIENT PATTERNS
+  const hasServerFile = paths.some((p) => SERVER_FILE_PATTERN.test(p));
+  const hasClientFolder = paths.some((p) => CLIENT_FOLDER_PATTERN.test(p));
+  const hasNextApi = paths.some((p) => NEXT_API_PATTERN.test(p));
+
+  if (hasNextApi) {
+    evidence.push({
+      label: 'Next.js API routes',
+      detail: 'Project contains API route files under pages/api or app/api.',
+    });
+  }
+  if (hasServerFile && hasClientFolder) {
+    evidence.push({
+      label: 'Multi-tier codebase',
+      detail: 'Found server entry files alongside client directory structure.',
+    });
   }
 
-  /* ── React ──────────────────────────────────────────────────────────── */
-
-  const hasReactDependency = dependencyNames.includes('react');
-  const hasJsxFiles = hasExtension(lowerPaths, ['.jsx', '.tsx']);
-  if (hasReactDependency || hasJsxFiles) {
-    return {
-      kind: 'react',
-      confidence: hasReactDependency && hasJsxFiles ? 'high' : 'medium',
-      signals: [
-        hasReactDependency
-          ? { label: 'React dependency', detail: 'package.json depends on react.' }
-          : { label: 'JSX components', detail: 'The project contains .jsx or .tsx files.' },
-      ],
-      requiresAdvancedMode: false,
-      entry: pickEntry(paths, ['src/main.jsx', 'src/main.tsx', 'src/index.jsx', 'src/App.jsx']),
-    };
+  // CONFLICT DETECTION
+  if (isNextJs && isAngular) {
+    conflicts.push('Conflicting framework evidence: Next.js and Angular indicators detected simultaneously.');
+  }
+  if (isNextJs && isAstro) {
+    conflicts.push('Conflicting framework evidence: Next.js and Astro indicators detected simultaneously.');
+  }
+  if (isAstro && isAngular) {
+    conflicts.push('Conflicting framework evidence: Astro and Angular indicators detected simultaneously.');
   }
 
-  /* ── Simple ─────────────────────────────────────────────────────────── */
+  // 5. Apply Explicit Precedence
 
-  const rootHtml = lowerPaths.find((path) => !path.includes('/') && path.endsWith('.html'));
-  const hasPackageJson = Boolean(packageEntry);
+  let primaryFramework: FrameworkId = 'unknown';
+  let displayName = 'Web Project';
+  let confidence: 'high' | 'medium' | 'low' = 'low';
+  let runtimeSupport: FrameworkRuntimeSupport = 'unverified';
+  let routerType: 'app-router' | 'pages-router' | 'none' = 'none';
+  let projectType: ProjectType = 'plain';
+  let requiresAdvancedMode = false;
+
+  if (isNextJs) {
+    primaryFramework = 'nextjs';
+    displayName = 'Next.js';
+    technologies.push('nextjs', 'react');
+    if (hasTsConfig || hasExtension(lowerPaths, ['.ts', '.tsx'])) technologies.push('typescript');
+    confidence = hasNextDep && (hasNextConfig || hasAppRouter || hasPagesRouter) ? 'high' : 'medium';
+    runtimeSupport = 'not_implemented'; // Genuine Next.js server runtime belongs to Phase 1E
+    routerType = hasAppRouter ? 'app-router' : hasPagesRouter ? 'pages-router' : 'none';
+    projectType = 'react';
+    requiresAdvancedMode = true;
+
+    evidence.push({
+      label: 'Next.js framework',
+      detail: hasNextDep
+        ? `next dependency (${dependencies['next'] || 'detected'})`
+        : 'Next.js configuration and router structure',
+    });
+    warnings.push('Next.js project detected. Full Next.js server/runtime compilation is planned for Phase 1E.');
+  } else if (isAstro) {
+    primaryFramework = 'astro';
+    displayName = 'Astro';
+    technologies.push('astro');
+    if (hasReactDep) technologies.push('react');
+    if (hasVueDep) technologies.push('vue');
+    if (hasSvelteDep) technologies.push('svelte');
+    confidence = hasAstroConfig || (hasAstroDep && hasAstroFiles) ? 'high' : 'medium';
+    runtimeSupport = 'not_implemented'; // Phase 1F
+    projectType = 'plain';
+    requiresAdvancedMode = true;
+
+    evidence.push({
+      label: 'Astro framework',
+      detail: hasAstroDep
+        ? `astro dependency (${dependencies['astro'] || 'detected'})`
+        : 'Astro configuration (.astro files)',
+    });
+    warnings.push('Astro project detected. Astro server execution is scheduled for Phase 1F.');
+  } else if (isAngular) {
+    primaryFramework = 'angular';
+    displayName = 'Angular';
+    technologies.push('angular', 'typescript');
+    confidence = hasAngularJson ? 'high' : 'medium';
+    runtimeSupport = 'not_implemented'; // Phase 1F
+    projectType = 'plain';
+    requiresAdvancedMode = true;
+
+    evidence.push({
+      label: 'Angular framework',
+      detail: hasAngularJson ? 'angular.json workspace configuration' : 'Angular core dependencies',
+    });
+    warnings.push('Angular project detected. Angular CLI runtime build is scheduled for Phase 1F.');
+  } else if (isSvelteKit) {
+    primaryFramework = 'sveltekit';
+    displayName = 'SvelteKit';
+    technologies.push('sveltekit', 'svelte');
+    confidence = 'high';
+    runtimeSupport = 'experimental';
+    projectType = 'plain';
+    requiresAdvancedMode = true;
+
+    evidence.push({
+      label: 'SvelteKit framework',
+      detail: '@sveltejs/kit dependency and routes structure',
+    });
+  } else if (isSvelte) {
+    primaryFramework = 'svelte';
+    displayName = 'Svelte';
+    technologies.push('svelte');
+    confidence = hasSvelteDep && hasSvelteFiles ? 'high' : 'medium';
+    runtimeSupport = 'experimental';
+    projectType = 'plain';
+    requiresAdvancedMode = true;
+
+    evidence.push({
+      label: 'Svelte component framework',
+      detail: 'svelte dependency with .svelte files',
+    });
+  } else if (isVueVite) {
+    primaryFramework = 'vue-vite';
+    displayName = 'Vue + Vite';
+    technologies.push('vue', 'vite');
+    confidence = 'high';
+    runtimeSupport = 'verified';
+    projectType = 'vue';
+    requiresAdvancedMode = true;
+
+    evidence.push({
+      label: 'Vue + Vite project',
+      detail: 'vue dependency with vite build tool',
+    });
+  } else if (isVue) {
+    primaryFramework = 'vue';
+    displayName = 'Vue';
+    technologies.push('vue');
+    confidence = hasVueDep && hasVueFiles ? 'high' : 'medium';
+    runtimeSupport = 'verified';
+    projectType = 'vue';
+    requiresAdvancedMode = true;
+
+    evidence.push({
+      label: 'Vue project',
+      detail: 'vue dependency with .vue components',
+    });
+  } else if (isReactVite) {
+    primaryFramework = 'react-vite';
+    displayName = 'React + Vite';
+    technologies.push('react', 'vite');
+    if (hasTsConfig || hasExtension(lowerPaths, ['.tsx'])) technologies.push('typescript');
+    confidence = 'high';
+    runtimeSupport = 'verified';
+    projectType = 'react';
+    requiresAdvancedMode = true;
+
+    evidence.push({
+      label: 'React + Vite project',
+      detail: 'react dependency with vite bundler',
+    });
+  } else if (isReact) {
+    primaryFramework = 'react';
+    displayName = 'React';
+    technologies.push('react');
+    if (hasTsConfig || hasExtension(lowerPaths, ['.tsx'])) technologies.push('typescript');
+    confidence = hasReactDep && hasJsx ? 'high' : 'medium';
+    runtimeSupport = 'verified';
+    projectType = 'react';
+    requiresAdvancedMode = true;
+
+    evidence.push({
+      label: 'React project',
+      detail: 'react dependency with JSX components',
+    });
+  } else if (isExpress) {
+    primaryFramework = 'express';
+    displayName = 'Express / Node.js';
+    technologies.push('express', 'node');
+    confidence = 'high';
+    runtimeSupport = 'experimental';
+    projectType = 'plain';
+    requiresAdvancedMode = true;
+
+    evidence.push({
+      label: 'Node.js backend dependencies',
+      detail: `Backend modules: ${backendDepsFound.slice(0, 3).join(', ')}`,
+    });
+  } else if (hasNonJsBackend) {
+    primaryFramework = 'unknown';
+    displayName = 'Non-JS Backend Project';
+    confidence = 'high';
+    runtimeSupport = 'unsupported';
+    projectType = 'plain';
+    requiresAdvancedMode = true;
+
+    warnings.push('Non-JavaScript backend manifest detected (e.g. Python, Docker, Go). Browser WebContainers execute Node.js only.');
+    evidence.push({
+      label: 'External runtime manifest',
+      detail: 'Project contains non-JS backend configuration files',
+    });
+  } else if (isTypeScript) {
+    primaryFramework = 'typescript';
+    displayName = 'TypeScript';
+    technologies.push('typescript');
+    confidence = 'high';
+    runtimeSupport = 'verified';
+    projectType = 'plain';
+    requiresAdvancedMode = false;
+
+    evidence.push({
+      label: 'TypeScript configuration',
+      detail: 'tsconfig.json or .ts files without frontend framework',
+    });
+  } else if (isNodeCli) {
+    primaryFramework = 'node-cli';
+    displayName = 'Node.js CLI';
+    technologies.push('node');
+    confidence = 'medium';
+    runtimeSupport = 'verified';
+    projectType = 'plain';
+    requiresAdvancedMode = true;
+
+    evidence.push({
+      label: 'Node.js package',
+      detail: 'package.json with Node scripts or binary entries',
+    });
+  } else {
+    const rootHtml = lowerPaths.find((p) => !p.includes('/') && p.endsWith('.html'));
+    if (rootHtml || lowerPaths.includes('index.html')) {
+      primaryFramework = 'vanilla';
+      displayName = 'Static HTML/CSS/JS';
+      technologies.push('html', 'css', 'javascript');
+      confidence = 'high';
+      runtimeSupport = 'verified';
+      projectType = 'plain';
+      requiresAdvancedMode = false;
+
+      evidence.push({
+        label: 'Static web page',
+        detail: 'index.html entry at root without build step',
+      });
+    } else {
+      primaryFramework = 'unknown';
+      displayName = 'Web Project';
+      confidence = 'low';
+      runtimeSupport = 'unverified';
+      projectType = 'plain';
+      requiresAdvancedMode = false;
+
+      evidence.push({
+        label: 'Generic workspace',
+        detail: 'Standard web files without explicit framework manifests',
+      });
+    }
+  }
+
+  // Pick Entry Point
+  const entry = pickEntry(paths, [
+    'src/main.jsx',
+    'src/main.tsx',
+    'src/main.js',
+    'src/main.ts',
+    'src/index.jsx',
+    'src/index.tsx',
+    'src/index.js',
+    'src/index.ts',
+    'src/App.jsx',
+    'src/App.vue',
+    'src/app/page.tsx',
+    'src/app/page.jsx',
+    'app/page.tsx',
+    'app/page.jsx',
+    'src/pages/index.astro',
+    'src/pages/index.tsx',
+    'src/pages/index.jsx',
+    'index.html',
+  ]);
 
   return {
-    kind: 'simple',
-    confidence: rootHtml && !hasPackageJson ? 'high' : 'low',
-    signals: [
-      rootHtml
-        ? { label: 'Static page', detail: `${rootHtml} at the project root, with no build step.` }
-        : {
-            label: 'No framework detected',
-            detail: 'Falling back to the plain HTML/CSS/JS editor, which is always safe.',
-          },
-    ],
-    requiresAdvancedMode: false,
-    entry: rootHtml,
+    primaryFramework,
+    displayName,
+    technologies,
+    confidence,
+    evidence,
+    configFiles,
+    manifestPath: rootPackageEntry?.path || null,
+    workspaceRoot: '.',
+    packageManager,
+    runtimeSupport,
+    detectedScripts: scripts,
+    routerType,
+    warnings,
+    conflicts,
+    entry,
+    projectType,
+    requiresAdvancedMode,
+  };
+}
+
+/**
+ * Classifies a project (backward-compatible API with rich framework metadata).
+ */
+export const detectProject = (entries: ManifestEntry[]): DetectionResult => {
+  const fw = detectFramework(entries);
+
+  // Backward-compatible kind mapping
+  let kind: DetectedProjectKind = 'simple';
+  if (fw.primaryFramework === 'nextjs' || fw.primaryFramework === 'astro' || fw.primaryFramework === 'angular' || fw.primaryFramework === 'express' || fw.runtimeSupport === 'unsupported') {
+    kind = 'fullstack';
+  } else if (fw.primaryFramework === 'vue' || fw.primaryFramework === 'vue-vite') {
+    kind = 'vue';
+  } else if (fw.primaryFramework === 'react' || fw.primaryFramework === 'react-vite') {
+    kind = 'react';
+  } else {
+    kind = 'simple';
+  }
+
+  return {
+    kind,
+    confidence: fw.confidence,
+    signals: fw.evidence,
+    entry: fw.entry,
+    requiresAdvancedMode: fw.requiresAdvancedMode,
+    framework: fw,
   };
 };
 
@@ -265,14 +804,13 @@ const pickEntry = (paths: string[], candidates: string[]): string | undefined =>
     const index = lower.indexOf(candidate.toLowerCase());
     if (index !== -1) return paths[index];
   }
-  return paths.find((path) => /^src\/.*\.(jsx|tsx|vue|js|ts)$/i.test(path));
+  return paths.find((path) => /^src\/.*\.(jsx|tsx|vue|astro|svelte|js|ts)$/i.test(path));
 };
 
 /** Maps a detected kind onto the editor's project model. */
 export const projectTypeForKind = (kind: DetectedProjectKind): ProjectType => {
   if (kind === 'react') return 'react';
   if (kind === 'vue') return 'vue';
-  // Full-stack has no editor mode yet, so it is treated as plain if forced.
   return 'plain';
 };
 

@@ -71,7 +71,9 @@
     "audit:phase1b": "node scripts/webcontainer-lifecycle-hardening-tests.mjs",
     "audit:lifecycle-hardening": "node scripts/webcontainer-lifecycle-hardening-tests.mjs",
     "audit:phase1c": "node scripts/webcontainer-terminal-package-hardening-tests.mjs",
-    "audit:terminal": "node scripts/webcontainer-terminal-package-hardening-tests.mjs"
+    "audit:terminal": "node scripts/webcontainer-terminal-package-hardening-tests.mjs",
+    "audit:phase1d": "node scripts/framework-detection-template-tests.mjs",
+    "audit:frameworks": "node scripts/framework-detection-template-tests.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

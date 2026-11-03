@@ -48,6 +48,8 @@ await build({
       export * from './src/services/snapshotService.ts';
       export * from './src/types/files.ts';
       export * from './src/utils/workspaceCoordination.ts';
+      export * from './src/services/import/projectDetection.ts';
+      export * from './src/services/templates/unifiedTemplateRegistry.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',

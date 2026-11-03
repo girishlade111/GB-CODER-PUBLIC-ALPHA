@@ -1,4 +1,9 @@
 import type { ProjectFile } from '../../types/files';
+import {
+  detectFramework,
+  type FrameworkDetectionResult,
+  type ManifestEntry,
+} from '../import/projectDetection';
 
 export type PackageManagerType = 'npm' | 'pnpm' | 'yarn';
 export type PackageManagerSource = 'packageManager-field' | 'lockfile' | 'default';
@@ -30,6 +35,7 @@ export interface ProjectCommandInfo {
   lockfiles: string[];
   scriptCommand: (scriptName: string) => string;
   supportedActions: Array<'install' | 'dev' | 'build' | 'test'>;
+  frameworkInfo?: FrameworkDetectionResult;
 }
 
 /**
@@ -187,7 +193,27 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
     installCommand = 'yarn install';
   }
 
-  // 6. Helper for arbitrary script command
+  // 6. Detect Framework Metadata
+  const manifestEntries: ManifestEntry[] = files.map((f) => ({
+    path: (f.path || '').replace(/^\/+/, ''),
+    content: f.content,
+  }));
+  const frameworkInfo = detectFramework(manifestEntries);
+
+  if (frameworkInfo.conflicts.length > 0) {
+    for (const conflict of frameworkInfo.conflicts) {
+      if (!conflicts.includes(conflict)) {
+        conflicts.push(conflict);
+      }
+    }
+  }
+
+  if (frameworkInfo.runtimeSupport === 'not_implemented') {
+    const plannedWarning = `Framework runtime for ${frameworkInfo.displayName} is planned for a future milestone (${frameworkInfo.runtimeSupport}).`;
+    runtimeWarning = runtimeWarning ? `${runtimeWarning}; ${plannedWarning}` : plannedWarning;
+  }
+
+  // 7. Helper for arbitrary script command
   const scriptCommand = (scriptName: string): string => {
     if (packageManager === 'npm') {
       return ['start', 'test', 'stop', 'restart'].includes(scriptName)
@@ -197,7 +223,7 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
     return `${packageManager} ${scriptName}`;
   };
 
-  // 7. Supported actions
+  // 8. Supported actions
   const supportedActions: Array<'install' | 'dev' | 'build' | 'test'> = ['install'];
   if (devCommand) supportedActions.push('dev');
   if (buildCommand) supportedActions.push('build');
@@ -224,5 +250,6 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
     lockfiles,
     scriptCommand,
     supportedActions,
+    frameworkInfo,
   };
 }
