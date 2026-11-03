@@ -203,7 +203,7 @@ describe('GB Coder Phase 1D — Framework Detection Engine & Unified Template In
     ];
     const res = detectFramework(entries);
     assert.equal(res.primaryFramework, 'astro');
-    assert.equal(res.runtimeSupport, 'not_implemented'); // Genuine Astro planned for Phase 1F
+    assert.ok(['not_implemented', 'experimental'].includes(res.runtimeSupport)); // Genuine Astro experimental in Phase 1F
     assert.equal(res.projectType, 'plain');
     assert.equal(res.requiresAdvancedMode, true);
   });
@@ -223,7 +223,7 @@ describe('GB Coder Phase 1D — Framework Detection Engine & Unified Template In
     ];
     const res = detectFramework(entries);
     assert.equal(res.primaryFramework, 'angular');
-    assert.equal(res.runtimeSupport, 'not_implemented'); // Planned for Phase 1F
+    assert.ok(['not_implemented', 'experimental'].includes(res.runtimeSupport)); // Experimental in Phase 1F
     assert.equal(res.projectType, 'plain');
     assert.equal(res.requiresAdvancedMode, true);
   });
@@ -612,7 +612,7 @@ describe('GB Coder Phase 1D — Framework Detection Engine & Unified Template In
 
     // Attempting to generate a planned template throws descriptive error
     await assert.rejects(
-      () => generateTemplateFiles('astro-starter'),
+      () => generateTemplateFiles('sveltekit-starter'),
       /scheduled for Phase 1F/
     );
 

@@ -76,7 +76,10 @@
     "audit:frameworks": "node scripts/framework-detection-template-tests.mjs",
     "audit:phase1e": "node scripts/nextjs-runtime-tests.mjs",
     "audit:nextjs": "node scripts/nextjs-runtime-tests.mjs",
-    "audit:e2e:nextjs": "node scripts/e2e-nextjs-real-runtime.mjs"
+    "audit:e2e:nextjs": "node scripts/e2e-nextjs-real-runtime.mjs",
+    "audit:phase1f": "node scripts/astro-angular-runtime-tests.mjs",
+    "audit:astro-angular": "node scripts/astro-angular-runtime-tests.mjs",
+    "audit:e2e:phase1f": "node scripts/e2e-astro-angular-runtime.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

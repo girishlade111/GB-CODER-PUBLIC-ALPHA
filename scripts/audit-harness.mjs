@@ -51,6 +51,8 @@ await build({
       export * from './src/services/import/projectDetection.ts';
       export * from './src/services/templates/unifiedTemplateRegistry.ts';
       export * from './src/services/webcontainer/nextjsDiagnostics.ts';
+      export * from './src/services/webcontainer/astroDiagnostics.ts';
+      export * from './src/services/webcontainer/angularDiagnostics.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',

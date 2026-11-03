@@ -562,7 +562,7 @@ export function detectFramework(entries: ManifestEntry[]): FrameworkDetectionRes
     if (hasVueDep) technologies.push('vue');
     if (hasSvelteDep) technologies.push('svelte');
     confidence = hasAstroConfig || (hasAstroDep && hasAstroFiles) ? 'high' : 'medium';
-    runtimeSupport = 'not_implemented'; // Phase 1F
+    runtimeSupport = 'experimental'; // Phase 1F
     projectType = 'plain';
     requiresAdvancedMode = true;
 
@@ -572,13 +572,15 @@ export function detectFramework(entries: ManifestEntry[]): FrameworkDetectionRes
         ? `astro dependency (${dependencies['astro'] || 'detected'})`
         : 'Astro configuration (.astro files)',
     });
-    warnings.push('Astro project detected. Astro server execution is scheduled for Phase 1F.');
+    warnings.push(
+      'Astro project detected. Astro server execution is supported in experimental mode in WebContainer IDE (port 4321). Node.js >=22.23.4 engine constraint on Astro 7+ requires Astro 5.x or --ignore-engines.'
+    );
   } else if (isAngular) {
     primaryFramework = 'angular';
     displayName = 'Angular';
     technologies.push('angular', 'typescript');
     confidence = hasAngularJson ? 'high' : 'medium';
-    runtimeSupport = 'not_implemented'; // Phase 1F
+    runtimeSupport = 'experimental'; // Phase 1F
     projectType = 'plain';
     requiresAdvancedMode = true;
 
@@ -586,7 +588,9 @@ export function detectFramework(entries: ManifestEntry[]): FrameworkDetectionRes
       label: 'Angular framework',
       detail: hasAngularJson ? 'angular.json workspace configuration' : 'Angular core dependencies',
     });
-    warnings.push('Angular project detected. Angular CLI runtime build is scheduled for Phase 1F.');
+    warnings.push(
+      'Angular project detected. Angular CLI runtime build is supported in experimental mode in WebContainer IDE (port 4200). Esbuild builder may require Webpack browser target.'
+    );
   } else if (isSvelteKit) {
     primaryFramework = 'sveltekit';
     displayName = 'SvelteKit';

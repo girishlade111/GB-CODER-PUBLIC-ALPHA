@@ -538,6 +538,493 @@ npm run dev
 - TypeScript & WebContainer Fast Refresh
 `,
   },
+  'astro-starter': {
+    'package.json': JSON.stringify(
+      {
+        name: 'astro-starter',
+        type: 'module',
+        version: '0.0.1',
+        scripts: {
+          dev: 'astro dev',
+          start: 'astro dev',
+          build: 'astro build',
+          preview: 'astro preview',
+        },
+        dependencies: {
+          astro: '^5.4.2',
+        },
+      },
+      null,
+      2
+    ),
+    'astro.config.mjs': `import { defineConfig } from 'astro/config';
+
+// https://astro.build/config
+export default defineConfig({
+  server: {
+    port: 4321,
+    host: true,
+  },
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/noop',
+    },
+  },
+});
+`,
+    'tsconfig.json': JSON.stringify(
+      {
+        extends: 'astro/tsconfigs/strict',
+        compilerOptions: {
+          jsx: 'preserve',
+        },
+      },
+      null,
+      2
+    ),
+    'src/pages/index.astro': `---
+import Layout from '../layouts/Layout.astro';
+import Welcome from '../components/Welcome.astro';
+const serverTime = new Date().toISOString();
+---
+
+<Layout title="Welcome to Astro on GB Coder">
+  <main>
+    <Welcome serverTime={serverTime} />
+  </main>
+</Layout>
+
+<style>
+  main {
+    margin: auto;
+    padding: 2rem;
+    width: 800px;
+    max-width: calc(100% - 2rem);
+    color: #f8fafc;
+    font-size: 18px;
+    line-height: 1.6;
+  }
+</style>
+`,
+    'src/layouts/Layout.astro': `---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Astro starter running inside GB Coder WebContainer" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --accent: 136, 58, 234;
+    --accent-light: 224, 204, 250;
+    --accent-dark: 49, 10, 101;
+    --bg-gradient: linear-gradient(45deg, rgb(var(--accent)), rgb(var(--accent-light)) 30%, #0f172a 60%);
+  }
+  html {
+    font-family: system-ui, sans-serif;
+    background: #0f172a;
+    background-size: 224px;
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+  }
+</style>
+`,
+    'src/components/Welcome.astro': `---
+interface Props {
+  serverTime: string;
+}
+const { serverTime } = Astro.props;
+---
+
+<div class="welcome-card">
+  <h1>Welcome to <span class="text-gradient">Astro</span></h1>
+  <p class="subtitle">
+    Genuine Astro content-focused architecture running inside WebContainer.
+  </p>
+  <div class="meta-box">
+    <p><strong>Server Render Time:</strong> {serverTime}</p>
+    <p><strong>Default Port:</strong> 4321</p>
+    <p><strong>Island Architecture:</strong> Zero JS by default</p>
+  </div>
+</div>
+
+<style>
+  .welcome-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 2.5rem;
+    text-align: center;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  }
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  .text-gradient {
+    background-image: var(--bg-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 400%;
+    background-position: 0%;
+  }
+  .subtitle {
+    color: #94a3b8;
+    font-size: 1.15rem;
+    margin-bottom: 2rem;
+  }
+  .meta-box {
+    background: #0b1120;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 1.25rem;
+    text-align: left;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #38bdf8;
+  }
+  .meta-box p {
+    margin: 0.4rem 0;
+  }
+</style>
+`,
+    'src/styles/global.css': `* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+`,
+    'public/favicon.svg': `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+    'README.md': `# Astro Starter
+
+Genuine Astro project with islands architecture running inside GB Coder WebContainer runtime.
+
+## Development
+\`\`\`bash
+npm run dev
+\`\`\`
+Server listens on \`http://localhost:4321\`.
+`,
+  },
+  'angular-starter': {
+    'package.json': JSON.stringify(
+      {
+        name: 'angular-starter',
+        version: '0.0.0',
+        private: true,
+        scripts: {
+          ng: 'ng',
+          start: 'ng serve',
+          build: 'ng build',
+          watch: 'ng build --watch --configuration development',
+        },
+        dependencies: {
+          '@angular/animations': '^22.2.4',
+          '@angular/common': '^22.2.4',
+          '@angular/compiler': '^22.2.4',
+          '@angular/core': '^22.2.4',
+          '@angular/forms': '^22.2.4',
+          '@angular/platform-browser': '^22.2.4',
+          '@angular/platform-browser-dynamic': '^22.2.4',
+          '@angular/router': '^22.2.4',
+          rxjs: '~7.8.0',
+          tslib: '^2.3.0',
+          'zone.js': '~0.15.0',
+        },
+        devDependencies: {
+          '@angular-devkit/build-angular': '^22.2.4',
+          '@angular/cli': '^22.2.4',
+          '@angular/compiler-cli': '^22.2.4',
+          typescript: '~5.7.0',
+        },
+      },
+      null,
+      2
+    ),
+    'angular.json': JSON.stringify(
+      {
+        $schema: './node_modules/@angular/cli/lib/config/schema.json',
+        version: 1,
+        newProjectRoot: 'projects',
+        projects: {
+          'angular-starter': {
+            projectType: 'application',
+            schematics: {},
+            root: '',
+            sourceRoot: 'src',
+            prefix: 'app',
+            architect: {
+              build: {
+                builder: '@angular-devkit/build-angular:browser',
+                options: {
+                  outputPath: 'dist/angular-starter',
+                  index: 'src/index.html',
+                  main: 'src/main.ts',
+                  polyfills: ['zone.js'],
+                  tsConfig: 'tsconfig.app.json',
+                  assets: ['src/favicon.ico', 'src/assets'],
+                  styles: ['src/styles.css'],
+                  scripts: [],
+                },
+                configurations: {
+                  production: {
+                    budgets: [
+                      {
+                        type: 'initial',
+                        maximumWarning: '500kb',
+                        maximumError: '1mb',
+                      },
+                    ],
+                    outputHashing: 'all',
+                  },
+                  development: {
+                    optimization: false,
+                    extractLicenses: false,
+                    sourceMap: true,
+                  },
+                },
+                defaultConfiguration: 'production',
+              },
+              serve: {
+                builder: '@angular-devkit/build-angular:dev-server',
+                configurations: {
+                  production: {
+                    buildTarget: 'angular-starter:build:production',
+                  },
+                  development: {
+                    buildTarget: 'angular-starter:build:development',
+                  },
+                },
+                defaultConfiguration: 'development',
+                options: {
+                  port: 4200,
+                  host: '0.0.0.0',
+                },
+              },
+            },
+          },
+        },
+      },
+      null,
+      2
+    ),
+    'tsconfig.json': JSON.stringify(
+      {
+        compileOnSave: false,
+        compilerOptions: {
+          outDir: './dist/out-tsc',
+          strict: true,
+          noImplicitOverride: true,
+          noPropertyAccessFromIndexSignature: true,
+          noImplicitReturns: true,
+          noFallthroughCasesInSwitch: true,
+          skipLibCheck: true,
+          isolatedModules: true,
+          esModuleInterop: true,
+          experimentalDecorators: true,
+          moduleResolution: 'bundler',
+          importHelpers: true,
+          target: 'ES2022',
+          module: 'ES2022',
+        },
+        angularCompilerOptions: {
+          enableI18nLegacyMessageIdFormat: false,
+          strictInjectionParameters: true,
+          strictInputAccessModifiers: true,
+          strictTemplates: true,
+        },
+      },
+      null,
+      2
+    ),
+    'tsconfig.app.json': JSON.stringify(
+      {
+        extends: './tsconfig.json',
+        compilerOptions: {
+          outDir: './out-tsc/app',
+          types: [],
+        },
+        files: ['src/main.ts'],
+        include: ['src/**/*.d.ts'],
+      },
+      null,
+      2
+    ),
+    'src/index.html': `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Angular Standalone App — GB Coder</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
+`,
+    'src/main.ts': `import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, appConfig)
+  .catch((err) => console.error(err));
+`,
+    'src/app/app.config.ts': `import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(routes),
+  ],
+};
+`,
+    'src/app/app.routes.ts': `import { Routes } from '@angular/router';
+
+export const routes: Routes = [];
+`,
+    'src/app/app.component.ts': `import { Component, signal } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterOutlet],
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = signal('Angular Standalone on GB Coder');
+  count = signal(0);
+
+  increment() {
+    this.count.update(c => c + 1);
+  }
+}
+`,
+    'src/app/app.component.html': `<main class="container">
+  <header class="header">
+    <span class="badge">Angular 22 Standalone</span>
+    <h1 class="title">{{ title() }}</h1>
+    <p class="subtitle">
+      Genuine Angular standalone components with reactive signals running inside WebContainer.
+    </p>
+  </header>
+
+  <div class="card">
+    <h2>Reactive Signals Counter</h2>
+    <p>Click count: <strong>{{ count() }}</strong></p>
+    <button class="btn" (click)="increment()">Increment Counter</button>
+  </div>
+
+  <div class="info-card">
+    <p><strong>Dev Server Port:</strong> 4200</p>
+    <p><strong>Architecture:</strong> Standalone Component (Zoneless/Zone.js compatible)</p>
+    <p><strong>Workspace:</strong> angular.json configured for browser builder</p>
+  </div>
+
+  <router-outlet></router-outlet>
+</main>
+`,
+    'src/app/app.component.css': `.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #f8fafc;
+}
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.badge {
+  background: rgba(221, 0, 49, 0.15);
+  color: #dd0031;
+  border: 1px solid rgba(221, 0, 49, 0.3);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.title {
+  font-size: 2.25rem;
+  margin: 0.75rem 0 0.5rem;
+}
+.subtitle {
+  color: #94a3b8;
+}
+.card, .info-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.btn {
+  background: #dd0031;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+.btn:hover {
+  background: #b50028;
+}
+.info-card {
+  font-family: monospace;
+  color: #38bdf8;
+  font-size: 0.9rem;
+}
+`,
+    'src/styles.css': `body {
+  margin: 0;
+  background-color: #0f172a;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+`,
+    'src/favicon.ico': '',
+    'README.md': `# Angular Standalone Starter
+
+Genuine Angular standalone application running inside GB Coder WebContainer runtime.
+
+## Development
+\`\`\`bash
+npm start
+\`\`\`
+Server listens on \`http://localhost:4200\`.
+`,
+  },
 };
 
 /**
@@ -819,44 +1306,44 @@ const UNIFIED_TEMPLATES: Record<string, UnifiedTemplateDescriptor> = {
     runtimeNotes: 'Experimental Next.js 16.4.4 runtime. Security-patched against CVEs. In-browser WebContainer npm install and compilation require significant browser resources and Webpack mode.',
   },
 
-  // --- Planned Starter Slots (Phase 1F) ---
+  // --- Genuine Starters (Phase 1F) ---
   'astro-starter': {
     id: 'astro-starter',
     title: 'Astro Content & Island Starter',
-    description: 'Astro islands architecture with multi-framework components. Planned for Phase 1F.',
+    description: 'Astro islands architecture with multi-framework components and zero-JS defaults.',
     framework: 'astro',
     category: 'framework',
-    supportStatus: 'planned_phase_1f',
-    runtimeType: 'planned',
+    supportStatus: 'experimental',
+    runtimeType: 'webcontainer',
     projectType: 'plain',
     recommendedEditor: 'vscode',
     packageManager: 'npm',
     targetMilestone: 'Phase 1F',
     icon: '🚀',
-    badge: 'Planned Phase 1F',
+    badge: 'Experimental Astro',
     tags: ['astro', 'islands', 'ssr', 'phase-1f'],
     isOfficial: true,
     requiresBuildStep: true,
-    runtimeNotes: 'Genuine Astro compiler runtime planned for Phase 1F.',
+    runtimeNotes: 'Genuine Astro 5.x islands architecture running in WebContainer (port 4321). In-browser package installation requires --prefer-offline or pre-warmed cache.',
   },
   'angular-starter': {
     id: 'angular-starter',
     title: 'Angular Standalone Starter',
-    description: 'Angular standalone components with reactive signals. Planned for Phase 1F.',
+    description: 'Angular 22 standalone components with reactive signals and zoneless compatibility.',
     framework: 'angular',
     category: 'framework',
-    supportStatus: 'planned_phase_1f',
-    runtimeType: 'planned',
+    supportStatus: 'experimental',
+    runtimeType: 'webcontainer',
     projectType: 'plain',
     recommendedEditor: 'vscode',
     packageManager: 'npm',
     targetMilestone: 'Phase 1F',
     icon: '🅰️',
-    badge: 'Planned Phase 1F',
+    badge: 'Experimental Angular',
     tags: ['angular', 'signals', 'typescript', 'phase-1f'],
     isOfficial: true,
     requiresBuildStep: true,
-    runtimeNotes: 'Genuine Angular CLI & runtime engine planned for Phase 1F.',
+    runtimeNotes: 'Genuine Angular 22 standalone architecture running in WebContainer (port 4200). In-browser package installation requires --prefer-offline or pre-warmed cache.',
   },
   'sveltekit-starter': {
     id: 'sveltekit-starter',

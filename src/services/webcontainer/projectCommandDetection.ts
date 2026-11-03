@@ -223,6 +223,16 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
       }
       runtimeWarning = runtimeWarning ? `${runtimeWarning}; ${turboWarning}` : turboWarning;
     }
+  } else if (frameworkInfo.primaryFramework === 'astro') {
+    // Astro dev server uses Vite and default port 4321
+    if (!devCommand && scripts['start']) {
+      devCommand = packageManager === 'npm' ? 'npm start' : `${packageManager} start`;
+    }
+  } else if (frameworkInfo.primaryFramework === 'angular') {
+    // Angular CLI uses "npm start" (ng serve) by convention
+    if (!devCommand && scripts['start']) {
+      devCommand = packageManager === 'npm' ? 'npm start' : `${packageManager} start`;
+    }
   }
 
   // 7. Helper for arbitrary script command
