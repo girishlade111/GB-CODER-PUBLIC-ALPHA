@@ -79,7 +79,9 @@
     "audit:e2e:nextjs": "node scripts/e2e-nextjs-real-runtime.mjs",
     "audit:phase1f": "node scripts/astro-angular-runtime-tests.mjs",
     "audit:astro-angular": "node scripts/astro-angular-runtime-tests.mjs",
-    "audit:e2e:phase1f": "node scripts/e2e-astro-angular-runtime.mjs"
+    "audit:e2e:phase1f": "node scripts/e2e-astro-angular-runtime.mjs",
+    "audit:phase1g": "node scripts/phase1g-runtime-tests.mjs",
+    "audit:e2e:phase1g": "node scripts/e2e-phase1g-acceptance.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -20,6 +20,17 @@ import { detectProjectCommands, type ProjectCommandInfo } from './projectCommand
 export { detectProjectCommands, type ProjectCommandInfo };
 export { FileSyncCoordinator, type FlushResult };
 
+export function sanitizeRuntimeErrorMessage(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/(?:ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9_]{82})/g, '[REDACTED_TOKEN]')
+    .replace(/(?:sk-[a-zA-Z0-9]{20,}|AIzaSy[a-zA-Z0-9_-]{33}|gsk_[a-zA-Z0-9_-]{20,})/g, '[REDACTED_API_KEY]')
+    .replace(/(?:npm_[a-zA-Z0-9]{36})/g, '[REDACTED_NPM_TOKEN]')
+    .replace(/Bearer\s+[A-Za-z0-9\-._~+/]+=*/g, 'Bearer [REDACTED_TOKEN]')
+    .replace(/([?&](?:token|key|api_key|npm_auth_token|password)=)[^&\s"'`]+/gi, '$1[REDACTED]')
+    .replace(/(?:password|token|secret)\s*[:=]\s*['"][^'"]+['"]/gi, 'secret: "[REDACTED]"');
+}
+
 export type WebContainerWriteErrorCode =
   | 'RUNTIME_UNAVAILABLE'
   | 'WRONG_PROJECT'
@@ -635,8 +646,13 @@ class WebContainerManager {
     const patch: Partial<WebContainerState> = { startupStage: stage };
     if (stage === 'error') {
       if (runtimeError) {
-        patch.runtimeError = runtimeError;
-        patch.error = runtimeError.message;
+        const sanitizedError: WebContainerRuntimeError = {
+          ...runtimeError,
+          message: sanitizeRuntimeErrorMessage(runtimeError.message),
+          details: runtimeError.details ? sanitizeRuntimeErrorMessage(runtimeError.details) : undefined,
+        };
+        patch.runtimeError = sanitizedError;
+        patch.error = sanitizedError.message;
       }
     } else if (runtimeError === undefined) {
       // Transitioning away from error automatically clears error flags

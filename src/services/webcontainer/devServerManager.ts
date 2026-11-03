@@ -3,6 +3,15 @@ import { webcontainerService } from './webcontainerService';
 
 export type DevServerStatus = 'idle' | 'starting' | 'running' | 'stopping' | 'stopped' | 'error';
 
+export interface DiscoveredPort {
+  port: number;
+  url: string;
+  projectId?: string | null;
+  sessionEpoch?: number;
+  discoveredAt: number;
+  active: boolean;
+}
+
 export interface DevServerState {
   status: DevServerStatus;
   serverUrl: string | null;
@@ -13,6 +22,8 @@ export interface DevServerState {
   startedAt: number | null;
   projectId?: string | null;
   sessionEpoch?: number;
+  ports: DiscoveredPort[];
+  selectedPort: number | null;
 }
 
 export class DevServerManager {
@@ -26,6 +37,8 @@ export class DevServerManager {
     startedAt: null,
     projectId: null,
     sessionEpoch: 0,
+    ports: [],
+    selectedPort: null,
   };
 
   private listeners = new Set<() => void>();
@@ -35,6 +48,27 @@ export class DevServerManager {
 
   public getState(): DevServerState {
     return this.state;
+  }
+
+  public getDiscoveredPorts(): DiscoveredPort[] {
+    return [...this.state.ports];
+  }
+
+  public getActivePorts(): DiscoveredPort[] {
+    return this.state.ports.filter((p) => p.active);
+  }
+
+  public selectPort(port: number): boolean {
+    const target = this.state.ports.find((p) => p.port === port && p.active);
+    if (!target) {
+      return false;
+    }
+    this.updateState({
+      selectedPort: target.port,
+      serverPort: target.port,
+      serverUrl: target.url,
+    });
+    return true;
   }
 
   public isRunning(): boolean {
@@ -150,10 +184,13 @@ export class DevServerManager {
 
       // If no port was active, stopping is immediate
       if (!targetPort) {
+        const markedPorts = this.state.ports.map((p) => ({ ...p, active: false }));
         this.updateState({
           status: 'stopped',
           serverUrl: null,
           serverPort: null,
+          selectedPort: null,
+          ports: markedPorts,
           error: null,
         });
         return true;
@@ -179,10 +216,13 @@ export class DevServerManager {
       await Promise.race([portPromise, timeoutPromise]);
 
       if (portClosed || this.state.serverPort === null) {
+        const markedPorts = this.state.ports.map((p) => ({ ...p, active: false }));
         this.updateState({
           status: 'stopped',
           serverUrl: null,
           serverPort: null,
+          selectedPort: null,
+          ports: markedPorts,
           error: null,
         });
         return true;
@@ -248,13 +288,48 @@ export class DevServerManager {
       return;
     }
 
+    const boundProject = eventProjectId ?? this.state.projectId;
+    const boundEpoch = eventEpoch ?? this.state.sessionEpoch;
+
+    // Filter out ports belonging to older projects or epochs
+    const currentPorts = this.state.ports.filter((p) => {
+      if (boundProject && p.projectId && p.projectId !== boundProject) return false;
+      if (boundEpoch && p.sessionEpoch && p.sessionEpoch !== boundEpoch) return false;
+      return true;
+    });
+
+    const newPortEntry: DiscoveredPort = {
+      port,
+      url,
+      projectId: boundProject,
+      sessionEpoch: boundEpoch,
+      discoveredAt: Date.now(),
+      active: true,
+    };
+
+    const existingIndex = currentPorts.findIndex((p) => p.port === port);
+    if (existingIndex >= 0) {
+      currentPorts[existingIndex] = newPortEntry;
+    } else {
+      currentPorts.push(newPortEntry);
+    }
+
+    // Determine selected port: keep current selected if still active, otherwise default to incoming port
+    const currentSelected = this.state.selectedPort;
+    const isCurrentStillActive =
+      currentSelected !== null && currentPorts.some((p) => p.port === currentSelected && p.active);
+    const selectedPort = isCurrentStillActive ? currentSelected : port;
+    const activeEntry = currentPorts.find((p) => p.port === selectedPort) || newPortEntry;
+
     this.updateState({
       status: 'running',
-      serverPort: port,
-      serverUrl: url,
+      serverPort: activeEntry.port,
+      serverUrl: activeEntry.url,
+      selectedPort: activeEntry.port,
+      ports: currentPorts,
       error: null,
-      projectId: eventProjectId ?? this.state.projectId,
-      sessionEpoch: eventEpoch ?? this.state.sessionEpoch,
+      projectId: boundProject,
+      sessionEpoch: boundEpoch,
     });
     webcontainerService.setDevServerStarting(false);
   }
@@ -300,12 +375,46 @@ export class DevServerManager {
       return;
     }
 
-    if (this.state.serverPort === port || this.state.serverPort === null) {
+    // Mark the closing port as inactive in ports array
+    const updatedPorts = this.state.ports.map((p) =>
+      p.port === port ? { ...p, active: false } : p,
+    );
+    const remainingActive = updatedPorts.filter((p) => p.active);
+
+    if (remainingActive.length === 0) {
       this.updateState({
         status: 'stopped',
         serverUrl: null,
         serverPort: null,
+        selectedPort: null,
+        ports: updatedPorts,
       });
+    } else {
+      // If the closed port was active/selected, failover to another active port
+      if (this.state.serverPort === port || this.state.selectedPort === port) {
+        const nextActive = remainingActive[remainingActive.length - 1];
+        this.updateState({
+          serverPort: nextActive.port,
+          serverUrl: nextActive.url,
+          selectedPort: nextActive.port,
+          ports: updatedPorts,
+        });
+      } else {
+        this.updateState({
+          ports: updatedPorts,
+        });
+      }
+    }
+  }
+
+  public cleanupStalePorts(currentProjectId?: string | null, currentEpoch?: number): void {
+    const filtered = this.state.ports.filter((p) => {
+      if (currentProjectId && p.projectId && p.projectId !== currentProjectId) return false;
+      if (currentEpoch && p.sessionEpoch && p.sessionEpoch !== currentEpoch) return false;
+      return true;
+    });
+    if (filtered.length !== this.state.ports.length) {
+      this.updateState({ ports: filtered });
     }
   }
 
@@ -320,6 +429,8 @@ export class DevServerManager {
       startedAt: null,
       projectId: null,
       sessionEpoch: 0,
+      ports: [],
+      selectedPort: null,
     };
     this.devSessionId = null;
     this.listeners.forEach((l) => {
@@ -342,7 +453,7 @@ export class DevServerManager {
     return () => this.listeners.delete(listener);
   }
 
-  private updateState(patch: Partial<DevServerState>): void {
+  public updateState(patch: Partial<DevServerState>): void {
     this.state = { ...this.state, ...patch };
     this.listeners.forEach((l) => {
       try {

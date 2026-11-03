@@ -760,7 +760,7 @@ Server listens on \`http://localhost:4321\`.
           '@angular-devkit/build-angular': '^22.2.4',
           '@angular/cli': '^22.2.4',
           '@angular/compiler-cli': '^22.2.4',
-          typescript: '~5.7.0',
+          typescript: '~6.0.0',
         },
       },
       null,
