@@ -150,6 +150,36 @@ export const consumeStoredReturnPath = (): string => {
   }
 };
 
+/**
+ * Removes sensitive authentication query and hash parameters from the browser URL
+ * using window.history.replaceState to prevent credentials lingering in browser
+ * history, logs, or subsequent reloads.
+ */
+export const cleanCallbackUrlParams = (): void => {
+  if (typeof window !== 'undefined' && window.history && window.location) {
+    try {
+      const url = new URL(window.location.href);
+      const paramsToRemove = ['code', 'error', 'error_description', 'error_code', 'state', 'returnTo'];
+      let changed = false;
+      for (const param of paramsToRemove) {
+        if (url.searchParams.has(param)) {
+          url.searchParams.delete(param);
+          changed = true;
+        }
+      }
+      if (window.location.hash) {
+        url.hash = '';
+        changed = true;
+      }
+      if (changed) {
+        window.history.replaceState(null, '', url.pathname + (url.search ? url.search : ''));
+      }
+    } catch {
+      // Storage/history unavailable in restricted contexts
+    }
+  }
+};
+
 export interface CallbackExchangeResult {
   session: Session | null;
   error: string | null;
@@ -159,10 +189,24 @@ export interface CallbackExchangeResult {
 /**
  * Exchanges PKCE authorization code for a Supabase session.
  * Deduplicates concurrent or re-mounted calls for the same code.
+ *
+ * Hardened Phase 2.1 Behaviors:
+ * - Application-Owned PKCE Exchange (detectSessionInUrl: false in client)
+ * - Removes sensitive params from address bar immediately
+ * - Deduplicates in-flight executions across React StrictMode remounts
+ * - Recovers session if code was already exchanged by prior attempt
+ * - Enforces 15-second exchange timeout guard against hung network connections
  */
-export const exchangeCallbackCode = async (code: string, fallbackReturnPath?: string): Promise<CallbackExchangeResult> => {
+export const exchangeCallbackCode = async (
+  code: string,
+  fallbackReturnPath?: string,
+  timeoutMs: number = 15000,
+): Promise<CallbackExchangeResult> => {
   const sanitizedCode = code.trim();
   const returnPath = sanitizeReturnPath(fallbackReturnPath || consumeStoredReturnPath());
+
+  // Clean URL parameters immediately upon consumption
+  cleanCallbackUrlParams();
 
   if (!sanitizedCode) {
     return {
@@ -196,17 +240,55 @@ export const exchangeCallbackCode = async (code: string, fallbackReturnPath?: st
 
   if (!pendingPromise) {
     pendingPromise = (async () => {
-      try {
-        const { data, error } = await client.auth.exchangeCodeForSession(sanitizedCode);
-        if (error) {
-          return { session: null, error: error.message };
+      let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+
+      const exchangePromise = (async () => {
+        try {
+          const { data, error } = await client.auth.exchangeCodeForSession(sanitizedCode);
+          if (error) {
+            // Check if code was already exchanged by an asynchronous attempt
+            const lower = error.message.toLowerCase();
+            if (
+              lower.includes('already been used') ||
+              lower.includes('expired') ||
+              lower.includes('invalid_grant')
+            ) {
+              const current = await client.auth.getSession();
+              if (current.data.session) {
+                completedCodes.add(sanitizedCode);
+                return { session: current.data.session, error: null };
+              }
+              return {
+                session: null,
+                error: 'The authorization link has expired or has already been used. Please sign in again.',
+              };
+            }
+            return { session: null, error: error.message };
+          }
+          completedCodes.add(sanitizedCode);
+          return { session: data.session, error: null };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Failed to exchange authorization code for session';
+          return { session: null, error: message };
         }
-        completedCodes.add(sanitizedCode);
-        return { session: data.session, error: null };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to exchange authorization code for session';
-        return { session: null, error: message };
+      })();
+
+      const timeoutPromise = new Promise<{ session: null; error: string }>((resolve) => {
+        timeoutHandle = setTimeout(() => {
+          resolve({
+            session: null,
+            error: 'Authorization code exchange timed out after 15 seconds. Please check your connection and try again.',
+          });
+        }, timeoutMs);
+      });
+
+      try {
+        const raceResult = await Promise.race([exchangePromise, timeoutPromise]);
+        return raceResult;
       } finally {
+        if (timeoutHandle) {
+          clearTimeout(timeoutHandle);
+        }
         activeCodeExchanges.delete(sanitizedCode);
       }
     })();

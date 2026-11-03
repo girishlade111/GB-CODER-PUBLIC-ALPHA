@@ -18,6 +18,27 @@ export interface SupabaseConfig {
   isConfigured: boolean;
 }
 
+export const SUPABASE_AUTH_STORAGE_KEY = 'gbcoder_supabase_auth_v1';
+
+/**
+ * Default Supabase Auth client options enforced by GB Coder.
+ *
+ * Architecture Decision — Option B: Application-Owned PKCE Exchange:
+ * - detectSessionInUrl is set to false to prevent the Supabase client from
+ *   automatically intercepting and consuming the authorization code during
+ *   initialization. This eliminates race conditions and double-exchange errors
+ *   between the SDK and the /app/auth/callback handler.
+ * - persistSession & autoRefreshToken remain true so authenticated sessions
+ *   survive browser reloads and tokens rotate automatically.
+ */
+export const SUPABASE_AUTH_OPTIONS = {
+  flowType: 'pkce' as const,
+  detectSessionInUrl: false,
+  persistSession: true,
+  autoRefreshToken: true,
+  storageKey: SUPABASE_AUTH_STORAGE_KEY,
+};
+
 let cachedClient: SupabaseClient | null = null;
 let mockClientOverride: SupabaseClient | null = null;
 
@@ -100,13 +121,7 @@ export const getSupabaseClient = (): SupabaseClient | null => {
   }
 
   cachedClient = createClient(url, anonKey, {
-    auth: {
-      flowType: 'pkce',
-      detectSessionInUrl: true,
-      persistSession: true,
-      autoRefreshToken: true,
-      storageKey: 'gbcoder_supabase_auth_v1',
-    },
+    auth: SUPABASE_AUTH_OPTIONS,
   });
 
   return cachedClient;
