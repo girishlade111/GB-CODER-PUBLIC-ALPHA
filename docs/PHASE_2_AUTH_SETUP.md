@@ -1,26 +1,27 @@
-# GB CODER — PHASE 2 & 2.1: SUPABASE AUTHENTICATION & GITHUB OAUTH SETUP
+# GB CODER — PHASE 2, 2.1 & 2.2: SUPABASE AUTHENTICATION & GITHUB OAUTH SETUP
 
-This document provides complete instructions for configuring Supabase Authentication, GitHub OAuth, Database Row Level Security (RLS), column-level privilege hardening, and local-first session management for GB Coder.
+This document provides complete instructions for configuring Supabase Authentication, GitHub OAuth, Database Row Level Security (RLS), column-level privilege hardening, identity metadata integrity, and local-first session management for GB Coder.
 
 ---
 
 ## 1. Architecture Overview
 
-Phase 2 and 2.1 introduce user authentication and profile management while strictly maintaining GB Coder's **local-first** guarantee:
+Phase 2 introduces user authentication and profile management while strictly maintaining GB Coder's **local-first** guarantee:
 
 ```
 [ Developer Browser ]
        │
        ├─► IndexedDB ("gb-coder-projects-db") ──► Local projects & workspace files remain on this device
        ├─► Supabase Auth (PKCE Flow) ───────────► Identity authentication via GitHub OAuth
-       └─► PostgreSQL ("public.profiles") ──────► Row Level Security (RLS) protects user profile records
+       └─► PostgreSQL ("public.profiles") ──────► Row Level Security (RLS) & Column Privileges protect profile records
 ```
 
 ### Critical Separation of Concerns
 1. **Authentication:** Determines who the user is using Supabase Auth with GitHub OAuth.
 2. **Local Project Storage:** Stores all project code and files in the browser via IndexedDB. Unchanged, private to this browser, functional without an account.
-3. **Cloud Synchronization:** Out of scope for Phase 2/2.1. Signing in does **not** upload local files.
-4. **Application-Owned PKCE Exchange (Phase 2.1 Hardening):** `detectSessionInUrl: false` is configured on the Supabase client so the application explicitly owns authorization code consumption at `/app/auth/callback`. This prevents race conditions and duplicate exchanges between the SDK and the callback component.
+3. **Cloud Synchronization:** Out of scope for Phase 2. Signing in does **not** upload local files.
+4. **Application-Owned PKCE Exchange (Phase 2.1):** `detectSessionInUrl: false` is configured on the Supabase client so the application explicitly owns authorization code consumption at `/app/auth/callback`.
+5. **Column-Level Least Privilege (Phase 2.2):** `authenticated` users can insert and update **only** `display_name` and `avatar_url`. Provider identity (`github_username`, `email`) and timestamps (`created_at`, `updated_at`) are derived server-side from `auth.users` and the database clock.
 
 ---
 
@@ -59,7 +60,7 @@ Follow these steps to register your OAuth App with GitHub:
    - **Application name:** `GB Coder IDE`
    - **Homepage URL:**
      - Production: `https://code.ladestack.in`
-     - Development: `http://localhost:5173`
+     - Development: `http://localhost:5173` (or active development port)
    - **Authorization callback URL (Callback A - GitHub to Supabase):**
      ```
      https://<YOUR-SUPABASE-PROJECT-REF>.supabase.co/auth/v1/callback
@@ -103,9 +104,10 @@ In the Supabase Dashboard, navigate to:
 
 ## 7. Database Migration & RLS Execution
 
-Apply the two migration scripts located in the repository:
+Apply the three migration scripts located in the repository in sequential order:
 1. Baseline schema: [`supabase/migrations/20261103000000_phase2_profiles_rls.sql`](file:///supabase/migrations/20261103000000_phase2_profiles_rls.sql)
 2. Security & RLS Hardening: [`supabase/migrations/20261103000001_phase2_1_hardening.sql`](file:///supabase/migrations/20261103000001_phase2_1_hardening.sql)
+3. Privilege Hardening & INSERT Protection: [`supabase/migrations/20261103000002_phase2_2_privilege_hardening.sql`](file:///supabase/migrations/20261103000002_phase2_2_privilege_hardening.sql)
 
 You can apply them via the **Supabase Dashboard SQL Editor** or using the **Supabase CLI**:
 
@@ -116,19 +118,23 @@ npx supabase db push
 ### Table Schema: `public.profiles`
 | Column | Type | Constraints | Modifiability | Description |
 |---|---|---|---|---|
-| `id` | `UUID` | `PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE` | Immutable (System) | Matches Supabase Auth user ID |
+| `id` | `UUID` | `PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE` | Immutable (System) | Matches Supabase Auth user ID (`auth.uid()`) |
 | `display_name` | `TEXT` | | User Editable | Custom user display name |
 | `avatar_url` | `TEXT` | | User Editable | Custom avatar image URL |
-| `github_username` | `TEXT` | `INDEX` | Immutable (Provider) | GitHub username synced from OAuth |
-| `email` | `TEXT` | | Immutable (Provider) | User email address |
-| `created_at` | `TIMESTAMPTZ` | `DEFAULT now() NOT NULL` | Immutable (System) | Creation timestamp |
-| `updated_at` | `TIMESTAMPTZ` | `DEFAULT now() NOT NULL` | System Triggered | Last update timestamp |
+| `github_username` | `TEXT` | `INDEX` | Immutable (Provider) | GitHub username synced server-side from `auth.users` |
+| `email` | `TEXT` | | Immutable (Provider) | User email address synced server-side from `auth.users` |
+| `created_at` | `TIMESTAMPTZ` | `DEFAULT now() NOT NULL` | Immutable (System) | Creation timestamp set by DB clock |
+| `updated_at` | `TIMESTAMPTZ` | `DEFAULT now() NOT NULL` | System Triggered | Last update timestamp set by DB trigger |
 
-### Hardened Authorization Model (Phase 2.1)
-- **Column-Level Privileges:** `GRANT UPDATE (display_name, avatar_url, updated_at) ON public.profiles TO authenticated;`. Broad UPDATE on all columns is revoked.
-- **No DELETE Permission:** DELETE privilege and DELETE policies on `public.profiles` are revoked from authenticated users.
-- **Immutable Column Trigger:** `protect_immutable_profile_fields()` rejects any attempt to update `id`, `github_username`, `email`, or `created_at`.
-- **Hardened SECURITY DEFINER Trigger:** `handle_new_user()` runs with `SET search_path = ''` and fully qualified catalog namespaces to prevent search path attacks. Preserves user-chosen display names on re-login conflict.
+### Trusted Identity Metadata Model (Phase 2.2)
+- **Authorization Evidence:** `auth.uid()` is the SOLE trusted token for row ownership and authorization in RLS.
+- **Display Metadata Notice:** `github_username` and `email` are informative display attributes. They are NOT authorization evidence, admin roles, or team permission assertions. Supabase client-side `user_metadata` is untrusted for privilege checks.
+- **Restricted Client Permissions:**
+  - `GRANT INSERT (id, display_name, avatar_url) ON public.profiles TO authenticated;`
+  - `GRANT UPDATE (display_name, avatar_url) ON public.profiles TO authenticated;`
+  - Broad INSERT, UPDATE, and DELETE permissions on all other columns are revoked.
+- **Server-Side Identity Synchronization:** The `sync_trusted_profile_metadata()` trigger fires `BEFORE INSERT` and populates `email` and `github_username` directly from `auth.users`, discarding any client-attempted forgery.
+- **Authoritative Timestamps:** The `handle_profiles_updated_at()` trigger manages `updated_at`. Clients cannot update or forge timestamps.
 
 ### Row Level Security (RLS) Verification Queries
 Execute these queries in the Supabase SQL Editor:
@@ -150,7 +156,9 @@ WHERE tablename = 'profiles';
 SELECT column_name, privilege_type 
 FROM information_schema.column_privileges 
 WHERE table_name = 'profiles' AND grantee = 'authenticated';
--- Confirms: UPDATE privilege exists ONLY for display_name, avatar_url, updated_at
+-- Confirms:
+-- INSERT privilege exists ONLY for: id, display_name, avatar_url
+-- UPDATE privilege exists ONLY for: display_name, avatar_url
 ```
 
 ---
@@ -166,7 +174,7 @@ npm run typecheck
 # 2. ESLint
 npm run lint
 
-# 3. Authentication, PKCE & Database Security Suite (59 tests)
+# 3. Comprehensive Authentication, PKCE & Database Security Suite (73 tests)
 npm run audit:phase2:auth
 
 # 4. Browser E2E Authentication Suite (Playwright Chromium)
@@ -190,12 +198,13 @@ npm run build
 | `access_denied` | User clicked Cancel on GitHub authorization screen | Expected user cancellation; GB Coder catches this and presents a clear "Return to Dashboard" action. |
 | `Invalid code` / `already used` | PKCE code already exchanged or expired | Application-Owned PKCE deduplicates exchanges and gracefully restores active session. |
 | `Supabase client not configured` | Missing `.env` variables | Supply `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. |
+| `Exchange timed out` | Slow network or unresponsive endpoint | 15s timeout fires. Late responses are safely discarded. Click "Try Signing In Again". |
 
 ---
 
-## 10. Explicit Phase 2 & 2.1 Boundaries
+## 10. Explicit Phase 2 Boundaries
 
-- **No Cloud Synchronization:** Project code is never synced to the database or cloud storage during Phase 2 or 2.1.
+- **No Cloud Synchronization:** Project code is never synced to the database or cloud storage during Phase 2.
 - **Local Projects Preserved:** Logging in or out does not delete, alter, or namespace existing IndexedDB projects.
 - **GitHub PAT Independence:** Existing GitHub Personal Access Tokens (used for Git export/sync) remain in encrypted local storage (`credentialStore`) and are never overwritten by OAuth identity tokens.
 - **Guest Mode Continuity:** GB Coder functions fully without any Supabase account or credentials.

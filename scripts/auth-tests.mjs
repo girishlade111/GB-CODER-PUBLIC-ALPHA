@@ -521,7 +521,7 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
                 return {
                   select: () => ({
                     single: async () => ({
-                      data: { id, ...payload },
+                      data: { id, ...payload, updated_at: new Date().toISOString() },
                       error: null,
                     }),
                   }),
@@ -537,7 +537,8 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
       assert.strictEqual(res.error, null);
       assert.strictEqual(res.profile?.display_name, 'Architect Lade');
       assert.strictEqual(updatedPayload?.display_name, 'Architect Lade');
-      assert.ok(updatedPayload?.updated_at);
+      assert.strictEqual(updatedPayload?.updated_at, undefined, 'Client must not supply updated_at; managed by DB trigger');
+      assert.ok(res.profile?.updated_at, 'Database returned updated_at timestamp');
     });
 
     test('P06 — Invalid profile metadata handling', () => {
@@ -984,6 +985,270 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
       assert.match(migration2Sql, /pg_catalog\.timezone/);
       assert.match(migration2Sql, /display_name = pg_catalog\.coalesce\(public\.profiles\.display_name,\s*EXCLUDED\.display_name\)/);
       assert.match(migration2Sql, /RAISE WARNING 'handle_new_user provisioning notice for %: % \(SQLSTATE: %\)'/);
+    });
+  });
+
+  // =========================================================================
+  // GROUP 6: PHASE 2.2 PRIVILEGE HARDENING & REAL RLS READINESS (V01 - V14)
+  // =========================================================================
+  describe('Phase 2.2 Privilege Hardening, Identity Integrity & Real RLS Readiness (V01 - V14)', () => {
+    test('V01 — Migration 02: Revocation of broad INSERT from authenticated', () => {
+      const migration3Sql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000002_phase2_2_privilege_hardening.sql'),
+        'utf8',
+      );
+      assert.match(migration3Sql, /REVOKE INSERT ON public\.profiles FROM authenticated;/);
+    });
+
+    test('V02 — Migration 02: Granular column-level INSERT grant strictly for (id, display_name, avatar_url)', () => {
+      const migration3Sql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000002_phase2_2_privilege_hardening.sql'),
+        'utf8',
+      );
+      assert.match(
+        migration3Sql,
+        /GRANT INSERT \(id,\s*display_name,\s*avatar_url\) ON public\.profiles TO authenticated;/,
+      );
+      // Ensure provider/system fields are absent from the INSERT grant
+      assert.strictEqual(/GRANT INSERT.*github_username/i.test(migration3Sql), false);
+      assert.strictEqual(/GRANT INSERT.*email/i.test(migration3Sql), false);
+      assert.strictEqual(/GRANT INSERT.*created_at/i.test(migration3Sql), false);
+    });
+
+    test('V03 — Migration 02: Revocation of client UPDATE on updated_at', () => {
+      const migration3Sql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000002_phase2_2_privilege_hardening.sql'),
+        'utf8',
+      );
+      assert.match(migration3Sql, /REVOKE UPDATE ON public\.profiles FROM authenticated;/);
+    });
+
+    test('V04 — Migration 02: Column-level UPDATE grant strictly for (display_name, avatar_url)', () => {
+      const migration3Sql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000002_phase2_2_privilege_hardening.sql'),
+        'utf8',
+      );
+      assert.match(
+        migration3Sql,
+        /GRANT UPDATE \(display_name,\s*avatar_url\) ON public\.profiles TO authenticated;/,
+      );
+      assert.strictEqual(/GRANT UPDATE.*updated_at/i.test(migration3Sql), false);
+    });
+
+    test('V05 — Migration 02: sync_trusted_profile_metadata trigger enforces database timestamps and auth.users email/github_username', () => {
+      const migration3Sql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000002_phase2_2_privilege_hardening.sql'),
+        'utf8',
+      );
+      assert.match(migration3Sql, /CREATE OR REPLACE FUNCTION public\.sync_trusted_profile_metadata\(\)/);
+      assert.match(migration3Sql, /BEFORE INSERT ON public\.profiles/);
+      assert.match(migration3Sql, /NEW\.created_at := pg_catalog\.timezone/);
+      assert.match(migration3Sql, /NEW\.updated_at := pg_catalog\.timezone/);
+      assert.match(migration3Sql, /FROM auth\.users u/);
+    });
+
+    test('V06 — Migration 02: Trigger functions converted to SECURITY INVOKER where elevated privileges are unnecessary', () => {
+      const migration3Sql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000002_phase2_2_privilege_hardening.sql'),
+        'utf8',
+      );
+      const matches = migration3Sql.match(/SECURITY INVOKER/g);
+      assert.ok(matches && matches.length >= 2, 'handle_profiles_updated_at and protect_immutable_profile_fields must be SECURITY INVOKER');
+    });
+
+    test('V07 — ProfileService: getOrCreateProfile inserts only user-editable columns (id, display_name, avatar_url)', async () => {
+      let capturedPayload = null;
+      const fakeUser = {
+        id: 'usr-v07-test',
+        email: 'v07@ladestack.in',
+        user_metadata: { user_name: 'v07dev', full_name: 'V07 Developer' },
+      };
+
+      const mockClient = {
+        from: (table) => {
+          assert.strictEqual(table, 'profiles');
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: null, error: null }),
+              }),
+            }),
+            upsert: (payload) => {
+              capturedPayload = payload;
+              return {
+                select: () => ({
+                  single: async () => ({
+                    data: {
+                      ...payload,
+                      email: fakeUser.email,
+                      github_username: 'v07dev',
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                    },
+                    error: null,
+                  }),
+                }),
+              };
+            },
+          };
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      await getOrCreateProfile(fakeUser);
+      assert.ok(capturedPayload);
+      assert.strictEqual(capturedPayload.id, 'usr-v07-test');
+      assert.strictEqual(capturedPayload.display_name, 'V07 Developer');
+      // Verify provider and timestamp fields are NOT in the client insert payload
+      assert.strictEqual('email' in capturedPayload, false);
+      assert.strictEqual('github_username' in capturedPayload, false);
+      assert.strictEqual('created_at' in capturedPayload, false);
+      assert.strictEqual('updated_at' in capturedPayload, false);
+    });
+
+    test('V08 — ProfileService: updateProfile does not send client-controlled updated_at timestamp', async () => {
+      let capturedUpdatePayload = null;
+      const mockClient = {
+        from: () => ({
+          update: (payload) => {
+            capturedUpdatePayload = payload;
+            return {
+              eq: () => ({
+                select: () => ({
+                  single: async () => ({
+                    data: { id: 'usr-v08', ...payload },
+                    error: null,
+                  }),
+                }),
+              }),
+            };
+          },
+        }),
+      };
+      _setMockSupabaseClient(mockClient);
+
+      await updateProfile('usr-v08', { display_name: 'Updated Name' });
+      assert.ok(capturedUpdatePayload);
+      assert.strictEqual(capturedUpdatePayload.display_name, 'Updated Name');
+      assert.strictEqual('updated_at' in capturedUpdatePayload, false, 'Client must not supply updated_at; managed by DB trigger');
+    });
+
+    test('V09 — AuthContext: profile fetching effect keyed strictly on userId preventing redundant PostgREST reads', () => {
+      const authContextSource = readFileSync(
+        join(process.cwd(), 'src/features/auth/AuthContext.tsx'),
+        'utf8',
+      );
+      assert.match(authContextSource, /const userId = user\?\.id;/);
+      assert.match(authContextSource, /useEffect\(\(\) => \{[\s\S]*?\}, \[userId\]\);/);
+      // Ensure previous [user] object dependency is eliminated
+      assert.strictEqual(/useEffect\(\(\) => \{[\s\S]*?\}, \[user\]\);/.test(authContextSource), false);
+    });
+
+    test('V10 — PKCE Lifecycle: delayed success after timeout is ignored and does not corrupt state', async () => {
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async () => {
+            // Simulate very slow network response (100ms)
+            await new Promise((r) => setTimeout(r, 100));
+            return {
+              data: { session: { user: { id: 'late-user' } } },
+              error: null,
+            };
+          },
+          getSession: async () => ({ data: { session: null }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      // Call with 20ms timeout
+      const res = await exchangeCallbackCode('code-late-success', '/app/ide', 20);
+      assert.strictEqual(res.session, null, 'Must not return session if timed out');
+      assert.ok(res.error);
+      assert.match(res.error, /timed out/i);
+    });
+
+    test('V11 — PKCE Lifecycle: delayed failure after timeout is cleanly discarded', async () => {
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async () => {
+            await new Promise((r) => setTimeout(r, 100));
+            return {
+              data: { session: null },
+              error: { message: 'Late network error' },
+            };
+          },
+          getSession: async () => ({ data: { session: null }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await exchangeCallbackCode('code-late-fail', '/app/ide', 20);
+      assert.strictEqual(res.session, null);
+      assert.match(res.error, /timed out/i);
+    });
+
+    test('V12 — Identity Metadata: user_metadata explicitly treated as untrusted for authorization', () => {
+      // User metadata full_name or user_name can be set by anyone, so row authorization relies solely on auth.uid()
+      const fakeUntrustedUser = {
+        id: 'usr-untrusted-1',
+        email: 'attacker@evil.com',
+        user_metadata: {
+          full_name: 'Admin User',
+          user_name: 'admin',
+          role: 'superuser', // Malicious attempt to claim superuser role
+        },
+      };
+      const mapped = mapUserToProfileFields(fakeUntrustedUser);
+      assert.strictEqual(mapped.id, 'usr-untrusted-1');
+      assert.strictEqual('role' in mapped, false, 'Role metadata must never be mapped or trusted from user_metadata');
+    });
+
+    test('V13 — RLS Contract: DB01-DB18 static SQL compliance check across all 3 migrations', () => {
+      const mig1 = readFileSync(join(process.cwd(), 'supabase/migrations/20261103000000_phase2_profiles_rls.sql'), 'utf8');
+      const mig2 = readFileSync(join(process.cwd(), 'supabase/migrations/20261103000001_phase2_1_hardening.sql'), 'utf8');
+      const mig3 = readFileSync(join(process.cwd(), 'supabase/migrations/20261103000002_phase2_2_privilege_hardening.sql'), 'utf8');
+
+      // DB01: RLS enabled
+      assert.match(mig1, /ALTER TABLE public\.profiles ENABLE ROW LEVEL SECURITY;/);
+      // DB02/DB03: Anonymous access revoked
+      assert.match(mig1, /REVOKE ALL ON public\.profiles FROM anon;/);
+      // DB04/DB05: Users can view own profile
+      assert.match(mig1, /CREATE POLICY "Users can view own profile"/);
+      // DB08/DB09/DB10/DB11: Immutable fields protected
+      assert.match(mig2, /CREATE OR REPLACE FUNCTION public\.protect_immutable_profile_fields/);
+      assert.match(mig3, /GRANT INSERT \(id,\s*display_name,\s*avatar_url\)/);
+      // DB12: updated_at protected from client updates
+      assert.match(mig3, /REVOKE UPDATE ON public\.profiles FROM authenticated;/);
+      assert.match(mig3, /GRANT UPDATE \(display_name,\s*avatar_url\)/);
+    });
+
+    test('V14 — Recovery and fallback profile preserves user session when database is unreachable', async () => {
+      const mockClient = {
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({ data: null, error: { message: 'Network offline 503' } }),
+            }),
+          }),
+          upsert: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: { message: 'Network offline 503' } }),
+            }),
+          }),
+        }),
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const user = {
+        id: 'usr-offline-recovery',
+        email: 'offline@ladestack.in',
+        user_metadata: { full_name: 'Offline Dev' },
+      };
+
+      const prof = await getOrCreateProfile(user);
+      assert.ok(prof);
+      assert.strictEqual(prof.id, 'usr-offline-recovery');
+      assert.strictEqual(prof.display_name, 'Offline Dev');
     });
   });
 });
