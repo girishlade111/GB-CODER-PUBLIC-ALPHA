@@ -268,4 +268,54 @@ describe('GB Coder Phase 1H.1 — Security Advisory Accuracy & Release Gate Test
       assert.equal(hasVulnWarning, false, 'Safe resolved version from lockfile must not push vulnerability warning');
     });
   });
+
+  // =========================================================================
+  // 6. ISSUE RC1: SECURITY ADVISORY METADATA INTEGRITY
+  // =========================================================================
+  describe('RC1: Security Advisory Metadata Integrity & No Invented CVEs', () => {
+    test('GHSA-f82v-jwr5-mffw has official CVE-2025-29927 and March 2025 publish date', () => {
+      const adv = NEXTJS_SECURITY_ADVISORIES.find((a) => a.id === 'GHSA-f82v-jwr5-mffw');
+      assert.ok(adv);
+      assert.equal(adv.cve, 'CVE-2025-29927');
+      assert.equal(adv.publishedDate, '2025-03-21');
+    });
+
+    test('GHSA-2xp9-vwfh-vxw4 has NO invented CVE and November 2024 publish date', () => {
+      const adv = NEXTJS_SECURITY_ADVISORIES.find((a) => a.id === 'GHSA-2xp9-vwfh-vxw4');
+      assert.ok(adv);
+      assert.equal(adv.cve, undefined, 'Must not assign invented CVE to Next.js for AVIF flaw');
+      assert.equal(adv.publishedDate, '2024-11-25');
+      assert.ok(adv.upstreamNote?.includes('libheif'));
+    });
+
+    test('GHSA-2464-fhr4-w9xw has NO invented CVE and October 2024 publish date', () => {
+      const adv = NEXTJS_SECURITY_ADVISORIES.find((a) => a.id === 'GHSA-2464-fhr4-w9xw');
+      assert.ok(adv);
+      assert.equal(adv.cve, undefined, 'Must not assign invented CVE to Next.js for SVG flaw');
+      assert.equal(adv.publishedDate, '2024-10-23');
+      assert.ok(adv.upstreamNote?.includes('sharp'));
+    });
+
+    test('GHSA-fr5h-rqp8-gw6v has official CVE-2024-34351 and May 2024 publish date', () => {
+      const adv = NEXTJS_SECURITY_ADVISORIES.find((a) => a.id === 'GHSA-fr5h-rqp8-gw6v');
+      assert.ok(adv);
+      assert.equal(adv.cve, 'CVE-2024-34351');
+      assert.equal(adv.publishedDate, '2024-05-09');
+    });
+
+    test('No invented CVEs (CVE-2024-46982 or CVE-2025-27598) exist across all advisories', () => {
+      const allCves = NEXTJS_SECURITY_ADVISORIES.map((a) => a.cve).filter(Boolean);
+      assert.ok(!allCves.includes('CVE-2024-46982'), 'CVE-2024-46982 must not be present');
+      assert.ok(!allCves.includes('CVE-2025-27598'), 'CVE-2025-27598 must not be present');
+    });
+
+    test('Audit result matches propagate publishedDate and upstreamNote', () => {
+      const res = auditNextJsSecurity('14.2.24');
+      const avifMatch = res.advisories.find((a) => a.id === 'GHSA-2xp9-vwfh-vxw4');
+      assert.ok(avifMatch);
+      assert.equal(avifMatch.cve, undefined);
+      assert.equal(avifMatch.publishedDate, '2024-11-25');
+      assert.ok(avifMatch.upstreamNote?.includes('libheif'));
+    });
+  });
 });

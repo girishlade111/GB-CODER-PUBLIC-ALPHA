@@ -1,11 +1,12 @@
 /**
  * Next.js Security Advisory & Version Verification Service
  *
- * Phase 1H.1: Security Advisory Accuracy & Controlled Release Gate
+ * Phase 1 Release Candidate 1: Security Advisory Accuracy & Controlled Release Gate
  *
  * Authoritative, advisory-specific semver evaluation for known Next.js vulnerabilities:
  *
  * 1. GHSA-f82v-jwr5-mffw (CVE-2025-29927): Authorization Bypass in Next.js Middleware
+ *    Published: 2025-03-21
  *    Affected:
  *    - >= 12.0.0 < 12.3.5 (Patched: 12.3.5)
  *    - >= 13.0.0 < 13.5.9 (Patched: 13.5.9)
@@ -13,19 +14,25 @@
  *    - >= 15.0.0 < 15.2.3 (Patched: 15.2.3)
  *    Reference: https://github.com/advisories/GHSA-f82v-jwr5-mffw
  *
- * 2. GHSA-2xp9-vwfh-vxw4 (CVE-2024-46982): Unauthenticated Remote Code Execution in Image Optimization (AVIF)
+ * 2. GHSA-2xp9-vwfh-vxw4: Unauthenticated Remote Code Execution in Image Optimization (AVIF)
+ *    Published: 2024-11-25
+ *    Note: No direct CVE assigned in official GitHub Advisory Database; flaw traces to upstream libheif
  *    Affected:
  *    - >= 10.0.0 < 15.5.24 (Patched: 15.5.24)
  *    - >= 16.0.0 < 16.3.3 (Patched: 16.3.3)
  *    Reference: https://github.com/advisories/GHSA-2xp9-vwfh-vxw4
  *
- * 3. GHSA-2464-fhr4-w9xw (CVE-2025-27598): Remote Code Execution in Image Optimization (SVG)
+ * 3. GHSA-2464-fhr4-w9xw: Remote Code Execution in Image Optimization (SVG)
+ *    Published: 2024-10-23
+ *    Note: No direct CVE assigned in official GitHub Advisory Database; flaw traces to upstream sharp SVG handling on glibc
  *    Affected:
  *    - >= 10.0.0 < 15.5.28 (Patched: 15.5.28)
  *    - >= 16.0.0 < 16.4.1 (Patched: 16.4.1)
  *    Reference: https://github.com/advisories/GHSA-2464-fhr4-w9xw
  *
  * 4. GHSA-fr5h-rqp8-gw6v (CVE-2024-34351): Server Actions SSRF via Host Header
+ *    Published: 2024-05-09
+ *    Note: Upstream advisory identifier is GHSA-fr5h-rqp8-mj6g
  *    Affected:
  *    - >= 13.4.0 < 14.1.1 (Patched: 14.1.1)
  *    - >= 14.0.0 < 14.2.10 (Patched: 14.2.10)
@@ -52,6 +59,8 @@ export interface NextJsAdvisoryDefinition {
   title: string;
   severity: 'critical' | 'high' | 'medium';
   description: string;
+  publishedDate: string;
+  upstreamNote?: string;
   intervals: NextJsAdvisoryInterval[];
   sourceUrl: string;
   remediation: string;
@@ -63,6 +72,8 @@ export interface NextJsAdvisoryMatch {
   title: string;
   severity: 'critical' | 'high' | 'medium';
   description: string;
+  publishedDate?: string;
+  upstreamNote?: string;
   affectedRange: string;
   patchedVersion: string;
   matchType: 'definitive' | 'potential';
@@ -222,6 +233,7 @@ export const NEXTJS_SECURITY_ADVISORIES: NextJsAdvisoryDefinition[] = [
     severity: 'critical',
     description:
       'Specially crafted request headers allow bypassing Next.js middleware route protection.',
+    publishedDate: '2025-03-21',
     sourceUrl: 'https://github.com/advisories/GHSA-f82v-jwr5-mffw',
     remediation:
       'Upgrade to 12.3.5 (12.x), 13.5.9 (13.x), 14.2.25 (14.x), or 15.2.3 (15.x).',
@@ -234,11 +246,15 @@ export const NEXTJS_SECURITY_ADVISORIES: NextJsAdvisoryDefinition[] = [
   },
   {
     id: 'GHSA-2xp9-vwfh-vxw4',
-    cve: 'CVE-2024-46982',
+    // Note: Official GitHub advisory assigns no direct CVE to Next.js for this entry.
+    // Upstream root cause is in libheif/sharp image processing.
+    cve: undefined,
     title: 'Unauthenticated Remote Code Execution in Image Optimization (AVIF)',
     severity: 'critical',
     description:
       'Heap buffer overflow vulnerability in built-in image optimizer handling AVIF images.',
+    publishedDate: '2024-11-25',
+    upstreamNote: 'No direct CVE assigned in official GitHub Advisory Database; flaw traces to upstream libheif heap buffer overflow.',
     sourceUrl: 'https://github.com/advisories/GHSA-2xp9-vwfh-vxw4',
     remediation: 'Upgrade to 15.5.24 (<=15.x) or 16.3.3 (16.x).',
     intervals: [
@@ -248,11 +264,15 @@ export const NEXTJS_SECURITY_ADVISORIES: NextJsAdvisoryDefinition[] = [
   },
   {
     id: 'GHSA-2464-fhr4-w9xw',
-    cve: 'CVE-2025-27598',
+    // Note: Official GitHub advisory assigns no direct CVE to Next.js for this entry.
+    // Upstream root cause is in sharp SVG parsing.
+    cve: undefined,
     title: 'Remote Code Execution in Image Optimization (SVG)',
     severity: 'critical',
     description:
       'Improper sanitization of SVG payloads in Next.js image optimization allows remote code execution.',
+    publishedDate: '2024-10-23',
+    upstreamNote: 'No direct CVE assigned in official GitHub Advisory Database; flaw traces to upstream sharp SVG handling on glibc.',
     sourceUrl: 'https://github.com/advisories/GHSA-2464-fhr4-w9xw',
     remediation: 'Upgrade to 15.5.28 (<=15.x) or 16.4.1 (16.x).',
     intervals: [
@@ -267,6 +287,8 @@ export const NEXTJS_SECURITY_ADVISORIES: NextJsAdvisoryDefinition[] = [
     severity: 'high',
     description:
       'Host header poisoning in Next.js Server Actions can lead to server-side request forgery (SSRF).',
+    publishedDate: '2024-05-09',
+    upstreamNote: 'Upstream GitHub Advisory identifier is GHSA-fr5h-rqp8-mj6g (CVE-2024-34351).',
     sourceUrl: 'https://github.com/advisories/GHSA-fr5h-rqp8-gw6v',
     remediation: 'Upgrade to 14.1.1 (13.x) or 14.2.10 (14.x).',
     intervals: [
@@ -312,6 +334,8 @@ export function auditNextJsSecurity(
             title: adv.title,
             severity: adv.severity,
             description: adv.description,
+            publishedDate: adv.publishedDate,
+            upstreamNote: adv.upstreamNote,
             affectedRange: interval.rangeString,
             patchedVersion: interval.patchedVersion,
             matchType: 'definitive',
@@ -330,6 +354,8 @@ export function auditNextJsSecurity(
             title: adv.title,
             severity: adv.severity,
             description: adv.description,
+            publishedDate: adv.publishedDate,
+            upstreamNote: adv.upstreamNote,
             affectedRange: interval.rangeString,
             patchedVersion: interval.patchedVersion,
             matchType: 'definitive',
@@ -353,6 +379,8 @@ export function auditNextJsSecurity(
             title: adv.title,
             severity: adv.severity,
             description: adv.description,
+            publishedDate: adv.publishedDate,
+            upstreamNote: adv.upstreamNote,
             affectedRange: interval.rangeString,
             patchedVersion: interval.patchedVersion,
             matchType: fullyContained ? 'definitive' : 'potential',
