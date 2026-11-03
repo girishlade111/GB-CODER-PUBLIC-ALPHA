@@ -3,8 +3,22 @@
  *
  * Coordinates session lifecycle, user profiles, guest mode continuity,
  * and authentication state changes.
+ *
+ * Hardened Phase 2.1 Behaviors:
+ * - Purely synchronous onAuthStateChange handler (eliminates async/await deadlock risks).
+ * - Race-condition and stale-profile prevention via request ID tokens.
+ * - Profile fetching isolated into a dedicated lifecycle effect keyed to user.
+ * - Immediate profile teardown on sign-out to prevent stale user profile leaks.
  */
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import {
   getCurrentSession,
@@ -56,6 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const profileRequestIdRef = useRef<number>(0);
   const configured = useMemo(() => isSupabaseConfigured(), []);
 
   // Initialize session and restore authentication
@@ -76,16 +91,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setSession(initialSession);
           setUser(initialSession.user);
           setStatus('authenticated');
-
-          // Asynchronously load profile
-          try {
-            const userProfile = await getOrCreateProfile(initialSession.user);
-            if (!isCancelled) {
-              setProfile(userProfile);
-            }
-          } catch (profileErr) {
-            console.warn('[AuthProvider] Profile load deferred:', profileErr);
-          }
         } else {
           setStatus('guest');
         }
@@ -99,32 +104,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     void initAuth();
 
-    // Subscribe to auth state updates
-    const unsubscribe = subscribeToAuthState(async (event, newSession) => {
+    // Subscribe to auth state updates.
+    // CRITICAL: Callback is PURELY SYNCHRONOUS to prevent Supabase GoTrue lock deadlocks.
+    const unsubscribe = subscribeToAuthState((event, newSession) => {
       if (isCancelled) return;
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         if (newSession?.user) {
           setSession(newSession);
           setUser(newSession.user);
           setStatus('authenticated');
           setError(null);
-
-          try {
-            const userProfile = await getOrCreateProfile(newSession.user);
-            if (!isCancelled) {
-              setProfile(userProfile);
-            }
-          } catch {
-            // Keep existing profile if refresh fails
-          }
         } else {
+          profileRequestIdRef.current += 1;
           setSession(null);
           setUser(null);
           setProfile(null);
           setStatus('guest');
         }
+      } else if (event === 'TOKEN_REFRESHED') {
+        if (newSession) {
+          setSession(newSession);
+          if (newSession.user) {
+            setUser(newSession.user);
+          }
+        }
       } else if (event === 'SIGNED_OUT') {
+        profileRequestIdRef.current += 1;
         setSession(null);
         setUser(null);
         setProfile(null);
@@ -138,6 +144,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       unsubscribe();
     };
   }, [configured]);
+
+  // Dedicated effect for asynchronous user profile fetching with request token cancellation.
+  // Prevents race conditions and stale profiles across fast login/logout transitions.
+  useEffect(() => {
+    if (!user) {
+      setProfile(null);
+      return;
+    }
+
+    const currentReqId = ++profileRequestIdRef.current;
+    let isCancelled = false;
+
+    const fetchProfile = async () => {
+      try {
+        const userProfile = await getOrCreateProfile(user);
+        if (!isCancelled && profileRequestIdRef.current === currentReqId) {
+          setProfile(userProfile);
+        }
+      } catch (profileErr) {
+        if (!isCancelled && profileRequestIdRef.current === currentReqId) {
+          console.warn('[AuthProvider] Profile load deferred:', profileErr);
+        }
+      }
+    };
+
+    void fetchProfile();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [user]);
 
   const signInWithGitHub = useCallback(
     async (returnPath?: string): Promise<{ error: string | null }> => {
@@ -164,12 +201,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signOut = useCallback(async (): Promise<{ error: string | null }> => {
     setError(null);
+    profileRequestIdRef.current += 1;
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setStatus('guest');
+
     try {
       const result = await authSignOutUser();
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      setStatus('guest');
       return result;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Sign out failed';
@@ -180,9 +219,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const refreshProfile = useCallback(async (): Promise<void> => {
     if (!user) return;
+    const currentReqId = ++profileRequestIdRef.current;
     try {
       const refreshed = await getOrCreateProfile(user);
-      setProfile(refreshed);
+      if (profileRequestIdRef.current === currentReqId) {
+        setProfile(refreshed);
+      }
     } catch (err) {
       console.warn('[AuthProvider] Failed to refresh profile:', err);
     }
@@ -221,7 +263,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       updateProfile,
       clearError,
     }),
-    [status, user, profile, session, configured, error, signInWithGitHub, signOut, refreshProfile, updateProfile, clearError],
+    [
+      status,
+      user,
+      profile,
+      session,
+      configured,
+      error,
+      signInWithGitHub,
+      signOut,
+      refreshProfile,
+      updateProfile,
+      clearError,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

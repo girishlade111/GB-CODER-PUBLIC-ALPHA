@@ -6,6 +6,7 @@
  * - Users can only select and mutate their own profile records (auth.uid() = id).
  * - GitHub provider metadata is mapped into profile fields.
  * - Profile creation is idempotent: duplicate insertions are handled safely.
+ * - Column update permissions are limited to display_name and avatar_url.
  */
 import type { User } from '@supabase/supabase-js';
 import { getSupabaseClient } from './supabaseClient';
@@ -99,7 +100,7 @@ export const getOrCreateProfile = async (user: User): Promise<UserProfile> => {
       return existing;
     }
 
-    // 2. Insert new profile record
+    // 2. Insert new profile record idempotently (ignore duplicates if trigger already ran)
     const newRecord = {
       id: user.id,
       display_name: fallback.display_name,
@@ -112,11 +113,16 @@ export const getOrCreateProfile = async (user: User): Promise<UserProfile> => {
 
     const { data, error } = await client
       .from('profiles')
-      .upsert(newRecord, { onConflict: 'id' })
+      .upsert(newRecord, { onConflict: 'id', ignoreDuplicates: true })
       .select('id, display_name, avatar_url, github_username, email, created_at, updated_at')
       .single();
 
     if (error) {
+      // If concurrent insert occurred, attempt one final read
+      const retryExisting = await getProfile(user.id);
+      if (retryExisting) {
+        return retryExisting;
+      }
       console.warn('[ProfileService] upsert notice (using in-memory fallback):', error.message);
       return fallback;
     }
@@ -135,6 +141,7 @@ export interface UpdateProfileInput {
 
 /**
  * Updates editable profile fields for the authenticated user.
+ * Strictly restricts mutations to display_name and avatar_url.
  */
 export const updateProfile = async (
   userId: string,
