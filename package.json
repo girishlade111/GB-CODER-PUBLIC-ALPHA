@@ -84,12 +84,15 @@
     "audit:e2e:phase1g": "node scripts/e2e-phase1g-acceptance.mjs",
     "audit:phase1h": "node scripts/phase1h-security-acceptance-tests.mjs",
     "audit:phase1h1": "node scripts/phase1h1-security-tests.mjs",
-    "audit:e2e:phase1h": "node scripts/e2e-phase1h-acceptance.mjs"
+    "audit:e2e:phase1h": "node scripts/e2e-phase1h-acceptance.mjs",
+    "audit:phase2:auth": "node scripts/auth-tests.mjs",
+    "audit:e2e:phase2:auth": "node scripts/e2e-auth-phase2.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@lmnr-ai/lmnr": "^0.8.40",
     "@monaco-editor/react": "^4.6.0",
+    "@supabase/supabase-js": "^2.118.0",
     "@typescript/ata": "^0.9.8",
     "@upstash/redis": "^1.38.0",
     "@vercel/analytics": "^1.6.1",
@@ -117,19 +120,19 @@
     "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
-    "playwright": "1.62.0",
-    "astro": "^5.4.2",
     "@eslint/js": "^9.9.1",
     "@types/diff": "^7.0.2",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "astro": "^5.4.2",
     "autoprefixer": "^10.4.18",
     "concurrently": "^9.2.1",
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
     "globals": "^15.9.0",
+    "playwright": "1.62.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
