@@ -1250,6 +1250,28 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
       assert.strictEqual(prof.id, 'usr-offline-recovery');
       assert.strictEqual(prof.display_name, 'Offline Dev');
     });
+
+    test('V15 — Migration 03: Privileged function execution revoking and private schema isolation', () => {
+      const mig4 = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000003_phase2_3_privileged_functions_hardening.sql'),
+        'utf8'
+      );
+
+      // Private schema creation and isolation from PostgREST
+      assert.match(mig4, /CREATE SCHEMA IF NOT EXISTS private;/);
+      assert.match(mig4, /REVOKE ALL ON SCHEMA private FROM PUBLIC;/);
+      assert.match(mig4, /REVOKE ALL ON SCHEMA private FROM anon;/);
+      assert.match(mig4, /REVOKE ALL ON SCHEMA private FROM authenticated;/);
+
+      // Explicit revocation of EXECUTE on handle_new_user from unprivileged web roles
+      assert.match(mig4, /REVOKE EXECUTE ON FUNCTION public\.handle_new_user\(\) FROM PUBLIC/);
+      assert.match(mig4, /REVOKE EXECUTE ON FUNCTION public\.handle_new_user\(\) FROM anon/);
+      assert.match(mig4, /REVOKE EXECUTE ON FUNCTION public\.handle_new_user\(\) FROM authenticated/);
+
+      // Explicit revocation of EXECUTE on sync_trusted_profile_metadata from PUBLIC and anon
+      assert.match(mig4, /REVOKE EXECUTE ON FUNCTION public\.sync_trusted_profile_metadata\(\) FROM PUBLIC/);
+      assert.match(mig4, /REVOKE EXECUTE ON FUNCTION public\.sync_trusted_profile_metadata\(\) FROM anon/);
+    });
   });
 
   // =========================================================================
