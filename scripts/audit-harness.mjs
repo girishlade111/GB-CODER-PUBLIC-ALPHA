@@ -36,6 +36,7 @@ await build({
       export * from './src/services/webcontainer/terminalSessionManager.ts';
       export * from './src/services/webcontainer/devServerManager.ts';
       export * from './src/services/webcontainer/fileSyncCoordinator.ts';
+      export * from './src/services/webcontainer/projectCommandDetection.ts';
       export * from './src/services/preview/previewReloadService.ts';
       export * from './src/services/laminarService.ts';
       export * from './src/services/vscodeWorkspaceStore.ts';

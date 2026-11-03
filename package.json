@@ -69,7 +69,9 @@
     "audit:e2e:boot": "node scripts/e2e-boot-recovery.mjs",
     "audit:e2e:multi-provider": "node scripts/e2e-multi-provider-functional-acceptance.mjs",
     "audit:phase1b": "node scripts/webcontainer-lifecycle-hardening-tests.mjs",
-    "audit:lifecycle-hardening": "node scripts/webcontainer-lifecycle-hardening-tests.mjs"
+    "audit:lifecycle-hardening": "node scripts/webcontainer-lifecycle-hardening-tests.mjs",
+    "audit:phase1c": "node scripts/webcontainer-terminal-package-hardening-tests.mjs",
+    "audit:terminal": "node scripts/webcontainer-terminal-package-hardening-tests.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

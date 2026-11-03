@@ -1,5 +1,7 @@
 import { WebContainer, WebContainerProcess } from '@webcontainer/api';
 
+export type TerminalSessionStatus = 'running' | 'exited' | 'terminated';
+
 export interface TerminalSessionSummary {
   id: string;
   title: string;
@@ -7,6 +9,9 @@ export interface TerminalSessionSummary {
   isPromptReady: boolean;
   projectId?: string | null;
   epoch?: number;
+  status: TerminalSessionStatus;
+  exitCode: number | null;
+  cwd?: string;
 }
 
 export interface TerminalSession {
@@ -22,7 +27,13 @@ export interface TerminalSession {
   isPromptReady: boolean;
   projectId?: string | null;
   epoch?: number;
+  status: TerminalSessionStatus;
+  exitCode: number | null;
+  cwd: string;
+  isDisposed: boolean;
 }
+
+const MAX_OUTPUT_BUFFER_CHUNKS = 2000;
 
 export class TerminalSessionManager {
   private sessions = new Map<string, TerminalSession>();
@@ -79,12 +90,18 @@ export class TerminalSessionManager {
   ): Promise<TerminalSession> {
     if (this.activeSessionId) {
       const active = this.sessions.get(this.activeSessionId);
-      if (active && (!options?.projectId || active.projectId === options.projectId)) {
+      if (
+        active &&
+        !active.isDisposed &&
+        (!options?.projectId || active.projectId === options.projectId)
+      ) {
         return active;
       }
     }
     const matching = Array.from(this.sessions.values()).find(
-      (s) => !options?.projectId || s.projectId === options.projectId,
+      (s) =>
+        !s.isDisposed &&
+        (!options?.projectId || s.projectId === options.projectId),
     );
     if (matching) {
       this.activeSessionId = matching.id;
@@ -101,6 +118,7 @@ export class TerminalSessionManager {
       rows?: number;
       projectId?: string | null;
       epoch?: number;
+      cwd?: string;
       onData?: (data: string) => void;
     } = {},
   ): Promise<TerminalSession> {
@@ -110,6 +128,7 @@ export class TerminalSessionManager {
     const rows = options.rows || 24;
     const projectId = options.projectId ?? null;
     const epoch = options.epoch ?? 0;
+    const cwd = options.cwd || '/';
 
     const process = await container.spawn('jsh', {
       terminal: { cols, rows },
@@ -136,23 +155,45 @@ export class TerminalSessionManager {
       isPromptReady: false,
       projectId,
       epoch,
+      status: 'running',
+      exitCode: null,
+      cwd,
+      isDisposed: false,
     };
 
+    this.wireProcessStreams(session, process);
+
+    this.sessions.set(id, session);
+    if (!this.activeSessionId) {
+      this.activeSessionId = id;
+    }
+
+    this.notify();
+    return session;
+  }
+
+  /**
+   * Wires a process's output and exit handlers to the terminal session.
+   */
+  private wireProcessStreams(session: TerminalSession, process: WebContainerProcess): void {
     // Pipe process output to buffer and active listeners
     void process.output
       .pipeTo(
         new WritableStream({
           write: (chunk: string) => {
-            outputBuffer.push(chunk);
-            if (outputBuffer.length > 500) {
-              outputBuffer.shift();
+            session.outputBuffer.push(chunk);
+            if (session.outputBuffer.length > MAX_OUTPUT_BUFFER_CHUNKS) {
+              session.outputBuffer.splice(
+                0,
+                session.outputBuffer.length - MAX_OUTPUT_BUFFER_CHUNKS,
+              );
             }
 
             if (chunk.includes('❯') || /[$#❯]\s*$/.test(chunk)) {
               session.isPromptReady = true;
             }
 
-            dataListeners.forEach((listener) => {
+            session.dataListeners.forEach((listener) => {
               try {
                 listener(chunk);
               } catch {
@@ -167,9 +208,13 @@ export class TerminalSessionManager {
     // Handle process exit
     void process.exit
       .then((exitCode) => {
-        console.log(`[TerminalSessionManager] Session ${id} exited with code ${exitCode}`);
+        session.status = 'exited';
+        session.exitCode = exitCode;
+        this.notify();
+
         const exitNotice = `\r\n\x1b[90m[Process completed with exit code ${exitCode}]\x1b[0m\r\n`;
-        dataListeners.forEach((l) => {
+        session.outputBuffer.push(exitNotice);
+        session.dataListeners.forEach((l) => {
           try {
             l(exitNotice);
           } catch {
@@ -177,20 +222,68 @@ export class TerminalSessionManager {
           }
         });
       })
-      .catch(() => {});
+      .catch(() => {
+        session.status = 'exited';
+        session.exitCode = 1;
+        this.notify();
+      });
+  }
 
-    this.sessions.set(id, session);
-    if (!this.activeSessionId) {
-      this.activeSessionId = id;
+  /**
+   * Restarts an existing terminal session by cleanly spawning a new shell process.
+   */
+  public async restartSession(
+    id: string,
+    container: WebContainer,
+    options?: { cols?: number; rows?: number },
+  ): Promise<TerminalSession | null> {
+    const session = this.sessions.get(id);
+    if (!session) return null;
+
+    // Terminate existing process if still running
+    try {
+      session.writer.releaseLock();
+      session.process.kill();
+    } catch {
+      // Ignored
     }
 
+    const cols = options?.cols || session.cols || 80;
+    const rows = options?.rows || session.rows || 24;
+
+    const newProcess = await container.spawn('jsh', {
+      terminal: { cols, rows },
+    });
+
+    session.process = newProcess;
+    session.writer = newProcess.input.getWriter();
+    session.cols = cols;
+    session.rows = rows;
+    session.status = 'running';
+    session.exitCode = null;
+    session.isPromptReady = false;
+    session.isDisposed = false;
+
+    const restartBanner = '\r\n\x1b[36m[Session restarted]\x1b[0m\r\n';
+    session.outputBuffer.push(restartBanner);
+    session.dataListeners.forEach((l) => {
+      try {
+        l(restartBanner);
+      } catch {
+        // Ignored
+      }
+    });
+
+    this.wireProcessStreams(session, newProcess);
     this.notify();
     return session;
   }
 
   public writeToSession(id: string, data: string): boolean {
     const session = this.sessions.get(id);
-    if (!session) return false;
+    if (!session || session.status !== 'running' || session.isDisposed) {
+      return false;
+    }
     try {
       void session.writer.write(data);
       return true;
@@ -202,19 +295,24 @@ export class TerminalSessionManager {
 
   public resizeSession(id: string, cols: number, rows: number): void {
     const session = this.sessions.get(id);
-    if (!session) return;
+    if (!session || session.status !== 'running' || session.isDisposed) {
+      return;
+    }
     session.cols = cols;
     session.rows = rows;
     try {
       session.process.resize({ cols, rows });
     } catch {
-      // Ignored
+      // Process may have already terminated
     }
   }
 
   public closeSession(id: string): void {
     const session = this.sessions.get(id);
     if (!session) return;
+
+    session.status = 'terminated';
+    session.isDisposed = true;
 
     try {
       session.writer.releaseLock();
@@ -249,10 +347,12 @@ export class TerminalSessionManager {
     const session = this.sessions.get(id);
     if (!session) return;
     session.outputBuffer = [];
-    try {
-      void session.writer.write('clear\r');
-    } catch {
-      // Ignored
+    if (session.status === 'running' && !session.isDisposed) {
+      try {
+        void session.writer.write('clear\r');
+      } catch {
+        // Ignored
+      }
     }
   }
 
@@ -279,6 +379,8 @@ export class TerminalSessionManager {
   public teardownForProject(projectId: string): void {
     for (const [id, session] of Array.from(this.sessions.entries())) {
       if (session.projectId === projectId) {
+        session.status = 'terminated';
+        session.isDisposed = true;
         try {
           session.writer.releaseLock();
           session.process.kill();
@@ -300,6 +402,8 @@ export class TerminalSessionManager {
 
   public teardownAll(): void {
     for (const session of this.sessions.values()) {
+      session.status = 'terminated';
+      session.isDisposed = true;
       try {
         session.writer.releaseLock();
         session.process.kill();
@@ -328,6 +432,9 @@ export class TerminalSessionManager {
       isPromptReady: s.isPromptReady,
       projectId: s.projectId,
       epoch: s.epoch,
+      status: s.status,
+      exitCode: s.exitCode,
+      cwd: s.cwd,
     }));
   }
 

@@ -2,11 +2,19 @@ import type { ProjectFile } from '../../types/files';
 
 export type PackageManagerType = 'npm' | 'pnpm' | 'yarn';
 export type PackageManagerSource = 'packageManager-field' | 'lockfile' | 'default';
+export type RuntimeAvailability = 'native' | 'experimental' | 'fallback_required' | 'unavailable';
+export type CompatibilityStatus =
+  | 'fully_supported'
+  | 'partially_supported'
+  | 'conflict_detected'
+  | 'unsupported_version';
 
 export interface ProjectCommandInfo {
   packageManager: PackageManagerType;
   packageManagerSource: PackageManagerSource;
   packageManagerVersion?: string | null;
+  runtimeAvailability: RuntimeAvailability;
+  compatibilityStatus: CompatibilityStatus;
   runtimeWarning?: string | null;
   hasManifest: boolean;
   packageJson: Record<string, unknown> | null;
@@ -18,7 +26,10 @@ export interface ProjectCommandInfo {
   hasLockfile: boolean;
   detectedLockfile: string | null;
   hasConflictingLockfiles: boolean;
+  conflicts: string[];
   lockfiles: string[];
+  scriptCommand: (scriptName: string) => string;
+  supportedActions: Array<'install' | 'dev' | 'build' | 'test'>;
 }
 
 /**
@@ -41,11 +52,17 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
   }
 
   const hasConflictingLockfiles = lockfiles.length > 1;
+  const conflicts: string[] = [];
+  if (hasConflictingLockfiles) {
+    conflicts.push(`Multiple conflicting lockfiles detected: ${lockfiles.join(', ')}`);
+  }
+
   let packageManager: PackageManagerType = 'npm';
   let packageManagerSource: PackageManagerSource = 'default';
   let packageManagerVersion: string | null = null;
   let detectedLockfile: string | null = null;
 
+  // Determine lockfile preference
   if (lockfiles.includes('pnpm-lock.yaml')) {
     packageManager = 'pnpm';
     packageManagerSource = 'lockfile';
@@ -85,22 +102,63 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
             packageManager = match[1].toLowerCase() as PackageManagerType;
             packageManagerSource = 'packageManager-field';
             packageManagerVersion = match[2] || null;
+
+            // Check for conflict between packageManager field and existing lockfiles
+            if (packageManager === 'pnpm' && lockfiles.includes('package-lock.json')) {
+              conflicts.push('packageManager field specifies pnpm, but project contains package-lock.json');
+            } else if (packageManager === 'pnpm' && lockfiles.includes('yarn.lock')) {
+              conflicts.push('packageManager field specifies pnpm, but project contains yarn.lock');
+            } else if (packageManager === 'yarn' && lockfiles.includes('pnpm-lock.yaml')) {
+              conflicts.push('packageManager field specifies yarn, but project contains pnpm-lock.yaml');
+            } else if (packageManager === 'yarn' && lockfiles.includes('package-lock.json')) {
+              conflicts.push('packageManager field specifies yarn, but project contains package-lock.json');
+            } else if (packageManager === 'npm' && lockfiles.includes('pnpm-lock.yaml')) {
+              conflicts.push('packageManager field specifies npm, but project contains pnpm-lock.yaml');
+            } else if (packageManager === 'npm' && lockfiles.includes('yarn.lock')) {
+              conflicts.push('packageManager field specifies npm, but project contains yarn.lock');
+            }
           }
         }
       }
     } catch {
-      // Invalid JSON
+      // Invalid JSON — safe fallback
     }
   }
 
   const hasManifest = manifestFile !== undefined;
   const isStaticProject = !hasManifest && files.some((f) => /\.(html|css|js)$/i.test(f.path));
 
-  // Diagnostic warning for pnpm in WebContainer runtime
+  // Determine runtime availability and compatibility
+  let runtimeAvailability: RuntimeAvailability = 'native';
+  let compatibilityStatus: CompatibilityStatus = conflicts.length > 0 ? 'conflict_detected' : 'fully_supported';
   let runtimeWarning: string | null = null;
-  if (packageManager === 'pnpm') {
+
+  if (packageManager === 'yarn') {
+    const isYarnBerry = Boolean(packageManagerVersion && /^[2-9]/.test(packageManagerVersion));
+    if (isYarnBerry) {
+      runtimeAvailability = 'fallback_required';
+      compatibilityStatus = 'unsupported_version';
+      runtimeWarning =
+        'Yarn Berry (v2+) detected. WebContainers require the node-modules linker; Plug\'n\'Play (PnP) virtual file systems are not supported natively without a .yarnrc.yml configuration.';
+    } else {
+      runtimeAvailability = 'native';
+      if (conflicts.length > 0) {
+        compatibilityStatus = 'conflict_detected';
+        runtimeWarning = conflicts.join('; ');
+      }
+    }
+  } else if (packageManager === 'pnpm') {
+    runtimeAvailability = 'experimental';
+    compatibilityStatus = conflicts.length > 0 ? 'conflict_detected' : 'partially_supported';
     runtimeWarning =
-      'pnpm project detected. WebContainer runtime executes npm commands natively; if pnpm encounters runtime limitations, npm may be used without modifying project lockfiles.';
+      'pnpm project detected. Running pnpm in WebContainers requires @pnpm/wasm, Node.js >= 22.13, and shared WebAssembly memory. npm may be used as a non-destructive fallback without altering pnpm-lock.yaml.';
+  } else {
+    // npm
+    runtimeAvailability = 'native';
+    if (conflicts.length > 0) {
+      compatibilityStatus = 'conflict_detected';
+      runtimeWarning = conflicts.join('; ');
+    }
   }
 
   // 3. Resolve dev command
@@ -129,10 +187,28 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
     installCommand = 'yarn install';
   }
 
+  // 6. Helper for arbitrary script command
+  const scriptCommand = (scriptName: string): string => {
+    if (packageManager === 'npm') {
+      return ['start', 'test', 'stop', 'restart'].includes(scriptName)
+        ? `npm ${scriptName}`
+        : `npm run ${scriptName}`;
+    }
+    return `${packageManager} ${scriptName}`;
+  };
+
+  // 7. Supported actions
+  const supportedActions: Array<'install' | 'dev' | 'build' | 'test'> = ['install'];
+  if (devCommand) supportedActions.push('dev');
+  if (buildCommand) supportedActions.push('build');
+  if (scripts['test']) supportedActions.push('test');
+
   return {
     packageManager,
     packageManagerSource,
     packageManagerVersion,
+    runtimeAvailability,
+    compatibilityStatus,
     runtimeWarning,
     hasManifest,
     packageJson,
@@ -144,6 +220,9 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
     hasLockfile: lockfiles.length > 0,
     detectedLockfile,
     hasConflictingLockfiles,
+    conflicts,
     lockfiles,
+    scriptCommand,
+    supportedActions,
   };
 }

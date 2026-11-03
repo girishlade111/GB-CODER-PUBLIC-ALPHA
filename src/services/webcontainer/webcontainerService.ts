@@ -15,7 +15,9 @@ import { StartupOutputParser } from './startupOutput';
 import { FileSyncCoordinator, type FlushResult } from './fileSyncCoordinator';
 import { webcontainerWatcher } from './webcontainerWatcher';
 import { devServerManager } from './devServerManager';
-import { terminalSessionManager, type TerminalSessionSummary } from './terminalSessionManager';
+import { terminalSessionManager, type TerminalSessionSummary, type TerminalSession } from './terminalSessionManager';
+import { detectProjectCommands, type ProjectCommandInfo } from './projectCommandDetection';
+export { detectProjectCommands, type ProjectCommandInfo };
 export { FileSyncCoordinator, type FlushResult };
 
 export type WebContainerWriteErrorCode =
@@ -1516,6 +1518,7 @@ class WebContainerManager {
           throw new Error('Project changed during boot; runtime retired');
         }
         this.instance = container;
+        this.isExplicitlyTornDown = false;
         this.diagnostics.record(diagnosticAttempt, 'boot', 'succeeded', {
           durationMs: Date.now() - bootStarted,
         });
@@ -2571,6 +2574,15 @@ class WebContainerManager {
 
   public listTerminalSessions(projectId?: string): TerminalSessionSummary[] {
     return terminalSessionManager.listSessions(projectId ?? this.activeProjectId ?? undefined);
+  }
+
+  public async restartTerminalSession(id: string): Promise<TerminalSession | null> {
+    const container = await this.boot();
+    return terminalSessionManager.restartSession(id, container);
+  }
+
+  public detectCommands(files?: ProjectFile[]): ProjectCommandInfo {
+    return detectProjectCommands(files || []);
   }
 
   public closeTerminalSession(id: string): void {

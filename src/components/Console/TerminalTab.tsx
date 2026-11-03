@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore }
 import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
-import { Play, Square, Trash2, HelpCircle, Plus, Columns, X, TerminalSquare } from 'lucide-react';
+import { Play, Square, Trash2, HelpCircle, Plus, Columns, X, TerminalSquare, RotateCcw, AlertTriangle } from 'lucide-react';
 import { MultiFileProject } from '../../types/files';
 import {
   ANSI,
@@ -18,6 +18,7 @@ import {
   terminalSessionManager,
 } from '../../services/webcontainer/terminalSessionManager';
 import { devServerManager } from '../../services/webcontainer/devServerManager';
+import { detectProjectCommands } from '../../services/webcontainer/projectCommandDetection';
 
 export type TerminalExecutionMode = 'webcontainer' | 'local';
 
@@ -149,6 +150,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   );
 
   const activeSessionId = terminalSessionManager.getActiveSessionId();
+  const detectedCommands = React.useMemo(() => detectProjectCommands(project.files), [project.files]);
   const splitSessionId = terminalSessionManager.getSplitSessionId();
 
   /** Current input line and cursor offset within it (Local mode only). */
@@ -166,14 +168,20 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     try {
       if (hostRef.current && hostRef.current.clientWidth > 0 && hostRef.current.clientHeight > 0) {
         fitAddonRef.current?.fit();
+        if (termRef.current && activeSessionId) {
+          terminalSessionManager.resizeSession(activeSessionId, termRef.current.cols, termRef.current.rows);
+        }
       }
       if (splitHostRef.current && splitHostRef.current.clientWidth > 0 && splitHostRef.current.clientHeight > 0) {
         splitFitAddonRef.current?.fit();
+        if (splitTermRef.current && splitSessionId) {
+          terminalSessionManager.resizeSession(splitSessionId, splitTermRef.current.cols, splitTermRef.current.rows);
+        }
       }
     } catch {
       // Ignore fit before render
     }
-  }, []);
+  }, [activeSessionId, splitSessionId]);
 
   const redrawLine = useCallback((term: XTerm) => {
     term.write(`\r\x1b[K${PROMPT}${lineRef.current}`);
@@ -419,8 +427,25 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     if (session && session.outputBuffer.length > 0) {
       term.write(session.outputBuffer.join(''));
     }
+    let writeQueue: string[] = [];
+    let rafId: number | null = null;
+    const flushQueue = () => {
+      if (writeQueue.length > 0 && termRef.current) {
+        const combined = writeQueue.join('');
+        writeQueue = [];
+        termRef.current.write(combined);
+      }
+      rafId = null;
+    };
     const unsub = terminalSessionManager.subscribeSession(activeSessionId, (chunk) => {
-      term.write(chunk);
+      if (chunk.length <= 2 && writeQueue.length === 0) {
+        term.write(chunk);
+        return;
+      }
+      writeQueue.push(chunk);
+      if (!rafId) {
+        rafId = requestAnimationFrame(flushQueue);
+      }
     });
 
     if (fitAddonRef.current) {
@@ -437,6 +462,10 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     }
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      if (writeQueue.length > 0) {
+        try { term.write(writeQueue.join('')); } catch {}
+      }
       unsub();
     };
   }, [mode, activeSessionId, isActive]);
@@ -478,8 +507,25 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       term.write(session.outputBuffer.join(''));
     }
 
+    let splitWriteQueue: string[] = [];
+    let splitRafId: number | null = null;
+    const flushSplitQueue = () => {
+      if (splitWriteQueue.length > 0 && splitTermRef.current) {
+        const combined = splitWriteQueue.join('');
+        splitWriteQueue = [];
+        splitTermRef.current.write(combined);
+      }
+      splitRafId = null;
+    };
     const unsubData = terminalSessionManager.subscribeSession(splitSessionId, (chunk) => {
-      term.write(chunk);
+      if (chunk.length <= 2 && splitWriteQueue.length === 0) {
+        term.write(chunk);
+        return;
+      }
+      splitWriteQueue.push(chunk);
+      if (!splitRafId) {
+        splitRafId = requestAnimationFrame(flushSplitQueue);
+      }
     });
 
     const disposable = term.onData((data) => {
@@ -498,6 +544,10 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     });
 
     return () => {
+      if (splitRafId) cancelAnimationFrame(splitRafId);
+      if (splitWriteQueue.length > 0) {
+        try { term.write(splitWriteQueue.join('')); } catch {}
+      }
       unsubData();
       disposable.dispose();
       safeDisposeTerminal(term);
@@ -639,8 +689,31 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
                   }`}
                   data-testid={`terminal-session-tab-${s.id}`}
                 >
-                  <TerminalSquare className="h-3 w-3 text-cyan-400" />
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      s.status === 'running'
+                        ? 'bg-emerald-400'
+                        : s.status === 'exited'
+                        ? 'bg-amber-400'
+                        : 'bg-rose-400'
+                    }`}
+                    title={`Status: ${s.status}${s.exitCode !== null ? ` (exit code ${s.exitCode})` : ''}`}
+                  />
+                  <TerminalSquare className="h-3 w-3 text-cyan-400 shrink-0" />
                   <span className="truncate max-w-[120px]">{s.title || `Terminal ${idx + 1}`}</span>
+                  {s.status === 'exited' && (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void webcontainerService.restartTerminalSession(s.id);
+                      }}
+                      className="ml-0.5 hover:text-cyan-300 rounded p-0.5"
+                      title="Restart session process"
+                      data-testid={`terminal-restart-session-btn-${s.id}`}
+                    >
+                      <RotateCcw className="h-2.5 w-2.5" />
+                    </span>
+                  )}
                   {sessions.length > 1 && (
                     <span
                       onClick={(e) => {
@@ -686,15 +759,25 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           {mode === 'webcontainer' && (
             <>
               <button
-                onClick={() => sendCommand('npm install --prefer-offline')}
+                onClick={() => sendCommand(detectedCommands.installCommand)}
                 className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-[var(--card)] hover:bg-[var(--accent)] text-slate-200 border border-[var(--border)] transition-colors"
-                title="Run 'npm install' in active terminal"
+                title={`Run '${detectedCommands.installCommand}' in active terminal`}
                 data-testid="terminal-quick-install-btn"
               >
                 <Play className="h-2.5 w-2.5 text-emerald-400" />
-                npm install
+                {detectedCommands.installCommand.split(' ')[0]} install
               </button>
 
+              {detectedCommands.runtimeWarning && (
+                <span
+                  className="hidden md:flex items-center gap-1 text-[11px] text-amber-400 bg-amber-950/40 border border-amber-500/30 px-1.5 py-0.5 rounded shrink-0"
+                  title={detectedCommands.runtimeWarning}
+                  data-testid="terminal-package-warning-badge"
+                >
+                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                  <span className="truncate max-w-[120px]">{detectedCommands.packageManager}</span>
+                </span>
+              )}
               {devServerState.status === 'running' ? (
                 <button
                   onClick={() => void devServerManager.stop()}
@@ -707,13 +790,13 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
                 </button>
               ) : (
                 <button
-                  onClick={() => void devServerManager.start('npm run dev', activeSessionId || undefined)}
+                  onClick={() => void devServerManager.start(detectedCommands.devCommand || 'npm run dev', activeSessionId || undefined)}
                   className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/30 transition-colors"
-                  title="Run 'npm run dev' to start development server"
+                  title={`Run '${detectedCommands.devCommand || 'npm run dev'}' to start development server`}
                   data-testid="terminal-start-server-btn"
                 >
                   <Play className="h-2.5 w-2.5 text-cyan-400" />
-                  npm run dev
+                  {detectedCommands.devCommand || 'npm run dev'}
                 </button>
               )}
             </>
