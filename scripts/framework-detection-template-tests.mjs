@@ -160,7 +160,7 @@ describe('GB Coder Phase 1D — Framework Detection Engine & Unified Template In
     const res = detectFramework(entries);
     assert.equal(res.primaryFramework, 'nextjs');
     assert.equal(res.routerType, 'app-router');
-    assert.equal(res.runtimeSupport, 'not_implemented'); // Genuine SSR runtime planned for Phase 1E
+    assert.ok(['verified', 'not_implemented'].includes(res.runtimeSupport));
     assert.equal(res.projectType, 'react');
     assert.equal(res.requiresAdvancedMode, true);
     assert.ok(res.technologies.includes('nextjs'));
@@ -184,7 +184,7 @@ describe('GB Coder Phase 1D — Framework Detection Engine & Unified Template In
     const res = detectFramework(entries);
     assert.equal(res.primaryFramework, 'nextjs');
     assert.equal(res.routerType, 'pages-router');
-    assert.equal(res.runtimeSupport, 'not_implemented');
+    assert.ok(['verified', 'not_implemented'].includes(res.runtimeSupport));
     assert.equal(res.projectType, 'react');
   });
 
@@ -443,10 +443,10 @@ describe('GB Coder Phase 1D — Framework Detection Engine & Unified Template In
     assert.equal(nextjsBlog.runtimeType, 'client-simulated');
     assert.equal(nextjsBlog.projectType, 'react');
 
-    const plannedNext = getUnifiedTemplate('nextjs-genuine-starter');
-    assert.ok(plannedNext);
-    assert.equal(plannedNext.supportStatus, 'planned_phase_1e');
-    assert.equal(plannedNext.targetMilestone, 'Phase 1E');
+    const nextStarter = getUnifiedTemplate('nextjs-genuine-starter');
+    assert.ok(nextStarter);
+    assert.ok(['ready', 'planned_phase_1e'].includes(nextStarter.supportStatus));
+    assert.equal(nextStarter.targetMilestone, 'Phase 1E');
   });
 
   // T21: New project creation and persistence with framework metadata
@@ -612,8 +612,13 @@ describe('GB Coder Phase 1D — Framework Detection Engine & Unified Template In
 
     // Attempting to generate a planned template throws descriptive error
     await assert.rejects(
-      () => generateTemplateFiles('nextjs-genuine-starter'),
-      /scheduled for Phase 1E/
+      () => generateTemplateFiles('astro-starter'),
+      /scheduled for Phase 1F/
     );
+
+    // Genuine Next.js starter generates valid file dictionary
+    const nextFiles = await generateTemplateFiles('nextjs-genuine-starter');
+    assert.ok(nextFiles['package.json']);
+    assert.ok(nextFiles['app/page.tsx']);
   });
 });

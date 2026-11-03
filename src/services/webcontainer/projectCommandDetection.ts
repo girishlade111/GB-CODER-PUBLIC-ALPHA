@@ -213,6 +213,18 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
     runtimeWarning = runtimeWarning ? `${runtimeWarning}; ${plannedWarning}` : plannedWarning;
   }
 
+  if (frameworkInfo.primaryFramework === 'nextjs') {
+    const devScript = scripts['dev'] || '';
+    if (devScript.includes('--turbo')) {
+      const turboWarning =
+        'Next.js Turbopack (--turbo) is not supported in WebContainers. Use standard "next dev" with Webpack and @next/swc-wasm-nodejs.';
+      if (!conflicts.includes(turboWarning)) {
+        conflicts.push(turboWarning);
+      }
+      runtimeWarning = runtimeWarning ? `${runtimeWarning}; ${turboWarning}` : turboWarning;
+    }
+  }
+
   // 7. Helper for arbitrary script command
   const scriptCommand = (scriptName: string): string => {
     if (packageManager === 'npm') {

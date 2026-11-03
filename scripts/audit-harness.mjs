@@ -50,6 +50,7 @@ await build({
       export * from './src/utils/workspaceCoordination.ts';
       export * from './src/services/import/projectDetection.ts';
       export * from './src/services/templates/unifiedTemplateRegistry.ts';
+      export * from './src/services/webcontainer/nextjsDiagnostics.ts';
     `,
     resolveDir: process.cwd(),
     loader: 'ts',

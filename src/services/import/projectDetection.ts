@@ -519,10 +519,27 @@ export function detectFramework(entries: ManifestEntry[]): FrameworkDetectionRes
     technologies.push('nextjs', 'react');
     if (hasTsConfig || hasExtension(lowerPaths, ['.ts', '.tsx'])) technologies.push('typescript');
     confidence = hasNextDep && (hasNextConfig || hasAppRouter || hasPagesRouter) ? 'high' : 'medium';
-    runtimeSupport = 'not_implemented'; // Genuine Next.js server runtime belongs to Phase 1E
     routerType = hasAppRouter ? 'app-router' : hasPagesRouter ? 'pages-router' : 'none';
     projectType = 'react';
     requiresAdvancedMode = true;
+
+    // Phase 1E: Evaluate WebContainer Next.js compatibility
+    const devScript = scripts['dev'] || '';
+    const hasTurbo = devScript.includes('--turbo');
+    const hasSwcWasm = depNames.includes('@next/swc-wasm-nodejs');
+
+    if (hasTurbo) {
+      runtimeSupport = 'unsupported';
+      warnings.push('Next.js Turbopack (--turbo) is not supported in WebContainers. Use standard "next dev" with Webpack and @next/swc-wasm-nodejs.');
+    } else {
+      runtimeSupport = 'verified'; // Phase 1E: Verified via Webpack & WASM SWC
+      evidence.push({
+        label: 'Next.js WebContainer Runtime',
+        detail: hasSwcWasm
+          ? 'Runs in WebContainer using Webpack and bundled @next/swc-wasm-nodejs compiler bindings.'
+          : 'Runs in WebContainer using Webpack and WASM SWC fallback.',
+      });
+    }
 
     evidence.push({
       label: 'Next.js framework',
@@ -530,7 +547,6 @@ export function detectFramework(entries: ManifestEntry[]): FrameworkDetectionRes
         ? `next dependency (${dependencies['next'] || 'detected'})`
         : 'Next.js configuration and router structure',
     });
-    warnings.push('Next.js project detected. Full Next.js server/runtime compilation is planned for Phase 1E.');
   } else if (isAstro) {
     primaryFramework = 'astro';
     displayName = 'Astro';

@@ -216,6 +216,327 @@ node bin/cli.js
 \`\`\`
 `,
   },
+  'nextjs-genuine-starter': {
+    'package.json': JSON.stringify(
+      {
+        name: 'nextjs-app',
+        version: '0.1.0',
+        private: true,
+        scripts: {
+          dev: 'next dev',
+          build: 'next build',
+          start: 'next start',
+          lint: 'next lint',
+        },
+        dependencies: {
+          next: '14.2.24',
+          react: '^18.3.1',
+          'react-dom': '^18.3.1',
+          '@next/swc-wasm-nodejs': '14.2.24',
+        },
+        devDependencies: {
+          '@types/node': '^20.11.0',
+          '@types/react': '^18.3.0',
+          '@types/react-dom': '^18.3.0',
+          typescript: '^5.4.0',
+        },
+      },
+      null,
+      2
+    ),
+    'next.config.mjs': `/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
+    return config;
+  },
+};
+
+export default nextConfig;
+`,
+    'tsconfig.json': JSON.stringify(
+      {
+        compilerOptions: {
+          lib: ['dom', 'dom.iterable', 'esnext'],
+          allowJs: true,
+          skipLibCheck: true,
+          strict: true,
+          noEmit: true,
+          esModuleInterop: true,
+          module: 'esnext',
+          moduleResolution: 'bundler',
+          resolveJsonModule: true,
+          isolatedModules: true,
+          jsx: 'preserve',
+          incremental: true,
+          plugins: [
+            {
+              name: 'next',
+            },
+          ],
+          paths: {
+            '@/*': ['./*'],
+          },
+        },
+        include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+        exclude: ['node_modules'],
+      },
+      null,
+      2
+    ),
+    'next-env.d.ts': `/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/basic-features/typescript for more information.
+`,
+    'app/layout.tsx': `import type { Metadata } from 'next';
+import './globals.css';
+
+export const metadata: Metadata = {
+  title: 'Next.js App — GB Coder',
+  description: 'Genuine Next.js SSR running inside WebContainer',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
+`,
+    'app/globals.css': `:root {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --border: #334155;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-hover: #0ea5e9;
+  --success: #22c55e;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+  width: 100%;
+}
+
+.header {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+}
+
+.badge {
+  display: inline-block;
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.5rem;
+}
+
+.description {
+  color: var(--muted);
+  font-size: 1.125rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.server-tag {
+  font-size: 0.75rem;
+  background: #4338ca;
+  color: #e0e7ff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.client-tag {
+  font-size: 0.75rem;
+  background: #047857;
+  color: #d1fae5;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.code-box {
+  background: #0b1120;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-family: monospace;
+  font-size: 0.875rem;
+  overflow-x: auto;
+  color: #38bdf8;
+}
+
+.counter-btn {
+  background: var(--accent);
+  color: #0f172a;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.15s ease;
+}
+
+.counter-btn:hover {
+  background: var(--accent-hover);
+}
+`,
+    'app/components/Counter.tsx': `'use client';
+
+import { useState } from 'react';
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.75rem' }}>
+      <button className="counter-btn" onClick={() => setCount((c) => c + 1)}>
+        Clicks: {count}
+      </button>
+      <span style={{ color: 'var(--muted)', fontSize: '0.875rem' }}>
+        Interactive React Client Component hydrated in browser
+      </span>
+    </div>
+  );
+}
+`,
+    'app/page.tsx': `import Counter from './components/Counter';
+
+export default function HomePage() {
+  const serverTime = new Date().toISOString();
+
+  return (
+    <main>
+      <header className="header">
+        <span className="badge">WebContainer Node.js SSR</span>
+        <h1 className="title">Next.js App Router</h1>
+        <p className="description">
+          Genuine Next.js development server running inside GB Coder WebContainer runtime.
+        </p>
+      </header>
+
+      <section className="card">
+        <h2 className="card-title">
+          <span>Server-Side Rendered (RSC)</span>
+          <span className="server-tag">RSC</span>
+        </h2>
+        <p style={{ color: 'var(--muted)', marginBottom: '0.5rem' }}>
+          This component rendered on the Next.js server instance:
+        </p>
+        <div className="code-box">Server Rendered at: {serverTime}</div>
+      </section>
+
+      <section className="card">
+        <h2 className="card-title">
+          <span>Client Component Hydration</span>
+          <span className="client-tag">use client</span>
+        </h2>
+        <p style={{ color: 'var(--muted)', marginBottom: '0.5rem' }}>
+          Fast Refresh and state hydration work seamlessly:
+        </p>
+        <Counter />
+      </section>
+
+      <section className="card">
+        <h2 className="card-title">
+          <span>API Route Handler</span>
+          <span className="server-tag">Route Handler</span>
+        </h2>
+        <p style={{ color: 'var(--muted)', marginBottom: '0.5rem' }}>
+          Test the WebContainer server endpoint at <code>/api/health</code>:
+        </p>
+        <div className="code-box">GET /api/health → 200 OK &#123; status: &quot;ok&quot; &#125;</div>
+      </section>
+    </main>
+  );
+}
+`,
+    'app/api/health/route.ts': `export async function GET() {
+  return Response.json({
+    status: 'ok',
+    framework: 'Next.js',
+    router: 'app-router',
+    runtime: 'WebContainer Node.js',
+    timestamp: new Date().toISOString(),
+  });
+}
+`,
+    'README.md': `# Next.js App Router Starter
+
+Runs with genuine Next.js in WebContainers using Webpack and WASM SWC compiler bindings.
+
+## Development
+\`\`\`bash
+npm run dev
+\`\`\`
+
+## Features
+- Next.js 14 App Router
+- React Server Components (RSC) & Client Hydration
+- Route Handlers (\`app/api/health/route.ts\`)
+- TypeScript & WebContainer Fast Refresh
+`,
+  },
 };
 
 /**
@@ -476,26 +797,28 @@ const UNIFIED_TEMPLATES: Record<string, UnifiedTemplateDescriptor> = {
     runtimeNotes: 'Client-side React App Router emulation. Real WebContainer Next.js SSR planned for Phase 1E.',
   },
 
-  // --- Planned Starter Slots (Phase 1E & 1F) ---
+  // --- Genuine Next.js App Router Starter (Phase 1E Verified) ---
   'nextjs-genuine-starter': {
     id: 'nextjs-genuine-starter',
     title: 'Next.js App Router (Node SSR)',
-    description: 'Genuine Next.js SSR and API routes running inside WebContainer. Planned for Phase 1E.',
+    description: 'Genuine Next.js SSR, React Server & Client Components, and API Route Handlers running in WebContainer via Webpack & WASM SWC.',
     framework: 'nextjs',
     category: 'nextjs',
-    supportStatus: 'planned_phase_1e',
-    runtimeType: 'planned',
+    supportStatus: 'ready',
+    runtimeType: 'webcontainer',
     projectType: 'react',
     recommendedEditor: 'vscode',
     packageManager: 'npm',
     targetMilestone: 'Phase 1E',
     icon: '▲',
-    badge: 'Planned Phase 1E',
+    badge: 'Genuine SSR',
     tags: ['nextjs', 'ssr', 'app-router', 'webcontainer', 'phase-1e'],
     isOfficial: true,
     requiresBuildStep: true,
-    runtimeNotes: 'Genuine Next.js Node.js server engine in WebContainer planned for Phase 1E.',
+    runtimeNotes: 'Genuine Next.js Node.js server engine in WebContainer via Webpack & WASM SWC.',
   },
+
+  // --- Planned Starter Slots (Phase 1F) ---
   'astro-starter': {
     id: 'astro-starter',
     title: 'Astro Content & Island Starter',
