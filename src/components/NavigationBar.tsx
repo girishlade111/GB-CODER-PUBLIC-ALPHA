@@ -16,6 +16,7 @@ import { PROJECT_TYPE_LABEL, ProjectType } from '../types/files';
 
 import Tooltip from './ui/Tooltip';
 import LadeStackLogo from './LadeStackLogo';
+import UserAccountMenu from './auth/UserAccountMenu';
 
 interface NavigationBarProps {
   onAutoSaveToggle: () => void;
@@ -264,6 +265,9 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
                   )}
                 </div>
               )}
+
+              {/* User Account Menu (Guest Sign-in / User Profile) */}
+              <UserAccountMenu />
 
               {/* Project menu — project-level actions that have no sidebar equivalent */}
               <div className="relative" ref={dropdownRef}>

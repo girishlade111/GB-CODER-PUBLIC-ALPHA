@@ -65,7 +65,15 @@ export const projectUrl = (projectId: string): string =>
 /** Project creation screen. Opening it never creates anything by itself. */
 export const NEW_PROJECT_ROUTE = '/app/projects/new';
 
+/** Authentication OAuth PKCE callback endpoint. */
+export const AUTH_CALLBACK_ROUTE = '/app/auth/callback';
+
+/** Account and profile settings screen. */
+export const ACCOUNT_ROUTE = '/app/account';
+
 export type ParsedAppRoute =
+  | { kind: 'auth-callback' }
+  | { kind: 'account' }
   | { kind: 'dashboard' }
   | { kind: 'new' }
   | { kind: 'project'; projectId: string }
@@ -97,6 +105,8 @@ export const parseAppRoute = (pathname?: string): ParsedAppRoute => {
     return { kind: 'dashboard' };
   }
   if (clean === NEW_PROJECT_ROUTE) return { kind: 'new' };
+  if (clean === AUTH_CALLBACK_ROUTE) return { kind: 'auth-callback' };
+  if (clean === ACCOUNT_ROUTE) return { kind: 'account' };
   if (clean === STATIC_EDITOR_ROUTE) return { kind: 'legacy-editor' };
   if (clean === VSCODE_ROUTE || clean === LEGACY_VSCODE_ROUTE) return { kind: 'legacy-ide' };
 

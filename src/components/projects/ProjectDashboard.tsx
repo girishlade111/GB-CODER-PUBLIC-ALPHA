@@ -29,6 +29,7 @@ import {
 import { createZipBlob, downloadBlob, zipFilename } from '../../services/projectArchiveService';
 import { MultiFileProject } from '../../types/files';
 import toast from 'react-hot-toast';
+import UserAccountMenu from '../auth/UserAccountMenu';
 
 const BackupRestoreModal = React.lazy(() => import('./BackupRestoreModal'));
 
@@ -275,6 +276,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
         {/* Brand Header */}
         <div className="mb-6 flex items-center justify-between">
           <LadeStackLogo size={28} subtitle="GB Coder" />
+          <UserAccountMenu />
         </div>
 
         {/* Dashboard Title & Actions Bar */}

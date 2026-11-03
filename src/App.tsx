@@ -91,6 +91,7 @@ const TemplateSelectorModal = lazyWithRecovery(() => import('./components/Templa
 const CodeStatsDashboard = lazyWithRecovery(() => import('./components/CodeStatsDashboard'));
 const CustomInjectionManager = lazyWithRecovery(() => import('./components/CustomInjectionManager'));
 const WelcomeTourModal = lazyWithRecovery(() => import('./components/WelcomeTourModal'));
+const AuthCallback = lazyWithRecovery(() => import('./components/auth/AuthCallback'));
 
 /*
  * Everything past the core HTML/CSS/JS editor is a separate chunk, fetched the
@@ -4483,6 +4484,18 @@ function App() {
       >
         <LazyFallback label={activeProject ? activeProject.name : 'your project'} variant="panel" />
       </div>
+    );
+  }
+
+  /*
+   * Dedicated OAuth PKCE Callback screen.
+   */
+  if (parseAppRoute().kind === 'auth-callback') {
+    return (
+      <Suspense fallback={<LazyFallback label="Signing in" variant="overlay" />}>
+        <AuthCallback />
+        <Toaster position="bottom-right" />
+      </Suspense>
     );
   }
 

@@ -1,0 +1,171 @@
+/**
+ * OAuth PKCE Callback Handler Screen for GB Coder.
+ *
+ * Mounted at /app/auth/callback.
+ * Processes the authorization code returned by Supabase Auth, executes
+ * exchangeCodeForSession, clears sensitive query parameters, and redirects
+ * to the verified safe return-path.
+ */
+import React, { useEffect, useState } from 'react';
+import { Loader2, AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { exchangeCallbackCode, sanitizeReturnPath } from '../../services/auth/authService';
+import { navigateReplace, PROJECTS_ROUTE } from '../../utils/appRoutes';
+import LadeStackLogo from '../LadeStackLogo';
+
+export interface AuthCallbackProps {
+  onSuccess?: (returnPath: string) => void;
+  onFailure?: (errorMessage: string) => void;
+}
+
+export const AuthCallback: React.FC<AuthCallbackProps> = ({ onSuccess, onFailure }) => {
+  const [phase, setPhase] = useState<'exchanging' | 'success' | 'error'>('exchanging');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const processCallback = async () => {
+      if (typeof window === 'undefined') return;
+
+      const url = new URL(window.location.href);
+      const searchParams = url.searchParams;
+
+      // Also check hash fragment in case provider returned fragment parameters
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+
+      const errorParam = searchParams.get('error') || hashParams.get('error');
+      const errorDesc =
+        searchParams.get('error_description') ||
+        hashParams.get('error_description') ||
+        searchParams.get('error_code');
+
+      if (errorParam) {
+        const friendlyMessage =
+          errorDesc ||
+          (errorParam === 'access_denied'
+            ? 'Sign in was cancelled or access was denied by GitHub.'
+            : `Authentication provider returned: ${errorParam}`);
+
+        if (!isCancelled) {
+          setErrorMessage(friendlyMessage);
+          setPhase('error');
+          onFailure?.(friendlyMessage);
+        }
+        return;
+      }
+
+      const code = searchParams.get('code') || hashParams.get('code');
+      const returnToParam = searchParams.get('returnTo') || hashParams.get('returnTo');
+
+      if (!code) {
+        const msg = 'No authorization code detected in callback URL.';
+        if (!isCancelled) {
+          setErrorMessage(msg);
+          setPhase('error');
+          onFailure?.(msg);
+        }
+        return;
+      }
+
+      try {
+        const result = await exchangeCallbackCode(code, returnToParam || undefined);
+        if (isCancelled) return;
+
+        if (result.error) {
+          setErrorMessage(result.error);
+          setPhase('error');
+          onFailure?.(result.error);
+          return;
+        }
+
+        setPhase('success');
+        const targetPath = sanitizeReturnPath(result.returnPath);
+        onSuccess?.(targetPath);
+
+        // Allow microtask tick for state updates, then redirect
+        setTimeout(() => {
+          if (!isCancelled) {
+            navigateReplace(targetPath);
+          }
+        }, 150);
+      } catch (err) {
+        if (!isCancelled) {
+          const msg = err instanceof Error ? err.message : 'Unexpected failure during code exchange';
+          setErrorMessage(msg);
+          setPhase('error');
+          onFailure?.(msg);
+        }
+      }
+    };
+
+    void processCallback();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [onSuccess, onFailure]);
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center bg-surface-canvas p-4 text-content-primary"
+      data-testid="auth-callback-screen"
+    >
+      <div className="w-full max-w-md rounded-2xl border border-stroke-subtle bg-surface-base p-6 shadow-xl text-center">
+        <div className="mb-6 flex justify-center">
+          <LadeStackLogo size={32} subtitle="GB Coder" />
+        </div>
+
+        {phase === 'exchanging' && (
+          <div className="py-8 space-y-4">
+            <Loader2 className="h-10 w-10 animate-spin text-accent mx-auto" />
+            <h2 className="text-base font-semibold text-content-primary">
+              Signing in with GitHub...
+            </h2>
+            <p className="text-xs text-content-secondary max-w-xs mx-auto">
+              Completing secure PKCE verification and establishing your session.
+            </p>
+          </div>
+        )}
+
+        {phase === 'success' && (
+          <div className="py-8 space-y-4">
+            <CheckCircle2 className="h-10 w-10 text-success mx-auto" />
+            <h2 className="text-base font-semibold text-content-primary">
+              Authenticated Successfully
+            </h2>
+            <p className="text-xs text-content-secondary">
+              Redirecting you back to your workspace...
+            </p>
+          </div>
+        )}
+
+        {phase === 'error' && (
+          <div className="py-6 space-y-4">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-danger-subtle text-danger">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <h2 className="text-base font-semibold text-content-primary">
+              Authentication Notice
+            </h2>
+            <p className="text-xs text-content-secondary rounded-lg bg-surface-canvas p-3 border border-stroke-soft font-mono break-words text-left">
+              {errorMessage || 'Unable to complete sign-in.'}
+            </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => navigateReplace(PROJECTS_ROUTE)}
+                data-testid="auth-error-return-btn"
+                className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-accent-fg hover:bg-accent-hover transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Return to Dashboard
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AuthCallback;

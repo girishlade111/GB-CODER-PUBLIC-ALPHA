@@ -17,6 +17,7 @@ import {
 import toast from 'react-hot-toast';
 import Tooltip from '../ui/Tooltip';
 import LadeStackLogo from '../LadeStackLogo';
+import UserAccountMenu from '../auth/UserAccountMenu';
 import { LayoutPresetId, WorkbenchLayoutState } from '../../services/workbench/workbenchTypes';
 
 interface WorkbenchTitleBarProps {
@@ -345,6 +346,9 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
             <Share2 className="h-3.5 w-3.5" />
           </button>
         </Tooltip>
+
+        {/* User Account Menu */}
+        <UserAccountMenu compact={true} />
 
         {/* Settings Button */}
         <Tooltip label="Workbench Settings" side="bottom">
