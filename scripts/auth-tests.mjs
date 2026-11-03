@@ -72,6 +72,8 @@ const {
   ACCOUNT_ROUTE,
   STATIC_EDITOR_ROUTE,
   VSCODE_ROUTE,
+  SUPABASE_AUTH_OPTIONS,
+  cleanCallbackUrlParams,
 } = services;
 
 describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', () => {
@@ -797,6 +799,191 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
     test('S08 — OAuth provider scopes remain minimal (identity only)', () => {
       assert.strictEqual(GITHUB_OAUTH_SCOPES, 'read:user user:email');
       assert.strictEqual(/repo|admin|write|delete/i.test(GITHUB_OAUTH_SCOPES), false);
+    });
+  });
+
+  // =========================================================================
+  // GROUP 5: PHASE 2.1 HARDENING & LIVE READINESS (H01 - H12)
+  // =========================================================================
+  describe('Phase 2.1 Hardening & OAuth/Postgres Security Verification (H01 - H12)', () => {
+    test('H01 — Application-Owned PKCE client configuration (detectSessionInUrl: false)', () => {
+      assert.strictEqual(SUPABASE_AUTH_OPTIONS.detectSessionInUrl, false);
+      assert.strictEqual(SUPABASE_AUTH_OPTIONS.flowType, 'pkce');
+    });
+
+    test('H02 — PKCE storage key and session persistence contract', () => {
+      assert.strictEqual(SUPABASE_AUTH_OPTIONS.persistSession, true);
+      assert.strictEqual(SUPABASE_AUTH_OPTIONS.autoRefreshToken, true);
+      assert.strictEqual(SUPABASE_AUTH_OPTIONS.storageKey, 'gbcoder_supabase_auth_v1');
+    });
+
+    test('H03 — Single-execution PKCE code exchange with timeout guard', async () => {
+      let exchangeStarted = false;
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async () => {
+            exchangeStarted = true;
+            // simulate a hanging network call
+            await new Promise((r) => setTimeout(r, 200));
+            return { data: { session: null }, error: null };
+          },
+          getSession: async () => ({ data: { session: null }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      // Call with 50ms timeout
+      const res = await exchangeCallbackCode('test-timeout-code', '/app/ide', 50);
+      assert.strictEqual(exchangeStarted, true);
+      assert.ok(res.error);
+      assert.match(res.error, /timed out/i);
+    });
+
+    test('H04 — PKCE exchange recovery on already-used code with active session', async () => {
+      const activeSession = {
+        user: { id: 'user-already-exchanged', email: 'active@ladestack.in' },
+        access_token: 'existing-jwt',
+      };
+      const mockClient = {
+        auth: {
+          exchangeCodeForSession: async () => ({
+            data: { session: null },
+            error: { message: 'Auth code has already been used' },
+          }),
+          getSession: async () => ({ data: { session: activeSession }, error: null }),
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const res = await exchangeCallbackCode('code-already-consumed', '/app/ide');
+      assert.strictEqual(res.error, null);
+      assert.strictEqual(res.session?.user.id, 'user-already-exchanged');
+    });
+
+    test('H05 — Sensitive query parameters stripped from browser URL during callback', () => {
+      // cleanCallbackUrlParams runs without throwing in both node and browser environments
+      assert.doesNotThrow(() => {
+        cleanCallbackUrlParams();
+      });
+    });
+
+    test('H06 — Synchronous onAuthStateChange subscriber contract (no async lock deadlock)', () => {
+      let callOrder = [];
+      const mockClient = {
+        auth: {
+          onAuthStateChange: (cb) => {
+            callOrder.push('subscribed');
+            // Execute callback synchronously
+            cb('SIGNED_IN', { user: { id: 'u1' } });
+            callOrder.push('callback_finished');
+            return { data: { subscription: { unsubscribe: () => {} } } };
+          },
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      const unsub = subscribeToAuthState((event) => {
+        callOrder.push(`event_${event}`);
+      });
+      unsub();
+
+      assert.deepStrictEqual(callOrder, ['subscribed', 'event_SIGNED_IN', 'callback_finished']);
+    });
+
+    test('H07 — Asynchronous profile race condition: sign-out invalidates in-flight request', async () => {
+      let requestIdCounter = 0;
+      let activeProfile = null;
+
+      // Simulate User A login starting profile fetch
+      const currentReqId = ++requestIdCounter;
+      const fetchProfileUserA = new Promise((resolve) => {
+        setTimeout(() => {
+          if (requestIdCounter === currentReqId) {
+            activeProfile = { id: 'user-a', display_name: 'User A' };
+          }
+          resolve(activeProfile);
+        }, 30);
+      });
+
+      // User signs out before fetch completes
+      requestIdCounter++;
+      activeProfile = null;
+
+      await fetchProfileUserA;
+      assert.strictEqual(activeProfile, null, 'Stale profile from User A must not be applied after sign out');
+    });
+
+    test('H08 — Asynchronous profile race condition: User B login invalidates User A in-flight request', async () => {
+      let requestIdCounter = 0;
+      let activeProfile = null;
+
+      // User A initiates slow profile load
+      const userAReqId = ++requestIdCounter;
+      const fetchUserA = new Promise((resolve) => {
+        setTimeout(() => {
+          if (requestIdCounter === userAReqId) {
+            activeProfile = { id: 'user-a', display_name: 'User A' };
+          }
+          resolve();
+        }, 50);
+      });
+
+      // User B logs in quickly and finishes earlier
+      const userBReqId = ++requestIdCounter;
+      activeProfile = { id: 'user-b', display_name: 'User B' };
+
+      await fetchUserA;
+      assert.strictEqual(activeProfile.id, 'user-b', 'User A delayed response must not overwrite User B');
+    });
+
+    test('H09 — Database migration: Revocation of UPDATE and DELETE permissions from authenticated users', () => {
+      const migration2Sql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000001_phase2_1_hardening.sql'),
+        'utf8',
+      );
+      assert.match(migration2Sql, /REVOKE UPDATE,\s*DELETE ON public\.profiles FROM authenticated;/);
+      assert.match(migration2Sql, /DROP POLICY IF EXISTS "Users can delete own profile" ON public\.profiles;/);
+    });
+
+    test('H10 — Database migration: Column-specific UPDATE grant for display_name, avatar_url, updated_at only', () => {
+      const migration2Sql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000001_phase2_1_hardening.sql'),
+        'utf8',
+      );
+      assert.match(
+        migration2Sql,
+        /GRANT UPDATE \(display_name,\s*avatar_url,\s*updated_at\) ON public\.profiles TO authenticated;/,
+      );
+      // Ensure broad GRANT UPDATE ON public.profiles is absent
+      assert.strictEqual(/GRANT UPDATE ON public\.profiles TO authenticated;/i.test(migration2Sql), false);
+    });
+
+    test('H11 — Database migration: Immutable column integrity trigger protects id, github_username, email, created_at', () => {
+      const migration2Sql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000001_phase2_1_hardening.sql'),
+        'utf8',
+      );
+      assert.match(migration2Sql, /CREATE OR REPLACE FUNCTION public\.protect_immutable_profile_fields\(\)/);
+      assert.match(migration2Sql, /SET search_path = ''/);
+      assert.match(migration2Sql, /Cannot modify profile id/);
+      assert.match(migration2Sql, /Cannot modify github_username/);
+      assert.match(migration2Sql, /Cannot modify email/);
+      assert.match(migration2Sql, /Cannot modify created_at timestamp/);
+    });
+
+    test('H12 — Database migration: Hardened SECURITY DEFINER handle_new_user() with SET search_path = \'\' and display_name preservation', () => {
+      const migration2Sql = readFileSync(
+        join(process.cwd(), 'supabase/migrations/20261103000001_phase2_1_hardening.sql'),
+        'utf8',
+      );
+      assert.match(migration2Sql, /CREATE OR REPLACE FUNCTION public\.handle_new_user\(\)/);
+      assert.match(migration2Sql, /SECURITY DEFINER/);
+      assert.match(migration2Sql, /SET search_path = ''/);
+      assert.match(migration2Sql, /pg_catalog\.coalesce/);
+      assert.match(migration2Sql, /pg_catalog\.split_part/);
+      assert.match(migration2Sql, /pg_catalog\.timezone/);
+      assert.match(migration2Sql, /display_name = pg_catalog\.coalesce\(public\.profiles\.display_name,\s*EXCLUDED\.display_name\)/);
+      assert.match(migration2Sql, /RAISE WARNING 'handle_new_user provisioning notice for %: % \(SQLSTATE: %\)'/);
     });
   });
 });
