@@ -192,7 +192,7 @@ export const GitHubRepoBrowserModal: React.FC<GitHubRepoBrowserModalProps> = ({
     try {
       const parsed = parseRepoInput(repo.fullName);
       if (parsed) {
-        const branchList = await listBranches(token.trim(), parsed.owner, parsed.repo);
+        const branchList = await listBranches(token.trim(), parsed);
         if (branchList.length > 0) {
           setBranches(branchList);
           if (!branchList.includes(repo.defaultBranch)) {
@@ -263,13 +263,19 @@ export const GitHubRepoBrowserModal: React.FC<GitHubRepoBrowserModalProps> = ({
       const projectType = inferProjectType(paths);
       const entry = inferEntry(paths, projectType) || 'index.html';
 
+      const projectFiles: ProjectFile[] = pullResult.files.map((f) => ({
+        path: f.path,
+        content: f.content,
+        language: languageForPath(f.path),
+      }));
+
       // 1. Create local project record in IndexedDB
       const localRecord = await createProject({
         name: selectedRepo.name,
         editorStyle: selectedEditorStyle,
         projectType,
         entry,
-        files: pullResult.files,
+        files: projectFiles,
       });
 
       if (!localRecord) {
@@ -290,7 +296,7 @@ export const GitHubRepoBrowserModal: React.FC<GitHubRepoBrowserModalProps> = ({
             source_repo_id: selectedRepo.id,
             source_branch: selectedBranch,
             entry,
-            files: pullResult.files,
+            files: projectFiles,
           });
           toast.success(`Imported and backed up to Supabase Cloud: ${selectedRepo.name}`);
         } catch (cloudErr) {
