@@ -10,6 +10,7 @@
  *   (display_name, avatar_url).
  * - Provider metadata (github_username, email) and timestamps (created_at, updated_at)
  *   are managed server-side by database triggers and cannot be forged by clients.
+ * - Tracks persistence status (is_persistent, sync_error) so UI does not mask DB failures.
  */
 import type { User } from '@supabase/supabase-js';
 import { getSupabaseClient } from './supabaseClient';
@@ -22,6 +23,10 @@ export interface UserProfile {
   email: string | null;
   created_at?: string;
   updated_at?: string;
+  /** True when the profile row is verified in Supabase PostgreSQL; false when using in-memory fallback. */
+  is_persistent?: boolean;
+  /** Human-readable explanation if database sync/persistence encountered an error. */
+  sync_error?: string | null;
 }
 
 /**
@@ -54,6 +59,8 @@ export const mapUserToProfileFields = (user: User): Omit<UserProfile, 'created_a
     avatar_url,
     github_username,
     email,
+    is_persistent: false,
+    sync_error: null,
   };
 };
 
@@ -76,7 +83,13 @@ export const getProfile = async (userId: string): Promise<UserProfile | null> =>
       return null;
     }
 
-    return (data as UserProfile) || null;
+    if (!data) return null;
+
+    return {
+      ...(data as UserProfile),
+      is_persistent: true,
+      sync_error: null,
+    };
   } catch (err) {
     console.warn('[ProfileService] getProfile exception:', err);
     return null;
@@ -86,21 +99,28 @@ export const getProfile = async (userId: string): Promise<UserProfile | null> =>
 /**
  * Idempotently fetches an existing profile or creates one if it does not yet exist.
  * Fallbacks to an in-memory profile if database is unreachable so that the user's
- * session remains usable without interruption.
+ * session remains usable without interruption, while honestly reporting is_persistent: false.
  *
  * Security constraint: Only inserts user-editable columns (id, display_name, avatar_url).
  * Provider identity (github_username, email) and timestamps are set by database triggers.
  */
 export const getOrCreateProfile = async (user: User): Promise<UserProfile> => {
-  const fallback = mapUserToProfileFields(user) as UserProfile;
+  const fallback: UserProfile = {
+    ...mapUserToProfileFields(user),
+    is_persistent: false,
+    sync_error: null,
+  };
 
   const client = getSupabaseClient();
   if (!client) {
-    return fallback;
+    return {
+      ...fallback,
+      sync_error: 'Supabase client is not configured',
+    };
   }
 
   try {
-    // 1. Try to read existing profile
+    // 1. Try to read existing verified profile from database
     const existing = await getProfile(user.id);
     if (existing) {
       return existing;
@@ -120,19 +140,87 @@ export const getOrCreateProfile = async (user: User): Promise<UserProfile> => {
       .single();
 
     if (error) {
-      // If concurrent insert occurred, attempt one final read
+      // If concurrent insert occurred or upsert returned empty, attempt one final read
       const retryExisting = await getProfile(user.id);
       if (retryExisting) {
         return retryExisting;
       }
       console.warn('[ProfileService] upsert notice (using in-memory fallback):', error.message);
-      return fallback;
+      return {
+        ...fallback,
+        is_persistent: false,
+        sync_error: error.message,
+      };
     }
 
-    return (data as UserProfile) || fallback;
-  } catch (err) {
-    console.warn('[ProfileService] getOrCreateProfile exception (using in-memory fallback):', err);
+    if (data) {
+      return {
+        ...(data as UserProfile),
+        is_persistent: true,
+        sync_error: null,
+      };
+    }
+
     return fallback;
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.warn('[ProfileService] getOrCreateProfile exception (using in-memory fallback):', errorMsg);
+    return {
+      ...fallback,
+      is_persistent: false,
+      sync_error: errorMsg,
+    };
+  }
+};
+
+/**
+ * Actively repairs a missing profile in public.profiles using server-side RPC
+ * (repair_my_profile) or direct insert, ensuring accurate database persistence.
+ */
+export const repairProfile = async (user: User): Promise<UserProfile> => {
+  const fallback: UserProfile = {
+    ...mapUserToProfileFields(user),
+    is_persistent: false,
+    sync_error: null,
+  };
+
+  const client = getSupabaseClient();
+  if (!client) {
+    return { ...fallback, sync_error: 'Supabase client is not configured' };
+  }
+
+  try {
+    // 1. First check if it already exists
+    const existing = await getProfile(user.id);
+    if (existing) {
+      return existing;
+    }
+
+    // 2. Try the SECURITY DEFINER repair_my_profile RPC
+    if (typeof (client as unknown as { rpc?: unknown }).rpc === 'function') {
+      try {
+        const { data: rpcData, error: rpcError } = await client.rpc('repair_my_profile');
+        if (!rpcError && rpcData) {
+          return {
+            ...(rpcData as UserProfile),
+            is_persistent: true,
+            sync_error: null,
+          };
+        }
+      } catch {
+        // RPC might not exist on older DB revisions; proceed to direct insert
+      }
+    }
+
+    // 3. Fall back to standard getOrCreateProfile upsert
+    return await getOrCreateProfile(user);
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return {
+      ...fallback,
+      is_persistent: false,
+      sync_error: errorMsg,
+    };
   }
 };
 
@@ -181,7 +269,14 @@ export const updateProfile = async (
       return { profile: null, error: error.message };
     }
 
-    return { profile: data as UserProfile, error: null };
+    return {
+      profile: {
+        ...(data as UserProfile),
+        is_persistent: true,
+        sync_error: null,
+      },
+      error: null,
+    };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to update user profile';
     return { profile: null, error: message };

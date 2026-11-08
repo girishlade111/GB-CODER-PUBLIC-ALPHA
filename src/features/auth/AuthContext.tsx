@@ -29,6 +29,7 @@ import {
 } from '../../services/auth/authService';
 import {
   getOrCreateProfile,
+  repairProfile as apiRepairProfile,
   updateProfile as apiUpdateProfile,
   UserProfile,
   UpdateProfileInput,
@@ -50,10 +51,13 @@ export interface AuthContextValue {
   profile: UserProfile | null;
   session: Session | null;
   isConfigured: boolean;
+  isProfilePersistent: boolean;
+  profileSyncError: string | null;
   error: string | null;
   signInWithGitHub: (returnPath?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<void>;
+  repairProfile: () => Promise<void>;
   updateProfile: (updates: UpdateProfileInput) => Promise<{ profile: UserProfile | null; error: string | null }>;
   clearError: () => void;
 }
@@ -240,6 +244,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const repairProfile = useCallback(async (): Promise<void> => {
+    const currentUser = userRef.current;
+    if (!currentUser) return;
+    const currentReqId = ++profileRequestIdRef.current;
+    try {
+      const repaired = await apiRepairProfile(currentUser);
+      if (profileRequestIdRef.current === currentReqId) {
+        setProfile(repaired);
+      }
+    } catch (err) {
+      console.warn('[AuthProvider] Failed to repair profile:', err);
+    }
+  }, []);
+
   const updateProfile = useCallback(
     async (updates: UpdateProfileInput): Promise<{ profile: UserProfile | null; error: string | null }> => {
       if (!user) {
@@ -259,6 +277,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
   }, []);
 
+  const isProfilePersistent = Boolean(profile?.is_persistent);
+  const profileSyncError = profile?.sync_error ?? null;
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
@@ -266,10 +287,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       profile,
       session,
       isConfigured: configured,
+      isProfilePersistent,
+      profileSyncError,
       error,
       signInWithGitHub,
       signOut,
       refreshProfile,
+      repairProfile,
       updateProfile,
       clearError,
     }),
@@ -279,10 +303,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       profile,
       session,
       configured,
+      isProfilePersistent,
+      profileSyncError,
       error,
       signInWithGitHub,
       signOut,
       refreshProfile,
+      repairProfile,
       updateProfile,
       clearError,
     ],

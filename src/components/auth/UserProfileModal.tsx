@@ -5,7 +5,20 @@
  * explanation, and allows updating the profile display name.
  */
 import React, { useState, useEffect } from 'react';
-import { X, User, Github, Mail, HardDrive, Shield, Check, Loader2, Calendar } from 'lucide-react';
+import {
+  X,
+  User,
+  Github,
+  Mail,
+  HardDrive,
+  Shield,
+  Check,
+  Loader2,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+} from 'lucide-react';
 import { useAuth } from '../../features/auth/useAuth';
 import toast from 'react-hot-toast';
 
@@ -15,9 +28,17 @@ export interface UserProfileModalProps {
 }
 
 export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose }) => {
-  const { user, profile, updateProfile } = useAuth();
+  const {
+    user,
+    profile,
+    isProfilePersistent,
+    profileSyncError,
+    repairProfile,
+    updateProfile,
+  } = useAuth();
   const [displayNameInput, setDisplayNameInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isRepairing, setIsRepairing] = useState(false);
 
   useEffect(() => {
     if (profile?.display_name) {
@@ -61,6 +82,18 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
       toast.error('Failed to save profile changes');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleRepairProfile = async () => {
+    setIsRepairing(true);
+    try {
+      await repairProfile();
+      toast.success('Profile repaired and synchronized with database.');
+    } catch {
+      toast.error('Failed to repair profile in database.');
+    } finally {
+      setIsRepairing(false);
     }
   };
 
@@ -146,6 +179,45 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                 <Calendar className="h-3 w-3" />
                 <span>Joined {createdAtFormatted}</span>
               </div>
+            </div>
+          </div>
+
+          {/* Database Sync Status Banner */}
+          <div className="rounded-xl border border-stroke-subtle bg-surface-canvas p-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start gap-2.5 min-w-0">
+                {isProfilePersistent ? (
+                  <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                )}
+                <div className="min-w-0 text-xs">
+                  <div className="font-semibold text-content-primary">
+                    {isProfilePersistent
+                      ? 'Profile Synced to Database (public.profiles)'
+                      : 'Profile Local Only / Database Sync Pending'}
+                  </div>
+                  <div className="text-[11px] text-content-muted mt-0.5 leading-relaxed">
+                    {isProfilePersistent
+                      ? 'Your profile record is verified and stored in Supabase PostgreSQL under Row Level Security.'
+                      : profileSyncError
+                        ? `Notice: ${profileSyncError}. Your session is active with fallback data.`
+                        : 'Profile record is pending database synchronization. Session remains active.'}
+                  </div>
+                </div>
+              </div>
+
+              {!isProfilePersistent && (
+                <button
+                  type="button"
+                  onClick={handleRepairProfile}
+                  disabled={isRepairing}
+                  className="inline-flex items-center gap-1.5 shrink-0 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg hover:bg-accent-hover transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-3 w-3 ${isRepairing ? 'animate-spin' : ''}`} />
+                  {isRepairing ? 'Syncing...' : 'Sync to DB'}
+                </button>
+              )}
             </div>
           </div>
 

@@ -19,6 +19,9 @@ import {
   HardDrive,
   ChevronDown,
   Loader2,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/useAuth';
 import UserProfileModal from './UserProfileModal';
@@ -35,9 +38,19 @@ export const UserAccountMenu: React.FC<UserAccountMenuProps> = ({
   returnPath,
   className = '',
 }) => {
-  const { status, user, profile, isConfigured, signInWithGitHub, signOut } = useAuth();
+  const {
+    status,
+    user,
+    profile,
+    isConfigured,
+    isProfilePersistent,
+    repairProfile,
+    signInWithGitHub,
+    signOut,
+  } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isRepairing, setIsRepairing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
@@ -81,6 +94,18 @@ export const UserAccountMenu: React.FC<UserAccountMenuProps> = ({
       toast.error(`Sign out notice: ${res.error}`);
     } else {
       toast.success('Signed out. Local projects remain saved on this device.');
+    }
+  };
+
+  const handleRepair = async () => {
+    setIsRepairing(true);
+    try {
+      await repairProfile();
+      toast.success('Profile synchronization refreshed.');
+    } catch {
+      toast.error('Unable to refresh profile sync.');
+    } finally {
+      setIsRepairing(false);
     }
   };
 
@@ -185,6 +210,32 @@ export const UserAccountMenu: React.FC<UserAccountMenuProps> = ({
                 <div className="text-[11px] font-mono text-content-muted truncate">@{username}</div>
                 {email && <div className="text-[10px] text-content-muted truncate">{email}</div>}
               </div>
+            </div>
+
+            {/* Profile DB Sync State */}
+            <div className="mt-2.5 pt-2 border-t border-stroke-subtle flex items-center justify-between text-[11px]">
+              {isProfilePersistent ? (
+                <span className="inline-flex items-center gap-1.5 text-success font-medium" data-testid="profile-synced-badge">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Profile Synced</span>
+                </span>
+              ) : (
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span className="inline-flex items-center gap-1 text-amber-400 font-medium truncate" data-testid="profile-local-badge" title="Database profile row missing; local session active">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">Local Only / Pending Sync</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleRepair}
+                    disabled={isRepairing}
+                    className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-colors"
+                  >
+                    <RefreshCw className={`h-2.5 w-2.5 ${isRepairing ? 'animate-spin' : ''}`} />
+                    Sync DB
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
