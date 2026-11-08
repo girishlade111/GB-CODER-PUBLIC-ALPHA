@@ -21,7 +21,6 @@ import {
   UploadCloud,
   Github,
   FolderGit2,
-  Lock,
 } from 'lucide-react';
 import LadeStackLogo from '../LadeStackLogo';
 import {
