@@ -14,6 +14,7 @@ import {
   sanitizeReturnPath,
   signInWithGitHub,
   subscribeToAuthState,
+  RETURN_PATH_STORAGE_KEY,
 } from '../../services/auth/authService';
 import { navigateReplace, PROJECTS_ROUTE } from '../../utils/appRoutes';
 import LadeStackLogo from '../LadeStackLogo';
@@ -37,7 +38,11 @@ export const AuthCallback: React.FC<AuthCallbackProps> = ({ onSuccess, onFailure
       ? new URLSearchParams(window.location.hash.replace(/^#/, ''))
       : null;
 
-    const returnToParam = searchParams?.get('returnTo') || hashParams?.get('returnTo');
+    const storedReturn =
+      typeof window !== 'undefined' && window.sessionStorage
+        ? window.sessionStorage.getItem(RETURN_PATH_STORAGE_KEY)
+        : null;
+    const returnToParam = searchParams?.get('returnTo') || hashParams?.get('returnTo') || storedReturn;
     const safeReturn = sanitizeReturnPath(returnToParam);
     setReturnTarget(safeReturn);
 

@@ -64,39 +64,57 @@ export const sanitizeReturnPath = (rawPath?: string | null): string => {
 
 /**
  * Determines the OAuth callback URL for redirecting from Supabase back to GB Coder.
+ *
+ * Requirements:
+ * - Uses the active origin from which login was initiated (window.location.origin).
+ * - Stable canonical endpoint (/app/auth/callback) without dynamic query parameters,
+ *   guaranteeing exact match against Supabase Auth Redirect URLs allowlist.
+ * - Return path is preserved through sessionStorage.
  */
-export const getAuthCallbackUrl = (returnPath?: string, baseOrigin?: string): string => {
-  const origin =
-    baseOrigin ||
-    (typeof window !== 'undefined' && window.location ? window.location.origin : 'https://code.ladestack.in');
+export const getAuthCallbackUrl = (baseOriginOrReturnPath?: string, legacyOrigin?: string): string => {
+  let origin = 'https://code.ladestack.in';
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    origin = window.location.origin;
+  }
+
+  if (baseOriginOrReturnPath) {
+    if (baseOriginOrReturnPath.startsWith('http://') || baseOriginOrReturnPath.startsWith('https://')) {
+      try {
+        origin = new URL(baseOriginOrReturnPath).origin;
+      } catch {
+        // Keep active origin
+      }
+    } else if (legacyOrigin && (legacyOrigin.startsWith('http://') || legacyOrigin.startsWith('https://'))) {
+      try {
+        origin = new URL(legacyOrigin).origin;
+      } catch {
+        // Keep active origin
+      }
+    }
+  }
 
   const callbackUrl = new URL(AUTH_CALLBACK_PATH, origin);
-
-  const safeReturn = sanitizeReturnPath(returnPath);
-  if (safeReturn && safeReturn !== DEFAULT_APP_RETURN_PATH) {
-    callbackUrl.searchParams.set('returnTo', safeReturn);
-  }
-
-  if (typeof window === 'undefined' && !baseOrigin) {
-    return `${callbackUrl.pathname}${callbackUrl.search}`;
-  }
-
   return callbackUrl.toString();
 };
 
 export interface SignInOptions {
   returnPath?: string;
   redirectTo?: string;
+  skipBrowserRedirect?: boolean;
 }
 
 /**
  * Initiates GitHub OAuth sign-in using PKCE flow.
  */
-export const signInWithGitHub = async (options?: SignInOptions): Promise<{ error: string | null }> => {
+export const signInWithGitHub = async (
+  options?: SignInOptions
+): Promise<{ error: string | null; url?: string }> => {
   const client = getSupabaseClient();
   if (!client) {
     return {
-      error: 'Supabase authentication is not configured. Please check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+      error:
+        'Supabase authentication is not configured. Please check VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY).',
     };
   }
 
@@ -107,23 +125,54 @@ export const signInWithGitHub = async (options?: SignInOptions): Promise<{ error
     try {
       window.sessionStorage.setItem(RETURN_PATH_STORAGE_KEY, returnPath);
     } catch {
-      // Storage unavailable in restricted iframe/private mode; URL query param will serve as fallback
+      // Storage unavailable in restricted iframe/private mode
     }
   }
 
-  const callbackUrl = options?.redirectTo || getAuthCallbackUrl(returnPath);
+  // Stable callback URL on current origin (localhost in dev, code.ladestack.in in prod)
+  const callbackUrl = options?.redirectTo || getAuthCallbackUrl();
 
   try {
-    const { error } = await client.auth.signInWithOAuth({
+    const { data, error } = await client.auth.signInWithOAuth({
       provider: 'github',
       options: {
         redirectTo: callbackUrl,
         scopes: GITHUB_OAUTH_SCOPES,
+        skipBrowserRedirect: true,
       },
     });
 
     if (error) {
       return { error: error.message };
+    }
+
+    if (data?.url) {
+      // Pre-flight diagnostic verification on generated OAuth URL
+      try {
+        const parsedAuthUrl = new URL(data.url);
+        const actualRedirectTo = parsedAuthUrl.searchParams.get('redirect_to');
+        if (actualRedirectTo) {
+          const parsedRedirect = new URL(actualRedirectTo);
+          const currentOrigin =
+            typeof window !== 'undefined' && window.location?.origin
+              ? window.location.origin
+              : null;
+          if (currentOrigin && parsedRedirect.origin !== currentOrigin) {
+            console.warn(
+              `[Auth] Warning: OAuth redirect_to origin (${parsedRedirect.origin}) does not match current origin (${currentOrigin})`
+            );
+          }
+        }
+      } catch {
+        // Safe diagnostics parsing; never leak codes or secrets
+      }
+
+      // Navigate to GitHub OAuth provider unless skipBrowserRedirect requested
+      if (typeof window !== 'undefined' && !options?.skipBrowserRedirect && window.location) {
+        window.location.assign(data.url);
+      }
+
+      return { error: null, url: data.url };
     }
 
     return { error: null };

@@ -102,6 +102,9 @@ In the Supabase Dashboard, navigate to:
    - Vercel Preview (if applicable):
      `https://*.vercel.app/app/auth/callback`
 
+> **Critical Redirect Allowlist Rule:**
+> Supabase Auth validates `redirect_to` strictly against these entries. If `http://localhost:5173/app/auth/callback` is missing from the allowlist, Supabase Auth will reject the localhost redirect and silently fall back to the default **Site URL** (`https://code.ladestack.in/?code=...`), stranding the user unauthenticated on localhost. Ensure `http://localhost:5173/app/auth/callback` is explicitly saved in **Authentication -> URL Configuration -> Redirect URLs**.
+
 ---
 
 ## 7. Database Migration & RLS Execution

@@ -183,11 +183,21 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
     });
 
     test('A06 — Correct redirectTo generation', () => {
+      // Default (production fallback in non-browser environment)
       const callbackDefault = getAuthCallbackUrl();
-      assert.match(callbackDefault, /\/app\/auth\/callback$/);
+      assert.strictEqual(callbackDefault, 'https://code.ladestack.in/app/auth/callback');
 
-      const callbackCustom = getAuthCallbackUrl('/app/ide');
-      assert.match(callbackCustom, /\/app\/auth\/callback\?returnTo=%2Fapp%2Fide/);
+      // Localhost development origin (Task 2 & 6 Requirement)
+      const callbackDev = getAuthCallbackUrl('http://localhost:5173');
+      assert.strictEqual(callbackDev, 'http://localhost:5173/app/auth/callback');
+
+      // Production custom origin (Task 2 & 6 Requirement)
+      const callbackProd = getAuthCallbackUrl('https://code.ladestack.in');
+      assert.strictEqual(callbackProd, 'https://code.ladestack.in/app/auth/callback');
+
+      // Zero dynamic query parameters in redirectTo to guarantee exact match in Supabase allowlist
+      assert.strictEqual(/returnTo=/i.test(callbackDev), false);
+      assert.strictEqual(/returnTo=/i.test(callbackProd), false);
     });
 
     test('A07 — Safe callback return-path validation (Open-Redirect Prevention)', () => {
@@ -450,6 +460,55 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
       assert.strictEqual(cfg5.isConfigured, true);
       assert.strictEqual(cfg5.publishableKey, 'valid_anon_fallback_key_12345');
       assert.strictEqual(cfg5.anonKey, 'valid_anon_fallback_key_12345');
+    });
+
+    test('A19 — Localhost and production OAuth redirectTo stability and sessionStorage preservation', async () => {
+      let passedOptions = null;
+      const mockClient = {
+        auth: {
+          signInWithOAuth: async (args) => {
+            passedOptions = args.options;
+            return {
+              data: {
+                provider: 'github',
+                url: `https://test.supabase.co/auth/v1/authorize?provider=github&redirect_to=${encodeURIComponent(args.options.redirectTo)}&code_challenge=test_challenge&code_challenge_method=s256`,
+              },
+              error: null,
+            };
+          },
+        },
+      };
+      _setMockSupabaseClient(mockClient);
+
+      // Simulate localhost login
+      const devCallback = getAuthCallbackUrl('http://localhost:5173');
+      const resDev = await signInWithGitHub({
+        redirectTo: devCallback,
+        returnPath: '/app/projects/my-local-project/editor',
+        skipBrowserRedirect: true,
+      });
+
+      assert.strictEqual(resDev.error, null);
+      assert.strictEqual(passedOptions.redirectTo, 'http://localhost:5173/app/auth/callback');
+      assert.strictEqual(/returnTo=/i.test(passedOptions.redirectTo), false);
+
+      // Verify generated URL redirect_to parameter resolves to exact current origin callback
+      assert.ok(resDev.url);
+      const parsedDevUrl = new URL(resDev.url);
+      assert.strictEqual(parsedDevUrl.searchParams.get('redirect_to'), 'http://localhost:5173/app/auth/callback');
+
+      // Verify production login
+      const prodCallback = getAuthCallbackUrl('https://code.ladestack.in');
+      const resProd = await signInWithGitHub({
+        redirectTo: prodCallback,
+        returnPath: '/app/ide',
+        skipBrowserRedirect: true,
+      });
+
+      assert.strictEqual(resProd.error, null);
+      assert.strictEqual(passedOptions.redirectTo, 'https://code.ladestack.in/app/auth/callback');
+      const parsedProdUrl = new URL(resProd.url);
+      assert.strictEqual(parsedProdUrl.searchParams.get('redirect_to'), 'https://code.ladestack.in/app/auth/callback');
     });
   });
 
