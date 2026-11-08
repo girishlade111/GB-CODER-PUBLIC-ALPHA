@@ -320,3 +320,4 @@ CREATE POLICY "Users can delete own project objects"
     bucket_id = 'gb-coder-projects'
     AND (storage.foldername(name))[1] = auth.uid()::text
   );
+
