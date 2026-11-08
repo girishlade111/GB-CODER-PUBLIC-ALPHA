@@ -187,7 +187,7 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
   .post-shell {
     max-width: 1120px;
     margin-inline: auto;
-    padding: clamp(2.5rem, 5vw, 4rem) 1.5rem 6rem;
+    padding: clamp(2.5rem, 5vw, 4rem) var(--page-gutter) clamp(3.5rem, 8vw, 6rem);
   }
 
   /* --- Masthead --------------------------------------------------------- */
@@ -236,7 +236,7 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
   /* --- Body + rail ------------------------------------------------------ */
   .post-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(2rem, 5vw, 4.5rem);
     align-items: start;
   }
@@ -284,7 +284,7 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
     color: var(--text-primary);
   }
   .post-section p {
-    font-size: 1.02rem;
+    font-size: clamp(0.98rem, 2vw, 1.02rem);
     line-height: 1.75;
     color: var(--text-secondary);
     margin: 0 0 1rem;
@@ -319,14 +319,12 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
     text-decoration: none;
   }
   .post-next__link:hover {
-    color: var(--accent-hover);
+    color: var(--primary-hover);
   }
 
   /* --- Related rail ----------------------------------------------------- */
   .post-rail__inner {
-    position: sticky;
-    top: 5.5rem;
-    padding-top: 2.5rem;
+    margin-top: 1rem;
   }
   .post-rail__title {
     font-size: 0.7rem;
@@ -411,29 +409,18 @@ const otherSlugs = getAllArticleSlugs().filter((s) => s !== slug);
     transition: background 0.18s ease;
   }
   .post-cta:hover {
-    background: var(--accent-hover);
+    background: var(--primary-hover);
   }
 
-  @media (max-width: 960px) {
+  @media (min-width: 61rem) {
     .post-layout {
-      grid-template-columns: minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) 280px;
     }
     .post-rail__inner {
-      position: static;
-      padding-top: 0;
-      margin-top: 3rem;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .post-shell {
-      padding-inline: 1.25rem;
-    }
-    .post-title {
-      font-size: 2.1rem;
-    }
-    .post-section p {
-      font-size: 0.98rem;
+      position: sticky;
+      inset-block-start: 5.5rem;
+      padding-top: 2.5rem;
+      margin-top: 0;
     }
   }
 </style>

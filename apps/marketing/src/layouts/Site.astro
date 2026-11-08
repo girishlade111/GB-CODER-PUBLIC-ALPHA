@@ -5,6 +5,7 @@ import '../styles/canvas.css';
 import '../styles/site.css';
 import '../styles/studio.css';
 import SeoHead from '../components/SeoHead.astro';
+import ThemePreference from '../components/ThemePreference.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/languages';
@@ -57,8 +58,7 @@ const langMeta = SUPPORTED_LANGUAGES[lang] || SUPPORTED_LANGUAGES[DEFAULT_LANGUA
       structuredData={structuredData}
       isLegalPage={isLegalPage}
     />
-
-
+    <ThemePreference />
   </head>
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -66,6 +66,6 @@ const langMeta = SUPPORTED_LANGUAGES[lang] || SUPPORTED_LANGUAGES[DEFAULT_LANGUA
     <main id="main-content">
       <slot />
     </main>
-    <Footer lang={lang} basePath={basePath} isLegalPage={isLegalPage} />
+    <Footer lang={lang} />
   </body>
 </html>

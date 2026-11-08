@@ -4,7 +4,6 @@ import '../../styles/studio.css';
 import { getHomeContent } from '../../i18n/home';
 import { getLocalizedPath } from '../../i18n/utils';
 import { getStudioContent } from '../../i18n/studio';
-import { getBlogContent, getAllArticleSlugs } from '../../i18n/blog';
 import { getNav } from '../../i18n/navigation';
 import { getUi } from '../../i18n/ui';
 import StudioDemo from '../StudioDemo.tsx';
@@ -22,13 +21,11 @@ interface Props {
 const { lang = 'en' } = Astro.props;
 const content = getHomeContent(lang);
 const studio = getStudioContent(lang);
-const blog = getBlogContent(lang);
 const nav = getNav(lang);
 const ui = getUi(lang);
 
 const featuresUrl = getLocalizedPath(lang, 'features');
 const docsUrl = getLocalizedPath(lang, 'docs');
-const blogUrl = getLocalizedPath(lang, 'blog');
 
 const techStack = [
   'HTML5',
@@ -75,7 +72,7 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
 
     <!-- Live Interactive Studio Stage -->
     <div class="studio-wrapper">
-      <StudioDemo client:load labels={studio} launchLabel={nav.openEditor} />
+      <StudioDemo client:load labels={studio} launchLabel={nav.openEditor} explorerLabel={ui.explorerLabel} />
     </div>
   </section>
 
@@ -83,7 +80,7 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
   <section class="stack-band" aria-label={ui.marqueeLabel}>
     <div class="stack-band__inner">
       <span class="stack-band__label">{ui.marqueeLabel}</span>
-      <Marquee items={techStack} label={ui.marqueeLabel} />
+      <Marquee items={techStack} label={ui.marqueeLabel} pauseLabel={ui.marqueePause} />
     </div>
   </section>
 
@@ -243,43 +240,6 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
     </div>
   </section>
 
-  <!-- Engineering Journal & Guides -->
-  <section class="journal-section section-container">
-    <div class="section-intro">
-      <div>
-        <h2>{studio.guides}</h2>
-      </div>
-      <a href={blogUrl} class="text-link">{studio.allGuides} <Icon name="arrow-up-right" size={14} /></a>
-    </div>
-
-    <div class="journal-list">
-      {getAllArticleSlugs().map((slug) => {
-        const article = blog.articles[slug];
-        return (
-          <article class="journal-row">
-            <div class="journal-row__meta">
-              <span class="journal-category">{article.tags[0]}</span>
-              <span class="journal-date">{article.date}</span>
-            </div>
-            <div class="journal-row__body">
-              <h3>
-                <a href={getLocalizedPath(lang, `blog/${slug}`)}>{article.title}</a>
-              </h3>
-              <p>{article.description}</p>
-            </div>
-            <a
-              href={getLocalizedPath(lang, `blog/${slug}`)}
-              class="journal-row__arrow"
-              aria-label={blog.readArticleLabel}
-            >
-              <Icon name="arrow-up-right" size={16} />
-            </a>
-          </article>
-        );
-      })}
-    </div>
-  </section>
-
   <!-- Browser Compatibility Note -->
   <aside class="compatibility section-container">
     <div class="compat-content">
@@ -323,7 +283,7 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
 <style>
   .section-container {
     max-width: 1248px;
-    padding-inline: 1.5rem;
+    padding-inline: var(--page-gutter);
     margin-inline: auto;
   }
 
@@ -331,14 +291,14 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
   .home-opening {
     max-width: 1248px;
     margin-inline: auto;
-    padding: 4.5rem 1.5rem 3.5rem;
+    padding: clamp(2.5rem, 6vw, 4.5rem) var(--page-gutter) clamp(2.5rem, 6vw, 3.5rem);
   }
   .opening-copy {
     display: grid;
-    grid-template-columns: 1.15fr 0.95fr;
-    gap: 4rem;
-    align-items: end;
-    margin-bottom: 3rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+    margin-bottom: clamp(1.75rem, 5vw, 3rem);
   }
   .hero-header-block {
     display: flex;
@@ -346,7 +306,7 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
     gap: 1.4rem;
   }
   h1 {
-    font-size: clamp(3rem, 5.5vw, 4.8rem);
+    font-size: clamp(2.5rem, 9vw, 4.8rem);
     font-weight: 550;
     line-height: 1.04;
     letter-spacing: -0.04em;
@@ -358,7 +318,7 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
     padding-bottom: 0.35rem;
   }
   .hero-lead {
-    font-size: 1.12rem;
+    font-size: clamp(1rem, 2vw, 1.12rem);
     color: var(--text-secondary);
     line-height: 1.7;
     margin: 0;
@@ -366,7 +326,7 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
   .opening-actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
     flex-wrap: wrap;
     margin-top: 1.75rem;
   }
@@ -394,7 +354,7 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
   }
   .studio-wrapper {
     position: relative;
-    margin-top: 1rem;
+    min-width: 0;
   }
 
   /* --- Technology band ------------------------------------------------- */
@@ -405,11 +365,11 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
   .stack-band__inner {
     max-width: 1248px;
     margin-inline: auto;
-    padding: 1.5rem 1.5rem;
+    padding: 1.25rem var(--page-gutter);
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
-    gap: 2rem;
+    gap: 0.5rem;
   }
   .stack-band__label {
     font-size: 0.72rem;
@@ -422,17 +382,16 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
 
   /* --- Workflow: ruled steps ------------------------------------------- */
   .workflow-section,
-  .capabilities-section,
-  .journal-section {
-    padding-top: 6.5rem;
-    padding-bottom: 6.5rem;
+  .capabilities-section {
+    padding-block: clamp(3rem, 8vw, 6.5rem);
   }
   .section-intro {
     display: flex;
-    align-items: flex-end;
+    flex-direction: column;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 3rem;
-    margin-bottom: 3.25rem;
+    gap: 0.75rem;
+    margin-bottom: clamp(1.75rem, 5vw, 3.25rem);
   }
   .section-intro > div {
     display: flex;
@@ -455,7 +414,7 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
   }
   .workflow-steps {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 0;
     list-style: none;
     padding: 0;
@@ -463,13 +422,9 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
     border-top: 1px solid var(--border);
   }
   .workflow-step {
-    padding: 2rem 2.5rem 2.25rem 0;
+    padding: 1.75rem 0;
     border-bottom: 1px solid var(--border-subtle);
     position: relative;
-  }
-  .workflow-step + .workflow-step {
-    padding-left: 2.5rem;
-    border-left: 1px solid var(--border-subtle);
   }
   .workflow-step__num {
     display: block;
@@ -496,13 +451,13 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
   /* --- Environments ---------------------------------------------------- */
   .environments-section {
     background: var(--surface-soft);
-    padding: 6.5rem 0;
+    padding-block: clamp(3rem, 8vw, 6.5rem);
     border-block: 1px solid var(--border-subtle);
   }
   .environment-notes {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2.5rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1.25rem, 4vw, 2.5rem);
     margin: 3rem 0 0;
     padding-top: 2.5rem;
     border-top: 1px solid var(--border);
@@ -543,13 +498,13 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
 
   /* --- Studio proof ---------------------------------------------------- */
   .studio-proof-section {
-    padding: 6.5rem 0;
+    padding-block: clamp(3rem, 8vw, 6.5rem);
     background: var(--surface);
     border-block: 1px solid var(--border-subtle);
   }
   .studio-proof {
     display: grid;
-    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 2.5rem;
     align-items: start;
   }
@@ -579,14 +534,14 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
 
   /* --- Use cases ------------------------------------------------------- */
   .usecases-section {
-    padding: 6.5rem 0;
+    padding-block: clamp(3rem, 8vw, 6.5rem);
     background: var(--canvas);
     border-block: 1px solid var(--border-subtle);
   }
   .usecases {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 2rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1rem, 3vw, 2rem);
   }
   .usecase-card {
     border: 1px solid var(--border-subtle);
@@ -610,13 +565,14 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
     border-bottom: 1px solid var(--border-subtle);
   }
   .usecase-art-1 {
-    background: #f1f5f2;
+    background: var(--study-surface);
   }
   .usecase-art-2 {
-    background: #e4ede7;
+    background: var(--study-tint);
   }
   .layout-study {
     width: 170px;
+    max-width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
@@ -625,13 +581,13 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
   .study-bar-1 {
     grid-column: 1/-1;
     height: 46px;
-    background: #9bbca7;
+    background: var(--study-accent);
     border-radius: 6px;
   }
   .study-bar-2,
   .study-bar-3 {
     height: 38px;
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 4px;
   }
   .code-study,
@@ -645,7 +601,7 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
   }
   .code-inner {
     font-weight: 600;
-    padding-left: 1rem;
+    padding-inline-start: 1rem;
   }
   .usecase-text {
     padding: 1.75rem;
@@ -665,85 +621,18 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
     margin: 0;
   }
 
-  /* --- Journal: ruled rows --------------------------------------------- */
-  .journal-list {
-    border-top: 1px solid var(--border);
-  }
-  .journal-row {
-    display: grid;
-    grid-template-columns: 190px minmax(0, 1fr) auto;
-    gap: 2.5rem;
-    align-items: start;
-    padding: 2.1rem 0;
-    border-bottom: 1px solid var(--border-subtle);
-    transition: background 0.25s ease;
-  }
-  .journal-row:hover {
-    background: var(--surface);
-  }
-  .journal-row__meta {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: flex-start;
-  }
-  .journal-category {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--primary);
-    background: var(--surface-soft);
-    padding: 0.22rem 0.55rem;
-    border-radius: 4px;
-  }
-  .journal-date {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-  }
-  .journal-row__body h3 {
-    font-size: clamp(1.15rem, 1.8vw, 1.5rem);
-    letter-spacing: -0.025em;
-    line-height: 1.25;
-    margin-bottom: 0.5rem;
-  }
-  .journal-row__body h3 a {
-    color: var(--text-primary);
-    text-decoration: none;
-    transition: color 0.15s ease;
-  }
-  .journal-row__body h3 a:hover {
-    color: var(--primary);
-  }
-  .journal-row__body p {
-    font-size: 0.92rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin: 0;
-    max-width: 68ch;
-  }
-  .journal-row__arrow {
-    color: var(--text-muted);
-    display: inline-flex;
-    padding-top: 0.2rem;
-    transition: color 0.2s ease, transform 0.2s ease;
-  }
-  .journal-row:hover .journal-row__arrow {
-    color: var(--primary);
-    transform: translate(2px, -2px);
-  }
-
   /* --- Compatibility --------------------------------------------------- */
   .compatibility {
     display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 2rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
     align-items: center;
-    padding: 2.25rem 2.5rem;
+    padding: clamp(1.25rem, 4vw, 2.25rem);
     background: var(--surface);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    margin-bottom: 6.5rem;
+    margin-block-start: var(--page-gutter);
+    margin-bottom: clamp(3rem, 8vw, 6.5rem);
   }
   .compat-heading {
     display: flex;
@@ -775,16 +664,17 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
   /* --- Closing --------------------------------------------------------- */
   .closing-section {
     background:
-      radial-gradient(70% 140% at 12% 0%, rgba(23, 102, 68, 0.08), transparent 62%),
+      radial-gradient(70% 140% at 12% 0%, color-mix(in srgb, var(--primary) 8%, transparent), transparent 62%),
       var(--surface);
     border-top: 1px solid var(--border-subtle);
-    padding: 6.5rem 0;
+    padding-block: clamp(3rem, 8vw, 6.5rem);
   }
   .closing-content {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 3rem;
+    gap: 1.5rem;
   }
   .closing-text h2 {
     font-size: clamp(2rem, 3.5vw, 3rem);
@@ -804,62 +694,55 @@ const capabilityIcons = ['code', 'monitor', 'layers', 'box', 'shield', 'download
   }
 
   /* --- Responsive ------------------------------------------------------ */
-  @media (max-width: 1000px) {
-    .opening-copy {
-      grid-template-columns: 1fr;
+  @media (min-width: 49rem) {
+    .section-intro {
+      flex-direction: row;
+      align-items: flex-end;
+      gap: 3rem;
+    }
+    .workflow-steps,
+    .usecases {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .environment-notes {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .workflow-step {
+      padding-block: 2rem 2.25rem;
+      padding-inline-end: 2.5rem;
+    }
+    .workflow-step + .workflow-step {
+      padding-inline-start: 2.5rem;
+      border-inline-start: 1px solid var(--border-subtle);
+    }
+    .compatibility {
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 2rem;
-      align-items: start;
-    }
-    .studio-proof {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .closing-content {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .stack-band__inner {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 1rem;
+      padding-inline: 2.5rem;
     }
   }
 
-  @media (max-width: 768px) {
-    .workflow-steps,
-    .usecases,
-    .environment-notes {
-      grid-template-columns: 1fr;
+  @media (min-width: 63rem) {
+    h1 {
+      font-size: clamp(3rem, 5.5vw, 4.8rem);
     }
-    .workflow-step + .workflow-step {
-      padding-left: 0;
-      border-left: 0;
+    .opening-copy {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
+      gap: 4rem;
+      align-items: end;
     }
-    .workflow-step {
-      padding: 1.75rem 0;
+    .studio-proof {
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
     }
-    .journal-row {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 0.9rem;
-      position: relative;
-      padding-right: 2.5rem;
-    }
-    .journal-row__meta {
+    .closing-content {
       flex-direction: row;
       align-items: center;
-      gap: 0.75rem;
+      gap: 3rem;
     }
-    .journal-row__arrow {
-      position: absolute;
-      top: 2.1rem;
-      right: 0;
-    }
-    .compatibility {
-      grid-template-columns: 1fr;
-      gap: 1.25rem;
-      padding: 1.75rem;
-    }
-    h1 {
-      font-size: clamp(2.8rem, 12vw, 4.2rem);
-      max-width: 13ch;
+    .stack-band__inner {
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 2rem;
+      padding-block: 1.5rem;
     }
   }
 </style>

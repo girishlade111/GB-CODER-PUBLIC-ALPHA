@@ -36,8 +36,6 @@ export const STUDIO = {
       "Connect the code you write to the result you see, one change at a time.",
       "Bring React, Vue and npm packages into a browser-based workspace.",
     ],
-    guides: "A little guidance goes a long way.",
-    allGuides: "Browse the journal",
     support: "Choose the right environment for your browser.",
     supportText:
       "Use a recent Chromium browser for the advanced WebContainer IDE. Runtime availability depends on browser support and cross-origin isolation. The static editor is the lightweight alternative.",
@@ -79,8 +77,6 @@ export const STUDIO = {
       "Conecta tu código con el resultado de cada cambio.",
       "Trabaja con React, Vue y paquetes npm.",
     ],
-    guides: "Un poco de ayuda para seguir.",
-    allGuides: "Explorar artículos",
     support: "Elige el entorno para tu navegador.",
     supportText:
       "Usa Chromium reciente para WebContainer. Depende de la compatibilidad y del aislamiento entre orígenes. El editor estático es la alternativa ligera.",
@@ -122,8 +118,6 @@ export const STUDIO = {
       "Zie het resultaat van elke wijziging.",
       "Werk met React, Vue en npm-pakketten.",
     ],
-    guides: "Een beetje hulp brengt je verder.",
-    allGuides: "Bekijk de artikelen",
     support: "Kies de omgeving voor je browser.",
     supportText:
       "Gebruik recent Chromium voor WebContainer. Beschikbaarheid hangt af van browserondersteuning en cross-origin-isolatie. De statische editor is het lichte alternatief.",
@@ -169,8 +163,6 @@ export const STUDIO = {
       "Reliez chaque changement au résultat obtenu.",
       "Travaillez avec React, Vue et les paquets npm.",
     ],
-    guides: "Un peu d’aide pour aller plus loin.",
-    allGuides: "Parcourir les articles",
     support: "Le bon environnement pour votre navigateur.",
     supportText:
       "Utilisez Chromium récent pour WebContainer. La disponibilité dépend du navigateur et de l’isolation entre origines. L’éditeur statique est l’alternative légère.",
@@ -207,8 +199,6 @@ export const STUDIO = {
       "変更したコードと結果をつなげる。",
       "React・Vue・npmで開発する。",
     ],
-    guides: "少しのガイドで、もっと先へ。",
-    allGuides: "記事を見る",
     support: "ブラウザーに合う開発環境を。",
     supportText:
       "WebContainerには最新のChromiumを推奨します。ブラウザー対応とクロスオリジン分離が必要です。静的エディターは軽量な選択肢です。",
@@ -245,8 +235,6 @@ export const STUDIO = {
       "코드 변경과 결과를 연결하세요.",
       "React, Vue, npm 패키지로 개발하세요.",
     ],
-    guides: "작은 안내가 큰 도움이 됩니다.",
-    allGuides: "글 둘러보기",
     support: "브라우저에 맞는 환경을 선택하세요.",
     supportText:
       "WebContainer에는 최신 Chromium을 권장합니다. 브라우저 지원 및 교차 출처 격리가 필요합니다. 정적 편집기는 가벼운 대안입니다.",
@@ -283,8 +271,6 @@ export const STUDIO = {
       "将每次代码修改与结果相联系。",
       "使用 React、Vue 和 npm 包构建项目。",
     ],
-    guides: "一点指引，走得更远。",
-    allGuides: "浏览文章",
     support: "选择适合浏览器的环境。",
     supportText:
       "建议使用新版 Chromium 运行 WebContainer。可用性取决于浏览器支持和跨源隔离。静态编辑器是轻量的替代方案。",
@@ -330,8 +316,6 @@ export const STUDIO = {
       "Связывайте изменения кода с результатом.",
       "Используйте React, Vue и пакеты npm.",
     ],
-    guides: "Немного помощи для следующего шага.",
-    allGuides: "Читать статьи",
     support: "Выберите среду для браузера.",
     supportText:
       "Для WebContainer рекомендуется свежий Chromium. Доступность зависит от браузера и межсайтовой изоляции. Статический редактор — лёгкая альтернатива.",
@@ -377,8 +361,6 @@ export const STUDIO = {
       "Liga cada alteração de código ao resultado.",
       "Trabalha com React, Vue e pacotes npm.",
     ],
-    guides: "Uma ajuda para ir mais longe.",
-    allGuides: "Explorar artigos",
     support: "Escolhe o ambiente para o navegador.",
     supportText:
       "Usa Chromium recente para WebContainer. Depende do suporte do navegador e do isolamento entre origens. O editor estático é a alternativa leve.",

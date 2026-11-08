@@ -118,26 +118,14 @@ const breadcrumbJsonLd = {
   .docs-layout-container {
     max-width: 1180px;
     margin: 0 auto;
-    padding: 2.5rem 1.5rem 6rem;
+    padding: 2rem var(--page-gutter) clamp(3.5rem, 8vw, 6rem);
     display: grid;
-    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(2rem, 5vw, 4.5rem);
     align-items: start;
   }
 
   /* --- Table of contents ------------------------------------------------ */
-  .docs-sidebar {
-    position: relative;
-  }
-
-  .sidebar-sticky {
-    position: sticky;
-    top: 5.5rem;
-    max-height: calc(100vh - 6.5rem);
-    overflow-y: auto;
-    padding-inline-end: 0.5rem;
-  }
-
   .toc-title {
     font-size: 0.7rem;
     font-weight: 700;
@@ -154,19 +142,22 @@ const breadcrumbJsonLd = {
     padding: 0;
     margin: 0;
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
   .toc-link {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 0.7rem;
-    padding: 0.55rem 0;
+    min-height: 44px;
+    padding: 0.35rem 0.8rem;
     color: var(--text-secondary);
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     line-height: 1.4;
-    border-bottom: 1px solid var(--border-subtle);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
     transition: color 0.15s ease;
   }
 
@@ -187,8 +178,8 @@ const breadcrumbJsonLd = {
   }
 
   .doc-section {
-    margin-bottom: 4rem;
-    scroll-margin-top: 6rem;
+    margin-bottom: clamp(3rem, 6vw, 4rem);
+    scroll-margin-block-start: 0.5rem;
   }
 
   .section-title-wrap {
@@ -264,41 +255,35 @@ const breadcrumbJsonLd = {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    white-space: nowrap;
   }
 
-  @media (max-width: 960px) {
+  @media (min-width: 61rem) {
     .docs-layout-container {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 2rem;
+      grid-template-columns: 240px minmax(0, 1fr);
+      padding-top: 2.5rem;
     }
-
+    .docs-sidebar {
+      align-self: stretch;
+    }
     .sidebar-sticky {
-      position: static;
-      max-height: none;
-      padding-inline-end: 0;
+      position: sticky;
+      inset-block-start: 5.5rem;
+      max-height: calc(100dvh - 6.5rem);
+      overflow-y: auto;
+      padding-inline-end: 0.5rem;
     }
 
     .toc-list {
-      flex-flow: row wrap;
-      gap: 0.5rem;
+      flex-flow: column nowrap;
+      gap: 0;
     }
 
     .toc-link {
-      border-bottom: 0;
-      border: 1px solid var(--border);
-      border-radius: 9999px;
-      padding: 0.3rem 0.8rem;
-      font-size: 0.8rem;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .docs-layout-container {
-      padding-inline: 1.25rem;
-    }
-    .doc-section {
-      margin-bottom: 3rem;
+      border: 0;
+      border-block-end: 1px solid var(--border-subtle);
+      border-radius: 0;
+      padding: 0.55rem 0;
+      font-size: 0.9rem;
     }
   }
 </style>

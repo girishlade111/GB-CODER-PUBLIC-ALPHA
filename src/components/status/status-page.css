@@ -14,8 +14,25 @@
   -webkit-font-smoothing: antialiased; text-align: left; color-scheme: light;
 }
 .status-page[data-status-theme='dark'] { --st-bg: oklch(0 0 0); --st-surface: oklch(0.14 0 0); --st-soft: oklch(0.23 0 0); --st-border: oklch(0.26 0 0); --st-rule: oklch(0.26 0 0); --st-text: oklch(1.00 0 0); --st-secondary: oklch(0.72 0 0); --st-muted: oklch(0.72 0 0); --st-faint: oklch(0.56 0 0); --st-primary: oklch(1.00 0 0); --st-positive: oklch(1.00 0 0); --st-button: oklch(1.00 0 0); --st-on-button: oklch(0 0 0); --st-accent: oklch(1.00 0 0); color-scheme: dark; }
+:root[data-marketing-theme='dark'] .status-page[data-status-theme='auto'] {
+  --st-bg: #0a0a0a;
+  --st-surface: #1c1c1c;
+  --st-soft: #232323;
+  --st-border: #383838;
+  --st-rule: var(--st-border);
+  --st-text: #f5f5f0;
+  --st-secondary: #b8b8b3;
+  --st-muted: var(--st-secondary);
+  --st-faint: #93938e;
+  --st-primary: #b59a5f;
+  --st-positive: var(--st-text);
+  --st-button: var(--st-primary);
+  --st-on-button: var(--st-bg);
+  --st-accent: var(--st-text);
+  color-scheme: dark;
+}
 @media (prefers-color-scheme: dark) {
-  .status-page[data-status-theme='auto'] { --st-bg: oklch(0 0 0); --st-surface: oklch(0.14 0 0); --st-soft: oklch(0.23 0 0); --st-border: oklch(0.26 0 0); --st-rule: oklch(0.26 0 0); --st-text: oklch(1.00 0 0); --st-secondary: oklch(0.72 0 0); --st-muted: oklch(0.72 0 0); --st-faint: oklch(0.56 0 0); --st-primary: oklch(1.00 0 0); --st-positive: oklch(1.00 0 0); --st-button: oklch(1.00 0 0); --st-on-button: oklch(0 0 0); --st-accent: oklch(1.00 0 0); color-scheme: dark; }
+  .status-page[data-status-theme='auto']:not(:root[data-marketing-theme] *) { --st-bg: oklch(0 0 0); --st-surface: oklch(0.14 0 0); --st-soft: oklch(0.23 0 0); --st-border: oklch(0.26 0 0); --st-rule: oklch(0.26 0 0); --st-text: oklch(1.00 0 0); --st-secondary: oklch(0.72 0 0); --st-muted: oklch(0.72 0 0); --st-faint: oklch(0.56 0 0); --st-primary: oklch(1.00 0 0); --st-positive: oklch(1.00 0 0); --st-button: oklch(1.00 0 0); --st-on-button: oklch(0 0 0); --st-accent: oklch(1.00 0 0); color-scheme: dark; }
 }
 .status-page[data-status-tone='muted'] { --st-accent: var(--st-muted); }
 .status-page[data-status-tone='positive'] { --st-accent: var(--st-positive); }

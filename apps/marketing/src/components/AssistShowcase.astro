@@ -54,10 +54,10 @@ const studio = getStudioContent(lang);
 <style>
   .assist-showcase {
     display: grid;
-    grid-template-columns: 1fr 1.1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(2.5rem, 6vw, 5rem);
     align-items: center;
-    padding: 4.5rem 0 2rem;
+    padding: clamp(3rem, 6vw, 4.5rem) 0 2rem;
     border-top: 1px solid var(--border-subtle);
     margin-top: 3.5rem;
   }
@@ -65,7 +65,7 @@ const studio = getStudioContent(lang);
   .assist-description h2 {
     font-size: clamp(2rem, 3.3vw, 3rem);
     letter-spacing: -0.035em;
-    max-width: 18ch;
+    max-width: 22ch;
     margin: 0 0 1.25rem;
     line-height: 1.12;
   }
@@ -128,6 +128,7 @@ const studio = getStudioContent(lang);
 
   .assist-modes {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.15rem;
     padding: 0.6rem 0.8rem;
     border-bottom: 1px solid var(--border-subtle);
@@ -139,7 +140,6 @@ const studio = getStudioContent(lang);
     padding: 0.3rem 0.75rem;
     border-radius: 9999px;
     color: var(--text-muted);
-    white-space: nowrap;
   }
   .assist-modes .mode-active {
     background: var(--surface-soft);
@@ -194,22 +194,16 @@ const studio = getStudioContent(lang);
     overflow: auto;
     font: 12px/1.85 ui-monospace, SFMono-Regular, Consolas, monospace;
   }
-  .code-kw { color: var(--chart-2); font-weight: 600; }
+  .code-kw { color: var(--code-keyword); font-weight: 600; }
   .code-fn { color: var(--code-text); }
-  .code-tag { color: var(--chart-1); }
+  .code-tag { color: var(--code-tag); }
 
-  @media (max-width: 800px) {
+  @media (min-width: 52rem) {
     .assist-showcase {
-      grid-template-columns: 1fr;
-      gap: 2.5rem;
-      padding-top: 3rem;
-    }
-    .assist-modes {
-      overflow-x: auto;
-      padding: 0.6rem 0.8rem;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
     }
     .assist-description h2 {
-      max-width: 22ch;
+      max-width: 18ch;
     }
   }
 </style>

@@ -201,7 +201,7 @@ const tags = [...tagCounts.entries()]
   .blog-hero {
     max-width: 1200px;
     margin-inline: auto;
-    padding: clamp(3rem, 7vw, 6rem) 1.5rem 2.5rem;
+    padding: clamp(2.5rem, 7vw, 6rem) var(--page-gutter) clamp(2rem, 5vw, 2.5rem);
   }
   .blog-hero h1 {
     font-size: clamp(2.5rem, 5.5vw, 4.75rem);
@@ -219,14 +219,14 @@ const tags = [...tagCounts.entries()]
   .blog-index-container {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 0 1.5rem 6rem;
+    padding: 0 var(--page-gutter) clamp(3.5rem, 8vw, 6rem);
   }
 
   /* --- Featured guide -------------------------------------------------- */
   .featured-article {
     display: grid;
-    grid-template-columns: 210px minmax(0, 1fr);
-    gap: 2.5rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
     padding: 2.5rem 0 3rem;
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
@@ -303,7 +303,7 @@ const tags = [...tagCounts.entries()]
   .blog-filter__chip[aria-pressed='true'] {
     background: var(--primary);
     border-color: var(--primary);
-    color: #fff;
+    color: var(--primary-foreground);
   }
 
   /* --- Article rows ---------------------------------------------------- */
@@ -398,29 +398,17 @@ const tags = [...tagCounts.entries()]
     gap: 0.35rem;
   }
   .read-more-link:hover {
-    color: var(--accent-hover);
+    color: var(--primary-hover);
   }
   .blog-empty {
     padding: 2.5rem 0;
     color: var(--text-secondary);
   }
 
-  @media (max-width: 860px) {
+  @media (min-width: 54rem) {
     .featured-article {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 1.25rem;
-    }
-  }
-
-  @media (max-width: 700px) {
-    .blog-hero {
-      padding: 2.5rem 1.25rem 2rem;
-    }
-    .blog-hero h1 {
-      font-size: 2.5rem;
-    }
-    .blog-index-container {
-      padding-inline: 1.25rem;
+      grid-template-columns: 210px minmax(0, 1fr);
+      gap: 2.5rem;
     }
   }
 </style>

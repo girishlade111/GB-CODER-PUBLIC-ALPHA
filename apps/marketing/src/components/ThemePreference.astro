@@ -1,0 +1,50 @@
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    const system = window.matchMedia('(prefers-color-scheme: dark)');
+    const key = 'gbcoder:marketing-theme';
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+
+    function readPreference() {
+      try {
+        const saved = localStorage.getItem(key);
+        return saved === 'light' || saved === 'dark' ? saved : null;
+      } catch {
+        return null;
+      }
+    }
+
+    let preference = readPreference();
+
+    function applyTheme() {
+      const theme = preference ?? (system.matches ? 'dark' : 'light');
+      root.dataset.marketingTheme = theme;
+      if (themeColor) themeColor.content = theme === 'dark' ? '#0a0a0a' : '#ffffff';
+
+      const toggle = document.querySelector('[data-theme-toggle]');
+      if (toggle) {
+        toggle.setAttribute('aria-pressed', String(theme === 'dark'));
+        toggle.hidden = false;
+      }
+    }
+
+    applyTheme();
+    document.addEventListener('DOMContentLoaded', applyTheme, { once: true });
+    document.addEventListener('click', (event) => {
+      if (!(event.target instanceof Element) || !event.target.closest('[data-theme-toggle]')) return;
+      preference = root.dataset.marketingTheme === 'dark' ? 'light' : 'dark';
+      try {
+        localStorage.setItem(key, preference);
+      } catch {
+        // The toggle also works when storage is unavailable.
+      }
+      applyTheme();
+    });
+    system.addEventListener('change', applyTheme);
+    window.addEventListener('storage', (event) => {
+      if (event.key !== key && event.key !== null) return;
+      preference = readPreference();
+      applyTheme();
+    });
+  })();
+</script>

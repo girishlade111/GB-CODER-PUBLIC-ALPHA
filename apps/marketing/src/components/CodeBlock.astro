@@ -100,7 +100,7 @@ const escapedCode = escapeHtml(code);
     align-items: center;
     gap: 1rem;
     padding: 0.55rem 1.25rem;
-    background: rgba(21, 43, 35, 0.85);
+    background: var(--code-panel);
     border-bottom: 1px solid var(--code-border);
     font-size: 0.75rem;
     color: var(--code-muted);
@@ -144,9 +144,9 @@ const escapedCode = escapeHtml(code);
     gap: 0.35rem;
     min-height: 30px;
     padding: 0.2rem 0.6rem;
-    background: rgb(255 255 255 / 0.05);
+    background: var(--surface);
     color: var(--code-ghost);
-    border: 1px solid rgb(255 255 255 / 0.12);
+    border: 1px solid var(--code-border);
     border-radius: var(--radius-sm);
     font-size: 0.72rem;
     cursor: pointer;
@@ -156,9 +156,9 @@ const escapedCode = escapeHtml(code);
   }
 
   .copy-btn:hover {
-    background: rgb(255 255 255 / 0.12);
-    color: #ffffff;
-    border-color: rgb(255 255 255 / 0.24);
+    background: var(--code-panel);
+    color: var(--code-text);
+    border-color: var(--border);
   }
 
   .copy-btn:focus-visible {

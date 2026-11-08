@@ -1,6 +1,7 @@
 ---
 import StatusPage, { type StatusPageProps } from '../../../../src/components/status/StatusPage';
 import { getStatusConfig } from '../../../../src/components/status/status-config';
+import ThemePreference from '../components/ThemePreference.astro';
 interface Props extends StatusPageProps {}
 const status = getStatusConfig(Astro.props.code);
 ---
@@ -9,6 +10,8 @@ const status = getStatusConfig(Astro.props.code);
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ffffff" />
+    <ThemePreference />
     <meta name="robots" content="noindex" />
     <meta name="description" content={status.message} />
     <title>{status.code} {status.reason} — GB Coder</title>

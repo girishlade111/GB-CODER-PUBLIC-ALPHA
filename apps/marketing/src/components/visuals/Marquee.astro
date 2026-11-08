@@ -1,24 +1,51 @@
 ---
 /**
  * GB Coder — technology marquee.
- * Adapted from Aceternity UI's marquee composition, but static: the chips
- * sit in a centred rail that wraps, so nothing scrolls on its own and no
- * item is ever hidden.
+ * Adapted from Aceternity UI's marquee composition. The second group
+ * fills the rail while the first group slides out of view.
  */
+import Icon from '../ui/Icon.astro';
+
 interface Props {
   items: string[];
-  label?: string;
+  label: string;
+  pauseLabel: string;
 }
 
-const { items, label } = Astro.props;
+const { items, label, pauseLabel } = Astro.props;
 ---
 
-<div class="marquee" role="group" aria-label={label}>
-  <div class="marquee__track">
-    <div class="marquee__group">
-      {items.map((item) => (
-        <span class="marquee__chip">{item}</span>
+<div class="marquee">
+  <div class="marquee__rail" role="group" aria-label={label} tabindex="0">
+    <div class="marquee__track">
+      {[false, true].map((duplicate) => (
+        <div class="marquee__group" aria-hidden={duplicate ? 'true' : undefined}>
+          {items.map((item) => (
+            <span class="marquee__chip">{item}</span>
+          ))}
+        </div>
       ))}
     </div>
   </div>
+  <button class="marquee__toggle" type="button" aria-label={pauseLabel} aria-pressed="false">
+    <svg class="marquee__pause" width="16" height="16" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+      <path d="M9 5v14M15 5v14" />
+    </svg>
+    <Icon class="marquee__play" name="play" size={16} />
+  </button>
 </div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.marquee').forEach((marquee) => {
+    const toggle = marquee.querySelector<HTMLButtonElement>('.marquee__toggle');
+    if (!toggle) return;
+
+    marquee.dataset.playing = 'true';
+    toggle.addEventListener('click', () => {
+      const paused = marquee.dataset.playing === 'true';
+      marquee.dataset.playing = String(!paused);
+      toggle.setAttribute('aria-pressed', String(paused));
+    });
+  });
+</script>

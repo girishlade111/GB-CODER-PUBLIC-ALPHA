@@ -5,16 +5,71 @@
 // (`ui/code-sample.tsx`) and the copy control is the shadcn/ui button
 // (`ui/button.tsx`). All three read the same marketing tokens, so the island
 // matches the surrounding pages exactly.
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import type { StudioContent } from "../i18n/studio";
 import { StudioTabs, type StudioTabItem } from "./ui/studio-tabs";
 import { CodeSample } from "./ui/code-sample";
+import { FileTree, type FileNode, type SampleFile } from "./ui/file-tree";
 import { Icon } from "./ui/icon";
 
 interface Props {
   labels: StudioContent;
   /** Localized label for the link that opens the real workspace. */
   launchLabel: string;
+  explorerLabel: string;
+}
+
+function WorkspaceExample({
+  files,
+  initialFile,
+  labels,
+  explorerLabel,
+  children,
+}: {
+  files: FileNode[];
+  initialFile: SampleFile;
+  labels: StudioContent;
+  explorerLabel: string;
+  children: ReactNode;
+}) {
+  const [file, setFile] = useState(initialFile);
+  const [explorerOpen, setExplorerOpen] = useState(false);
+  const explorerId = useId();
+
+  return (
+    <div className="studio-stage">
+      <aside className="studio-explorer" aria-label={explorerLabel}>
+        <div className="studio-explorer__heading">{explorerLabel}</div>
+        <button
+          className="studio-explorer__toggle"
+          type="button"
+          aria-expanded={explorerOpen}
+          aria-controls={explorerId}
+          onClick={() => setExplorerOpen((open) => !open)}
+        >
+          <Icon name="folder" size={16} />
+          <span>{explorerLabel}</span>
+          <Icon name="chevron-down" size={14} className="studio-tree__chevron" />
+        </button>
+        <div id={explorerId} className="studio-explorer__files" data-open={explorerOpen}>
+          <FileTree nodes={files} selectedFile={file} onSelect={setFile} />
+        </div>
+      </aside>
+      <CodeSample
+        key={file.name}
+        code={file.code}
+        filename={file.name}
+        copyLabel={labels.copy}
+        copiedLabel={labels.copied}
+        errorLabel={labels.error}
+        icon={<Icon name={file.icon} size={13} />}
+      />
+      <div className="sample-output">
+        <OutputToolbar previewLabel={labels.preview} />
+        <div className="output-canvas">{children}</div>
+      </div>
+    </div>
+  );
 }
 
 function FrameworkExample({
@@ -59,29 +114,28 @@ function FrameworkExample({
   );
 }
 
-function buildItems(labels: StudioContent, launchLabel: string): StudioTabItem[] {
-  const htmlCode = `<main class="idea">
+function buildItems(labels: StudioContent, launchLabel: string, explorerLabel: string): StudioTabItem[] {
+  const html: SampleFile = {
+    name: "index.html",
+    icon: "code",
+    code: `<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GB Coder</title>
+<link rel="stylesheet" href="./styles/idea.css">
+
+<main class="idea">
   <div class="badge">${labels.sampleBadge}</div>
   <h1>${labels.sampleTitle}</h1>
   <p>${labels.sampleText}</p>
   <a href="/app/projects">${labels.sampleLink}</a>
-</main>
+</main>`,
+  };
 
-<style>
-  .idea {
-    background: #edf3ef;
-    color: #122820;
-    padding: 36px;
-    border-radius: 12px;
-  }
-  .badge {
-    color: #136240;
-    font-size: 11px;
-    font-weight: 700;
-  }
-</style>`;
-
-  const reactCode = `import { useState } from 'react';
+  const reactApp: SampleFile = {
+    name: "App.jsx",
+    icon: "code",
+    code: `import React, { useState } from 'react';
 
 export default function App() {
   const [count, setCount] = useState(0);
@@ -98,9 +152,13 @@ export default function App() {
       </div>
     </main>
   );
-}`;
+}`,
+  };
 
-  const vueCode = `<script setup>
+  const vueApp: SampleFile = {
+    name: "App.vue",
+    icon: "code",
+    code: `<script setup>
 import { ref } from 'vue';
 const count = ref(0);
 const reset = () => count.value = 0;
@@ -115,98 +173,165 @@ const reset = () => count.value = 0;
       <button @click="reset">${labels.resetLabel}</button>
     </div>
   </main>
-</template>`;
+</template>`,
+  };
+
+  const counterStyles: SampleFile = {
+    name: "styles.css",
+    icon: "file",
+    code: `.card {
+  max-width: 28rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: #edf3ef;
+}
+.pill { color: #136240; font-weight: 700; }
+.row { display: flex; flex-wrap: wrap; gap: 0.75rem; }`,
+  };
+
+  const reactFiles: FileNode[] = [
+    {
+      name: "src",
+      children: [
+        reactApp,
+        {
+          name: "main.jsx",
+          icon: "code",
+          code: `import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.jsx';
+import './styles.css';
+
+createRoot(document.getElementById('root')).render(<App />);`,
+        },
+        counterStyles,
+      ],
+    },
+    frameworkIndex("main.jsx"),
+    packageFile({ react: "^18.3.1", "react-dom": "^18.3.1" }),
+  ];
+
+  const vueFiles: FileNode[] = [
+    {
+      name: "src",
+      children: [
+        vueApp,
+        {
+          name: "main.js",
+          icon: "code",
+          code: `import { createApp } from 'vue';
+import App from './App.vue';
+import './styles.css';
+
+createApp(App).mount('#root');`,
+        },
+        counterStyles,
+      ],
+    },
+    frameworkIndex("main.js"),
+    packageFile({ vue: "^3.5.0" }, { "@vitejs/plugin-vue": "^5.1.4" }),
+    {
+      name: "vite.config.js",
+      icon: "code",
+      code: `import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({ plugins: [vue()] });`,
+    },
+  ];
 
   return [
     {
       id: "html",
       title: "HTML + CSS",
       panel: (
-        <div className="studio-stage">
-          <CodeSample
-            code={htmlCode}
-            filename="index.html"
-            copyLabel={labels.copy}
-            copiedLabel={labels.copied}
-            errorLabel={labels.error}
-            icon={<Icon name="file" size={13} />}
-          />
-          <div className="sample-output">
-            <OutputToolbar previewLabel={labels.preview} />
-            <div className="output-canvas">
-              <div className="idea-art">
-                <span className="idea-orbit" aria-hidden="true">
-                  <span />
-                </span>
-                <h2>{labels.sampleTitle}</h2>
-                <p>{labels.sampleText}</p>
-                <a href="/app/projects" className="sample-launch">
-                  {labels.sampleLink}
-                  <Icon name="arrow-right" size={12} />
-                </a>
-              </div>
-            </div>
+        <WorkspaceExample
+          labels={labels}
+          explorerLabel={explorerLabel}
+          initialFile={html}
+          files={[
+            {
+              name: "styles",
+              children: [
+                {
+                  name: "idea.css",
+                  icon: "file",
+                  code: `.idea {
+  background: #edf3ef;
+  color: #122820;
+  padding: 36px;
+  border-radius: 12px;
+}
+.badge {
+  color: #136240;
+  font-size: 11px;
+  font-weight: 700;
+}`,
+                },
+              ],
+            },
+            html,
+          ]}
+        >
+          <div className="idea-art">
+            <span className="idea-orbit" aria-hidden="true"><span /></span>
+            <h2>{labels.sampleTitle}</h2>
+            <p>{labels.sampleText}</p>
+            <a href="/app/projects" className="sample-launch">
+              {labels.sampleLink}
+              <Icon name="arrow-right" size={12} />
+            </a>
           </div>
-        </div>
+        </WorkspaceExample>
       ),
     },
-    {
-      id: "react",
-      title: "React",
+    ...[
+      { id: "react", title: "React", framework: "React 18", files: reactFiles, app: reactApp },
+      { id: "vue", title: "Vue", framework: "Vue 3", files: vueFiles, app: vueApp },
+    ].map(({ id, title, framework, files, app }) => ({
+      id,
+      title,
       panel: (
-        <div className="studio-stage">
-          <CodeSample
-            code={reactCode}
-            filename="App.jsx"
-            copyLabel={labels.copy}
-            copiedLabel={labels.copied}
-            errorLabel={labels.error}
-            icon={<Icon name="code" size={13} />}
+        <WorkspaceExample labels={labels} explorerLabel={explorerLabel} files={files} initialFile={app}>
+          <FrameworkExample
+            framework={framework}
+            title={labels.frameworkTitle}
+            countLabel={labels.countLabel}
+            resetLabel={labels.resetLabel}
+            openLabel={launchLabel}
           />
-          <div className="sample-output">
-            <OutputToolbar previewLabel={labels.preview} />
-            <div className="output-canvas">
-              <FrameworkExample
-                framework="React 18"
-                title={labels.frameworkTitle}
-                countLabel={labels.countLabel}
-                resetLabel={labels.resetLabel}
-                openLabel={launchLabel}
-              />
-            </div>
-          </div>
-        </div>
+        </WorkspaceExample>
       ),
-    },
-    {
-      id: "vue",
-      title: "Vue",
-      panel: (
-        <div className="studio-stage">
-          <CodeSample
-            code={vueCode}
-            filename="App.vue"
-            copyLabel={labels.copy}
-            copiedLabel={labels.copied}
-            errorLabel={labels.error}
-            icon={<Icon name="code" size={13} />}
-          />
-          <div className="sample-output">
-            <OutputToolbar previewLabel={labels.preview} />
-            <div className="output-canvas">
-              <FrameworkExample
-                framework="Vue 3"
-                title={labels.frameworkTitle}
-                countLabel={labels.countLabel}
-                resetLabel={labels.resetLabel}
-                openLabel={launchLabel}
-              />
-            </div>
-          </div>
-        </div>
-      ),
-    },
+    })),
   ];
+}
+
+function frameworkIndex(entry: string): SampleFile {
+  return {
+    name: "index.html",
+    icon: "code",
+    code: `<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GB Coder</title>
+<div id="root"></div>
+<script type="module" src="/src/${entry}"></script>`,
+  };
+}
+
+function packageFile(dependencies: Record<string, string>, plugins?: Record<string, string>): SampleFile {
+  return {
+    name: "package.json",
+    icon: "package",
+    code: JSON.stringify({
+      private: true,
+      type: "module",
+      scripts: { dev: "vite" },
+      dependencies,
+      devDependencies: { vite: "^5.4.0", ...plugins },
+    }, null, 2),
+  };
 }
 
 function OutputToolbar({ previewLabel }: { previewLabel: string }) {
@@ -226,8 +351,8 @@ function OutputToolbar({ previewLabel }: { previewLabel: string }) {
   );
 }
 
-export default function StudioDemo({ labels, launchLabel }: Props) {
-  const items = useMemo(() => buildItems(labels, launchLabel), [labels, launchLabel]);
+export default function StudioDemo({ labels, launchLabel, explorerLabel }: Props) {
+  const items = useMemo(() => buildItems(labels, launchLabel, explorerLabel), [labels, launchLabel, explorerLabel]);
 
   return (
     <StudioTabs

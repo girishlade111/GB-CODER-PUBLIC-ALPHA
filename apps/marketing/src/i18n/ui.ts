@@ -8,6 +8,7 @@ export interface UiTranslations {
   explorerLabel: string;
   palettePlaceholder: string;
   marqueeLabel: string;
+  marqueePause: string;
   insideStudio: string;
   insideStudioSub: string;
   featuredArticle: string;
@@ -34,6 +35,7 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     explorerLabel: 'Explorer',
     palettePlaceholder: 'Search files, commands, docs',
     marqueeLabel: 'Built on',
+    marqueePause: 'Pause animation',
     insideStudio: 'Inside the studio.',
     insideStudioSub:
       'The workspace you actually work in: a project tree, one keystroke to anything, and a preview that stays in step with your source.',
@@ -59,6 +61,7 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     explorerLabel: 'Explorador',
     palettePlaceholder: 'Busca archivos, comandos, documentación',
     marqueeLabel: 'Construido con',
+    marqueePause: 'Pausar animación',
     insideStudio: 'Dentro del estudio.',
     insideStudioSub:
       'El espacio de trabajo real: un árbol de proyecto, una tecla para llegar a cualquier cosa y una vista previa que sigue al código.',
@@ -84,6 +87,7 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     explorerLabel: 'Verkenner',
     palettePlaceholder: 'Zoek bestanden, commando’s, documentatie',
     marqueeLabel: 'Gebouwd op',
+    marqueePause: 'Animatie pauzeren',
     insideStudio: 'Binnen de studio.',
     insideStudioSub:
       'De werksplek waar je echt in werkt: een projectboom, één toetscombinatie naar alles, en een preview die met je broncode meebeweegt.',
@@ -109,6 +113,7 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     explorerLabel: 'Explorateur',
     palettePlaceholder: 'Rechercher fichiers, commandes, documentation',
     marqueeLabel: 'Propulsé par',
+    marqueePause: 'Mettre l’animation en pause',
     insideStudio: 'Dans le studio.',
     insideStudioSub:
       'L’espace de travail où vous travaillez vraiment : une arborescence de projet, un raccourci vers tout, et un aperçu qui suit votre source.',
@@ -134,6 +139,7 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     explorerLabel: 'エクスプローラー',
     palettePlaceholder: 'ファイル・コマンド・ドキュメントを検索',
     marqueeLabel: '採用技術',
+    marqueePause: 'アニメーションを一時停止',
     insideStudio: 'スタジオの中身。',
     insideStudioSub:
       '実際に作業するワークスペース。プロジェクトツリー、ワンキー操作の検索、ソースと常に同期するプレビュー。',
@@ -159,6 +165,7 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     explorerLabel: '탐색기',
     palettePlaceholder: '파일, 명령, 문서 검색',
     marqueeLabel: '구성 기술',
+    marqueePause: '애니메이션 일시 정지',
     insideStudio: '스튜디오 내부.',
     insideStudioSub:
       '실제로 일하는 작업 공간. 프로젝트 트리, 한 번의 입력으로 찾는 검색, 그리고 소스와 함께 움직이는 미리보기.',
@@ -184,6 +191,7 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     explorerLabel: '资源管理器',
     palettePlaceholder: '搜索文件、命令与文档',
     marqueeLabel: '基于',
+    marqueePause: '暂停动画',
     insideStudio: '工作室内部。',
     insideStudioSub:
       '真正的工作空间：项目文件树、一次按键即可搜索，以及与源码同步的实时预览。',
@@ -209,6 +217,7 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     explorerLabel: 'Проводник',
     palettePlaceholder: 'Поиск файлов, команд, документации',
     marqueeLabel: 'Работает на',
+    marqueePause: 'Приостановить анимацию',
     insideStudio: 'Внутри студии.',
     insideStudioSub:
       'Рабочее пространство, где вы действительно работаете: дерево проекта, один ярлык — и всё найдено, а предпросмотр идёт в ногу с исходниками.',
@@ -234,6 +243,7 @@ export const UI_TRANSLATIONS: Record<string, UiTranslations> = {
     explorerLabel: 'Explorador',
     palettePlaceholder: 'Buscar arquivos, comandos, documentação',
     marqueeLabel: 'Construído com',
+    marqueePause: 'Pausar animação',
     insideStudio: 'Dentro do estúdio.',
     insideStudioSub:
       'O espaço de trabalho onde você realmente trabalha: uma árvore de projeto, um atalho para tudo e uma pré-visualização que acompanha o código.',

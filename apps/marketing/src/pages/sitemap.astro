@@ -214,7 +214,7 @@ const articleSlugs = getAllArticleSlugs();
   #sitemapSearch:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(23, 102, 68, 0.1);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ring) 12%, transparent);
   }
   .sitemap-container {
     max-width: 1200px;
@@ -224,12 +224,12 @@ const articleSlugs = getAllArticleSlugs();
   }
   .sitemap-card {
     border-top: 1px solid var(--border);
-    padding: 3rem 0;
+    padding: clamp(2.25rem, 5vw, 3rem) 0;
   }
   .card-header {
     display: flex;
     align-items: flex-start;
-    gap: 1.1rem;
+    gap: clamp(0.9rem, 2vw, 1.1rem);
     margin-bottom: 2rem;
   }
   .group-icon {
@@ -256,7 +256,7 @@ const articleSlugs = getAllArticleSlugs();
   .sitemap-links-grid {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
     gap: 0 2.5rem;
     padding: 0;
     margin: 0;
@@ -308,7 +308,7 @@ const articleSlugs = getAllArticleSlugs();
   }
   .languages-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
     gap: 0 2.5rem;
   }
   .lang-box {
@@ -352,12 +352,4 @@ const articleSlugs = getAllArticleSlugs();
     text-decoration: underline;
   }
 
-  @media (max-width: 700px) {
-    .sitemap-card {
-      padding: 2.25rem 0;
-    }
-    .card-header {
-      gap: 0.9rem;
-    }
-  }
 </style>
