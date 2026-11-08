@@ -109,6 +109,7 @@ export const GitHubRepoBrowserModal: React.FC<GitHubRepoBrowserModalProps> = ({
       if (stored && !cancelled) {
         setToken(stored);
         setIsVerifyingToken(true);
+        setIsLoadingRepos(true);
         try {
           const [userRecord, reposList] = await Promise.all([
             fetchViewer(stored),
@@ -124,7 +125,10 @@ export const GitHubRepoBrowserModal: React.FC<GitHubRepoBrowserModalProps> = ({
             setErrorMessage('Saved GitHub token could not be verified. Please re-enter.');
           }
         } finally {
-          if (!cancelled) setIsVerifyingToken(false);
+          if (!cancelled) {
+            setIsVerifyingToken(false);
+            setIsLoadingRepos(false);
+          }
         }
       }
     };
@@ -147,6 +151,7 @@ export const GitHubRepoBrowserModal: React.FC<GitHubRepoBrowserModalProps> = ({
 
     setErrorMessage(null);
     setIsVerifyingToken(true);
+    setIsLoadingRepos(true);
     try {
       const [userRecord, reposList] = await Promise.all([
         fetchViewer(cleanToken),
@@ -161,6 +166,7 @@ export const GitHubRepoBrowserModal: React.FC<GitHubRepoBrowserModalProps> = ({
       setErrorMessage(message);
     } finally {
       setIsVerifyingToken(false);
+      setIsLoadingRepos(false);
     }
   };
 
