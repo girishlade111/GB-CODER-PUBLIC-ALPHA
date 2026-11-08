@@ -13,13 +13,12 @@
  * - High-contrast Lucide icons.
  * - Intent-based token styling.
  */
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
   Github,
   Search,
   Lock,
-  GitBranch,
   HardDrive,
   Cloud,
   Loader2,
@@ -29,7 +28,6 @@ import {
   Eye,
   EyeOff,
   FolderDown,
-  RotateCcw,
 } from 'lucide-react';
 import {
   listRepos,
@@ -50,6 +48,7 @@ import {
 import { createProject, EditorStyle } from '../../services/projects/projectDatabase';
 import { createCloudProject } from '../../services/projects/cloudProjectService';
 import { inferProjectType, inferEntry } from '../../services/projectImportService';
+import { languageForPath, ProjectFile } from '../../types/files';
 import { useAuth } from '../../features/auth/useAuth';
 import toast from 'react-hot-toast';
 
