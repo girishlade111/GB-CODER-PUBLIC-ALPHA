@@ -27,14 +27,11 @@ import {
   createRepository,
   fetchViewer,
   GitHubUser,
-  buildPushableFiles,
 } from '../../services/githubSyncService';
 import {
   readCredential,
   saveCredential,
-  forgetCredential,
   describeCredential,
-  isEncryptionAvailable,
 } from '../../services/credentialStore';
 import { ProjectRecord, readProjectFiles } from '../../services/projects/projectDatabase';
 import { MultiFileProject } from '../../types/files';
