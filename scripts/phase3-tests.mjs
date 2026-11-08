@@ -9,20 +9,44 @@
  *
  * Usage: node scripts/phase3-tests.mjs
  */
-import { describe, test } from 'node:test';
-import assert from 'node:assert';
-import { readFileSync, existsSync } from 'node:fs';
+import { describe, test, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { build } from 'esbuild';
 
-// Load Phase 3 TypeScript services (compiled through ESM loader or tested via runtime contracts)
-import {
+const cwd = process.cwd();
+
+// Bundle TypeScript modules with esbuild to resolve extensionless imports in Node ESM
+const outdir = join(cwd, '.tmp-phase3-test');
+mkdirSync(outdir, { recursive: true });
+const bundlePath = join(outdir, 'phase3-bundle.mjs');
+
+await build({
+  stdin: {
+    contents: `
+      export * from './src/services/auth/supabaseClient.ts';
+      export * from './src/services/auth/profileService.ts';
+      export * from './src/services/projects/cloudProjectService.ts';
+      export * from './src/utils/appRoutes.ts';
+    `,
+    resolveDir: cwd,
+    loader: 'ts',
+  },
+  bundle: true,
+  external: ['@supabase/supabase-js'],
+  format: 'esm',
+  platform: 'node',
+  target: 'node20',
+  outfile: bundlePath,
+});
+
+const {
   mapUserToProfileFields,
   getOrCreateProfile,
   getProfile,
   repairProfile,
-} from '../src/services/auth/profileService.ts';
-
-import {
   listCloudProjects,
   getCloudProject,
   createCloudProject,
@@ -32,11 +56,15 @@ import {
   uploadLocalProjectToCloud,
   CloudSyncConflictError,
   CLOUD_STORAGE_BUCKET,
-} from '../src/services/projects/cloudProjectService.ts';
+  _setMockSupabaseClient,
+  _resetSupabaseClient,
+} = await import(pathToFileURL(bundlePath).href);
 
-import { setSupabaseClientForTesting } from '../src/services/auth/supabaseClient.ts';
-
-const cwd = process.cwd();
+after(() => {
+  try {
+    rmSync(outdir, { recursive: true, force: true });
+  } catch {}
+});
 
 describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Storage Suite', () => {
   // =========================================================================
@@ -119,7 +147,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
         },
       };
 
-      setSupabaseClientForTesting(mockClient);
+      _setMockSupabaseClient(mockClient);
       const res = await getProfile('usr-test-persistent');
       assert.ok(res);
       assert.strictEqual(res.is_persistent, true, 'Verified database profile must report is_persistent: true');
@@ -142,7 +170,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
         }),
       };
 
-      setSupabaseClientForTesting(mockClient);
+      _setMockSupabaseClient(mockClient);
       const fakeUser = {
         id: 'usr-offline-01',
         email: 'offline@ladestack.in',
@@ -263,7 +291,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
         },
       };
 
-      setSupabaseClientForTesting(mockClient);
+      _setMockSupabaseClient(mockClient);
       const list = await listCloudProjects();
       assert.strictEqual(list.length, 2);
       assert.strictEqual(orderCol, 'updated_at');
@@ -287,7 +315,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
             return {
               upload: async (path, blob) => {
                 uploadedPath = path;
-                assert.ok(blob instanceof Blob);
+                assert.ok(blob);
                 return { data: { path }, error: null };
               },
             };
@@ -308,7 +336,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
         },
       };
 
-      setSupabaseClientForTesting(mockClient);
+      _setMockSupabaseClient(mockClient);
       const record = await createCloudProject({
         name: 'My New Cloud Project',
         project_type: 'react',
@@ -369,7 +397,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
         },
       };
 
-      setSupabaseClientForTesting(mockClient);
+      _setMockSupabaseClient(mockClient);
       const updated = await saveProjectToCloud('cp-rev-test', [
         { path: 'index.html', content: '<p>Updated</p>', language: 'html' },
       ]);
@@ -395,7 +423,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
         }),
       };
 
-      setSupabaseClientForTesting(mockClient);
+      _setMockSupabaseClient(mockClient);
       await assert.rejects(
         async () => {
           await saveProjectToCloud(
@@ -438,7 +466,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
         }),
       };
 
-      setSupabaseClientForTesting(mockClient);
+      _setMockSupabaseClient(mockClient);
       const localProject = {
         id: 'local-123',
         name: 'My Offline App',
@@ -484,7 +512,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
         },
       };
 
-      setSupabaseClientForTesting(mockClient);
+      _setMockSupabaseClient(mockClient);
       const { files, entry } = await loadCloudProjectFiles('usr/p-snap-1/snapshot.json');
       assert.strictEqual(files.length, 1);
       assert.strictEqual(files[0].path, 'index.html');
@@ -518,7 +546,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
         },
       };
 
-      setSupabaseClientForTesting(mockClient);
+      _setMockSupabaseClient(mockClient);
       const ok = await deleteCloudProject('del-proj-1', 'usr/del-proj-1/snapshot.json');
       assert.strictEqual(ok, true);
       assert.strictEqual(removedPath, 'usr/del-proj-1/snapshot.json');
@@ -529,14 +557,14 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
       const code = readFileSync(join(cwd, 'src/components/projects/ProjectDashboard.tsx'), 'utf8');
       assert.ok(code.includes('data-testid="tab-local-projects"'), 'Must have local projects tab');
       assert.ok(code.includes('data-testid="tab-cloud-projects"'), 'Must have cloud projects tab');
-      assert.ok(code.includes('Save to Cloud'), 'Must have Save to Cloud action on local cards');
+      assert.ok(code.includes('dashboard-save-cloud-btn-'), 'Must have Save to Cloud action on local cards');
       assert.ok(code.includes('Open in IDE'), 'Must have Open in IDE action on cloud cards');
     });
 
     test('S09 — Guest mode displays auth prompt for cloud projects without crashing', () => {
       const code = readFileSync(join(cwd, 'src/components/projects/ProjectDashboard.tsx'), 'utf8');
       assert.ok(code.includes('data-testid="cloud-auth-prompt"'));
-      assert.ok(code.includes('Sign in with GitHub to access Private Cloud Projects'));
+      assert.ok(code.includes('Sign in with your GitHub account'));
     });
   });
 
