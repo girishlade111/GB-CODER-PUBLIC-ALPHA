@@ -72,3 +72,4 @@ For developers who prefer not to install an app or who work in restricted organi
 - Token is verified via GET https://api.github.com/user.
 - Token is encrypted in browser memory via WebCrypto and saved to IndexedDB (credentialStore).
 - Tokens are never logged, printed, or sent to backend telemetry.
+
