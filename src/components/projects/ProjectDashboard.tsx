@@ -38,6 +38,8 @@ import {
   deleteCloudProject,
   loadCloudProjectFiles,
   uploadLocalProjectToCloud,
+  saveProjectToCloud,
+  getCloudProject,
   CloudProjectRecord,
 } from '../../services/projects/cloudProjectService';
 import { createZipBlob, downloadBlob, zipFilename } from '../../services/projectArchiveService';
@@ -363,8 +365,22 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
     const toastId = toast.loading(`Saving "${project.name}" to private Supabase cloud...`);
     try {
       const files = await readProjectFiles(project.id);
-      await uploadLocalProjectToCloud(project, files);
-      toast.success(`Saved "${project.name}" to Private Cloud Projects.`, { id: toastId });
+      const existingCloud =
+        cloudProjects.find((cp) => cp.id === project.id) ||
+        (await getCloudProject(project.id).catch(() => null));
+      if (existingCloud) {
+        const updated = await saveProjectToCloud(existingCloud.id, files, {
+          expectedRevision: existingCloud.cloud_revision,
+          name: project.name,
+        });
+        toast.success(
+          `Updated "${project.name}" in Private Cloud (Rev ${updated.cloud_revision}).`,
+          { id: toastId },
+        );
+      } else {
+        await uploadLocalProjectToCloud(project, files);
+        toast.success(`Saved "${project.name}" to Private Cloud Projects.`, { id: toastId });
+      }
       void refreshCloudProjects();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to save project to cloud.';

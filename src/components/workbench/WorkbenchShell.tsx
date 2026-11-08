@@ -47,6 +47,9 @@ interface WorkbenchShellProps {
   onToggleSplitTerminal?: () => void;
   cursor?: { line: number; column: number };
   activeLanguage?: string | null;
+  onCloudSync?: () => void;
+  isCloudSyncing?: boolean;
+  cloudRevision?: number | null;
 }
 
 export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
@@ -72,6 +75,9 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
   onToggleSplitTerminal,
   cursor,
   activeLanguage,
+  onCloudSync,
+  isCloudSyncing,
+  cloudRevision,
 }) => {
   // Viewport width tracking for responsive behavior
   const [viewportWidth, setViewportWidth] = useState<number>(() => {
@@ -226,6 +232,9 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
           onOpenProjects={onOpenProjects}
           onExit={onExit}
           webcontainerState={webcontainerState}
+          onCloudSync={onCloudSync}
+          isCloudSyncing={isCloudSyncing}
+          cloudRevision={cloudRevision}
         />
       ) : (
         <div
@@ -257,6 +266,9 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
               onOpenProjects={onOpenProjects}
               onExit={onExit}
               webcontainerState={webcontainerState}
+              onCloudSync={onCloudSync}
+              isCloudSyncing={isCloudSyncing}
+              cloudRevision={cloudRevision}
             />
           </div>
         </div>

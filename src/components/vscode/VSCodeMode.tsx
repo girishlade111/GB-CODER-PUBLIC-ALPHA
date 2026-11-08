@@ -16,6 +16,7 @@ import {
   ChevronRight,
   RotateCcw,
   Sliders,
+  Cloud,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import FileTreeView, { FileTreeViewHandle } from './FileTreeView';
@@ -57,6 +58,12 @@ import { codeAssistService } from '../../services/ai/codeAssistService';
 import { Snapshot } from '../../services/snapshotService';
 import { editorConflictService, type ExternalFileConflict } from '../../services/editor/editorConflictService';
 import { saveProjectFiles } from '../../services/projects/projectDatabase';
+import { useAuth } from '../../features/auth/useAuth';
+import {
+  getCloudProject,
+  saveProjectToCloud,
+  createCloudProject,
+} from '../../services/projects/cloudProjectService';
 
 // Phase 2 Workbench Architecture Imports
 import { WorkbenchShell } from '../workbench/WorkbenchShell';
@@ -173,6 +180,30 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   const [activePath, setActivePath] = useState<string | null>(restoredView.activePath);
   const hasHydratedViewRef = useRef(project.files.length > 0 && restoredView.openPaths.length > 0);
   const [dirtyPaths, setDirtyPaths] = useState<Set<string>>(new Set());
+
+  const { user: authUser } = useAuth();
+  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
+  const [cloudRevision, setCloudRevision] = useState<number | null>(null);
+
+  useEffect(() => {
+    let isCancelled = false;
+    if (!activeProjectId || !authUser) {
+      setCloudRevision(null);
+      return;
+    }
+    void getCloudProject(activeProjectId)
+      .then((record) => {
+        if (!isCancelled && record) {
+          setCloudRevision(record.cloud_revision);
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) setCloudRevision(null);
+      });
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeProjectId, authUser]);
 
   // Phase 2 Workbench Layout State
   const [workbenchLayout, setWorkbenchLayout] = useState<WorkbenchLayoutState>(() => loadWorkbenchLayout());
@@ -1394,6 +1425,53 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       });
   }, [hasFiles, project.files, project.dependencies, project.projectType, activeProjectId]);
 
+  const handleCloudSync = useCallback(async () => {
+    if (!authUser) {
+      toast.error('Sign in with GitHub to save projects to Private Cloud.');
+      return;
+    }
+    if (!activeProjectId) {
+      toast.error('No active project to sync.');
+      return;
+    }
+
+    setIsCloudSyncing(true);
+    const toastId = toast.loading('Syncing project to Private Cloud...');
+    try {
+      await saveProjectFiles(activeProjectId, project.files);
+
+      const existing = await getCloudProject(activeProjectId);
+      let updated;
+      if (existing) {
+        updated = await saveProjectToCloud(existing.id, project.files, {
+          expectedRevision: existing.cloud_revision,
+          name: projectName,
+        });
+        setCloudRevision(updated.cloud_revision);
+        toast.success(`Synced "${projectName}" to Private Cloud (Rev ${updated.cloud_revision}).`, {
+          id: toastId,
+        });
+      } else {
+        updated = await createCloudProject({
+          name: projectName,
+          project_type: 'react',
+          editor_style: 'vscode',
+          entry: 'index.html',
+          files: project.files,
+        });
+        setCloudRevision(updated.cloud_revision);
+        toast.success(`Saved "${projectName}" to Private Cloud (Rev 1).`, {
+          id: toastId,
+        });
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to sync to Private Cloud.';
+      toast.error(msg, { id: toastId });
+    } finally {
+      setIsCloudSyncing(false);
+    }
+  }, [authUser, activeProjectId, project.files, projectName]);
+
   // Render view content for any dockable container
   const renderViewContent = useCallback(
     (viewId: ViewId, _containerId: ContainerId): React.ReactNode => {
@@ -1757,6 +1835,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenProjects={onOpenProjects}
         onExit={onExit}
+        onCloudSync={handleCloudSync}
+        isCloudSyncing={isCloudSyncing}
+        cloudRevision={cloudRevision}
         onOpenQuickOpen={openQuickOpen}
         onOpenCommandPalette={openCommandPalette}
         renderViewContent={renderViewContent}
@@ -2182,6 +2263,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             section: 'Server',
             icon: <RotateCcw className="w-4 h-4 text-amber-400" />,
             perform: () => void handleRestartDevServer(),
+          },
+          {
+            id: 'workbench.action.cloudSync',
+            title: 'Cloud: Save / Sync to Private Cloud',
+            section: 'Cloud',
+            icon: <Cloud className="w-4 h-4 text-accent" />,
+            perform: () => void handleCloudSync(),
           },
         ]}
         files={project.files}

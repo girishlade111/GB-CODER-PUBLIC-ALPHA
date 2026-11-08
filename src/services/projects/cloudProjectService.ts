@@ -69,6 +69,7 @@ export interface SaveCloudProjectOptions {
   entry?: string;
   expectedRevision?: number;
   forceOverwrite?: boolean;
+  attemptId?: string;
 }
 
 export class CloudSyncConflictError extends Error {
@@ -241,7 +242,8 @@ export const saveProjectToCloud = async (
   }
 
   const nextRevision = existing.cloud_revision + 1;
-  const newStoragePath = `${existing.owner_id}/${cloudProjectId}/revisions/${nextRevision}.json`;
+  const attemptSuffix = options?.attemptId ? `-${options.attemptId}` : '';
+  const newStoragePath = `${existing.owner_id}/${cloudProjectId}/revisions/${nextRevision}${attemptSuffix}.json`;
 
   const snapshot: CloudProjectSnapshot = {
     version: 1,

@@ -13,6 +13,7 @@ import {
   Loader2,
   Check,
   ChevronDown,
+  Cloud,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Tooltip from '../ui/Tooltip';
@@ -39,6 +40,9 @@ interface WorkbenchTitleBarProps {
     serverPort: number | null;
     serverUrl?: string | null;
   };
+  onCloudSync?: () => void;
+  isCloudSyncing?: boolean;
+  cloudRevision?: number | null;
 }
 
 const PRESET_LABELS: Record<LayoutPresetId, { label: string; desc: string }> = {
@@ -62,6 +66,9 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
   onOpenProjects,
   onExit,
   webcontainerState,
+  onCloudSync,
+  isCloudSyncing,
+  cloudRevision,
 }) => {
   const [showPresetsMenu, setShowPresetsMenu] = useState(false);
 
@@ -346,6 +353,36 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
             <Share2 className="h-3.5 w-3.5" />
           </button>
         </Tooltip>
+
+        {/* Cloud Sync Button */}
+        {onCloudSync && (
+          <Tooltip
+            label={
+              cloudRevision !== null && cloudRevision !== undefined
+                ? `Save to Private Cloud (Current: Rev ${cloudRevision})`
+                : 'Save to Private Cloud'
+            }
+            side="bottom"
+          >
+            <button
+              type="button"
+              onClick={onCloudSync}
+              disabled={isCloudSyncing}
+              aria-label="Save to Private Cloud"
+              data-testid="workbench-cloud-sync-btn"
+              className="inline-flex items-center gap-1 rounded p-1 text-[var(--muted-foreground)] hover:text-accent hover:bg-white/5 transition-colors disabled:opacity-50"
+            >
+              {isCloudSyncing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
+              ) : (
+                <Cloud className="h-3.5 w-3.5" />
+              )}
+              {cloudRevision !== null && cloudRevision !== undefined && (
+                <span className="text-[10px] font-mono text-accent">r{cloudRevision}</span>
+              )}
+            </button>
+          </Tooltip>
+        )}
 
         {/* User Account Menu */}
         <UserAccountMenu compact={true} />
