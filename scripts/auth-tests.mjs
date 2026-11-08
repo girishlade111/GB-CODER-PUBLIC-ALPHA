@@ -48,6 +48,7 @@ const services = await import(pathToFileURL(bundlePath).href);
 const {
   isValidConfigValue,
   isValidHttpUrl,
+  isServiceRoleOrSecretKey,
   getSupabaseConfig,
   isSupabaseConfigured,
   getSupabaseClient,
@@ -106,6 +107,23 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
       assert.strictEqual(isValidConfigValue('placeholder_key'), false);
       assert.strictEqual(isValidConfigValue('<your-key>'), false);
       assert.strictEqual(isValidConfigValue('valid_anon_key_12345'), true);
+      assert.strictEqual(isValidConfigValue('sb_publishable_valid_key_12345'), true);
+      assert.strictEqual(isValidConfigValue('sb_secret_admin_key'), false);
+      assert.strictEqual(isValidConfigValue('service_role_secret'), false);
+
+      assert.strictEqual(isServiceRoleOrSecretKey('sb_secret_test'), true);
+      assert.strictEqual(isServiceRoleOrSecretKey('sbs_test_key'), true);
+      assert.strictEqual(isServiceRoleOrSecretKey('my_service_role_key'), true);
+      assert.strictEqual(isServiceRoleOrSecretKey('sb_publishable_test'), false);
+      assert.strictEqual(isServiceRoleOrSecretKey('valid_anon_key_12345'), false);
+
+      // Verify JWT role inspection
+      const serviceRoleJwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UifQ.sig';
+      const anonJwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIn0.sig';
+      assert.strictEqual(isServiceRoleOrSecretKey(serviceRoleJwt), true);
+      assert.strictEqual(isValidConfigValue(serviceRoleJwt), false);
+      assert.strictEqual(isServiceRoleOrSecretKey(anonJwt), false);
+      assert.strictEqual(isValidConfigValue(anonJwt), true);
 
       assert.strictEqual(isValidHttpUrl('not-a-url'), false);
       assert.strictEqual(isValidHttpUrl('ftp://example.com'), false);
@@ -132,6 +150,7 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
       const config = getSupabaseConfig();
       assert.strictEqual(config.isConfigured, false);
       assert.strictEqual(config.url, null);
+      assert.strictEqual(config.publishableKey, null);
       assert.strictEqual(config.anonKey, null);
     });
 
@@ -378,6 +397,59 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
       const unsubscribe = subscribeToAuthState(() => {});
       unsubscribe();
       assert.strictEqual(unsubscribed, true);
+    });
+
+    test('A18 — Supabase publishable key support with anon key backward compatibility', () => {
+      _resetSupabaseClient();
+
+      // 1. Both URL and modern VITE_SUPABASE_PUBLISHABLE_KEY present
+      const cfg1 = getSupabaseConfig({
+        VITE_SUPABASE_URL: 'https://demo.supabase.co',
+        VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_demo12345678',
+      });
+      assert.strictEqual(cfg1.isConfigured, true);
+      assert.strictEqual(cfg1.url, 'https://demo.supabase.co');
+      assert.strictEqual(cfg1.publishableKey, 'sb_publishable_demo12345678');
+      assert.strictEqual(cfg1.anonKey, 'sb_publishable_demo12345678');
+
+      // 2. Backward compatibility: only legacy VITE_SUPABASE_ANON_KEY present
+      const cfg2 = getSupabaseConfig({
+        VITE_SUPABASE_URL: 'https://legacy.supabase.co',
+        VITE_SUPABASE_ANON_KEY: 'anon_legacy_key_12345678',
+      });
+      assert.strictEqual(cfg2.isConfigured, true);
+      assert.strictEqual(cfg2.url, 'https://legacy.supabase.co');
+      assert.strictEqual(cfg2.publishableKey, 'anon_legacy_key_12345678');
+      assert.strictEqual(cfg2.anonKey, 'anon_legacy_key_12345678');
+
+      // 3. Precedence: VITE_SUPABASE_PUBLISHABLE_KEY takes priority over VITE_SUPABASE_ANON_KEY
+      const cfg3 = getSupabaseConfig({
+        VITE_SUPABASE_URL: 'https://precedence.supabase.co',
+        VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_preferred',
+        VITE_SUPABASE_ANON_KEY: 'anon_legacy_secondary',
+      });
+      assert.strictEqual(cfg3.isConfigured, true);
+      assert.strictEqual(cfg3.publishableKey, 'sb_publishable_preferred');
+      assert.strictEqual(cfg3.anonKey, 'sb_publishable_preferred');
+
+      // 4. Security: service_role or secret keys strictly rejected
+      const cfg4 = getSupabaseConfig({
+        VITE_SUPABASE_URL: 'https://security.supabase.co',
+        VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_secret_unauthorized_key',
+      });
+      assert.strictEqual(cfg4.isConfigured, false);
+      assert.strictEqual(cfg4.publishableKey, null);
+      assert.strictEqual(cfg4.anonKey, null);
+
+      // 5. Fallback from placeholder publishable key to valid legacy anon key
+      const cfg5 = getSupabaseConfig({
+        VITE_SUPABASE_URL: 'https://fallback.supabase.co',
+        VITE_SUPABASE_PUBLISHABLE_KEY: 'your_publishable_key_here',
+        VITE_SUPABASE_ANON_KEY: 'valid_anon_fallback_key_12345',
+      });
+      assert.strictEqual(cfg5.isConfigured, true);
+      assert.strictEqual(cfg5.publishableKey, 'valid_anon_fallback_key_12345');
+      assert.strictEqual(cfg5.anonKey, 'valid_anon_fallback_key_12345');
     });
   });
 
@@ -715,6 +787,7 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
       assert.strictEqual(/VITE_.*SERVICE_ROLE/i.test(envExample), false);
       assert.strictEqual(/VITE_.*SECRET_KEY/i.test(envExample), false);
       assert.match(envExample, /VITE_SUPABASE_URL=/);
+      assert.match(envExample, /VITE_SUPABASE_PUBLISHABLE_KEY=/);
       assert.match(envExample, /VITE_SUPABASE_ANON_KEY=/);
     });
 

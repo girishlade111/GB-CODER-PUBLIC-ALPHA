@@ -120,11 +120,14 @@ export const isValidHttpUrl = (val: unknown): boolean => {
  * Maintains backward compatibility with legacy VITE_SUPABASE_ANON_KEY.
  * Strictly prevents exposure of service_role or secret keys.
  */
-export const getSupabaseConfig = (): SupabaseConfig => {
+export const getSupabaseConfig = (
+  customEnv?: Record<string, string | undefined>
+): SupabaseConfig => {
   const env: Record<string, string | undefined> =
-    typeof import.meta !== 'undefined' && import.meta.env
+    customEnv ||
+    (typeof import.meta !== 'undefined' && import.meta.env
       ? (import.meta.env as unknown as Record<string, string | undefined>)
-      : {};
+      : {});
 
   const url = env.VITE_SUPABASE_URL?.trim() || null;
 

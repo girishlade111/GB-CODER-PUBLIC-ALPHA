@@ -41,6 +41,8 @@ Add the following to your local `.env` file (copied from `.env.example`):
 ```bash
 # Public client configuration for Supabase Authentication
 VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=<your-supabase-publishable-key>
+# Backward-compatibility fallback:
 VITE_SUPABASE_ANON_KEY=<your-anon-publishable-key>
 ```
 
