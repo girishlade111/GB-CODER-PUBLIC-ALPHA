@@ -34,7 +34,6 @@ import {
   describeCredential,
 } from '../../services/credentialStore';
 import { ProjectRecord, readProjectFiles } from '../../services/projects/projectDatabase';
-import { MultiFileProject } from '../../types/files';
 import toast from 'react-hot-toast';
 
 const GITHUB_TOKEN_ID = 'github';
