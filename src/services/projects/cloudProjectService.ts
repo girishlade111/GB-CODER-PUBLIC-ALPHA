@@ -8,8 +8,8 @@
  * - Operates strictly through the authenticated user's session (auth.uid()).
  * - Row Level Security (RLS) on public.cloud_projects enforces owner_id = auth.uid().
  * - Storage RLS restricts bucket operations strictly to the user's folder:
- *   `<owner_id>/<project_id>/snapshot.json`.
- * - Employs optimistic revision counters (cloud_revision) to detect and prevent
+ *   `<owner_id>/<project_id>/revisions/<revision>.json`.
+ * - Employs immutable revisioned storage paths and conditional atomic updates to prevent
  *   silent multi-device or multi-tab overwrites.
  * - Never includes or exposes service-role keys or secrets.
  */
@@ -147,7 +147,7 @@ export const createCloudProject = async (
 
   const ownerId = session.user.id;
   const projectId = crypto.randomUUID();
-  const storagePath = `${ownerId}/${projectId}/snapshot.json`;
+  const storagePath = `${ownerId}/${projectId}/revisions/1.json`;
 
   const snapshot: CloudProjectSnapshot = {
     version: 1,
@@ -163,12 +163,12 @@ export const createCloudProject = async (
   const payload = JSON.stringify(snapshot, null, 2);
   const blob = new Blob([payload], { type: 'application/json' });
 
-  // 1. Upload snapshot to storage
+  // 1. Upload snapshot to storage (versioned path)
   const { error: uploadError } = await client.storage
     .from(CLOUD_STORAGE_BUCKET)
     .upload(storagePath, blob, {
       contentType: 'application/json',
-      upsert: true,
+      upsert: false,
     });
 
   if (uploadError) {
@@ -210,6 +210,11 @@ export const createCloudProject = async (
 
 /**
  * Saves updated project files to an existing cloud project with revision conflict detection.
+ * Concurrency Safety:
+ * Writes new files to an immutable versioned path (${ownerId}/${cloudProjectId}/revisions/${nextRevision}.json)
+ * and conditionally updates cloud_revision and storage_path in PostgreSQL.
+ * If another write occurred concurrently, the database update matches zero rows and aborts, leaving
+ * the prior revision untouched and preventing silent clobbering.
  */
 export const saveProjectToCloud = async (
   cloudProjectId: string,
@@ -226,7 +231,7 @@ export const saveProjectToCloud = async (
     throw new Error(`Cloud project not found: ${cloudProjectId}`);
   }
 
-  // Revision conflict check
+  // Pre-upload revision conflict check if expectedRevision supplied
   if (
     options?.expectedRevision !== undefined &&
     !options.forceOverwrite &&
@@ -236,6 +241,8 @@ export const saveProjectToCloud = async (
   }
 
   const nextRevision = existing.cloud_revision + 1;
+  const newStoragePath = `${existing.owner_id}/${cloudProjectId}/revisions/${nextRevision}.json`;
+
   const snapshot: CloudProjectSnapshot = {
     version: 1,
     projectId: cloudProjectId,
@@ -250,21 +257,22 @@ export const saveProjectToCloud = async (
   const payload = JSON.stringify(snapshot, null, 2);
   const blob = new Blob([payload], { type: 'application/json' });
 
-  // Upload updated snapshot
+  // 1. Upload snapshot to immutable revisioned path (does not overwrite existing revision file)
   const { error: uploadError } = await client.storage
     .from(CLOUD_STORAGE_BUCKET)
-    .upload(existing.storage_path, blob, {
+    .upload(newStoragePath, blob, {
       contentType: 'application/json',
-      upsert: true,
+      upsert: false,
     });
 
   if (uploadError) {
     throw new Error(`Failed to upload updated snapshot: ${uploadError.message}`);
   }
 
-  // Update DB record
+  // 2. Perform conditional atomic database pointer update
   const updatePayload: Record<string, unknown> = {
     cloud_revision: nextRevision,
+    storage_path: newStoragePath,
     file_count: files.length,
     last_synced_at: new Date().toISOString(),
   };
@@ -273,15 +281,30 @@ export const saveProjectToCloud = async (
   if (options?.description !== undefined) updatePayload.description = options.description.trim();
   if (options?.entry) updatePayload.entry = options.entry;
 
-  const { data, error: updateError } = await client
+  let updateQuery = client
     .from('cloud_projects')
     .update(updatePayload)
-    .eq('id', cloudProjectId)
-    .select('*')
-    .single();
+    .eq('id', cloudProjectId);
+
+  // If optimistic concurrency check is active, match expected revision atomically
+  if (options?.expectedRevision !== undefined && !options.forceOverwrite) {
+    updateQuery = updateQuery.eq('cloud_revision', options.expectedRevision);
+  }
+
+  const { data, error: updateError } = await updateQuery.select('*').maybeSingle();
 
   if (updateError) {
+    // Attempt cleanup of unreferenced revision snapshot
+    void client.storage.from(CLOUD_STORAGE_BUCKET).remove([newStoragePath]);
     throw new Error(`Failed to update cloud project metadata: ${updateError.message}`);
+  }
+
+  // If zero rows updated, a concurrent save advanced the revision!
+  if (!data) {
+    void client.storage.from(CLOUD_STORAGE_BUCKET).remove([newStoragePath]);
+    const latest = await getCloudProject(cloudProjectId);
+    const latestRevision = latest?.cloud_revision ?? nextRevision;
+    throw new CloudSyncConflictError(latestRevision, options?.expectedRevision ?? existing.cloud_revision);
   }
 
   return data as CloudProjectRecord;

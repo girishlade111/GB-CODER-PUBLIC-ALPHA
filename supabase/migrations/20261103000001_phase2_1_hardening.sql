@@ -82,7 +82,7 @@ BEGIN
   )
   VALUES (
     NEW.id,
-    pg_catalog.coalesce(
+    COALESCE(
       NEW.raw_user_meta_data->>'full_name',
       NEW.raw_user_meta_data->>'name',
       NEW.raw_user_meta_data->>'user_name',
@@ -90,11 +90,11 @@ BEGIN
       pg_catalog.split_part(NEW.email, '@', 1),
       'GB Coder User'
     ),
-    pg_catalog.coalesce(
+    COALESCE(
       NEW.raw_user_meta_data->>'avatar_url',
       NEW.raw_user_meta_data->>'picture'
     ),
-    pg_catalog.coalesce(
+    COALESCE(
       NEW.raw_user_meta_data->>'user_name',
       NEW.raw_user_meta_data->>'preferred_username'
     ),
@@ -104,10 +104,10 @@ BEGIN
   )
   ON CONFLICT (id) DO UPDATE SET
     -- Do not overwrite user-chosen display_name or avatar_url with OAuth defaults on re-login
-    display_name = pg_catalog.coalesce(public.profiles.display_name, EXCLUDED.display_name),
-    avatar_url = pg_catalog.coalesce(public.profiles.avatar_url, EXCLUDED.avatar_url),
-    github_username = pg_catalog.coalesce(public.profiles.github_username, EXCLUDED.github_username),
-    email = pg_catalog.coalesce(public.profiles.email, EXCLUDED.email),
+    display_name = COALESCE(public.profiles.display_name, EXCLUDED.display_name),
+    avatar_url = COALESCE(public.profiles.avatar_url, EXCLUDED.avatar_url),
+    github_username = COALESCE(public.profiles.github_username, EXCLUDED.github_username),
+    email = COALESCE(public.profiles.email, EXCLUDED.email),
     updated_at = pg_catalog.timezone('utc'::pg_catalog.text, pg_catalog.now());
   RETURN NEW;
 EXCEPTION

@@ -27,6 +27,41 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Ensure sync_trusted_profile_metadata trigger function uses standard COALESCE
+-- to prevent syntax error 42883 if attached from earlier Phase 2 migrations.
+CREATE OR REPLACE FUNCTION public.sync_trusted_profile_metadata()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_user_email pg_catalog.text;
+  v_meta jsonb;
+BEGIN
+  NEW.created_at := pg_catalog.timezone('utc'::pg_catalog.text, pg_catalog.now());
+  NEW.updated_at := pg_catalog.timezone('utc'::pg_catalog.text, pg_catalog.now());
+
+  SELECT u.email, u.raw_user_meta_data
+  INTO v_user_email, v_meta
+  FROM auth.users u
+  WHERE u.id = NEW.id;
+
+  IF v_user_email IS NOT NULL THEN
+    NEW.email := v_user_email;
+  END IF;
+
+  IF v_meta IS NOT NULL THEN
+    NEW.github_username := COALESCE(
+      v_meta->>'user_name',
+      v_meta->>'preferred_username'
+    );
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
 -- Backfill missing profiles for existing auth.users
 INSERT INTO public.profiles (
   id,
@@ -39,7 +74,7 @@ INSERT INTO public.profiles (
 )
 SELECT
   u.id,
-  pg_catalog.coalesce(
+  COALESCE(
     u.raw_user_meta_data->>'full_name',
     u.raw_user_meta_data->>'name',
     u.raw_user_meta_data->>'user_name',
@@ -47,23 +82,23 @@ SELECT
     pg_catalog.split_part(u.email, '@', 1),
     'GB Coder User'
   ),
-  pg_catalog.coalesce(
+  COALESCE(
     u.raw_user_meta_data->>'avatar_url',
     u.raw_user_meta_data->>'picture'
   ),
-  pg_catalog.coalesce(
+  COALESCE(
     u.raw_user_meta_data->>'user_name',
     u.raw_user_meta_data->>'preferred_username'
   ),
   u.email,
-  pg_catalog.coalesce(u.created_at, pg_catalog.timezone('utc'::pg_catalog.text, pg_catalog.now())),
+  COALESCE(u.created_at, pg_catalog.timezone('utc'::pg_catalog.text, pg_catalog.now())),
   pg_catalog.timezone('utc'::pg_catalog.text, pg_catalog.now())
 FROM auth.users u
 LEFT JOIN public.profiles p ON p.id = u.id
 WHERE p.id IS NULL
 ON CONFLICT (id) DO UPDATE SET
-  github_username = pg_catalog.coalesce(public.profiles.github_username, EXCLUDED.github_username),
-  email = pg_catalog.coalesce(public.profiles.email, EXCLUDED.email),
+  github_username = COALESCE(public.profiles.github_username, EXCLUDED.github_username),
+  email = COALESCE(public.profiles.email, EXCLUDED.email),
   updated_at = pg_catalog.timezone('utc'::pg_catalog.text, pg_catalog.now());
 
 -- Robust SECURITY DEFINER trigger function for auth.users
@@ -85,7 +120,7 @@ BEGIN
   )
   VALUES (
     NEW.id,
-    pg_catalog.coalesce(
+    COALESCE(
       NEW.raw_user_meta_data->>'full_name',
       NEW.raw_user_meta_data->>'name',
       NEW.raw_user_meta_data->>'user_name',
@@ -93,11 +128,11 @@ BEGIN
       pg_catalog.split_part(NEW.email, '@', 1),
       'GB Coder User'
     ),
-    pg_catalog.coalesce(
+    COALESCE(
       NEW.raw_user_meta_data->>'avatar_url',
       NEW.raw_user_meta_data->>'picture'
     ),
-    pg_catalog.coalesce(
+    COALESCE(
       NEW.raw_user_meta_data->>'user_name',
       NEW.raw_user_meta_data->>'preferred_username'
     ),
@@ -106,10 +141,10 @@ BEGIN
     pg_catalog.timezone('utc'::pg_catalog.text, pg_catalog.now())
   )
   ON CONFLICT (id) DO UPDATE SET
-    display_name = pg_catalog.coalesce(public.profiles.display_name, EXCLUDED.display_name),
-    avatar_url = pg_catalog.coalesce(public.profiles.avatar_url, EXCLUDED.avatar_url),
-    github_username = pg_catalog.coalesce(public.profiles.github_username, EXCLUDED.github_username),
-    email = pg_catalog.coalesce(public.profiles.email, EXCLUDED.email),
+    display_name = COALESCE(public.profiles.display_name, EXCLUDED.display_name),
+    avatar_url = COALESCE(public.profiles.avatar_url, EXCLUDED.avatar_url),
+    github_username = COALESCE(public.profiles.github_username, EXCLUDED.github_username),
+    email = COALESCE(public.profiles.email, EXCLUDED.email),
     updated_at = pg_catalog.timezone('utc'::pg_catalog.text, pg_catalog.now());
   RETURN NEW;
 EXCEPTION
@@ -155,7 +190,7 @@ BEGIN
     id, display_name, avatar_url, github_username, email, created_at, updated_at
   ) VALUES (
     v_uid,
-    pg_catalog.coalesce(
+    COALESCE(
       v_user.raw_user_meta_data->>'full_name',
       v_user.raw_user_meta_data->>'name',
       v_user.raw_user_meta_data->>'user_name',
@@ -163,11 +198,11 @@ BEGIN
       pg_catalog.split_part(v_user.email, '@', 1),
       'GB Coder User'
     ),
-    pg_catalog.coalesce(
+    COALESCE(
       v_user.raw_user_meta_data->>'avatar_url',
       v_user.raw_user_meta_data->>'picture'
     ),
-    pg_catalog.coalesce(
+    COALESCE(
       v_user.raw_user_meta_data->>'user_name',
       v_user.raw_user_meta_data->>'preferred_username'
     ),

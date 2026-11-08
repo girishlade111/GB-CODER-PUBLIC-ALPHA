@@ -96,12 +96,13 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
       assert.ok(sql.includes('u.email'), 'Maps email');
     });
 
-    test('R03 — handle_new_user() SECURITY DEFINER with SET search_path = \'\'', () => {
+    test('R03 — handle_new_user() SECURITY DEFINER with SET search_path = \'\' and standard COALESCE', () => {
       const sql = readFileSync(migrationPath, 'utf8');
       assert.ok(sql.includes('CREATE OR REPLACE FUNCTION public.handle_new_user()'));
       assert.ok(sql.includes('SECURITY DEFINER'));
       assert.ok(sql.includes("SET search_path = ''"));
-      assert.ok(sql.includes('pg_catalog.coalesce'));
+      assert.ok(sql.includes('COALESCE('), 'Must use standard SQL COALESCE construct');
+      assert.strictEqual(sql.includes('pg_catalog.coalesce'), false, 'Must never use invalid pg_catalog.coalesce');
     });
 
     test('R04 — repair_my_profile() RPC with auth.uid() authorization check', () => {
@@ -298,7 +299,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
       assert.strictEqual(orderAsc, false);
     });
 
-    test('S02 — createCloudProject stores snapshot under owner_id/projectId/snapshot.json', async () => {
+    test('S02 — createCloudProject stores snapshot under owner_id/projectId/revisions/1.json', async () => {
       let uploadedBucket = null;
       let uploadedPath = null;
       let insertedPayload = null;
@@ -350,14 +351,17 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
       assert.ok(record);
       assert.strictEqual(uploadedBucket, 'gb-coder-projects');
       assert.ok(uploadedPath.startsWith('usr-owner-uuid-123/'));
-      assert.ok(uploadedPath.endsWith('/snapshot.json'));
+      assert.ok(uploadedPath.endsWith('/revisions/1.json'), 'Must use versioned immutable snapshot path');
       assert.strictEqual(insertedPayload.owner_id, 'usr-owner-uuid-123');
       assert.strictEqual(insertedPayload.file_count, 2);
       assert.strictEqual(insertedPayload.cloud_revision, 1);
     });
 
-    test('S03 — saveProjectToCloud increments cloud_revision on successful save', async () => {
+    test('S03 — saveProjectToCloud writes to versioned revision path and updates DB pointer', async () => {
       let updatedRevision = null;
+      let updatedStoragePath = null;
+      let uploadedPath = null;
+
       const mockClient = {
         from: (table) => ({
           select: () => ({
@@ -370,7 +374,7 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
                   project_type: 'react',
                   editor_style: 'vscode',
                   cloud_revision: 3,
-                  storage_path: 'usr-1/cp-rev-test/snapshot.json',
+                  storage_path: 'usr-1/cp-rev-test/revisions/3.json',
                 },
                 error: null,
               }),
@@ -378,21 +382,29 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
           }),
           update: (payload) => {
             updatedRevision = payload.cloud_revision;
-            return {
-              eq: () => ({
-                select: () => ({
-                  single: async () => ({
-                    data: { id: 'cp-rev-test', cloud_revision: updatedRevision },
-                    error: null,
-                  }),
+            updatedStoragePath = payload.storage_path;
+            const chain = {
+              eq: () => chain,
+              select: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    id: 'cp-rev-test',
+                    cloud_revision: updatedRevision,
+                    storage_path: updatedStoragePath,
+                  },
+                  error: null,
                 }),
               }),
             };
+            return chain;
           },
         }),
         storage: {
           from: () => ({
-            upload: async () => ({ data: {}, error: null }),
+            upload: async (path) => {
+              uploadedPath = path;
+              return { data: {}, error: null };
+            },
           }),
         },
       };
@@ -403,9 +415,11 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
       ]);
 
       assert.strictEqual(updatedRevision, 4, 'Revision must increment from 3 to 4');
+      assert.strictEqual(uploadedPath, 'usr-1/cp-rev-test/revisions/4.json');
+      assert.strictEqual(updatedStoragePath, 'usr-1/cp-rev-test/revisions/4.json');
     });
 
-    test('S04 — saveProjectToCloud throws CloudSyncConflictError on revision divergence', async () => {
+    test('S04 — saveProjectToCloud throws CloudSyncConflictError on pre-upload revision divergence', async () => {
       const mockClient = {
         from: () => ({
           select: () => ({
@@ -413,8 +427,9 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
               maybeSingle: async () => ({
                 data: {
                   id: 'cp-conflict-test',
+                  owner_id: 'usr-1',
                   cloud_revision: 5,
-                  storage_path: 'usr-1/cp-conflict-test/snapshot.json',
+                  storage_path: 'usr-1/cp-conflict-test/revisions/5.json',
                 },
                 error: null,
               }),
@@ -438,6 +453,87 @@ describe('GB Coder Phase 3 — GitHub Repository Integration & Private Cloud Sto
           assert.strictEqual(err.expectedRevision, 2);
           return true;
         },
+      );
+    });
+
+    test('S04b — saveProjectToCloud detects atomic DB conflict and cleans up orphaned snapshot', async () => {
+      let cleanedUpPaths = [];
+      let latestQueried = false;
+
+      const mockClient = {
+        from: (table) => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => {
+                if (latestQueried) {
+                  return {
+                    data: {
+                      id: 'cp-atomic-conflict',
+                      owner_id: 'usr-1',
+                      cloud_revision: 4, // advanced to 4 concurrently
+                      storage_path: 'usr-1/cp-atomic-conflict/revisions/4.json',
+                    },
+                    error: null,
+                  };
+                }
+                return {
+                  data: {
+                    id: 'cp-atomic-conflict',
+                    owner_id: 'usr-1',
+                    cloud_revision: 3,
+                    storage_path: 'usr-1/cp-atomic-conflict/revisions/3.json',
+                  },
+                  error: null,
+                };
+              },
+            }),
+          }),
+          update: () => {
+            const chain = {
+              eq: () => chain,
+              select: () => ({
+                maybeSingle: async () => {
+                  latestQueried = true;
+                  // DB update matched 0 rows because another write advanced cloud_revision
+                  return { data: null, error: null };
+                },
+              }),
+            };
+            return chain;
+          },
+        }),
+        storage: {
+          from: () => ({
+            upload: async () => ({ data: {}, error: null }),
+            remove: async (paths) => {
+              cleanedUpPaths = paths;
+              return { data: paths, error: null };
+            },
+          }),
+        },
+      };
+
+      _setMockSupabaseClient(mockClient);
+      await assert.rejects(
+        async () => {
+          await saveProjectToCloud(
+            'cp-atomic-conflict',
+            [{ path: 'index.html', content: '<p>Edit</p>', language: 'html' }],
+            { expectedRevision: 3 },
+          );
+        },
+        (err) => {
+          assert.ok(err instanceof CloudSyncConflictError);
+          assert.strictEqual(err.currentRevision, 4);
+          assert.strictEqual(err.expectedRevision, 3);
+          return true;
+        },
+      );
+
+      assert.deepStrictEqual(
+        cleanedUpPaths,
+        ['usr-1/cp-atomic-conflict/revisions/4.json'],
+        'Uncommitted snapshot must be cleaned up on atomic DB conflict',
       );
     });
 

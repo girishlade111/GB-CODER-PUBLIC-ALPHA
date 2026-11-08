@@ -88,7 +88,7 @@ BEGIN
   END IF;
 
   IF v_meta IS NOT NULL THEN
-    NEW.github_username := pg_catalog.coalesce(
+    NEW.github_username := COALESCE(
       v_meta->>'user_name',
       v_meta->>'preferred_username'
     );

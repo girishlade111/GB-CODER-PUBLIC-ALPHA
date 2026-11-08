@@ -1112,10 +1112,10 @@ describe('GB Coder Phase 2 — Comprehensive Auth, Profile & Security Suite', ()
       assert.match(migration2Sql, /CREATE OR REPLACE FUNCTION public\.handle_new_user\(\)/);
       assert.match(migration2Sql, /SECURITY DEFINER/);
       assert.match(migration2Sql, /SET search_path = ''/);
-      assert.match(migration2Sql, /pg_catalog\.coalesce/);
+      assert.match(migration2Sql, /COALESCE/);
       assert.match(migration2Sql, /pg_catalog\.split_part/);
       assert.match(migration2Sql, /pg_catalog\.timezone/);
-      assert.match(migration2Sql, /display_name = pg_catalog\.coalesce\(public\.profiles\.display_name,\s*EXCLUDED\.display_name\)/);
+      assert.match(migration2Sql, /display_name = COALESCE\(public\.profiles\.display_name,\s*EXCLUDED\.display_name\)/);
       assert.match(migration2Sql, /RAISE WARNING 'handle_new_user provisioning notice for %: % \(SQLSTATE: %\)'/);
     });
   });
