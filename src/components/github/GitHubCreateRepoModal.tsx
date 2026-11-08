@@ -152,15 +152,11 @@ export const GitHubCreateRepoModal: React.FC<GitHubCreateRepoModalProps> = ({
     setErrorMessage(null);
 
     try {
-      let multiProject: MultiFileProject | undefined;
+      let initialFiles: { path: string; content: string }[] = [];
 
       if (pushCurrentProject && project) {
         const files = await readProjectFiles(project.id);
-        multiProject = {
-          projectType: project.projectType || 'plain',
-          entry: project.entry,
-          files,
-        };
+        initialFiles = files.map((f) => ({ path: f.path, content: f.content }));
       }
 
       const result = await createRepository({
@@ -168,7 +164,9 @@ export const GitHubCreateRepoModal: React.FC<GitHubCreateRepoModalProps> = ({
         name: cleanName,
         description: description.trim() || undefined,
         private: isPrivate,
-        project: multiProject,
+        autoInit: initialFiles.length === 0,
+        files: initialFiles,
+        commitMessage: 'Initial commit from GB Coder',
       });
 
       const repoUrl = `https://github.com/${result.repo.fullName}`;
