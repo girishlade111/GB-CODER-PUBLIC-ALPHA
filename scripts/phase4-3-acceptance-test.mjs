@@ -68,8 +68,7 @@ const {
   pullRemote,
   cloneRepository,
   importRepositoryFiles,
-  isGitHubAppConfigured,
-  getAppInstallationUrl,
+  getGitHubAppConfig,
 } = await import(pathToFileURL(bundlePath).href);
 
 after(() => {
@@ -319,14 +318,15 @@ describe('GB Coder Phase 4.3 — Workbench & Filesystem Synchronization (TASK 6)
     await initRepository(projectId, [{ path: 'file1.ts', content: 'v1', language: 'typescript' }]);
     await createBranch(projectId, 'feature-1');
 
-    // Introduce dirty unsaved change
+    // Introduce dirty unsaved change and stage it
     await syncWorkingTree(projectId, [{ path: 'file1.ts', content: 'dirty-v2', language: 'typescript' }]);
+    await stageAll(projectId);
 
     await assert.rejects(
       async () => {
         await switchBranch(projectId, 'feature-1');
       },
-      /Cannot switch branches with uncommitted modifications/,
+      /Cannot switch branch with staged changes/,
     );
   });
 
@@ -343,11 +343,10 @@ describe('GB Coder Phase 4.3 — Workbench & Filesystem Synchronization (TASK 6)
 
 describe('GB Coder Phase 4.3 — GitHub App vs PAT Architectural Boundary (TASK 7)', () => {
   it('APP-01 — GitHub App configuration is reported as incomplete pending serverless private key backend', () => {
-    const configured = isGitHubAppConfigured();
-    assert.equal(configured, false, 'GitHub App must not report configured without serverless backend');
-
-    const installUrl = getAppInstallationUrl();
-    assert.equal(installUrl, null, 'Installation URL must be null when app slug is missing');
+    const config = getGitHubAppConfig();
+    assert.equal(config.isConfigured, false, 'GitHub App must not report configured without serverless backend');
+    assert.equal(config.appName, undefined);
+    assert.equal(config.installUrl, undefined);
   });
 });
 
