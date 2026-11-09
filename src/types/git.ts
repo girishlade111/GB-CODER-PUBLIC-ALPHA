@@ -93,3 +93,20 @@ export interface GitDiffInfo {
   newContent: string;
 }
 
+export interface RemoteCommitPayload {
+  sha: string;
+  message: string;
+  author: {
+    name: string;
+    email: string;
+    date: string | number;
+  };
+  committer?: {
+    name: string;
+    email: string;
+    date: string | number;
+  };
+  parents?: string[];
+  treeSha?: string;
+}
+

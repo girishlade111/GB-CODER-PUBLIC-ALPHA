@@ -26,6 +26,7 @@ import type {
   GitBranchInfo,
   GitDiffInfo,
   GitMergeResult,
+  RemoteCommitPayload,
 } from '../../types/git';
 
 const FS_NAME = 'gb-coder-git-fs';
@@ -34,7 +35,7 @@ const DEFAULT_BRANCH = 'main';
 
 let fsInstance: FS | null = null;
 
-const getFS = (): FS => {
+export const getFS = (): FS => {
   if (fsInstance) return fsInstance;
 
   // Polyfill in Node test environments if needed
@@ -51,10 +52,10 @@ const getFS = (): FS => {
   return fsInstance;
 };
 
-const getProjectDir = (projectId: string): string => `/projects/${projectId}`;
+export const getProjectDir = (projectId: string): string => `/projects/${projectId}`;
 
 /** Ensure recursive directory creation */
-const ensureDir = async (pfs: FS['promises'], dirPath: string): Promise<void> => {
+export const ensureDir = async (pfs: FS['promises'], dirPath: string): Promise<void> => {
   const parts = dirPath.split('/').filter(Boolean);
   let current = '';
   for (const part of parts) {
@@ -696,3 +697,227 @@ export const abortMerge = async (projectId: string): Promise<ProjectFile[]> => {
   await git.checkout({ fs, dir: projectDir, ref: current, force: true });
   return await readWorkingTree(projectId);
 };
+
+/** Set remote tracking branch reference */
+export const setRemoteTrackingRef = async (
+  projectId: string,
+  remoteName: string,
+  branch: string,
+  commitSha: string,
+): Promise<void> => {
+  const fs = getFS();
+  const projectDir = getProjectDir(projectId);
+  await git.writeRef({
+    fs,
+    dir: projectDir,
+    ref: `refs/remotes/${remoteName}/${branch}`,
+    value: commitSha,
+    force: true,
+  });
+};
+
+/** Get remote tracking branch reference */
+export const getRemoteTrackingRef = async (
+  projectId: string,
+  remoteName: string,
+  branch: string,
+): Promise<string | null> => {
+  const fs = getFS();
+  const projectDir = getProjectDir(projectId);
+  try {
+    return await git.resolveRef({
+      fs,
+      dir: projectDir,
+      ref: `refs/remotes/${remoteName}/${branch}`,
+    });
+  } catch {
+    return null;
+  }
+};
+
+/** Set local branch reference */
+export const setBranchRef = async (
+  projectId: string,
+  branch: string,
+  commitSha: string,
+): Promise<void> => {
+  const fs = getFS();
+  const projectDir = getProjectDir(projectId);
+  await git.writeRef({
+    fs,
+    dir: projectDir,
+    ref: `refs/heads/${branch}`,
+    value: commitSha,
+    force: true,
+  });
+};
+
+/** Reconstruct remote commits into local Git object database */
+export const writeRemoteCommitObjects = async (
+  projectId: string,
+  commits: RemoteCommitPayload[],
+): Promise<Map<string, string>> => {
+  const fs = getFS();
+  const projectDir = getProjectDir(projectId);
+
+  let treeOid = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+  try {
+    treeOid = await git.writeTree({ fs, dir: projectDir, tree: [] });
+  } catch {
+    // Default empty tree
+  }
+
+  const shaMap = new Map<string, string>();
+
+  // Ensure chronological order (oldest first so parents exist before children)
+  const ordered = [...commits];
+  if (ordered.length > 1) {
+    const firstDate = new Date(ordered[0].author.date).getTime();
+    const lastDate = new Date(ordered[ordered.length - 1].author.date).getTime();
+    if (firstDate > lastDate) {
+      ordered.reverse();
+    }
+  }
+
+  for (const c of ordered) {
+    const mappedParents = (c.parents || []).map((p) => shaMap.get(p) || p);
+    const authorTime =
+      typeof c.author.date === 'number'
+        ? Math.floor(c.author.date / 1000)
+        : Math.floor(new Date(c.author.date).getTime() / 1000);
+    const committerTime = c.committer
+      ? typeof c.committer.date === 'number'
+        ? Math.floor(c.committer.date / 1000)
+        : Math.floor(new Date(c.committer.date).getTime() / 1000)
+      : authorTime;
+
+    const commitMessage = c.message.endsWith('\n') ? c.message : `${c.message}\n`;
+
+    const writtenOid = await git.writeCommit({
+      fs,
+      dir: projectDir,
+      commit: {
+        message: commitMessage,
+        tree: c.treeSha || treeOid,
+        parent: mappedParents,
+        author: {
+          name: c.author.name || 'Unknown',
+          email: c.author.email || 'developer@example.com',
+          timestamp: authorTime || Math.floor(Date.now() / 1000),
+          timezoneOffset: 0,
+        },
+        committer: {
+          name: c.committer?.name || c.author.name || 'Unknown',
+          email: c.committer?.email || c.author.email || 'developer@example.com',
+          timestamp: committerTime || Math.floor(Date.now() / 1000),
+          timezoneOffset: 0,
+        },
+      },
+    });
+
+    shaMap.set(c.sha, writtenOid);
+  }
+
+  return shaMap;
+};
+
+/** Verify whether an ancestor commit is in the ancestry of descendant commit */
+export const isCommitAncestor = async (
+  projectId: string,
+  ancestorSha: string,
+  descendantSha: string,
+): Promise<boolean> => {
+  if (ancestorSha === descendantSha) return true;
+  const fs = getFS();
+  const projectDir = getProjectDir(projectId);
+  try {
+    return await git.isDescendent({
+      fs,
+      dir: projectDir,
+      oid: descendantSha,
+      ancestor: ancestorSha,
+    });
+  } catch {
+    return false;
+  }
+};
+
+/** Compute ahead and behind count between local branch and remote-tracking ref */
+export const computeAheadBehind = async (
+  projectId: string,
+  localBranch: string,
+  remoteTrackingRef: string,
+): Promise<{ ahead: number; behind: number }> => {
+  const fs = getFS();
+  const projectDir = getProjectDir(projectId);
+
+  let localSha = '';
+  let remoteSha = '';
+  try {
+    localSha = await git.resolveRef({ fs, dir: projectDir, ref: `refs/heads/${localBranch}` });
+  } catch {
+    return { ahead: 0, behind: 0 };
+  }
+
+  try {
+    remoteSha = await git.resolveRef({ fs, dir: projectDir, ref: remoteTrackingRef });
+  } catch {
+    const localLogs = await git.log({ fs, dir: projectDir, depth: 50 });
+    return { ahead: localLogs.length, behind: 0 };
+  }
+
+  if (localSha === remoteSha) {
+    return { ahead: 0, behind: 0 };
+  }
+
+  // Check if remote is ancestor of local (local ahead)
+  let remoteIsAncestor = false;
+  try {
+    remoteIsAncestor = await git.isDescendent({ fs, dir: projectDir, oid: localSha, ancestor: remoteSha });
+  } catch {
+    // Missing object
+  }
+
+  if (remoteIsAncestor) {
+    const localLogs = await git.log({ fs, dir: projectDir, depth: 100 });
+    const localShas = localLogs.map((l) => l.oid);
+    const idx = localShas.indexOf(remoteSha);
+    return { ahead: idx > 0 ? idx : 1, behind: 0 };
+  }
+
+  // Check if local is ancestor of remote (local behind)
+  let localIsAncestor = false;
+  try {
+    localIsAncestor = await git.isDescendent({ fs, dir: projectDir, oid: remoteSha, ancestor: localSha });
+  } catch {
+    // Missing object
+  }
+
+  if (localIsAncestor) {
+    const remoteLogs = await git.log({ fs, dir: projectDir, ref: remoteTrackingRef, depth: 100 });
+    const remoteShas = remoteLogs.map((l) => l.oid);
+    const idx = remoteShas.indexOf(localSha);
+    return { ahead: 0, behind: idx > 0 ? idx : 1 };
+  }
+
+  // Diverged branches: calculate via merge base
+  try {
+    const mergeBases = await git.findMergeBase({ fs, dir: projectDir, oids: [localSha, remoteSha] });
+    if (mergeBases.length > 0) {
+      const baseSha = mergeBases[0];
+      const localLogs = await git.log({ fs, dir: projectDir, depth: 100 });
+      const remoteLogs = await git.log({ fs, dir: projectDir, ref: remoteTrackingRef, depth: 100 });
+      const localIdx = localLogs.map((l) => l.oid).indexOf(baseSha);
+      const remoteIdx = remoteLogs.map((l) => l.oid).indexOf(baseSha);
+      return {
+        ahead: localIdx > 0 ? localIdx : 1,
+        behind: remoteIdx > 0 ? remoteIdx : 1,
+      };
+    }
+  } catch {
+    // Fallback
+  }
+
+  return { ahead: 1, behind: 1 };
+};
+
