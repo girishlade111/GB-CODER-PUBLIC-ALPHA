@@ -930,7 +930,16 @@ export const createRepository = async (options: CreateRepoOptions): Promise<GitH
     const base = repoPath(ref);
     const treeEntries = await uploadBlobs(token, base, files, signal, report, 20, 55);
     const treeSha = await createTree(token, base, treeEntries, null, signal);
-    const root = await createCommit(token, base, commitMessage, treeSha, [], signal);
+    const root = await createCommit(
+      token,
+      base,
+      commitMessage,
+      treeSha,
+      [],
+      undefined,
+      undefined,
+      signal,
+    );
 
     await githubRequest<RawRef>(
       token,
