@@ -38,9 +38,10 @@ import {
 } from './gitEngineService';
 import {
   pullFiles,
-  commitFiles,
+  commitChain,
   parseRepoInput,
   type GitHubCommitResult,
+  type CommitChainItem,
 } from '../githubSyncService';
 import { checkRepositoryPermissions } from './gitGitHubAppService';
 import { languageForPath, type ProjectFile } from '../../types/files';
@@ -301,6 +302,7 @@ export const pullRemote = async (
 
 export interface PushRemoteResult extends GitHubCommitResult {
   branch: string;
+  pushedCommitsCount?: number;
 }
 
 /** Push local commits to remote repository with fast-forward verification and ref sync */
@@ -327,55 +329,111 @@ export const pushRemote = async (
     );
   }
 
-  const files = await readWorkingTree(projectId);
-  const localLogs = await getLog(projectId, 1);
-  const commitMessage = localLogs.length > 0 ? localLogs[0].message : 'Commit from GB Coder';
-  const authorData = localLogs[0]?.author;
-  const commitTimestamp = localLogs[0]?.timestamp || Date.now();
-  const localAuthor = authorData
-    ? {
-        name: authorData.name,
-        email: authorData.email,
-        date: new Date(commitTimestamp).toISOString(),
-      }
-    : undefined;
+  const fs = getFS();
+  const projectDir = getProjectDir(projectId);
 
-  const result = await commitFiles({
+  // Identify unpushed commits from local Git history
+  const localLogs = await git.log({ fs, dir: projectDir, depth: 50 });
+  if (localLogs.length === 0) {
+    throw new Error('No commits to push. Create a commit first.');
+  }
+
+  const trackingRef = await getRemoteTrackingRef(projectId, 'origin', currentBranch);
+  let unpushedLogs = localLogs;
+
+  if (trackingRef) {
+    const trackingIdx = localLogs.findIndex((c) => c.oid === trackingRef);
+    if (trackingIdx === 0) {
+      return {
+        branch: currentBranch,
+        commitSha: trackingRef,
+        commitUrl: `https://github.com/${repoFullName}/commit/${trackingRef}`,
+        filesChanged: 0,
+        alreadyUpToDate: true,
+        pushedCommitsCount: 0,
+      };
+    } else if (trackingIdx > 0) {
+      unpushedLogs = localLogs.slice(0, trackingIdx);
+    }
+  }
+
+  // Chronological order: oldest unpushed commit to newest
+  const chronologicalLogs = [...unpushedLogs].reverse();
+
+  // Read snapshot of files for each commit from Git object database without altering working tree
+  const commitItems: CommitChainItem[] = await Promise.all(
+    chronologicalLogs.map(async (entry) => {
+      const paths = await git.listFiles({ fs, dir: projectDir, ref: entry.oid });
+      const files = await Promise.all(
+        paths.map(async (filepath) => {
+          const { blob } = await git.readBlob({ fs, dir: projectDir, oid: entry.oid, filepath });
+          return {
+            path: filepath,
+            content: Buffer.from(blob).toString('utf8'),
+          };
+        }),
+      );
+      const commitAuthor = entry.commit.author
+        ? {
+            name: entry.commit.author.name,
+            email: entry.commit.author.email,
+            date: new Date(entry.commit.author.timestamp * 1000).toISOString(),
+          }
+        : undefined;
+      const commitCommitter = entry.commit.committer
+        ? {
+            name: entry.commit.committer.name,
+            email: entry.commit.committer.email,
+            date: new Date(entry.commit.committer.timestamp * 1000).toISOString(),
+          }
+        : undefined;
+
+      return {
+        message: entry.commit.message,
+        files,
+        deleteMissing: true,
+        author: commitAuthor,
+        committer: commitCommitter,
+      };
+    }),
+  );
+
+  const result = await commitChain({
     ref: repoRef,
     branch: currentBranch,
-    files: files.map((f) => ({ path: f.path, content: f.content })),
-    message: commitMessage,
-    author: localAuthor,
+    commits: commitItems,
     token,
   });
 
-  // Reconcile remote tracking ref and local branch ref with pushed commit
-  if (result.commitSha) {
-    const localSha = localLogs[0]?.sha;
-    if (localSha && localSha === result.commitSha) {
-      await setRemoteTrackingRef(projectId, 'origin', currentBranch, result.commitSha);
-    } else {
-      const shaMap = await writeRemoteCommitObjects(projectId, [
-        {
-          sha: result.commitSha,
-          message: commitMessage,
+  // Reconcile remote tracking ref and local branch ref with pushed commits
+  if (result.commitSha && !result.alreadyUpToDate) {
+    if (result.pushedCommits && result.pushedCommits.length > 0) {
+      const shaMap = await writeRemoteCommitObjects(
+        projectId,
+        result.pushedCommits.map((c) => ({
+          sha: c.sha,
+          message: c.message,
           author: {
-            name: authorData?.name || 'GB Coder Developer',
-            email: authorData?.email || 'developer@gbcoder.dev',
-            date: commitTimestamp,
+            name: c.author?.name || 'GB Coder Developer',
+            email: c.author?.email || 'developer@gbcoder.dev',
+            date: c.author?.date ? new Date(c.author.date).getTime() : Date.now(),
           },
-          parents: localLogs[0]?.parentShas || [],
-        },
-      ]);
-      const writtenOid = shaMap.get(result.commitSha) || result.commitSha;
-      await setRemoteTrackingRef(projectId, 'origin', currentBranch, writtenOid);
-      await setBranchRef(projectId, currentBranch, writtenOid);
+          parents: c.parents,
+        })),
+      );
+      const canonicalHead = shaMap.get(result.commitSha) || result.commitSha;
+      await setRemoteTrackingRef(projectId, 'origin', currentBranch, canonicalHead);
+      await setBranchRef(projectId, currentBranch, canonicalHead);
+    } else {
+      await setRemoteTrackingRef(projectId, 'origin', currentBranch, result.commitSha);
+      await setBranchRef(projectId, currentBranch, result.commitSha);
     }
   }
 
   return {
     ...result,
     branch: currentBranch,
+    pushedCommitsCount: result.pushedCommits?.length || (result.alreadyUpToDate ? 0 : 1),
   };
 };
 

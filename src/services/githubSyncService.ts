@@ -745,6 +745,168 @@ export interface CommitFilesOptions {
   signal?: AbortSignal;
 }
 
+export interface CommitChainItem {
+  message: string;
+  files: { path: string; content: string }[];
+  deleteMissing?: boolean;
+  author?: { name: string; email: string; date?: string };
+  committer?: { name: string; email: string; date?: string };
+}
+
+export interface CommitChainOptions {
+  token: string;
+  ref: RepoRef;
+  branch: string;
+  commits: CommitChainItem[];
+  onProgress?: (message: string, percent: number) => void;
+  signal?: AbortSignal;
+}
+
+export interface PushedCommitInfo {
+  sha: string;
+  message: string;
+  author?: { name: string; email: string; date?: string };
+  committer?: { name: string; email: string; date?: string };
+  parents: string[];
+}
+
+export interface CommitChainResult extends GitHubCommitResult {
+  pushedCommits?: PushedCommitInfo[];
+}
+
+/**
+ * Pushes a sequential chain of commits to GitHub.
+ *
+ * Each commit is created with its authentic message, author, timestamp,
+ * and parent pointer to the previous commit in the chain. The remote branch ref
+ * is updated only once at the end, ensuring atomic updates.
+ */
+export const commitChain = async (options: CommitChainOptions): Promise<CommitChainResult> => {
+  const { token, ref, branch, commits, onProgress, signal } = options;
+  const report = onProgress ?? (() => {});
+  const base = repoPath(ref);
+  const commitBase = `https://github.com/${ref.owner}/${ref.repo}/commit`;
+
+  if (commits.length === 0) {
+    const { headSha } = await readBranchHead(token, base, branch, signal);
+    return {
+      branch,
+      commitSha: headSha,
+      commitUrl: `${commitBase}/${headSha}`,
+      filesChanged: 0,
+      alreadyUpToDate: true,
+      pushedCommits: [],
+    };
+  }
+
+  report('Finding the latest commit…', 10);
+  const { headSha, baseTreeSha } = await readBranchHead(token, base, branch, signal);
+
+  let currentParentSha = headSha;
+  let currentBaseTreeSha = baseTreeSha;
+  let totalFilesChanged = 0;
+  const pushedCommits: PushedCommitInfo[] = [];
+
+  for (let i = 0; i < commits.length; i++) {
+    const commitItem = commits[i];
+    const progressBase = 15 + Math.round((i / commits.length) * 75);
+    report(`Processing commit ${i + 1}/${commits.length}: ${commitItem.message}…`, progressBase);
+
+    const remotePaths = await readTreePaths(token, base, currentBaseTreeSha, signal);
+
+    const entries = await Promise.all(
+      commitItem.files.map(async (file) => ({ file, sha: await gitBlobSha(file.content) })),
+    );
+    const writes = entries.filter((entry) => remotePaths.get(entry.file.path) !== entry.sha);
+
+    const localPaths = new Set(commitItem.files.map((file) => file.path));
+    const deleteMissing = commitItem.deleteMissing ?? false;
+    const deletions = deleteMissing
+      ? [...remotePaths.keys()].filter((path) => !localPaths.has(path))
+      : [];
+
+    if (writes.length === 0 && deletions.length === 0) {
+      if (commits.length === 1) {
+        report('Already up to date.', 100);
+        return {
+          branch,
+          commitSha: headSha,
+          commitUrl: `${commitBase}/${headSha}`,
+          filesChanged: 0,
+          alreadyUpToDate: true,
+          pushedCommits: [],
+        };
+      }
+      continue;
+    }
+
+    totalFilesChanged += writes.length + deletions.length;
+
+    const treeEntries = await uploadBlobs(
+      token,
+      base,
+      writes.map((entry) => entry.file),
+      signal,
+      report,
+      progressBase,
+      Math.round(75 / commits.length / 2),
+    );
+    for (const path of deletions) {
+      treeEntries.push({ path, mode: '100644', type: 'blob', sha: null });
+    }
+
+    const treeSha = await createTree(token, base, treeEntries, currentBaseTreeSha, signal);
+
+    const created = await createCommit(
+      token,
+      base,
+      commitItem.message,
+      treeSha,
+      [currentParentSha],
+      commitItem.author,
+      commitItem.committer,
+      signal,
+    );
+
+    pushedCommits.push({
+      sha: created.sha,
+      message: commitItem.message,
+      author: commitItem.author,
+      committer: commitItem.committer,
+      parents: [currentParentSha],
+    });
+
+    currentParentSha = created.sha;
+    currentBaseTreeSha = treeSha;
+  }
+
+  if (pushedCommits.length === 0) {
+    report('Already up to date.', 100);
+    return {
+      branch,
+      commitSha: headSha,
+      commitUrl: `${commitBase}/${headSha}`,
+      filesChanged: 0,
+      alreadyUpToDate: true,
+      pushedCommits: [],
+    };
+  }
+
+  report('Updating the branch…', 92);
+  await updateRef(token, base, branch, currentParentSha, signal);
+
+  report('Pushed.', 100);
+
+  return {
+    branch,
+    commitSha: currentParentSha,
+    commitUrl: `${commitBase}/${currentParentSha}`,
+    filesChanged: totalFilesChanged,
+    alreadyUpToDate: false,
+    pushedCommits,
+  };
+};
+
 /**
  * Writes the whole file set as one commit.
  *
@@ -764,89 +926,22 @@ export const commitFiles = async (options: CommitFilesOptions): Promise<GitHubCo
     onProgress,
     signal,
   } = options;
-  const report = onProgress ?? (() => {});
-  const base = repoPath(ref);
-  const commitBase = `https://github.com/${ref.owner}/${ref.repo}/commit`;
-
-  report('Finding the latest commit…', 10);
-  const { headSha, baseTreeSha } = await readBranchHead(token, base, branch, signal);
-
-  report('Reading the current tree…', 18);
-  const remotePaths = await readTreePaths(token, base, baseTreeSha, signal);
-
-  /*
-   * Hash locally and compare against the remote tree, so an unchanged file costs
-   * no API call. `Promise.all` rather than a loop because the digests are
-   * independent; a 200-file push is a few milliseconds of SHA-1.
-   */
-  const entries = await Promise.all(
-    files.map(async (file) => ({ file, sha: await gitBlobSha(file.content) })),
-  );
-  const writes = entries.filter((entry) => remotePaths.get(entry.file.path) !== entry.sha);
-
-  // A Set, so the deletion scan stays linear: a repository can hold thousands of
-  // paths and this runs once per push.
-  const localPaths = new Set(files.map((file) => file.path));
-  const deletions = deleteMissing
-    ? [...remotePaths.keys()].filter((path) => !localPaths.has(path))
-    : [];
-
-  if (writes.length === 0 && deletions.length === 0) {
-    report('Already up to date.', 100);
-    return {
-      branch,
-      commitSha: headSha,
-      commitUrl: `${commitBase}/${headSha}`,
-      filesChanged: 0,
-      alreadyUpToDate: true,
-    };
-  }
-
-  // 1. Blobs for changed content. Deleted paths need no blob — a null sha removes
-  //    the entry from the new tree.
-  const treeEntries = await uploadBlobs(
+  return commitChain({
     token,
-    base,
-    writes.map((entry) => entry.file),
-    signal,
-    report,
-    20,
-    45,
-  );
-  for (const path of deletions) {
-    treeEntries.push({ path, mode: '100644', type: 'blob', sha: null });
-  }
-
-  // 2. A tree based on the old one, so untouched paths are carried forward
-  //    automatically rather than being re-sent.
-  report('Building the commit tree…', 70);
-  const treeSha = await createTree(token, base, treeEntries, baseTreeSha, signal);
-
-  // 3. The commit, then the branch move.
-  report('Creating the commit…', 82);
-  const commit = await createCommit(
-    token,
-    base,
-    message,
-    treeSha,
-    [headSha],
-    author,
-    committer,
-    signal,
-  );
-
-  report('Updating the branch…', 92);
-  await updateRef(token, base, branch, commit.sha, signal);
-
-  report('Pushed.', 100);
-
-  return {
+    ref,
     branch,
-    commitSha: commit.sha,
-    commitUrl: commit.html_url || `${commitBase}/${commit.sha}`,
-    filesChanged: writes.length + deletions.length,
-    alreadyUpToDate: false,
-  };
+    commits: [
+      {
+        message,
+        files,
+        deleteMissing,
+        author,
+        committer,
+      },
+    ],
+    onProgress,
+    signal,
+  });
 };
 
 export interface CreateRepoOptions {
