@@ -362,7 +362,7 @@ const githubRequest = async <T>(
         Accept: 'application/vnd.github+json',
         // Pinned so a future default change cannot silently alter response shapes.
         'X-GitHub-Api-Version': '2022-11-28',
-        Authorization: `Bearer ${token}`,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init.body ? { 'Content-Type': 'application/json' } : {}),
         ...init.headers,
       },
