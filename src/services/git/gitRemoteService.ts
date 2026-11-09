@@ -380,7 +380,7 @@ export const pushRemote = async (
         : undefined;
 
       return {
-        message: entry.commit.message,
+        message: entry.commit.message.trim(),
         files,
         deleteMissing: true,
         author: commitAuthor,
