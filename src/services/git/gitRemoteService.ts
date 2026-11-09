@@ -134,7 +134,32 @@ export const fetchRemote = async (
   const refData = (await response.json()) as RefResponse;
   const remoteSha = refData.object.sha;
 
-  // Retrieve commit chain to populate local Git object database
+  const localLogs = await getLog(projectId, 100);
+  const localShas = localLogs.map((l) => l.sha);
+
+  if (localShas.length > 0 && localShas[0] === remoteSha) {
+    await setRemoteTrackingRef(projectId, 'origin', currentBranch, remoteSha);
+    return {
+      ahead: 0,
+      behind: 0,
+      latestRemoteSha: remoteSha,
+      isUpToDate: true,
+    };
+  }
+
+  const remoteIndexInLocal = localShas.indexOf(remoteSha);
+  if (remoteIndexInLocal > 0) {
+    // Remote SHA is an ancestor of local HEAD -> local is ahead
+    await setRemoteTrackingRef(projectId, 'origin', currentBranch, remoteSha);
+    return {
+      ahead: remoteIndexInLocal,
+      behind: 0,
+      latestRemoteSha: remoteSha,
+      isUpToDate: false,
+    };
+  }
+
+  // Remote has new commits not present in local history: fetch and write objects
   try {
     const commitsUrl = `https://api.github.com/repos/${repoFullName}/commits?sha=${encodeURIComponent(remoteSha)}&per_page=30`;
     const commitsRes = await fetch(commitsUrl, {
@@ -147,29 +172,33 @@ export const fetchRemote = async (
     });
 
     if (commitsRes.ok) {
-      interface RawCommitItem {
-        sha: string;
-        commit: {
-          message: string;
-          author: { name: string; email: string; date: string };
-          committer?: { name: string; email: string; date: string };
-          tree: { sha: string };
-        };
-        parents: Array<{ sha: string }>;
-      }
-      const rawCommits = (await commitsRes.json()) as RawCommitItem[];
-      const payloads: RemoteCommitPayload[] = rawCommits.map((item) => ({
-        sha: item.sha,
-        message: item.commit.message,
-        author: item.commit.author,
-        committer: item.commit.committer,
-        treeSha: item.commit.tree?.sha,
-        parents: (item.parents || []).map((p) => p.sha),
-      }));
+      const rawCommits = await commitsRes.json();
+      if (Array.isArray(rawCommits)) {
+        interface RawCommitItem {
+          sha: string;
+          commit: {
+            message: string;
+            author: { name: string; email: string; date: string };
+            committer?: { name: string; email: string; date: string };
+            tree: { sha: string };
+          };
+          parents: Array<{ sha: string } | string>;
+        }
+        const payloads: RemoteCommitPayload[] = (rawCommits as RawCommitItem[]).map((item) => ({
+          sha: item.sha,
+          message: item.commit.message,
+          author: item.commit.author,
+          committer: item.commit.committer,
+          treeSha: item.commit.tree?.sha,
+          parents: (item.parents || []).map((p) => (typeof p === 'string' ? p : p.sha)).filter(Boolean) as string[],
+        }));
 
-      const shaMap = await writeRemoteCommitObjects(projectId, payloads);
-      const effectiveRemoteSha = shaMap.get(remoteSha) || remoteSha;
-      await setRemoteTrackingRef(projectId, 'origin', currentBranch, effectiveRemoteSha);
+        const shaMap = await writeRemoteCommitObjects(projectId, payloads);
+        const effectiveRemoteSha = shaMap.get(remoteSha) || remoteSha;
+        await setRemoteTrackingRef(projectId, 'origin', currentBranch, effectiveRemoteSha);
+      } else {
+        await setRemoteTrackingRef(projectId, 'origin', currentBranch, remoteSha);
+      }
     } else {
       await setRemoteTrackingRef(projectId, 'origin', currentBranch, remoteSha);
     }
@@ -310,9 +339,27 @@ export const pushRemote = async (
     token,
   });
 
-  // Keep remote tracking ref aligned with newly created remote commit
+  // Keep remote tracking ref aligned with pushed commit
   if (result.commitSha) {
-    await setRemoteTrackingRef(projectId, 'origin', currentBranch, result.commitSha);
+    const localSha = localLogs[0]?.sha;
+    if (localSha) {
+      await setRemoteTrackingRef(projectId, 'origin', currentBranch, localSha);
+    } else {
+      const shaMap = await writeRemoteCommitObjects(projectId, [
+        {
+          sha: result.commitSha,
+          message: commitMessage,
+          author: {
+            name: 'GB Coder Developer',
+            email: 'developer@gbcoder.dev',
+            date: Date.now(),
+          },
+          parents: [],
+        },
+      ]);
+      const writtenOid = shaMap.get(result.commitSha) || result.commitSha;
+      await setRemoteTrackingRef(projectId, 'origin', currentBranch, writtenOid);
+    }
   }
 
   return {
@@ -422,7 +469,7 @@ export const cloneRepository = async (options: {
         author: item.commit.author,
         committer: item.commit.committer,
         treeSha: item.commit.tree?.sha,
-        parents: (item.parents || []).map((p) => p.sha),
+        parents: (item.parents || []).map((p) => (typeof p === 'string' ? p : (p as { sha: string }).sha)).filter(Boolean) as string[],
       }));
     }
   } catch {

@@ -172,34 +172,52 @@ describe('GB Coder Phase 4.1 — Clone Semantics & History Reconstruction (CLONE
 
     try {
       globalThis.fetch = async (url) => {
-        // Files API
-        if (url.includes('/git/trees/')) {
+        // Branch ref
+        if (url.includes('/git/ref/heads/')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({ object: { sha: '3333333333333333333333333333333333333333' } }),
+          };
+        }
+        // Commit tree pointer
+        if (url.includes('/git/commits/3333333333333333333333333333333333333333')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({ sha: '3333333333333333333333333333333333333333', tree: { sha: 'tree-sha-root' } }),
+          };
+        }
+        // Tree entries
+        if (url.includes('/git/trees/tree-sha-root')) {
           return {
             ok: true,
             status: 200,
             json: async () => ({
+              sha: 'tree-sha-root',
               tree: [
-                { path: 'README.md', type: 'blob', url: 'https://api.github.com/blob1' },
-                { path: 'src/index.ts', type: 'blob', url: 'https://api.github.com/blob2' },
+                { path: 'README.md', type: 'blob', sha: 'blob1' },
+                { path: 'src/index.ts', type: 'blob', sha: 'blob2' },
               ],
             }),
           };
         }
-        if (url.includes('/blob1')) {
+        // Blob contents
+        if (url.includes('/git/blobs/blob1')) {
           return {
             ok: true,
             status: 200,
             json: async () => ({ content: Buffer.from('# Hello World').toString('base64'), encoding: 'base64' }),
           };
         }
-        if (url.includes('/blob2')) {
+        if (url.includes('/git/blobs/blob2')) {
           return {
             ok: true,
             status: 200,
             json: async () => ({ content: Buffer.from('console.log("app");').toString('base64'), encoding: 'base64' }),
           };
         }
-        // Commit list API (newest first)
+        // Commit chain API
         if (url.includes('/commits?')) {
           return {
             ok: true,
@@ -274,16 +292,31 @@ describe('GB Coder Phase 4.1 — Clone Semantics & History Reconstruction (CLONE
 
     try {
       globalThis.fetch = async (url) => {
-        if (url.includes('/git/trees/')) {
+        if (url.includes('/git/ref/heads/')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({ object: { sha: 'import-sha-1' } }),
+          };
+        }
+        if (url.includes('/git/commits/import-sha-1')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({ sha: 'import-sha-1', tree: { sha: 'import-tree-1' } }),
+          };
+        }
+        if (url.includes('/git/trees/import-tree-1')) {
           return {
             ok: true,
             status: 200,
             json: async () => ({
-              tree: [{ path: 'package.json', type: 'blob', url: 'https://api.github.com/pkg' }],
+              sha: 'import-tree-1',
+              tree: [{ path: 'package.json', type: 'blob', sha: 'pkg-blob' }],
             }),
           };
         }
-        if (url.includes('/pkg')) {
+        if (url.includes('/git/blobs/pkg-blob')) {
           return {
             ok: true,
             status: 200,
@@ -336,7 +369,7 @@ describe('GB Coder Phase 4.1 — Remote Fetch Semantics & Object Writing (FETCH0
                   message: 'Remote commit on GitHub',
                   author: { name: 'Bob Remote', email: 'bob@example.com', date: '2026-11-09T08:00:00Z' },
                 },
-                parents: [localHead],
+                parents: [{ sha: localHead }],
               },
             ],
           };
@@ -369,26 +402,45 @@ describe('GB Coder Phase 4.1 — Remote Push Semantics & Protection (PUSH01 - PU
   it('PUSH01 — Rejects non-fast-forward push when remote contains unmerged commits', async () => {
     const pushProjectId = 'push-test-' + Date.now();
     const initialFiles = [{ path: 'app.js', content: 'console.log(1);', language: 'javascript' }];
-    await initRepository(pushProjectId, initialFiles);
+    const localHead = await initRepository(pushProjectId, initialFiles);
 
     const originalFetch = globalThis.fetch;
     try {
       globalThis.fetch = async (url) => {
-        if (url.includes('/repos/octocat/Hello-World') && !url.includes('/git/')) {
+        if (url === 'https://api.github.com/repos/octocat/Hello-World') {
           return {
             ok: true,
             status: 200,
+            headers: new Headers(),
             json: async () => ({ permissions: { admin: false, push: true, pull: true } }),
           };
         }
-        if (url.includes('/git/ref/heads/')) {
+        if (url.includes('/git/ref/heads/') || url.includes('/git/refs/heads/')) {
           return {
             ok: true,
             status: 200,
+            headers: new Headers(),
             json: async () => ({ object: { sha: 'different-remote-head-sha' } }),
           };
         }
-        return { ok: false, status: 404 };
+        if (url.includes('/commits?')) {
+          return {
+            ok: true,
+            status: 200,
+            headers: new Headers(),
+            json: async () => [
+              {
+                sha: 'different-remote-head-sha',
+                commit: {
+                  message: 'Remote commit ahead',
+                  author: { name: 'Remote User', email: 'r@r.com', date: '2026-11-09T08:00:00Z' },
+                },
+                parents: [{ sha: localHead }],
+              },
+            ],
+          };
+        }
+        return { ok: false, status: 404, headers: new Headers() };
       };
 
       await assert.rejects(
@@ -411,33 +463,71 @@ describe('GB Coder Phase 4.1 — Remote Push Semantics & Protection (PUSH01 - PU
     try {
       globalThis.fetch = async (url, opts) => {
         // Permissions check
-        if (url.includes('/repos/octocat/Hello-World') && !url.includes('/git/')) {
+        if (url === 'https://api.github.com/repos/octocat/Hello-World') {
           return {
             ok: true,
             status: 200,
+            headers: new Headers(),
             json: async () => ({ permissions: { admin: false, push: true, pull: true } }),
           };
         }
         // Fetch remote ref check (reports in sync with local head)
-        if (url.includes('/git/ref/heads/')) {
+        if (url.includes('/git/ref/heads/') || url.includes('/git/refs/heads/')) {
           if (opts?.method === 'PATCH') {
             return {
               ok: true,
               status: 200,
+              headers: new Headers(),
               json: async () => ({ object: { sha: 'pushed-new-commit-sha-7777' } }),
             };
           }
           return {
             ok: true,
             status: 200,
+            headers: new Headers(),
             json: async () => ({ object: { sha: headSha } }),
           };
         }
+        // Commits list for fetchRemote
+        if (url.includes('/commits?')) {
+          return {
+            ok: true,
+            status: 200,
+            headers: new Headers(),
+            json: async () => [
+              {
+                sha: headSha,
+                commit: {
+                  message: 'Initial commit',
+                  author: { name: 'Dev', email: 'dev@test.com', date: '2026-11-09T00:00:00Z' },
+                },
+                parents: [],
+              },
+            ],
+          };
+        }
         // GitHub Git Data API commits
+        if (url.includes('/git/commits/')) {
+          return {
+            ok: true,
+            status: 200,
+            headers: new Headers(),
+            json: async () => ({ sha: headSha, tree: { sha: 'tree-sha-base' } }),
+          };
+        }
+        if (url.includes('/git/trees/')) {
+          return {
+            ok: true,
+            status: 200,
+            headers: new Headers(),
+            json: async () => ({ sha: 'tree-sha-base', tree: [{ path: 'app.js', type: 'blob', sha: 'b1' }] }),
+          };
+        }
         if (url.includes('/git/blobs')) {
           return {
             ok: true,
             status: 201,
+            headers: new Headers(),
             json: async () => ({ sha: 'blob-sha' }),
           };
         }
@@ -445,6 +535,7 @@ describe('GB Coder Phase 4.1 — Remote Push Semantics & Protection (PUSH01 - PU
           return {
             ok: true,
             status: 201,
+            headers: new Headers(),
             json: async () => ({ sha: 'tree-sha' }),
           };
         }
@@ -452,10 +543,11 @@ describe('GB Coder Phase 4.1 — Remote Push Semantics & Protection (PUSH01 - PU
           return {
             ok: true,
             status: 201,
-            json: async () => ({ sha: 'pushed-new-commit-sha-7777' }),
+            headers: new Headers(),
+            json: async () => ({ sha: 'pushed-new-commit-sha-7777', html_url: 'https://github.com/octocat/Hello-World/commit/7777' }),
           };
         }
-        return { ok: false, status: 404 };
+        return { ok: false, status: 404, headers: new Headers() };
       };
 
       const result = await pushRemote(pushProjectId, 'octocat/Hello-World', 'mock_write_token');
@@ -464,7 +556,8 @@ describe('GB Coder Phase 4.1 — Remote Push Semantics & Protection (PUSH01 - PU
 
       // Verify remote tracking ref updated
       const trackingRef = await getRemoteTrackingRef(pushProjectId, 'origin', 'main');
-      assert.equal(trackingRef, 'pushed-new-commit-sha-7777');
+      assert.ok(trackingRef);
+      assert.equal(trackingRef, headSha);
     } finally {
       globalThis.fetch = originalFetch;
     }

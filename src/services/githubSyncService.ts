@@ -232,11 +232,11 @@ interface RateLimitState {
 
 /** Reads GitHub's rate-limit headers off a response, when present. */
 const readRateLimit = (response: Response): RateLimitState => {
-  const remaining = response.headers.get('x-ratelimit-remaining');
-  const reset = response.headers.get('x-ratelimit-reset');
+  const remaining = response.headers?.get ? response.headers.get('x-ratelimit-remaining') : null;
+  const reset = response.headers?.get ? response.headers.get('x-ratelimit-reset') : null;
   return {
-    remaining: remaining === null ? undefined : Number(remaining),
-    resetAt: reset === null ? undefined : Number(reset),
+    remaining: remaining === null || remaining === undefined ? undefined : Number(remaining),
+    resetAt: reset === null || reset === undefined ? undefined : Number(reset),
   };
 };
 
@@ -349,7 +349,7 @@ const githubRequest = async <T>(
   if (init.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
 
   const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   const relayAbort = () => controller.abort();
   init.signal?.addEventListener('abort', relayAbort, { once: true });
 
@@ -375,7 +375,7 @@ const githubRequest = async <T>(
       retryable: true,
     });
   } finally {
-    window.clearTimeout(timer);
+    clearTimeout(timer);
     init.signal?.removeEventListener('abort', relayAbort);
   }
 

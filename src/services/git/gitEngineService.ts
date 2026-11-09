@@ -890,7 +890,7 @@ export const computeAheadBehind = async (
   try {
     localIsAncestor = await git.isDescendent({ fs, dir: projectDir, oid: remoteSha, ancestor: localSha });
   } catch {
-    // Missing object
+    // Missing object or not ancestor
   }
 
   if (localIsAncestor) {
