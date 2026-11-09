@@ -343,16 +343,7 @@ export const pushRemote = async (
 
   if (trackingRef) {
     const trackingIdx = localLogs.findIndex((c) => c.oid === trackingRef);
-    if (trackingIdx === 0) {
-      return {
-        branch: currentBranch,
-        commitSha: trackingRef,
-        commitUrl: `https://github.com/${repoFullName}/commit/${trackingRef}`,
-        filesChanged: 0,
-        alreadyUpToDate: true,
-        pushedCommitsCount: 0,
-      };
-    } else if (trackingIdx > 0) {
+    if (trackingIdx > 0) {
       unpushedLogs = localLogs.slice(0, trackingIdx);
     }
   }
