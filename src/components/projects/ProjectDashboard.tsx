@@ -368,10 +368,12 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
       const existingCloud =
         cloudProjects.find((cp) => cp.id === project.id) ||
         (await getCloudProject(project.id).catch(() => null));
+      const attemptId = crypto.randomUUID().slice(0, 8);
       if (existingCloud) {
         const updated = await saveProjectToCloud(existingCloud.id, files, {
           expectedRevision: existingCloud.cloud_revision,
           name: project.name,
+          attemptId,
         });
         toast.success(
           `Updated "${project.name}" in Private Cloud (Rev ${updated.cloud_revision}).`,

@@ -1438,14 +1438,29 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     setIsCloudSyncing(true);
     const toastId = toast.loading('Syncing project to Private Cloud...');
     try {
-      await saveProjectFiles(activeProjectId, project.files);
+      // 1. Flush any in-flight Monaco editor edits into file set before saving
+      let filesToSync = project.files;
+      if (activePath && editorRef.current) {
+        const currentModel = editorRef.current.getModel();
+        if (currentModel) {
+          const currentText = currentModel.getValue();
+          filesToSync = filesToSync.map((f) =>
+            f.path === activePath ? { ...f, content: currentText } : f
+          );
+        }
+      }
+
+      await saveProjectFiles(activeProjectId, filesToSync);
+      await webcontainerService.flushFileSync();
 
       const existing = await getCloudProject(activeProjectId);
+      const attemptId = crypto.randomUUID().slice(0, 8);
       let updated;
       if (existing) {
-        updated = await saveProjectToCloud(existing.id, project.files, {
+        updated = await saveProjectToCloud(existing.id, filesToSync, {
           expectedRevision: existing.cloud_revision,
           name: projectName,
+          attemptId,
         });
         setCloudRevision(updated.cloud_revision);
         toast.success(`Synced "${projectName}" to Private Cloud (Rev ${updated.cloud_revision}).`, {
@@ -1457,7 +1472,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           project_type: 'react',
           editor_style: 'vscode',
           entry: 'index.html',
-          files: project.files,
+          files: filesToSync,
         });
         setCloudRevision(updated.cloud_revision);
         toast.success(`Saved "${projectName}" to Private Cloud (Rev 1).`, {
