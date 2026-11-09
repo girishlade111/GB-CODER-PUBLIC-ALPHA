@@ -236,33 +236,39 @@ describe('GB Coder Phase 4.4 — Multi-Commit Push & Ancestry Integrity', () => 
         throw err;
       }
 
-      // Verify 2 commits were created on GitHub
-      assert.equal(commitsCreated.length, 2, 'Exactly 2 remote commits must be created');
+      try {
+        // Verify 2 commits were created on GitHub
+        console.log('commitsCreated count:', commitsCreated.length);
+        assert.equal(commitsCreated.length, 2, 'Exactly 2 remote commits must be created');
 
-      // Commit 1 checks
-      assert.equal(commitsCreated[0].message, 'feat: add index.js');
-      assert.deepEqual(commitsCreated[0].parents, [baseSha], 'Commit 1 parent must be baseSha');
+        // Commit 1 checks
+        assert.equal(commitsCreated[0].message, 'feat: add index.js');
+        assert.deepEqual(commitsCreated[0].parents, [baseSha], 'Commit 1 parent must be baseSha');
 
-      // Commit 2 checks
-      assert.equal(commitsCreated[1].message, 'feat: add utils.js helper');
-      assert.deepEqual(commitsCreated[1].parents, ['remote-commit-1'], 'Commit 2 parent must be remote-commit-1');
+        // Commit 2 checks
+        assert.equal(commitsCreated[1].message, 'feat: add utils.js helper');
+        assert.deepEqual(commitsCreated[1].parents, ['remote-commit-1'], 'Commit 2 parent must be remote-commit-1');
 
-      // Branch ref was updated once to final commit
-      assert.ok(refUpdated, 'Branch ref must be updated');
-      assert.equal(refUpdated.sha, 'remote-commit-2', 'Branch ref must point to remote-commit-2');
-      assert.equal(refUpdated.force, false, 'Force push must remain false');
+        // Branch ref was updated once to final commit
+        assert.ok(refUpdated, 'Branch ref must be updated');
+        assert.equal(refUpdated.sha, 'remote-commit-2', 'Branch ref must point to remote-commit-2');
+        assert.equal(refUpdated.force, false, 'Force push must remain false');
 
-      // Return result checks
-      assert.equal(pushResult.commitSha, 'remote-commit-2');
-      assert.equal(pushResult.pushedCommitsCount, 2);
+        // Return result checks
+        assert.equal(pushResult.commitSha, 'remote-commit-2');
+        assert.equal(pushResult.pushedCommitsCount, 2);
 
-      // Verify uncommitted working tree file remained completely untouched
-      const uncommittedContent = await fs.promises.readFile(`${projectDir}/uncommitted-draft.txt`, 'utf8');
-      assert.equal(uncommittedContent, 'Draft notes not yet staged');
+        // Verify uncommitted working tree file remained completely untouched
+        const uncommittedContent = await fs.promises.readFile(`${projectDir}/uncommitted-draft.txt`, 'utf8');
+        assert.equal(uncommittedContent, 'Draft notes not yet staged');
 
-      // Verify tracking ref updated to reconciled remote head
-      const trackingRefAfter = await getRemoteTrackingRef(projectId, 'origin', 'main');
-      assert.ok(trackingRefAfter);
+        // Verify tracking ref updated to reconciled remote head
+        const trackingRefAfter = await getRemoteTrackingRef(projectId, 'origin', 'main');
+        assert.ok(trackingRefAfter);
+      } catch (err) {
+        console.error('Assertion failed:', err);
+        throw err;
+      }
     } finally {
       globalThis.fetch = originalFetch;
     }
