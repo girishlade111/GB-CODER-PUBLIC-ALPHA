@@ -96,8 +96,8 @@ const PULLABLE_EXTENSIONS = new Set([
 const isPullablePath = (path: string): boolean => {
   const base = path.split('/').pop() ?? '';
   const dot = base.lastIndexOf('.');
-  // No extension at all: only allow the well-known extensionless dotfiles.
-  if (dot <= 0) return ['Dockerfile', 'Makefile', 'LICENSE', 'Procfile', 'Gemfile'].includes(base);
+  // No extension at all: only allow the well-known extensionless files.
+  if (dot <= 0) return ['README', 'Dockerfile', 'Makefile', 'LICENSE', 'Procfile', 'Gemfile'].includes(base);
   return PULLABLE_EXTENSIONS.has(base.slice(dot + 1).toLowerCase());
 };
 
