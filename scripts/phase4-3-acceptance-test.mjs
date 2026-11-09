@@ -147,7 +147,7 @@ describe('GB Coder Phase 4.3 — Clone Correctness & Wire vs REST Transport Audi
 
     const logs = await getLog(projectId, 5);
     assert.equal(logs.length, 1);
-    assert.equal(logs[0].message, `Initial commit from ${targetRepo}@master`);
+    assert.equal(logs[0].message, 'Initial commit');
   });
 });
 
