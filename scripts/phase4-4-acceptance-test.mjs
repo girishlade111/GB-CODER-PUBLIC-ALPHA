@@ -228,7 +228,13 @@ describe('GB Coder Phase 4.4 — Multi-Commit Push & Ancestry Integrity', () => 
         return { ok: false, status: 404, headers: new Headers() };
       };
 
-      const pushResult = await pushRemote(projectId, 'disposable-org/disposable-repo', 'test_write_token');
+      let pushResult;
+      try {
+        pushResult = await pushRemote(projectId, 'disposable-org/disposable-repo', 'test_write_token');
+      } catch (err) {
+        console.error('PUSH-MULTI-01 pushRemote error:', err);
+        throw err;
+      }
 
       // Verify 2 commits were created on GitHub
       assert.equal(commitsCreated.length, 2, 'Exactly 2 remote commits must be created');
