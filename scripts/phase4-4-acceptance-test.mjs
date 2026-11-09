@@ -346,6 +346,6 @@ describe('GB Coder Phase 4.4 — Authorization Boundary & Disposable Repo Gates'
     const appConfig = getGitHubAppConfig();
     assert.ok(typeof appConfig === 'object');
     // Client-side app has no private RSA key or backend token-minting endpoint
-    assert.equal(appConfig.installed, false);
+    assert.equal(appConfig.isConfigured, false);
   });
 });
