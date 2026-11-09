@@ -326,6 +326,38 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     [project.files, onChangeFile, onCreateFile],
   );
 
+  const handleGitFilesChanged = useCallback(
+    (newFiles: ProjectFile[]) => {
+      for (const file of newFiles) {
+        if (project.files.some((f) => f.path === file.path)) {
+          onChangeFile(file.path, file.content);
+        } else {
+          onCreateFile?.(file.path, file.language);
+          onChangeFile(file.path, file.content);
+        }
+        void webcontainerService.syncFile(file.path, file.content);
+      }
+      for (const existing of project.files) {
+        if (!newFiles.some((f) => f.path === existing.path)) {
+          onDeleteFile?.(existing.path);
+        }
+      }
+    },
+    [project.files, onChangeFile, onCreateFile, onDeleteFile],
+  );
+
+  const handleFlushEditor = useCallback(async () => {
+    if (activePath && editorRef.current) {
+      const currentModel = editorRef.current.getModel();
+      if (currentModel) {
+        const currentText = currentModel.getValue();
+        onChangeFile(activePath, currentText);
+        void webcontainerService.syncFile(activePath, currentText);
+      }
+    }
+    await webcontainerService.flushFileSync();
+  }, [activePath, onChangeFile]);
+
   const openTerminal = useCallback(() => {
     setWorkbenchLayout((prev) => ({
       ...prev,
@@ -1681,10 +1713,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         case 'source-control':
           return (
             <GitSourceControlPanel
+              projectId={effectiveProjectId}
               files={project.files}
               dirtyPaths={dirtyPaths}
               activePath={activePath}
               onOpenFile={openFile}
+              onFilesChanged={handleGitFilesChanged}
+              onFlushEditor={handleFlushEditor}
             />
           );
 
