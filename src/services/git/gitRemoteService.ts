@@ -331,11 +331,12 @@ export const pushRemote = async (
   const localLogs = await getLog(projectId, 1);
   const commitMessage = localLogs.length > 0 ? localLogs[0].message : 'Commit from GB Coder';
   const authorData = localLogs[0]?.author;
+  const commitTimestamp = localLogs[0]?.timestamp || Date.now();
   const localAuthor = authorData
     ? {
         name: authorData.name,
         email: authorData.email,
-        date: new Date(authorData.timestamp * 1000).toISOString(),
+        date: new Date(commitTimestamp).toISOString(),
       }
     : undefined;
 
@@ -361,9 +362,9 @@ export const pushRemote = async (
           author: {
             name: authorData?.name || 'GB Coder Developer',
             email: authorData?.email || 'developer@gbcoder.dev',
-            date: authorData?.timestamp ? authorData.timestamp * 1000 : Date.now(),
+            date: commitTimestamp,
           },
-          parents: localLogs[0]?.parents || [],
+          parents: localLogs[0]?.parentShas || [],
         },
       ]);
       const writtenOid = shaMap.get(result.commitSha) || result.commitSha;

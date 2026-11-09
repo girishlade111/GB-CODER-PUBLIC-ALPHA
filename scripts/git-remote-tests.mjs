@@ -560,7 +560,7 @@ describe('GB Coder Phase 4.1 — Remote Push Semantics & Protection (PUSH01 - PU
       // Tracking ref matches the reconciled commit object written to .git/objects
       const logsAfter = await getLog(pushProjectId, 1);
       assert.equal(trackingRef, logsAfter[0].sha);
-      assert.equal(logsAfter[0].message, 'Initial commit\n');
+      assert.equal(logsAfter[0].message, 'Initial commit');
     } finally {
       globalThis.fetch = originalFetch;
     }
