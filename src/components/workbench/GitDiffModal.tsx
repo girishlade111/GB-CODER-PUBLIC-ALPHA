@@ -131,3 +131,4 @@ export const GitDiffModal: React.FC<GitDiffModalProps> = ({ isOpen, onClose, dif
     </div>
   );
 };
+

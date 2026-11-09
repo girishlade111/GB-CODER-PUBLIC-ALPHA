@@ -139,3 +139,4 @@ export const GitAuthorModal: React.FC<GitAuthorModalProps> = ({ isOpen, onClose,
     </div>
   );
 };
+

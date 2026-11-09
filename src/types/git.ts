@@ -92,3 +92,4 @@ export interface GitDiffInfo {
   oldContent: string;
   newContent: string;
 }
+

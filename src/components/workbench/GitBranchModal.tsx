@@ -271,3 +271,4 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
     </div>
   );
 };
+

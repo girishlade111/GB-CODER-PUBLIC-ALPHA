@@ -170,3 +170,4 @@ function reportFail(name, err) {
     process.exit(failedCount === 0 ? 0 : 1);
   }
 })();
+
