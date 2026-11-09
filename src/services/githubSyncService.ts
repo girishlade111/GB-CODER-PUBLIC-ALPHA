@@ -666,14 +666,20 @@ const createCommit = async (
   message: string,
   treeSha: string,
   parents: string[],
+  author?: { name: string; email: string; date?: string },
+  committer?: { name: string; email: string; date?: string },
   signal?: AbortSignal,
-): Promise<RawCommit> =>
-  githubRequest<RawCommit>(
+): Promise<RawCommit> => {
+  const body: Record<string, unknown> = { message, tree: treeSha, parents };
+  if (author) body.author = author;
+  if (committer) body.committer = committer;
+  return githubRequest<RawCommit>(
     token,
     `${base}/git/commits`,
-    { method: 'POST', body: JSON.stringify({ message, tree: treeSha, parents }), signal },
+    { method: 'POST', body: JSON.stringify(body), signal },
     'create the commit',
   );
+};
 
 /**
  * Moves a branch to a commit.
@@ -733,6 +739,8 @@ export interface CommitFilesOptions {
    * would be indefensible. Surfaced in the UI as an explicit opt-in.
    */
   deleteMissing?: boolean;
+  author?: { name: string; email: string; date?: string };
+  committer?: { name: string; email: string; date?: string };
   onProgress?: (message: string, percent: number) => void;
   signal?: AbortSignal;
 }
@@ -744,7 +752,18 @@ export interface CommitFilesOptions {
  * differs, so a repeat push is a no-op rather than an empty commit.
  */
 export const commitFiles = async (options: CommitFilesOptions): Promise<GitHubCommitResult> => {
-  const { token, ref, branch, message, files, deleteMissing = false, onProgress, signal } = options;
+  const {
+    token,
+    ref,
+    branch,
+    message,
+    files,
+    deleteMissing = false,
+    author,
+    committer,
+    onProgress,
+    signal,
+  } = options;
   const report = onProgress ?? (() => {});
   const base = repoPath(ref);
   const commitBase = `https://github.com/${ref.owner}/${ref.repo}/commit`;
@@ -805,7 +824,16 @@ export const commitFiles = async (options: CommitFilesOptions): Promise<GitHubCo
 
   // 3. The commit, then the branch move.
   report('Creating the commit…', 82);
-  const commit = await createCommit(token, base, message, treeSha, [headSha], signal);
+  const commit = await createCommit(
+    token,
+    base,
+    message,
+    treeSha,
+    [headSha],
+    author,
+    committer,
+    signal,
+  );
 
   report('Updating the branch…', 92);
   await updateRef(token, base, branch, commit.sha, signal);

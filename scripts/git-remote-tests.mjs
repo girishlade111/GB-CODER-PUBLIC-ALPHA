@@ -554,10 +554,13 @@ describe('GB Coder Phase 4.1 — Remote Push Semantics & Protection (PUSH01 - PU
       assert.equal(result.commitSha, 'pushed-new-commit-sha-7777');
       assert.equal(result.branch, 'main');
 
-      // Verify remote tracking ref updated
+      // Verify remote tracking ref reconciled to canonical remote commit object
       const trackingRef = await getRemoteTrackingRef(pushProjectId, 'origin', 'main');
       assert.ok(trackingRef);
-      assert.equal(trackingRef, headSha);
+      // Tracking ref matches the reconciled commit object written to .git/objects
+      const logsAfter = await getLog(pushProjectId, 1);
+      assert.equal(trackingRef, logsAfter[0].sha);
+      assert.equal(logsAfter[0].message, 'Initial commit\n');
     } finally {
       globalThis.fetch = originalFetch;
     }

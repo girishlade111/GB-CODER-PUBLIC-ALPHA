@@ -330,35 +330,45 @@ export const pushRemote = async (
   const files = await readWorkingTree(projectId);
   const localLogs = await getLog(projectId, 1);
   const commitMessage = localLogs.length > 0 ? localLogs[0].message : 'Commit from GB Coder';
+  const authorData = localLogs[0]?.author;
+  const localAuthor = authorData
+    ? {
+        name: authorData.name,
+        email: authorData.email,
+        date: new Date(authorData.timestamp * 1000).toISOString(),
+      }
+    : undefined;
 
   const result = await commitFiles({
     ref: repoRef,
     branch: currentBranch,
     files: files.map((f) => ({ path: f.path, content: f.content })),
     message: commitMessage,
+    author: localAuthor,
     token,
   });
 
-  // Keep remote tracking ref aligned with pushed commit
+  // Reconcile remote tracking ref and local branch ref with pushed commit
   if (result.commitSha) {
     const localSha = localLogs[0]?.sha;
-    if (localSha) {
-      await setRemoteTrackingRef(projectId, 'origin', currentBranch, localSha);
+    if (localSha && localSha === result.commitSha) {
+      await setRemoteTrackingRef(projectId, 'origin', currentBranch, result.commitSha);
     } else {
       const shaMap = await writeRemoteCommitObjects(projectId, [
         {
           sha: result.commitSha,
           message: commitMessage,
           author: {
-            name: 'GB Coder Developer',
-            email: 'developer@gbcoder.dev',
-            date: Date.now(),
+            name: authorData?.name || 'GB Coder Developer',
+            email: authorData?.email || 'developer@gbcoder.dev',
+            date: authorData?.timestamp ? authorData.timestamp * 1000 : Date.now(),
           },
-          parents: [],
+          parents: localLogs[0]?.parents || [],
         },
       ]);
       const writtenOid = shaMap.get(result.commitSha) || result.commitSha;
       await setRemoteTrackingRef(projectId, 'origin', currentBranch, writtenOid);
+      await setBranchRef(projectId, currentBranch, writtenOid);
     }
   }
 
