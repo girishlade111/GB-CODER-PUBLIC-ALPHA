@@ -24,6 +24,7 @@ import {
   initRepository,
   syncWorkingTree,
   stageAll,
+  unstageAll,
   commit,
   readWorkingTree,
   getFS,
@@ -103,7 +104,7 @@ export const fetchRemote = async (
   token: string,
 ): Promise<FetchResult> => {
   const currentBranch = await getCurrentBranch(projectId);
-  const url = `https://api.github.com/repos/${repoFullName}/git/ref/heads/${encodeURIComponent(currentBranch)}`;
+  const url = `https://api.github.com/repos/${repoFullName}/git/ref/heads/${encodeURIComponent(currentBranch)}?_t=${Date.now()}`;
 
   const response = await fetch(url, {
     method: 'GET',
@@ -112,6 +113,8 @@ export const fetchRemote = async (
       Authorization: `Bearer ${token}`,
       'User-Agent': 'GB-Coder-IDE',
     },
+    cache: 'no-store',
+    signal: AbortSignal.timeout(8000),
   });
 
   if (!response.ok) {
@@ -168,7 +171,7 @@ export const fetchRemote = async (
 
   // Remote has new commits not present in local history: fetch and write objects
   try {
-    const commitsUrl = `https://api.github.com/repos/${repoFullName}/commits?sha=${encodeURIComponent(remoteSha)}&per_page=30`;
+    const commitsUrl = `https://api.github.com/repos/${repoFullName}/commits?sha=${encodeURIComponent(remoteSha)}&per_page=30&_t=${Date.now()}`;
     const commitsRes = await fetch(commitsUrl, {
       method: 'GET',
       headers: {
@@ -176,6 +179,8 @@ export const fetchRemote = async (
         Authorization: `Bearer ${token}`,
         'User-Agent': 'GB-Coder-IDE',
       },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(8000),
     });
 
     if (commitsRes.ok) {
@@ -296,6 +301,7 @@ export const pullRemote = async (
     const remoteSha =
       (await getRemoteTrackingRef(projectId, 'origin', currentBranch)) || fetchRes.latestRemoteSha;
     await setBranchRef(projectId, currentBranch, remoteSha);
+    await unstageAll(projectId);
 
     return {
       status: 'fast-forward',
@@ -382,7 +388,7 @@ export const pushRemote = async (
           const { blob } = await git.readBlob({ fs, dir: projectDir, oid: entry.oid, filepath });
           return {
             path: filepath,
-            content: Buffer.from(blob).toString('utf8'),
+            content: new TextDecoder().decode(blob),
           };
         }),
       );

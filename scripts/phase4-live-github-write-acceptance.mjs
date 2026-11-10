@@ -608,4 +608,8 @@ if (isAuthorized) {
       });
     });
   });
+
+  after(() => {
+    setTimeout(() => process.exit(0), 100);
+  });
 }

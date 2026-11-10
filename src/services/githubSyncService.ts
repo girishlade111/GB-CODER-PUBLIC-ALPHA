@@ -356,6 +356,7 @@ const githubRequest = async <T>(
   let response: Response;
   try {
     response = await fetch(`${API_BASE}${path}`, {
+      cache: 'no-store',
       ...init,
       signal: controller.signal,
       headers: {
@@ -568,19 +569,44 @@ const readBranchHead = async (
   branch: string,
   signal?: AbortSignal,
 ): Promise<BranchHead> => {
-  const headRef = await githubRequest<RawRef>(
-    token,
-    `${base}/git/ref/heads/${encodeURIComponent(branch)}`,
-    { signal },
-    'find the branch',
-  );
-  const headCommit = await githubRequest<RawCommit>(
-    token,
-    `${base}/git/commits/${headRef.object.sha}`,
-    { signal },
-    'read the latest commit',
-  );
-  return { headSha: headRef.object.sha, baseTreeSha: headCommit.tree.sha };
+  try {
+    const headRef = await githubRequest<RawRef>(
+      token,
+      `${base}/git/ref/heads/${encodeURIComponent(branch)}?_t=${Date.now()}`,
+      { signal },
+      'find the branch',
+    );
+    const headCommit = await githubRequest<RawCommit>(
+      token,
+      `${base}/git/commits/${headRef.object.sha}`,
+      { signal },
+      'read the latest commit',
+    );
+    return { headSha: headRef.object.sha, baseTreeSha: headCommit.tree.sha };
+  } catch (error) {
+    if (error instanceof GitHubSyncError && error.status === 404) {
+      const repo = await githubRequest<{ default_branch: string }>(
+        token,
+        base,
+        { signal },
+        'read repository default branch',
+      );
+      const defaultRef = await githubRequest<RawRef>(
+        token,
+        `${base}/git/ref/heads/${encodeURIComponent(repo.default_branch)}`,
+        { signal },
+        'find default branch',
+      );
+      const defaultCommit = await githubRequest<RawCommit>(
+        token,
+        `${base}/git/commits/${defaultRef.object.sha}`,
+        { signal },
+        'read default branch commit',
+      );
+      return { headSha: defaultRef.object.sha, baseTreeSha: defaultCommit.tree.sha };
+    }
+    throw error;
+  }
 };
 
 /** Walks a tree into a path → blob-sha map, for diffing against. */
@@ -708,9 +734,22 @@ const updateRef = async (
       'update the branch',
     );
   } catch (error) {
+    if (
+      error instanceof GitHubSyncError &&
+      (error.status === 404 ||
+        (error.status === 422 && error.message.toLowerCase().includes('reference does not exist')))
+    ) {
+      await githubRequest<RawRef>(
+        token,
+        `${base}/git/refs`,
+        { method: 'POST', body: JSON.stringify({ ref: `refs/heads/${branch}`, sha }), signal },
+        'create the branch ref',
+      );
+      return;
+    }
     if (error instanceof GitHubSyncError && (error.kind === 'validation' || error.kind === 'conflict')) {
       throw new GitHubSyncError(
-        'The branch moved while you were editing, so GitHub refused the update. Pull the latest changes, then push again — nothing of yours or anyone else’s was overwritten.',
+        'The branch moved while you were editing, so GitHub refused the update. Pull the latest changes, then push again: nothing of yours or anyone else was overwritten.',
         { kind: 'conflict', status: error.status, retryable: false },
       );
     }

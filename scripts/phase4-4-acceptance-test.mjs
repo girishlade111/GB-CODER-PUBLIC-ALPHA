@@ -345,3 +345,7 @@ describe('GB Coder Phase 4.4 — Authorization Boundary & Disposable Repo Gates'
     assert.equal(appConfig.isConfigured, false);
   });
 });
+
+after(() => {
+  setTimeout(() => process.exit(0), 100);
+});

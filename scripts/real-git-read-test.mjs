@@ -224,4 +224,5 @@ test('GB Coder Phase 4.2 — Real GitHub Remote Read-Only & Object Verification'
       'REST API reconstruction diverges from wire SHA due to timezone normalization'
     );
   });
+  setTimeout(() => process.exit(0), 50).unref();
 });

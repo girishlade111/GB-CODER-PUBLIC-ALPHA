@@ -36,6 +36,7 @@ export const GitCommitHistoryModal: React.FC<GitCommitHistoryModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="git-history-modal-title"
+      data-testid="git-history-modal"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs select-none"
     >
       <div className="flex h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-2xl">
@@ -53,6 +54,7 @@ export const GitCommitHistoryModal: React.FC<GitCommitHistoryModalProps> = ({
           </div>
 
           <button
+            data-testid="git-history-modal-close"
             onClick={onClose}
             className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)]"
             title="Close"
@@ -71,7 +73,7 @@ export const GitCommitHistoryModal: React.FC<GitCommitHistoryModalProps> = ({
           ) : (
             <div className="relative space-y-4 pl-4 before:absolute before:bottom-2 before:top-2 before:left-6 before:w-0.5 before:bg-[var(--border)]">
               {commits.map((commit) => (
-                <div key={commit.sha} className="relative flex items-start gap-4">
+                <div key={commit.sha} data-testid="git-commit-item" className="relative flex items-start gap-4">
                   <div className="relative z-10 mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] ring-4 ring-[var(--background)]">
                     <div className="h-1.5 w-1.5 rounded-full bg-[var(--primary-foreground)]" />
                   </div>
@@ -79,7 +81,10 @@ export const GitCommitHistoryModal: React.FC<GitCommitHistoryModalProps> = ({
                   <div className="flex-1 rounded border border-[var(--border)] bg-[var(--sidebar)] p-3 text-xs shadow-xs">
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="font-semibold text-[var(--foreground)]">{commit.message}</h3>
-                      <span className="font-mono text-[11px] text-[var(--muted-foreground)] bg-black/30 px-1.5 py-0.5 rounded">
+                      <span
+                        data-testid="git-commit-sha"
+                        className="font-mono text-[11px] text-[var(--muted-foreground)] bg-black/30 px-1.5 py-0.5 rounded"
+                      >
                         {commit.shortSha}
                       </span>
                     </div>

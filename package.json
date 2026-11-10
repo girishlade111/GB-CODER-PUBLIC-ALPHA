@@ -100,6 +100,7 @@
     "@vue/compiler-sfc": "3.5.40",
     "@webcontainer/api": "^1.6.4",
     "axios": "^1.13.6",
+    "buffer": "^6.0.3",
     "diff": "^5.2.0",
     "e2b": "^2.37.0",
     "esbuild-wasm": "0.25.10",

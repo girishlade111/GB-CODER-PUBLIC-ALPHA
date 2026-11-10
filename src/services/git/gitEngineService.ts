@@ -15,8 +15,16 @@
  * - Clear separation from Supabase Cloud Sync
  */
 
+import { Buffer } from 'buffer';
 import * as git from 'isomorphic-git';
 import FS from '@isomorphic-git/lightning-fs';
+
+if (typeof window !== 'undefined' && !window.Buffer) {
+  (window as unknown as { Buffer: typeof Buffer }).Buffer = Buffer;
+}
+if (typeof globalThis !== 'undefined' && !globalThis.Buffer) {
+  (globalThis as unknown as { Buffer: typeof Buffer }).Buffer = Buffer;
+}
 import { languageForPath, type ProjectFile } from '../../types/files';
 import type {
   GitAuthor,

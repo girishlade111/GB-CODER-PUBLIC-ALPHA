@@ -376,3 +376,8 @@ describe('GB Coder Phase 4.3 — Real GitHub Authorization & Write Tests Gate (T
     }
   });
 });
+
+after(() => {
+  setTimeout(() => process.exit(0), 100);
+});
+

@@ -17,7 +17,7 @@
  * - Dark workbench aesthetic with high-contrast Lucide icons
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   GitBranch,
   GitCommit,
@@ -47,6 +47,7 @@ import type {
   GitBranchInfo,
   GitDiffInfo,
   GitAuthor,
+  GitRemoteConfig,
 } from '../../types/git';
 import {
   isRepositoryInitialized,
@@ -77,7 +78,7 @@ import {
   pushRemote,
   parseRepoFullName,
 } from '../../services/git/gitRemoteService';
-import { readCredential } from '../../services/credentialStore';
+import { readCredential, saveCredential } from '../../services/credentialStore';
 import { GitDiffModal } from './GitDiffModal';
 import { GitBranchModal } from './GitBranchModal';
 import { GitCommitHistoryModal } from './GitCommitHistoryModal';
@@ -122,6 +123,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
   const [isCommitting, setIsCommitting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const isRefreshingRef = useRef(false);
   const [currentAuthor, setCurrentAuthor] = useState<GitAuthor>(getGitAuthor());
 
   // Accordion toggles
@@ -142,17 +144,22 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
   const [prModalOpen, setPrModalOpen] = useState(false);
 
   // Remote config
-  const remoteConfig = useMemo(() => getRemoteConfig(projectId), [projectId, isSyncing]);
+  const [remoteConfig, setRemoteConfigState] = useState<GitRemoteConfig | null>(() => getRemoteConfig(projectId));
   const repoFullName = useMemo(() => {
     return remoteConfig ? parseRepoFullName(remoteConfig.url) : null;
   }, [remoteConfig]);
 
   // Load and refresh Git status
-  const refreshStatus = useCallback(async () => {
+  const refreshStatus = useCallback(async (checkRemote = false) => {
+    if (isRefreshingRef.current) return;
+    isRefreshingRef.current = true;
     setIsRefreshing(true);
     try {
       const initialized = await isRepositoryInitialized(projectId);
       setIsInitialized(initialized);
+      const activeRemote = getRemoteConfig(projectId);
+      setRemoteConfigState(activeRemote);
+      const activeRepoFullName = activeRemote ? parseRepoFullName(activeRemote.url) : null;
 
       if (!initialized) {
         setStatus({
@@ -173,25 +180,31 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
       const gitStatus = await getStatus(projectId);
       setStatus(gitStatus);
 
-      // Check remote ahead/behind if configured
-      if (remoteConfig && repoFullName) {
-        const token = await readCredential('github');
-        if (token) {
-          try {
-            const fetchRes = await fetchRemote(projectId, repoFullName, token);
-            setStatus((prev) => ({
-              ...prev,
-              ahead: fetchRes.ahead,
-              behind: fetchRes.behind,
-            }));
-          } catch {
-            // Offline or rate-limited
+      // Check remote ahead/behind if configured and explicitly requested
+      if (checkRemote) {
+        console.error('[DEBUG-SC] checkRemote is true, activeRemote:', activeRemote?.url, 'activeRepoFullName:', activeRepoFullName);
+        if (activeRemote && activeRepoFullName) {
+          const token = await readCredential('github');
+          console.error('[DEBUG-SC] readCredential token exists:', Boolean(token));
+          if (token) {
+            try {
+              const fetchRes = await fetchRemote(projectId, activeRepoFullName, token);
+              console.error('[DEBUG-SC] fetchRes:', JSON.stringify(fetchRes));
+              setStatus((prev) => ({
+                ...prev,
+                ahead: fetchRes.ahead,
+                behind: fetchRes.behind,
+              }));
+            } catch (err) {
+              console.error('[DEBUG-SC] fetchRemote threw:', err);
+            }
           }
         }
       }
     } catch (err) {
       console.error('[GitSourceControl] Failed to refresh status:', err);
     } finally {
+      isRefreshingRef.current = false;
       setIsRefreshing(false);
     }
   }, [projectId, files, remoteConfig, repoFullName]);
@@ -199,6 +212,25 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
   useEffect(() => {
     void refreshStatus();
   }, [refreshStatus]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as unknown as Record<string, unknown>).__gitDebug = {
+        projectId,
+        refreshStatus,
+        fetchRemote: async () => {
+          const activeRemote = getRemoteConfig(projectId);
+          const activeRepoFullName = activeRemote ? parseRepoFullName(activeRemote.url) : null;
+          const token = await readCredential('github');
+          if (!activeRepoFullName || !token) {
+            return { error: 'Missing remote or token', activeRepoFullName, hasToken: Boolean(token) };
+          }
+          return await fetchRemote(projectId, activeRepoFullName, token);
+        },
+        getStatus: () => getStatus(projectId),
+      };
+    }
+  }, [projectId, refreshStatus]);
 
   // Initialize repository
   const handleInitializeRepo = async () => {
@@ -328,10 +360,10 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
 
   // Open Branches Modal
   const handleOpenBranches = async () => {
+    setBranchModalOpen(true);
     try {
       const branches = await getBranches(projectId);
       setBranchList(branches);
-      setBranchModalOpen(true);
     } catch {
       toast.error('Failed to load branches.');
     }
@@ -339,10 +371,20 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
 
   // Create branch
   const handleCreateBranch = async (name: string) => {
+    console.log('[GitSourceControl] handleCreateBranch called with:', name);
+    if (onFlushEditor) {
+      await Promise.race([
+        onFlushEditor(),
+        new Promise((resolve) => setTimeout(resolve, 1500)),
+      ]);
+    }
     await createBranch(projectId, name);
-    toast.success(`Branch '${name}' created.`);
-    const updated = await getBranches(projectId);
-    setBranchList(updated);
+    const updatedFiles = await switchBranch(projectId, name);
+    toast.success(`Created and switched to branch '${name}'.`);
+    setStatus((prev) => ({ ...prev, branch: name }));
+    if (onFilesChanged) onFilesChanged(updatedFiles);
+    setBranchModalOpen(false);
+    await refreshStatus();
   };
 
   // Switch branch
@@ -350,6 +392,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
     if (onFlushEditor) await onFlushEditor();
     const updatedFiles = await switchBranch(projectId, name);
     toast.success(`Switched to branch '${name}'.`);
+    setStatus((prev) => ({ ...prev, branch: name }));
     if (onFilesChanged) onFilesChanged(updatedFiles);
     await refreshStatus();
   };
@@ -384,10 +427,10 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
 
   // Open History Modal
   const handleOpenHistory = async () => {
+    setHistoryModalOpen(true);
     try {
       const logs = await getLog(projectId);
       setCommitHistory(logs);
-      setHistoryModalOpen(true);
     } catch {
       toast.error('Failed to load commit history.');
     }
@@ -413,10 +456,16 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
       toast.error('Remote origin not configured.');
       return;
     }
-    const token = await readCredential('github');
+    let token = await readCredential('github');
     if (!token) {
-      toast.error('Please configure your GitHub access token first.');
-      return;
+      const tokenInput = window.prompt('Please enter your GitHub access token:');
+      if (tokenInput && tokenInput.trim()) {
+        await saveCredential('github', tokenInput.trim(), true);
+        token = tokenInput.trim();
+      } else {
+        toast.error('Please configure your GitHub access token first.');
+        return;
+      }
     }
 
     setIsSyncing(true);
@@ -428,7 +477,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
       } else {
         toast.success(`Pushed to ${repoFullName} (${res.commitSha.slice(0, 7)})`);
       }
-      await refreshStatus();
+      await refreshStatus(true);
     } catch (err: unknown) {
       toast.error((err as Error)?.message || 'Failed to push changes.');
     } finally {
@@ -442,10 +491,16 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
       toast.error('Remote origin not configured.');
       return;
     }
-    const token = await readCredential('github');
+    let token = await readCredential('github');
     if (!token) {
-      toast.error('Please configure your GitHub access token first.');
-      return;
+      const tokenInput = window.prompt('Please enter your GitHub access token:');
+      if (tokenInput && tokenInput.trim()) {
+        await saveCredential('github', tokenInput.trim(), true);
+        token = tokenInput.trim();
+      } else {
+        toast.error('Please configure your GitHub access token first.');
+        return;
+      }
     }
 
     setIsSyncing(true);
@@ -454,7 +509,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
       const res = await pullRemote(projectId, repoFullName, token, currentAuthor);
       toast.success(`Pulled ${res.filesChanged} files from ${repoFullName}.`);
       if (onFilesChanged) onFilesChanged(res.files);
-      await refreshStatus();
+      await refreshStatus(true);
     } catch (err: unknown) {
       toast.error((err as Error)?.message || 'Failed to pull changes.');
     } finally {
@@ -463,7 +518,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
   };
 
   // Configure Remote URL prompt
-  const handleConfigureRemote = () => {
+  const handleConfigureRemote = async () => {
     const currentUrl = remoteConfig?.url || '';
     const input = window.prompt(
       'Enter GitHub repository URL (e.g. https://github.com/owner/repo.git or owner/repo):',
@@ -477,16 +532,31 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
       return;
     }
 
-    setRemoteConfig(projectId, {
+    const newConfig = {
       name: 'origin',
       url: `https://github.com/${parsed}.git`,
-    });
+    };
+    setRemoteConfig(projectId, newConfig);
+    setRemoteConfigState(newConfig);
     toast.success(`Configured remote origin to ${parsed}.`);
+
+    const existingToken = await readCredential('github');
+    if (!existingToken) {
+      const tokenInput = window.prompt('Enter GitHub Personal Access Token:');
+      if (tokenInput && tokenInput.trim()) {
+        await saveCredential('github', tokenInput.trim(), true);
+        toast.success('GitHub token saved securely.');
+      }
+    }
+
     void refreshStatus();
   };
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--sidebar)] text-xs select-none">
+    <div
+      data-testid="git-source-control-panel"
+      className="flex h-full w-full flex-col overflow-hidden bg-[var(--sidebar)] text-xs select-none"
+    >
       {/* Top Header Bar */}
       <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-3 py-2 bg-[var(--sidebar)]">
         <div className="flex items-center gap-1.5 truncate">
@@ -499,7 +569,8 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
         <div className="flex items-center gap-1 shrink-0">
           {/* Refresh Button */}
           <button
-            onClick={() => void refreshStatus()}
+            data-testid="git-refresh-btn"
+            onClick={() => void refreshStatus(true)}
             disabled={isRefreshing}
             className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)] disabled:opacity-50"
             title="Refresh Git Status"
@@ -510,6 +581,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
 
           {/* History Button */}
           <button
+            data-testid="git-history-btn"
             onClick={() => void handleOpenHistory()}
             className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)]"
             title="View Commit History"
@@ -520,6 +592,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
 
           {/* Pull Request Button */}
           <button
+            data-testid="git-pr-btn"
             onClick={() => void handleOpenPRModal()}
             className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)]"
             title="Pull Requests"
@@ -530,11 +603,12 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
 
           {/* Branch Switcher Pill */}
           <button
+            data-testid="git-branch-switcher-btn"
             onClick={() => void handleOpenBranches()}
             className="flex items-center gap-1 rounded bg-[var(--sidebar-accent)] px-2 py-0.5 text-[10px] font-mono text-[var(--foreground)] hover:bg-white/10"
             title={`Current branch: ${status.branch} (Click to switch)`}
           >
-            <span className="truncate max-w-[80px]">{status.branch}</span>
+            <span data-testid="git-branch-name" className="truncate max-w-[80px]">{status.branch}</span>
             <ChevronDown className="h-3 w-3 opacity-60 shrink-0" />
           </button>
         </div>
@@ -551,6 +625,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
             Initialize a local Git repository to start tracking changes, creating commits, and syncing with GitHub.
           </p>
           <button
+            data-testid="git-init-btn"
             onClick={() => void handleInitializeRepo()}
             disabled={isRefreshing}
             className="flex items-center gap-2 rounded bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)] shadow-xs hover:opacity-90 disabled:opacity-50"
@@ -590,6 +665,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
           <div className="border-b border-[var(--border)] p-3 space-y-2 bg-[var(--sidebar)]/50">
             <div className="relative">
               <textarea
+                data-testid="git-commit-input"
                 value={commitMessage}
                 onChange={(e) => setCommitMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -612,6 +688,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
 
               {/* Commit Button */}
               <button
+                data-testid="git-commit-btn"
                 onClick={() => void handleCommit()}
                 disabled={isCommitting || !commitMessage.trim()}
                 className="flex items-center gap-1.5 rounded bg-[var(--primary)] px-3 py-1 text-xs font-semibold text-[var(--primary-foreground)] hover:opacity-90 disabled:opacity-50 shadow-xs"
@@ -629,6 +706,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
           {/* STAGED CHANGES Section */}
           <div className="border-b border-[var(--border)]">
             <div
+              data-testid="git-staged-header"
               onClick={() => setStagedExpanded(!stagedExpanded)}
               className="flex cursor-pointer items-center justify-between px-3 py-1.5 bg-[var(--sidebar)] hover:bg-white/5 text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider"
             >
@@ -639,13 +717,14 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
                   <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                 )}
                 <span>Staged Changes</span>
-                <span className="rounded bg-[var(--sidebar-accent)] px-1.5 py-0.2 text-[10px] font-mono">
+                <span data-testid="git-staged-count" className="rounded bg-[var(--sidebar-accent)] px-1.5 py-0.2 text-[10px] font-mono">
                   {status.staged.length}
                 </span>
               </div>
 
               {status.staged.length > 0 && (
                 <button
+                  data-testid="git-unstage-all-btn"
                   onClick={(e) => {
                     e.stopPropagation();
                     void handleUnstageAll();
@@ -709,6 +788,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
 
                           {/* Unstage Button */}
                           <button
+                            data-testid={`git-unstage-file-${file.path}`}
                             onClick={(e) => void handleUnstageFile(file.path, e)}
                             className="hidden group-hover:inline-flex rounded p-1 hover:bg-white/10 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                             title="Unstage Changes"
@@ -739,6 +819,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
           {/* CHANGES (Unstaged) Section */}
           <div className="border-b border-[var(--border)]">
             <div
+              data-testid="git-unstaged-header"
               onClick={() => setUnstagedExpanded(!unstagedExpanded)}
               className="flex cursor-pointer items-center justify-between px-3 py-1.5 bg-[var(--sidebar)] hover:bg-white/5 text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider"
             >
@@ -749,7 +830,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
                   <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                 )}
                 <span>Changes</span>
-                <span className="rounded bg-[var(--sidebar-accent)] px-1.5 py-0.2 text-[10px] font-mono">
+                <span data-testid="git-unstaged-count" className="rounded bg-[var(--sidebar-accent)] px-1.5 py-0.2 text-[10px] font-mono">
                   {status.unstaged.length}
                 </span>
               </div>
@@ -757,6 +838,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
               {status.unstaged.length > 0 && (
                 <div className="flex items-center gap-1">
                   <button
+                    data-testid="git-stage-all-btn"
                     onClick={(e) => {
                       e.stopPropagation();
                       void handleStageAll();
@@ -830,6 +912,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
 
                           {/* Stage Button */}
                           <button
+                            data-testid={`git-stage-file-${file.path}`}
                             onClick={(e) => void handleStageFile(file.path, e)}
                             className="hidden group-hover:inline-flex rounded p-1 hover:bg-white/10 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                             title="Stage Changes"
@@ -864,15 +947,15 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
         {remoteConfig ? (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-[11px]">
-              <span className="truncate font-medium text-[var(--foreground)]">
+              <span data-testid="git-remote-name" className="truncate font-medium text-[var(--foreground)]">
                 {repoFullName || remoteConfig.name}
               </span>
               <div className="flex items-center gap-2 font-mono text-[10px] text-[var(--muted-foreground)]">
-                <span className="flex items-center gap-0.5" title="Commits ahead of remote">
+                <span data-testid="git-ahead-count" className="flex items-center gap-0.5" title="Commits ahead of remote">
                   <ArrowUp className="h-3 w-3 text-emerald-400" />
                   {status.ahead}
                 </span>
-                <span className="flex items-center gap-0.5" title="Commits behind remote">
+                <span data-testid="git-behind-count" className="flex items-center gap-0.5" title="Commits behind remote">
                   <ArrowDown className="h-3 w-3 text-amber-400" />
                   {status.behind}
                 </span>
@@ -881,6 +964,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
 
             <div className="flex items-center gap-1.5">
               <button
+                data-testid="git-pull-btn"
                 onClick={() => void handlePull()}
                 disabled={isSyncing}
                 className="flex-1 flex items-center justify-center gap-1 rounded border border-[var(--border)] bg-[var(--background)] py-1 text-[11px] font-medium text-[var(--foreground)] hover:bg-white/5 disabled:opacity-50"
@@ -890,6 +974,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
               </button>
 
               <button
+                data-testid="git-push-btn"
                 onClick={() => void handlePush()}
                 disabled={isSyncing}
                 className="flex-1 flex items-center justify-center gap-1 rounded bg-[var(--primary)] py-1 text-[11px] font-semibold text-[var(--primary-foreground)] hover:opacity-90 disabled:opacity-50"
@@ -905,6 +990,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
           </div>
         ) : (
           <button
+            data-testid="git-connect-remote-btn"
             onClick={handleConfigureRemote}
             className="w-full flex items-center justify-center gap-1.5 rounded border border-[var(--border)] bg-[var(--sidebar-accent)] py-1.5 text-[11px] font-medium text-[var(--foreground)] hover:bg-white/10"
           >

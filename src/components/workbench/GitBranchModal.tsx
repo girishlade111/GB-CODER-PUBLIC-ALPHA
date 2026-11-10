@@ -55,8 +55,8 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreate = async () => {
+    console.log('[GitBranchModal] handleCreate called, newBranchName:', newBranchName);
     const clean = newBranchName.trim();
     if (!clean) return;
 
@@ -66,6 +66,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
       await onCreateBranch(clean);
       setNewBranchName('');
     } catch (err: unknown) {
+      console.error('[GitBranchModal] create failed:', err);
       setActionError((err as Error)?.message || 'Failed to create branch.');
     } finally {
       setIsCreating(false);
@@ -126,6 +127,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="git-branches-modal-title"
+      data-testid="git-branch-modal"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs select-none"
     >
       <div className="flex h-[75vh] w-full max-w-xl flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-2xl">
@@ -139,6 +141,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
           </div>
 
           <button
+            data-testid="git-branch-modal-close"
             onClick={onClose}
             className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)]"
             title="Close"
@@ -150,16 +153,25 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
 
         {/* Create Branch Bar */}
         <div className="border-b border-[var(--border)] bg-[var(--sidebar)]/50 p-4">
-          <form onSubmit={handleCreate} className="flex gap-2">
+          <div className="flex gap-2">
             <input
+              data-testid="git-new-branch-input"
               type="text"
               value={newBranchName}
               onChange={(e) => setNewBranchName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void handleCreate();
+                }
+              }}
               placeholder="New branch name (e.g. feature/login)"
               className="flex-1 rounded border border-[var(--border)] bg-[var(--sidebar)] px-3 py-1.5 text-xs text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-hidden font-mono"
             />
             <button
-              type="submit"
+              data-testid="git-create-branch-btn"
+              type="button"
+              onClick={() => void handleCreate()}
               disabled={isCreating || !newBranchName.trim()}
               className="flex items-center gap-1.5 rounded bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-[var(--primary-foreground)] hover:opacity-90 disabled:opacity-50"
             >
@@ -170,12 +182,12 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
               )}
               <span>Create</span>
             </button>
-          </form>
+          </div>
         </div>
 
         {/* Error notification */}
         {actionError && (
-          <div className="flex items-center gap-2 border-b border-rose-500/30 bg-rose-500/10 px-4 py-2 text-xs text-rose-300">
+          <div data-testid="git-branch-error" className="flex items-center gap-2 border-b border-rose-500/30 bg-rose-500/10 px-4 py-2 text-xs text-rose-300">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span className="truncate">{actionError}</span>
           </div>
@@ -219,6 +231,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
                   {!isCurrent && (
                     <>
                       <button
+                        data-testid={`git-switch-branch-${b.name}`}
                         onClick={() => handleSwitch(b.name)}
                         disabled={isBusy}
                         className="rounded bg-[var(--sidebar-accent)] px-2.5 py-1 text-[11px] font-medium text-[var(--foreground)] hover:bg-white/10 disabled:opacity-50"

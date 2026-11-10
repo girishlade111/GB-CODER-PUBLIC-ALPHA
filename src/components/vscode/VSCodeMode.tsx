@@ -332,10 +332,17 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         if (project.files.some((f) => f.path === file.path)) {
           onChangeFile(file.path, file.content);
         } else {
-          onCreateFile?.(file.path, file.language);
+          onCreateFile?.(file.path, file.content);
           onChangeFile(file.path, file.content);
         }
         void webcontainerService.syncFile(file.path, file.content);
+        dirtyPathsMirrorRef.current.delete(file.path);
+        setDirtyPaths((prev) => {
+          if (!prev.has(file.path)) return prev;
+          const next = new Set(prev);
+          next.delete(file.path);
+          return next;
+        });
       }
       for (const existing of project.files) {
         if (!newFiles.some((f) => f.path === existing.path)) {
@@ -353,9 +360,23 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         const currentText = currentModel.getValue();
         onChangeFile(activePath, currentText);
         void webcontainerService.syncFile(activePath, currentText);
+        dirtyPathsMirrorRef.current.delete(activePath);
+        setDirtyPaths((prev) => {
+          if (!prev.has(activePath)) return prev;
+          const next = new Set(prev);
+          next.delete(activePath);
+          return next;
+        });
       }
     }
-    await webcontainerService.flushFileSync();
+    try {
+      await Promise.race([
+        webcontainerService.flushFileSync(),
+        new Promise((resolve) => setTimeout(resolve, 800)),
+      ]);
+    } catch {
+      // Non-blocking flush
+    }
   }, [activePath, onChangeFile]);
 
   const openTerminal = useCallback(() => {
@@ -1046,6 +1067,8 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     (editor, monaco) => {
       editorRef.current = editor;
       monacoRef.current = monaco;
+      (window as unknown as { monaco?: unknown; currentEditor?: unknown }).monaco = monaco;
+      (window as unknown as { monaco?: unknown; currentEditor?: unknown }).currentEditor = editor;
 
       setCursor({
         line: editor.getPosition()?.lineNumber ?? 1,
