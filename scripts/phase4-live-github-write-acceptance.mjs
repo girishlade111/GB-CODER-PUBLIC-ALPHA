@@ -1,19 +1,22 @@
 /**
- * GB Coder Phase 4 — Final Live GitHub Write Acceptance Test Suite
+ * GB Coder Phase 4.5 — Real Live GitHub Remote Acceptance Test Suite
  *
  * Requirements:
- * - Never mutates product repository: girishlade111/GB-CODER-PUBLIC-ALPHA
- * - Executes real GitHub API operations only if DISPOSABLE_GITHUB_TEST_REPO
- *   and DISPOSABLE_GITHUB_TEST_TOKEN are configured in environment.
- * - If not configured, gracefully reports BLOCKED BY AUTHORIZATION.
- * - If configured, performs real multi-commit push, fetch, pull, and failure tests.
+ * - Strictly protects product repository: girishlade111/GB-CODER-PUBLIC-ALPHA
+ * - Executes real GitHub API operations only against authorized disposable repo:
+ *   lodu35180-create/gb-coder-git-integration-test
+ * - Reads credentials securely from environment or .env.local / .env
+ * - Never logs or exposes access tokens
+ * - Executes Stages 2 through 8 with real GitHub API calls (no mocks)
+ * - Preserves the remote test branch for operator inspection (does not delete)
+ * - Collects structured live evidence for the final report
  *
  * Zero emoji rule strictly enforced.
  */
 
 import { describe, it, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, rmSync } from 'node:fs';
+import { mkdirSync, rmSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
@@ -21,10 +24,52 @@ import 'fake-indexeddb/auto';
 import git from 'isomorphic-git';
 import FS from '@isomorphic-git/lightning-fs';
 
+// 1. Safely load credentials from environment or .env.local / .env
+function loadCredentials() {
+  for (const envFile of ['.env.local', '.env']) {
+    if (existsSync(envFile)) {
+      const content = readFileSync(envFile, 'utf8');
+      for (const line of content.split('\n')) {
+        const match = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line.trim());
+        if (match) {
+          const key = match[1];
+          let val = match[2].trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
+      }
+    }
+  }
+}
+
+loadCredentials();
+
+const FORBIDDEN_PRODUCT_REPO = 'girishlade111/gb-coder-public-alpha';
+const EXPECTED_DISPOSABLE_REPO = 'lodu35180-create/gb-coder-git-integration-test';
+
+let rawRepo = (process.env.DISPOSABLE_GITHUB_TEST_REPO || '').trim();
+const disposableToken = (process.env.DISPOSABLE_GITHUB_TEST_TOKEN || '').trim();
+
+// Normalize repo string: handle full https URL or owner/repo format
+const repoMatch = /github\.com[/:]([^/]+\/[^/]+?)(?:\.git|\/)?$/.exec(rawRepo) || /^([^/]+\/[^/]+)$/.exec(rawRepo);
+const disposableRepo = repoMatch ? repoMatch[1].toLowerCase() : rawRepo.toLowerCase();
+
+const isAuthorized = Boolean(
+  disposableRepo &&
+  disposableToken &&
+  disposableRepo === EXPECTED_DISPOSABLE_REPO.toLowerCase() &&
+  disposableRepo !== FORBIDDEN_PRODUCT_REPO
+);
+
 const cwd = process.cwd();
 const outdir = join(cwd, '.tmp-live-write-test');
 mkdirSync(outdir, { recursive: true });
 const bundlePath = join(outdir, 'live-write-bundle.mjs');
+const evidencePath = join(cwd, 'dist-staging', 'phase4-5-evidence.json');
 
 await build({
   stdin: {
@@ -77,51 +122,95 @@ after(() => {
   }
 });
 
-const FORBIDDEN_PRODUCT_REPO = 'girishlade111/GB-CODER-PUBLIC-ALPHA'.toLowerCase();
-const disposableRepo = process.env.DISPOSABLE_GITHUB_TEST_REPO?.trim();
-const disposableToken = process.env.DISPOSABLE_GITHUB_TEST_TOKEN?.trim();
+// Evidence ledger
+const evidence = {
+  timestamp: new Date().toISOString(),
+  targetRepository: disposableRepo,
+  authorized: isAuthorized,
+  operations: [],
+};
 
-const isAuthorized = Boolean(
-  disposableRepo &&
-  disposableToken &&
-  disposableRepo.toLowerCase() !== FORBIDDEN_PRODUCT_REPO
-);
+function recordOperation(op) {
+  evidence.operations.push(op);
+  try {
+    mkdirSync(join(cwd, 'dist-staging'), { recursive: true });
+    writeFileSync(evidencePath, JSON.stringify(evidence, null, 2), 'utf8');
+  } catch {
+    // Non-fatal
+  }
+}
 
-describe('GB Coder Phase 4 — Safety & Authorization Preflight (TASK 1)', () => {
+describe('GB Coder Phase 4.5 — Safety & Authentication Preflight (STAGE 1 & 2)', () => {
   it('PREFLIGHT-01 — Product repository is strictly protected from remote write operations', () => {
-    if (disposableRepo) {
-      assert.notEqual(
-        disposableRepo.toLowerCase(),
-        FORBIDDEN_PRODUCT_REPO,
-        'Cannot target GB Coder product repository for write acceptance tests'
-      );
-    }
-    assert.ok(true, 'Product repository safety boundary verified');
+    assert.notEqual(
+      disposableRepo,
+      FORBIDDEN_PRODUCT_REPO,
+      'Product repository must never be targeted for write acceptance testing'
+    );
+    recordOperation({
+      id: 'PREFLIGHT-01',
+      operation: 'SAFETY_CHECK',
+      status: 'PASS',
+      details: 'Product repository confirmed protected',
+    });
   });
 
-  it('PREFLIGHT-02 — Check authorized disposable repository configuration', () => {
+  it('PREFLIGHT-02 — Target repository matches expected authorized disposable repo', () => {
     if (!isAuthorized) {
-      console.log('[AUTH_PREFLIGHT] DISPOSABLE_GITHUB_TEST_REPO or DISPOSABLE_GITHUB_TEST_TOKEN is missing.');
+      console.log('[AUTH_PREFLIGHT] Authorized disposable repository credentials missing.');
       console.log('[AUTH_PREFLIGHT] Real remote write acceptance tests are BLOCKED BY AUTHORIZATION.');
-      assert.ok(true, 'Safety boundary correctly enforced');
+      recordOperation({
+        id: 'PREFLIGHT-02',
+        operation: 'AUTH_CHECK',
+        status: 'BLOCKED',
+        details: 'DISPOSABLE_GITHUB_TEST_REPO or DISPOSABLE_GITHUB_TEST_TOKEN missing',
+      });
+      assert.ok(true, 'Safety boundary enforced');
     } else {
-      console.log(`[AUTH_PREFLIGHT] Authorized disposable repository detected: ${disposableRepo}`);
-      assert.ok(isAuthorized, 'Authorized disposable repository available');
+      assert.equal(
+        disposableRepo,
+        EXPECTED_DISPOSABLE_REPO.toLowerCase(),
+        'Target repo must match expected disposable test repository'
+      );
+      recordOperation({
+        id: 'PREFLIGHT-02',
+        operation: 'AUTH_CHECK',
+        status: 'PASS',
+        details: `Target confirmed: ${disposableRepo}`,
+      });
     }
   });
 });
 
 if (isAuthorized) {
-  describe('GB Coder Phase 4 — Real Live GitHub Remote Acceptance', () => {
-    const testBranchName = `gbcoder-acceptance-${Date.now()}`;
-    const projectId = `live-write-proj-${Date.now()}`;
+  describe('GB Coder Phase 4.5 — Live GitHub Remote Acceptance (STAGES 2 - 8)', { concurrency: 1 }, () => {
+    const timestamp = Date.now();
+    const testBranchName = `gbcoder-acceptance-${timestamp}`;
+    const runFolder = `gbcoder-run-${timestamp}`;
+    const projectId = `live-write-proj-${timestamp}`;
     let startingHeadSha = '';
-    let pushedHeadSha = '';
+    let commit1LocalSha = '';
+    let commit2LocalSha = '';
+    let commit3LocalSha = '';
+    let push1HeadSha = '';
+    let push2HeadSha = '';
+    let remoteEditSha = '';
 
-    it('LIVE-W01 — Prepare test branch and verify starting remote HEAD', async () => {
-      // 1. Fetch default branch ref
-      const infoUrl = `https://api.github.com/repos/${disposableRepo}`;
-      const repoRes = await fetch(infoUrl, {
+    it('STAGE 2 — Authenticate and verify write access on disposable repository', async () => {
+      // 1. Verify user authentication
+      const userRes = await fetch('https://api.github.com/user', {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          Authorization: `Bearer ${disposableToken}`,
+          'User-Agent': 'GB-Coder-Live-Acceptance',
+        },
+      });
+      assert.equal(userRes.status, 200, 'GitHub user authentication must succeed');
+      const userData = await userRes.json();
+      assert.ok(userData.login, 'Authenticated user login must be present');
+
+      // 2. Verify repository write permission
+      const repoRes = await fetch(`https://api.github.com/repos/${disposableRepo}`, {
         headers: {
           Accept: 'application/vnd.github.v3+json',
           Authorization: `Bearer ${disposableToken}`,
@@ -130,22 +219,46 @@ if (isAuthorized) {
       });
       assert.equal(repoRes.status, 200, 'Must have access to disposable repository');
       const repoData = await repoRes.json();
-      const defaultBranch = repoData.default_branch || 'main';
+      assert.equal(repoData.permissions?.push, true, 'Token must have push write permission');
 
-      const refUrl = `https://api.github.com/repos/${disposableRepo}/git/ref/heads/${defaultBranch}`;
-      const refRes = await fetch(refUrl, {
+      // 3. Verify rate limit
+      const rateRes = await fetch('https://api.github.com/rate_limit', {
         headers: {
           Accept: 'application/vnd.github.v3+json',
           Authorization: `Bearer ${disposableToken}`,
           'User-Agent': 'GB-Coder-Live-Acceptance',
         },
       });
-      assert.equal(refRes.status, 200, 'Must resolve default branch reference');
+      assert.equal(rateRes.status, 200);
+      const rateData = await rateRes.json();
+      assert.ok(rateData.resources.core.remaining > 10, 'Rate limit must be sufficient');
+
+      // 4. Resolve default branch HEAD
+      const defaultBranch = repoData.default_branch || 'main';
+      const refRes = await fetch(`https://api.github.com/repos/${disposableRepo}/git/ref/heads/${defaultBranch}`, {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          Authorization: `Bearer ${disposableToken}`,
+          'User-Agent': 'GB-Coder-Live-Acceptance',
+        },
+      });
+      assert.equal(refRes.status, 200, 'Must resolve default branch HEAD');
       const refData = await refRes.json();
       startingHeadSha = refData.object.sha;
-      assert.ok(startingHeadSha, 'Must resolve starting remote SHA');
+      assert.ok(startingHeadSha, 'Starting remote SHA must be valid');
 
-      // 2. Create isolated test branch on remote
+      recordOperation({
+        id: 'STAGE-2',
+        operation: 'AUTH_PREFLIGHT',
+        status: 'PASS',
+        user: userData.login,
+        defaultBranch,
+        startingHeadSha,
+        rateLimitRemaining: rateData.resources.core.remaining,
+      });
+    });
+
+    it('STAGE 3 — Create isolated test branch from starting remote HEAD', async () => {
       const createBranchRes = await fetch(`https://api.github.com/repos/${disposableRepo}/git/refs`, {
         method: 'POST',
         headers: {
@@ -161,48 +274,79 @@ if (isAuthorized) {
       });
       assert.ok(
         createBranchRes.status === 201 || createBranchRes.status === 200,
-        'Dedicated test branch must be created on disposable repository'
+        `Branch creation must return 201 (got ${createBranchRes.status})`
       );
+
+      recordOperation({
+        id: 'STAGE-3',
+        operation: 'CREATE_BRANCH',
+        status: 'PASS',
+        branch: testBranchName,
+        baseSha: startingHeadSha,
+      });
     });
 
-    it('LIVE-W02 — Multi-commit push creates sequential chained commits on remote', async () => {
-      // Initialize local repository on test branch
-      const initialFiles = [
-        { path: 'README.md', content: '# Disposable Test Repo\n\nLive test in progress.', language: 'markdown' },
-        { path: 'test-file-1.txt', content: 'Step 1: first commit\n', language: 'text' },
-      ];
-      await initRepository(projectId, initialFiles);
-      await createBranch(projectId, testBranchName);
-      await switchBranch(projectId, testBranchName);
-      await setRemoteTrackingRef(projectId, 'origin', testBranchName, startingHeadSha);
+    it('STAGE 4 — W01 - W12: Local multi-commit creation and first live push', async () => {
+      try {
+        // W01: Clone/import repository test branch into local LightningFS
+      const cloned = await cloneRepository({
+        projectId,
+        repoFullName: disposableRepo,
+        branch: testBranchName,
+        token: disposableToken,
+        depth: 10,
+      });
+      assert.ok(cloned.headSha, 'Cloned repository must have a valid HEAD SHA');
 
-      // Commit 1 locally
+      // W02: Verify baseline Git history
+      const baselineLogs = await getLog(projectId, 5);
+      assert.ok(baselineLogs.length >= 1, 'Must have at least initial commit in baseline');
+      assert.equal(baselineLogs[0].sha, cloned.headSha, 'Local HEAD must match remote cloned HEAD');
+
+      // W03 - W05: Modify/create disposable file and create local Commit 1
+      const fs = getFS();
+      const projectDir = getProjectDir(projectId);
       await syncWorkingTree(projectId, [
-        { path: 'README.md', content: '# Disposable Test Repo\n\nLive test in progress.', language: 'markdown' },
-        { path: 'test-file-1.txt', content: 'Step 1: first commit modified\n', language: 'text' },
-        { path: 'test-file-2.txt', content: 'Step 2: second file added in commit 1\n', language: 'text' },
+        ...cloned.files,
+        { path: `${runFolder}/test-1.txt`, content: 'Step 1: created in commit 1\n', language: 'text' },
       ]);
       await stageAll(projectId);
-      const commit1 = await commit(projectId, 'test: commit 1 from GB Coder');
+      const c1 = await commit(projectId, 'test: W05 commit 1 from GB Coder');
+      commit1LocalSha = c1.sha;
 
-      // Commit 2 locally
+      // W06 - W07: Modify file again and create local Commit 2
       await syncWorkingTree(projectId, [
-        { path: 'README.md', content: '# Disposable Test Repo\n\nLive test in progress.', language: 'markdown' },
-        { path: 'test-file-1.txt', content: 'Step 1: first commit modified\n', language: 'text' },
-        { path: 'test-file-2.txt', content: 'Step 2: second file modified in commit 2\n', language: 'text' },
-        { path: 'test-file-3.txt', content: 'Step 3: third file added in commit 2\n', language: 'text' },
+        ...cloned.files,
+        { path: `${runFolder}/test-1.txt`, content: 'Step 1: created in commit 1\n', language: 'text' },
+        { path: `${runFolder}/test-2.txt`, content: 'Step 2: added file 2 in commit 2\n', language: 'text' },
       ]);
       await stageAll(projectId);
-      const commit2 = await commit(projectId, 'test: commit 2 from GB Coder');
+      const c2 = await commit(projectId, 'test: W07 commit 2 from GB Coder');
+      commit2LocalSha = c2.sha;
 
-      // Execute live push
-      const pushRes = await pushRemote(projectId, disposableRepo, disposableToken);
-      assert.ok(pushRes.commitSha, 'Push must succeed and return remote commit SHA');
-      pushedHeadSha = pushRes.commitSha;
+      // W17: Add an uncommitted working tree file to verify working-tree preservation
+      await fs.promises.writeFile(`${projectDir}/${runFolder}/uncommitted-draft.txt`, 'Draft content not staged');
 
-      // Verify remote commit history via GitHub API
-      const commitsUrl = `https://api.github.com/repos/${disposableRepo}/commits?sha=${testBranchName}&per_page=5`;
-      const commitsRes = await fetch(commitsUrl, {
+      // W08: Execute live multi-commit Push
+      const pushResult = await pushRemote(projectId, disposableRepo, disposableToken);
+      assert.ok(pushResult.commitSha, 'Push must succeed and return commitSha');
+      assert.equal(pushResult.alreadyUpToDate, false);
+      push1HeadSha = pushResult.commitSha;
+
+      // W09: Query actual GitHub branch HEAD
+      const branchRes = await fetch(`https://api.github.com/repos/${disposableRepo}/git/ref/heads/${testBranchName}`, {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          Authorization: `Bearer ${disposableToken}`,
+          'User-Agent': 'GB-Coder-Live-Acceptance',
+        },
+      });
+      assert.equal(branchRes.status, 200);
+      const branchData = await branchRes.json();
+      assert.equal(branchData.object.sha, push1HeadSha, 'Remote branch ref must point to pushed commit SHA');
+
+      // W10 & W11: Query commit history and verify both commits and parent relationships
+      const commitsRes = await fetch(`https://api.github.com/repos/${disposableRepo}/commits?sha=${testBranchName}&per_page=5`, {
         headers: {
           Accept: 'application/vnd.github.v3+json',
           Authorization: `Bearer ${disposableToken}`,
@@ -210,53 +354,189 @@ if (isAuthorized) {
         },
       });
       assert.equal(commitsRes.status, 200);
-      const remoteCommits = await commitsRes.json();
-      assert.ok(remoteCommits.length >= 2, 'At least 2 commits must exist on test branch');
+      const commitsList = await commitsRes.json();
+      assert.ok(commitsList.length >= 2, 'Must have at least 2 commits on branch');
 
-      // Verify top commit is commit 2
-      assert.equal(remoteCommits[0].commit.message, 'test: commit 2 from GB Coder');
-      // Verify second commit is commit 1
-      assert.equal(remoteCommits[1].commit.message, 'test: commit 1 from GB Coder');
-      // Verify parent pointer chaining
-      assert.equal(remoteCommits[0].parents[0].sha, remoteCommits[1].sha);
-      assert.equal(remoteCommits[1].parents[0].sha, startingHeadSha);
-    });
+      const topRemote = commitsList[0];
+      const secondRemote = commitsList[1];
 
-    it('LIVE-W03 — Subsequent commit push appends to existing chain', async () => {
-      // Commit 3 locally
-      await syncWorkingTree(projectId, [
-        { path: 'README.md', content: '# Disposable Test Repo\n\nLive test in progress.\nAll 3 steps complete.', language: 'markdown' },
-        { path: 'test-file-1.txt', content: 'Step 1: final\n', language: 'text' },
-        { path: 'test-file-2.txt', content: 'Step 2: final\n', language: 'text' },
-        { path: 'test-file-3.txt', content: 'Step 3: final\n', language: 'text' },
-      ]);
-      await stageAll(projectId);
-      await commit(projectId, 'test: commit 3 from GB Coder');
+      assert.equal(topRemote.commit.message, 'test: W07 commit 2 from GB Coder');
+      assert.equal(secondRemote.commit.message, 'test: W05 commit 1 from GB Coder');
+      assert.equal(topRemote.parents[0].sha, secondRemote.sha, 'Top commit parent must point to second commit');
+      assert.equal(secondRemote.parents[0].sha, startingHeadSha, 'Second commit parent must point to starting head');
 
-      const pushRes3 = await pushRemote(projectId, disposableRepo, disposableToken);
-      assert.ok(pushRes3.commitSha);
-      assert.notEqual(pushRes3.commitSha, pushedHeadSha);
-
-      // Verify remote log has 3 commits in order
-      const commitsUrl = `https://api.github.com/repos/${disposableRepo}/commits?sha=${testBranchName}&per_page=5`;
-      const commitsRes = await fetch(commitsUrl, {
+      // W12: Verify remote file contents
+      const fileRes = await fetch(`https://api.github.com/repos/${disposableRepo}/contents/${runFolder}/test-2.txt?ref=${testBranchName}`, {
         headers: {
           Accept: 'application/vnd.github.v3+json',
           Authorization: `Bearer ${disposableToken}`,
           'User-Agent': 'GB-Coder-Live-Acceptance',
         },
       });
-      const remoteCommits = await commitsRes.json();
-      assert.equal(remoteCommits[0].commit.message, 'test: commit 3 from GB Coder');
-      assert.equal(remoteCommits[1].commit.message, 'test: commit 2 from GB Coder');
-      assert.equal(remoteCommits[2].commit.message, 'test: commit 1 from GB Coder');
-      assert.equal(remoteCommits[0].parents[0].sha, remoteCommits[1].sha);
+      assert.equal(fileRes.status, 200);
+      const fileData = await fileRes.json();
+      const content = Buffer.from(fileData.content, 'base64').toString('utf8');
+      assert.match(content, /added file 2 in commit 2/);
+
+      // W17: Verify uncommitted file is still intact
+      const uncommitted = await fs.promises.readFile(`${projectDir}/${runFolder}/uncommitted-draft.txt`, 'utf8');
+      assert.equal(uncommitted, 'Draft content not staged');
+
+      // Clean up uncommitted draft file so subsequent operations remain clean
+      await fs.promises.unlink(`${projectDir}/${runFolder}/uncommitted-draft.txt`);
+
+      // W16: Verify tracking ref updated locally
+      const localTrackingRef = await getRemoteTrackingRef(projectId, 'origin', testBranchName);
+      assert.ok(localTrackingRef, 'Tracking ref must exist');
+
+      recordOperation({
+        id: 'STAGE-4-PUSH1',
+        operation: 'MULTI_COMMIT_PUSH',
+        status: 'PASS',
+        commitsPushed: 2,
+        remoteTopSha: topRemote.sha,
+        remoteSecondSha: secondRemote.sha,
+        parentLink: `${topRemote.sha} -> ${secondRemote.sha} -> ${startingHeadSha}`,
+      });
+    } catch (err) {
+      console.error('ERROR IN STAGE 4 W01-W12:', err);
+      throw err;
+    }
+  });
+
+    it('STAGE 4 — W13 - W18: Create local Commit 3 and perform second live Push', async () => {
+      try {
+        // W13: Create local Commit 3
+        const currentFiles = await readWorkingTree(projectId);
+        await syncWorkingTree(projectId, [
+          ...currentFiles,
+          { path: `${runFolder}/test-3.txt`, content: 'Step 3: new file 3 added in commit 3\n', language: 'text' },
+        ]);
+        await stageAll(projectId);
+        const c3 = await commit(projectId, 'test: W13 commit 3 from GB Coder');
+        commit3LocalSha = c3.sha;
+
+        // W14: Perform second real Push
+        const pushResult2 = await pushRemote(projectId, disposableRepo, disposableToken);
+        assert.ok(pushResult2.commitSha);
+        assert.notEqual(pushResult2.commitSha, push1HeadSha, 'Second push must produce a new remote HEAD SHA');
+        push2HeadSha = pushResult2.commitSha;
+
+        // W15: Verify all three commits are preserved in order
+        const commitsRes = await fetch(`https://api.github.com/repos/${disposableRepo}/commits?sha=${testBranchName}&per_page=5`, {
+          headers: {
+            Accept: 'application/vnd.github.v3+json',
+            Authorization: `Bearer ${disposableToken}`,
+            'User-Agent': 'GB-Coder-Live-Acceptance',
+          },
+        });
+        const commitsList = await commitsRes.json();
+        assert.equal(commitsList[0].commit.message, 'test: W13 commit 3 from GB Coder');
+        assert.equal(commitsList[1].commit.message, 'test: W07 commit 2 from GB Coder');
+        assert.equal(commitsList[2].commit.message, 'test: W05 commit 1 from GB Coder');
+        assert.equal(commitsList[0].parents[0].sha, commitsList[1].sha);
+        assert.equal(commitsList[1].parents[0].sha, commitsList[2].sha);
+
+        // Verify new file 3 is present on GitHub
+        const file3Res = await fetch(`https://api.github.com/repos/${disposableRepo}/contents/${runFolder}/test-3.txt?ref=${testBranchName}`, {
+          headers: {
+            Accept: 'application/vnd.github.v3+json',
+            Authorization: `Bearer ${disposableToken}`,
+            'User-Agent': 'GB-Coder-Live-Acceptance',
+          },
+        });
+        assert.equal(file3Res.status, 200);
+
+        recordOperation({
+          id: 'STAGE-4-PUSH2',
+          operation: 'APPEND_COMMIT_PUSH',
+          status: 'PASS',
+          newRemoteHead: push2HeadSha,
+          ancestry: `${commitsList[0].sha} -> ${commitsList[1].sha} -> ${commitsList[2].sha}`,
+        });
+      } catch (err) {
+        console.error('ERROR IN STAGE 4 W13-W18:', err);
+        throw err;
+      }
     });
 
-    it('LIVE-W04 — Fetch and pull reflect remote changes in working tree', async () => {
-      // Modify a file directly on remote via GitHub API
-      const remoteFileUrl = `https://api.github.com/repos/${disposableRepo}/contents/remote-note.txt`;
-      const createRemoteFileRes = await fetch(remoteFileUrl, {
+    it('STAGE 6 — Real live Fetch detects remote-only commit', async () => {
+      try {
+        // 1. Introduce an authorized remote-only commit via GitHub REST API
+        const remoteNoteUrl = `https://api.github.com/repos/${disposableRepo}/contents/${runFolder}/remote-note.txt`;
+        const createRemoteRes = await fetch(remoteNoteUrl, {
+          method: 'PUT',
+          headers: {
+            Accept: 'application/vnd.github.v3+json',
+            Authorization: `Bearer ${disposableToken}`,
+            'User-Agent': 'GB-Coder-Live-Acceptance',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: 'test: remote-only commit via GitHub API',
+            content: Buffer.from('Created directly on remote to verify fetch\n').toString('base64'),
+            branch: testBranchName,
+          }),
+        });
+        assert.ok(createRemoteRes.status === 201 || createRemoteRes.status === 200);
+        const remoteCommitData = await createRemoteRes.json();
+        remoteEditSha = remoteCommitData.commit.sha;
+
+        // 2. Execute fetchRemote
+        const fetchStatus = await fetchRemote(projectId, disposableRepo, disposableToken);
+        assert.equal(fetchStatus.behind, 1, 'Local repository must report behind by 1 commit');
+        assert.equal(fetchStatus.latestRemoteSha, remoteEditSha);
+
+        // 3. Verify working tree does NOT have the remote file yet
+        const workingFiles = await readWorkingTree(projectId);
+        assert.equal(workingFiles.some((f) => f.path === `${runFolder}/remote-note.txt`), false);
+
+        recordOperation({
+          id: 'STAGE-6-FETCH',
+          operation: 'LIVE_FETCH',
+          status: 'PASS',
+          remoteCommitSha: remoteEditSha,
+          behindCount: fetchStatus.behind,
+        });
+      } catch (err) {
+        console.error('ERROR IN STAGE 6 FETCH:', err);
+        throw err;
+      }
+    });
+
+    it('STAGE 7 — Real live Pull fast-forwards and merges files into working tree', async () => {
+      try {
+        // Execute pullRemote
+        const pullResult = await pullRemote(projectId, disposableRepo, disposableToken);
+        assert.ok(pullResult.commitSha, 'Pull must return a valid commit SHA');
+        assert.equal(pullResult.status, 'fast-forward');
+
+        // Verify working tree now HAS the remote file
+        const workingFilesAfter = await readWorkingTree(projectId);
+        const pulledFile = workingFilesAfter.find((f) => f.path === `${runFolder}/remote-note.txt`);
+        assert.ok(pulledFile, 'Remote note must now exist in local working tree');
+        assert.match(pulledFile.content, /Created directly on remote to verify fetch/);
+
+        // Verify log history reflects remote commit
+        const localLogs = await getLog(projectId, 5);
+        assert.equal(localLogs[0].message, 'test: remote-only commit via GitHub API');
+
+        recordOperation({
+          id: 'STAGE-7-PULL',
+          operation: 'LIVE_PULL',
+          status: 'PASS',
+          newLocalHead: localLogs[0].sha,
+          pulledFilePath: pulledFile.path,
+        });
+      } catch (err) {
+        console.error('ERROR IN STAGE 7 PULL:', err);
+        throw err;
+      }
+    });
+
+    it('STAGE 8 — Non-fast-forward push rejection and safety failure tests', async () => {
+      // 1. Introduce another remote edit to make remote ahead
+      await fetch(`https://api.github.com/repos/${disposableRepo}/contents/${runFolder}/remote-barrier.txt`, {
         method: 'PUT',
         headers: {
           Accept: 'application/vnd.github.v3+json',
@@ -265,91 +545,67 @@ if (isAuthorized) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: 'test: remote change from GitHub API',
-          content: Buffer.from('Created directly on remote for pull test\n').toString('base64'),
+          message: 'test: remote barrier commit',
+          content: Buffer.from('Barrier content\n').toString('base64'),
           branch: testBranchName,
         }),
       });
-      assert.ok(createRemoteFileRes.status === 201 || createRemoteFileRes.status === 200);
 
-      // Execute fetchRemote: should report behind by 1
-      const fetchRes = await fetchRemote(projectId, disposableRepo, disposableToken);
-      assert.equal(fetchRes.behind, 1, 'Local must be behind by 1 after remote edit');
-
-      // Verify working tree does NOT have the remote file yet
-      const filesBeforePull = await readWorkingTree(projectId);
-      assert.equal(filesBeforePull.some((f) => f.path === 'remote-note.txt'), false);
-
-      // Execute pullRemote: should fast-forward and write to working tree
-      const pullRes = await pullRemote(projectId, disposableRepo, disposableToken);
-      assert.ok(pullRes.newHeadSha);
-
-      // Verify working tree now HAS the remote file
-      const filesAfterPull = await readWorkingTree(projectId);
-      const pulledFile = filesAfterPull.find((f) => f.path === 'remote-note.txt');
-      assert.ok(pulledFile, 'Pulled file must exist in working tree');
-      assert.match(pulledFile.content, /Created directly on remote/);
-    });
-
-    it('LIVE-W05 — Non-fast-forward push is rejected without modifying local or remote state', async () => {
-      // Create local divergent commit
+      // 2. Make local commit without pulling
       await syncWorkingTree(projectId, [
-        { path: 'divergent-local.txt', content: 'Local edit\n', language: 'text' },
+        { path: 'README.md', content: '# GB Coder Integration Test\n\nLive acceptance run.', language: 'markdown' },
+        { path: `${runFolder}/divergent-local.txt`, content: 'Local divergence\n', language: 'text' },
       ]);
       await stageAll(projectId);
       await commit(projectId, 'test: local divergent commit');
 
-      // Push should succeed now that we are ahead
-      const pushRes = await pushRemote(projectId, disposableRepo, disposableToken);
-      assert.ok(pushRes.commitSha);
-
-      // Now create a remote edit to cause remote to be ahead of a different local commit
-      await fetch(`https://api.github.com/repos/${disposableRepo}/contents/remote-divergence.txt`, {
-        method: 'PUT',
-        headers: {
-          Accept: 'application/vnd.github.v3+json',
-          Authorization: `Bearer ${disposableToken}`,
-          'User-Agent': 'GB-Coder-Live-Acceptance',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: 'test: remote divergence',
-          content: Buffer.from('Remote divergence\n').toString('base64'),
-          branch: testBranchName,
-        }),
-      });
-
-      // Now add a local commit without pulling
-      await syncWorkingTree(projectId, [
-        { path: 'divergent-local-2.txt', content: 'Local edit 2\n', language: 'text' },
-      ]);
-      await stageAll(projectId);
-      await commit(projectId, 'test: unpulled local commit');
-
-      // Push MUST be rejected
+      // 3. Push MUST reject non-fast-forward reference
       await assert.rejects(
         async () => {
           await pushRemote(projectId, disposableRepo, disposableToken);
         },
         /Cannot push non-fast-forward reference/i
       );
+
+      // 4. Test invalid token failure handling
+      await assert.rejects(
+        async () => {
+          await fetchRemote(projectId, disposableRepo, 'ghp_invalid_token_xyz_00000000000000000000');
+        },
+        /GitHub token expired or unauthorized/i
+      );
+
+      recordOperation({
+        id: 'STAGE-8-FAILURE-GUARDS',
+        operation: 'NON_FAST_FORWARD_REJECTION',
+        status: 'PASS',
+        details: 'Non-fast-forward push rejected; invalid token rejected',
+      });
     });
 
-    it('LIVE-W06 — Cleanup disposable remote test branch', async () => {
-      const deleteRefUrl = `https://api.github.com/repos/${disposableRepo}/git/refs/heads/${testBranchName}`;
-      const delRes = await fetch(deleteRefUrl, {
-        method: 'DELETE',
+    it('STAGE 12 — Preserve test branch on remote for operator inspection', async () => {
+      // Explicitly verify the test branch exists on GitHub and leave it intact
+      const branchRes = await fetch(`https://api.github.com/repos/${disposableRepo}/git/ref/heads/${testBranchName}`, {
         headers: {
           Accept: 'application/vnd.github.v3+json',
           Authorization: `Bearer ${disposableToken}`,
           'User-Agent': 'GB-Coder-Live-Acceptance',
         },
       });
-      assert.ok(
-        delRes.status === 204 || delRes.status === 200,
-        'Disposable test branch must be deleted from remote repository'
-      );
+      assert.equal(branchRes.status, 200);
+      const branchData = await branchRes.json();
+      console.log(`[STAGE-12] Verified test branch preserved on GitHub: ${testBranchName}`);
+      console.log(`[STAGE-12] Branch URL: https://github.com/${disposableRepo}/tree/${testBranchName}`);
+      console.log(`[STAGE-12] Branch HEAD SHA: ${branchData.object.sha}`);
+
+      recordOperation({
+        id: 'STAGE-12-PRESERVATION',
+        operation: 'BRANCH_PRESERVED',
+        status: 'PASS',
+        branchName: testBranchName,
+        branchUrl: `https://github.com/${disposableRepo}/tree/${testBranchName}`,
+        headSha: branchData.object.sha,
+      });
     });
   });
 }
-

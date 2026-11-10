@@ -454,7 +454,8 @@ export const getLog = async (projectId: string, depth = 50): Promise<GitCommitRe
       timestamp: entry.commit.author.timestamp * 1000,
       parentShas: entry.commit.parent || [],
     }));
-  } catch {
+  } catch (err) {
+    console.error('[getLog error]', err);
     return [];
   }
 };
@@ -752,6 +753,33 @@ export const setBranchRef = async (
   });
 };
 
+/** Map of remote GitHub commit SHAs to local isomorphic-git commit OIDs */
+export const getRemoteShaMapping = async (projectId: string): Promise<Record<string, string>> => {
+  const fs = getFS();
+  const projectDir = getProjectDir(projectId);
+  try {
+    const raw = await fs.promises.readFile(`${projectDir}/.git/remote-sha-map.json`, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+};
+
+export const saveRemoteShaMapping = async (
+  projectId: string,
+  newMappings: Record<string, string>,
+): Promise<void> => {
+  const fs = getFS();
+  const projectDir = getProjectDir(projectId);
+  try {
+    const current = await getRemoteShaMapping(projectId);
+    const merged = { ...current, ...newMappings };
+    await fs.promises.writeFile(`${projectDir}/.git/remote-sha-map.json`, JSON.stringify(merged));
+  } catch {
+    // Best-effort persistence
+  }
+};
+
 /** Reconstruct remote commits into local Git object database */
 export const writeRemoteCommitObjects = async (
   projectId: string,
@@ -779,8 +807,20 @@ export const writeRemoteCommitObjects = async (
     }
   }
 
+  const persistentMapping = await getRemoteShaMapping(projectId);
+
   for (const c of ordered) {
-    const mappedParents = (c.parents || []).map((p) => shaMap.get(p) || p);
+    const mappedParents: string[] = [];
+    for (const p of c.parents || []) {
+      const candidate = shaMap.get(p) || persistentMapping[p] || p;
+      try {
+        await git.readObject({ fs, dir: projectDir, oid: candidate });
+        mappedParents.push(candidate);
+      } catch {
+        // Parent object does not exist in local database.
+        // Omit to avoid dangling parent pointer that breaks git.log.
+      }
+    }
     const authorTime =
       typeof c.author.date === 'number'
         ? Math.floor(c.author.date / 1000)
@@ -793,12 +833,22 @@ export const writeRemoteCommitObjects = async (
 
     const commitMessage = c.message.endsWith('\n') ? c.message : `${c.message}\n`;
 
+    let effectiveTreeOid = treeOid;
+    if (c.treeSha) {
+      try {
+        await git.readObject({ fs, dir: projectDir, oid: c.treeSha });
+        effectiveTreeOid = c.treeSha;
+      } catch {
+        effectiveTreeOid = treeOid;
+      }
+    }
+
     const writtenOid = await git.writeCommit({
       fs,
       dir: projectDir,
       commit: {
         message: commitMessage,
-        tree: c.treeSha || treeOid,
+        tree: effectiveTreeOid,
         parent: mappedParents,
         author: {
           name: c.author.name || 'Unknown',
@@ -817,6 +867,13 @@ export const writeRemoteCommitObjects = async (
 
     shaMap.set(c.sha, writtenOid);
   }
+
+  const mappingRecord: Record<string, string> = {};
+  for (const [remoteSha, localSha] of shaMap.entries()) {
+    mappingRecord[remoteSha] = localSha;
+    mappingRecord[localSha] = remoteSha;
+  }
+  await saveRemoteShaMapping(projectId, mappingRecord);
 
   return shaMap;
 };
@@ -866,14 +923,23 @@ export const computeAheadBehind = async (
     return { ahead: localLogs.length, behind: 0 };
   }
 
-  if (localSha === remoteSha) {
+  let effectiveRemoteSha = remoteSha;
+  try {
+    await git.readObject({ fs, dir: projectDir, oid: remoteSha });
+    effectiveRemoteSha = remoteSha;
+  } catch {
+    const shaMap = await getRemoteShaMapping(projectId);
+    effectiveRemoteSha = shaMap[remoteSha] || remoteSha;
+  }
+
+  if (localSha === remoteSha || localSha === effectiveRemoteSha) {
     return { ahead: 0, behind: 0 };
   }
 
   // Check if remote is ancestor of local (local ahead)
   let remoteIsAncestor = false;
   try {
-    remoteIsAncestor = await git.isDescendent({ fs, dir: projectDir, oid: localSha, ancestor: remoteSha });
+    remoteIsAncestor = await git.isDescendent({ fs, dir: projectDir, oid: localSha, ancestor: effectiveRemoteSha });
   } catch {
     // Missing object
   }
@@ -881,32 +947,41 @@ export const computeAheadBehind = async (
   if (remoteIsAncestor) {
     const localLogs = await git.log({ fs, dir: projectDir, depth: 100 });
     const localShas = localLogs.map((l) => l.oid);
-    const idx = localShas.indexOf(remoteSha);
+    const idx = localShas.indexOf(effectiveRemoteSha);
     return { ahead: idx > 0 ? idx : 1, behind: 0 };
   }
 
   // Check if local is ancestor of remote (local behind)
   let localIsAncestor = false;
   try {
-    localIsAncestor = await git.isDescendent({ fs, dir: projectDir, oid: remoteSha, ancestor: localSha });
+    localIsAncestor = await git.isDescendent({ fs, dir: projectDir, oid: effectiveRemoteSha, ancestor: localSha });
   } catch {
     // Missing object or not ancestor
   }
 
   if (localIsAncestor) {
-    const remoteLogs = await git.log({ fs, dir: projectDir, ref: remoteTrackingRef, depth: 100 });
-    const remoteShas = remoteLogs.map((l) => l.oid);
-    const idx = remoteShas.indexOf(localSha);
-    return { ahead: 0, behind: idx > 0 ? idx : 1 };
+    try {
+      const remoteLogs = await git.log({ fs, dir: projectDir, ref: effectiveRemoteSha, depth: 100 });
+      const remoteShas = remoteLogs.map((l) => l.oid);
+      const idx = remoteShas.indexOf(localSha);
+      return { ahead: 0, behind: idx > 0 ? idx : 1 };
+    } catch {
+      return { ahead: 0, behind: 1 };
+    }
   }
 
   // Diverged branches: calculate via merge base
   try {
-    const mergeBases = await git.findMergeBase({ fs, dir: projectDir, oids: [localSha, remoteSha] });
+    const mergeBases = await git.findMergeBase({ fs, dir: projectDir, oids: [localSha, effectiveRemoteSha] });
     if (mergeBases.length > 0) {
       const baseSha = mergeBases[0];
       const localLogs = await git.log({ fs, dir: projectDir, depth: 100 });
-      const remoteLogs = await git.log({ fs, dir: projectDir, ref: remoteTrackingRef, depth: 100 });
+      let remoteLogs: { oid: string }[] = [];
+      try {
+        remoteLogs = await git.log({ fs, dir: projectDir, ref: effectiveRemoteSha, depth: 100 });
+      } catch {
+        remoteLogs = [];
+      }
       const localIdx = localLogs.map((l) => l.oid).indexOf(baseSha);
       const remoteIdx = remoteLogs.map((l) => l.oid).indexOf(baseSha);
       return {

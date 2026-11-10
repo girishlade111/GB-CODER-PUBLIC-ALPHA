@@ -35,6 +35,8 @@ import {
   writeRemoteCommitObjects,
   computeAheadBehind,
   getGitAuthor,
+  getRemoteShaMapping,
+  saveRemoteShaMapping,
 } from './gitEngineService';
 import {
   pullFiles,
@@ -135,11 +137,15 @@ export const fetchRemote = async (
   const refData = (await response.json()) as RefResponse;
   const remoteSha = refData.object.sha;
 
+  // Resolve remoteSha to local OID if it was previously imported/mapped
+  const shaMap = await getRemoteShaMapping(projectId);
+  const localMappedSha = shaMap[remoteSha] || remoteSha;
+
   const localLogs = await getLog(projectId, 100);
   const localShas = localLogs.map((l) => l.sha);
 
-  if (localShas.length > 0 && localShas[0] === remoteSha) {
-    await setRemoteTrackingRef(projectId, 'origin', currentBranch, remoteSha);
+  if (localShas.length > 0 && (localShas[0] === remoteSha || localShas[0] === localMappedSha)) {
+    await setRemoteTrackingRef(projectId, 'origin', currentBranch, localMappedSha);
     return {
       ahead: 0,
       behind: 0,
@@ -148,10 +154,10 @@ export const fetchRemote = async (
     };
   }
 
-  const remoteIndexInLocal = localShas.indexOf(remoteSha);
+  const remoteIndexInLocal = localShas.findIndex((s) => s === remoteSha || s === localMappedSha);
   if (remoteIndexInLocal > 0) {
     // Remote SHA is an ancestor of local HEAD -> local is ahead
-    await setRemoteTrackingRef(projectId, 'origin', currentBranch, remoteSha);
+    await setRemoteTrackingRef(projectId, 'origin', currentBranch, localMappedSha);
     return {
       ahead: remoteIndexInLocal,
       behind: 0,
@@ -185,17 +191,31 @@ export const fetchRemote = async (
           };
           parents: Array<{ sha: string } | string>;
         }
-        const payloads: RemoteCommitPayload[] = (rawCommits as RawCommitItem[]).map((item) => ({
-          sha: item.sha,
-          message: item.commit.message,
-          author: item.commit.author,
-          committer: item.commit.committer,
-          treeSha: item.commit.tree?.sha,
-          parents: (item.parents || []).map((p) => (typeof p === 'string' ? p : p.sha)).filter(Boolean) as string[],
-        }));
 
-        const shaMap = await writeRemoteCommitObjects(projectId, payloads);
-        const effectiveRemoteSha = shaMap.get(remoteSha) || remoteSha;
+        // Filter down to only commits not yet known in local Git history
+        const newCommits: RawCommitItem[] = [];
+        for (const item of (rawCommits as RawCommitItem[])) {
+          if (shaMap[item.sha] || localShas.includes(item.sha)) {
+            break;
+          }
+          newCommits.push(item);
+        }
+
+        let effectiveRemoteSha = shaMap[remoteSha] || remoteSha;
+        if (newCommits.length > 0) {
+          const payloads: RemoteCommitPayload[] = newCommits.map((item) => ({
+            sha: item.sha,
+            message: item.commit.message,
+            author: item.commit.author,
+            committer: item.commit.committer,
+            treeSha: item.commit.tree?.sha,
+            parents: (item.parents || []).map((p) => (typeof p === 'string' ? p : p.sha)).filter(Boolean) as string[],
+          }));
+
+          const writtenShaMap = await writeRemoteCommitObjects(projectId, payloads);
+          effectiveRemoteSha = writtenShaMap.get(remoteSha) || shaMap[remoteSha] || remoteSha;
+        }
+
         await setRemoteTrackingRef(projectId, 'origin', currentBranch, effectiveRemoteSha);
       } else {
         await setRemoteTrackingRef(projectId, 'origin', currentBranch, remoteSha);
@@ -342,7 +362,9 @@ export const pushRemote = async (
   let unpushedLogs = localLogs;
 
   if (trackingRef) {
-    const trackingIdx = localLogs.findIndex((c) => c.oid === trackingRef);
+    const shaMap = await getRemoteShaMapping(projectId);
+    const resolvedTrackingRef = shaMap[trackingRef] || trackingRef;
+    const trackingIdx = localLogs.findIndex((c) => c.oid === trackingRef || c.oid === resolvedTrackingRef);
     if (trackingIdx > 0) {
       unpushedLogs = localLogs.slice(0, trackingIdx);
     }
@@ -396,29 +418,25 @@ export const pushRemote = async (
     token,
   });
 
-  // Reconcile remote tracking ref and local branch ref with pushed commits
+  // Reconcile remote tracking ref and record remote-to-local commit mapping
   if (result.commitSha && !result.alreadyUpToDate) {
-    if (result.pushedCommits && result.pushedCommits.length > 0) {
-      const shaMap = await writeRemoteCommitObjects(
-        projectId,
-        result.pushedCommits.map((c) => ({
-          sha: c.sha,
-          message: c.message,
-          author: {
-            name: c.author?.name || 'GB Coder Developer',
-            email: c.author?.email || 'developer@gbcoder.dev',
-            date: c.author?.date ? new Date(c.author.date).getTime() : Date.now(),
-          },
-          parents: c.parents,
-        })),
-      );
-      const canonicalHead = shaMap.get(result.commitSha) || result.commitSha;
-      await setRemoteTrackingRef(projectId, 'origin', currentBranch, canonicalHead);
-      await setBranchRef(projectId, currentBranch, canonicalHead);
-    } else {
-      await setRemoteTrackingRef(projectId, 'origin', currentBranch, result.commitSha);
-      await setBranchRef(projectId, currentBranch, result.commitSha);
+    const pushedLocalSha = localLogs[0].oid;
+    const mappingUpdate: Record<string, string> = {
+      [result.commitSha]: pushedLocalSha,
+      [pushedLocalSha]: result.commitSha,
+    };
+    if (result.pushedCommits && result.pushedCommits.length > 0 && chronologicalLogs.length === result.pushedCommits.length) {
+      for (let i = 0; i < result.pushedCommits.length; i++) {
+        const remoteC = result.pushedCommits[i];
+        const localC = chronologicalLogs[i];
+        if (remoteC?.sha && localC?.oid) {
+          mappingUpdate[remoteC.sha] = localC.oid;
+          mappingUpdate[localC.oid] = remoteC.sha;
+        }
+      }
     }
+    await saveRemoteShaMapping(projectId, mappingUpdate);
+    await setRemoteTrackingRef(projectId, 'origin', currentBranch, pushedLocalSha);
   }
 
   return {
