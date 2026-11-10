@@ -78,6 +78,12 @@ import {
   pushRemote,
   parseRepoFullName,
 } from '../../services/git/gitRemoteService';
+import {
+  getGitHubAppStatus,
+  startGitHubAppAuth,
+  disconnectGitHubApp,
+  type GitHubAppStatus,
+} from '../../services/git/gitGitHubAppService';
 import { readCredential, saveCredential } from '../../services/credentialStore';
 import { GitDiffModal } from './GitDiffModal';
 import { GitBranchModal } from './GitBranchModal';
@@ -142,6 +148,47 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
 
   const [authorModalOpen, setAuthorModalOpen] = useState(false);
   const [prModalOpen, setPrModalOpen] = useState(false);
+
+  // GitHub App Phase 5 state
+  const [githubAppStatus, setGithubAppStatus] = useState<GitHubAppStatus | null>(null);
+  const [isConnectingApp, setIsConnectingApp] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getGitHubAppStatus()
+      .then((st) => {
+        if (mounted) setGithubAppStatus(st);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleConnectGitHubApp = async () => {
+    setIsConnectingApp(true);
+    try {
+      const url = await startGitHubAppAuth(window.location.pathname);
+      if (typeof window !== 'undefined' && window.location) {
+        window.location.assign(url);
+      }
+    } catch (err: unknown) {
+      toast.error((err as Error)?.message || 'Failed to start GitHub App authorization.');
+    } finally {
+      setIsConnectingApp(false);
+    }
+  };
+
+  const handleDisconnectGitHubApp = async () => {
+    try {
+      await disconnectGitHubApp();
+      setGithubAppStatus({ isConnected: false });
+      toast.success('Disconnected GitHub App.');
+      await refreshStatus(true);
+    } catch (err: unknown) {
+      toast.error((err as Error)?.message || 'Failed to disconnect GitHub App.');
+    }
+  };
 
   // Remote config
   const [remoteConfig, setRemoteConfigState] = useState<GitRemoteConfig | null>(() => getRemoteConfig(projectId));
@@ -457,13 +504,14 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
       return;
     }
     let token = await readCredential('github');
-    if (!token) {
+    const isAppActive = Boolean(githubAppStatus?.isConnected && !githubAppStatus.isExpired);
+    if (!token && !isAppActive) {
       const tokenInput = window.prompt('Please enter your GitHub access token:');
       if (tokenInput && tokenInput.trim()) {
         await saveCredential('github', tokenInput.trim(), true);
         token = tokenInput.trim();
       } else {
-        toast.error('Please configure your GitHub access token first.');
+        toast.error('Please configure your GitHub access token or connect GitHub App.');
         return;
       }
     }
@@ -471,7 +519,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
     setIsSyncing(true);
     try {
       if (onFlushEditor) await onFlushEditor();
-      const res = await pushRemote(projectId, repoFullName, token);
+      const res = await pushRemote(projectId, repoFullName, token || undefined);
       if (res.alreadyUpToDate) {
         toast.success('Remote repository is already up to date.');
       } else {
@@ -492,13 +540,14 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
       return;
     }
     let token = await readCredential('github');
-    if (!token) {
+    const isAppActive = Boolean(githubAppStatus?.isConnected && !githubAppStatus.isExpired);
+    if (!token && !isAppActive) {
       const tokenInput = window.prompt('Please enter your GitHub access token:');
       if (tokenInput && tokenInput.trim()) {
         await saveCredential('github', tokenInput.trim(), true);
         token = tokenInput.trim();
       } else {
-        toast.error('Please configure your GitHub access token first.');
+        toast.error('Please configure your GitHub access token or connect GitHub App.');
         return;
       }
     }
@@ -506,7 +555,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
     setIsSyncing(true);
     try {
       if (onFlushEditor) await onFlushEditor();
-      const res = await pullRemote(projectId, repoFullName, token, currentAuthor);
+      const res = await pullRemote(projectId, repoFullName, token || undefined, currentAuthor);
       toast.success(`Pulled ${res.filesChanged} files from ${repoFullName}.`);
       if (onFilesChanged) onFilesChanged(res.files);
       await refreshStatus(true);
@@ -943,7 +992,35 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
       )}
 
       {/* Bottom Remote Synchronize Bar */}
-      <div className="shrink-0 border-t border-[var(--border)] bg-[var(--sidebar)] p-2.5">
+      <div className="shrink-0 border-t border-[var(--border)] bg-[var(--sidebar)] p-2.5 space-y-2">
+        {/* GitHub App connection banner */}
+        {githubAppStatus?.isConnected ? (
+          <div data-testid="github-app-status-badge" className="flex items-center justify-between rounded bg-emerald-950/30 border border-emerald-500/30 px-2 py-1 text-[10px] text-emerald-300">
+            <span className="truncate">GitHub App: @{githubAppStatus.githubUsername || 'connected'}</span>
+            <button
+              data-testid="github-app-disconnect-btn"
+              onClick={() => void handleDisconnectGitHubApp()}
+              className="text-[10px] text-[var(--muted-foreground)] hover:text-rose-400 ml-1.5"
+              title="Disconnect GitHub App"
+            >
+              Disconnect
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-1 text-[10px] text-[var(--muted-foreground)] px-0.5">
+            <span>PAT-less access:</span>
+            <button
+              data-testid="github-app-connect-btn"
+              onClick={() => void handleConnectGitHubApp()}
+              disabled={isConnectingApp}
+              className="text-[10px] font-medium text-[var(--primary)] hover:underline flex items-center gap-1"
+            >
+              {isConnectingApp && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
+              <span>Connect GitHub App</span>
+            </button>
+          </div>
+        )}
+
         {remoteConfig ? (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-[11px]">

@@ -41,6 +41,7 @@
 
 import type { MultiFileProject } from '../types/files';
 import { buildArchiveFiles, type ArchiveOptions } from './projectArchiveService';
+import { getSupabaseClient } from './auth/supabaseClient';
 
 const API_BASE = 'https://api.github.com';
 
@@ -341,7 +342,7 @@ const readErrorMessage = async (response: Response): Promise<string> => {
  * version pin, or the error classification.
  */
 const githubRequest = async <T>(
-  token: string,
+  token: string | null | undefined,
   path: string,
   init: RequestInit = {},
   context = 'reach GitHub',
@@ -353,20 +354,43 @@ const githubRequest = async <T>(
   const relayAbort = () => controller.abort();
   init.signal?.addEventListener('abort', relayAbort, { once: true });
 
+  let targetUrl = `${API_BASE}${path}`;
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github+json',
+    // Pinned so a future default change cannot silently alter response shapes.
+    'X-GitHub-Api-Version': '2022-11-28',
+    ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+    ...(init.headers as Record<string, string>),
+  };
+
+  if (token && token !== '__GITHUB_APP__') {
+    headers.Authorization = `Bearer ${token}`;
+  } else if (!token || token === '__GITHUB_APP__') {
+    const client = getSupabaseClient();
+    if (client) {
+      try {
+        const sessionRes = await client.auth.getSession();
+        const sessionToken = sessionRes.data.session?.access_token;
+        if (sessionToken) {
+          const supabaseUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPABASE_URL : '';
+          if (supabaseUrl) {
+            targetUrl = `${supabaseUrl}/functions/v1/github-app-git-proxy?path=${encodeURIComponent(path)}`;
+            headers.Authorization = `Bearer ${sessionToken}`;
+          }
+        }
+      } catch {
+        // Fallback to direct request
+      }
+    }
+  }
+
   let response: Response;
   try {
-    response = await fetch(`${API_BASE}${path}`, {
+    response = await fetch(targetUrl, {
       cache: 'no-store',
       ...init,
       signal: controller.signal,
-      headers: {
-        Accept: 'application/vnd.github+json',
-        // Pinned so a future default change cannot silently alter response shapes.
-        'X-GitHub-Api-Version': '2022-11-28',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(init.body ? { 'Content-Type': 'application/json' } : {}),
-        ...init.headers,
-      },
+      headers,
     });
   } catch (error) {
     // The caller cancelled; that is not a network failure.
@@ -462,7 +486,7 @@ const toRepo = (repo: RawRepo): GitHubRepo => ({
 });
 
 /** Verifies a token and returns the account it belongs to. */
-export const fetchViewer = async (token: string): Promise<GitHubUser> => {
+export const fetchViewer = async (token?: string): Promise<GitHubUser> => {
   const user = await githubRequest<RawUser>(token, '/user', {}, 'identify your account');
   return { login: user.login, name: user.name, avatarUrl: user.avatar_url };
 };
@@ -479,7 +503,7 @@ export const fetchViewer = async (token: string): Promise<GitHubUser> => {
  * because this runs against a 5,000/hour budget and a linear scan of every
  * repository a user has ever touched is not what the picker is for.
  */
-export const listRepos = async (token: string, signal?: AbortSignal): Promise<GitHubRepo[]> => {
+export const listRepos = async (token?: string, signal?: AbortSignal): Promise<GitHubRepo[]> => {
   const collected: GitHubRepo[] = [];
 
   for (let page = 1; page <= MAX_REPO_PAGES; page += 1) {
@@ -500,7 +524,7 @@ export const listRepos = async (token: string, signal?: AbortSignal): Promise<Gi
 
 /** Branch names, default branch first. */
 export const listBranches = async (
-  token: string,
+  token: string | undefined,
   ref: RepoRef,
   signal?: AbortSignal,
 ): Promise<string[]> => {
@@ -515,7 +539,7 @@ export const listBranches = async (
 
 /** The account's remaining hourly API calls, when GitHub reports them. */
 export const readRateLimitStatus = async (
-  token: string,
+  token?: string,
 ): Promise<{ limit: number; remaining: number; resetAt: number } | null> => {
   try {
     const response = await fetch(`${API_BASE}/rate_limit`, {
@@ -564,7 +588,7 @@ interface BranchHead {
 }
 
 const readBranchHead = async (
-  token: string,
+  token: string | undefined,
   base: string,
   branch: string,
   signal?: AbortSignal,
@@ -611,7 +635,7 @@ const readBranchHead = async (
 
 /** Walks a tree into a path → blob-sha map, for diffing against. */
 const readTreePaths = async (
-  token: string,
+  token: string | undefined,
   base: string,
   treeSha: string,
   signal?: AbortSignal,
@@ -627,7 +651,7 @@ const readTreePaths = async (
 
 /** Uploads each changed file as a blob and returns the tree entries for them. */
 const uploadBlobs = async (
-  token: string,
+  token: string | undefined,
   base: string,
   files: { path: string; content: string }[],
   signal: AbortSignal | undefined,
@@ -667,7 +691,7 @@ const uploadBlobs = async (
  * where there is nothing to build on.
  */
 const createTree = async (
-  token: string,
+  token: string | undefined,
   base: string,
   entries: TreeEntry[],
   baseTree: string | null,
@@ -687,7 +711,7 @@ const createTree = async (
 };
 
 const createCommit = async (
-  token: string,
+  token: string | undefined,
   base: string,
   message: string,
   treeSha: string,
@@ -720,7 +744,7 @@ const createCommit = async (
  * would be told to pull and try again with no explanation of what happened.
  */
 const updateRef = async (
-  token: string,
+  token: string | undefined,
   base: string,
   branch: string,
   sha: string,
@@ -758,7 +782,7 @@ const updateRef = async (
 };
 
 export interface CommitFilesOptions {
-  token: string;
+  token?: string;
   ref: RepoRef;
   branch: string;
   message: string;
@@ -793,7 +817,7 @@ export interface CommitChainItem {
 }
 
 export interface CommitChainOptions {
-  token: string;
+  token?: string;
   ref: RepoRef;
   branch: string;
   commits: CommitChainItem[];
@@ -984,7 +1008,7 @@ export const commitFiles = async (options: CommitFilesOptions): Promise<GitHubCo
 };
 
 export interface CreateRepoOptions {
-  token: string;
+  token?: string;
   name: string;
   description?: string;
   private: boolean;
@@ -1114,7 +1138,7 @@ export interface PullResult {
  * in `skipped` rather than silently dropped.
  */
 export const pullFiles = async (options: {
-  token: string;
+  token?: string;
   ref: RepoRef;
   branch: string;
   onProgress?: (message: string, percent: number) => void;

@@ -47,6 +47,7 @@ import {
   type CommitChainItem,
 } from '../githubSyncService';
 import { checkRepositoryPermissions } from './gitGitHubAppService';
+import { getSupabaseClient } from '../auth/supabaseClient';
 import { languageForPath, type ProjectFile } from '../../types/files';
 import type { GitRemoteConfig, GitAuthor, RemoteCommitPayload } from '../../types/git';
 
@@ -101,18 +102,38 @@ export interface FetchResult {
 export const fetchRemote = async (
   projectId: string,
   repoFullName: string,
-  token: string,
+  token?: string,
 ): Promise<FetchResult> => {
   const currentBranch = await getCurrentBranch(projectId);
-  const url = `https://api.github.com/repos/${repoFullName}/git/ref/heads/${encodeURIComponent(currentBranch)}?_t=${Date.now()}`;
+  let url = `https://api.github.com/repos/${repoFullName}/git/ref/heads/${encodeURIComponent(currentBranch)}?_t=${Date.now()}`;
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+    'User-Agent': 'GB-Coder-IDE',
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  } else {
+    const client = getSupabaseClient();
+    if (client) {
+      try {
+        const { data: { session } } = await client.auth.getSession();
+        if (session?.access_token) {
+          const supabaseUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPABASE_URL : '';
+          if (supabaseUrl) {
+            url = `${supabaseUrl}/functions/v1/github-app-git-proxy?path=${encodeURIComponent(`/repos/${repoFullName}/git/ref/heads/${encodeURIComponent(currentBranch)}?_t=${Date.now()}`)}`;
+            headers.Authorization = `Bearer ${session.access_token}`;
+          }
+        }
+      } catch {
+        // Fallback to direct request
+      }
+    }
+  }
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      Authorization: `Bearer ${token}`,
-      'User-Agent': 'GB-Coder-IDE',
-    },
+    headers,
     cache: 'no-store',
     signal: AbortSignal.timeout(8000),
   });
@@ -171,14 +192,35 @@ export const fetchRemote = async (
 
   // Remote has new commits not present in local history: fetch and write objects
   try {
-    const commitsUrl = `https://api.github.com/repos/${repoFullName}/commits?sha=${encodeURIComponent(remoteSha)}&per_page=30&_t=${Date.now()}`;
+    let commitsUrl = `https://api.github.com/repos/${repoFullName}/commits?sha=${encodeURIComponent(remoteSha)}&per_page=30&_t=${Date.now()}`;
+    const commitHeaders: Record<string, string> = {
+      Accept: 'application/vnd.github.v3+json',
+      'User-Agent': 'GB-Coder-IDE',
+    };
+
+    if (token) {
+      commitHeaders.Authorization = `Bearer ${token}`;
+    } else {
+      const client = getSupabaseClient();
+      if (client) {
+        try {
+          const { data: { session } } = await client.auth.getSession();
+          if (session?.access_token) {
+            const supabaseUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPABASE_URL : '';
+            if (supabaseUrl) {
+              commitsUrl = `${supabaseUrl}/functions/v1/github-app-git-proxy?path=${encodeURIComponent(`/repos/${repoFullName}/commits?sha=${encodeURIComponent(remoteSha)}&per_page=30&_t=${Date.now()}`)}`;
+              commitHeaders.Authorization = `Bearer ${session.access_token}`;
+            }
+          }
+        } catch {
+          // Fallback to direct request
+        }
+      }
+    }
+
     const commitsRes = await fetch(commitsUrl, {
       method: 'GET',
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-        Authorization: `Bearer ${token}`,
-        'User-Agent': 'GB-Coder-IDE',
-      },
+      headers: commitHeaders,
       cache: 'no-store',
       signal: AbortSignal.timeout(8000),
     });
@@ -255,7 +297,7 @@ export interface PullRemoteResult {
 export const pullRemote = async (
   projectId: string,
   repoFullName: string,
-  token: string,
+  token?: string,
   author?: GitAuthor,
 ): Promise<PullRemoteResult> => {
   const status = await getStatus(projectId);
@@ -335,7 +377,7 @@ export interface PushRemoteResult extends GitHubCommitResult {
 export const pushRemote = async (
   projectId: string,
   repoFullName: string,
-  token: string,
+  token?: string,
 ): Promise<PushRemoteResult> => {
   const permissions = await checkRepositoryPermissions(repoFullName, token);
   if (!permissions.push) {

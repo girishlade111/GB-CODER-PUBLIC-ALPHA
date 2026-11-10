@@ -50,6 +50,12 @@ import { createCloudProject } from '../../services/projects/cloudProjectService'
 import { inferProjectType, inferEntry } from '../../services/projectImportService';
 import { languageForPath, ProjectFile } from '../../types/files';
 import { useAuth } from '../../features/auth/useAuth';
+import {
+  getGitHubAppStatus,
+  startGitHubAppAuth,
+  listAuthorizedRepositories,
+  type GitHubAppStatus,
+} from '../../services/git/gitGitHubAppService';
 import toast from 'react-hot-toast';
 
 const GITHUB_TOKEN_ID = 'github';
@@ -68,6 +74,9 @@ export const GitHubRepoBrowserModal: React.FC<GitHubRepoBrowserModalProps> = ({
   onImportSuccess,
 }) => {
   const { user: authUser } = useAuth();
+
+  // GitHub App Phase 5 state
+  const [githubAppStatus, setGithubAppStatus] = useState<GitHubAppStatus | null>(null);
 
   // Token management state
   const [token, setToken] = useState('');
@@ -105,6 +114,14 @@ export const GitHubRepoBrowserModal: React.FC<GitHubRepoBrowserModalProps> = ({
     let cancelled = false;
 
     const loadExistingToken = async () => {
+      // Check GitHub App connection status
+      try {
+        const appStatus = await getGitHubAppStatus();
+        if (!cancelled) setGithubAppStatus(appStatus);
+      } catch {
+        // App status check optional
+      }
+
       const stored = await readCredential(GITHUB_TOKEN_ID);
       if (stored && !cancelled) {
         setToken(stored);
@@ -166,6 +183,42 @@ export const GitHubRepoBrowserModal: React.FC<GitHubRepoBrowserModalProps> = ({
       setErrorMessage(message);
     } finally {
       setIsVerifyingToken(false);
+      setIsLoadingRepos(false);
+    }
+  };
+
+  // Connect via GitHub App Phase 5
+  const handleConnectWithGitHubApp = async () => {
+    try {
+      if (githubAppStatus?.isConnected) {
+        setIsLoadingRepos(true);
+        const appRepos = await listAuthorizedRepositories();
+        setRepos(
+          appRepos.map((r) => ({
+            id: r.id,
+            name: r.name,
+            fullName: r.fullName,
+            private: r.private,
+            defaultBranch: r.defaultBranch,
+            description: r.description,
+            updatedAt: new Date().toISOString(),
+            canPush: r.permissions ? r.permissions.push : true,
+          })),
+        );
+        setViewer({
+          login: githubAppStatus.githubUsername || 'github-app-user',
+          name: githubAppStatus.githubUsername || 'GitHub App User',
+          avatarUrl: `https://github.com/${githubAppStatus.githubUsername || 'ghost'}.png`,
+        });
+        toast.success(`Loaded repositories via GitHub App (@${githubAppStatus.githubUsername})`);
+      } else {
+        const authUrl = await startGitHubAppAuth(window.location.pathname);
+        window.location.href = authUrl;
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to connect via GitHub App.';
+      setErrorMessage(message);
+    } finally {
       setIsLoadingRepos(false);
     }
   };
@@ -362,6 +415,34 @@ export const GitHubRepoBrowserModal: React.FC<GitHubRepoBrowserModalProps> = ({
           {/* Token Authentication Section */}
           {!viewer ? (
             <div className="space-y-4">
+              <div className="rounded-xl border border-stroke-subtle bg-surface-canvas p-4 text-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-semibold text-content-primary">
+                    <Github className="h-4 w-4 text-accent" />
+                    <span>PAT-less Access: GitHub App</span>
+                  </div>
+                  {githubAppStatus?.isConnected && (
+                    <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-400 border border-emerald-500/20">
+                      Connected (@{githubAppStatus.githubUsername})
+                    </span>
+                  )}
+                </div>
+                <p className="text-content-secondary leading-relaxed text-[11.5px]">
+                  {githubAppStatus?.isConnected
+                    ? 'Your GitHub App authorization is active. You can browse and clone repositories without entering a PAT.'
+                    : 'Connect GB Coder GitHub App to access repositories without entering a personal access token.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void handleConnectWithGitHubApp()}
+                  disabled={isLoadingRepos}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-accent-contrast hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  <Github className="h-3.5 w-3.5" />
+                  {githubAppStatus?.isConnected ? 'Use GitHub App Repositories' : 'Connect with GitHub App'}
+                </button>
+              </div>
+
               <div className="rounded-xl border border-stroke-subtle bg-surface-canvas p-4 text-xs space-y-2">
                 <div className="flex items-center gap-2 font-semibold text-content-primary">
                   <Github className="h-4 w-4 text-accent" />
