@@ -37,7 +37,7 @@ const cwd = process.cwd();
 // Route rules replica for unit verification
 const ROUTE_RULES = [
   { pattern: /^\/user$/, allowedMethods: ['GET'] },
-  { pattern: /^\/user\/repos(\?.*)?$/, allowedMethods: ['GET', 'POST'] },
+  { pattern: /^\/user\/repos(\?.*)?$/, allowedMethods: ['GET'] },
   { pattern: /^\/user\/installations(\?.*)?$/, allowedMethods: ['GET'] },
   { pattern: /^\/user\/installations\/\d+\/repositories(\?.*)?$/, allowedMethods: ['GET'] },
   { pattern: /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/, allowedMethods: ['GET'] },
@@ -224,6 +224,10 @@ describe('Phase 5.1: GitHub App Security Hardening & Isolation (SEC01 - SEC20)',
     const userRes = evaluateProxyRequest('/user', 'POST');
     assert.equal(userRes.status, 405, 'POST on /user must return 405');
 
+    // /user/repos is GET only in hardened configuration (least privilege)
+    const userReposRes = evaluateProxyRequest('/user/repos', 'POST');
+    assert.equal(userReposRes.status, 405, 'POST on /user/repos must return 405');
+
     // Commit by SHA is GET only
     const shaRes = evaluateProxyRequest('/repos/owner/repo/git/commits/a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2', 'POST');
     assert.equal(shaRes.status, 405, 'POST on commit SHA must return 405');
@@ -258,17 +262,42 @@ describe('Phase 5.1: GitHub App Security Hardening & Isolation (SEC01 - SEC20)',
     assert.ok(sanitized.includes('[REDACTED_TOKEN]'));
   });
 
-  it('SEC16: Concurrent token refresh safety', () => {
-    const tokenRecord = {
-      token_expires_at: new Date(Date.now() + 600 * 1000).toISOString(),
+  it('SEC16: Concurrent token refresh safety via Compare-And-Swap leasing', () => {
+    // Model atomic DB record with refreshing_until lease
+    let authDbRecord = {
+      id: 'auth-1',
+      token_expires_at: new Date(Date.now() + 60 * 1000).toISOString(), // Expiring in 1 min
+      refreshing_until: null,
+      access_token: 'ghu_old_token',
     };
 
-    // If expiration is already > 5 minutes in future, concurrent refresh was completed
-    const shouldSkipRefresh = (expiresAt) => {
-      return new Date(expiresAt).getTime() - Date.now() > 5 * 60 * 1000;
+    // Simulate atomic CAS lease acquisition
+    const acquireLease = (record, leaseUntil) => {
+      const now = Date.now();
+      const currentLease = record.refreshing_until ? new Date(record.refreshing_until).getTime() : 0;
+      if (!record.refreshing_until || currentLease < now) {
+        record.refreshing_until = leaseUntil;
+        return true;
+      }
+      return false;
     };
 
-    assert.equal(shouldSkipRefresh(tokenRecord.token_expires_at), true, 'Concurrent refresh avoids re-refreshing fresh token');
+    const leaseUntil = new Date(Date.now() + 30000).toISOString();
+    const req1Acquired = acquireLease(authDbRecord, leaseUntil);
+    const req2Acquired = acquireLease(authDbRecord, leaseUntil);
+
+    assert.equal(req1Acquired, true, 'First concurrent request successfully acquires refresh lease');
+    assert.equal(req2Acquired, false, 'Second concurrent request fails to acquire lease and avoids duplicate refresh');
+
+    // Simulate completion of refresh by Req 1
+    authDbRecord.access_token = 'ghu_new_token_rotated';
+    authDbRecord.token_expires_at = new Date(Date.now() + 28800 * 1000).toISOString();
+    authDbRecord.refreshing_until = null;
+
+    // Sibling poll detects refreshed token
+    const isNowFresh = new Date(authDbRecord.token_expires_at).getTime() - Date.now() > 5 * 60 * 1000;
+    assert.equal(isNowFresh, true, 'Subsequent poll confirms token was successfully rotated');
+    assert.equal(authDbRecord.access_token, 'ghu_new_token_rotated');
   });
 
   it('SEC17: Revocation on disconnect', () => {
@@ -330,6 +359,88 @@ describe('Phase 5.1: GitHub App Security Hardening & Isolation (SEC01 - SEC20)',
     assert.ok(
       !codeServiceSource.includes('GITHUB_APP_CLIENT_SECRET'),
       'Client files must not reference GitHub App secret',
+    );
+  });
+
+  it('SEC21: Standardized 256-bit encryption key parser supporting 64-hex and 44-base64', () => {
+    const parseEncryptionKey = (secretKey) => {
+      const trimmed = secretKey.trim();
+      if (/^[0-9a-fA-F]{64}$/.test(trimmed)) {
+        const bytes = new Uint8Array(32);
+        for (let i = 0; i < 32; i++) {
+          bytes[i] = parseInt(trimmed.substring(i * 2, i * 2 + 2), 16);
+        }
+        return bytes;
+      }
+      try {
+        const decoded = Buffer.from(trimmed, 'base64');
+        if (decoded.length === 32) {
+          return new Uint8Array(decoded);
+        }
+      } catch {
+        // Fall back
+      }
+      return new TextEncoder().encode(trimmed.padEnd(32, '0').slice(0, 32));
+    };
+
+    // Test 64-hex format (e.g. openssl rand -hex 32)
+    const hexKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+    const parsedHex = parseEncryptionKey(hexKey);
+    assert.equal(parsedHex.length, 32, 'Parsed hex key must be exactly 32 bytes');
+    assert.equal(parsedHex[0], 0x01);
+    assert.equal(parsedHex[1], 0x23);
+    assert.equal(parsedHex[31], 0xef);
+
+    // Test 44-char base64 format (e.g. openssl rand -base64 32)
+    const base64Key = Buffer.from(parsedHex).toString('base64');
+    const parsedBase64 = parseEncryptionKey(base64Key);
+    assert.equal(parsedBase64.length, 32, 'Parsed base64 key must be exactly 32 bytes');
+    assert.deepEqual(parsedBase64, parsedHex, 'Parsed base64 matches original key bytes');
+  });
+
+  it('SEC22: GitHub App OAuth callback URL action fallback when action query is absent', () => {
+    const resolveAction = (urlStr) => {
+      const url = new URL(urlStr);
+      let action = url.searchParams.get('action') || url.pathname.split('/').pop();
+      if ((!action || action === 'github-app-auth') && url.searchParams.has('code') && url.searchParams.has('state')) {
+        action = 'callback';
+      }
+      return action;
+    };
+
+    // Explicit action=callback
+    assert.equal(
+      resolveAction('https://example.supabase.co/functions/v1/github-app-auth?action=callback&code=abc&state=xyz'),
+      'callback',
+    );
+
+    // Missing action parameter, but code and state present
+    assert.equal(
+      resolveAction('https://example.supabase.co/functions/v1/github-app-auth?code=abc&state=xyz'),
+      'callback',
+      'Should automatically resolve to callback action when code and state are present',
+    );
+
+    // Start action
+    assert.equal(
+      resolveAction('https://example.supabase.co/functions/v1/github-app-auth?action=start'),
+      'start',
+    );
+  });
+
+  it('SEC23: Database migration includes refreshing_until column and index', () => {
+    const migrationContent = readFileSync(
+      join(cwd, 'supabase/migrations/20261110000000_phase5_github_app_authorizations.sql'),
+      'utf8',
+    );
+
+    assert.ok(
+      migrationContent.includes('refreshing_until TIMESTAMPTZ'),
+      'Table schema must define refreshing_until column',
+    );
+    assert.ok(
+      migrationContent.includes('CREATE INDEX IF NOT EXISTS idx_gh_app_auth_refreshing ON public.github_app_authorizations(refreshing_until);'),
+      'Index on refreshing_until must be defined for high performance lease queries',
     );
   });
 });

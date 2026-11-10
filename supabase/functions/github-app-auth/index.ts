@@ -48,12 +48,34 @@ const CORS_HEADERS = {
 
 // ─── Cryptographic Helpers ──────────────────────────────────────────────────
 
+/** Parse secretKey supporting 64-character hex, 44-character base64, or raw 32-byte string */
+export function parseEncryptionKey(secretKey: string): Uint8Array {
+  const trimmed = secretKey.trim();
+  if (/^[0-9a-fA-F]{64}$/.test(trimmed)) {
+    const bytes = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) {
+      bytes[i] = parseInt(trimmed.substring(i * 2, i * 2 + 2), 16);
+    }
+    return bytes;
+  }
+  try {
+    const decoded = atob(trimmed);
+    if (decoded.length === 32) {
+      return Uint8Array.from(decoded, (c) => c.charCodeAt(0));
+    }
+  } catch {
+    // Fall back to text encoding
+  }
+  const enc = new TextEncoder();
+  return enc.encode(trimmed.padEnd(32, '0').slice(0, 32));
+}
+
 /** Encrypt plaintext using AES-256-GCM */
 export async function encryptToken(plaintext: string, secretKey: string): Promise<string> {
-  const enc = new TextEncoder();
-  const keyData = enc.encode(secretKey.padEnd(32, '0').slice(0, 32));
+  const keyData = parseEncryptionKey(secretKey);
   const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'AES-GCM' }, false, ['encrypt']);
   const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
   const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, enc.encode(plaintext));
 
   const combined = new Uint8Array(iv.length + encrypted.byteLength);
@@ -64,8 +86,7 @@ export async function encryptToken(plaintext: string, secretKey: string): Promis
 
 /** Decrypt ciphertext using AES-256-GCM */
 export async function decryptToken(ciphertext: string, secretKey: string): Promise<string> {
-  const enc = new TextEncoder();
-  const keyData = enc.encode(secretKey.padEnd(32, '0').slice(0, 32));
+  const keyData = parseEncryptionKey(secretKey);
   const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'AES-GCM' }, false, ['decrypt']);
 
   const combined = Uint8Array.from(atob(ciphertext), (c) => c.charCodeAt(0));
@@ -105,7 +126,10 @@ serve(async (req: Request) => {
   }
 
   const url = new URL(req.url);
-  const action = url.searchParams.get('action') || url.pathname.split('/').pop();
+  let action = url.searchParams.get('action') || url.pathname.split('/').pop();
+  if ((!action || action === 'github-app-auth') && url.searchParams.has('code') && url.searchParams.has('state')) {
+    action = 'callback';
+  }
   const env = getEnv();
 
   const serviceClient = createClient(env.supabaseUrl, env.supabaseServiceRoleKey);
@@ -388,59 +412,113 @@ serve(async (req: Request) => {
         });
       }
 
-      const refreshToken = await decryptToken(authRecord.refresh_token_encrypted, env.githubAppEncryptionKey);
+      const nowIso = new Date().toISOString();
+      const leaseUntil = new Date(Date.now() + 30000).toISOString();
 
-      const refreshRes = await fetch('https://github.com/login/oauth/access_token', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'User-Agent': 'GB-Coder-App',
-        },
-        body: JSON.stringify({
-          client_id: env.githubAppClientId,
-          client_secret: env.githubAppClientSecret,
-          grant_type: 'refresh_token',
-          refresh_token: refreshToken,
-        }),
-      });
+      // Acquire CAS lease to prevent concurrent refresh conflicts
+      const { data: leaseAcquired } = await serviceClient
+        .from('github_app_authorizations')
+        .update({ refreshing_until: leaseUntil })
+        .eq('id', authRecord.id)
+        .or(`refreshing_until.is.null,refreshing_until.lt.${nowIso}`)
+        .select('id')
+        .maybeSingle();
 
-      const refreshData = await refreshRes.json();
-      if (!refreshRes.ok || refreshData.error) {
-        return new Response(JSON.stringify({ error: refreshData.error_description || 'Refresh failed' }), {
-          status: 400,
+      if (!leaseAcquired) {
+        // Poll for concurrent refresh to complete
+        for (let attempt = 0; attempt < 5; attempt++) {
+          await new Promise((res) => setTimeout(res, 800));
+          const { data: updatedRecord } = await serviceClient
+            .from('github_app_authorizations')
+            .select('token_expires_at, refreshing_until')
+            .eq('id', authRecord.id)
+            .maybeSingle();
+
+          if (updatedRecord && new Date(updatedRecord.token_expires_at).getTime() - Date.now() > 2 * 60 * 1000) {
+            return new Response(
+              JSON.stringify({
+                success: true,
+                tokenExpiresAt: updatedRecord.token_expires_at,
+              }),
+              {
+                status: 200,
+                headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+              },
+            );
+          }
+        }
+        return new Response(JSON.stringify({ error: 'Concurrent refresh in progress, please retry' }), {
+          status: 409,
           headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
         });
       }
 
-      const newAccessToken = refreshData.access_token;
-      const newRefreshToken = refreshData.refresh_token || refreshToken;
-      const expiresIn = refreshData.expires_in || 28800;
+      try {
+        const refreshToken = await decryptToken(authRecord.refresh_token_encrypted, env.githubAppEncryptionKey);
 
-      const newAccessEncrypted = await encryptToken(newAccessToken, env.githubAppEncryptionKey);
-      const newRefreshEncrypted = await encryptToken(newRefreshToken, env.githubAppEncryptionKey);
-      const newExpiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+        const refreshRes = await fetch('https://github.com/login/oauth/access_token', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'User-Agent': 'GB-Coder-App',
+          },
+          body: JSON.stringify({
+            client_id: env.githubAppClientId,
+            client_secret: env.githubAppClientSecret,
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken,
+          }),
+        });
 
-      await serviceClient
-        .from('github_app_authorizations')
-        .update({
-          access_token_encrypted: newAccessEncrypted,
-          refresh_token_encrypted: newRefreshEncrypted,
-          token_expires_at: newExpiresAt,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', authRecord.id);
+        const refreshData = await refreshRes.json();
+        if (!refreshRes.ok || refreshData.error) {
+          await serviceClient
+            .from('github_app_authorizations')
+            .update({ refreshing_until: null })
+            .eq('id', authRecord.id);
+          return new Response(JSON.stringify({ error: refreshData.error_description || 'Refresh failed' }), {
+            status: 400,
+            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+          });
+        }
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          tokenExpiresAt: newExpiresAt,
-        }),
-        {
-          status: 200,
-          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-        },
-      );
+        const newAccessToken = refreshData.access_token;
+        const newRefreshToken = refreshData.refresh_token || refreshToken;
+        const expiresIn = refreshData.expires_in || 28800;
+
+        const newAccessEncrypted = await encryptToken(newAccessToken, env.githubAppEncryptionKey);
+        const newRefreshEncrypted = await encryptToken(newRefreshToken, env.githubAppEncryptionKey);
+        const newExpiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+
+        await serviceClient
+          .from('github_app_authorizations')
+          .update({
+            access_token_encrypted: newAccessEncrypted,
+            refresh_token_encrypted: newRefreshEncrypted,
+            token_expires_at: newExpiresAt,
+            refreshing_until: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', authRecord.id);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            tokenExpiresAt: newExpiresAt,
+          }),
+          {
+            status: 200,
+            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+          },
+        );
+      } catch (refreshErr) {
+        await serviceClient
+          .from('github_app_authorizations')
+          .update({ refreshing_until: null })
+          .eq('id', authRecord.id);
+        throw refreshErr;
+      }
     }
 
     // 5. ACTION: DISCONNECT ACCOUNT

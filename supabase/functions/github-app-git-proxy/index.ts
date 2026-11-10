@@ -40,10 +40,31 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
 };
 
+/** Parse secretKey supporting 64-character hex, 44-character base64, or raw 32-byte string */
+export function parseEncryptionKey(secretKey: string): Uint8Array {
+  const trimmed = secretKey.trim();
+  if (/^[0-9a-fA-F]{64}$/.test(trimmed)) {
+    const bytes = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) {
+      bytes[i] = parseInt(trimmed.substring(i * 2, i * 2 + 2), 16);
+    }
+    return bytes;
+  }
+  try {
+    const decoded = atob(trimmed);
+    if (decoded.length === 32) {
+      return Uint8Array.from(decoded, (c) => c.charCodeAt(0));
+    }
+  } catch {
+    // Fall back to text encoding
+  }
+  const enc = new TextEncoder();
+  return enc.encode(trimmed.padEnd(32, '0').slice(0, 32));
+}
+
 /** Decrypt ciphertext using AES-256-GCM */
 async function decryptToken(ciphertext: string, secretKey: string): Promise<string> {
-  const enc = new TextEncoder();
-  const keyData = enc.encode(secretKey.padEnd(32, '0').slice(0, 32));
+  const keyData = parseEncryptionKey(secretKey);
   const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'AES-GCM' }, false, ['decrypt']);
 
   const combined = Uint8Array.from(atob(ciphertext), (c) => c.charCodeAt(0));
@@ -56,10 +77,10 @@ async function decryptToken(ciphertext: string, secretKey: string): Promise<stri
 
 /** Encrypt plaintext using AES-256-GCM */
 async function encryptToken(plaintext: string, secretKey: string): Promise<string> {
-  const enc = new TextEncoder();
-  const keyData = enc.encode(secretKey.padEnd(32, '0').slice(0, 32));
+  const keyData = parseEncryptionKey(secretKey);
   const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'AES-GCM' }, false, ['encrypt']);
   const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
   const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, enc.encode(plaintext));
 
   const combined = new Uint8Array(iv.length + encrypted.byteLength);
@@ -77,8 +98,8 @@ interface RouteRule {
 const ROUTE_RULES: RouteRule[] = [
   // 1. Current authenticated user profile
   { pattern: /^\/user$/, allowedMethods: ['GET'] },
-  // 2. Repositories list for the user
-  { pattern: /^\/user\/repos(\?.*)?$/, allowedMethods: ['GET', 'POST'] },
+  // 2. Repositories list for the user (least-privilege read-only)
+  { pattern: /^\/user\/repos(\?.*)?$/, allowedMethods: ['GET'] },
   // 3. User installations
   { pattern: /^\/user\/installations(\?.*)?$/, allowedMethods: ['GET'] },
   // 4. Repositories accessible in an installation
@@ -159,48 +180,99 @@ serve(async (req: Request) => {
     });
   }
 
-  // Check if token is expired or within 2 minutes of expiration, and auto-refresh if possible
+  // Check if token is expired or within 2 minutes of expiration, and auto-refresh with atomic CAS leasing
   const expiresAt = new Date(authRecord.token_expires_at).getTime();
   if (expiresAt - Date.now() < 2 * 60 * 1000 && authRecord.refresh_token_encrypted) {
-    try {
-      const refreshToken = await decryptToken(authRecord.refresh_token_encrypted, env.githubAppEncryptionKey);
-      const refreshRes = await fetch('https://github.com/login/oauth/access_token', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'User-Agent': 'GB-Coder-App',
-        },
-        body: JSON.stringify({
-          client_id: env.githubAppClientId,
-          client_secret: env.githubAppClientSecret,
-          grant_type: 'refresh_token',
-          refresh_token: refreshToken,
-        }),
-      });
+    const nowIso = new Date().toISOString();
+    const leaseUntil = new Date(Date.now() + 30000).toISOString(); // 30-second lease
 
-      const refreshData = await refreshRes.json();
-      if (refreshRes.ok && refreshData.access_token) {
-        accessToken = refreshData.access_token;
-        const newRefreshToken = refreshData.refresh_token || refreshToken;
-        const expiresIn = refreshData.expires_in || 28800;
+    // Atomically acquire refresh lease via Compare-And-Swap
+    const { data: leaseAcquired } = await serviceClient
+      .from('github_app_authorizations')
+      .update({ refreshing_until: leaseUntil })
+      .eq('id', authRecord.id)
+      .or(`refreshing_until.is.null,refreshing_until.lt.${nowIso}`)
+      .select('id')
+      .maybeSingle();
 
-        const newAccessEncrypted = await encryptToken(accessToken, env.githubAppEncryptionKey);
-        const newRefreshEncrypted = await encryptToken(newRefreshToken, env.githubAppEncryptionKey);
-        const newExpiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+    if (leaseAcquired) {
+      // Lease won: execute single-use refresh token exchange with GitHub
+      try {
+        const refreshToken = await decryptToken(authRecord.refresh_token_encrypted, env.githubAppEncryptionKey);
+        const refreshRes = await fetch('https://github.com/login/oauth/access_token', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'User-Agent': 'GB-Coder-App',
+          },
+          body: JSON.stringify({
+            client_id: env.githubAppClientId,
+            client_secret: env.githubAppClientSecret,
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken,
+          }),
+        });
 
+        const refreshData = await refreshRes.json();
+        if (refreshRes.ok && refreshData.access_token) {
+          accessToken = refreshData.access_token;
+          const newRefreshToken = refreshData.refresh_token || refreshToken;
+          const expiresIn = refreshData.expires_in || 28800;
+
+          const newAccessEncrypted = await encryptToken(accessToken, env.githubAppEncryptionKey);
+          const newRefreshEncrypted = await encryptToken(newRefreshToken, env.githubAppEncryptionKey);
+          const newExpiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+
+          await serviceClient
+            .from('github_app_authorizations')
+            .update({
+              access_token_encrypted: newAccessEncrypted,
+              refresh_token_encrypted: newRefreshEncrypted,
+              token_expires_at: newExpiresAt,
+              refreshing_until: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', authRecord.id);
+        } else {
+          // Release lease on unsuccessful refresh response
+          await serviceClient
+            .from('github_app_authorizations')
+            .update({ refreshing_until: null })
+            .eq('id', authRecord.id);
+        }
+      } catch {
+        // Release lease on unexpected network or cryptographic error
         await serviceClient
           .from('github_app_authorizations')
-          .update({
-            access_token_encrypted: newAccessEncrypted,
-            refresh_token_encrypted: newRefreshEncrypted,
-            token_expires_at: newExpiresAt,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ refreshing_until: null })
           .eq('id', authRecord.id);
       }
-    } catch {
-      // If refresh fails, attempt using current token before failing
+    } else {
+      // Concurrent refresh detected: poll for rotated token
+      for (let attempt = 0; attempt < 5; attempt++) {
+        await new Promise((res) => setTimeout(res, 800));
+        const { data: updatedRecord } = await serviceClient
+          .from('github_app_authorizations')
+          .select('access_token_encrypted, token_expires_at, refreshing_until')
+          .eq('id', authRecord.id)
+          .maybeSingle();
+
+        if (updatedRecord) {
+          const updatedExpiresAt = new Date(updatedRecord.token_expires_at).getTime();
+          if (updatedExpiresAt - Date.now() > 2 * 60 * 1000) {
+            try {
+              accessToken = await decryptToken(updatedRecord.access_token_encrypted, env.githubAppEncryptionKey);
+              break;
+            } catch {
+              // fallback to existing token
+            }
+          }
+          if (!updatedRecord.refreshing_until) {
+            break;
+          }
+        }
+      }
     }
   }
 

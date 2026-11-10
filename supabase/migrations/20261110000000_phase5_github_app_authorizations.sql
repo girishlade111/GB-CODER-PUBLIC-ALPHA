@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.github_app_authorizations (
     refresh_token_expires_at TIMESTAMPTZ,
     installation_id BIGINT,
     scope TEXT DEFAULT '',
+    refreshing_until TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT uq_github_app_user_gh_user UNIQUE (user_id, github_user_id)
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.github_app_authorizations (
 -- Index for fast user queries
 CREATE INDEX IF NOT EXISTS idx_gh_app_auth_user_id ON public.github_app_authorizations(user_id);
 CREATE INDEX IF NOT EXISTS idx_gh_app_auth_gh_user_id ON public.github_app_authorizations(github_user_id);
+CREATE INDEX IF NOT EXISTS idx_gh_app_auth_refreshing ON public.github_app_authorizations(refreshing_until);
 
 -- Enable RLS
 ALTER TABLE public.github_app_authorizations ENABLE ROW LEVEL SECURITY;
