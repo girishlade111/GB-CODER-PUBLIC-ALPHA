@@ -211,7 +211,7 @@ server.listen(PORT, async () => {
     const testBranch = `gbcoder-ui-acceptance-${runTimestamp}`;
     liveEvidence.testBranch = testBranch;
 
-    record('PREFLIGHT-01', 'Remote permissions and isolated branch target verified', 'PASS', `target branch: ${testBranch}, base: ${baseSha.slice(0, 7)}`);
+    record('PREFLIGHT-01', 'Remote permissions and isolated branch target verified', 'PASS', `target branch: ${testBranch}, base: ${baseSha}`);
 
     // Launch Playwright Chromium
     browser = await chromium.launch({
@@ -469,7 +469,7 @@ server.listen(PORT, async () => {
     }
 
     const commitPushedSuccessfully = remoteHeadSha !== baseSha;
-    record('STEP-11', 'Verify remote commit through GitHub API', commitPushedSuccessfully ? 'PASS' : 'FAIL', `remote HEAD: ${remoteHeadSha.slice(0, 7)}, base: ${baseSha.slice(0, 7)}`);
+    record('STEP-11', 'Verify remote commit through GitHub API', commitPushedSuccessfully ? 'PASS' : 'FAIL', `remote HEAD: ${remoteHeadSha}, base: ${baseSha}`);
 
     // ─── STEP 12: Fetch a new remote commit ─────────────────────────────────
     // Create an authentic remote-only commit via GitHub REST API
@@ -552,7 +552,7 @@ server.listen(PORT, async () => {
         break;
       }
     }
-    record('STEP-12', 'Fetch new remote commit and verify behind indicator in UI', hasBehind ? 'PASS' : 'FAIL', `behind: ${behindText}, remote commit: ${remoteOnlyCommit.sha.slice(0, 7)}`);
+    record('STEP-12', 'Fetch new remote commit and verify behind indicator in UI', hasBehind ? 'PASS' : 'FAIL', `behind: ${behindText}, remote commit: ${remoteOnlyCommit.sha}`);
 
     // ─── STEP 13: Pull that commit ──────────────────────────────────────────
     await page.waitForSelector('[data-testid="git-pull-btn"]:not([disabled])', { timeout: 15000 });
@@ -693,6 +693,9 @@ server.listen(PORT, async () => {
     liveEvidence.endedAt = new Date().toISOString();
     mkdirSync('dist-staging', { recursive: true });
     writeFileSync(join('dist-staging', 'phase4-6-evidence.json'), JSON.stringify(liveEvidence, null, 2));
+    writeFileSync('phase4-6-evidence.json', JSON.stringify(liveEvidence, null, 2));
+    console.log('\n[LIVE EVIDENCE JSON]');
+    console.log(JSON.stringify(liveEvidence, null, 2));
 
     console.log('\n======================================================================');
     console.log('PHASE 4.6 BROWSER ACCEPTANCE SUMMARY');
