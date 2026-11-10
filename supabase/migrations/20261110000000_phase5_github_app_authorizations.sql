@@ -28,7 +28,8 @@ ALTER TABLE public.github_app_authorizations ENABLE ROW LEVEL SECURITY;
 
 -- Revoke all permissions from anon and PUBLIC
 REVOKE ALL ON public.github_app_authorizations FROM anon, PUBLIC;
-GRANT SELECT, DELETE ON public.github_app_authorizations TO authenticated;
+-- Grant column-level SELECT strictly for non-sensitive metadata (ciphertext columns withheld from client)
+GRANT SELECT (id, user_id, github_user_id, github_username, token_expires_at, refresh_token_expires_at, installation_id, scope, created_at, updated_at), DELETE ON public.github_app_authorizations TO authenticated;
 GRANT ALL ON public.github_app_authorizations TO service_role;
 
 -- SELECT policy: Authenticated users can view their own connection metadata

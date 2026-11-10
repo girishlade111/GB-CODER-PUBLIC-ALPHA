@@ -68,22 +68,42 @@ async function encryptToken(plaintext: string, secretKey: string): Promise<strin
   return btoa(String.fromCharCode(...combined));
 }
 
-/** Allowed GitHub REST API path regex patterns for Git operations */
-const ALLOWED_PATH_PATTERNS = [
-  /^\/user$/,
-  /^\/user\/repos(\?.*)?$/,
-  /^\/user\/installations(\?.*)?$/,
-  /^\/user\/installations\/\d+\/repositories(\?.*)?$/,
-  /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/,
-  /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/ref\/heads\/[a-zA-Z0-9._/-]+(\?.*)?$/,
-  /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/refs(\/heads\/[a-zA-Z0-9._/-]+)?(\?.*)?$/,
-  /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/commits\/[0-9a-fA-F]{40}$/,
-  /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/commits$/,
-  /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/commits(\?.*)?$/,
-  /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/trees(\/[0-9a-fA-F]{40})?(\?.*)?$/,
-  /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/blobs(\/[0-9a-fA-F]{40})?$/,
-  /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/pulls(\?.*)?$/,
+interface RouteRule {
+  pattern: RegExp;
+  allowedMethods: string[];
+}
+
+/** Allowed GitHub REST API route rules with explicit HTTP method restrictions */
+const ROUTE_RULES: RouteRule[] = [
+  // 1. Current authenticated user profile
+  { pattern: /^\/user$/, allowedMethods: ['GET'] },
+  // 2. Repositories list for the user
+  { pattern: /^\/user\/repos(\?.*)?$/, allowedMethods: ['GET', 'POST'] },
+  // 3. User installations
+  { pattern: /^\/user\/installations(\?.*)?$/, allowedMethods: ['GET'] },
+  // 4. Repositories accessible in an installation
+  { pattern: /^\/user\/installations\/\d+\/repositories(\?.*)?$/, allowedMethods: ['GET'] },
+  // 5. Repository metadata (only GET)
+  { pattern: /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/, allowedMethods: ['GET'] },
+  // 6. Branch head ref (GET to read, PATCH to update head)
+  { pattern: /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/ref\/heads\/[a-zA-Z0-9._/-]+(\?.*)?$/, allowedMethods: ['GET', 'PATCH'] },
+  // 7. Git refs list / create (GET to list, POST to create)
+  { pattern: /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/refs(\/heads\/[a-zA-Z0-9._/-]+)?(\?.*)?$/, allowedMethods: ['GET', 'POST'] },
+  // 8. Commit object by SHA (only GET)
+  { pattern: /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/commits\/[0-9a-fA-F]{40}$/, allowedMethods: ['GET'] },
+  // 9. Git commits (POST to create atomic commit object)
+  { pattern: /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/commits$/, allowedMethods: ['POST'] },
+  // 10. Commits list (only GET)
+  { pattern: /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/commits(\?.*)?$/, allowedMethods: ['GET'] },
+  // 11. Git trees (GET to read tree, POST to create tree)
+  { pattern: /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/trees(\/[0-9a-fA-F]{40})?(\?.*)?$/, allowedMethods: ['GET', 'POST'] },
+  // 12. Git blobs (GET to read blob, POST to create blob)
+  { pattern: /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/git\/blobs(\/[0-9a-fA-F]{40})?$/, allowedMethods: ['GET', 'POST'] },
+  // 13. Pull requests (GET to list, POST to create PR)
+  { pattern: /^\/repos\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/pulls(\?.*)?$/, allowedMethods: ['GET', 'POST'] },
 ];
+
+const MAX_BODY_BYTES = 25 * 1024 * 1024; // 25 MB max body size
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -194,22 +214,62 @@ serve(async (req: Request) => {
     });
   }
 
-  // Validate path against allowed whitelist patterns
-  const isAllowed = ALLOWED_PATH_PATTERNS.some((pattern) => pattern.test(pathParam));
-  if (!isAllowed) {
+  // Reject path traversal, backslashes, double slashes, and protocol prefixes
+  if (
+    pathParam.includes('..') ||
+    pathParam.includes('\\') ||
+    pathParam.includes('//') ||
+    pathParam.toLowerCase().includes('%2e') ||
+    pathParam.startsWith('http://') ||
+    pathParam.startsWith('https://')
+  ) {
+    return new Response(JSON.stringify({ error: 'Malformed or traversed path parameter' }), {
+      status: 400,
+      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Match against ROUTE_RULES
+  const matchedRule = ROUTE_RULES.find((rule) => rule.pattern.test(pathParam));
+  if (!matchedRule) {
     return new Response(JSON.stringify({ error: `Forbidden path: ${pathParam}` }), {
       status: 403,
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     });
   }
 
+  // Enforce HTTP method restriction on matched route
+  if (!matchedRule.allowedMethods.includes(req.method)) {
+    return new Response(JSON.stringify({ error: `Method ${req.method} not allowed for path: ${pathParam}` }), {
+      status: 405,
+      headers: {
+        ...CORS_HEADERS,
+        'Allow': matchedRule.allowedMethods.join(', '),
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
   // Target exclusively api.github.com
   const targetUrl = `https://api.github.com${pathParam}`;
 
-  // Forward body if present
+  // Forward body if present and check body size cap
   let body: string | null = null;
-  if (['POST', 'PATCH', 'PUT'].includes(req.method)) {
+  if (['POST', 'PATCH'].includes(req.method)) {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > MAX_BODY_BYTES) {
+      return new Response(JSON.stringify({ error: 'Payload Too Large: exceeds 25 MB limit' }), {
+        status: 413,
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      });
+    }
     body = await req.text();
+    if (body.length > MAX_BODY_BYTES) {
+      return new Response(JSON.stringify({ error: 'Payload Too Large: exceeds 25 MB limit' }), {
+        status: 413,
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      });
+    }
   }
 
   try {
@@ -222,20 +282,31 @@ serve(async (req: Request) => {
         ...(body ? { 'Content-Type': 'application/json' } : {}),
       },
       body: body || undefined,
+      signal: AbortSignal.timeout(15000),
     });
 
     const responseText = await upstreamRes.text();
+
+    const forwardHeaders: Record<string, string> = {
+      ...CORS_HEADERS,
+      'Content-Type': upstreamRes.headers.get('Content-Type') || 'application/json',
+    };
+
+    // Forward rate-limit headers
+    ['x-ratelimit-limit', 'x-ratelimit-remaining', 'x-ratelimit-reset', 'x-ratelimit-used', 'x-ratelimit-resource'].forEach((h) => {
+      const val = upstreamRes.headers.get(h);
+      if (val) forwardHeaders[h] = val;
+    });
+
     return new Response(responseText, {
       status: upstreamRes.status,
-      headers: {
-        ...CORS_HEADERS,
-        'Content-Type': upstreamRes.headers.get('Content-Type') || 'application/json',
-      },
+      headers: forwardHeaders,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    const isTimeout = message.toLowerCase().includes('timeout') || message.toLowerCase().includes('aborted');
     return new Response(JSON.stringify({ error: `GitHub upstream request failed: ${message}` }), {
-      status: 502,
+      status: isTimeout ? 504 : 502,
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     });
   }

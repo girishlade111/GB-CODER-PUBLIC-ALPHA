@@ -188,19 +188,17 @@ serve(async (req: Request) => {
         return Response.redirect(`${env.appOrigin}/app?github_error=missing_callback_params`, 302);
       }
 
-      // Look up and immediately delete state to prevent replay
-      const { data: stateData, error: stateFetchError } = await serviceClient
+      // Atomically consume state using DELETE ... RETURNING to prevent replay and concurrent races
+      const { data: stateData, error: stateError } = await serviceClient
         .from('github_app_oauth_states')
-        .select('*')
+        .delete()
         .eq('state', state)
-        .single();
+        .select('*')
+        .maybeSingle();
 
-      if (stateFetchError || !stateData) {
+      if (stateError || !stateData) {
         return Response.redirect(`${env.appOrigin}/app?github_error=invalid_or_replayed_state`, 302);
       }
-
-      // Single-use: delete state record
-      await serviceClient.from('github_app_oauth_states').delete().eq('state', state);
 
       // Verify expiration
       if (new Date(stateData.expires_at).getTime() < Date.now()) {
@@ -284,7 +282,14 @@ serve(async (req: Request) => {
         return Response.redirect(`${env.appOrigin}/app?github_error=database_save_failed`, 302);
       }
 
-      const redirectPath = stateData.return_path.startsWith('/app') ? stateData.return_path : '/app';
+      const redirectPath = (
+        typeof stateData.return_path === 'string' &&
+        stateData.return_path.startsWith('/app') &&
+        !stateData.return_path.includes('//') &&
+        !stateData.return_path.includes('\\')
+      )
+        ? stateData.return_path
+        : '/app';
       const successUrl = new URL(redirectPath, env.appOrigin);
       successUrl.searchParams.set('github_connected', '1');
       successUrl.searchParams.set('github_user', githubUsername);

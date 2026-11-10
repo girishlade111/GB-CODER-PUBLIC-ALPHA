@@ -1,0 +1,10 @@
+# Supabase Edge Functions Configuration for GB Coder Phase 5
+# Zero emoji rule strictly enforced.
+
+project_id = "gb-coder"
+
+[functions.github-app-git-proxy]
+verify_jwt = true
+
+[functions.github-app-auth]
+verify_jwt = false
