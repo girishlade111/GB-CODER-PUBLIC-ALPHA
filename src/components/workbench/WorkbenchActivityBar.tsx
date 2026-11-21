@@ -1,17 +1,6 @@
 import React from 'react';
-import {
-  Files,
-  Search,
-  Package,
-  GitBranch,
-  TerminalSquare,
-  Settings,
-  RotateCcw,
-  Mic,
-  Database,
-} from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
-import { GBAssistIcon } from '../icons/GBAssistIcon';
+import Codicon from '../ui/Codicon';
 import { ViewId } from '../../services/workbench/workbenchTypes';
 
 interface WorkbenchActivityBarProps {
@@ -43,10 +32,12 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
 }) => {
   return (
     <aside
-      className="flex w-12 shrink-0 flex-col items-center justify-between border-r border-[var(--border)] bg-[var(--sidebar)] py-0 select-none z-10"
+      className="flex w-[48px] shrink-0 flex-col items-center justify-between border-r border-[var(--vscode-activityBar-border,#2b2b2b)] bg-[var(--vscode-activityBar-background,#181818)] py-0 select-none z-20"
       data-testid="vscode-activity-bar"
+      role="navigation"
+      aria-label="Activity Bar"
     >
-      {/* Top Group: Primary Navigation Panels & Tools */}
+      {/* ── Top Group: Primary Views & Tools ── */}
       <div className="flex flex-col items-center w-full">
         {/* Explorer */}
         <Tooltip label="Explorer (Ctrl+Shift+E)" side="right">
@@ -58,14 +49,14 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-explorer"
             className={`group relative flex h-12 w-12 items-center justify-center transition-colors cursor-pointer ${
               isSidebarOpen && activeViewId === 'explorer'
-                ? 'text-[var(--foreground)]'
-                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                ? 'text-[var(--vscode-activityBar-foreground,#ffffff)]'
+                : 'text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white'
             }`}
           >
             {isSidebarOpen && activeViewId === 'explorer' && (
-              <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--foreground)]" />
+              <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--vscode-activityBar-activeBorder,#ffffff)]" />
             )}
-            <Files className="h-5 w-5" strokeWidth={1.5} />
+            <Codicon name="files" className="text-xl" />
           </button>
         </Tooltip>
 
@@ -79,19 +70,19 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-search"
             className={`group relative flex h-12 w-12 items-center justify-center transition-colors cursor-pointer ${
               isSidebarOpen && activeViewId === 'search'
-                ? 'text-[var(--foreground)]'
-                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                ? 'text-[var(--vscode-activityBar-foreground,#ffffff)]'
+                : 'text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white'
             }`}
           >
             {isSidebarOpen && activeViewId === 'search' && (
-              <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--foreground)]" />
+              <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--vscode-activityBar-activeBorder,#ffffff)]" />
             )}
-            <Search className="h-5 w-5" strokeWidth={1.5} />
+            <Codicon name="search" className="text-xl" />
           </button>
         </Tooltip>
 
-        {/* Source Control / Modified Files */}
-        <Tooltip label="Source Control" side="right">
+        {/* Source Control / Git */}
+        <Tooltip label="Source Control (Ctrl+Shift+G)" side="right">
           <button
             type="button"
             onClick={() => onSelectView('source-control')}
@@ -100,18 +91,18 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-source-control"
             className={`group relative flex h-12 w-12 items-center justify-center transition-colors cursor-pointer ${
               isSidebarOpen && activeViewId === 'source-control'
-                ? 'text-[var(--foreground)]'
-                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                ? 'text-[var(--vscode-activityBar-foreground,#ffffff)]'
+                : 'text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white'
             }`}
           >
             {isSidebarOpen && activeViewId === 'source-control' && (
-              <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--foreground)]" />
+              <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--vscode-activityBar-activeBorder,#ffffff)]" />
             )}
-            <GitBranch className="h-5 w-5" strokeWidth={1.5} />
+            <Codicon name="source-control" className="text-xl" />
             {dirtyCount > 0 && (
               <span
                 data-testid="source-control-badge"
-                className="absolute top-2 right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--primary)] px-1 text-[9px] font-bold text-[var(--primary-foreground)] shadow-sm"
+                className="absolute top-2 right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--vscode-activityBarBadge-background,#0078d4)] px-1 text-[9px] font-bold text-[var(--vscode-activityBarBadge-foreground,#ffffff)] shadow-sm"
               >
                 {dirtyCount}
               </span>
@@ -119,8 +110,8 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
           </button>
         </Tooltip>
 
-        {/* GB Assist (Code Assist AI) */}
-        <Tooltip label="GB Assist (AI Assistant)" side="right">
+        {/* GB Assist (AI Agent) */}
+        <Tooltip label="GB Assist (AI Coding Agent)" side="right">
           <button
             type="button"
             onClick={() => onSelectView('code-assist')}
@@ -129,24 +120,22 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-code-assist"
             className={`group relative flex h-12 w-12 items-center justify-center transition-colors cursor-pointer ${
               isSidebarOpen && activeViewId === 'code-assist'
-                ? 'text-[var(--foreground)]'
-                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                ? 'text-[var(--vscode-activityBar-foreground,#ffffff)]'
+                : 'text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white'
             }`}
           >
             {isSidebarOpen && activeViewId === 'code-assist' && (
-              <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--foreground)]" />
+              <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--vscode-activityBar-activeBorder,#ffffff)]" />
             )}
-            <GBAssistIcon
-              className={`h-5 w-5 ${
-                isCodeAssistGenerating ? 'text-[var(--primary)] animate-pulse' : ''
-              }`}
-              strokeWidth={1.5}
+            <Codicon
+              name="sparkle"
+              className={`text-xl ${isCodeAssistGenerating ? 'text-[#0078d4] animate-pulse' : ''}`}
             />
           </button>
         </Tooltip>
 
-        {/* Packages / Dependencies */}
-        <Tooltip label="Package Manager" side="right">
+        {/* Extensions / Package Manager */}
+        <Tooltip label="Extensions & Packages (Ctrl+Shift+X)" side="right">
           <button
             type="button"
             onClick={() => onSelectView('packages')}
@@ -155,19 +144,19 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-packages"
             className={`group relative flex h-12 w-12 items-center justify-center transition-colors cursor-pointer ${
               isSidebarOpen && activeViewId === 'packages'
-                ? 'text-[var(--foreground)]'
-                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                ? 'text-[var(--vscode-activityBar-foreground,#ffffff)]'
+                : 'text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white'
             }`}
           >
             {isSidebarOpen && activeViewId === 'packages' && (
-              <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--foreground)]" />
+              <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--vscode-activityBar-activeBorder,#ffffff)]" />
             )}
-            <Package className="h-5 w-5" strokeWidth={1.5} />
+            <Codicon name="extensions" className="text-xl" />
           </button>
         </Tooltip>
       </div>
 
-      {/* Bottom Group: Tools, Terminal, Settings */}
+      {/* ── Bottom Group: Terminal, Tools & Settings ── */}
       <div className="flex flex-col items-center w-full pb-1">
         {/* Toggle Terminal Panel */}
         <Tooltip label="Toggle Terminal (Ctrl+`)" side="right">
@@ -179,11 +168,11 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
             data-testid="activity-bar-terminal"
             className={`relative flex h-11 w-12 items-center justify-center transition-colors cursor-pointer ${
               isTerminalOpen
-                ? 'text-[var(--foreground)]'
-                : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                ? 'text-[var(--vscode-activityBar-foreground,#ffffff)]'
+                : 'text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white'
             }`}
           >
-            <TerminalSquare className="h-5 w-5" strokeWidth={1.5} />
+            <Codicon name="terminal" className="text-xl" />
           </button>
         </Tooltip>
 
@@ -195,9 +184,9 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
               onClick={onOpenSnapshots}
               aria-label="Snapshots"
               data-testid="activity-bar-snapshots"
-              className="flex h-10 w-12 items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
+              className="flex h-10 w-12 items-center justify-center text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white transition-colors cursor-pointer"
             >
-              <Database className="h-5 w-5" strokeWidth={1.5} />
+              <Codicon name="history" className="text-xl" />
             </button>
           </Tooltip>
         )}
@@ -210,14 +199,14 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
               onClick={onOpenVoiceCommands}
               aria-label="Voice Commands"
               data-testid="activity-bar-voice"
-              className="flex h-10 w-12 items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
+              className="flex h-10 w-12 items-center justify-center text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white transition-colors cursor-pointer"
             >
-              <Mic className="h-5 w-5" strokeWidth={1.5} />
+              <Codicon name="mic" className="text-xl" />
             </button>
           </Tooltip>
         )}
 
-        {/* Remount WebContainer */}
+        {/* Remount Virtual Filesystem */}
         {onResetContainer && (
           <Tooltip label="Remount Virtual Filesystem" side="right">
             <button
@@ -225,26 +214,28 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
               onClick={onResetContainer}
               aria-label="Remount Filesystem"
               data-testid="activity-bar-reset"
-              className="flex h-10 w-12 items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
+              className="flex h-10 w-12 items-center justify-center text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white transition-colors cursor-pointer"
             >
-              <RotateCcw className="h-5 w-5" strokeWidth={1.5} />
+              <Codicon name="sync" className="text-xl" />
             </button>
           </Tooltip>
         )}
 
         {/* Settings */}
-        <Tooltip label="Settings" side="right">
+        <Tooltip label="Manage (Settings)" side="right">
           <button
             type="button"
             onClick={onOpenSettings}
             aria-label="Settings"
             data-testid="activity-bar-settings"
-            className="flex h-11 w-12 items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
+            className="flex h-11 w-12 items-center justify-center text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white transition-colors cursor-pointer"
           >
-            <Settings className="h-5 w-5" strokeWidth={1.5} />
+            <Codicon name="settings-gear" className="text-xl" />
           </button>
         </Tooltip>
       </div>
     </aside>
   );
 };
+
+export default WorkbenchActivityBar;

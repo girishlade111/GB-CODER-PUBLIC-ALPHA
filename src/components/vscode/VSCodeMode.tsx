@@ -1544,7 +1544,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
   // Render view content for any dockable container
   const renderViewContent = useCallback(
-    (viewId: ViewId, _containerId: ContainerId): React.ReactNode => {
+    (viewId: ViewId, containerId: ContainerId): React.ReactNode => {
       switch (viewId) {
         case 'explorer':
           return (
@@ -1703,7 +1703,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             <CodeAssistPanel
               project={project}
               projectId={effectiveProjectId}
-              activePath={activePath}
+              activePath={activePath ?? undefined}
               getEditorContent={(filePath) => {
                 if (activePathMirrorRef.current === filePath && editorRef.current) return editorRef.current.getValue();
                 return projectFilesMirrorRef.current.find((f) => f.path === filePath)?.content;
@@ -1713,11 +1713,50 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 return dirtyPathsMirrorRef.current.has(clean) || dirtyPathsMirrorRef.current.has(filePath);
               }}
               onApplyFiles={handleApplyCodeAssistFiles}
+              currentContainer={containerId === 'secondary_sidebar' ? 'secondary_sidebar' : 'primary_sidebar'}
+              onToggleContainer={() => {
+                const targetContainer: ContainerId =
+                  containerId === 'secondary_sidebar' ? 'primary_sidebar' : 'secondary_sidebar';
+                setWorkbenchLayout((prev) => {
+                  const nextLocations: Record<ViewId, ContainerId> = {
+                    ...prev.viewLocations,
+                    'code-assist': targetContainer,
+                  };
+                  if (targetContainer === 'secondary_sidebar') {
+                    return {
+                      ...prev,
+                      viewLocations: nextLocations,
+                      secondarySidebar: {
+                        ...prev.secondarySidebar,
+                        visible: true,
+                        activeViewId: 'code-assist',
+                      },
+                    };
+                  } else {
+                    return {
+                      ...prev,
+                      viewLocations: nextLocations,
+                      primarySidebar: {
+                        ...prev.primarySidebar,
+                        visible: true,
+                        activeViewId: 'code-assist',
+                      },
+                    };
+                  }
+                });
+              }}
               onClose={() => {
-                setWorkbenchLayout((prev) => ({
-                  ...prev,
-                  primarySidebar: { ...prev.primarySidebar, activeViewId: 'explorer' },
-                }));
+                if (containerId === 'secondary_sidebar') {
+                  setWorkbenchLayout((prev) => ({
+                    ...prev,
+                    secondarySidebar: { ...prev.secondarySidebar, visible: false },
+                  }));
+                } else {
+                  setWorkbenchLayout((prev) => ({
+                    ...prev,
+                    primarySidebar: { ...prev.primarySidebar, activeViewId: 'explorer' },
+                  }));
+                }
               }}
             />
           );

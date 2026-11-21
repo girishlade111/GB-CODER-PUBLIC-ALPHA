@@ -45,15 +45,18 @@ import { AssistContextComposer } from './AssistContextComposer';
 import { AiProviderSettingsModal } from './AiProviderSettingsModal';
 import { AiMonacoDiffModal } from './AiMonacoDiffModal';
 import { GBAssistIcon } from '../icons/GBAssistIcon';
+import Codicon from '../ui/Codicon';
 
 interface CodeAssistPanelProps {
   project: MultiFileProject;
   projectId?: string;
-  activePath?: string | null;
+  activePath?: string;
   getEditorContent?: (path: string) => string | undefined;
   isEditorDirty?: (path: string) => boolean;
   onApplyFiles?: (files: Array<{ path: string; content: string }>) => void;
   onClose?: () => void;
+  currentContainer?: 'primary_sidebar' | 'secondary_sidebar';
+  onToggleContainer?: () => void;
 }
 
 const subscribeAssist = (onChange: () => void) => assistAgentService.subscribe(onChange);
@@ -95,6 +98,8 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
   getEditorContent,
   onApplyFiles,
   onClose,
+  currentContainer = 'primary_sidebar',
+  onToggleContainer,
 }) => {
   const state = useSyncExternalStore(subscribeAssist, getAssistSnapshot, getAssistSnapshot);
 
@@ -326,6 +331,26 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
           >
             <Search className="h-3.5 w-3.5" />
           </button>
+
+          {/* Move to Side Bar / Auxiliary Bar Toggle */}
+          {onToggleContainer && (
+            <button
+              type="button"
+              onClick={onToggleContainer}
+              data-testid="toggle-assist-dock-btn"
+              className="rounded p-1 hover:bg-white/10 hover:text-white transition-colors"
+              title={
+                currentContainer === 'secondary_sidebar'
+                  ? 'Move to Primary Side Bar (Left)'
+                  : 'Move to Auxiliary Bar (Right)'
+              }
+            >
+              <Codicon
+                name={currentContainer === 'secondary_sidebar' ? 'layout-sidebar-left' : 'layout-sidebar-right'}
+                className="text-xs"
+              />
+            </button>
+          )}
 
           {onClose && (
             <button

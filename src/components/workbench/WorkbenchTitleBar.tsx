@@ -1,24 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  Layout,
-  PanelLeft,
-  PanelRight,
-  PanelBottom,
-  Share2,
-  Settings,
-  LogOut,
-  Loader2,
-  Check,
-  ChevronDown,
   Cloud,
+  Loader2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Tooltip from '../ui/Tooltip';
-import LadeStackLogo from '../LadeStackLogo';
 import UserAccountMenu from '../auth/UserAccountMenu';
+import Codicon from '../ui/Codicon';
 import { LayoutPresetId, WorkbenchLayoutState } from '../../services/workbench/workbenchTypes';
 
 interface WorkbenchTitleBarProps {
@@ -45,13 +33,7 @@ interface WorkbenchTitleBarProps {
   cloudRevision?: number | null;
 }
 
-const PRESET_LABELS: Record<LayoutPresetId, { label: string; desc: string }> = {
-  DEFAULT: { label: 'Default', desc: 'Standard 4-pane developer workbench' },
-  FOCUS: { label: 'Focus', desc: 'Maximized editor area, sidebars hidden' },
-  PREVIEW_FOCUSED: { label: 'Preview Focused', desc: 'Expanded live preview and editor' },
-  AI_WORKFLOW: { label: 'AI Workflow', desc: 'Prominent GB Assist and editor' },
-  TERMINAL_FOCUSED: { label: 'Terminal Focused', desc: 'Expanded terminal panel' },
-};
+type MenuKey = 'File' | 'Edit' | 'Selection' | 'View' | 'Go' | 'Run' | 'Terminal' | 'Help';
 
 export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
   projectName,
@@ -62,6 +44,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
   onApplyPreset,
   onOpenCustomizeLayout,
   onOpenQuickOpen,
+  onOpenCommandPalette,
   onOpenSettings,
   onOpenProjects,
   onExit,
@@ -70,52 +53,314 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
   isCloudSyncing,
   cloudRevision,
 }) => {
-  const [showPresetsMenu, setShowPresetsMenu] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<MenuKey | null>(null);
+  const menuBarRef = useRef<HTMLDivElement>(null);
+
+  // Close top menu when clicking outside
+  useEffect(() => {
+    if (!activeMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuBarRef.current && !menuBarRef.current.contains(e.target as Node)) {
+        setActiveMenu(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeMenu]);
+
+  const handleMenuClick = (menu: MenuKey) => {
+    setActiveMenu((prev) => (prev === menu ? null : menu));
+  };
+
+  const handleMenuHover = (menu: MenuKey) => {
+    if (activeMenu !== null) {
+      setActiveMenu(menu);
+    }
+  };
+
+  const closeMenu = () => setActiveMenu(null);
 
   return (
     <header
-      className="flex h-9 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--background)] px-2.5 text-xs text-[var(--foreground)] select-none z-20"
+      className="flex h-[35px] shrink-0 items-center justify-between border-b border-[var(--vscode-titleBar-border,#2b2b2b)] bg-[var(--vscode-titleBar-activeBackground,#181818)] px-2 text-xs text-[var(--vscode-titleBar-activeForeground,#cccccc)] select-none z-30 font-sans"
       data-testid="vscode-topbar"
     >
-      {/* Left: Branding & Navigation */}
-      <div className="flex items-center gap-2">
+      {/* ── Left: VS Code Brand & Classic Menu Bar ── */}
+      <div className="flex items-center gap-1 min-w-0" ref={menuBarRef}>
+        {/* VS Code Official Vector Logo */}
         <div
-          className="flex items-center gap-1.5 cursor-pointer hover:opacity-90 transition-opacity"
           onClick={onOpenProjects}
-          title="Return to Project Dashboard"
+          title="Return to Projects Dashboard"
           role="button"
           tabIndex={0}
+          className="flex items-center justify-center p-1 rounded-[2px] hover:bg-white/10 text-[#0078d4] hover:text-[#0078d4] transition-colors cursor-pointer mr-0.5"
         >
-          <LadeStackLogo size={18} subtitle="IDE" />
+          <Codicon name="vscode" className="text-base text-[#0078d4]" />
         </div>
 
-        <div className="hidden md:flex items-center gap-0.5 ml-1 text-[var(--muted-foreground)]">
-          <button
-            type="button"
-            className="rounded p-0.5 hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
-            title="Navigate back"
-            aria-label="Back"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            className="rounded p-0.5 hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
-            title="Navigate forward"
-            aria-label="Forward"
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        {/* Desktop/Web Menubar */}
+        <nav className="flex items-center text-xs relative">
+          {(['File', 'Edit', 'Selection', 'View', 'Go', 'Run', 'Terminal', 'Help'] as MenuKey[]).map(
+            (menu) => {
+              const isOpen = activeMenu === menu;
+              return (
+                <div key={menu} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => handleMenuClick(menu)}
+                    onMouseEnter={() => handleMenuHover(menu)}
+                    className={`px-2 py-0.5 rounded-[2px] transition-colors cursor-pointer text-xs ${
+                      isOpen
+                        ? 'bg-[var(--vscode-menu-selectionBackground,#04395e)] text-white'
+                        : 'text-[var(--vscode-titleBar-activeForeground,#cccccc)] hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {menu}
+                  </button>
 
-        {/* Project Breadcrumb */}
-        <div className="hidden sm:flex items-center text-[11px] text-[var(--muted-foreground)] font-mono ml-1 truncate max-w-[200px]">
-          <span className="text-[var(--muted-foreground)]">gb-coder /</span>
-          <span className="text-[var(--foreground)] font-medium ml-1 truncate">{projectName}</span>
-        </div>
+                  {/* Dropdown Menu Popup */}
+                  {isOpen && (
+                    <div
+                      className="absolute left-0 top-full mt-0.5 min-w-[220px] rounded-[4px] border border-[var(--vscode-menu-border,#3c3c3c)] bg-[var(--vscode-menu-background,#252526)] text-[var(--vscode-menu-foreground,#cccccc)] shadow-2xl py-1 text-xs z-50 animate-in fade-in duration-75"
+                      role="menu"
+                    >
+                      {menu === 'File' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              onOpenQuickOpen();
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Open File...</span>
+                            <span className="text-[10px] opacity-60 font-mono">Ctrl+P</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              toast.success('Workspace saved');
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Save</span>
+                            <span className="text-[10px] opacity-60 font-mono">Ctrl+S</span>
+                          </button>
+                          <div className="my-1 border-t border-[var(--vscode-menu-separatorBackground,#3c3c3c)]" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              onOpenProjects?.();
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Open Project Dashboard</span>
+                          </button>
+                          {onExit && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                closeMenu();
+                                onExit();
+                              }}
+                              className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                            >
+                              <span>Close Workspace</span>
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {menu === 'Edit' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              document.execCommand?.('undo');
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Undo</span>
+                            <span className="text-[10px] opacity-60 font-mono">Ctrl+Z</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              document.execCommand?.('redo');
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Redo</span>
+                            <span className="text-[10px] opacity-60 font-mono">Ctrl+Y</span>
+                          </button>
+                        </>
+                      )}
+
+                      {menu === 'Selection' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              document.execCommand?.('selectAll');
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Select All</span>
+                            <span className="text-[10px] opacity-60 font-mono">Ctrl+A</span>
+                          </button>
+                        </>
+                      )}
+
+                      {menu === 'View' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              onOpenCommandPalette();
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Command Palette...</span>
+                            <span className="text-[10px] opacity-60 font-mono">Ctrl+Shift+P</span>
+                          </button>
+                          <div className="my-1 border-t border-[var(--vscode-menu-separatorBackground,#3c3c3c)]" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              onTogglePrimarySidebar();
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Primary Side Bar</span>
+                            <span className="text-[10px] opacity-60 font-mono">Ctrl+B</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              onToggleBottomPanel();
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Panel</span>
+                            <span className="text-[10px] opacity-60 font-mono">Ctrl+J</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              onToggleSecondarySidebar();
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Secondary Side Bar</span>
+                          </button>
+                          <div className="my-1 border-t border-[var(--vscode-menu-separatorBackground,#3c3c3c)]" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              onApplyPreset('DEFAULT');
+                              toast.success('Applied Default layout preset');
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Reset to Default Preset</span>
+                          </button>
+                        </>
+                      )}
+
+                      {menu === 'Go' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              onOpenQuickOpen();
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Go to File...</span>
+                            <span className="text-[10px] opacity-60 font-mono">Ctrl+P</span>
+                          </button>
+                        </>
+                      )}
+
+                      {menu === 'Run' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              toast('Running development server...', { icon: '▶' });
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Start Dev Server</span>
+                            <span className="text-[10px] opacity-60 font-mono">F5</span>
+                          </button>
+                        </>
+                      )}
+
+                      {menu === 'Terminal' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              onToggleBottomPanel();
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Toggle Terminal</span>
+                            <span className="text-[10px] opacity-60 font-mono">Ctrl+`</span>
+                          </button>
+                        </>
+                      )}
+
+                      {menu === 'Help' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              onOpenSettings();
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Settings</span>
+                            <span className="text-[10px] opacity-60 font-mono">Ctrl+,</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              closeMenu();
+                              window.open('https://code.visualstudio.com/docs', '_blank');
+                            }}
+                            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                          >
+                            <span>Documentation</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            },
+          )}
+        </nav>
       </div>
 
-      {/* Center: Command Search / Quick Open */}
+      {/* ── Center: Official VS Code Command Center ── */}
       <div
         onClick={onOpenQuickOpen}
         role="button"
@@ -126,241 +371,54 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
             onOpenQuickOpen();
           }
         }}
-        className="flex items-center gap-2 rounded border border-[var(--border)] bg-[var(--sidebar)] px-2.5 py-1 text-[11px] text-[var(--muted-foreground)] shadow-inner hover:border-[var(--ring)] hover:text-[var(--foreground)] transition-all cursor-pointer w-64 md:w-80 justify-between select-none"
+        className="flex items-center justify-between px-3 h-[22px] w-64 md:w-96 max-w-[500px] rounded-[4px] border border-[var(--vscode-commandCenter-border,rgba(255,255,255,0.12))] bg-[var(--vscode-commandCenter-background,rgba(255,255,255,0.05))] hover:bg-[var(--vscode-commandCenter-activeBackground,rgba(255,255,255,0.08))] text-xs text-[var(--vscode-commandCenter-foreground,#cccccc)] transition-all cursor-pointer shadow-inner select-none"
         title="Quick Open / Search Files (Ctrl+P / Ctrl+Shift+P)"
         aria-label="Quick Open / Command Search"
       >
         <div className="flex items-center gap-1.5 truncate">
-          <Search className="h-3 w-3 text-[var(--muted-foreground)] shrink-0" />
-          <span className="truncate font-mono text-[11px]">
+          <Codicon name="search" className="text-xs opacity-60 shrink-0" />
+          <span className="truncate text-[11px] font-sans">
             {projectName} — Search files (Ctrl+P)
           </span>
         </div>
-        <kbd className="hidden sm:inline-block rounded border border-white/10 bg-white/5 px-1 py-0.2 text-[9px] text-[var(--muted-foreground)] font-mono">
+        <kbd className="hidden sm:inline-block px-1 py-0.2 text-[9px] text-neutral-400 font-mono rounded bg-white/5 border border-white/10">
           Ctrl+P
         </kbd>
       </div>
 
-      {/* Right: Controls, Layout Toggles & Status */}
-      <div className="flex items-center gap-1.5">
-        {/* WebContainer Status Badge */}
+      {/* ── Right: Controls, WebContainer Status & Layout Toggles ── */}
+      <div className="flex items-center gap-1">
+        {/* WebContainer Status (Subtle VS Code badge) */}
         {webcontainerState.isSupported && (
-          <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-[var(--sidebar)] border border-[var(--border)] px-2 py-0.5 text-[10px]">
+          <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 text-[11px] text-[#cccccc]">
             {webcontainerState.serverUrl ? (
               <>
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-emerald-400 font-medium">
-                  {webcontainerState.serverPort ? `Port ${webcontainerState.serverPort}` : 'Ready'}
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span className="text-emerald-400 font-mono text-[11px]">
+                  {webcontainerState.serverPort ? `:${webcontainerState.serverPort}` : 'Online'}
                 </span>
               </>
-            ) : webcontainerState.startupStage === 'booting' ? (
-              <>
-                <Loader2 className="h-2.5 w-2.5 animate-spin text-indigo-400" />
-                <span className="text-indigo-300">Booting Runtime</span>
-              </>
-            ) : webcontainerState.startupStage === 'installing' ? (
+            ) : webcontainerState.startupStage === 'booting' || webcontainerState.startupStage === 'installing' ? (
               <>
                 <Loader2 className="h-2.5 w-2.5 animate-spin text-cyan-400" />
-                <span className="text-cyan-300">Installing Deps</span>
+                <span className="text-cyan-400 text-[11px]">Syncing</span>
               </>
             ) : (
               <>
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                <span className="text-slate-300">WebContainer Ready</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />
+                <span className="text-neutral-400 text-[11px]">WebContainer</span>
               </>
             )}
           </div>
         )}
-
-        {/* Layout Preset Selector */}
-        <div className="relative">
-          <Tooltip label="Layout Presets" side="bottom">
-            <button
-              type="button"
-              onClick={() => setShowPresetsMenu((prev) => !prev)}
-              className="flex items-center gap-1 rounded bg-[var(--sidebar)] hover:bg-[var(--card)] px-2 py-1 text-[11px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)] transition-colors"
-              aria-label="Layout Presets"
-              data-testid="workbench-preset-button"
-            >
-              <Layout className="h-3 w-3 text-[var(--muted-foreground)]" />
-              <span className="hidden xl:inline text-[10px] font-medium">
-                {PRESET_LABELS[layoutState.currentPreset]?.label || 'Preset'}
-              </span>
-              <ChevronDown className="h-2.5 w-2.5 text-[var(--muted-foreground)]" />
-            </button>
-          </Tooltip>
-
-          {showPresetsMenu && (
-            <div
-              className="absolute right-0 top-full mt-1 w-52 rounded-md border border-[var(--border)] bg-[var(--sidebar)] p-1 shadow-xl z-50 text-left"
-              data-testid="workbench-presets-menu"
-            >
-              <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                Workbench Presets
-              </div>
-              {(Object.keys(PRESET_LABELS) as LayoutPresetId[]).map((preset) => {
-                const info = PRESET_LABELS[preset];
-                const isSelected = layoutState.currentPreset === preset;
-                return (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => {
-                      onApplyPreset(preset);
-                      setShowPresetsMenu(false);
-                      toast.success(`Applied ${info.label} layout preset`);
-                    }}
-                    className={`flex w-full items-start justify-between rounded px-2 py-1.5 text-xs transition-colors ${
-                      isSelected
-                        ? 'bg-[var(--accent)] text-[var(--foreground)]'
-                        : 'text-[var(--muted-foreground)] hover:bg-white/5 hover:text-[var(--foreground)]'
-                    }`}
-                    data-testid={`preset-option-${preset.toLowerCase()}`}
-                  >
-                    <div>
-                      <div className="font-medium text-[11px] flex items-center gap-1">
-                        {info.label}
-                        {isSelected && <Check className="h-3 w-3 text-[var(--primary)]" />}
-                      </div>
-                      <div className="text-[9px] text-[var(--muted-foreground)] leading-tight">{info.desc}</div>
-                    </div>
-                  </button>
-                );
-              })}
-              {onOpenCustomizeLayout && (
-                <div className="mt-1 border-t border-[var(--border)] pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPresetsMenu(false);
-                      onOpenCustomizeLayout();
-                    }}
-                    className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-xs text-sky-400 hover:bg-white/5 transition-colors font-medium"
-                    data-testid="preset-customize-layout-option"
-                  >
-                    <svg
-                      className="h-3 w-3"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="1.5" y="2" width="13" height="12" rx="1.5" />
-                      <line x1="5.5" y1="2" x2="5.5" y2="14" />
-                      <line x1="5.5" y1="6" x2="14.5" y2="6" />
-                    </svg>
-                    <span>Customize Layout...</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Layout Panel Toggles */}
-        <div className="flex items-center rounded bg-[var(--sidebar)] border border-[var(--border)] p-0.5">
-          {onOpenCustomizeLayout && (
-            <Tooltip label="Customize Layout" side="bottom">
-              <button
-                type="button"
-                onClick={onOpenCustomizeLayout}
-                aria-label="Customize Layout"
-                data-testid="customize-layout-btn"
-                className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
-              >
-                <svg
-                  className="h-3 w-3"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="1.5" y="2" width="13" height="12" rx="1.5" />
-                  <line x1="5.5" y1="2" x2="5.5" y2="14" />
-                  <line x1="5.5" y1="6" x2="14.5" y2="6" />
-                </svg>
-              </button>
-            </Tooltip>
-          )}
-          <Tooltip label="Toggle Primary Sidebar (Ctrl+B)" side="bottom">
-            <button
-              type="button"
-              onClick={onTogglePrimarySidebar}
-              aria-label="Toggle Primary Sidebar"
-              aria-pressed={layoutState.primarySidebar.visible}
-              data-testid="toggle-primary-sidebar-btn"
-              className={`rounded p-1 transition-colors ${
-                layoutState.primarySidebar.visible
-                  ? 'text-[var(--primary)] bg-white/5'
-                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-              }`}
-            >
-              <PanelLeft className="h-3 w-3" />
-            </button>
-          </Tooltip>
-
-          <Tooltip label="Toggle Bottom Panel (Ctrl+J)" side="bottom">
-            <button
-              type="button"
-              onClick={onToggleBottomPanel}
-              aria-label="Toggle Bottom Panel"
-              aria-pressed={layoutState.bottomPanel.visible}
-              data-testid="toggle-bottom-panel-btn"
-              className={`rounded p-1 transition-colors ${
-                layoutState.bottomPanel.visible
-                  ? 'text-[var(--primary)] bg-white/5'
-                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-              }`}
-            >
-              <PanelBottom className="h-3 w-3" />
-            </button>
-          </Tooltip>
-
-          <Tooltip label="Toggle Secondary Sidebar" side="bottom">
-            <button
-              type="button"
-              onClick={onToggleSecondarySidebar}
-              aria-label="Toggle Secondary Sidebar"
-              aria-pressed={layoutState.secondarySidebar.visible}
-              data-testid="toggle-secondary-sidebar-btn"
-              className={`rounded p-1 transition-colors ${
-                layoutState.secondarySidebar.visible
-                  ? 'text-[var(--primary)] bg-white/5'
-                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-              }`}
-            >
-              <PanelRight className="h-3 w-3" />
-            </button>
-          </Tooltip>
-        </div>
-
-        {/* Share Button */}
-        <Tooltip label="Share Project Link" side="bottom">
-          <button
-            type="button"
-            onClick={() => {
-              void navigator.clipboard?.writeText(window.location.href);
-              toast.success('Workspace URL copied to clipboard!');
-            }}
-            className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
-            aria-label="Share Project"
-            data-testid="workbench-share-btn"
-          >
-            <Share2 className="h-3.5 w-3.5" />
-          </button>
-        </Tooltip>
 
         {/* Cloud Sync Button */}
         {onCloudSync && (
           <Tooltip
             label={
               cloudRevision !== null && cloudRevision !== undefined
-                ? `Save to Private Cloud (Current: Rev ${cloudRevision})`
-                : 'Save to Private Cloud'
+                ? `Save to Cloud (Rev ${cloudRevision})`
+                : 'Save to Cloud'
             }
             side="bottom"
           >
@@ -368,53 +426,99 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
               type="button"
               onClick={onCloudSync}
               disabled={isCloudSyncing}
-              aria-label="Save to Private Cloud"
-              data-testid="workbench-cloud-sync-btn"
-              className="inline-flex items-center gap-1 rounded p-1 text-[var(--muted-foreground)] hover:text-accent hover:bg-white/5 transition-colors disabled:opacity-50"
+              aria-label="Save to Cloud"
+              className="p-1 rounded-[2px] text-[var(--vscode-titleBar-activeForeground,#cccccc)] hover:bg-white/10 hover:text-white transition-colors"
             >
               {isCloudSyncing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#0078d4]" />
               ) : (
                 <Cloud className="h-3.5 w-3.5" />
-              )}
-              {cloudRevision !== null && cloudRevision !== undefined && (
-                <span className="text-[10px] font-mono text-accent">r{cloudRevision}</span>
               )}
             </button>
           </Tooltip>
         )}
+
+        {/* Layout Panel Toggles with Authentic Codicons */}
+        <div className="flex items-center border border-[var(--vscode-commandCenter-border,rgba(255,255,255,0.1))] rounded-[3px] bg-white/[0.03] p-0.5">
+          <Tooltip label="Toggle Primary Side Bar (Ctrl+B)" side="bottom">
+            <button
+              type="button"
+              onClick={onTogglePrimarySidebar}
+              aria-label="Toggle Primary Side Bar"
+              aria-pressed={layoutState.primarySidebar.visible}
+              className={`p-1 rounded-[2px] transition-colors ${
+                layoutState.primarySidebar.visible
+                  ? 'text-white bg-white/10'
+                  : 'text-[var(--vscode-titleBar-activeForeground,#cccccc)] hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Codicon name="layout-sidebar-left" className="text-sm" />
+            </button>
+          </Tooltip>
+
+          <Tooltip label="Toggle Panel (Ctrl+J)" side="bottom">
+            <button
+              type="button"
+              onClick={onToggleBottomPanel}
+              aria-label="Toggle Panel"
+              aria-pressed={layoutState.bottomPanel.visible}
+              className={`p-1 rounded-[2px] transition-colors ${
+                layoutState.bottomPanel.visible
+                  ? 'text-white bg-white/10'
+                  : 'text-[var(--vscode-titleBar-activeForeground,#cccccc)] hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Codicon name="layout-panel" className="text-sm" />
+            </button>
+          </Tooltip>
+
+          <Tooltip label="Toggle Secondary Side Bar" side="bottom">
+            <button
+              type="button"
+              onClick={onToggleSecondarySidebar}
+              aria-label="Toggle Secondary Side Bar"
+              aria-pressed={layoutState.secondarySidebar.visible}
+              className={`p-1 rounded-[2px] transition-colors ${
+                layoutState.secondarySidebar.visible
+                  ? 'text-white bg-white/10'
+                  : 'text-[var(--vscode-titleBar-activeForeground,#cccccc)] hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Codicon name="layout-sidebar-right" className="text-sm" />
+            </button>
+          </Tooltip>
+
+          {onOpenCustomizeLayout && (
+            <Tooltip label="Customize Layout..." side="bottom">
+              <button
+                type="button"
+                onClick={onOpenCustomizeLayout}
+                aria-label="Customize Layout"
+                className="p-1 rounded-[2px] text-[var(--vscode-titleBar-activeForeground,#cccccc)] hover:text-white hover:bg-white/5 transition-colors"
+              >
+                <Codicon name="layout" className="text-sm" />
+              </button>
+            </Tooltip>
+          )}
+        </div>
 
         {/* User Account Menu */}
         <UserAccountMenu compact={true} />
 
-        {/* Settings Button */}
-        <Tooltip label="Workbench Settings" side="bottom">
+        {/* Settings Gear */}
+        <Tooltip label="Settings (Ctrl+,)" side="bottom">
           <button
             type="button"
             onClick={onOpenSettings}
-            className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5 transition-colors"
-            aria-label="Workbench Settings"
-            data-testid="workbench-settings-btn"
+            className="p-1 rounded-[2px] text-[var(--vscode-titleBar-activeForeground,#cccccc)] hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Settings"
           >
-            <Settings className="h-3.5 w-3.5" />
+            <Codicon name="settings-gear" className="text-sm" />
           </button>
         </Tooltip>
-
-        {/* Exit Button */}
-        {onExit && (
-          <Tooltip label="Exit Advanced IDE" side="bottom">
-            <button
-              type="button"
-              onClick={onExit}
-              className="rounded p-1 text-[var(--muted-foreground)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-              aria-label="Exit Mode"
-              data-testid="workbench-exit-btn"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-            </button>
-          </Tooltip>
-        )}
       </div>
     </header>
   );
 };
+
+export default WorkbenchTitleBar;
