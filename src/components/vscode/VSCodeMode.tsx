@@ -2,18 +2,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExtern
 import type { OnMount } from '@monaco-editor/react';
 import {
   FilePlus,
-  FolderPlus,
   RefreshCw,
   Columns,
   TerminalSquare,
   ExternalLink,
   Minimize2,
   Maximize2,
-  FolderArchive,
-  FolderDown,
   Search,
-  ChevronDown,
-  ChevronRight,
   RotateCcw,
   Sliders,
   Cloud,
@@ -33,6 +28,7 @@ import CommandPalette from '../CommandPalette';
 import type * as monacoEditor from 'monaco-editor';
 import { diagnosticsService } from '../../services/diagnostics/diagnosticsService';
 import Tooltip from '../ui/Tooltip';
+import Codicon from '../ui/Codicon';
 import {
   chooseEvictionTab,
   remapPath,
@@ -1548,10 +1544,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       switch (viewId) {
         case 'explorer':
           return (
-            <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--sidebar)] select-none">
-              {/* Explorer Action Header */}
-              <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-3 py-1.5 select-none bg-[var(--sidebar)]">
-                <span className="text-[11px] font-bold tracking-wider uppercase text-[var(--muted-foreground)]">
+            <div className="flex h-full w-full flex-col overflow-hidden bg-[#181818] text-[#cccccc] font-sans select-none">
+              {/* Explorer Action Header (35px) */}
+              <div className="flex h-[35px] shrink-0 items-center justify-between border-b border-[#2b2b2b] px-3 select-none bg-[#181818]">
+                <span className="text-[11px] font-bold tracking-wider uppercase text-[#858585]">
                   Explorer
                 </span>
                 <div className="flex items-center gap-0.5">
@@ -1561,9 +1557,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       onClick={() => treeRef.current?.startNewFile()}
                       aria-label="New File"
                       data-testid="explorer-new-file"
-                      className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white"
+                      className="flex h-6 w-6 items-center justify-center rounded-[2px] text-[#cccccc] hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
                     >
-                      <FilePlus className="h-3.5 w-3.5" />
+                      <Codicon name="new-file" className="text-[13px]" />
                     </button>
                   </Tooltip>
                   <Tooltip label="New Folder" side="bottom">
@@ -1572,9 +1568,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       onClick={() => treeRef.current?.startNewFolder()}
                       aria-label="New Folder"
                       data-testid="explorer-new-folder"
-                      className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white"
+                      className="flex h-6 w-6 items-center justify-center rounded-[2px] text-[#cccccc] hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
                     >
-                      <FolderPlus className="h-3.5 w-3.5" />
+                      <Codicon name="new-folder" className="text-[13px]" />
                     </button>
                   </Tooltip>
                   <Tooltip label="Collapse All Folders" side="bottom">
@@ -1583,9 +1579,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       onClick={() => treeRef.current?.collapseAll()}
                       aria-label="Collapse All Folders"
                       data-testid="explorer-collapse-all"
-                      className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white"
+                      className="flex h-6 w-6 items-center justify-center rounded-[2px] text-[#cccccc] hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
                     >
-                      <FolderArchive className="h-3.5 w-3.5" />
+                      <Codicon name="collapse-all" className="text-[13px]" />
                     </button>
                   </Tooltip>
                   <Tooltip label="Load Folder from Disk" side="bottom">
@@ -1594,9 +1590,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                       onClick={() => folderInputRef.current?.click()}
                       aria-label="Load Folder"
                       data-testid="explorer-load-folder"
-                      className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white"
+                      className="flex h-6 w-6 items-center justify-center rounded-[2px] text-[#cccccc] hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
                     >
-                      <FolderDown className="h-3.5 w-3.5" />
+                      <Codicon name="folder-opened" className="text-[13px]" />
                     </button>
                   </Tooltip>
                 </div>
@@ -1611,35 +1607,45 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 onDrop={handleExplorerDrop}
               >
                 {/* INFO Accordion */}
-                <div className="border-b border-[var(--border)]/60">
+                <div className="border-b border-[#2b2b2b]">
                   <button
                     type="button"
                     onClick={() => setIsInfoOpen(!isInfoOpen)}
-                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[var(--muted-foreground)] hover:bg-white/5 hover:text-white uppercase select-none"
+                    className="flex h-[22px] w-full items-center gap-1.5 px-2 text-left text-[11px] font-bold tracking-wider text-[#cccccc] hover:bg-[#2a2d2e] uppercase select-none cursor-pointer"
                   >
-                    {isInfoOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                    Info
+                    <Codicon
+                      name="chevron-right"
+                      className={`text-[12px] text-[#858585] transition-transform duration-100 ${
+                        isInfoOpen ? 'rotate-90 text-[#cccccc]' : ''
+                      }`}
+                    />
+                    <span>Info</span>
                   </button>
                   {isInfoOpen && (
-                    <div className="px-5 py-2 text-[11px] text-[var(--muted-foreground)] space-y-1 bg-[var(--background)]">
-                      <p><span className="text-[var(--muted-foreground)]">Framework:</span> React + Vite</p>
-                      <p><span className="text-[var(--muted-foreground)]">Runtime:</span> In-Browser WebContainer</p>
-                      <p><span className="text-[var(--muted-foreground)]">Files:</span> {project.files.length} loaded</p>
-                      <p><span className="text-[var(--muted-foreground)]">Cost:</span> $0.00 (Local-First Compute)</p>
+                    <div className="px-5 py-2 text-[11px] text-[#858585] space-y-1 bg-[#1f1f1f]">
+                      <p><span className="text-[#858585]">Framework:</span> React + Vite</p>
+                      <p><span className="text-[#858585]">Runtime:</span> In-Browser WebContainer</p>
+                      <p><span className="text-[#858585]">Files:</span> {project.files.length} loaded</p>
+                      <p><span className="text-[#858585]">Cost:</span> $0.00 (Local-First Compute)</p>
                     </div>
                   )}
                 </div>
 
                 {/* PROJECT_NAME Accordion (Contains FileTreeView) */}
-                <div>
+                <div className="border-b border-[#2b2b2b]">
                   <button
                     type="button"
                     onClick={() => setIsProjectRootOpen(!isProjectRootOpen)}
-                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[var(--foreground)] hover:bg-white/5 uppercase select-none"
+                    className="flex h-[22px] w-full items-center gap-1.5 px-2 text-left text-[11px] font-bold tracking-wider text-[#cccccc] hover:bg-[#2a2d2e] uppercase select-none cursor-pointer"
                   >
-                    {isProjectRootOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    <Codicon
+                      name="chevron-right"
+                      className={`text-[12px] text-[#858585] transition-transform duration-100 ${
+                        isProjectRootOpen ? 'rotate-90 text-[#cccccc]' : ''
+                      }`}
+                    />
                     <span className="truncate">{projectName}</span>
-                    <span className="ml-auto rounded bg-[var(--background)] px-1 text-[9px] text-[var(--muted-foreground)]">
+                    <span className="ml-auto rounded-[2px] bg-[#2a2d2e] px-1 text-[10px] text-[#858585] font-mono">
                       {project.files.length}
                     </span>
                   </button>
@@ -1662,34 +1668,44 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                 </div>
 
                 {/* OUTLINE Accordion */}
-                <div className="border-t border-[var(--border)]/60">
+                <div className="border-b border-[#2b2b2b]">
                   <button
                     type="button"
                     onClick={() => setIsOutlineOpen(!isOutlineOpen)}
-                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[var(--muted-foreground)] hover:bg-white/5 hover:text-white uppercase select-none"
+                    className="flex h-[22px] w-full items-center gap-1.5 px-2 text-left text-[11px] font-bold tracking-wider text-[#cccccc] hover:bg-[#2a2d2e] uppercase select-none cursor-pointer"
                   >
-                    {isOutlineOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                    Outline
+                    <Codicon
+                      name="chevron-right"
+                      className={`text-[12px] text-[#858585] transition-transform duration-100 ${
+                        isOutlineOpen ? 'rotate-90 text-[#cccccc]' : ''
+                      }`}
+                    />
+                    <span>Outline</span>
                   </button>
                   {isOutlineOpen && (
-                    <div className="px-5 py-2 text-[11px] text-[var(--muted-foreground)] italic bg-[var(--background)]">
+                    <div className="px-5 py-2 text-[11px] text-[#858585] italic bg-[#1f1f1f]">
                       {activePath ? `Active symbol structure: ${activePath}` : 'No symbols to display'}
                     </div>
                   )}
                 </div>
 
                 {/* TIMELINE Accordion */}
-                <div className="border-t border-[var(--border)]/60">
+                <div className="border-b border-[#2b2b2b]">
                   <button
                     type="button"
                     onClick={() => setIsTimelineOpen(!isTimelineOpen)}
-                    className="flex w-full items-center gap-1.5 px-2.5 py-1 text-left text-[11px] font-bold tracking-wider text-[var(--muted-foreground)] hover:bg-white/5 hover:text-white uppercase select-none"
+                    className="flex h-[22px] w-full items-center gap-1.5 px-2 text-left text-[11px] font-bold tracking-wider text-[#cccccc] hover:bg-[#2a2d2e] uppercase select-none cursor-pointer"
                   >
-                    {isTimelineOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                    Timeline
+                    <Codicon
+                      name="chevron-right"
+                      className={`text-[12px] text-[#858585] transition-transform duration-100 ${
+                        isTimelineOpen ? 'rotate-90 text-[#cccccc]' : ''
+                      }`}
+                    />
+                    <span>Timeline</span>
                   </button>
                   {isTimelineOpen && (
-                    <div className="px-5 py-2 text-[11px] text-[var(--muted-foreground)] italic bg-[var(--background)]">
+                    <div className="px-5 py-2 text-[11px] text-[#858585] italic bg-[#1f1f1f]">
                       Workspace file history active
                     </div>
                   )}

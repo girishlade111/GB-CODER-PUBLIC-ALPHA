@@ -6,29 +6,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {
-  Atom,
-  Braces,
-  ChevronDown,
-  ChevronRight,
-  Clipboard,
-  Columns,
-  Copy,
-  File,
-  FileCode,
-  FilePlus,
-  FileText,
-  FileType,
-  Folder,
-  FolderArchive,
-  FolderOpen,
-  FolderPlus,
-  Globe,
-  Palette,
-  Pencil,
-  Trash2,
-  Triangle,
-} from 'lucide-react';
+import { createPortal } from 'react-dom';
+import Codicon from '../ui/Codicon';
 import toast from 'react-hot-toast';
 import { ProjectFile } from '../../types/files';
 
@@ -80,7 +59,6 @@ const buildTree = (files: ProjectFile[]): TreeNode[] => {
 
   for (const file of files) {
     if (file.path.endsWith('/.gitkeep')) {
-      // Empty folder placeholder: ensure the folder hierarchy exists in the tree
       const dirPath = file.path.slice(0, -'/.gitkeep'.length);
       const segments = dirPath.split('/').filter(Boolean);
       let cursor = root;
@@ -112,7 +90,7 @@ const buildTree = (files: ProjectFile[]): TreeNode[] => {
     });
   }
 
-  // Folders before files, each alphabetical — standard IDE convention.
+  // Folders before files, each alphabetical
   const sort = (nodes: TreeNode[]): TreeNode[] => {
     nodes.sort((a, b) => {
       if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
@@ -125,45 +103,49 @@ const buildTree = (files: ProjectFile[]): TreeNode[] => {
   return sort(root.children);
 };
 
-const ICON_CLASS = 'h-3.5 w-3.5 flex-shrink-0';
-
-const iconFor = (name: string) => {
-  const ext = (name.split('.').pop() ?? '').toLowerCase();
-
+/**
+ * Returns authentic VS Code Codicon glyph and color for a given file extension.
+ */
+const getFileCodicon = (name: string) => {
+  const ext = name.split('.').pop()?.toLowerCase();
   switch (ext) {
+    case 'ts':
+    case 'tsx':
+      return <Codicon name="file-code" className="text-[13px] text-[#3794ff] shrink-0" />;
+    case 'js':
+    case 'jsx':
+    case 'mjs':
+    case 'cjs':
+      return <Codicon name="file-code" className="text-[13px] text-[#cca700] shrink-0" />;
+    case 'json':
+    case 'jsonc':
+      return <Codicon name="json" className="text-[13px] text-[#cca700] shrink-0" />;
     case 'html':
     case 'htm':
-      return <Globe className={`${ICON_CLASS} text-accent`} />;
+      return <Codicon name="browser" className="text-[13px] text-[#e37933] shrink-0" />;
     case 'css':
     case 'scss':
     case 'sass':
     case 'less':
-      return <Palette className={`${ICON_CLASS} text-content-on-dark-soft`} />;
-    case 'js':
-    case 'mjs':
-    case 'cjs':
-      return <FileCode className={`${ICON_CLASS} text-content-on-dark-soft`} />;
-    case 'jsx':
-    case 'tsx':
-      return <Atom className={`${ICON_CLASS} text-cyan-400`} />;
-    case 'ts':
-      return <FileType className={`${ICON_CLASS} text-blue-400`} />;
-    case 'vue':
-      return <Triangle className={`${ICON_CLASS} text-teal`} />;
-    case 'json':
-    case 'jsonc':
-      return <Braces className={`${ICON_CLASS} text-amber-400`} />;
+      return <Codicon name="symbol-color" className="text-[13px] text-[#4ec9b0] shrink-0" />;
     case 'md':
+    case 'markdown':
     case 'mdx':
-    case 'txt':
-      return <FileText className={`${ICON_CLASS} text-vsc-textMuted`} />;
+      return <Codicon name="markdown" className="text-[13px] text-[#75beff] shrink-0" />;
+    case 'svg':
+    case 'png':
+    case 'jpg':
+    case 'jpeg':
+    case 'gif':
+    case 'webp':
+      return <Codicon name="file-media" className="text-[13px] text-[#b180d7] shrink-0" />;
     default:
-      return <File className={`${ICON_CLASS} text-vsc-textMuted`} />;
+      return <Codicon name="file" className="text-[13px] text-[#cccccc] shrink-0" />;
   }
 };
 
 /** Clamps context menu position within viewport bounds */
-const getClampedMenuPos = (x: number, y: number, menuWidth = 190, menuHeight = 240) => {
+const getClampedMenuPos = (x: number, y: number, menuWidth = 200, menuHeight = 240) => {
   if (typeof window === 'undefined') return { x, y };
   const maxX = window.innerWidth - menuWidth - 10;
   const maxY = window.innerHeight - menuHeight - 10;
@@ -251,10 +233,10 @@ const TreeRow: React.FC<RowProps> = ({
         data-testid={node.isDirectory ? 'tree-folder' : 'tree-file'}
         data-path={node.path}
         title={node.path}
-        className={`group relative flex w-[calc(100%-8px)] mx-1 rounded-[3px] items-center gap-1.5 py-[3px] pr-2 text-left text-xs transition-colors select-none cursor-pointer ${
+        className={`group relative flex h-[22px] w-full items-center gap-1.5 pr-2 text-left text-[12px] select-none cursor-pointer font-sans transition-colors ${
           isActive
-            ? 'bg-[#04395e] text-white font-medium'
-            : 'text-[#cccccc] hover:bg-white/5 hover:text-white'
+            ? 'bg-[#04395e] text-white font-normal'
+            : 'text-[#cccccc] hover:bg-[#2a2d2e] hover:text-white'
         }`}
         style={{ paddingLeft: `${depth * INDENT_PX + 6}px` }}
       >
@@ -263,28 +245,31 @@ const TreeRow: React.FC<RowProps> = ({
           <span
             key={level}
             aria-hidden
-            className="pointer-events-none absolute top-0 bottom-0 w-px bg-vsc-indent"
+            className="pointer-events-none absolute top-0 bottom-0 w-px bg-[#3c3c3c]/50"
             style={{ left: `${level * INDENT_PX + 11}px` }}
           />
         ))}
 
         {node.isDirectory ? (
           <>
-            {isOpen ? (
-              <ChevronDown className="h-3 w-3 flex-shrink-0 text-vsc-textMuted" />
-            ) : (
-              <ChevronRight className="h-3 w-3 flex-shrink-0 text-vsc-textMuted" />
-            )}
-            {isOpen ? (
-              <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-amber-400" />
-            ) : (
-              <Folder className="h-3.5 w-3.5 flex-shrink-0 text-amber-400/90" />
-            )}
+            <span className="flex items-center justify-center w-4 h-4 shrink-0 text-[#858585]">
+              <Codicon
+                name="chevron-right"
+                className={`text-[12px] transition-transform duration-100 ${
+                  isOpen ? 'rotate-90 text-[#cccccc]' : ''
+                }`}
+              />
+            </span>
+            <span className="flex items-center justify-center w-4 h-4 shrink-0 text-[#dcb67a]">
+              <Codicon name={isOpen ? 'folder-opened' : 'folder'} className="text-[13px]" />
+            </span>
           </>
         ) : (
           <>
-            <span className="w-3 flex-shrink-0" />
-            {iconFor(node.name)}
+            <span className="w-4 shrink-0" />
+            <span className="flex items-center justify-center w-4 h-4 shrink-0">
+              {getFileCodicon(node.name)}
+            </span>
           </>
         )}
 
@@ -297,10 +282,10 @@ const TreeRow: React.FC<RowProps> = ({
             onKeyDown={handleRenameKeyDown}
             onBlur={() => onCommitRename(node.path, renameVal)}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 min-w-0 bg-[var(--input)] text-white px-1 py-0.5 text-xs rounded border border-accent outline-none shadow-sm"
+            className="h-[20px] flex-1 min-w-0 bg-[#1f1f1f] text-white px-1.5 text-[12px] rounded-[2px] border border-[#0078d4] outline-none"
           />
         ) : (
-          <span className="truncate flex-1">{node.name}</span>
+          <span className="truncate flex-1 leading-[22px]">{node.name}</span>
         )}
 
         {!node.isDirectory && !isRenaming && (
@@ -313,15 +298,15 @@ const TreeRow: React.FC<RowProps> = ({
                   e.stopPropagation();
                   onOpenToSide(node.path);
                 }}
-                className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-product-active text-vsc-textMuted hover:text-content-on-dark transition-opacity"
+                className="opacity-0 group-hover:opacity-100 p-0.5 rounded-[2px] hover:bg-white/10 text-[#858585] hover:text-white transition-opacity"
                 title="Open to the Side (Split Editor)"
               >
-                <Columns className="h-3 w-3" />
+                <Codicon name="split-horizontal" className="text-[12px]" />
               </span>
             )}
             {dirty.has(node.path) && (
               <span
-                className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-vsc-text"
+                className="h-1.5 w-1.5 shrink-0 rounded-full bg-white"
                 title="Unsaved changes"
               />
             )}
@@ -332,7 +317,6 @@ const TreeRow: React.FC<RowProps> = ({
       {/* Children of expanded folder */}
       {node.isDirectory && isOpen && (
         <>
-          {/* Inline draft input when creating inside this folder */}
           {draft && draft.targetFolder === node.path && (
             <InlineDraftInput
               type={draft.type}
@@ -401,14 +385,16 @@ const InlineDraftInput: React.FC<InlineDraftInputProps> = ({
   return (
     <div
       style={{ paddingLeft: `${depth * INDENT_PX + 6}px` }}
-      className="flex w-full items-center gap-1.5 py-[3px] pr-2 text-xs bg-product-hover/40"
+      className="flex h-[22px] w-full items-center gap-1.5 pr-2 text-[12px] bg-[#2a2d2e]"
     >
-      <span className="w-3 flex-shrink-0" />
-      {type === 'folder' ? (
-        <Folder className="h-3.5 w-3.5 flex-shrink-0 text-amber-400" />
-      ) : (
-        <File className="h-3.5 w-3.5 flex-shrink-0 text-accent" />
-      )}
+      <span className="w-4 shrink-0" />
+      <span className="flex items-center justify-center w-4 h-4 shrink-0">
+        {type === 'folder' ? (
+          <Codicon name="folder" className="text-[13px] text-[#dcb67a]" />
+        ) : (
+          <Codicon name="file" className="text-[13px] text-[#cccccc]" />
+        )}
+      </span>
       <input
         ref={inputRef}
         type="text"
@@ -417,7 +403,7 @@ const InlineDraftInput: React.FC<InlineDraftInputProps> = ({
         onChange={(e) => setVal(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={() => onCommit(val)}
-        className="flex-1 min-w-0 bg-[var(--input)] text-white px-1.5 py-0.5 text-xs rounded border border-accent outline-none shadow-sm"
+        className="h-[20px] flex-1 min-w-0 bg-[#1f1f1f] text-white px-1.5 text-[12px] rounded-[2px] border border-[#0078d4] outline-none"
       />
     </div>
   );
@@ -575,7 +561,6 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
         return;
       }
 
-      // Disallow invalid characters
       if (/[\\:*?"<>|]/.test(trimmed)) {
         toast.error('File name contains invalid characters');
         return;
@@ -589,8 +574,6 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
       }
 
       if (draft.type === 'folder') {
-        // A `false` return means the owner rejected the path (collision,
-        // traversal, …): keep the draft open for correction, no success toast.
         if (onCreateFolder?.(fullPath) === false) return;
         setExpanded((prev) => new Set([...prev, fullPath]));
         toast.success(`Created folder ${trimmed}`);
@@ -625,8 +608,6 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
         return;
       }
 
-      // Rejected by the owner (strict validation): keep the row as-is; the
-      // owner has already explained why. Success toast only on acceptance.
       try {
         const res = await onRename?.(oldPath, newPath);
         if (res === false) return;
@@ -641,8 +622,6 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
       if (!deleteTarget) return;
       try {
         const result = await onDelete?.(deleteTarget.path);
-        // onDelete returns false to signal failure (the caller is responsible for toasting the error).
-        // In that case suppress the success toast and keep the dialog open so the user can retry.
         if (result === false) return;
         toast.success(`Deleted ${deleteTarget.name}`);
         setDeleteTarget(null);
@@ -650,7 +629,6 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
         console.error('[FileTreeView] Delete rejected:', err);
       }
     };
-
 
     const copyToClipboard = async (text: string, label: string) => {
       try {
@@ -663,7 +641,7 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
 
     return (
       <div
-        className="py-1 min-h-[120px]"
+        className="py-0.5 min-h-[120px] select-none"
         data-testid="vscode-file-tree"
         onContextMenu={handleContainerContextMenu}
       >
@@ -678,13 +656,13 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
         )}
 
         {files.length === 0 && !draft ? (
-          <div className="px-3 py-6 text-center text-xs text-vsc-textMuted">
+          <div className="px-3 py-6 text-center text-xs text-[#858585]">
             <p>No files in this project.</p>
             <button
               onClick={() => setDraft({ type: 'file', targetFolder: '' })}
-              className="mt-2 text-accent hover:underline inline-flex items-center gap-1 font-medium"
+              className="mt-2 text-[#3794ff] hover:underline inline-flex items-center gap-1 font-normal cursor-pointer"
             >
-              <FilePlus className="h-3 w-3" />
+              <Codicon name="new-file" className="text-[13px]" />
               Create new file
             </button>
           </div>
@@ -711,283 +689,289 @@ export const FileTreeView = forwardRef<FileTreeViewHandle, FileTreeViewProps>(
           ))
         )}
 
-        {/* ── Right-Click Context Menu ── */}
-        {contextMenu && (
-          <div
-            className="fixed z-[100] min-w-[170px] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--card)] py-1 shadow-2xl text-xs text-slate-200"
-            style={{ top: contextMenu.y, left: contextMenu.x }}
-            role="menu"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {contextMenu.node ? (
-              contextMenu.node.isDirectory ? (
-                /* Folder context menu */
-                <>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      const path = contextMenu.node!.path;
-                      setContextMenu(null);
-                      setDraft({ type: 'file', targetFolder: path });
-                      setExpanded((prev) => new Set([...prev, path]));
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
-                  >
-                    <FilePlus className="h-3.5 w-3.5 text-accent" />
-                    New File...
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      const path = contextMenu.node!.path;
-                      setContextMenu(null);
-                      setDraft({ type: 'folder', targetFolder: path });
-                      setExpanded((prev) => new Set([...prev, path]));
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
-                  >
-                    <FolderPlus className="h-3.5 w-3.5 text-amber-400" />
-                    New Folder...
-                  </button>
-                  <div className="my-1 border-t border-[var(--border)]" />
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setRenamingPath(contextMenu.node!.path);
-                      setContextMenu(null);
-                    }}
-                    className="flex w-full items-center justify-between px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Pencil className="h-3.5 w-3.5" />
-                      Rename
-                    </span>
-                    <span className="text-[10px] text-vsc-textMuted font-mono">F2</span>
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setDeleteTarget(contextMenu.node);
-                      setContextMenu(null);
-                    }}
-                    className="flex w-full items-center justify-between px-3 py-1.5 text-left text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Delete Folder
-                    </span>
-                    <span className="text-[10px] text-red-400/80 font-mono">Del</span>
-                  </button>
-                  <div className="my-1 border-t border-[var(--border)]" />
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      void copyToClipboard(contextMenu.node!.path, 'Folder path');
-                      setContextMenu(null);
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
-                  >
-                    <Clipboard className="h-3.5 w-3.5" />
-                    Copy Path
-                  </button>
-                </>
-              ) : (
-                /* File context menu */
-                <>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      onOpen(contextMenu.node!.path);
-                      setContextMenu(null);
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
-                  >
-                    <File className="h-3.5 w-3.5" />
-                    Open
-                  </button>
-                  {onOpenToSide && (
+        {/* ── Authentic VS Code Right-Click Context Menu ── */}
+        {contextMenu &&
+          typeof document !== 'undefined' &&
+          createPortal(
+            <div
+              className="fixed z-[99999] min-w-[190px] overflow-hidden rounded-[4px] border border-[#3c3c3c] bg-[#252526] py-1 shadow-2xl text-[12px] text-[#cccccc] font-sans select-none"
+              style={{ top: contextMenu.y, left: contextMenu.x }}
+              role="menu"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {contextMenu.node ? (
+                contextMenu.node.isDirectory ? (
+                  /* Folder context menu */
+                  <>
                     <button
                       type="button"
                       role="menuitem"
                       onClick={() => {
-                        onOpenToSide(contextMenu.node!.path);
+                        const path = contextMenu.node!.path;
+                        setContextMenu(null);
+                        setDraft({ type: 'file', targetFolder: path });
+                        setExpanded((prev) => new Set([...prev, path]));
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Codicon name="new-file" className="text-[13px] text-[#3794ff]" />
+                      <span>New File...</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        const path = contextMenu.node!.path;
+                        setContextMenu(null);
+                        setDraft({ type: 'folder', targetFolder: path });
+                        setExpanded((prev) => new Set([...prev, path]));
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Codicon name="new-folder" className="text-[13px] text-[#dcb67a]" />
+                      <span>New Folder...</span>
+                    </button>
+                    <div className="my-1 border-t border-[#3c3c3c]" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setRenamingPath(contextMenu.node!.path);
                         setContextMenu(null);
                       }}
-                      className="flex w-full items-center justify-between px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
+                      className="flex w-full items-center justify-between px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
                     >
                       <span className="flex items-center gap-2">
-                        <Columns className="h-3.5 w-3.5" />
-                        Open to the Side
+                        <Codicon name="edit" className="text-[13px]" />
+                        <span>Rename</span>
                       </span>
-                      <span className="text-[10px] text-vsc-textMuted font-mono">Ctrl+\</span>
+                      <span className="text-[10px] text-[#858585] font-mono">F2</span>
                     </button>
-                  )}
-                  <div className="my-1 border-t border-[var(--border)]" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setDeleteTarget(contextMenu.node);
+                        setContextMenu(null);
+                      }}
+                      className="flex w-full items-center justify-between px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Codicon name="trash" className="text-[13px] text-[#f14c4c]" />
+                        <span>Delete Folder</span>
+                      </span>
+                      <span className="text-[10px] text-[#858585] font-mono">Del</span>
+                    </button>
+                    <div className="my-1 border-t border-[#3c3c3c]" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        void copyToClipboard(contextMenu.node!.path, 'Folder path');
+                        setContextMenu(null);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Codicon name="copy" className="text-[13px]" />
+                      <span>Copy Path</span>
+                    </button>
+                  </>
+                ) : (
+                  /* File context menu */
+                  <>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        onOpen(contextMenu.node!.path);
+                        setContextMenu(null);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Codicon name="file" className="text-[13px]" />
+                      <span>Open</span>
+                    </button>
+                    {onOpenToSide && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          onOpenToSide(contextMenu.node!.path);
+                          setContextMenu(null);
+                        }}
+                        className="flex w-full items-center justify-between px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Codicon name="split-horizontal" className="text-[13px]" />
+                          <span>Open to the Side</span>
+                        </span>
+                        <span className="text-[10px] text-[#858585] font-mono">Ctrl+\</span>
+                      </button>
+                    )}
+                    <div className="my-1 border-t border-[#3c3c3c]" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setRenamingPath(contextMenu.node!.path);
+                        setContextMenu(null);
+                      }}
+                      className="flex w-full items-center justify-between px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Codicon name="edit" className="text-[13px]" />
+                        <span>Rename</span>
+                      </span>
+                      <span className="text-[10px] text-[#858585] font-mono">F2</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        onDuplicate?.(contextMenu.node!.path);
+                        setContextMenu(null);
+                        toast.success(`Duplicated ${contextMenu.node!.name}`);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Codicon name="files" className="text-[13px]" />
+                      <span>Duplicate</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setDeleteTarget(contextMenu.node);
+                        setContextMenu(null);
+                      }}
+                      className="flex w-full items-center justify-between px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Codicon name="trash" className="text-[13px] text-[#f14c4c]" />
+                        <span>Delete</span>
+                      </span>
+                      <span className="text-[10px] text-[#858585] font-mono">Del</span>
+                    </button>
+                    <div className="my-1 border-t border-[#3c3c3c]" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        void copyToClipboard(contextMenu.node!.path, 'Path');
+                        setContextMenu(null);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Codicon name="copy" className="text-[13px]" />
+                      <span>Copy Path</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        void copyToClipboard(contextMenu.node!.name, 'File name');
+                        setContextMenu(null);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Codicon name="file-code" className="text-[13px]" />
+                      <span>Copy File Name</span>
+                    </button>
+                  </>
+                )
+              ) : (
+                /* Empty explorer background menu */
+                <>
                   <button
                     type="button"
                     role="menuitem"
                     onClick={() => {
-                      setRenamingPath(contextMenu.node!.path);
                       setContextMenu(null);
+                      setDraft({ type: 'file', targetFolder: '' });
                     }}
-                    className="flex w-full items-center justify-between px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
+                    className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
                   >
-                    <span className="flex items-center gap-2">
-                      <Pencil className="h-3.5 w-3.5" />
-                      Rename
-                    </span>
-                    <span className="text-[10px] text-vsc-textMuted font-mono">F2</span>
+                    <Codicon name="new-file" className="text-[13px] text-[#3794ff]" />
+                    <span>New File...</span>
                   </button>
                   <button
                     type="button"
                     role="menuitem"
                     onClick={() => {
-                      onDuplicate?.(contextMenu.node!.path);
                       setContextMenu(null);
-                      toast.success(`Duplicated ${contextMenu.node!.name}`);
+                      setDraft({ type: 'folder', targetFolder: '' });
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
+                    className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
                   >
-                    <Copy className="h-3.5 w-3.5" />
-                    Duplicate
+                    <Codicon name="new-folder" className="text-[13px] text-[#dcb67a]" />
+                    <span>New Folder...</span>
                   </button>
+                  <div className="my-1 border-t border-[#3c3c3c]" />
                   <button
                     type="button"
                     role="menuitem"
                     onClick={() => {
-                      setDeleteTarget(contextMenu.node);
+                      setExpanded(new Set());
                       setContextMenu(null);
                     }}
-                    className="flex w-full items-center justify-between px-3 py-1.5 text-left text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+                    className="flex w-full items-center gap-2 px-3 py-1 text-left hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
                   >
-                    <span className="flex items-center gap-2">
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Delete
-                    </span>
-                    <span className="text-[10px] text-red-400/80 font-mono">Del</span>
-                  </button>
-                  <div className="my-1 border-t border-[var(--border)]" />
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      void copyToClipboard(contextMenu.node!.path, 'Path');
-                      setContextMenu(null);
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
-                  >
-                    <Clipboard className="h-3.5 w-3.5" />
-                    Copy Path
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      void copyToClipboard(contextMenu.node!.name, 'File name');
-                      setContextMenu(null);
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
-                  >
-                    <FileCode className="h-3.5 w-3.5" />
-                    Copy File Name
+                    <Codicon name="collapse-all" className="text-[13px]" />
+                    <span>Collapse All Folders</span>
                   </button>
                 </>
-              )
-            ) : (
-              /* Empty explorer background menu */
-              <>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setContextMenu(null);
-                    setDraft({ type: 'file', targetFolder: '' });
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
-                >
-                  <FilePlus className="h-3.5 w-3.5 text-accent" />
-                  New File...
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setContextMenu(null);
-                    setDraft({ type: 'folder', targetFolder: '' });
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
-                >
-                  <FolderPlus className="h-3.5 w-3.5 text-amber-400" />
-                  New Folder...
-                </button>
-                <div className="my-1 border-t border-[var(--border)]" />
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setExpanded(new Set());
-                    setContextMenu(null);
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-indigo-600/30 hover:text-white transition-colors"
-                >
-                  <FolderArchive className="h-3.5 w-3.5" />
-                  Collapse All Folders
-                </button>
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </div>,
+            document.body,
+          )}
 
-        {/* ── Delete Confirmation Dialog ── */}
-        {deleteTarget && (
-          <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
-            role="dialog"
-            aria-modal="true"
-            onClick={() => setDeleteTarget(null)}
-          >
+        {/* ── Authentic Delete Confirmation Dialog Portalled to Body ── */}
+        {deleteTarget &&
+          typeof document !== 'undefined' &&
+          createPortal(
             <div
-              className="w-full max-w-sm rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 shadow-2xl text-white"
-              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+              role="dialog"
+              aria-modal="true"
+              onClick={() => setDeleteTarget(null)}
             >
-              <div className="flex items-center gap-2.5 text-red-400 mb-2 font-semibold text-sm">
-                <Trash2 className="h-4 w-4" />
-                Delete {deleteTarget.isDirectory ? 'Folder' : 'File'}
+              <div
+                className="w-full max-w-sm rounded-[4px] border border-[#3c3c3c] bg-[#252526] p-4 shadow-2xl text-[#cccccc] font-sans"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-2 text-[#f14c4c] mb-2 font-medium text-[13px]">
+                  <Codicon name="warning" className="text-[16px]" />
+                  <span>Delete {deleteTarget.isDirectory ? 'Folder' : 'File'}</span>
+                </div>
+                <p className="text-[12px] text-[#858585] leading-relaxed">
+                  Are you sure you want to permanently delete{' '}
+                  <span className="font-semibold text-white">'{deleteTarget.name}'</span>?
+                  {deleteTarget.isDirectory && (
+                    <span className="block mt-1 text-[#f14c4c] text-[11px]">
+                      This action will delete the folder and all its contents.
+                    </span>
+                  )}
+                </p>
+                <div className="mt-4 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(null)}
+                    className="rounded-[2px] px-3 py-1 text-[12px] text-[#cccccc] hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmDelete}
+                    className="rounded-[2px] bg-[#e51400] hover:bg-[#b81000] px-3 py-1 text-[12px] font-medium text-white transition-colors cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-              <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
-                Are you sure you want to permanently delete{' '}
-                <span className="font-semibold text-white">'{deleteTarget.name}'</span>?
-                {deleteTarget.isDirectory && (
-                  <span className="block mt-1 text-red-400 text-[11px]">
-                    This action will delete the folder and all its contents.
-                  </span>
-                )}
-              </p>
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setDeleteTarget(null)}
-                  className="rounded px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmDelete}
-                  className="rounded bg-red-600 hover:bg-red-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+            </div>,
+            document.body,
+          )}
       </div>
     );
   },

@@ -19,26 +19,10 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
-  GitBranch,
-  GitCommit,
-  GitPullRequest as GitPullRequestIcon,
-  RefreshCw,
-  Plus,
-  Minus,
-  Check,
-  RotateCcw,
-  FileCode,
-  FilePlus,
-  FileX,
-  FileDiff,
-  AlertTriangle,
   ArrowUp,
   ArrowDown,
   Cloud,
-  User,
   Loader2,
-  ChevronDown,
-  ChevronRight,
 } from 'lucide-react';
 import type { ProjectFile } from '../../types/files';
 import type {
@@ -90,6 +74,7 @@ import { GitBranchModal } from './GitBranchModal';
 import { GitCommitHistoryModal } from './GitCommitHistoryModal';
 import { GitAuthorModal } from './GitAuthorModal';
 import { GitPullRequestModal } from './GitPullRequestModal';
+import Codicon from '../ui/Codicon';
 import toast from 'react-hot-toast';
 
 export interface GitSourceControlPanelProps {
@@ -604,85 +589,86 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
   return (
     <div
       data-testid="git-source-control-panel"
-      className="flex h-full w-full flex-col overflow-hidden bg-[var(--sidebar)] text-xs select-none"
+      className="flex h-full w-full flex-col overflow-hidden bg-[#181818] text-[12px] text-[#cccccc] font-sans select-none"
     >
-      {/* Top Header Bar */}
-      <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-3 py-2 bg-[var(--sidebar)]">
+      {/* Top Header Bar (35px) */}
+      <div className="flex h-[35px] shrink-0 items-center justify-between border-b border-[#2b2b2b] px-3 bg-[#181818]">
         <div className="flex items-center gap-1.5 truncate">
-          <GitBranch className="h-3.5 w-3.5 text-[var(--primary)] shrink-0" />
-          <span className="font-bold tracking-wider uppercase text-[var(--foreground)] text-[11px] truncate">
+          <Codicon name="source-control" className="text-[13px] text-[#3794ff] shrink-0" />
+          <span className="font-bold tracking-wider uppercase text-[#858585] text-[11px] truncate">
             Source Control
           </span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 shrink-0">
           {/* Refresh Button */}
           <button
             data-testid="git-refresh-btn"
             onClick={() => void refreshStatus(true)}
             disabled={isRefreshing}
-            className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)] disabled:opacity-50"
+            className="flex h-6 w-6 items-center justify-center rounded-[2px] text-[#cccccc] hover:bg-white/10 hover:text-white disabled:opacity-50 transition-colors cursor-pointer"
             title="Refresh Git Status"
             aria-label="Refresh Git Status"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <Codicon name="refresh" className={`text-[13px] ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
 
           {/* History Button */}
           <button
             data-testid="git-history-btn"
             onClick={() => void handleOpenHistory()}
-            className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)]"
+            className="flex h-6 w-6 items-center justify-center rounded-[2px] text-[#cccccc] hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
             title="View Commit History"
             aria-label="View Commit History"
           >
-            <GitCommit className="h-3.5 w-3.5" />
+            <Codicon name="history" className="text-[13px]" />
           </button>
 
           {/* Pull Request Button */}
           <button
             data-testid="git-pr-btn"
             onClick={() => void handleOpenPRModal()}
-            className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)]"
+            className="flex h-6 w-6 items-center justify-center rounded-[2px] text-[#cccccc] hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
             title="Pull Requests"
             aria-label="Pull Requests"
           >
-            <GitPullRequestIcon className="h-3.5 w-3.5" />
+            <Codicon name="git-pull-request" className="text-[13px]" />
           </button>
 
           {/* Branch Switcher Pill */}
           <button
             data-testid="git-branch-switcher-btn"
             onClick={() => void handleOpenBranches()}
-            className="flex items-center gap-1 rounded bg-[var(--sidebar-accent)] px-2 py-0.5 text-[10px] font-mono text-[var(--foreground)] hover:bg-white/10"
+            className="flex items-center gap-1 rounded-[2px] bg-[#2a2d2e] px-1.5 py-0.5 text-[10px] font-mono text-[#cccccc] hover:bg-white/10 transition-colors cursor-pointer ml-1"
             title={`Current branch: ${status.branch} (Click to switch)`}
           >
+            <Codicon name="git-branch" className="text-[11px] text-[#858585]" />
             <span data-testid="git-branch-name" className="truncate max-w-[80px]">{status.branch}</span>
-            <ChevronDown className="h-3 w-3 opacity-60 shrink-0" />
+            <Codicon name="chevron-down" className="text-[10px] text-[#858585]" />
           </button>
         </div>
       </div>
 
       {/* Main Content Area */}
       {!isInitialized ? (
-        <div className="flex flex-1 flex-col items-center justify-center p-6 text-center text-[var(--muted-foreground)]">
-          <GitBranch className="h-10 w-10 text-[var(--muted-foreground)]/40 mb-3" />
-          <h3 className="font-semibold text-sm text-[var(--foreground)] mb-1">
+        <div className="flex flex-1 flex-col items-center justify-center p-6 text-center text-[#858585]">
+          <Codicon name="source-control" className="text-4xl text-[#555555] mb-3" />
+          <h3 className="font-medium text-sm text-[#cccccc] mb-1">
             No Git Repository Initialized
           </h3>
-          <p className="text-xs mb-4 max-w-xs text-[var(--muted-foreground)] leading-relaxed">
+          <p className="text-xs mb-4 max-w-xs text-[#858585] leading-relaxed">
             Initialize a local Git repository to start tracking changes, creating commits, and syncing with GitHub.
           </p>
           <button
             data-testid="git-init-btn"
             onClick={() => void handleInitializeRepo()}
             disabled={isRefreshing}
-            className="flex items-center gap-2 rounded bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-[var(--primary-foreground)] shadow-xs hover:opacity-90 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-[2px] bg-[#0078d4] hover:bg-[#006cbd] px-3.5 py-1.5 text-[12px] font-medium text-white transition-colors disabled:opacity-50 cursor-pointer"
           >
             {isRefreshing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Codicon name="loading" className="text-[14px] animate-spin" />
             ) : (
-              <Plus className="h-4 w-4" />
+              <Codicon name="plus" className="text-[14px]" />
             )}
             <span>Initialize Repository</span>
           </button>
@@ -691,15 +677,15 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
         <div className="flex-1 overflow-y-auto">
           {/* Conflict Alert Banner */}
           {status.hasConflicts && (
-            <div className="border-b border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+            <div className="border-b border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 font-semibold">
-                  <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
+                  <Codicon name="warning" className="text-[14px] text-rose-400 shrink-0" />
                   <span>Merge Conflict in Progress</span>
                 </div>
                 <button
                   onClick={() => void handleAbortMerge()}
-                  className="rounded border border-rose-500/30 bg-rose-950/40 px-2 py-0.5 text-[10px] font-medium hover:bg-rose-900/50"
+                  className="rounded-[2px] border border-rose-500/30 bg-rose-950/40 px-2 py-0.5 text-[10px] font-medium hover:bg-rose-900/50 cursor-pointer"
                 >
                   Abort Merge
                 </button>
@@ -711,7 +697,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
           )}
 
           {/* Commit Input Area */}
-          <div className="border-b border-[var(--border)] p-3 space-y-2 bg-[var(--sidebar)]/50">
+          <div className="border-b border-[#2b2b2b] p-2 space-y-1.5 bg-[#181818]">
             <div className="relative">
               <textarea
                 data-testid="git-commit-input"
@@ -720,7 +706,7 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
                 onKeyDown={handleKeyDown}
                 rows={3}
                 placeholder="Commit message (Ctrl+Enter to commit)"
-                className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:border-[var(--primary)] focus:outline-hidden resize-none leading-relaxed"
+                className="w-full rounded-[2px] border border-[#3c3c3c] bg-[#1f1f1f] px-2 py-1.5 text-[12px] text-white placeholder-[#858585] focus:border-[#0078d4] outline-none resize-none leading-relaxed"
               />
             </div>
 
@@ -728,10 +714,10 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
               {/* Author badge */}
               <button
                 onClick={() => setAuthorModalOpen(true)}
-                className="flex items-center gap-1 text-[10px] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                className="flex items-center gap-1 text-[11px] text-[#858585] hover:text-[#cccccc] transition-colors cursor-pointer"
                 title={`Author: ${currentAuthor.name} <${currentAuthor.email}> (Click to edit)`}
               >
-                <User className="h-3 w-3" />
+                <Codicon name="account" className="text-[12px]" />
                 <span className="truncate max-w-[120px]">{currentAuthor.name}</span>
               </button>
 
@@ -740,12 +726,12 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
                 data-testid="git-commit-btn"
                 onClick={() => void handleCommit()}
                 disabled={isCommitting || !commitMessage.trim()}
-                className="flex items-center gap-1.5 rounded bg-[var(--primary)] px-3 py-1 text-xs font-semibold text-[var(--primary-foreground)] hover:opacity-90 disabled:opacity-50 shadow-xs"
+                className="flex items-center gap-1.5 rounded-[2px] bg-[#0078d4] hover:bg-[#006cbd] px-3 py-1 text-[12px] font-medium text-white disabled:opacity-40 transition-colors cursor-pointer"
               >
                 {isCommitting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Codicon name="loading" className="text-[13px] animate-spin" />
                 ) : (
-                  <Check className="h-3.5 w-3.5" />
+                  <Codicon name="check" className="text-[13px]" />
                 )}
                 <span>Commit</span>
               </button>
@@ -753,20 +739,21 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
           </div>
 
           {/* STAGED CHANGES Section */}
-          <div className="border-b border-[var(--border)]">
+          <div className="border-b border-[#2b2b2b]">
             <div
               data-testid="git-staged-header"
               onClick={() => setStagedExpanded(!stagedExpanded)}
-              className="flex cursor-pointer items-center justify-between px-3 py-1.5 bg-[var(--sidebar)] hover:bg-white/5 text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider"
+              className="flex h-[22px] cursor-pointer items-center justify-between px-2 bg-[#181818] hover:bg-[#2a2d2e] text-[11px] font-bold text-[#cccccc] uppercase tracking-wider select-none"
             >
               <div className="flex items-center gap-1.5">
-                {stagedExpanded ? (
-                  <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-                ) : (
-                  <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                )}
+                <Codicon
+                  name="chevron-right"
+                  className={`text-[12px] text-[#858585] transition-transform duration-100 ${
+                    stagedExpanded ? 'rotate-90 text-[#cccccc]' : ''
+                  }`}
+                />
                 <span>Staged Changes</span>
-                <span data-testid="git-staged-count" className="rounded bg-[var(--sidebar-accent)] px-1.5 py-0.2 text-[10px] font-mono">
+                <span data-testid="git-staged-count" className="rounded-[2px] bg-[#2a2d2e] px-1 text-[10px] font-mono text-[#858585]">
                   {status.staged.length}
                 </span>
               </div>
@@ -778,18 +765,18 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
                     e.stopPropagation();
                     void handleUnstageAll();
                   }}
-                  className="rounded p-0.5 hover:bg-white/10 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                  className="rounded-[2px] p-0.5 hover:bg-white/10 text-[#858585] hover:text-white cursor-pointer"
                   title="Unstage All Changes"
                 >
-                  <Minus className="h-3.5 w-3.5" />
+                  <Codicon name="remove" className="text-[12px]" />
                 </button>
               )}
             </div>
 
             {stagedExpanded && (
-              <div className="p-1 space-y-0.5">
+              <div className="py-0.5 space-y-px">
                 {status.staged.length === 0 ? (
-                  <div className="px-3 py-2 text-[11px] text-[var(--muted-foreground)] italic">
+                  <div className="px-3 py-1.5 text-[11px] text-[#858585] italic">
                     No staged changes.
                   </div>
                 ) : (
@@ -802,24 +789,23 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
                       <div
                         key={file.path}
                         onClick={() => onOpenFile(file.path)}
-                        className={`group flex cursor-pointer items-center justify-between rounded px-2 py-1 transition-colors ${
+                        className={`group flex h-[22px] cursor-pointer items-center justify-between px-2 transition-colors select-none ${
                           isActive
-                            ? 'bg-[var(--primary)]/20 text-[var(--foreground)]'
-                            : 'text-[var(--muted-foreground)] hover:bg-white/5 hover:text-[var(--foreground)]'
+                            ? 'bg-[#04395e] text-white font-normal'
+                            : 'text-[#cccccc] hover:bg-[#2a2d2e] hover:text-white'
                         }`}
                         title={file.path}
                       >
                         <div className="flex items-center gap-1.5 truncate">
-                          {file.badge === 'A' ? (
-                            <FilePlus className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                          ) : file.badge === 'D' ? (
-                            <FileX className="h-3.5 w-3.5 text-rose-400 shrink-0" />
-                          ) : (
-                            <FileCode className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                          )}
-                          <span className="truncate font-medium text-[11px]">{name}</span>
+                          <Codicon
+                            name={file.badge === 'D' ? 'trash' : file.badge === 'A' ? 'new-file' : 'file-code'}
+                            className={`text-[13px] shrink-0 ${
+                              file.badge === 'D' ? 'text-[#f14c4c]' : file.badge === 'A' ? 'text-[#73c991]' : 'text-[#cca700]'
+                            }`}
+                          />
+                          <span className="truncate text-[12px]">{name}</span>
                           {folder && (
-                            <span className="truncate text-[10px] text-[var(--muted-foreground)] opacity-70">
+                            <span className="truncate text-[10px] text-[#858585]">
                               {folder}
                             </span>
                           )}
@@ -829,29 +815,29 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
                           {/* Diff Inspector */}
                           <button
                             onClick={(e) => void handleOpenDiff(file.path, true, e)}
-                            className="hidden group-hover:inline-flex rounded p-1 hover:bg-white/10 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                            className="hidden group-hover:inline-flex rounded-[2px] p-0.5 hover:bg-white/10 text-[#858585] hover:text-white cursor-pointer"
                             title="Inspect Staged Diff"
                           >
-                            <FileDiff className="h-3 w-3" />
+                            <Codicon name="diff" className="text-[12px]" />
                           </button>
 
                           {/* Unstage Button */}
                           <button
                             data-testid={`git-unstage-file-${file.path}`}
                             onClick={(e) => void handleUnstageFile(file.path, e)}
-                            className="hidden group-hover:inline-flex rounded p-1 hover:bg-white/10 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                            className="hidden group-hover:inline-flex rounded-[2px] p-0.5 hover:bg-white/10 text-[#858585] hover:text-white cursor-pointer"
                             title="Unstage Changes"
                           >
-                            <Minus className="h-3 w-3" />
+                            <Codicon name="remove" className="text-[12px]" />
                           </button>
 
                           <span
                             className={`font-mono text-[10px] font-bold w-4 text-center ${
                               file.badge === 'A'
-                                ? 'text-emerald-400'
+                                ? 'text-[#73c991]'
                                 : file.badge === 'D'
-                                ? 'text-rose-400'
-                                : 'text-amber-400'
+                                ? 'text-[#f14c4c]'
+                                : 'text-[#cca700]'
                             }`}
                           >
                             {file.badge}
@@ -866,20 +852,21 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
           </div>
 
           {/* CHANGES (Unstaged) Section */}
-          <div className="border-b border-[var(--border)]">
+          <div className="border-b border-[#2b2b2b]">
             <div
               data-testid="git-unstaged-header"
               onClick={() => setUnstagedExpanded(!unstagedExpanded)}
-              className="flex cursor-pointer items-center justify-between px-3 py-1.5 bg-[var(--sidebar)] hover:bg-white/5 text-[11px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider"
+              className="flex h-[22px] cursor-pointer items-center justify-between px-2 bg-[#181818] hover:bg-[#2a2d2e] text-[11px] font-bold text-[#cccccc] uppercase tracking-wider select-none"
             >
               <div className="flex items-center gap-1.5">
-                {unstagedExpanded ? (
-                  <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-                ) : (
-                  <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                )}
+                <Codicon
+                  name="chevron-right"
+                  className={`text-[12px] text-[#858585] transition-transform duration-100 ${
+                    unstagedExpanded ? 'rotate-90 text-[#cccccc]' : ''
+                  }`}
+                />
                 <span>Changes</span>
-                <span data-testid="git-unstaged-count" className="rounded bg-[var(--sidebar-accent)] px-1.5 py-0.2 text-[10px] font-mono">
+                <span data-testid="git-unstaged-count" className="rounded-[2px] bg-[#2a2d2e] px-1 text-[10px] font-mono text-[#858585]">
                   {status.unstaged.length}
                 </span>
               </div>
@@ -892,19 +879,19 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
                       e.stopPropagation();
                       void handleStageAll();
                     }}
-                    className="rounded p-0.5 hover:bg-white/10 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                    className="rounded-[2px] p-0.5 hover:bg-white/10 text-[#858585] hover:text-white cursor-pointer"
                     title="Stage All Changes"
                   >
-                    <Plus className="h-3.5 w-3.5" />
+                    <Codicon name="plus" className="text-[12px]" />
                   </button>
                 </div>
               )}
             </div>
 
             {unstagedExpanded && (
-              <div className="p-1 space-y-0.5">
+              <div className="py-0.5 space-y-px">
                 {status.unstaged.length === 0 ? (
-                  <div className="px-3 py-2 text-[11px] text-[var(--muted-foreground)] italic">
+                  <div className="px-3 py-1.5 text-[11px] text-[#858585] italic">
                     Working tree clean.
                   </div>
                 ) : (
@@ -917,24 +904,23 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
                       <div
                         key={file.path}
                         onClick={() => onOpenFile(file.path)}
-                        className={`group flex cursor-pointer items-center justify-between rounded px-2 py-1 transition-colors ${
+                        className={`group flex h-[22px] cursor-pointer items-center justify-between px-2 transition-colors select-none ${
                           isActive
-                            ? 'bg-[var(--primary)]/20 text-[var(--foreground)]'
-                            : 'text-[var(--muted-foreground)] hover:bg-white/5 hover:text-[var(--foreground)]'
+                            ? 'bg-[#04395e] text-white font-normal'
+                            : 'text-[#cccccc] hover:bg-[#2a2d2e] hover:text-white'
                         }`}
                         title={file.path}
                       >
                         <div className="flex items-center gap-1.5 truncate">
-                          {file.badge === 'U' ? (
-                            <FilePlus className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                          ) : file.badge === 'D' ? (
-                            <FileX className="h-3.5 w-3.5 text-rose-400 shrink-0" />
-                          ) : (
-                            <FileCode className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                          )}
-                          <span className="truncate font-medium text-[11px]">{name}</span>
+                          <Codicon
+                            name={file.badge === 'D' ? 'trash' : file.badge === 'U' ? 'new-file' : 'file-code'}
+                            className={`text-[13px] shrink-0 ${
+                              file.badge === 'D' ? 'text-[#f14c4c]' : file.badge === 'U' ? 'text-[#73c991]' : 'text-[#cca700]'
+                            }`}
+                          />
+                          <span className="truncate text-[12px]">{name}</span>
                           {folder && (
-                            <span className="truncate text-[10px] text-[var(--muted-foreground)] opacity-70">
+                            <span className="truncate text-[10px] text-[#858585]">
                               {folder}
                             </span>
                           )}
@@ -944,38 +930,38 @@ export const GitSourceControlPanel: React.FC<GitSourceControlPanelProps> = ({
                           {/* Discard changes */}
                           <button
                             onClick={(e) => void handleDiscardChanges(file.path, e)}
-                            className="hidden group-hover:inline-flex rounded p-1 hover:bg-white/10 text-[var(--muted-foreground)] hover:text-rose-400"
+                            className="hidden group-hover:inline-flex rounded-[2px] p-0.5 hover:bg-white/10 text-[#858585] hover:text-[#f14c4c] cursor-pointer"
                             title="Discard File Changes"
                           >
-                            <RotateCcw className="h-3 w-3" />
+                            <Codicon name="discard" className="text-[12px]" />
                           </button>
 
                           {/* Diff Inspector */}
                           <button
                             onClick={(e) => void handleOpenDiff(file.path, false, e)}
-                            className="hidden group-hover:inline-flex rounded p-1 hover:bg-white/10 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                            className="hidden group-hover:inline-flex rounded-[2px] p-0.5 hover:bg-white/10 text-[#858585] hover:text-white cursor-pointer"
                             title="Inspect Working Tree Diff"
                           >
-                            <FileDiff className="h-3 w-3" />
+                            <Codicon name="diff" className="text-[12px]" />
                           </button>
 
                           {/* Stage Button */}
                           <button
                             data-testid={`git-stage-file-${file.path}`}
                             onClick={(e) => void handleStageFile(file.path, e)}
-                            className="hidden group-hover:inline-flex rounded p-1 hover:bg-white/10 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                            className="hidden group-hover:inline-flex rounded-[2px] p-0.5 hover:bg-white/10 text-[#858585] hover:text-white cursor-pointer"
                             title="Stage Changes"
                           >
-                            <Plus className="h-3 w-3" />
+                            <Codicon name="plus" className="text-[12px]" />
                           </button>
 
                           <span
                             className={`font-mono text-[10px] font-bold w-4 text-center ${
                               file.badge === 'U'
-                                ? 'text-emerald-400'
+                                ? 'text-[#73c991]'
                                 : file.badge === 'D'
-                                ? 'text-rose-400'
-                                : 'text-amber-400'
+                                ? 'text-[#f14c4c]'
+                                : 'text-[#cca700]'
                             }`}
                           >
                             {file.badge}
