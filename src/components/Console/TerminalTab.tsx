@@ -258,7 +258,10 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       }
 
       terminalSessionManager.setActiveSessionId(session.id);
-      webcontainerService.setStartupStage('runtime_ready');
+      const currentStage = webcontainerService.getState().startupStage;
+      if (currentStage === 'idle' || currentStage === 'booting' || currentStage === 'mounting_files') {
+        webcontainerService.setStartupStage('runtime_ready');
+      }
     } catch (err) {
       console.error('[TerminalTab] Session init failed:', err);
     } finally {

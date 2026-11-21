@@ -125,14 +125,21 @@ export class DevServerManager {
 
     let sessionId = customSessionId;
     if (!sessionId) {
-      // Find or create a terminal session for the dev server
-      let session = terminalSessionManager.getSession(this.devSessionId || '');
+      // Find or create a terminal session for the dev server (reuse active Terminal 1)
+      let session = this.devSessionId ? terminalSessionManager.getSession(this.devSessionId) : undefined;
+      if (!session) {
+        const activeId = terminalSessionManager.getActiveSessionId();
+        if (activeId) {
+          session = terminalSessionManager.getSession(activeId);
+        }
+      }
       if (!session) {
         session = await terminalSessionManager.createSession(container, {
-          title: 'Dev Server',
+          title: 'Terminal 1',
           projectId: boundProject,
           epoch: boundEpoch,
         });
+        terminalSessionManager.setActiveSessionId(session.id);
       }
       sessionId = session.id;
     }
@@ -150,8 +157,9 @@ export class DevServerManager {
 
     webcontainerService.setDevServerStarting(true, boundEpoch, boundProject ?? undefined);
 
-    // Send command to the session
-    const dispatched = terminalSessionManager.writeToSession(sessionId, `${command}\n`);
+    // Send command to the session with carriage return for reliable jsh PTY execution
+    const cmdPayload = command.endsWith('\r') ? command : `${command.trim()}\r`;
+    const dispatched = terminalSessionManager.writeToSession(sessionId, cmdPayload);
     if (!dispatched) {
       this.updateState({
         status: 'error',
