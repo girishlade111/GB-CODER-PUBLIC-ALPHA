@@ -13,6 +13,7 @@
  */
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, GitCommit, User, Calendar, GitBranch } from 'lucide-react';
 import type { GitCommitRecord } from '../../types/git';
 
@@ -31,13 +32,13 @@ export const GitCommitHistoryModal: React.FC<GitCommitHistoryModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  return (
+  const content = (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="git-history-modal-title"
       data-testid="git-history-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs select-none"
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs select-none animate-in fade-in duration-100"
     >
       <div className="flex h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-2xl">
         {/* Header */}
@@ -127,4 +128,6 @@ export const GitCommitHistoryModal: React.FC<GitCommitHistoryModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 };

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   WorkbenchLayoutState,
   PrimarySidebarPosition,
@@ -99,10 +100,10 @@ export const CustomizeLayoutModal: React.FC<CustomizeLayoutModalProps> = ({
     }));
   };
 
-  return (
+  const content = (
     <div
       ref={menuRef}
-      className="fixed right-3 top-[38px] z-50 w-64 rounded-[4px] border border-[var(--vscode-menu-border,#3c3c3c)] bg-[var(--vscode-menu-background,#252526)] text-[var(--vscode-menu-foreground,#cccccc)] shadow-2xl py-1 text-xs select-none font-sans animate-in fade-in duration-100"
+      className="fixed right-3 top-[38px] z-[99999] w-64 rounded-[4px] border border-[var(--vscode-menu-border,#3c3c3c)] bg-[var(--vscode-menu-background,#252526)] text-[var(--vscode-menu-foreground,#cccccc)] shadow-2xl py-1 text-xs select-none font-sans animate-in fade-in duration-100"
       data-testid="customize-layout-dialog"
       role="menu"
       aria-label="Customize Layout"
@@ -271,6 +272,8 @@ export const CustomizeLayoutModal: React.FC<CustomizeLayoutModalProps> = ({
       </button>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 };
 
 export default CustomizeLayoutModal;

@@ -12,6 +12,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { X, GitCommit, FileCode } from 'lucide-react';
 import { diffLines, type Change } from 'diff';
 import type { GitDiffInfo } from '../../types/git';
@@ -36,12 +37,12 @@ export const GitDiffModal: React.FC<GitDiffModalProps> = ({ isOpen, onClose, dif
 
   const fileName = diffInfo.path.split('/').pop() || diffInfo.path;
 
-  return (
+  const content = (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="git-diff-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs select-none"
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs select-none animate-in fade-in duration-100"
     >
       <div className="flex h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-2xl">
         {/* Header */}
@@ -130,5 +131,7 @@ export const GitDiffModal: React.FC<GitDiffModalProps> = ({ isOpen, onClose, dif
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 };
 

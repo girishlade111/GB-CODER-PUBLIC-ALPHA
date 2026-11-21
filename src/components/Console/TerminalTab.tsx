@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore }
 import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
-import { Play, Square, Trash2, HelpCircle, Plus, Columns, X, TerminalSquare, RotateCcw, AlertTriangle } from 'lucide-react';
+import Codicon from '../ui/Codicon';
 import { MultiFileProject } from '../../types/files';
 import {
   ANSI,
@@ -17,8 +17,6 @@ import {
 import {
   terminalSessionManager,
 } from '../../services/webcontainer/terminalSessionManager';
-import { devServerManager } from '../../services/webcontainer/devServerManager';
-import { detectProjectCommands } from '../../services/webcontainer/projectCommandDetection';
 
 export type TerminalExecutionMode = 'webcontainer' | 'local';
 
@@ -137,11 +135,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   });
 
   const [, setWcState] = useState(() => webcontainerService.getState());
-  const devServerState = useSyncExternalStore(
-    (cb) => devServerManager.subscribe(cb),
-    () => devServerManager.getState(),
-    () => devServerManager.getState(),
-  );
 
   const sessions = useSyncExternalStore(
     (cb) => terminalSessionManager.subscribe(cb),
@@ -150,7 +143,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   );
 
   const activeSessionId = terminalSessionManager.getActiveSessionId();
-  const detectedCommands = React.useMemo(() => detectProjectCommands(project.files), [project.files]);
   const splitSessionId = terminalSessionManager.getSplitSessionId();
 
   /** Current input line and cursor offset within it (Local mode only). */
@@ -593,22 +585,6 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
     return () => cancelAnimationFrame(frame);
   }, [isActive, fit]);
 
-  // Helper to send shortcut commands
-  const sendCommand = useCallback(
-    (cmd: string) => {
-      if (mode === 'webcontainer') {
-        const id = activeSessionId || terminalSessionManager.getActiveSessionId();
-        if (id) {
-          terminalSessionManager.writeToSession(id, `${cmd}\n`);
-        }
-      } else {
-        const term = termRef.current;
-        if (term) submitLocal(term, cmd);
-      }
-    },
-    [mode, activeSessionId, submitLocal],
-  );
-
   const handleNewTerminal = async () => {
     try {
       const container = await webcontainerService.boot();
@@ -652,183 +628,126 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-[var(--background)] text-slate-300">
-      {/* Multi-Terminal Header Bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0 select-none">
-        <div className="flex items-center gap-2 overflow-x-auto min-w-0">
-          {/* Mode Badge */}
-          <div className="flex items-center gap-1.5 mr-2 shrink-0">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                mode === 'webcontainer'
-                  ? devServerState.status === 'running'
-                    ? 'bg-emerald-400 animate-pulse'
-                    : devServerState.status === 'starting'
-                    ? 'bg-amber-400 animate-pulse'
-                    : 'bg-cyan-400'
-                  : 'bg-slate-400'
-              }`}
-              aria-hidden="true"
-            />
-            <span className="text-xs font-semibold text-white flex items-center gap-1">
-              {mode === 'webcontainer' ? 'WebContainer' : 'Local Shell'}
-            </span>
-          </div>
-
-          {/* Session Tabs */}
-          {mode === 'webcontainer' && (
-            <div className="flex items-center gap-1 min-w-0">
-              {sessions.map((s, idx) => (
-                <button
-                  key={s.id}
-                  onClick={() => terminalSessionManager.setActiveSessionId(s.id)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border transition-colors shrink-0 ${
-                    activeSessionId === s.id
-                      ? 'bg-[var(--card)] text-cyan-300 border-cyan-500/40 shadow-sm'
-                      : 'bg-transparent text-slate-400 border-transparent hover:text-white hover:bg-white/5'
-                  }`}
-                  data-testid={`terminal-session-tab-${s.id}`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                      s.status === 'running'
-                        ? 'bg-emerald-400'
-                        : s.status === 'exited'
-                        ? 'bg-amber-400'
-                        : 'bg-rose-400'
-                    }`}
-                    title={`Status: ${s.status}${s.exitCode !== null ? ` (exit code ${s.exitCode})` : ''}`}
-                  />
-                  <TerminalSquare className="h-3 w-3 text-cyan-400 shrink-0" />
-                  <span className="truncate max-w-[120px]">{s.title || `Terminal ${idx + 1}`}</span>
-                  {s.status === 'exited' && (
-                    <span
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        void webcontainerService.restartTerminalSession(s.id);
-                      }}
-                      className="ml-0.5 hover:text-cyan-300 rounded p-0.5"
-                      title="Restart session process"
-                      data-testid={`terminal-restart-session-btn-${s.id}`}
-                    >
-                      <RotateCcw className="h-2.5 w-2.5" />
-                    </span>
-                  )}
-                  {sessions.length > 1 && (
-                    <span
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        terminalSessionManager.closeSession(s.id);
-                      }}
-                      className="ml-0.5 hover:text-rose-400 rounded p-0.5"
-                      title="Close terminal session"
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </span>
-                  )}
-                </button>
-              ))}
-
+    <div className="flex flex-col h-full min-h-0 bg-[#181818] text-[#cccccc]">
+      {/* VS Code Terminal Instance Subheader Strip */}
+      <div className="flex h-7 items-center justify-between px-2 border-b border-[#2b2b2b] bg-[#181818] text-[#cccccc] flex-shrink-0 select-none text-xs">
+        <div className="flex items-center gap-1 overflow-x-auto min-w-0">
+          {mode === 'webcontainer' ? (
+            sessions.map((s, idx) => (
               <button
-                onClick={() => void handleNewTerminal()}
-                className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-                title="Create New Terminal Session (+)"
-                data-testid="terminal-new-session-btn"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-
-              <button
-                onClick={() => void handleToggleSplit()}
-                className={`p-1 rounded transition-colors ${
-                  splitSessionId
-                    ? 'bg-cyan-950/60 text-cyan-300 border border-cyan-500/30'
-                    : 'text-slate-400 hover:text-white hover:bg-white/10'
+                key={s.id}
+                type="button"
+                onClick={() => terminalSessionManager.setActiveSessionId(s.id)}
+                className={`group flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] font-sans text-[11px] transition-colors shrink-0 ${
+                  activeSessionId === s.id
+                    ? 'bg-[#2a2d2e] text-white font-medium'
+                    : 'text-[#999999] hover:text-[#cccccc] hover:bg-white/5'
                 }`}
-                title={splitSessionId ? 'Close Split View' : 'Split Terminal Side-by-Side'}
-                data-testid="terminal-split-view-btn"
+                data-testid={`terminal-session-tab-${s.id}`}
               >
-                <Columns className="h-3.5 w-3.5" />
+                <Codicon name="terminal" className="text-[12px] text-[#cccccc]" />
+                <span className="truncate max-w-[120px]">{s.title || `${idx + 1}: node`}</span>
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    s.status === 'running'
+                      ? 'bg-[#89d185]'
+                      : s.status === 'exited'
+                      ? 'bg-[#cca700]'
+                      : 'bg-[#f14c4c]'
+                  }`}
+                  title={`Status: ${s.status}${s.exitCode !== null ? ` (exit code ${s.exitCode})` : ''}`}
+                />
+                {s.status === 'exited' && (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void webcontainerService.restartTerminalSession(s.id);
+                    }}
+                    className="ml-0.5 hover:text-white rounded p-0.5"
+                    title="Restart session process"
+                    data-testid={`terminal-restart-session-btn-${s.id}`}
+                  >
+                    <Codicon name="debug-restart" className="text-[11px]" />
+                  </span>
+                )}
+                {sessions.length > 1 && (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      terminalSessionManager.closeSession(s.id);
+                    }}
+                    className="ml-0.5 hover:text-[#f14c4c] rounded p-0.5"
+                    title="Kill terminal session"
+                  >
+                    <Codicon name="trash" className="text-[11px]" />
+                  </span>
+                )}
               </button>
+            ))
+          ) : (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 text-[11px] text-[#cccccc]">
+              <Codicon name="terminal" className="text-[12px]" />
+              <span>1: bash</span>
             </div>
           )}
         </div>
 
-        {/* Quick Dev Action Buttons */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          {mode === 'webcontainer' && (
-            <>
-              <button
-                onClick={() => sendCommand(detectedCommands.installCommand)}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-[var(--card)] hover:bg-[var(--accent)] text-slate-200 border border-[var(--border)] transition-colors"
-                title={`Run '${detectedCommands.installCommand}' in active terminal`}
-                data-testid="terminal-quick-install-btn"
-              >
-                <Play className="h-2.5 w-2.5 text-emerald-400" />
-                {detectedCommands.installCommand.split(' ')[0]} install
-              </button>
-
-              {detectedCommands.runtimeWarning && (
-                <span
-                  className="hidden md:flex items-center gap-1 text-[11px] text-amber-400 bg-amber-950/40 border border-amber-500/30 px-1.5 py-0.5 rounded shrink-0"
-                  title={detectedCommands.runtimeWarning}
-                  data-testid="terminal-package-warning-badge"
-                >
-                  <AlertTriangle className="h-3 w-3 shrink-0" />
-                  <span className="truncate max-w-[120px]">{detectedCommands.packageManager}</span>
-                </span>
-              )}
-              {devServerState.status === 'running' ? (
-                <button
-                  onClick={() => void devServerManager.stop()}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-500/30 transition-colors"
-                  title="Stop Development Server"
-                  data-testid="terminal-stop-server-btn"
-                >
-                  <Square className="h-2.5 w-2.5 text-rose-400" />
-                  Stop Server
-                </button>
-              ) : (
-                <button
-                  onClick={() => void devServerManager.start(detectedCommands.devCommand || 'npm run dev', activeSessionId || undefined)}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/30 transition-colors"
-                  title={`Run '${detectedCommands.devCommand || 'npm run dev'}' to start development server`}
-                  data-testid="terminal-start-server-btn"
-                >
-                  <Play className="h-2.5 w-2.5 text-cyan-400" />
-                  {detectedCommands.devCommand || 'npm run dev'}
-                </button>
-              )}
-            </>
-          )}
-
+        {/* Right Action Icons matching VS Code */}
+        <div className="flex items-center gap-0.5 shrink-0">
           <button
-            onClick={() => sendCommand('help')}
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-[var(--card)] hover:bg-[var(--accent)] text-slate-300 border border-[var(--border)] transition-colors"
-            title="Display commands help cheat sheet"
+            type="button"
+            onClick={() => void handleNewTerminal()}
+            className="flex h-5 w-5 items-center justify-center rounded text-[#999999] hover:text-[#cccccc] hover:bg-white/10 transition-colors"
+            title="New Terminal (Ctrl+Shift+`)"
+            data-testid="terminal-new-session-btn"
           >
-            <HelpCircle className="h-2.5 w-2.5 text-cyan-400" />
-            help
+            <Codicon name="plus" className="text-[12px]" />
           </button>
 
           <button
+            type="button"
+            onClick={() => void handleToggleSplit()}
+            className={`flex h-5 w-5 items-center justify-center rounded transition-colors ${
+              splitSessionId
+                ? 'bg-[#04395e] text-white'
+                : 'text-[#999999] hover:text-[#cccccc] hover:bg-white/10'
+            }`}
+            title={splitSessionId ? 'Close Split View' : 'Split Terminal (Ctrl+\\)'}
+            data-testid="terminal-split-view-btn"
+          >
+            <Codicon name="split-horizontal" className="text-[12px]" />
+          </button>
+
+          <button
+            type="button"
             onClick={clearTerminal}
-            className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="flex h-5 w-5 items-center justify-center rounded text-[#999999] hover:text-[#cccccc] hover:bg-white/10 transition-colors"
             title="Clear Terminal (Ctrl+L)"
             data-testid="terminal-clear-btn"
           >
-            <Trash2 className="h-3 w-3" />
+            <Codicon name="clear-all" className="text-[12px]" />
           </button>
+
+          {activeSessionId && sessions.length > 1 && (
+            <button
+              type="button"
+              onClick={() => terminalSessionManager.closeSession(activeSessionId)}
+              className="flex h-5 w-5 items-center justify-center rounded text-[#999999] hover:text-[#f14c4c] hover:bg-white/10 transition-colors"
+              title="Kill Terminal"
+            >
+              <Codicon name="trash" className="text-[12px]" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Terminal Viewport(s) */}
-      <div className="flex-1 min-h-0 flex overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden bg-[#181818]">
         {/* Primary Terminal */}
         <div
           ref={hostRef}
-          className={`h-full min-h-0 overflow-hidden px-2 py-1 ${
-            splitSessionId ? 'w-1/2 border-r border-[var(--border)]' : 'w-full'
+          className={`h-full min-h-0 overflow-hidden px-2 py-1 bg-[#181818] ${
+            splitSessionId ? 'w-1/2 border-r border-[#2b2b2b]' : 'w-full'
           }`}
           data-testid="terminal-primary-viewport"
         />
@@ -837,7 +756,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
         {splitSessionId && (
           <div
             ref={splitHostRef}
-            className="w-1/2 h-full min-h-0 overflow-hidden px-2 py-1 bg-[var(--sidebar)]"
+            className="w-1/2 h-full min-h-0 overflow-hidden px-2 py-1 bg-[#181818]"
             data-testid="terminal-split-viewport"
           />
         )}

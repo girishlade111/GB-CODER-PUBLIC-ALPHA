@@ -15,6 +15,7 @@
  */
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   GitBranch,
@@ -122,13 +123,13 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
     }
   };
 
-  return (
+  const content = (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="git-branches-modal-title"
       data-testid="git-branch-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs select-none"
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs select-none animate-in fade-in duration-100"
     >
       <div className="flex h-[75vh] w-full max-w-xl flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-2xl">
         {/* Header */}
@@ -283,5 +284,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 };
 

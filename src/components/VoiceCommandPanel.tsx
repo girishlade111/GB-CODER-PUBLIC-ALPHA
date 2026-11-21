@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ChevronDown,
   ChevronUp,
@@ -200,14 +201,14 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
 
   const displayedTranscript = voice.transcript || voice.interimTranscript;
 
-  return (
-    /*
-     * A bottom overlay rather than a blocking modal: `pointer-events-none` on
-     * the wrapper keeps the editor usable while the mic is live, so commands
-     * like "explain this" can act on a selection the user just made.
-     */
+  /*
+   * A bottom overlay rather than a blocking modal: `pointer-events-none` on
+   * the wrapper keeps the editor usable while the mic is live, so commands
+   * like "explain this" can act on a selection the user just made.
+   */
+  const content = (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 flex justify-center px-3 pb-4 sm:pb-6 pointer-events-none"
+      className="fixed bottom-0 left-0 right-0 z-[99999] flex justify-center px-3 pb-4 sm:pb-6 pointer-events-none"
       role="region"
       aria-label="Voice commands"
     >
@@ -544,6 +545,8 @@ const VoiceCommandPanel: React.FC<VoiceCommandPanelProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 };
 
 export default VoiceCommandPanel;

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Codicon from '../ui/Codicon';
@@ -85,7 +86,7 @@ export const WorkbenchSettingsModal: React.FC<WorkbenchSettingsModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  const content = (
     <div
       ref={dialogRef}
       tabIndex={-1}
@@ -94,7 +95,7 @@ export const WorkbenchSettingsModal: React.FC<WorkbenchSettingsModalProps> = ({
       aria-labelledby="workbench-settings-title"
       aria-label="Workbench Settings"
       data-testid="workbench-settings-dialog"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 outline-none"
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 outline-none animate-in fade-in duration-100"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
@@ -273,4 +274,6 @@ export const WorkbenchSettingsModal: React.FC<WorkbenchSettingsModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 };

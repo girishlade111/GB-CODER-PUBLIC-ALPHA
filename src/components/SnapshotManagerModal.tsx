@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Search, Clock, Save, Download, Trash2, Edit2, RotateCcw, Eye, Database } from 'lucide-react';
 import { useSnapshots } from '../hooks/useSnapshots';
 import { Snapshot } from '../services/snapshotService';
@@ -17,9 +18,7 @@ const SnapshotManagerModal: React.FC<SnapshotManagerModalProps> = ({
   onPreview
 }) => {
   const { snapshots, deleteSnapshot, renameSnapshot, exportProject } = useSnapshots();
-  // DESIGN.md is light-only; the dark branches below are dead and get cleaned
-  // up when this modal is migrated to plain token classes in Stage 3a.
-  const isDark = false;
+  const isDark = true;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
@@ -74,8 +73,8 @@ const SnapshotManagerModal: React.FC<SnapshotManagerModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+  const content = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs select-none animate-in fade-in duration-100">
       <div className={`w-full max-w-4xl h-[80vh] flex flex-col rounded-xl shadow-2xl border ${
         isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
       }`}>
@@ -246,6 +245,8 @@ const SnapshotManagerModal: React.FC<SnapshotManagerModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 };
 
 export default SnapshotManagerModal;
