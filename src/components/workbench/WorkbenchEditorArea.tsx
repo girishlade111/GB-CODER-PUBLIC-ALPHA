@@ -1,14 +1,4 @@
-import React, { useRef } from 'react';
-import {
-  X,
-  Columns,
-  Rows,
-  ArrowRightLeft,
-  AlertTriangle,
-  FolderTree,
-  ChevronRight,
-  FileCode,
-} from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
 import Codicon from '../ui/Codicon';
 import type * as monacoEditor from 'monaco-editor';
 import Editor, { LocalDiffEditor } from '../LocalMonacoEditor';
@@ -43,6 +33,52 @@ interface WorkbenchEditorAreaProps {
   monacoOptions?: monacoEditor.editor.IStandaloneEditorConstructionOptions;
 }
 
+/**
+ * Returns the authentic VS Code Codicon glyph and color for a given file extension.
+ */
+const getFileCodicon = (path: string) => {
+  const ext = path.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'ts':
+    case 'tsx':
+      return <Codicon name="file-code" className="text-[13px] text-[#3794ff]" />;
+    case 'js':
+    case 'jsx':
+    case 'mjs':
+    case 'cjs':
+      return <Codicon name="file-code" className="text-[13px] text-[#cca700]" />;
+    case 'json':
+      return <Codicon name="json" className="text-[13px] text-[#cca700]" />;
+    case 'html':
+    case 'htm':
+      return <Codicon name="browser" className="text-[13px] text-[#e37933]" />;
+    case 'css':
+    case 'scss':
+    case 'less':
+      return <Codicon name="symbol-color" className="text-[13px] text-[#4ec9b0]" />;
+    case 'md':
+    case 'markdown':
+      return <Codicon name="markdown" className="text-[13px] text-[#75beff]" />;
+    case 'svg':
+    case 'png':
+    case 'jpg':
+    case 'jpeg':
+    case 'gif':
+    case 'webp':
+      return <Codicon name="file-media" className="text-[13px] text-[#b180d7]" />;
+    default:
+      return <Codicon name="file" className="text-[13px] text-[#cccccc]" />;
+  }
+};
+
+interface TabContextMenuState {
+  visible: boolean;
+  x: number;
+  y: number;
+  groupId: string;
+  path: string;
+}
+
 export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
   layout,
   files,
@@ -54,6 +90,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
   onResolveUseExternal,
   onSelectTab,
   onCloseTab,
+  onCloseOtherTabs,
   onSplitEditor,
   onCloseSplit,
   onMoveTabToOtherGroup,
@@ -68,6 +105,32 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
 }) => {
   const isSplitDraggingRef = useRef(false);
   const dirtySet = Array.isArray(dirtyPaths) ? new Set(dirtyPaths) : dirtyPaths;
+
+  // Tab right-click context menu state
+  const [tabContextMenu, setTabContextMenu] = useState<TabContextMenuState | null>(null);
+
+  useEffect(() => {
+    if (!tabContextMenu) return;
+    const handleOutside = () => setTabContextMenu(null);
+    window.addEventListener('click', handleOutside);
+    window.addEventListener('contextmenu', handleOutside);
+    return () => {
+      window.removeEventListener('click', handleOutside);
+      window.removeEventListener('contextmenu', handleOutside);
+    };
+  }, [tabContextMenu]);
+
+  const handleTabContextMenu = (e: React.MouseEvent, groupId: string, path: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setTabContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      groupId,
+      path,
+    });
+  };
 
   const handleSplitResizeDown = (e: React.PointerEvent) => {
     e.preventDefault();
@@ -95,27 +158,35 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
     window.addEventListener('pointerup', handlePointerUp);
   };
 
+  /**
+   * Breadcrumbs bar (22px height, subtle VS Code dark background #1f1f1f, Codicon arrows)
+   */
   const renderBreadcrumb = (path: string | null) => {
     if (!path) return null;
     const segments = path.split('/');
     return (
       <div
-        className="flex h-6 shrink-0 items-center gap-1 border-b border-[var(--border)] bg-[var(--background)] px-3 text-[11px] text-[var(--muted-foreground)] select-none"
+        className="flex h-[22px] shrink-0 items-center gap-1 border-b border-[#2b2b2b] bg-[#1f1f1f] px-3 text-[11px] text-[#858585] select-none font-sans"
         data-testid="editor-breadcrumb"
       >
-        <FolderTree className="h-3 w-3 text-[var(--muted-foreground)]" />
+        <span className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
+          <Codicon name="folder" className="text-[12px] text-[#858585]" />
+          <span>workspace</span>
+        </span>
         {segments.map((segment, index) => {
           const isLast = index === segments.length - 1;
           return (
             <React.Fragment key={index}>
-              {index > 0 && <ChevronRight className="h-2.5 w-2.5 text-[var(--muted-foreground)]" />}
+              <Codicon name="chevron-right" className="text-[9px] text-[#6e7681]" />
               <span
-                className={
-                  isLast ? 'text-[var(--foreground)] font-medium flex items-center gap-1' : 'hover:text-[var(--muted-foreground)] cursor-pointer'
-                }
+                className={`flex items-center gap-1 transition-colors ${
+                  isLast
+                    ? 'text-[#cccccc] font-normal'
+                    : 'hover:text-[#ffffff] cursor-pointer'
+                }`}
               >
-                {isLast && <FileCode className="h-3 w-3 text-[var(--primary)]" />}
-                {segment}
+                {isLast && getFileCodicon(path)}
+                <span>{segment}</span>
               </span>
             </React.Fragment>
           );
@@ -128,11 +199,11 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
     if (!activeConflict || activeConflict.path !== path) return null;
     return (
       <div
-        className="flex items-center justify-between border-b border-amber-600/40 bg-amber-950/70 px-3 py-1.5 text-xs text-amber-200 z-10 shrink-0"
+        className="flex items-center justify-between border-b border-amber-600/40 bg-amber-950/70 px-3 py-1.5 text-xs text-amber-200 z-10 shrink-0 select-none"
         data-testid="conflict-banner"
       >
         <div className="flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+          <Codicon name="warning" className="text-amber-400 text-sm shrink-0" />
           <span>
             <strong>
               {activeConflict.status === 'recovery_required'
@@ -219,17 +290,17 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
 
     return (
       <div
-        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--background)]"
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#1f1f1f]"
         data-testid={testId}
       >
-        {/* Tabbar */}
+        {/* VS Code Tabbar (35px height, #181818 inactive background, #1f1f1f active background) */}
         <div
-          className="flex h-9 shrink-0 items-stretch justify-between border-b border-[var(--border)] bg-[var(--sidebar)]"
+          className="flex h-[35px] shrink-0 items-stretch justify-between border-b border-[#2b2b2b] bg-[#181818] select-none"
           data-testid={isSecondary ? 'vscode-split-tabbar-container' : 'vscode-tabbar-container'}
         >
-          {/* Tabs */}
+          {/* Tabs List */}
           <div
-            className="flex min-w-0 flex-1 items-stretch overflow-x-auto"
+            className="flex min-w-0 flex-1 items-stretch overflow-x-auto scrollbar-none"
             role="tablist"
             data-testid={isSecondary ? 'vscode-split-tabs' : 'vscode-tabs'}
           >
@@ -245,46 +316,66 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
                   data-testid={isSecondary ? 'vscode-split-tab' : 'vscode-tab'}
                   data-path={path}
                   onClick={() => onSelectTab(group.id, path)}
-                  className={`group flex min-w-0 cursor-pointer items-center gap-1.5 border-r border-[var(--border)] border-t-2 px-3 py-1 text-xs select-none ${
+                  onContextMenu={(e) => handleTabContextMenu(e, group.id, path)}
+                  className={`group relative flex min-w-0 cursor-pointer items-center gap-2 border-r border-[#2b2b2b] border-t-2 px-3 text-[12px] select-none transition-colors ${
                     isActive
-                      ? 'border-t-[var(--primary)] bg-[var(--background)] text-[var(--foreground)] font-medium'
-                      : 'border-t-transparent text-[var(--muted-foreground)] hover:bg-white/5 hover:text-[var(--foreground)]'
+                      ? 'border-t-[#0078d4] bg-[#1f1f1f] text-[#ffffff] font-normal'
+                      : 'border-t-transparent bg-[#181818] text-[rgba(255,255,255,0.5)] hover:bg-white/5 hover:text-[rgba(255,255,255,0.85)]'
                   }`}
                   title={path}
                 >
+                  <span className="shrink-0 flex items-center justify-center">
+                    {getFileCodicon(path)}
+                  </span>
                   <span className="max-w-[12rem] truncate">{name}</span>
-                  {isDirty && (
-                    <span
-                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--foreground)]"
-                      data-testid="tab-dirty-dot"
-                      title="Unsaved changes"
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={(event) => onCloseTab(group.id, path, event)}
-                    aria-label={`Close ${name}`}
-                    data-testid={isSecondary ? 'vscode-split-tab-close' : 'vscode-tab-close'}
-                    className="rounded p-0.5 opacity-0 transition-opacity hover:bg-white/10 group-hover:opacity-100 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+
+                  {/* Dirty Dot / Close Cross: in VS Code, unsaved dot is replaced by close icon on hover */}
+                  <div className="ml-1 flex items-center justify-center w-4 h-4">
+                    {isDirty ? (
+                      <>
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-full bg-white group-hover:hidden"
+                          data-testid="tab-dirty-dot"
+                          title="Unsaved changes"
+                        />
+                        <button
+                          type="button"
+                          onClick={(event) => onCloseTab(group.id, path, event)}
+                          aria-label={`Close ${name}`}
+                          data-testid={isSecondary ? 'vscode-split-tab-close' : 'vscode-tab-close'}
+                          className="hidden group-hover:flex h-4 w-4 items-center justify-center rounded-[2px] hover:bg-white/10 text-[#999999] hover:text-white"
+                        >
+                          <Codicon name="close" className="text-[12px]" />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(event) => onCloseTab(group.id, path, event)}
+                        aria-label={`Close ${name}`}
+                        data-testid={isSecondary ? 'vscode-split-tab-close' : 'vscode-tab-close'}
+                        className="opacity-0 group-hover:opacity-100 flex h-4 w-4 items-center justify-center rounded-[2px] transition-opacity hover:bg-white/10 text-[#999999] hover:text-white"
+                      >
+                        <Codicon name="close" className="text-[12px]" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Group Controls */}
-          <div className="flex shrink-0 items-center px-1.5 border-l border-[var(--border)] bg-[var(--sidebar)] gap-1">
+          {/* Group Action Controls with official Codicons */}
+          <div className="flex shrink-0 items-center px-1 border-l border-[#2b2b2b] bg-[#181818] gap-0.5">
             {layout.mode === 'split' && group.activePath && (
               <Tooltip label="Move Tab to Other Group" side="bottom">
                 <button
                   type="button"
                   onClick={() => onMoveTabToOtherGroup(group.activePath!, group.id)}
-                  className="p-1 rounded text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)] transition-colors"
+                  className="flex h-6 w-6 items-center justify-center rounded text-[#999999] hover:bg-white/10 hover:text-white transition-colors"
                   aria-label="Move Tab to Other Group"
                 >
-                  <ArrowRightLeft className="h-3.5 w-3.5" />
+                  <Codicon name="arrow-swap" className="text-[13px]" />
                 </button>
               </Tooltip>
             )}
@@ -294,11 +385,10 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
                 <button
                   type="button"
                   onClick={() => onSplitEditor('vertical')}
-                  className="p-1 rounded text-xs transition-colors flex items-center gap-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)]"
+                  className="flex h-6 w-6 items-center justify-center rounded text-[#999999] hover:bg-white/10 hover:text-white transition-colors"
                   aria-label="Split Editor Right"
                 >
-                  <Columns className="h-3.5 w-3.5" />
-                  <span className="text-[10px] hidden sm:inline">Split</span>
+                  <Codicon name="split-horizontal" className="text-[13px]" />
                 </button>
               </Tooltip>
             ) : (
@@ -316,13 +406,12 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
                     onClick={() =>
                       onSplitEditor(layout.splitDirection === 'vertical' ? 'horizontal' : 'vertical')
                     }
-                    className="p-1 rounded text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)] transition-colors"
+                    className="flex h-6 w-6 items-center justify-center rounded text-[#999999] hover:bg-white/10 hover:text-white transition-colors"
                   >
-                    {layout.splitDirection === 'vertical' ? (
-                      <Rows className="h-3.5 w-3.5" />
-                    ) : (
-                      <Columns className="h-3.5 w-3.5" />
-                    )}
+                    <Codicon
+                      name={layout.splitDirection === 'vertical' ? 'split-vertical' : 'split-horizontal'}
+                      className="text-[13px]"
+                    />
                   </button>
                 </Tooltip>
 
@@ -331,18 +420,28 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
                     <button
                       type="button"
                       onClick={onCloseSplit}
-                      className="p-1 rounded text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)] transition-colors"
+                      className="flex h-6 w-6 items-center justify-center rounded text-[#999999] hover:bg-white/10 hover:text-white transition-colors"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <Codicon name="close" className="text-[13px]" />
                     </button>
                   </Tooltip>
                 )}
               </>
             )}
+
+            <Tooltip label="More Actions..." side="bottom">
+              <button
+                type="button"
+                className="flex h-6 w-6 items-center justify-center rounded text-[#999999] hover:bg-white/10 hover:text-white transition-colors"
+                aria-label="More Actions"
+              >
+                <Codicon name="ellipsis" className="text-[13px]" />
+              </button>
+            </Tooltip>
           </div>
         </div>
 
-        {/* Breadcrumb */}
+        {/* Breadcrumbs Bar (22px) */}
         {renderBreadcrumb(group.activePath)}
 
         {/* Conflict Banner */}
@@ -350,7 +449,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
 
         {/* Monaco Editor Container */}
         <div
-          className="flex min-h-0 flex-1 flex-col overflow-hidden relative bg-[var(--background)]"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden relative bg-[#1f1f1f]"
           data-testid={isSecondary ? 'vscode-editor-scroll-secondary' : 'vscode-editor-scroll'}
         >
           {activeFile ? (
@@ -380,8 +479,8 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
             )
           ) : (
             /* Authentic VS Code Empty Workspace with Watermark & Keyboard Hints */
-            <div className="relative flex h-full w-full flex-col items-center justify-center select-none bg-[#1f1f1f] text-xs text-[#999999] overflow-hidden p-6">
-              {/* VS Code Large Center Watermark */}
+            <div className="relative flex h-full w-full flex-col items-center justify-center select-none bg-[#1f1f1f] text-xs text-[#999999] overflow-hidden p-6 font-sans">
+              {/* VS Code Large Center Watermark SVG */}
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.04]">
                 <svg
                   className="h-64 w-64 text-white"
@@ -395,21 +494,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
 
               {/* Centered Keyboard Shortcuts matching vscode.dev */}
               <div className="relative z-10 flex flex-col items-center gap-3 max-w-sm text-left">
-                <div className="flex items-center justify-between w-64 text-xs text-[#cccccc] py-1 border-b border-[#2b2b2b]/50">
-                  <span className="flex items-center gap-2">
-                    <Codicon name="comment-discussion" className="text-sm text-[#0078d4]" />
-                    <span>Open Chat</span>
-                  </span>
-                  <div className="flex items-center gap-1 font-mono text-[10px] text-[#999999]">
-                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Ctrl</kbd>
-                    <span>+</span>
-                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Alt</kbd>
-                    <span>+</span>
-                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">I</kbd>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between w-64 text-xs text-[#cccccc] py-1 border-b border-[#2b2b2b]/50">
+                <div className="flex items-center justify-between w-72 text-xs text-[#cccccc] py-1 border-b border-[#2b2b2b]/50">
                   <span className="flex items-center gap-2">
                     <Codicon name="menu" className="text-sm text-[#9cdcfe]" />
                     <span>Show All Commands</span>
@@ -423,7 +508,7 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between w-64 text-xs text-[#cccccc] py-1 border-b border-[#2b2b2b]/50">
+                <div className="flex items-center justify-between w-72 text-xs text-[#cccccc] py-1 border-b border-[#2b2b2b]/50">
                   <span className="flex items-center gap-2">
                     <Codicon name="go-to-file" className="text-sm text-[#4ec9b0]" />
                     <span>Go to File</span>
@@ -432,6 +517,44 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
                     <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Ctrl</kbd>
                     <span>+</span>
                     <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">P</kbd>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between w-72 text-xs text-[#cccccc] py-1 border-b border-[#2b2b2b]/50">
+                  <span className="flex items-center gap-2">
+                    <Codicon name="comment-discussion" className="text-sm text-[#0078d4]" />
+                    <span>Open Chat</span>
+                  </span>
+                  <div className="flex items-center gap-1 font-mono text-[10px] text-[#999999]">
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Ctrl</kbd>
+                    <span>+</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Alt</kbd>
+                    <span>+</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">I</kbd>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between w-72 text-xs text-[#cccccc] py-1 border-b border-[#2b2b2b]/50">
+                  <span className="flex items-center gap-2">
+                    <Codicon name="terminal" className="text-sm text-[#cca700]" />
+                    <span>Toggle Terminal</span>
+                  </span>
+                  <div className="flex items-center gap-1 font-mono text-[10px] text-[#999999]">
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Ctrl</kbd>
+                    <span>+</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">`</kbd>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between w-72 text-xs text-[#cccccc] py-1 border-b border-[#2b2b2b]/50">
+                  <span className="flex items-center gap-2">
+                    <Codicon name="layout-sidebar-left" className="text-sm text-[#75beff]" />
+                    <span>Toggle Primary Side Bar</span>
+                  </span>
+                  <div className="flex items-center gap-1 font-mono text-[10px] text-[#999999]">
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Ctrl</kbd>
+                    <span>+</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">B</kbd>
                   </div>
                 </div>
               </div>
@@ -445,67 +568,112 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
   const group1 = layout.groups[0];
   const group2 = layout.groups[1];
 
-  if (layout.mode === 'split' && group2) {
-    const isVertical = layout.splitDirection === 'vertical';
-    return (
-      <main
-        role="region"
-        aria-label="Editor"
-        className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${
-          isVertical ? 'flex-row' : 'flex-col'
-        } ${isCenteredLayout ? 'max-w-5xl mx-auto w-full border-x border-[var(--border)]' : ''}`}
-        data-testid="vscode-editor-panes"
-      >
-        {/* Primary Pane */}
-        <div
-          style={{
-            [isVertical ? 'width' : 'height']: `${layout.splitRatio}%`,
-          }}
-          className="flex min-h-0 min-w-0 flex-col overflow-hidden"
-        >
-          {renderGroup(group1, false, 'vscode-pane-primary')}
-        </div>
-
-        {/* Modern Split Divider Handle with smooth sash grip */}
-        <div
-          role="separator"
-          aria-orientation={layout.splitDirection}
-          onPointerDown={handleSplitResizeDown}
-          className={`group shrink-0 bg-transparent hover:bg-white/5 active:bg-[#0078d4]/20 transition-colors z-10 flex items-center justify-center select-none ${
-            isVertical ? 'w-2 cursor-col-resize h-full' : 'h-2 cursor-row-resize w-full'
-          }`}
-          title="Drag to resize editor panes"
-        >
-          <div
-            className={`rounded-full bg-[#3c3c3c] group-hover:bg-[#0078d4] transition-colors ${
-              isVertical ? 'h-8 w-1' : 'w-8 h-1'
-            }`}
-          />
-        </div>
-
-        {/* Secondary Pane */}
-        <div
-          style={{
-            [isVertical ? 'width' : 'height']: `${100 - layout.splitRatio}%`,
-          }}
-          className="flex min-h-0 min-w-0 flex-col overflow-hidden"
-        >
-          {renderGroup(group2, true, 'vscode-pane-secondary')}
-        </div>
-      </main>
-    );
-  }
-
-  // Single Pane Mode
   return (
-    <main
-      role="region"
-      aria-label="Editor"
-      className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--background)] ${
-        isCenteredLayout ? 'max-w-5xl mx-auto w-full border-x border-[var(--border)]' : ''
-      }`}
-    >
-      {renderGroup(group1, false, 'vscode-pane-single')}
-    </main>
+    <>
+      {layout.mode === 'split' && group2 ? (
+        <main
+          role="region"
+          aria-label="Editor"
+          className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${
+            layout.splitDirection === 'vertical' ? 'flex-row' : 'flex-col'
+          } ${isCenteredLayout ? 'max-w-5xl mx-auto w-full border-x border-[#2b2b2b]' : ''}`}
+          data-testid="vscode-editor-panes"
+        >
+          {/* Primary Pane */}
+          <div
+            style={{
+              [layout.splitDirection === 'vertical' ? 'width' : 'height']: `${layout.splitRatio}%`,
+            }}
+            className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+          >
+            {renderGroup(group1, false, 'vscode-pane-primary')}
+          </div>
+
+          {/* Modern Split Divider Handle with smooth sash grip */}
+          <div
+            role="separator"
+            aria-orientation={layout.splitDirection}
+            onPointerDown={handleSplitResizeDown}
+            className={`group shrink-0 bg-transparent hover:bg-white/5 active:bg-[#0078d4]/20 transition-colors z-10 flex items-center justify-center select-none ${
+              layout.splitDirection === 'vertical' ? 'w-2 cursor-col-resize h-full' : 'h-2 cursor-row-resize w-full'
+            }`}
+            title="Drag to resize editor panes"
+          >
+            <div
+              className={`rounded-full bg-[#3c3c3c] group-hover:bg-[#0078d4] transition-colors ${
+                layout.splitDirection === 'vertical' ? 'h-8 w-1' : 'w-8 h-1'
+              }`}
+            />
+          </div>
+
+          {/* Secondary Pane */}
+          <div
+            style={{
+              [layout.splitDirection === 'vertical' ? 'width' : 'height']: `${100 - layout.splitRatio}%`,
+            }}
+            className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+          >
+            {renderGroup(group2, true, 'vscode-pane-secondary')}
+          </div>
+        </main>
+      ) : (
+        <main
+          role="region"
+          aria-label="Editor"
+          className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#1f1f1f] ${
+            isCenteredLayout ? 'max-w-5xl mx-auto w-full border-x border-[#2b2b2b]' : ''
+          }`}
+        >
+          {renderGroup(group1, false, 'vscode-pane-single')}
+        </main>
+      )}
+
+      {/* Tab Right-Click Context Menu */}
+      {tabContextMenu && tabContextMenu.visible && (
+        <div
+          style={{ top: tabContextMenu.y, left: tabContextMenu.x }}
+          className="fixed z-[999999] w-48 rounded-[4px] border border-[#3c3c3c] bg-[#252526] text-[#cccccc] shadow-2xl py-1 text-xs select-none font-sans animate-in fade-in duration-75"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+            onClick={() => {
+              onCloseTab(tabContextMenu.groupId, tabContextMenu.path);
+              setTabContextMenu(null);
+            }}
+          >
+            <span>Close</span>
+            <span className="text-[10px] text-[#858585] font-mono">Ctrl+W</span>
+          </button>
+          {onCloseOtherTabs && (
+            <button
+              type="button"
+              className="flex w-full items-center justify-between px-3 py-1 hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+              onClick={() => {
+                onCloseOtherTabs(tabContextMenu.groupId, tabContextMenu.path);
+                setTabContextMenu(null);
+              }}
+            >
+              <span>Close Others</span>
+            </button>
+          )}
+          <div className="my-1 border-t border-[#3c3c3c]" />
+          <button
+            type="button"
+            className="flex w-full items-center justify-between px-3 py-1 hover:bg-[#04395e] hover:text-white transition-colors cursor-pointer"
+            onClick={() => {
+              onSplitEditor('vertical');
+              setTabContextMenu(null);
+            }}
+          >
+            <span>Split Right</span>
+            <span className="text-[10px] text-[#858585] font-mono">Ctrl+\</span>
+          </button>
+        </div>
+      )}
+    </>
   );
 };
+
+export default WorkbenchEditorArea;

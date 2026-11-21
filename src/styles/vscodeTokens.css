@@ -144,19 +144,63 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* Strict 0px radius on workbench containers */
-[data-testid="vscode-mode"] div,
-[data-testid="vscode-mode"] header,
-[data-testid="vscode-mode"] aside,
-[data-testid="vscode-mode"] section {
-  border-radius: 0;
-}
-
 /* Inputs and buttons max 2px border radius */
 [data-testid="vscode-mode"] input,
 [data-testid="vscode-mode"] button,
 [data-testid="vscode-mode"] select {
   border-radius: 2px;
+}
+
+/* ── Authentic Monaco Context Menu (Right-Click) & Action Dropdown Polish ── */
+.context-view.monaco-menu-container {
+  background-color: var(--vscode-menu-background, #252526) !important;
+  color: var(--vscode-menu-foreground, #cccccc) !important;
+  border: 1px solid var(--vscode-menu-border, #3c3c3c) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+  padding: 4px 0 !important;
+  font-family: var(--vscode-font-family) !important;
+  font-size: 12px !important;
+  z-index: 999999 !important;
+}
+
+.monaco-menu .monaco-action-bar.vertical {
+  text-align: left;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-item {
+  height: 24px !important;
+  line-height: 24px !important;
+  padding: 0 8px !important;
+  cursor: pointer;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-item:hover,
+.monaco-menu .monaco-action-bar.vertical .action-item.focused {
+  background-color: var(--vscode-menu-selectionBackground, #04395e) !important;
+  color: #ffffff !important;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-label {
+  font-size: 12px !important;
+  color: inherit !important;
+}
+
+.monaco-menu .monaco-action-bar.vertical .keybinding {
+  font-size: 11px !important;
+  opacity: 0.7 !important;
+  margin-left: 24px !important;
+  font-family: var(--vscode-editor-font-family) !important;
+}
+
+.monaco-menu .monaco-action-bar.vertical .action-item.separator {
+  height: 1px !important;
+  border-bottom: 1px solid var(--vscode-menu-separatorBackground, #3c3c3c) !important;
+  margin: 4px 0 !important;
+  padding: 0 !important;
 }
 
 /* VS Code Slim Scrollbar */
