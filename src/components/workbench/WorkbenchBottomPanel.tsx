@@ -1,16 +1,6 @@
 import React, { useRef } from 'react';
-import {
-  TerminalSquare,
-  AlertTriangle,
-  FileText,
-  Radio,
-  X,
-  Maximize2,
-  Minimize2,
-  Plus,
-  Columns,
-} from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
+import Codicon from '../ui/Codicon';
 import { ViewId, ContainerId } from '../../services/workbench/workbenchTypes';
 import { getViewDefinition } from '../../services/workbench/workbenchViewRegistry';
 
@@ -45,7 +35,7 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
   onClose,
   onResize,
   renderViewContent,
-  panelAlignment = 'center',
+  panelAlignment = 'left',
   diagnostics = { errorCount: 0, warningCount: 0 },
   onNewTerminal,
   onToggleSplitTerminal,
@@ -79,15 +69,15 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
     window.addEventListener('pointerup', handlePointerUp);
   };
 
-  const effectiveHeight = isMaximized ? 'calc(100% - 36px)' : `${height}px`;
+  const effectiveHeight = isMaximized ? 'calc(100% - 35px)' : `${height}px`;
 
   const alignmentClass =
     !isMaximized && panelAlignment === 'center'
-      ? 'w-full max-w-[85%] mx-auto border-x border-[var(--border)]'
+      ? 'w-full max-w-[85%] mx-auto border-x border-[#2b2b2b]'
       : !isMaximized && panelAlignment === 'left'
-      ? 'w-full max-w-[75%] mr-auto border-r border-[var(--border)]'
+      ? 'w-full max-w-[75%] mr-auto border-r border-[#2b2b2b]'
       : !isMaximized && panelAlignment === 'right'
-      ? 'w-full max-w-[75%] ml-auto border-l border-[var(--border)]'
+      ? 'w-full max-w-[75%] ml-auto border-l border-[#2b2b2b]'
       : 'w-full';
 
   return (
@@ -95,7 +85,7 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
       role="region"
       aria-label="Bottom Panel"
       style={{ height: effectiveHeight }}
-      className={`relative flex shrink-0 flex-col overflow-hidden border-t border-[var(--border)] bg-[var(--background)] text-xs select-none z-10 ${alignmentClass} ${
+      className={`relative flex shrink-0 flex-col overflow-hidden border-t border-[#2b2b2b] bg-[#1f1f1f] text-xs select-none z-10 ${alignmentClass} ${
         isMaximized ? 'absolute inset-x-0 bottom-6 top-9 z-30 w-full max-w-full' : ''
       }`}
       data-testid="vscode-terminal-dock"
@@ -107,16 +97,14 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
           aria-orientation="horizontal"
           aria-label="Resize Bottom Panel"
           onPointerDown={handlePointerDown}
-          className="absolute left-0 right-0 top-0 h-1 cursor-row-resize hover:bg-[var(--primary)] active:bg-[var(--primary)] transition-colors z-20"
+          className="absolute left-0 right-0 top-0 h-1 cursor-row-resize hover:bg-[#0078d4] active:bg-[#0078d4] transition-colors z-20"
           data-testid="bottom-panel-resizer"
         />
       )}
 
-      {/* Panel Header Tabs */}
-      <div className="flex h-8 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-2.5">
-        <div className={`flex items-center gap-1 overflow-x-auto py-0.5 ${
-          panelAlignment === 'center' ? 'mx-auto' : panelAlignment === 'right' ? 'ml-auto' : ''
-        }`}>
+      {/* VS Code Panel Tab Strip (35px height, underline active indicator) */}
+      <div className="flex h-[35px] shrink-0 items-stretch justify-between border-b border-[#2b2b2b] bg-[#181818] px-2">
+        <div className="flex items-stretch gap-1 overflow-x-auto">
           {availableViews.map((vid) => {
             const def = getViewDefinition(vid);
             const isSelected = vid === activeViewId;
@@ -125,23 +113,33 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
                 key={vid}
                 type="button"
                 onClick={() => onSelectView(vid)}
-                className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+                className={`group flex items-center gap-1.5 px-3 border-b-2 text-[11px] tracking-normal transition-colors ${
                   isSelected
-                    ? 'text-[var(--foreground)] bg-white/10'
-                    : 'text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)] hover:bg-white/5'
+                    ? 'border-[#0078d4] text-[#ffffff] font-medium'
+                    : 'border-transparent text-[#999999] hover:text-[#cccccc]'
                 }`}
                 data-testid={`bottom-tab-${vid}`}
               >
-                {vid === 'terminal' && <TerminalSquare className="h-3 w-3" />}
-                {vid === 'problems' && <AlertTriangle className="h-3 w-3 text-amber-400" />}
-                {vid === 'output' && <FileText className="h-3 w-3" />}
-                {vid === 'ports' && <Radio className="h-3 w-3 text-emerald-400" />}
-                <span>{def.title}</span>
-
+                {vid === 'terminal' && <Codicon name="terminal" className="text-[13px]" />}
                 {vid === 'problems' && (
+                  <Codicon
+                    name="error"
+                    className={`text-[13px] ${
+                      diagnostics.errorCount > 0 ? 'text-[#f14c4c]' : diagnostics.warningCount > 0 ? 'text-[#cca700]' : 'text-[#999999]'
+                    }`}
+                  />
+                )}
+                {vid === 'output' && <Codicon name="output" className="text-[13px]" />}
+                {vid === 'ports' && <Codicon name="radio-tower" className="text-[13px]" />}
+                <span className="uppercase text-[11px]">{def.title}</span>
+                {vid === 'problems' && (diagnostics.errorCount > 0 || diagnostics.warningCount > 0) && (
                   <span className="flex items-center gap-1 text-[10px] ml-1">
-                    <span className="text-rose-400 font-bold">{diagnostics.errorCount}</span>
-                    <span className="text-amber-400 font-bold">{diagnostics.warningCount}</span>
+                    {diagnostics.errorCount > 0 && (
+                      <span className="text-[#f14c4c] font-semibold">{diagnostics.errorCount}</span>
+                    )}
+                    {diagnostics.warningCount > 0 && (
+                      <span className="text-[#cca700] font-semibold">{diagnostics.warningCount}</span>
+                    )}
                   </span>
                 )}
               </button>
@@ -149,35 +147,35 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
           })}
         </div>
 
-        {/* Panel Action Controls */}
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Panel Action Controls with official Codicons */}
+        <div className="flex items-center gap-0.5 shrink-0">
           {/* Specific Terminal Actions */}
           {activeViewId === 'terminal' && (
             <>
               {onNewTerminal && (
-                <Tooltip label="New Terminal" side="top">
+                <Tooltip label="New Terminal (Ctrl+Shift+`)" side="top">
                   <button
                     type="button"
                     onClick={onNewTerminal}
-                    className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/10 transition-colors"
+                    className="flex h-6 w-6 items-center justify-center rounded text-[#999999] hover:text-[#cccccc] hover:bg-white/10 transition-colors"
                     aria-label="New Terminal"
                     data-testid="terminal-new-btn"
                   >
-                    <Plus className="h-3 w-3" />
+                    <Codicon name="plus" className="text-[13px]" />
                   </button>
                 </Tooltip>
               )}
 
               {onToggleSplitTerminal && (
-                <Tooltip label="Split Terminal" side="top">
+                <Tooltip label="Split Terminal (Ctrl+\)" side="top">
                   <button
                     type="button"
                     onClick={onToggleSplitTerminal}
-                    className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/10 transition-colors"
+                    className="flex h-6 w-6 items-center justify-center rounded text-[#999999] hover:text-[#cccccc] hover:bg-white/10 transition-colors"
                     aria-label="Split Terminal"
                     data-testid="terminal-split-btn"
                   >
-                    <Columns className="h-3 w-3" />
+                    <Codicon name="split-horizontal" className="text-[13px]" />
                   </button>
                 </Tooltip>
               )}
@@ -189,31 +187,31 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
             <button
               type="button"
               onClick={onToggleMaximize}
-              className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/10 transition-colors"
+              className="flex h-6 w-6 items-center justify-center rounded text-[#999999] hover:text-[#cccccc] hover:bg-white/10 transition-colors"
               aria-label={isMaximized ? 'Restore Panel' : 'Maximize Panel'}
               data-testid="bottom-panel-maximize-btn"
             >
-              {isMaximized ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+              <Codicon name={isMaximized ? 'chevron-down' : 'chevron-up'} className="text-[14px]" />
             </button>
           </Tooltip>
 
           {/* Close Panel */}
-          <Tooltip label="Close Panel" side="top">
+          <Tooltip label="Close Panel (Ctrl+J)" side="top">
             <button
               type="button"
               onClick={onClose}
-              className="rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/10 transition-colors"
+              className="flex h-6 w-6 items-center justify-center rounded text-[#999999] hover:text-[#cccccc] hover:bg-white/10 transition-colors"
               aria-label="Close Panel"
               data-testid="bottom-panel-close-btn"
             >
-              <X className="h-3 w-3" />
+              <Codicon name="close" className="text-[13px]" />
             </button>
           </Tooltip>
         </div>
       </div>
 
       {/* Panel Content Body */}
-      <div className="min-h-0 flex-1 overflow-hidden relative bg-[var(--background)]">
+      <div className="min-h-0 flex-1 overflow-hidden relative bg-[#1f1f1f]">
         {renderViewContent(activeViewId)}
       </div>
     </div>

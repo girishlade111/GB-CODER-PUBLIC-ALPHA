@@ -1,5 +1,5 @@
 import React from 'react';
-import { TerminalSquare } from 'lucide-react';
+import Codicon from '../ui/Codicon';
 import { LayoutPresetId } from '../../services/workbench/workbenchTypes';
 
 interface WorkbenchStatusBarProps {
@@ -55,46 +55,71 @@ export const WorkbenchStatusBar: React.FC<WorkbenchStatusBarProps> = ({
   activeLanguage,
   cursor,
   dirtyCount = 0,
-  currentPreset = 'DEFAULT',
+  currentPreset: _currentPreset = 'DEFAULT',
   webcontainerState,
 }) => {
   return (
     <footer
-      className="flex h-6 shrink-0 items-center justify-between border-t border-[var(--border)] bg-[var(--sidebar)] px-2 text-[11px] text-[var(--muted-foreground)] select-none z-10"
+      className="flex h-[22px] shrink-0 items-center justify-between border-t border-[#2b2b2b] bg-[#181818] text-[11px] text-[#cccccc] select-none z-10 font-sans"
       data-testid="vscode-status-bar"
     >
-      {/* Left items: diagnostics, terminal toggle, dirty count */}
-      <div className="flex items-center gap-2">
+      {/* Left items: VS Code Remote Badge, Git branch, Problems, Terminal */}
+      <div className="flex h-full items-center">
+        {/* Iconic VS Code Blue Remote Indicator */}
+        <button
+          type="button"
+          className="flex h-full items-center gap-1 bg-[#0078d4] hover:bg-[#026ec1] px-2.5 text-white font-medium transition-colors"
+          title="WebContainer Virtual Workspace"
+        >
+          <Codicon name="remote" className="text-[12px]" />
+          <span className="text-[11px] font-medium tracking-tight">WebContainer</span>
+        </button>
+
+        {/* Source Control Branch */}
+        <button
+          type="button"
+          className="flex h-full items-center gap-1 hover:bg-white/10 px-2 text-[#cccccc] transition-colors"
+          title="Current Git Branch: main"
+        >
+          <Codicon name="source-control" className="text-[12px] text-[#999999]" />
+          <span>main</span>
+        </button>
+
+        {/* Problems Diagnostics (Errors & Warnings) */}
         <button
           type="button"
           onClick={onOpenProblems}
-          title="Toggle Problems Panel"
+          title={`Problems: ${diagnostics.errorCount} errors, ${diagnostics.warningCount} warnings`}
           aria-label={`Problems: ${diagnostics.errorCount} errors, ${diagnostics.warningCount} warnings`}
-          className="flex items-center gap-1.5 hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          className="flex h-full items-center gap-2 hover:bg-white/10 px-2 text-[#cccccc] transition-colors"
         >
-          <span className="text-rose-400 flex items-center gap-0.5">
-            <span className="font-bold">⊗</span> {diagnostics.errorCount}
+          <span className="flex items-center gap-0.5">
+            <Codicon name="error" className="text-[12px] text-[#f14c4c]" />
+            <span className="text-[11px] text-[#cccccc]">{diagnostics.errorCount}</span>
           </span>
-          <span className="text-amber-400 flex items-center gap-0.5">
-            <span className="font-bold">⚠</span> {diagnostics.warningCount}
+          <span className="flex items-center gap-0.5">
+            <Codicon name="warning" className="text-[12px] text-[#cca700]" />
+            <span className="text-[11px] text-[#cccccc]">{diagnostics.warningCount}</span>
           </span>
         </button>
 
+        {/* Terminal Toggle Button */}
         <button
           type="button"
           onClick={onToggleTerminal}
           data-testid="vscode-terminal-toggle"
           aria-pressed={isTerminalOpen}
           title="Toggle Terminal Panel (Ctrl+`)"
-          className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-white/10 transition-colors text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          className="flex h-full items-center gap-1 hover:bg-white/10 px-2 text-[#cccccc] transition-colors"
         >
-          <TerminalSquare className="h-3 w-3 text-[var(--primary)]" />
+          <Codicon name="terminal" className="text-[12px] text-[#999999]" />
           <span>Terminal</span>
         </button>
 
+        {/* Unsaved Files Badge */}
         {dirtyCount > 0 && (
           <span
-            className="flex items-center gap-1 rounded bg-[var(--accent)] border border-[var(--ring)] px-1.5 py-0.2 text-[10px] text-[var(--primary)]"
+            className="flex items-center gap-1 px-2 text-[10px] text-[#0078d4] font-medium"
             title={`${dirtyCount} unsaved files`}
           >
             <span>●</span> {dirtyCount} unsaved
@@ -102,40 +127,46 @@ export const WorkbenchStatusBar: React.FC<WorkbenchStatusBarProps> = ({
         )}
       </div>
 
-      {/* Right items: ATA, Language, Cursor, Port, Encoding, Preset */}
-      <div className="flex items-center gap-2">
+      {/* Right items: Language, Cursor, Encoding, Indentation, WebContainer Port, Notifications */}
+      <div className="flex h-full items-center">
+        {/* Language Mode */}
         {activeLanguage && (
-          <span
+          <button
+            type="button"
             data-testid="status-language"
-            className="hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            className="flex h-full items-center hover:bg-white/10 px-2 text-[#cccccc] transition-colors"
           >
             {LANGUAGE_LABELS[activeLanguage] ?? activeLanguage}
-          </span>
+          </button>
         )}
 
+        {/* Cursor Coordinates */}
         {cursor && (
-          <span
+          <button
+            type="button"
             data-testid="status-cursor"
-            className="hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            className="flex h-full items-center hover:bg-white/10 px-2 text-[#cccccc] transition-colors"
           >
             Ln {cursor.line}, Col {cursor.column}
-          </span>
+          </button>
         )}
 
-        <span className="hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors hidden md:inline text-[var(--muted-foreground)]">
-          UTF-8
-        </span>
-
-        <span className="hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors hidden md:inline text-[var(--muted-foreground)]">
+        {/* Indentation */}
+        <span className="hidden md:flex h-full items-center hover:bg-white/10 px-2 text-[#999999] cursor-pointer transition-colors">
           Spaces: 2
         </span>
 
-        {/* Real Dev Server / WebContainer status badge */}
+        {/* Encoding */}
+        <span className="hidden md:flex h-full items-center hover:bg-white/10 px-2 text-[#999999] cursor-pointer transition-colors">
+          UTF-8
+        </span>
+
+        {/* WebContainer Dev Server Status */}
         <span
-          className="flex items-center gap-1.5 font-medium hover:bg-white/10 px-1.5 py-0.5 rounded cursor-pointer transition-colors text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          className="flex h-full items-center gap-1 hover:bg-white/10 px-2 text-[#cccccc] cursor-pointer transition-colors"
           title={
             webcontainerState.startupStage === 'ready'
-              ? `Dev Server active on port ${webcontainerState.serverPort || 5173}`
+              ? `Dev Server running on port ${webcontainerState.serverPort || 5173}`
               : webcontainerState.startupStage === 'error'
               ? `Runtime Error: ${webcontainerState.runtimeError?.message || 'Check terminal'}`
               : `WebContainer: ${webcontainerState.startupStage}`
@@ -145,13 +176,13 @@ export const WorkbenchStatusBar: React.FC<WorkbenchStatusBarProps> = ({
           <span
             className={`h-1.5 w-1.5 rounded-full ${
               webcontainerState.startupStage === 'ready'
-                ? 'bg-emerald-400 animate-pulse'
+                ? 'bg-[#4ec9b0]'
                 : webcontainerState.startupStage === 'error'
-                ? 'bg-rose-400 animate-pulse'
+                ? 'bg-[#f14c4c]'
                 : webcontainerState.startupStage === 'installing' ||
                   webcontainerState.startupStage === 'booting'
-                ? 'bg-indigo-400 animate-pulse'
-                : 'bg-slate-400'
+                ? 'bg-[#0078d4] animate-pulse'
+                : 'bg-[#6e7681]'
             }`}
           />
           {webcontainerState.startupStage === 'ready' && `Port ${webcontainerState.serverPort || 5173}`}
@@ -160,12 +191,17 @@ export const WorkbenchStatusBar: React.FC<WorkbenchStatusBarProps> = ({
           {webcontainerState.startupStage === 'mounting_files' && 'Mounting Files...'}
           {webcontainerState.startupStage === 'booting' && 'Booting Runtime...'}
           {webcontainerState.startupStage === 'error' && 'Runtime Error'}
-          {webcontainerState.startupStage === 'idle' && 'Runtime Idle'}
+          {webcontainerState.startupStage === 'idle' && 'Standby'}
         </span>
 
-        <span className="hidden xl:inline text-[10px] text-[var(--muted-foreground)] border-l border-[var(--border)] pl-2">
-          {currentPreset}
-        </span>
+        {/* Notifications Bell */}
+        <button
+          type="button"
+          className="flex h-full items-center hover:bg-white/10 px-2 text-[#999999] hover:text-[#cccccc] transition-colors"
+          title="No Notifications"
+        >
+          <Codicon name="bell" className="text-[12px]" />
+        </button>
       </div>
     </footer>
   );
