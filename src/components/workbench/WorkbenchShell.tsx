@@ -338,6 +338,7 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
             onOpenSnapshots={onOpenSnapshots}
             onOpenVoiceCommands={onOpenVoiceCommands}
             onResetContainer={onResetContainer}
+            onOpenCommandPalette={onOpenCommandPalette}
           />
         )}
 
@@ -386,9 +387,13 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
           />
 
           {/* Center: Editor Area + Docked Bottom Panel */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden gap-1">
+          <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden gap-1">
             {/* Editor Area Card */}
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-[#2b2b2b] bg-[#1f1f1f] shadow-sm">
+            <div
+              className={`min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-[#2b2b2b] bg-[#1f1f1f] shadow-sm ${
+                layout.bottomPanel.visible && layout.bottomPanel.isMaximized ? 'hidden' : 'flex'
+              }`}
+            >
               <WorkbenchEditorArea
                 {...editorAreaProps}
                 isCenteredLayout={Boolean(layout.modes?.centeredLayout)}

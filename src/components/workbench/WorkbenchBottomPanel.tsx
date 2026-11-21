@@ -85,8 +85,8 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
       role="region"
       aria-label="Bottom Panel"
       style={{ height: effectiveHeight }}
-      className={`group relative flex shrink-0 flex-col overflow-hidden rounded-lg border border-[#2b2b2b] bg-[#1f1f1f] text-xs select-none shadow-sm z-10 ${alignmentClass} ${
-        isMaximized ? 'absolute inset-0 z-30 w-full max-w-full rounded-none border-0' : ''
+      className={`group relative flex flex-col overflow-hidden rounded-lg border border-[#2b2b2b] bg-[#1f1f1f] text-xs select-none shadow-sm z-10 ${alignmentClass} ${
+        isMaximized ? 'flex-1 h-full w-full max-w-full' : 'shrink-0'
       }`}
       data-testid="vscode-terminal-dock"
     >

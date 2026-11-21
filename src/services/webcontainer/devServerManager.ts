@@ -45,6 +45,7 @@ export class DevServerManager {
   private devSessionId: string | null = null;
   private pendingStopPromise: Promise<boolean> | null = null;
   private portCloseListeners = new Set<(port: number) => void>();
+  private startupTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
 
   public getState(): DevServerState {
     return this.state;
@@ -101,9 +102,24 @@ export class DevServerManager {
     targetProjectId?: string | null,
     targetEpoch?: number,
   ): Promise<boolean> {
-    if (this.state.status === 'running' || this.state.status === 'starting') {
-      console.warn('[DevServerManager] Dev server is already active or starting. Ignoring duplicate start.');
+    if (this.state.status === 'running') {
+      console.warn('[DevServerManager] Dev server is already active. Ignoring duplicate start.');
       return false;
+    }
+
+    if (this.state.status === 'starting') {
+      const elapsed = Date.now() - (this.state.startedAt || 0);
+      if (elapsed > 8000) {
+        console.warn(`[DevServerManager] Dev server was starting for ${elapsed}ms; force restarting.`);
+        return this.restart(command);
+      }
+      console.warn('[DevServerManager] Dev server is currently starting. Ignoring duplicate start.');
+      return false;
+    }
+
+    if (this.startupTimeoutTimer) {
+      clearTimeout(this.startupTimeoutTimer);
+      this.startupTimeoutTimer = null;
     }
 
     if (this.state.status === 'stopping') {
@@ -157,6 +173,17 @@ export class DevServerManager {
 
     webcontainerService.setDevServerStarting(true, boundEpoch, boundProject ?? undefined);
 
+    this.startupTimeoutTimer = setTimeout(() => {
+      if (this.state.status === 'starting') {
+        console.warn('[DevServerManager] Startup timed out waiting for server-ready event.');
+        this.updateState({
+          status: 'error',
+          error: 'Dev server startup timed out. Check terminal logs for compilation errors.',
+        });
+        webcontainerService.setDevServerStarting(false);
+      }
+    }, 45000);
+
     // Send command to the session with carriage return for reliable jsh PTY execution
     const cmdPayload = command.endsWith('\r') ? command : `${command.trim()}\r`;
     const dispatched = terminalSessionManager.writeToSession(sessionId, cmdPayload);
@@ -187,6 +214,10 @@ export class DevServerManager {
     }
 
     this.pendingStopPromise = (async () => {
+      if (this.startupTimeoutTimer) {
+        clearTimeout(this.startupTimeoutTimer);
+        this.startupTimeoutTimer = null;
+      }
       this.updateState({ status: 'stopping' });
 
       const targetSessionId = this.devSessionId;
@@ -336,6 +367,11 @@ export class DevServerManager {
       currentSelected !== null && currentPorts.some((p) => p.port === currentSelected && p.active);
     const selectedPort = isCurrentStillActive ? currentSelected : port;
     const activeEntry = currentPorts.find((p) => p.port === selectedPort) || newPortEntry;
+
+    if (this.startupTimeoutTimer) {
+      clearTimeout(this.startupTimeoutTimer);
+      this.startupTimeoutTimer = null;
+    }
 
     this.updateState({
       status: 'running',

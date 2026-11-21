@@ -1478,7 +1478,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         webcontainer.startupStage === 'booting' ||
         webcontainer.startupStage === 'starting_server'
       ) {
-        toast('Development server is still starting. Please wait for it to be ready.', { icon: '⏳' });
+        toast('Development server is still starting. Please wait for it to be ready.');
       } else {
         toast.error('Development server is not running. Start the dev server before opening preview.');
       }
@@ -1492,7 +1492,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       const popoutUrl = `/preview-popout?url=${urlParam}&port=${portParam}`;
       const newWin = window.open(popoutUrl, '_blank', 'noopener,noreferrer');
       if (!newWin && typeof window !== 'undefined') {
-        toast.error('Popup window was blocked by browser. Please allow popups for this site.');
+        const directWin = window.open(activePreview.url, '_blank');
+        if (!directWin) {
+          toast.error('Popup window was blocked by browser. Please allow popups for this site.');
+        }
       }
     } catch (err) {
       console.error('[OpenInNewTab] Failed to open new tab:', err);
@@ -1548,6 +1551,32 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     webcontainerService.setPreviewStatus('error', 'Unable to render live preview.');
     setPreviewLoadError('Unable to render live preview. Check that the dev server is responding.');
   }, []);
+
+  const handleTogglePreviewWidth = useCallback(() => {
+    setWorkbenchLayout((prev) => {
+      const isExpanded = prev.secondarySidebar.width > 600;
+      const targetWidth = isExpanded ? 450 : Math.min(Math.floor((typeof window !== 'undefined' ? window.innerWidth : 1440) * 0.65), 1050);
+      return {
+        ...prev,
+        secondarySidebar: {
+          ...prev.secondarySidebar,
+          width: targetWidth,
+          visible: true,
+        },
+      };
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isPreviewFullscreen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsPreviewFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPreviewFullscreen]);
 
   const monacoOptions = useMemo(
     () => ({
@@ -1609,7 +1638,16 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     });
     const started = await devServerManager.start(fullCmd, session.id, effectiveProjectId, webcontainerService.getSessionEpoch());
     if (!started) {
-      toast.error('Dev server is already starting or running.');
+      if (devServerManager.isRunning()) {
+        const port = devServerManager.getState().serverPort;
+        toast.success(port ? `Dev server is running on port ${port}` : 'Dev server is running');
+      } else {
+        toast('Restarting development server...');
+        const restarted = await devServerManager.restart(fullCmd);
+        if (!restarted) {
+          toast.error('Could not start dev server. Check terminal for error logs.');
+        }
+      }
     }
   }, [hasFiles, openTerminal, project.files, project.dependencies, project.projectType, activeProjectId]);
 
@@ -2084,6 +2122,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               onStartDevServer={handleStartDevServer}
               onInstallDependencies={handleInstallDependencies}
               onRestartDevServer={handleRestartDevServer}
+              onMaximizeWidth={handleTogglePreviewWidth}
               onFullscreen={() => setIsPreviewFullscreen(true)}
             />
           );
@@ -2113,24 +2152,139 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         case 'output':
           return <OutputPanel />;
 
-        case 'ports':
+        case 'ports': {
+          const devPorts = devServerManager.getActivePorts();
+          const activePortList = devPorts.length > 0
+            ? devPorts
+            : webcontainer.serverPort && webcontainer.serverUrl
+            ? [{ port: webcontainer.serverPort, url: webcontainer.serverUrl, active: true }]
+            : [];
+          const isDevServerStarting = webcontainer.startupStage === 'starting_server' || devServerManager.isStarting();
+
           return (
-            <div className="flex h-full flex-col p-4 text-xs bg-[var(--background)] text-[var(--foreground)]">
-              <span className="font-bold tracking-wider uppercase text-[var(--muted-foreground)] mb-2">Ports & Endpoints</span>
-              <div className="rounded border border-[var(--border)] bg-[var(--sidebar)] p-3 mt-2">
+            <div className="flex h-full flex-col overflow-hidden bg-[#1f1f1f] text-xs font-sans select-none">
+              {/* Header */}
+              <div className="flex h-8 shrink-0 items-center justify-between border-b border-[#2b2b2b] px-3 bg-[#181818] text-[#cccccc]">
                 <div className="flex items-center gap-2">
-                  <span className={`h-2 w-2 rounded-full ${webcontainer.startupStage === 'ready' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-                  <span className="font-semibold text-white">Vite Development Server</span>
+                  <Codicon name="radio-tower" className="text-[13px] text-[#4ec9b0]" />
+                  <span className="font-semibold text-[11px] tracking-wide uppercase">Forwarded Ports</span>
+                  {activePortList.length > 0 && (
+                    <span className="rounded bg-[#0078d4]/20 text-[#75beff] px-1.5 py-0.2 text-[10px] font-mono">
+                      {activePortList.length}
+                    </span>
+                  )}
                 </div>
-                <p className="text-[var(--muted-foreground)] text-[11px] mt-1.5 font-mono">
-                  Port: {webcontainer.serverPort || 5173}
-                </p>
-                <p className="text-[var(--muted-foreground)] text-[10px] truncate mt-0.5 font-mono">
-                  URL: {webcontainer.serverUrl || `http://localhost:${webcontainer.serverPort || 5173}/`}
-                </p>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={handleStartDevServer}
+                    className="flex items-center gap-1 rounded px-2 py-0.5 text-[11px] text-[#cccccc] hover:bg-white/10 hover:text-white transition-colors"
+                    title="Forward Port / Start Server"
+                  >
+                    <Codicon name="add" className="text-[12px]" />
+                    <span>Forward a Port</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-auto p-3">
+                {activePortList.length > 0 ? (
+                  <div className="rounded border border-[#2b2b2b] bg-[#252526] overflow-hidden">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#2b2b2b] bg-[#181818] text-[11px] text-[#858585]">
+                          <th className="py-1.5 px-3 font-medium">Port</th>
+                          <th className="py-1.5 px-3 font-medium">Local Address</th>
+                          <th className="py-1.5 px-3 font-medium">Process</th>
+                          <th className="py-1.5 px-3 font-medium text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activePortList.map((p) => (
+                          <tr key={p.port} className="border-b border-[#2b2b2b]/50 hover:bg-white/5 transition-colors">
+                            <td className="py-2 px-3 font-mono text-[12px] text-white">
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                {p.port}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3 font-mono text-[11px]">
+                              <a
+                                href={p.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[#75beff] hover:underline truncate max-w-[280px] inline-block align-middle"
+                              >
+                                {p.url}
+                              </a>
+                            </td>
+                            <td className="py-2 px-3 text-[11px] text-[#cccccc]">
+                              Development Server (Vite)
+                            </td>
+                            <td className="py-2 px-3 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => window.open(p.url, '_blank')}
+                                  title="Open in Browser"
+                                  className="p-1 rounded text-[#858585] hover:text-white hover:bg-white/10"
+                                >
+                                  <Codicon name="link-external" className="text-[12px]" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    void navigator.clipboard.writeText(p.url);
+                                    toast.success('Port URL copied to clipboard');
+                                  }}
+                                  title="Copy Local Address"
+                                  className="p-1 rounded text-[#858585] hover:text-white hover:bg-white/10"
+                                >
+                                  <Codicon name="copy" className="text-[12px]" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => void devServerManager.stop()}
+                                  title="Stop Server Process"
+                                  className="p-1 rounded text-[#858585] hover:text-rose-400 hover:bg-white/10"
+                                >
+                                  <Codicon name="stop-circle" className="text-[12px]" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : isDevServerStarting ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-center text-[#858585]">
+                    <div className="h-6 w-6 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin mb-3" />
+                    <p className="text-[12px] text-[#cccccc] font-medium">Forwarding local port...</p>
+                    <p className="text-[11px] text-[#858585] mt-1">Starting development server in terminal.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-10 text-center text-[#858585]">
+                    <Codicon name="plug" className="text-3xl text-[#555555] mb-2" />
+                    <p className="text-[12px] text-[#cccccc] font-medium">No forwarded ports</p>
+                    <p className="text-[11px] text-[#858585] mt-1 max-w-sm">
+                      There are no active forwarded ports in this workspace. Start the dev server to forward a local port.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleStartDevServer}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-[3px] bg-[#0078d4] px-3 py-1 text-[12px] font-medium text-white hover:bg-[#006cbd] transition-colors"
+                    >
+                      <Codicon name="play" className="text-[12px]" />
+                      <span>Start Dev Server</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );
+        }
 
         default:
           return <div className="p-4 text-[var(--muted-foreground)]">Panel content not found.</div>;
@@ -2263,7 +2417,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       />
 
       {/* Fullscreen Preview Overlay */}
-      {isPreviewFullscreen && activePreview && (
+      {isPreviewFullscreen && (
         <div
           className="fixed inset-0 z-50 flex flex-col bg-[var(--background)] text-white shadow-2xl"
           role="dialog"
@@ -2271,9 +2425,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         >
           <header className="flex h-10 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-4">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className={`h-2.5 w-2.5 rounded-full ${activePreview?.url ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'} shrink-0`} />
               <span className="font-semibold text-xs text-white truncate">
-                {activePreview.label}
+                {activePreview?.label || 'Development Preview'}
               </span>
               <span className="hidden sm:inline-flex items-center rounded bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400 border border-emerald-500/20">
                 Live Fullscreen Preview
@@ -2298,7 +2452,10 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               <button
                 type="button"
                 onClick={handleOpenInNewTab}
-                className="flex items-center gap-1.5 rounded px-2.5 py-1 text-xs bg-[var(--card)] hover:bg-[var(--muted)] text-gray-200 transition-colors"
+                disabled={!activePreview?.url}
+                className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs bg-[var(--card)] hover:bg-[var(--muted)] text-gray-200 transition-colors ${
+                  !activePreview?.url ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
                 title="Open in new tab"
                 data-testid="fullscreen-preview-open-new-tab-btn"
               >
@@ -2318,16 +2475,24 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             </div>
           </header>
 
-          <iframe
-            ref={fullscreenIframeRef}
-            src={activePreview.url}
-            title="Fullscreen live preview"
-            onLoad={handleIframeLoad}
-            onError={handleIframeError}
-            className="h-full w-full border-0 bg-white"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
-            data-testid="fullscreen-preview-iframe"
-          />
+          {activePreview?.url ? (
+            <iframe
+              ref={fullscreenIframeRef}
+              src={activePreview.url}
+              title="Fullscreen live preview"
+              onLoad={handleIframeLoad}
+              onError={handleIframeError}
+              className="h-full w-full border-0 bg-white"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
+              data-testid="fullscreen-preview-iframe"
+            />
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center p-6 text-center text-[#858585]">
+              <div className="h-8 w-8 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin mb-4" />
+              <p className="text-sm font-semibold text-white">Starting development server...</p>
+              <p className="text-xs text-[#858585] mt-1">Live preview will appear as soon as the port opens.</p>
+            </div>
+          )}
         </div>
       )}
 

@@ -62,6 +62,7 @@ export const CustomizeLayoutModal: React.FC<CustomizeLayoutModalProps> = ({
   const isStatusBarVisible = layoutState.statusBar?.visible ?? true;
   const currentSidebarPos: PrimarySidebarPosition = layoutState.primarySidebarPosition ?? 'left';
   const currentPanelAlignment: PanelAlignment = layoutState.panelAlignment ?? 'center';
+  const currentQuickInputPos = layoutState.quickInputPosition ?? 'top';
 
   const toggleVisibility = (
     key: 'menuBar' | 'activityBar' | 'primarySidebar' | 'secondarySidebar' | 'bottomPanel' | 'statusBar',
@@ -100,176 +101,219 @@ export const CustomizeLayoutModal: React.FC<CustomizeLayoutModalProps> = ({
     }));
   };
 
+  const setQuickInputPos = (pos: 'top' | 'center') => {
+    onUpdateLayout((prev) => ({
+      ...prev,
+      quickInputPosition: pos,
+    }));
+  };
+
   const content = (
     <div
-      ref={menuRef}
-      className="fixed right-3 top-[38px] z-[99999] w-64 rounded-[4px] border border-[var(--vscode-menu-border,#3c3c3c)] bg-[var(--vscode-menu-background,#252526)] text-[var(--vscode-menu-foreground,#cccccc)] shadow-2xl py-1 text-xs select-none font-sans animate-in fade-in duration-100"
-      data-testid="customize-layout-dialog"
-      role="menu"
+      className="fixed inset-0 z-[99999] flex justify-center items-start pt-3 bg-black/40 select-none animate-in fade-in duration-75"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
       aria-label="Customize Layout"
     >
-      <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--vscode-tab-inactiveForeground,rgba(255,255,255,0.4))]">
-        Visibility
+      <div
+        ref={menuRef}
+        className="w-[520px] max-w-[95vw] rounded-[6px] border border-[#3c3c3c] bg-[#1f1f1f] text-[#cccccc] shadow-2xl overflow-hidden font-sans text-xs"
+        onClick={(e) => e.stopPropagation()}
+        data-testid="customize-layout-dialog"
+      >
+        {/* Header Bar */}
+        <div className="flex h-9 items-center justify-between border-b border-[#2b2b2b] bg-[#252526] px-3">
+          <span className="text-[13px] font-medium text-white mx-auto">Customize Layout</span>
+          <div className="flex items-center gap-1 absolute right-2">
+            <button
+              type="button"
+              onClick={() => {
+                onResetLayout();
+                onClose();
+              }}
+              title="Reset to Default Layout"
+              className="flex h-6 w-6 items-center justify-center rounded text-[#858585] hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <Codicon name="discard" className="text-[13px]" />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              title="Close (Esc)"
+              className="flex h-6 w-6 items-center justify-center rounded text-[#858585] hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <Codicon name="close" className="text-[13px]" />
+            </button>
+          </div>
+        </div>
+
+        {/* Items List */}
+        <div className="max-h-[75vh] overflow-y-auto p-1 space-y-0.5">
+          {/* Menu Bar */}
+          <div
+            onClick={() => toggleVisibility('menuBar')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{isMenuBarVisible ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <Codicon name="menu" className="text-[14px] text-[#75beff]" />
+              <span className="text-white">Menu Bar</span>
+            </div>
+            <span className="text-[11px] text-[#858585] group-hover:text-white">Visibility</span>
+          </div>
+
+          {/* Activity Bar */}
+          <div
+            onClick={() => toggleVisibility('activityBar')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{isActivityBarVisible ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <Codicon name="layout-activitybar-left" className="text-[14px] text-[#75beff]" />
+              <span className="text-white">Activity Bar</span>
+            </div>
+          </div>
+
+          {/* Primary Side Bar */}
+          <div
+            onClick={() => toggleVisibility('primarySidebar')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{isPrimarySidebarVisible ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <Codicon name="layout-sidebar-left" className="text-[14px] text-[#75beff]" />
+              <span className="text-white">Primary Side Bar</span>
+            </div>
+            <span className="text-[11px] font-mono text-[#858585] group-hover:text-white">Ctrl + B</span>
+          </div>
+
+          {/* Secondary Side Bar */}
+          <div
+            onClick={() => toggleVisibility('secondarySidebar')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{isSecondarySidebarVisible ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <Codicon name="layout-sidebar-right" className="text-[14px] text-[#75beff]" />
+              <span className="text-white">Secondary Side Bar</span>
+            </div>
+            <span className="text-[11px] font-mono text-[#858585] group-hover:text-white">Ctrl + Alt + B</span>
+          </div>
+
+          {/* Panel */}
+          <div
+            onClick={() => toggleVisibility('bottomPanel')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{isPanelVisible ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <Codicon name="layout-panel" className="text-[14px] text-[#75beff]" />
+              <span className="text-white">Panel</span>
+            </div>
+            <span className="text-[11px] font-mono text-[#858585] group-hover:text-white">Ctrl + J</span>
+          </div>
+
+          {/* Status Bar */}
+          <div
+            onClick={() => toggleVisibility('statusBar')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{isStatusBarVisible ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <Codicon name="layout-statusbar" className="text-[14px] text-[#75beff]" />
+              <span className="text-white">Status Bar</span>
+            </div>
+          </div>
+
+          <div className="my-1 border-t border-[#2b2b2b]" />
+
+          {/* Primary Side Bar Position */}
+          <div
+            onClick={() => setSidebarPosition('left')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{currentSidebarPos === 'left' ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <span className="text-white">Left</span>
+            </div>
+            <span className="text-[11px] text-[#858585] group-hover:text-white">Primary Side Bar Position</span>
+          </div>
+          <div
+            onClick={() => setSidebarPosition('right')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{currentSidebarPos === 'right' ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <span className="text-white">Right</span>
+            </div>
+          </div>
+
+          <div className="my-1 border-t border-[#2b2b2b]" />
+
+          {/* Panel Alignment */}
+          <div
+            onClick={() => setPanelAlignment('left')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{currentPanelAlignment === 'left' ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <span className="text-white">Left</span>
+            </div>
+            <span className="text-[11px] text-[#858585] group-hover:text-white">Panel Alignment</span>
+          </div>
+          <div
+            onClick={() => setPanelAlignment('right')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{currentPanelAlignment === 'right' ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <span className="text-white">Right</span>
+            </div>
+          </div>
+          <div
+            onClick={() => setPanelAlignment('center')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{currentPanelAlignment === 'center' ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <span className="text-white">Center</span>
+            </div>
+          </div>
+          <div
+            onClick={() => setPanelAlignment('justify')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{currentPanelAlignment === 'justify' ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <span className="text-white">Justify</span>
+            </div>
+          </div>
+
+          <div className="my-1 border-t border-[#2b2b2b]" />
+
+          {/* Quick Input Position */}
+          <div
+            onClick={() => setQuickInputPos('top')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{currentQuickInputPos === 'top' ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <span className="text-white">Top</span>
+            </div>
+            <span className="text-[11px] text-[#858585] group-hover:text-white">Quick Input Position</span>
+          </div>
+          <div
+            onClick={() => setQuickInputPos('center')}
+            className="group flex items-center justify-between px-2.5 py-1.5 rounded-[2px] cursor-pointer hover:bg-[#04395e] hover:text-white transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-4 flex items-center justify-center">{currentQuickInputPos === 'center' ? <Codicon name="check" className="text-[12px] text-[#0078d4] group-hover:text-white" /> : null}</span>
+              <span className="text-white">Center</span>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <button
-        type="button"
-        role="menuitemcheckbox"
-        aria-checked={isMenuBarVisible}
-        onClick={() => toggleVisibility('menuBar')}
-        className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors cursor-pointer"
-      >
-        <span className="flex items-center gap-2">
-          <span className="w-3.5 text-center">{isMenuBarVisible ? '✓' : ''}</span>
-          <span>Menu Bar</span>
-        </span>
-      </button>
-
-      <button
-        type="button"
-        role="menuitemcheckbox"
-        aria-checked={isActivityBarVisible}
-        onClick={() => toggleVisibility('activityBar')}
-        className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors cursor-pointer"
-      >
-        <span className="flex items-center gap-2">
-          <span className="w-3.5 text-center">{isActivityBarVisible ? '✓' : ''}</span>
-          <span>Activity Bar</span>
-        </span>
-      </button>
-
-      <button
-        type="button"
-        role="menuitemcheckbox"
-        aria-checked={isPrimarySidebarVisible}
-        onClick={() => toggleVisibility('primarySidebar')}
-        className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors cursor-pointer"
-      >
-        <span className="flex items-center gap-2">
-          <span className="w-3.5 text-center">{isPrimarySidebarVisible ? '✓' : ''}</span>
-          <span>Primary Side Bar</span>
-        </span>
-        <span className="text-[10px] text-neutral-400 font-mono">Ctrl+B</span>
-      </button>
-
-      <button
-        type="button"
-        role="menuitemcheckbox"
-        aria-checked={isSecondarySidebarVisible}
-        onClick={() => toggleVisibility('secondarySidebar')}
-        className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors cursor-pointer"
-      >
-        <span className="flex items-center gap-2">
-          <span className="w-3.5 text-center">{isSecondarySidebarVisible ? '✓' : ''}</span>
-          <span>Secondary Side Bar</span>
-        </span>
-      </button>
-
-      <button
-        type="button"
-        role="menuitemcheckbox"
-        aria-checked={isPanelVisible}
-        onClick={() => toggleVisibility('bottomPanel')}
-        className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors cursor-pointer"
-      >
-        <span className="flex items-center gap-2">
-          <span className="w-3.5 text-center">{isPanelVisible ? '✓' : ''}</span>
-          <span>Panel</span>
-        </span>
-        <span className="text-[10px] text-neutral-400 font-mono">Ctrl+J</span>
-      </button>
-
-      <button
-        type="button"
-        role="menuitemcheckbox"
-        aria-checked={isStatusBarVisible}
-        onClick={() => toggleVisibility('statusBar')}
-        className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors cursor-pointer"
-      >
-        <span className="flex items-center gap-2">
-          <span className="w-3.5 text-center">{isStatusBarVisible ? '✓' : ''}</span>
-          <span>Status Bar</span>
-        </span>
-      </button>
-
-      <div className="my-1 border-t border-[var(--vscode-menu-separatorBackground,#3c3c3c)]" />
-
-      <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--vscode-tab-inactiveForeground,rgba(255,255,255,0.4))]">
-        Side Bar Position
-      </div>
-
-      <button
-        type="button"
-        role="menuitemradio"
-        aria-checked={currentSidebarPos === 'left'}
-        onClick={() => setSidebarPosition('left')}
-        className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors cursor-pointer"
-      >
-        <span className="flex items-center gap-2">
-          <span className="w-3.5 text-center">{currentSidebarPos === 'left' ? '•' : ''}</span>
-          <span>Left</span>
-        </span>
-      </button>
-
-      <button
-        type="button"
-        role="menuitemradio"
-        aria-checked={currentSidebarPos === 'right'}
-        onClick={() => setSidebarPosition('right')}
-        className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors cursor-pointer"
-      >
-        <span className="flex items-center gap-2">
-          <span className="w-3.5 text-center">{currentSidebarPos === 'right' ? '•' : ''}</span>
-          <span>Right</span>
-        </span>
-      </button>
-
-      <div className="my-1 border-t border-[var(--vscode-menu-separatorBackground,#3c3c3c)]" />
-
-      <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--vscode-tab-inactiveForeground,rgba(255,255,255,0.4))]">
-        Panel Alignment
-      </div>
-
-      <button
-        type="button"
-        role="menuitemradio"
-        aria-checked={currentPanelAlignment === 'center'}
-        onClick={() => setPanelAlignment('center')}
-        className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors cursor-pointer"
-      >
-        <span className="flex items-center gap-2">
-          <span className="w-3.5 text-center">{currentPanelAlignment === 'center' ? '•' : ''}</span>
-          <span>Center</span>
-        </span>
-      </button>
-
-      <button
-        type="button"
-        role="menuitemradio"
-        aria-checked={currentPanelAlignment === 'justify'}
-        onClick={() => setPanelAlignment('justify')}
-        className="flex w-full items-center justify-between px-3 py-1 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors cursor-pointer"
-      >
-        <span className="flex items-center gap-2">
-          <span className="w-3.5 text-center">{currentPanelAlignment === 'justify' ? '•' : ''}</span>
-          <span>Justify</span>
-        </span>
-      </button>
-
-      <div className="my-1 border-t border-[var(--vscode-menu-separatorBackground,#3c3c3c)]" />
-
-      <button
-        type="button"
-        role="menuitem"
-        onClick={() => {
-          onResetLayout();
-          onClose();
-        }}
-        className="flex w-full items-center gap-2 px-3 py-1 text-red-400 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors cursor-pointer"
-      >
-        <Codicon name="discard" className="text-xs" />
-        <span>Reset to Default Layout</span>
-      </button>
     </div>
   );
 

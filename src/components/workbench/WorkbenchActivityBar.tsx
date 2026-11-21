@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Tooltip from '../ui/Tooltip';
 import Codicon from '../ui/Codicon';
 import { ViewId } from '../../services/workbench/workbenchTypes';
@@ -15,6 +15,7 @@ interface WorkbenchActivityBarProps {
   onOpenSnapshots?: () => void;
   onOpenVoiceCommands?: () => void;
   onResetContainer?: () => void;
+  onOpenCommandPalette?: () => void;
 }
 
 export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
@@ -29,7 +30,28 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
   onOpenSnapshots,
   onOpenVoiceCommands,
   onResetContainer,
+  onOpenCommandPalette,
 }) => {
+  const [isManageMenuOpen, setIsManageMenuOpen] = useState(false);
+  const manageMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isManageMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (manageMenuRef.current && !manageMenuRef.current.contains(e.target as Node)) {
+        setIsManageMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsManageMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isManageMenuOpen]);
   return (
     <aside
       className="flex w-[48px] shrink-0 flex-col items-center justify-between border-r border-[var(--vscode-activityBar-border,#2b2b2b)] bg-[var(--vscode-activityBar-background,#181818)] py-0 select-none z-20"
@@ -221,18 +243,118 @@ export const WorkbenchActivityBar: React.FC<WorkbenchActivityBarProps> = ({
           </Tooltip>
         )}
 
-        {/* Settings */}
-        <Tooltip label="Manage (Settings)" side="right">
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            aria-label="Settings"
-            data-testid="activity-bar-settings"
-            className="flex h-11 w-12 items-center justify-center text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white transition-colors cursor-pointer"
-          >
-            <Codicon name="settings-gear" className="text-xl" />
-          </button>
-        </Tooltip>
+        {/* Manage (Gear) */}
+        <div className="relative">
+          <Tooltip label="Manage" side="right">
+            <button
+              type="button"
+              onClick={() => setIsManageMenuOpen((prev) => !prev)}
+              aria-label="Manage"
+              aria-expanded={isManageMenuOpen}
+              data-testid="activity-bar-settings"
+              className={`flex h-11 w-12 items-center justify-center transition-colors cursor-pointer ${
+                isManageMenuOpen
+                  ? 'text-white bg-white/10'
+                  : 'text-[var(--vscode-activityBar-inactiveForeground,rgba(255,255,255,0.4))] hover:text-white'
+              }`}
+            >
+              <Codicon name="settings-gear" className="text-xl" />
+            </button>
+          </Tooltip>
+
+          {/* Authentic VS Code Manage Popup Menu */}
+          {isManageMenuOpen && (
+            <div
+              ref={manageMenuRef}
+              className="fixed bottom-2 left-12 z-[99999] w-[230px] rounded-[6px] border border-[#3c3c3c] bg-[#1f1f1f] text-[#cccccc] shadow-2xl py-1 text-xs select-none font-sans animate-in fade-in duration-75"
+              role="menu"
+              aria-label="Manage Menu"
+            >
+              <div
+                onClick={() => {
+                  setIsManageMenuOpen(false);
+                  if (onOpenCommandPalette) onOpenCommandPalette();
+                  else window.dispatchEvent(new CustomEvent('workbench:open-command-palette'));
+                }}
+                className="group flex items-center justify-between px-3 py-1.5 hover:bg-[#04395e] hover:text-white cursor-pointer transition-colors"
+              >
+                <span>Command Palette...</span>
+                <span className="text-[11px] font-mono text-[#858585] group-hover:text-white">Ctrl+Shift+P</span>
+              </div>
+
+              <div className="my-1 border-t border-[#2b2b2b]" />
+
+              <div
+                onClick={() => {
+                  setIsManageMenuOpen(false);
+                  onOpenSettings();
+                }}
+                className="group flex items-center justify-between px-3 py-1.5 hover:bg-[#04395e] hover:text-white cursor-pointer transition-colors"
+              >
+                <span>Settings</span>
+                <span className="text-[11px] font-mono text-[#858585] group-hover:text-white">Ctrl+,</span>
+              </div>
+
+              <div
+                onClick={() => {
+                  setIsManageMenuOpen(false);
+                  window.dispatchEvent(new CustomEvent('workbench:customize-layout'));
+                }}
+                className="group flex items-center justify-between px-3 py-1.5 hover:bg-[#04395e] hover:text-white cursor-pointer transition-colors"
+              >
+                <span>Customize Layout...</span>
+              </div>
+
+              {onOpenVoiceCommands && (
+                <div
+                  onClick={() => {
+                    setIsManageMenuOpen(false);
+                    onOpenVoiceCommands();
+                  }}
+                  className="group flex items-center justify-between px-3 py-1.5 hover:bg-[#04395e] hover:text-white cursor-pointer transition-colors"
+                >
+                  <span>Voice Commands</span>
+                </div>
+              )}
+
+              {onOpenSnapshots && (
+                <div
+                  onClick={() => {
+                    setIsManageMenuOpen(false);
+                    onOpenSnapshots();
+                  }}
+                  className="group flex items-center justify-between px-3 py-1.5 hover:bg-[#04395e] hover:text-white cursor-pointer transition-colors"
+                >
+                  <span>Snapshots & Backups</span>
+                </div>
+              )}
+
+              {onResetContainer && (
+                <div
+                  onClick={() => {
+                    setIsManageMenuOpen(false);
+                    onResetContainer();
+                  }}
+                  className="group flex items-center justify-between px-3 py-1.5 hover:bg-[#04395e] hover:text-white cursor-pointer transition-colors"
+                >
+                  <span>Remount Virtual Filesystem</span>
+                </div>
+              )}
+
+              <div className="my-1 border-t border-[#2b2b2b]" />
+
+              <div
+                onClick={() => {
+                  setIsManageMenuOpen(false);
+                  window.dispatchEvent(new CustomEvent('workbench:reset-layout'));
+                }}
+                className="group flex items-center justify-between px-3 py-1.5 hover:bg-[#04395e] hover:text-white cursor-pointer transition-colors text-rose-400"
+              >
+                <span>Reset to Default Layout</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </aside>
   );

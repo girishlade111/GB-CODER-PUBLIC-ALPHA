@@ -52,6 +52,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
   onSelectFile,
   initialMode = 'commands',
   recentFiles: propRecentFiles,
+  quickInputPosition = 'top',
 }) => {
   const [query, setQuery] = useState(initialMode === 'files' ? '' : '>');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -395,7 +396,9 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   const content = (
     <div
-      className="fixed inset-0 z-[99999] flex justify-center items-start pt-2 sm:pt-4 bg-black/40 select-none animate-in fade-in duration-75"
+      className={`fixed inset-0 z-[99999] flex justify-center bg-black/40 select-none animate-in fade-in duration-75 ${
+        quickInputPosition === 'center' ? 'items-center pb-[12vh]' : 'items-start pt-2 sm:pt-4'
+      }`}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
