@@ -146,73 +146,74 @@
 .dark,
 [data-theme="dark"],
 html:not([data-theme="light"]) {
-  --card: oklch(0.14 0 0);
-  --ring: oklch(0.72 0 0);
-  --input: oklch(0.32 0 0);
-  --muted: oklch(0.23 0 0);
-  --accent: oklch(0.32 0 0);
-  --border: oklch(0.26 0 0);
-  --chart-1: oklch(0.81 0.17 75.35);
-  --chart-2: oklch(0.58 0.21 260.84);
-  --chart-3: oklch(0.56 0 0);
-  --chart-4: oklch(0.44 0 0);
-  --chart-5: oklch(0.92 0 0);
-  --popover: oklch(0.18 0 0);
-  --primary: oklch(1.00 0 0);
-  --sidebar: oklch(0.18 0 0);
-  --font-mono: Geist Mono, monospace;
-  --font-sans: Geist, sans-serif;
-  --secondary: oklch(0.25 0 0);
-  --background: oklch(0 0 0);
+  /* VS Code Dark Modern Core Palette */
+  --card: #252526;
+  --ring: #0078d4;
+  --input: #222222;
+  --muted: #2a2a2a;
+  --accent: #04395e;
+  --border: #2b2b2b;
+  --chart-1: #0078d4;
+  --chart-2: #264f78;
+  --chart-3: #cca700;
+  --chart-4: #4ec9b0;
+  --chart-5: #ce9178;
+  --popover: #252526;
+  --primary: #0078d4;
+  --sidebar: #181818;
+  --font-mono: "Geist Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, sans-serif;
+  --secondary: #313131;
+  --background: #1f1f1f;
   --font-serif: Georgia, serif;
-  --foreground: oklch(1.00 0 0);
-  --destructive: oklch(0.69 0.20 23.91);
-  --sidebar-ring: oklch(0.72 0 0);
-  --sidebar-accent: oklch(0.32 0 0);
-  --sidebar-border: oklch(0.32 0 0);
-  --card-foreground: oklch(1.00 0 0);
-  --sidebar-primary: oklch(1.00 0 0);
-  --muted-foreground: oklch(0.72 0 0);
-  --accent-foreground: oklch(1.00 0 0);
-  --popover-foreground: oklch(1.00 0 0);
-  --primary-foreground: oklch(0 0 0);
-  --sidebar-foreground: oklch(1.00 0 0);
-  --secondary-foreground: oklch(1.00 0 0);
-  --destructive-foreground: oklch(0 0 0);
-  --sidebar-accent-foreground: oklch(1.00 0 0);
-  --sidebar-primary-foreground: oklch(0 0 0);
+  --foreground: #cccccc;
+  --destructive: #f14c4c;
+  --sidebar-ring: #0078d4;
+  --sidebar-accent: #04395e;
+  --sidebar-border: #2b2b2b;
+  --card-foreground: #cccccc;
+  --sidebar-primary: #0078d4;
+  --muted-foreground: #999999;
+  --accent-foreground: #ffffff;
+  --popover-foreground: #cccccc;
+  --primary-foreground: #ffffff;
+  --sidebar-foreground: #cccccc;
+  --secondary-foreground: #cccccc;
+  --destructive-foreground: #ffffff;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-primary-foreground: #ffffff;
 
-  --surface-canvas: var(--background);
-  --surface-base: var(--sidebar);
-  --surface-raised: var(--card);
-  --surface-overlay: var(--muted);
-  --surface-hover: var(--accent);
-  --surface-strong: var(--secondary);
+  --surface-canvas: #1f1f1f;
+  --surface-base: #181818;
+  --surface-raised: #252526;
+  --surface-overlay: #2a2a2a;
+  --surface-hover: rgba(255, 255, 255, 0.05);
+  --surface-strong: #313131;
 
-  --hover-overlay: color-mix(in srgb, var(--foreground) 6%, transparent);
-  --active-overlay: color-mix(in srgb, var(--primary) 15%, transparent);
+  --hover-overlay: rgba(255, 255, 255, 0.05);
+  --active-overlay: rgba(0, 120, 212, 0.2);
 
-  --product: var(--background);
-  --product-elevated: var(--card);
-  --product-soft: var(--sidebar);
-  --product-border: var(--border);
-  --product-border-strong: var(--input);
-  --product-hover: color-mix(in srgb, var(--foreground) 7%, transparent);
-  --product-active: color-mix(in srgb, var(--primary) 18%, transparent);
+  --product: #1f1f1f;
+  --product-elevated: #252526;
+  --product-soft: #181818;
+  --product-border: #2b2b2b;
+  --product-border-strong: #3c3c3c;
+  --product-hover: rgba(255, 255, 255, 0.05);
+  --product-active: #0078d4;
 
-  --stroke-soft: var(--border);
-  --stroke-subtle: var(--border);
-  --stroke-strong: var(--input);
+  --stroke-soft: #2b2b2b;
+  --stroke-subtle: #2b2b2b;
+  --stroke-strong: #3c3c3c;
 
-  --text-primary: var(--foreground);
-  --text-secondary: var(--muted-foreground);
-  --text-muted: var(--muted-foreground);
-  --text-faint: oklch(0.56 0 0);
+  --text-primary: #cccccc;
+  --text-secondary: #999999;
+  --text-muted: #999999;
+  --text-faint: #6e7681;
 
-  --accent-fg: var(--primary-foreground);
-  --accent-hover: var(--accent);
-  --accent-muted: var(--muted-foreground);
-  --accent-subtle: color-mix(in srgb, var(--primary) 15%, transparent);
+  --accent-fg: #ffffff;
+  --accent-hover: #026ec1;
+  --accent-muted: #999999;
+  --accent-subtle: rgba(0, 120, 212, 0.15);
   --accent-disabled: var(--muted);
 }
 

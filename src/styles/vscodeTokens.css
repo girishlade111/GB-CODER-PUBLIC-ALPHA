@@ -28,6 +28,15 @@
   --vscode-editor-lineHighlightBackground: rgba(255, 255, 255, 0.04);
   --vscode-editor-selectionBackground: #264f78;
 
+  /* Universal Tailwind / CSS Bridge */
+  --background: #1f1f1f;
+  --sidebar: #181818;
+  --card: #252526;
+  --border: #2b2b2b;
+  --primary: #0078d4;
+  --foreground: #cccccc;
+  --muted-foreground: #999999;
+
   /* ── Title Bar & Command Center ── */
   --vscode-titleBar-activeBackground: #181818;
   --vscode-titleBar-activeForeground: #cccccc;
