@@ -1,20 +1,20 @@
 /**
- * GB Coder — Workbench & Advance IDE Theme Bridge
- * Maps Advance IDE & VS Code Mode to OKLCH tokens and Geist typography.
+ * GB Coder — Workbench & VS Code Theme Bridge
+ * Connects all workbench components to authentic VS Code Dark Modern tokens.
  */
 
 :root {
-  --wb-canvas: var(--background, oklch(0 0 0));
-  --wb-surface-secondary: var(--sidebar, oklch(0.18 0 0));
-  --wb-surface-elevated: var(--card, oklch(0.14 0 0));
-  --wb-border-subtle: var(--border, oklch(0.26 0 0));
-  --wb-border-focus: var(--ring, oklch(0.72 0 0));
-  --wb-text-primary: var(--foreground, oklch(1.00 0 0));
-  --wb-text-secondary: var(--muted-foreground, oklch(0.72 0 0));
-  --wb-text-muted: var(--muted-foreground, oklch(0.72 0 0));
-  --wb-accent: var(--primary, oklch(1.00 0 0));
-  --wb-accent-hover: var(--accent, oklch(0.32 0 0));
-  --wb-active-indicator: var(--primary, oklch(1.00 0 0));
+  --wb-canvas: var(--vscode-editor-background, #1f1f1f);
+  --wb-surface-secondary: var(--vscode-sideBar-background, #181818);
+  --wb-surface-elevated: var(--vscode-menu-background, #252526);
+  --wb-border-subtle: var(--vscode-sideBar-border, #2b2b2b);
+  --wb-border-focus: var(--vscode-focusBorder, #0078d4);
+  --wb-text-primary: var(--vscode-editor-foreground, #cccccc);
+  --wb-text-secondary: var(--vscode-sideBarTitle-foreground, #999999);
+  --wb-text-muted: var(--vscode-tab-inactiveForeground, rgba(255, 255, 255, 0.5));
+  --wb-accent: var(--vscode-button-background, #0078d4);
+  --wb-accent-hover: var(--vscode-button-hoverBackground, #026ec1);
+  --wb-active-indicator: var(--vscode-activityBar-activeBorder, #0078d4);
 }
 
 /* Semantic utility classes */
@@ -53,30 +53,30 @@
 
 .wb-bg-accent {
   background-color: var(--wb-accent);
-  color: var(--primary-foreground, oklch(0 0 0));
+  color: var(--vscode-button-foreground, #ffffff);
 }
 
 .wb-bg-accent:hover {
   background-color: var(--wb-accent-hover);
 }
 
-/* ── Typography Enforcement in Advance IDE ── */
+/* ── Typography Enforcement in VS Code Mode ── */
 [data-testid="vscode-mode"],
 [data-testid="vscode-mode"] * {
-  font-family: var(--font-sans, Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, sans-serif);
 }
 
 [data-testid="vscode-mode"] code,
 [data-testid="vscode-mode"] pre,
 [data-testid="vscode-mode"] kbd,
 [data-testid="vscode-mode"] .font-mono {
-  font-family: var(--font-mono, "Geist Mono", monospace);
+  font-family: var(--vscode-editor-font-family, "Geist Mono", monospace);
 }
 
-/* ── Universal Surface Overrides for Advance IDE ── */
+/* ── Universal Surface Overrides for VS Code Mode ── */
 [data-testid="vscode-mode"] {
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
+  background-color: var(--vscode-editor-background, #1f1f1f) !important;
+  color: var(--vscode-editor-foreground, #cccccc) !important;
 }
 
 /* Base Canvas & Deep Editor Surfaces */
@@ -102,7 +102,7 @@
 [data-testid="vscode-mode"] .bg-\[\#10121a\],
 [data-testid="vscode-mode"] .bg-\[\#1e1e1e\],
 .bg-\[\#181A20\] {
-  background-color: var(--background) !important;
+  background-color: var(--vscode-editor-background, #1f1f1f) !important;
 }
 
 /* Secondary Surfaces: Activity Bar, Sidebars, Header, Status Bar, Panel Headers */
@@ -117,7 +117,7 @@
 [data-testid="vscode-mode"] .bg-\[\#232431\],
 [data-testid="vscode-mode"] .bg-\[\#252526\],
 .bg-\[\#20232B\] {
-  background-color: var(--sidebar) !important;
+  background-color: var(--vscode-sideBar-background, #181818) !important;
 }
 
 /* Elevated Surfaces: Modals, Dropdowns, Cards, Input Containers */
@@ -125,7 +125,7 @@
 [data-testid="vscode-mode"] .bg-\[\#161824\],
 [data-testid="vscode-mode"] .bg-\[\#2d2d30\],
 .bg-\[\#262A33\] {
-  background-color: var(--card) !important;
+  background-color: var(--vscode-menu-background, #252526) !important;
 }
 
 /* Interactive Hover States */
@@ -134,7 +134,7 @@
 [data-testid="vscode-mode"] .hover\:bg-\[\#2d2d30\]:hover,
 [data-testid="vscode-mode"] .hover\:bg-\[\#4F46E5\]:hover,
 [data-testid="vscode-mode"] .hover\:bg-\[\#18192c\]:hover {
-  background-color: var(--accent) !important;
+  background-color: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.06)) !important;
 }
 
 /* Borders and Separators */
@@ -152,7 +152,7 @@
 [data-testid="vscode-mode"] .border-\[\#333652\],
 .border-\[\#343945\],
 .border-\[\#2A2E39\] {
-  border-color: var(--border) !important;
+  border-color: var(--vscode-sideBar-border, #2b2b2b) !important;
 }
 
 /* Primary Text */
@@ -160,7 +160,7 @@
 [data-testid="vscode-mode"] .text-slate-100,
 [data-testid="vscode-mode"] .text-slate-200,
 .text-\[\#E5E9F1\] {
-  color: var(--foreground) !important;
+  color: var(--vscode-editor-foreground, #cccccc) !important;
 }
 
 /* Secondary & Muted Text */
@@ -171,7 +171,7 @@
 [data-testid="vscode-mode"] .text-slate-500,
 .text-\[\#9AA4B5\],
 .text-\[\#697487\] {
-  color: var(--muted-foreground) !important;
+  color: var(--vscode-tab-inactiveForeground, rgba(255, 255, 255, 0.5)) !important;
 }
 
 /* Primary Accent & CTAs */
@@ -180,33 +180,40 @@
 [data-testid="vscode-mode"] .bg-indigo-600,
 [data-testid="vscode-mode"] .bg-indigo-500,
 .bg-\[\#6366F1\] {
-  background-color: var(--primary) !important;
-  color: var(--primary-foreground) !important;
+  background-color: var(--vscode-button-background, #0078d4) !important;
+  color: var(--vscode-button-foreground, #ffffff) !important;
 }
 
 [data-testid="vscode-mode"] .text-\[\#6366F1\],
 [data-testid="vscode-mode"] .text-indigo-400,
 [data-testid="vscode-mode"] .text-indigo-500,
 .text-\[\#6366F1\] {
-  color: var(--primary) !important;
+  color: var(--vscode-button-background, #0078d4) !important;
 }
 
 [data-testid="vscode-mode"] .border-t-\[\#6366F1\],
 .border-t-\[\#6366F1\] {
-  border-top-color: var(--primary) !important;
+  border-top-color: var(--vscode-tab-activeBorderTop, #0078d4) !important;
 }
 
 [data-testid="vscode-mode"] .border-\[\#6366F1\],
 .border-\[\#6366F1\] {
-  border-color: var(--primary) !important;
+  border-color: var(--vscode-focusBorder, #0078d4) !important;
 }
 
 /* Active tab indicator in Editor Area */
 [data-testid="vscode-tab"][aria-selected="true"],
 [data-testid="vscode-split-tab"][aria-selected="true"] {
-  border-top-color: var(--primary) !important;
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
+  border-top-color: var(--vscode-tab-activeBorderTop, #0078d4) !important;
+  background-color: var(--vscode-tab-activeBackground, #1f1f1f) !important;
+  color: var(--vscode-tab-activeForeground, #ffffff) !important;
+}
+
+/* Inactive tabs */
+[data-testid="vscode-tab"][aria-selected="false"],
+[data-testid="vscode-split-tab"][aria-selected="false"] {
+  background-color: var(--vscode-tab-inactiveBackground, #181818) !important;
+  color: var(--vscode-tab-inactiveForeground, rgba(255, 255, 255, 0.5)) !important;
 }
 
 /* Activity bar: Antigravity IDE & VS Code minimal styling */
@@ -216,5 +223,5 @@
 }
 
 [data-testid="vscode-activity-bar"] button:hover {
-  background-color: transparent !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
