@@ -99,7 +99,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
         </div>
 
         {/* Desktop/Web Menubar */}
-        <nav className="flex items-center text-xs relative">
+        <nav className="hidden md:flex items-center text-xs relative">
           {(['File', 'Edit', 'Selection', 'View', 'Go', 'Run', 'Terminal', 'Help'] as MenuKey[]).map(
             (menu) => {
               const isOpen = activeMenu === menu;
@@ -358,6 +358,96 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
             },
           )}
         </nav>
+
+        {/* Mobile Hamburger Menu (compact view on small screens) */}
+        <div className="flex md:hidden relative">
+          <button
+            type="button"
+            onClick={() => setActiveMenu((prev) => (prev ? null : 'File'))}
+            aria-label="Application Menu"
+            className="p-1 rounded-[2px] text-[var(--vscode-titleBar-activeForeground,#cccccc)] hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <Codicon name="menu" className="text-sm" />
+          </button>
+          {activeMenu !== null && (
+            <div
+              className="absolute left-0 top-full mt-1 w-60 rounded-[4px] border border-[var(--vscode-menu-border,#3c3c3c)] bg-[var(--vscode-menu-background,#252526)] text-[var(--vscode-menu-foreground,#cccccc)] shadow-2xl py-1 text-xs z-50 max-h-[75vh] overflow-y-auto"
+              role="menu"
+            >
+              <div className="px-3 py-1 font-semibold text-[#888888] uppercase text-[10px] tracking-wider border-b border-[#333333]">
+                Menu
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenu();
+                  onOpenQuickOpen();
+                }}
+                className="flex w-full items-center justify-between px-3 py-1.5 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+              >
+                <span>Go to File...</span>
+                <span className="text-[10px] opacity-60 font-mono">Ctrl+P</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenu();
+                  onOpenCommandPalette();
+                }}
+                className="flex w-full items-center justify-between px-3 py-1.5 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+              >
+                <span>Command Palette...</span>
+                <span className="text-[10px] opacity-60 font-mono">Ctrl+Shift+P</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenu();
+                  onTogglePrimarySidebar();
+                }}
+                className="flex w-full items-center justify-between px-3 py-1.5 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+              >
+                <span>Toggle Primary Sidebar</span>
+                <span className="text-[10px] opacity-60 font-mono">Ctrl+B</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenu();
+                  onToggleBottomPanel();
+                }}
+                className="flex w-full items-center justify-between px-3 py-1.5 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+              >
+                <span>Toggle Terminal</span>
+                <span className="text-[10px] opacity-60 font-mono">Ctrl+`</span>
+              </button>
+              <div className="my-1 border-t border-[var(--vscode-menu-separatorBackground,#3c3c3c)]" />
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenu();
+                  onOpenSettings();
+                }}
+                className="flex w-full items-center justify-between px-3 py-1.5 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+              >
+                <span>Settings</span>
+                <span className="text-[10px] opacity-60 font-mono">Ctrl+,</span>
+              </button>
+              {onOpenProjects && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeMenu();
+                    onOpenProjects();
+                  }}
+                  className="flex w-full items-center justify-between px-3 py-1.5 hover:bg-[var(--vscode-menu-selectionBackground,#04395e)] hover:text-white transition-colors"
+                >
+                  <span>Projects Dashboard</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Center: Official VS Code Command Center ── */}
@@ -371,7 +461,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
             onOpenQuickOpen();
           }
         }}
-        className="flex items-center justify-between px-3 h-[22px] w-64 md:w-96 max-w-[500px] rounded-[4px] border border-[var(--vscode-commandCenter-border,rgba(255,255,255,0.12))] bg-[var(--vscode-commandCenter-background,rgba(255,255,255,0.05))] hover:bg-[var(--vscode-commandCenter-activeBackground,rgba(255,255,255,0.08))] text-xs text-[var(--vscode-commandCenter-foreground,#cccccc)] transition-all cursor-pointer shadow-inner select-none"
+        className="flex items-center justify-between px-2 sm:px-3 h-[22px] min-w-0 max-w-[500px] flex-1 mx-1.5 sm:mx-2 sm:w-80 md:w-96 rounded-[4px] border border-[var(--vscode-commandCenter-border,rgba(255,255,255,0.12))] bg-[var(--vscode-commandCenter-background,rgba(255,255,255,0.05))] hover:bg-[var(--vscode-commandCenter-activeBackground,rgba(255,255,255,0.08))] text-xs text-[var(--vscode-commandCenter-foreground,#cccccc)] transition-all cursor-pointer shadow-inner select-none"
         title="Quick Open / Search Files (Ctrl+P / Ctrl+Shift+P)"
         aria-label="Quick Open / Command Search"
       >
@@ -381,7 +471,7 @@ export const WorkbenchTitleBar: React.FC<WorkbenchTitleBarProps> = ({
             {projectName} — Search files (Ctrl+P)
           </span>
         </div>
-        <kbd className="hidden sm:inline-block px-1 py-0.2 text-[9px] text-neutral-400 font-mono rounded bg-white/5 border border-white/10">
+        <kbd className="hidden sm:inline-block px-1 py-0.2 text-[9px] text-neutral-400 font-mono rounded bg-white/5 border border-white/10 shrink-0">
           Ctrl+P
         </kbd>
       </div>

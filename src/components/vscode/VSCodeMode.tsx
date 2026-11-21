@@ -612,6 +612,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       return [...next, path];
     });
     setActivePath(path);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      window.dispatchEvent(new CustomEvent('workbench:close-mobile-sidebar'));
+    }
   }, []);
 
   const closeTab = useCallback(
@@ -1221,6 +1224,63 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         return;
       }
 
+      // Escape: Close mobile sidebar
+      if (e.key === 'Escape') {
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+          window.dispatchEvent(new CustomEvent('workbench:close-mobile-sidebar'));
+        }
+      }
+
+      // Ctrl/Cmd + Shift + G: Source Control
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'G' || e.key === 'g')) {
+        e.preventDefault();
+        setWorkbenchLayout((prev) => ({
+          ...prev,
+          primarySidebar: { ...prev.primarySidebar, visible: true, activeViewId: 'source-control' },
+        }));
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + X: Extensions & Packages
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'X' || e.key === 'x')) {
+        e.preventDefault();
+        setWorkbenchLayout((prev) => ({
+          ...prev,
+          primarySidebar: { ...prev.primarySidebar, visible: true, activeViewId: 'packages' },
+        }));
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + D: Run & Debug
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+        e.preventDefault();
+        toast('Debugger: Node environment active in WebContainer');
+        return;
+      }
+
+      // Ctrl/Cmd + ,: Open Settings / Preferences
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === ',') {
+        e.preventDefault();
+        setIsSettingsOpen(true);
+        return;
+      }
+
+      // Ctrl/Cmd + S: Save file
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        toast.success('Workspace saved');
+        return;
+      }
+
+      // Ctrl/Cmd + W: Close current tab
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'w' || e.key === 'W')) {
+        if (activePath) {
+          e.preventDefault();
+          closeTab(activePath);
+          return;
+        }
+      }
+
       // Ctrl/Cmd + \: Split Editor
       if ((e.ctrlKey || e.metaKey) && e.key === '\\') {
         e.preventDefault();
@@ -1238,7 +1298,17 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [openCommandPalette, openQuickOpen, isSplitActive, openPaths, activePath, project.files, openToSide, closeSplitPane]);
+  }, [
+    openCommandPalette,
+    openQuickOpen,
+    isSplitActive,
+    openPaths,
+    activePath,
+    project.files,
+    openToSide,
+    closeSplitPane,
+    closeTab,
+  ]);
 
   const submitFiles = useCallback(
     async (files: File[]) => {
@@ -2380,9 +2450,52 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             perform: () => setWorkbenchLayout((prev) => WORKBENCH_PRESETS.TERMINAL_FOCUSED(prev)),
           },
           {
+            id: 'workbench.view.sourceControl',
+            title: 'View: Focus Source Control',
+            section: 'View',
+            shortcut: 'Ctrl+Shift+G',
+            perform: () => {
+              setWorkbenchLayout((prev) => ({
+                ...prev,
+                primarySidebar: { ...prev.primarySidebar, visible: true, activeViewId: 'source-control' },
+              }));
+            },
+          },
+          {
+            id: 'workbench.view.packages',
+            title: 'View: Focus Extensions & Packages',
+            section: 'View',
+            shortcut: 'Ctrl+Shift+X',
+            perform: () => {
+              setWorkbenchLayout((prev) => ({
+                ...prev,
+                primarySidebar: { ...prev.primarySidebar, visible: true, activeViewId: 'packages' },
+              }));
+            },
+          },
+          {
+            id: 'workbench.action.files.save',
+            title: 'File: Save Workspace',
+            section: 'File',
+            shortcut: 'Ctrl+S',
+            perform: () => {
+              toast.success('Workspace saved');
+            },
+          },
+          {
+            id: 'workbench.action.closeActiveEditor',
+            title: 'View: Close Active Editor Tab',
+            section: 'View',
+            shortcut: 'Ctrl+W',
+            perform: () => {
+              if (activePath) closeTab(activePath);
+            },
+          },
+          {
             id: 'workbench.action.openSettings',
             title: 'Preferences: Open Workbench Settings',
             section: 'Preferences',
+            shortcut: 'Ctrl+,',
             perform: () => setIsSettingsOpen(true),
           },
           {

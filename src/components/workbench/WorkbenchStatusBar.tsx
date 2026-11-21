@@ -68,17 +68,17 @@ export const WorkbenchStatusBar: React.FC<WorkbenchStatusBarProps> = ({
         {/* Iconic VS Code Blue Remote Indicator */}
         <button
           type="button"
-          className="flex h-full items-center gap-1 bg-[#0078d4] hover:bg-[#026ec1] px-2.5 text-white font-medium transition-colors"
+          className="flex h-full items-center gap-1 bg-[#0078d4] hover:bg-[#026ec1] px-2 sm:px-2.5 text-white font-medium transition-colors"
           title="WebContainer Virtual Workspace"
         >
           <Codicon name="remote" className="text-[12px]" />
-          <span className="text-[11px] font-medium tracking-tight">WebContainer</span>
+          <span className="hidden sm:inline text-[11px] font-medium tracking-tight">WebContainer</span>
         </button>
 
         {/* Source Control Branch */}
         <button
           type="button"
-          className="flex h-full items-center gap-1 hover:bg-white/10 px-2 text-[#cccccc] transition-colors"
+          className="hidden sm:flex h-full items-center gap-1 hover:bg-white/10 px-2 text-[#cccccc] transition-colors"
           title="Current Git Branch: main"
         >
           <Codicon name="source-control" className="text-[12px] text-[#999999]" />
@@ -145,7 +145,7 @@ export const WorkbenchStatusBar: React.FC<WorkbenchStatusBarProps> = ({
           <button
             type="button"
             data-testid="status-cursor"
-            className="flex h-full items-center hover:bg-white/10 px-2 text-[#cccccc] transition-colors"
+            className="hidden sm:flex h-full items-center hover:bg-white/10 px-2 text-[#cccccc] transition-colors"
           >
             Ln {cursor.line}, Col {cursor.column}
           </button>

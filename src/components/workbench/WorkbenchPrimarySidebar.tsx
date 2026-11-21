@@ -12,6 +12,7 @@ interface WorkbenchPrimarySidebarProps {
   onClose: () => void;
   onResize: (newWidth: number) => void;
   renderViewContent: (viewId: ViewId) => React.ReactNode;
+  isOverlay?: boolean;
 }
 
 export const WorkbenchPrimarySidebar: React.FC<WorkbenchPrimarySidebarProps> = ({
@@ -24,12 +25,14 @@ export const WorkbenchPrimarySidebar: React.FC<WorkbenchPrimarySidebarProps> = (
   onClose,
   onResize,
   renderViewContent,
+  isOverlay = false,
 }) => {
   const isDraggingRef = useRef(false);
 
   if (!visible) return null;
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (isOverlay) return;
     e.preventDefault();
     isDraggingRef.current = true;
     const startX = e.clientX;
@@ -56,8 +59,12 @@ export const WorkbenchPrimarySidebar: React.FC<WorkbenchPrimarySidebarProps> = (
     <aside
       role="region"
       aria-label="Primary Sidebar"
-      style={{ width: `${width}px` }}
-      className="group relative flex h-full shrink-0 flex-col overflow-hidden rounded-lg border border-[#2b2b2b] bg-[#181818] text-xs select-none shadow-sm z-10"
+      style={isOverlay ? { width: 'min(320px, calc(100vw - 56px))' } : { width: `${width}px` }}
+      className={`group flex shrink-0 flex-col overflow-hidden rounded-lg border border-[#2b2b2b] bg-[#181818] text-xs select-none shadow-sm z-10 ${
+        isOverlay
+          ? 'fixed top-1 bottom-6 left-[52px] z-40 max-w-[calc(100vw-56px)] shadow-2xl border-[#3c3c3c]'
+          : 'relative h-full'
+      }`}
       data-testid="vscode-explorer"
     >
       <WorkbenchViewContainer
@@ -73,17 +80,19 @@ export const WorkbenchPrimarySidebar: React.FC<WorkbenchPrimarySidebarProps> = (
       </WorkbenchViewContainer>
 
       {/* Modern VS Code Smooth Sash Resizer with Centered Pill Grip */}
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Resize Primary Sidebar"
-        onPointerDown={handlePointerDown}
-        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#0078d4]/30 active:bg-[#0078d4] transition-colors z-20 flex items-center justify-center select-none"
-        data-testid="primary-sidebar-resizer"
-        title="Drag to resize Primary Sidebar"
-      >
-        <div className="h-6 w-0.5 rounded-full bg-[#3c3c3c] group-hover:bg-[#0078d4] transition-colors" />
-      </div>
+      {!isOverlay && (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize Primary Sidebar"
+          onPointerDown={handlePointerDown}
+          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#0078d4]/30 active:bg-[#0078d4] transition-colors z-20 flex items-center justify-center select-none"
+          data-testid="primary-sidebar-resizer"
+          title="Drag to resize Primary Sidebar"
+        >
+          <div className="h-6 w-0.5 rounded-full bg-[#3c3c3c] group-hover:bg-[#0078d4] transition-colors" />
+        </div>
+      )}
     </aside>
   );
 };

@@ -73,11 +73,11 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
 
   const alignmentClass =
     !isMaximized && panelAlignment === 'center'
-      ? 'w-full max-w-[85%] mx-auto'
+      ? 'w-full md:max-w-[85%] mx-auto'
       : !isMaximized && panelAlignment === 'left'
-      ? 'w-full max-w-[75%] mr-auto'
+      ? 'w-full md:max-w-[75%] mr-auto'
       : !isMaximized && panelAlignment === 'right'
-      ? 'w-full max-w-[75%] ml-auto'
+      ? 'w-full md:max-w-[75%] ml-auto'
       : 'w-full';
 
   return (

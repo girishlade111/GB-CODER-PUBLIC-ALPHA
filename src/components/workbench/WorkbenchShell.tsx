@@ -103,28 +103,40 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
     return () => window.removeEventListener('workbench:customize-layout', handleOpen);
   }, []);
 
-  // Restore desktop layout when viewport expands (> 900px for secondary, > 640px for primary)
+  useEffect(() => {
+    const handleCloseMobile = () => {
+      if (viewportWidth < 768) {
+        setResponsivePrimaryOverride(false);
+      }
+    };
+    window.addEventListener('workbench:close-mobile-sidebar', handleCloseMobile);
+    return () => window.removeEventListener('workbench:close-mobile-sidebar', handleCloseMobile);
+  }, [viewportWidth]);
+
+  // Restore desktop layout when viewport expands (> 900px for secondary, > 768px for primary)
   useEffect(() => {
     if (viewportWidth > 900) {
       setResponsiveSecondaryOverride(null);
     }
-    if (viewportWidth > 640) {
+    if (viewportWidth >= 768) {
       setResponsivePrimaryOverride(null);
     }
   }, [viewportWidth]);
+
+  const isMobile = viewportWidth < 768;
 
   // Determine effective visibility without mutating persisted preferences
   const effectiveSecondaryVisible = viewportWidth <= 900
     ? (responsiveSecondaryOverride !== null ? responsiveSecondaryOverride : false)
     : layout.secondarySidebar.visible;
 
-  const effectivePrimaryVisible = viewportWidth <= 640
+  const effectivePrimaryVisible = isMobile
     ? (responsivePrimaryOverride !== null ? responsivePrimaryOverride : false)
     : layout.primarySidebar.visible;
 
   // Toggle helpers
   const handleTogglePrimarySidebar = () => {
-    if (viewportWidth <= 640) {
+    if (isMobile) {
       setResponsivePrimaryOverride(!effectivePrimaryVisible);
     } else {
       onUpdateLayout((prev) => ({
@@ -284,7 +296,7 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
             activeViewId={layout.primarySidebar.activeViewId}
             isSidebarOpen={effectivePrimaryVisible}
             onSelectView={(vid) => {
-              if (viewportWidth < 640) {
+              if (isMobile) {
                 if (effectivePrimaryVisible && layout.primarySidebar.activeViewId === vid) {
                   setResponsivePrimaryOverride(false);
                 } else {
@@ -331,10 +343,20 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
 
         {/* Floating/Card Grid Container with subtle spacing matching vscode.dev */}
         <div className="flex min-h-0 min-w-0 flex-1 p-1 gap-1 overflow-hidden relative bg-[#181818]">
+          {/* Mobile Backdrop Overlay */}
+          {isMobile && effectivePrimaryVisible && (
+            <div
+              className="fixed inset-0 bg-black/60 z-30 transition-opacity backdrop-blur-[1px]"
+              onClick={() => setResponsivePrimaryOverride(false)}
+              aria-hidden="true"
+            />
+          )}
+
           {/* Primary Sidebar (Left) */}
           <WorkbenchPrimarySidebar
             width={layout.primarySidebar.width}
             visible={effectivePrimaryVisible}
+            isOverlay={isMobile}
             activeViewId={layout.primarySidebar.activeViewId}
             availableViews={primaryViews}
             onSelectView={(vid) => {
@@ -345,7 +367,7 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
             }}
             onMoveView={handleMoveView}
             onClose={() => {
-              if (viewportWidth < 640) {
+              if (isMobile) {
                 setResponsivePrimaryOverride(false);
               } else {
                 onUpdateLayout((prev) => ({
