@@ -464,14 +464,24 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     });
   }, [project.files]);
 
-  // Dynamic project file sync & auto-startup when package.json is added
+  // Dynamic project file sync & auto-startup when package.json is added or dependencies change
   const prevHasManifestRef = useRef<boolean>(webcontainerService.hasNpmManifest(project.files));
+  const prevFingerprintRef = useRef<string>(
+    webcontainerService.computeDependencyFingerprint(project.files, project.dependencies, project.projectType)
+  );
   useEffect(() => {
     projectFilesMirrorRef.current = project.files;
     const hasManifest = webcontainerService.hasNpmManifest(project.files);
+    const currentFingerprint = webcontainerService.computeDependencyFingerprint(
+      project.files,
+      project.dependencies,
+      project.projectType
+    );
+    const effectiveProjectId = activeProjectId || (project as { id?: string }).id || 'default-project';
+
     if (!prevHasManifestRef.current && hasManifest) {
       prevHasManifestRef.current = true;
-      const effectiveProjectId = activeProjectId || (project as { id?: string }).id || 'default-project';
+      prevFingerprintRef.current = currentFingerprint;
       void (async () => {
         try {
           const container = await webcontainerService.boot();
@@ -499,8 +509,42 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           console.warn('[VSCodeMode] Auto-startup on package.json addition failed:', err);
         }
       })();
+    } else if (hasManifest && prevFingerprintRef.current !== currentFingerprint) {
+      // Dependencies changed while dev server or project was active
+      prevFingerprintRef.current = currentFingerprint;
+      void (async () => {
+        try {
+          const container = await webcontainerService.boot();
+          const pkgFile = project.files.find(
+            (f) => f.path.replace(/\\/g, '/').replace(/^\/+/, '').toLowerCase() === 'package.json'
+          );
+          if (pkgFile) {
+            await webcontainerService.syncFile('package.json', pkgFile.content, effectiveProjectId);
+          }
+          const cmdInfo = webcontainerService.detectCommands(project.files);
+          const devCmd = cmdInfo.devCommand || 'npm run dev';
+          const installCmd = cmdInfo.installCommand || 'npm install';
+
+          if (devServerManager.isRunning()) {
+            toast('New dependencies detected. Installing & restarting dev server...');
+            webcontainerService.setStartupStage('installing');
+            await devServerManager.restart(`${installCmd} && ${devCmd}`);
+          } else {
+            toast('New dependencies detected in package.json. Installing...');
+            const session = await terminalSessionManager.getOrCreateSession(container, {
+              title: 'Terminal 1',
+              projectId: effectiveProjectId,
+              epoch: webcontainerService.getSessionEpoch(),
+            });
+            terminalSessionManager.writeToSession(session.id, `${installCmd}\r`);
+          }
+        } catch (err) {
+          console.warn('[VSCodeMode] Auto-reinstall on dependency modification failed:', err);
+        }
+      })();
     } else {
       prevHasManifestRef.current = hasManifest;
+      prevFingerprintRef.current = currentFingerprint;
     }
   }, [project.files, activeProjectId, project.dependencies, project.projectType]);
 
