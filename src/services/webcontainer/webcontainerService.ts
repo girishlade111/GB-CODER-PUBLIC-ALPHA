@@ -208,7 +208,7 @@ export function filesToFileSystemTree(
 
   for (const file of files) {
     if (!file.path) continue;
-    const cleanPath = file.path.replace(/^\/+/, '');
+    const cleanPath = file.path.replace(/\\/g, '/').replace(/^\/+/, '');
     const lower = cleanPath.toLowerCase();
     if (lower === 'package.json') {
       hasRootPackageJson = true;
@@ -1623,14 +1623,27 @@ class WebContainerManager {
       releaseMountLock = resolve;
     });
 
+    const isStale = () => {
+      if (targetProject && this.activeProjectId && this.activeProjectId !== targetProject) {
+        return true;
+      }
+      if (targetEpoch !== undefined && this.sessionEpoch !== targetGen) {
+        return true;
+      }
+      return false;
+    };
+
     try {
       await previousMount.catch(() => {});
 
-      // Stale mount guard 1: verify project identity and session epoch before progressing
-      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+      // Stale mount guard 1: verify project identity before progressing
+      if (isStale()) {
         console.warn(
-          `[WebContainer] Discarded stale mount for project "${targetProject}" (epoch ${targetGen}) - active project is now "${this.activeProjectId}" (epoch ${this.sessionEpoch})`,
+          `[WebContainer] Discarded stale mount for project "${targetProject}" - active project is now "${this.activeProjectId}"`,
         );
+        if (this.state.startupStage === 'mounting_files') {
+          this.updateState({ startupStage: 'runtime_ready' });
+        }
         return false;
       }
 
@@ -1652,10 +1665,13 @@ class WebContainerManager {
       }
 
       // Stale mount guard 2: verify project scope after barrier
-      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+      if (isStale()) {
         console.warn(
           `[WebContainer] Discarded stale mount after barrier for project "${targetProject}"`,
         );
+        if (this.state.startupStage === 'mounting_files') {
+          this.updateState({ startupStage: 'runtime_ready' });
+        }
         return false;
       }
 
@@ -1666,10 +1682,13 @@ class WebContainerManager {
       endSerialization({ fileCount: files.length });
 
       // Stale mount guard 3: verify project scope before mutating container filesystem
-      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+      if (isStale()) {
         console.warn(
           `[WebContainer] Discarded stale mount before container.mount for project "${targetProject}"`,
         );
+        if (this.state.startupStage === 'mounting_files') {
+          this.updateState({ startupStage: 'runtime_ready' });
+        }
         return false;
       }
 
@@ -1677,10 +1696,13 @@ class WebContainerManager {
       const container = await this.boot();
 
       // Stale mount guard 4: verify project scope after boot() completes
-      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+      if (isStale()) {
         console.warn(
           `[WebContainer] Discarded stale mount after boot() for project "${targetProject}"`,
         );
+        if (this.state.startupStage === 'mounting_files') {
+          this.updateState({ startupStage: 'runtime_ready' });
+        }
         return false;
       }
 
@@ -1690,10 +1712,13 @@ class WebContainerManager {
       await container.mount(tree);
 
       // Stale mount guard 5: verify project scope after container.mount() completes
-      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) {
+      if (isStale()) {
         console.warn(
           `[WebContainer] Discarded stale mount after container.mount() for project "${targetProject}"`,
         );
+        if (this.state.startupStage === 'mounting_files') {
+          this.updateState({ startupStage: 'runtime_ready' });
+        }
         return false;
       }
 
@@ -1714,7 +1739,7 @@ class WebContainerManager {
       });
       return true;
     } catch (err) {
-      if (this.activeProjectId !== targetProject || this.sessionEpoch !== targetGen) return false;
+      if (isStale()) return false;
       const msg = err instanceof Error ? err.message : String(err);
       this.setStartupStage('error', {
         phase: 'mount',
@@ -1723,7 +1748,7 @@ class WebContainerManager {
         recoverable: true,
         retryAction: 'reboot_container',
       });
-      throw err;
+      return false;
     } finally {
       releaseMountLock();
     }
@@ -1765,10 +1790,18 @@ class WebContainerManager {
    * explicit manual terminal commands keep working against the booted shell.
    * Nested package.json (e.g. in packages/app/package.json) does NOT trigger root auto-start.
    */
-  public hasNpmManifest(files: ProjectFile[]): boolean {
-    return files.some((f) =>
-      (f.path || '').replace(/^\/+/, '').toLowerCase() === 'package.json',
+  public hasNpmManifest(
+    files: ProjectFile[],
+    dependencies?: Record<string, string>,
+    projectType?: ProjectType,
+  ): boolean {
+    const hasExplicit = (files || []).some((f) =>
+      (f.path || '').replace(/\\/g, '/').replace(/^\/+/, '').toLowerCase() === 'package.json',
     );
+    if (hasExplicit) return true;
+    if (dependencies && Object.keys(dependencies).length > 0) return true;
+    if (projectType === 'react' || projectType === 'vue') return true;
+    return false;
   }
 
   /**

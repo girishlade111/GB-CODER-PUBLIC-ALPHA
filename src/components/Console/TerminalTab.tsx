@@ -119,6 +119,7 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
   isResolvingPackages,
   isActive,
   projectId,
+  autoStartProject = false,
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
@@ -233,18 +234,21 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
       const currentProj = projectRef.current;
       const effectiveProjectId = projectId || (currentProj as unknown as { id?: string }).id;
 
-      if (effectiveProjectId) {
-        webcontainerService.attachProject(effectiveProjectId);
-      }
+      // Only attach and mount if running standalone with autoStartProject=true
+      if (autoStartProject) {
+        if (effectiveProjectId) {
+          webcontainerService.attachProject(effectiveProjectId);
+        }
 
-      if (currentProj.files.length > 0) {
-        await webcontainerService.mountProject(
-          currentProj.files,
-          currentProj.dependencies,
-          currentProj.projectType,
-          effectiveProjectId,
-          webcontainerService.getSessionEpoch(),
-        );
+        if (currentProj.files.length > 0) {
+          await webcontainerService.mountProject(
+            currentProj.files,
+            currentProj.dependencies,
+            currentProj.projectType,
+            effectiveProjectId,
+            webcontainerService.getSessionEpoch(),
+          );
+        }
       }
 
       // Check if session already exists
@@ -254,6 +258,8 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
           title: 'Terminal 1',
           cols: termRef.current?.cols || 80,
           rows: termRef.current?.rows || 24,
+          projectId: effectiveProjectId,
+          epoch: webcontainerService.getSessionEpoch(),
         });
       }
 
