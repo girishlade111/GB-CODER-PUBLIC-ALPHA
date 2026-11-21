@@ -57,7 +57,7 @@ export const WorkbenchPrimarySidebar: React.FC<WorkbenchPrimarySidebarProps> = (
       role="region"
       aria-label="Primary Sidebar"
       style={{ width: `${width}px` }}
-      className="relative flex shrink-0 flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--sidebar)] text-xs select-none z-10"
+      className="group relative flex h-full shrink-0 flex-col overflow-hidden rounded-lg border border-[#2b2b2b] bg-[#181818] text-xs select-none shadow-sm z-10"
       data-testid="vscode-explorer"
     >
       <WorkbenchViewContainer
@@ -72,15 +72,18 @@ export const WorkbenchPrimarySidebar: React.FC<WorkbenchPrimarySidebarProps> = (
         {renderViewContent(activeViewId)}
       </WorkbenchViewContainer>
 
-      {/* Resize Handle (Right Border) */}
+      {/* Modern VS Code Smooth Sash Resizer with Centered Pill Grip */}
       <div
         role="separator"
         aria-orientation="vertical"
         aria-label="Resize Primary Sidebar"
         onPointerDown={handlePointerDown}
-        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-[var(--primary)] active:bg-[var(--primary)] transition-colors z-20"
+        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#0078d4]/30 active:bg-[#0078d4] transition-colors z-20 flex items-center justify-center select-none"
         data-testid="primary-sidebar-resizer"
-      />
+        title="Drag to resize Primary Sidebar"
+      >
+        <div className="h-6 w-0.5 rounded-full bg-[#3c3c3c] group-hover:bg-[#0078d4] transition-colors" />
+      </div>
     </aside>
   );
 };

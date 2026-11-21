@@ -274,172 +274,177 @@ export const WorkbenchShell: React.FC<WorkbenchShellProps> = ({
         </div>
       )}
 
-      {/* ── Main Workbench Body ── */}
-      <div className={`flex min-h-0 flex-1 overflow-hidden relative ${
+      {/* ── Main Workbench Body with Modern VS Code Card Grid & Gaps ── */}
+      <div className={`flex min-h-0 flex-1 overflow-hidden relative bg-[#181818] ${
         layout.primarySidebarPosition === 'right' ? 'flex-row-reverse' : 'flex-row'
       }`}>
         {/* Fixed Activity Bar */}
         {layout.activityBar?.visible !== false && (
-        <WorkbenchActivityBar
-          activeViewId={layout.primarySidebar.activeViewId}
-          isSidebarOpen={effectivePrimaryVisible}
-          onSelectView={(vid) => {
-            if (viewportWidth < 640) {
-              if (effectivePrimaryVisible && layout.primarySidebar.activeViewId === vid) {
-                setResponsivePrimaryOverride(false);
-              } else {
-                setResponsivePrimaryOverride(true);
-                onUpdateLayout((prev) => ({
-                  ...prev,
-                  primarySidebar: { ...prev.primarySidebar, activeViewId: vid },
-                }));
+          <WorkbenchActivityBar
+            activeViewId={layout.primarySidebar.activeViewId}
+            isSidebarOpen={effectivePrimaryVisible}
+            onSelectView={(vid) => {
+              if (viewportWidth < 640) {
+                if (effectivePrimaryVisible && layout.primarySidebar.activeViewId === vid) {
+                  setResponsivePrimaryOverride(false);
+                } else {
+                  setResponsivePrimaryOverride(true);
+                  onUpdateLayout((prev) => ({
+                    ...prev,
+                    primarySidebar: { ...prev.primarySidebar, activeViewId: vid },
+                  }));
+                }
+                return;
               }
-              return;
-            }
 
-            onUpdateLayout((prev) => {
-              // If already visible and clicked again, toggle visibility
-              if (prev.primarySidebar.visible && prev.primarySidebar.activeViewId === vid) {
+              onUpdateLayout((prev) => {
+                // If already visible and clicked again, toggle visibility
+                if (prev.primarySidebar.visible && prev.primarySidebar.activeViewId === vid) {
+                  return {
+                    ...prev,
+                    primarySidebar: {
+                      ...prev.primarySidebar,
+                      visible: false,
+                    },
+                  };
+                }
                 return {
                   ...prev,
                   primarySidebar: {
                     ...prev.primarySidebar,
-                    visible: false,
+                    visible: true,
+                    activeViewId: vid,
                   },
                 };
-              }
-              return {
-                ...prev,
-                primarySidebar: {
-                  ...prev.primarySidebar,
-                  visible: true,
-                  activeViewId: vid,
-                },
-              };
-            });
-          }}
-          onToggleTerminal={handleToggleBottomPanel}
-          isTerminalOpen={layout.bottomPanel.visible}
-          dirtyCount={dirtyCount}
-          isCodeAssistGenerating={isCodeAssistGenerating}
-          onOpenSettings={onOpenSettings}
-          onOpenSnapshots={onOpenSnapshots}
-          onOpenVoiceCommands={onOpenVoiceCommands}
-          onResetContainer={onResetContainer}
-        />
+              });
+            }}
+            onToggleTerminal={handleToggleBottomPanel}
+            isTerminalOpen={layout.bottomPanel.visible}
+            dirtyCount={dirtyCount}
+            isCodeAssistGenerating={isCodeAssistGenerating}
+            onOpenSettings={onOpenSettings}
+            onOpenSnapshots={onOpenSnapshots}
+            onOpenVoiceCommands={onOpenVoiceCommands}
+            onResetContainer={onResetContainer}
+          />
         )}
 
-        {/* Primary Sidebar (Left) */}
-        <WorkbenchPrimarySidebar
-          width={layout.primarySidebar.width}
-          visible={effectivePrimaryVisible}
-          activeViewId={layout.primarySidebar.activeViewId}
-          availableViews={primaryViews}
-          onSelectView={(vid) => {
-            onUpdateLayout((prev) => ({
-              ...prev,
-              primarySidebar: { ...prev.primarySidebar, activeViewId: vid },
-            }));
-          }}
-          onMoveView={handleMoveView}
-          onClose={() => {
-            if (viewportWidth < 640) {
-              setResponsivePrimaryOverride(false);
-            } else {
-              onUpdateLayout((prev) => ({
-                ...prev,
-                primarySidebar: { ...prev.primarySidebar, visible: false },
-              }));
-            }
-          }}
-          onResize={(newWidth) => {
-            onUpdateLayout((prev) => ({
-              ...prev,
-              primarySidebar: { ...prev.primarySidebar, width: newWidth },
-            }));
-          }}
-          renderViewContent={(vid) => renderViewContent(vid, 'primary_sidebar')}
-        />
-
-        {/* Center: Editor Area + Docked Bottom Panel */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--background)]">
-          {/* Editor Area */}
-          <WorkbenchEditorArea
-            {...editorAreaProps}
-            isCenteredLayout={Boolean(layout.modes?.centeredLayout)}
-          />
-
-          {/* Bottom Panel */}
-          <WorkbenchBottomPanel
-            panelAlignment={layout.panelAlignment ?? 'center'}
-            height={layout.bottomPanel.height}
-            visible={layout.bottomPanel.visible}
-            isMaximized={layout.bottomPanel.isMaximized}
-            activeViewId={layout.bottomPanel.activeViewId}
-            availableViews={bottomViews}
+        {/* Floating/Card Grid Container with subtle spacing matching vscode.dev */}
+        <div className="flex min-h-0 min-w-0 flex-1 p-1 gap-1 overflow-hidden relative bg-[#181818]">
+          {/* Primary Sidebar (Left) */}
+          <WorkbenchPrimarySidebar
+            width={layout.primarySidebar.width}
+            visible={effectivePrimaryVisible}
+            activeViewId={layout.primarySidebar.activeViewId}
+            availableViews={primaryViews}
             onSelectView={(vid) => {
               onUpdateLayout((prev) => ({
                 ...prev,
-                bottomPanel: { ...prev.bottomPanel, activeViewId: vid },
+                primarySidebar: { ...prev.primarySidebar, activeViewId: vid },
               }));
             }}
             onMoveView={handleMoveView}
-            onToggleMaximize={() => {
-              onUpdateLayout((prev) => ({
-                ...prev,
-                bottomPanel: { ...prev.bottomPanel, isMaximized: !prev.bottomPanel.isMaximized },
-              }));
-            }}
             onClose={() => {
+              if (viewportWidth < 640) {
+                setResponsivePrimaryOverride(false);
+              } else {
+                onUpdateLayout((prev) => ({
+                  ...prev,
+                  primarySidebar: { ...prev.primarySidebar, visible: false },
+                }));
+              }
+            }}
+            onResize={(newWidth) => {
               onUpdateLayout((prev) => ({
                 ...prev,
-                bottomPanel: { ...prev.bottomPanel, visible: false },
+                primarySidebar: { ...prev.primarySidebar, width: newWidth },
               }));
             }}
-            onResize={(newHeight) => {
+            renderViewContent={(vid) => renderViewContent(vid, 'primary_sidebar')}
+          />
+
+          {/* Center: Editor Area + Docked Bottom Panel */}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden gap-1">
+            {/* Editor Area Card */}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-[#2b2b2b] bg-[#1f1f1f] shadow-sm">
+              <WorkbenchEditorArea
+                {...editorAreaProps}
+                isCenteredLayout={Boolean(layout.modes?.centeredLayout)}
+              />
+            </div>
+
+            {/* Bottom Panel Card */}
+            <WorkbenchBottomPanel
+              panelAlignment={layout.panelAlignment ?? 'center'}
+              height={layout.bottomPanel.height}
+              visible={layout.bottomPanel.visible}
+              isMaximized={layout.bottomPanel.isMaximized}
+              activeViewId={layout.bottomPanel.activeViewId}
+              availableViews={bottomViews}
+              onSelectView={(vid) => {
+                onUpdateLayout((prev) => ({
+                  ...prev,
+                  bottomPanel: { ...prev.bottomPanel, activeViewId: vid },
+                }));
+              }}
+              onMoveView={handleMoveView}
+              onToggleMaximize={() => {
+                onUpdateLayout((prev) => ({
+                  ...prev,
+                  bottomPanel: { ...prev.bottomPanel, isMaximized: !prev.bottomPanel.isMaximized },
+                }));
+              }}
+              onClose={() => {
+                onUpdateLayout((prev) => ({
+                  ...prev,
+                  bottomPanel: { ...prev.bottomPanel, visible: false },
+                }));
+              }}
+              onResize={(newHeight) => {
+                onUpdateLayout((prev) => ({
+                  ...prev,
+                  bottomPanel: { ...prev.bottomPanel, height: newHeight },
+                }));
+              }}
+              renderViewContent={(vid) => renderViewContent(vid, 'bottom_panel')}
+              diagnostics={diagnostics}
+              onNewTerminal={onNewTerminal}
+              onToggleSplitTerminal={onToggleSplitTerminal}
+            />
+          </div>
+
+          {/* Secondary Sidebar (Right) */}
+          <WorkbenchSecondarySidebar
+            width={layout.secondarySidebar.width}
+            visible={effectiveSecondaryVisible}
+            activeViewId={layout.secondarySidebar.activeViewId}
+            availableViews={secondaryViews}
+            onSelectView={(vid) => {
               onUpdateLayout((prev) => ({
                 ...prev,
-                bottomPanel: { ...prev.bottomPanel, height: newHeight },
+                secondarySidebar: { ...prev.secondarySidebar, activeViewId: vid },
               }));
             }}
-            renderViewContent={(vid) => renderViewContent(vid, 'bottom_panel')}
-            diagnostics={diagnostics}
-            onNewTerminal={onNewTerminal}
-            onToggleSplitTerminal={onToggleSplitTerminal}
+            onMoveView={handleMoveView}
+            onClose={() => {
+              if (viewportWidth < 900) {
+                setResponsiveSecondaryOverride(false);
+              } else {
+                onUpdateLayout((prev) => ({
+                  ...prev,
+                  secondarySidebar: { ...prev.secondarySidebar, visible: false },
+                }));
+              }
+            }}
+            onResize={(newWidth) => {
+              onUpdateLayout((prev) => ({
+                ...prev,
+                secondarySidebar: { ...prev.secondarySidebar, width: newWidth },
+              }));
+            }}
+            renderViewContent={(vid) => renderViewContent(vid, 'secondary_sidebar')}
           />
         </div>
-
-        {/* Secondary Sidebar (Right) */}
-        <WorkbenchSecondarySidebar
-          width={layout.secondarySidebar.width}
-          visible={effectiveSecondaryVisible}
-          activeViewId={layout.secondarySidebar.activeViewId}
-          availableViews={secondaryViews}
-          onSelectView={(vid) => {
-            onUpdateLayout((prev) => ({
-              ...prev,
-              secondarySidebar: { ...prev.secondarySidebar, activeViewId: vid },
-            }));
-          }}
-          onMoveView={handleMoveView}
-          onClose={() => {
-            if (viewportWidth < 900) {
-              setResponsiveSecondaryOverride(false);
-            } else {
-              onUpdateLayout((prev) => ({
-                ...prev,
-                secondarySidebar: { ...prev.secondarySidebar, visible: false },
-              }));
-            }
-          }}
-          onResize={(newWidth) => {
-            onUpdateLayout((prev) => ({
-              ...prev,
-              secondarySidebar: { ...prev.secondarySidebar, width: newWidth },
-            }));
-          }}
-          renderViewContent={(vid) => renderViewContent(vid, 'secondary_sidebar')}
-        />
       </div>
 
       {/* ── Status Bar ── */}

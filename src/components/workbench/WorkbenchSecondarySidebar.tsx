@@ -60,18 +60,21 @@ export const WorkbenchSecondarySidebar: React.FC<WorkbenchSecondarySidebarProps>
       role="region"
       aria-label="Secondary Sidebar"
       style={{ width: `${width}px` }}
-      className="relative flex shrink-0 flex-col overflow-hidden border-l border-[var(--border)] bg-[var(--sidebar)] text-xs select-none z-10"
+      className="group relative flex h-full shrink-0 flex-col overflow-hidden rounded-lg border border-[#2b2b2b] bg-[#181818] text-xs select-none shadow-sm z-10"
       data-testid="vscode-right-panel"
     >
-      {/* Resize Handle (Left Border) */}
+      {/* Modern VS Code Smooth Sash Resizer with Centered Pill Grip */}
       <div
         role="separator"
         aria-orientation="vertical"
         aria-label="Resize Secondary Sidebar"
         onPointerDown={handlePointerDown}
-        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-[var(--primary)] active:bg-[var(--primary)] transition-colors z-20"
+        className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#0078d4]/30 active:bg-[#0078d4] transition-colors z-20 flex items-center justify-center select-none"
         data-testid="secondary-sidebar-resizer"
-      />
+        title="Drag to resize Secondary Sidebar"
+      >
+        <div className="h-6 w-0.5 rounded-full bg-[#3c3c3c] group-hover:bg-[#0078d4] transition-colors" />
+      </div>
 
       <WorkbenchViewContainer
         containerId="secondary_sidebar"

@@ -9,6 +9,7 @@ import {
   ChevronRight,
   FileCode,
 } from 'lucide-react';
+import Codicon from '../ui/Codicon';
 import type * as monacoEditor from 'monaco-editor';
 import Editor, { LocalDiffEditor } from '../LocalMonacoEditor';
 import Tooltip from '../ui/Tooltip';
@@ -378,8 +379,62 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
               />
             )
           ) : (
-            <div className="grid h-full place-items-center text-xs text-[var(--muted-foreground)] select-none">
-              Select a file from the explorer to begin editing.
+            /* Authentic VS Code Empty Workspace with Watermark & Keyboard Hints */
+            <div className="relative flex h-full w-full flex-col items-center justify-center select-none bg-[#1f1f1f] text-xs text-[#999999] overflow-hidden p-6">
+              {/* VS Code Large Center Watermark */}
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.04]">
+                <svg
+                  className="h-64 w-64 text-white"
+                  viewBox="0 0 256 256"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M185.3 252.7c4.6 2.3 10.1 2 14.4-.7l48-30c4.9-3.1 7.9-8.5 7.9-14.3V48.3c0-5.8-3-11.2-7.9-14.3l-48-30c-4.3-2.7-9.8-3-14.4-.7-4.6 2.3-7.5 7-7.5 12.1v23.2L78.4 121.2 31.7 85.3c-3.7-2.9-8.7-3.3-12.8-1.2-4.1 2.1-6.7 6.3-6.7 10.9v66c0 4.6 2.6 8.8 6.7 10.9 4.1 2.1 9.1 1.7 12.8-1.2l46.7-35.9 99.4 82.6v23.2c0 5.1 2.9 9.8 7.5 12.1zM193.6 63.8l38.4-24v176.4l-38.4-24V63.8zM40.2 113.8l32.2 24.8-32.2 24.8v-49.6zm63.4 33.6l74.4 61.8V46.8l-74.4 61.8-35.6-27.4 35.6 66.2z" />
+                </svg>
+              </div>
+
+              {/* Centered Keyboard Shortcuts matching vscode.dev */}
+              <div className="relative z-10 flex flex-col items-center gap-3 max-w-sm text-left">
+                <div className="flex items-center justify-between w-64 text-xs text-[#cccccc] py-1 border-b border-[#2b2b2b]/50">
+                  <span className="flex items-center gap-2">
+                    <Codicon name="comment-discussion" className="text-sm text-[#0078d4]" />
+                    <span>Open Chat</span>
+                  </span>
+                  <div className="flex items-center gap-1 font-mono text-[10px] text-[#999999]">
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Ctrl</kbd>
+                    <span>+</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Alt</kbd>
+                    <span>+</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">I</kbd>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between w-64 text-xs text-[#cccccc] py-1 border-b border-[#2b2b2b]/50">
+                  <span className="flex items-center gap-2">
+                    <Codicon name="menu" className="text-sm text-[#9cdcfe]" />
+                    <span>Show All Commands</span>
+                  </span>
+                  <div className="flex items-center gap-1 font-mono text-[10px] text-[#999999]">
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Ctrl</kbd>
+                    <span>+</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Shift</kbd>
+                    <span>+</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">P</kbd>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between w-64 text-xs text-[#cccccc] py-1 border-b border-[#2b2b2b]/50">
+                  <span className="flex items-center gap-2">
+                    <Codicon name="go-to-file" className="text-sm text-[#4ec9b0]" />
+                    <span>Go to File</span>
+                  </span>
+                  <div className="flex items-center gap-1 font-mono text-[10px] text-[#999999]">
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">Ctrl</kbd>
+                    <span>+</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#252526] border border-[#3c3c3c]">P</kbd>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -411,16 +466,22 @@ export const WorkbenchEditorArea: React.FC<WorkbenchEditorAreaProps> = ({
           {renderGroup(group1, false, 'vscode-pane-primary')}
         </div>
 
-        {/* Split Divider Handle */}
+        {/* Modern Split Divider Handle with smooth sash grip */}
         <div
           role="separator"
           aria-orientation={layout.splitDirection}
           onPointerDown={handleSplitResizeDown}
-          className={`shrink-0 bg-[var(--border)] hover:bg-[var(--primary)] active:bg-[var(--primary)] transition-colors z-10 flex items-center justify-center select-none ${
-            isVertical ? 'w-1 cursor-col-resize h-full' : 'h-1 cursor-row-resize w-full'
+          className={`group shrink-0 bg-transparent hover:bg-white/5 active:bg-[#0078d4]/20 transition-colors z-10 flex items-center justify-center select-none ${
+            isVertical ? 'w-2 cursor-col-resize h-full' : 'h-2 cursor-row-resize w-full'
           }`}
           title="Drag to resize editor panes"
-        />
+        >
+          <div
+            className={`rounded-full bg-[#3c3c3c] group-hover:bg-[#0078d4] transition-colors ${
+              isVertical ? 'h-8 w-1' : 'w-8 h-1'
+            }`}
+          />
+        </div>
 
         {/* Secondary Pane */}
         <div

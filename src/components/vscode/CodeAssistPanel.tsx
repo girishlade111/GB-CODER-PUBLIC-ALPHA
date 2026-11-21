@@ -13,18 +13,13 @@
 
 import React, { useState, useEffect, useRef, useSyncExternalStore, useCallback } from 'react';
 import {
-  Columns,
-  Search,
   ChevronDown,
   ChevronRight,
-  Send,
-  MessageSquare,
   X,
   Check,
   Loader2,
   StopCircle,
   Brain,
-  Sliders,
   FileCode,
   FileText,
   Copy,
@@ -44,7 +39,6 @@ import { ContextBuilder } from '../../services/ai/contextBuilder';
 import { AssistContextComposer } from './AssistContextComposer';
 import { AiProviderSettingsModal } from './AiProviderSettingsModal';
 import { AiMonacoDiffModal } from './AiMonacoDiffModal';
-import { GBAssistIcon } from '../icons/GBAssistIcon';
 import Codicon from '../ui/Codicon';
 
 interface CodeAssistPanelProps {
@@ -287,38 +281,41 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
       className="flex h-full w-full flex-col bg-[var(--background)] text-slate-200 select-none overflow-hidden text-xs"
       data-testid="code-assist-panel"
     >
-      {/* ── Top Header Strip ── */}
-      <div className="flex h-10 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-3 select-none">
+      {/* ── Top Header Strip matching VS Code Copilot Chat ── */}
+      <div className="flex h-[35px] shrink-0 items-center justify-between border-b border-[#2b2b2b] bg-[#181818] px-3 select-none">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="truncate font-mono text-[11px] text-slate-300">
-            {activeSession?.title || 'New session'}
+          <span className="text-[11px] font-semibold text-[#cccccc]">
+            Chat
           </span>
-          <span className="rounded bg-white/5 border border-white/10 px-1.5 py-0.2 text-[10px] text-cyan-400 font-mono shrink-0">
+          <span className="truncate font-mono text-[10px] text-[#999999]">
+            {activeSession?.title ? `— ${activeSession.title}` : ''}
+          </span>
+          <span className="rounded bg-[#252526] border border-[#3c3c3c] px-1.5 py-0.2 text-[9px] text-[#0078d4] font-mono shrink-0">
             {currentProviderObj.name.split(' ')[0]}
           </span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0 text-slate-400">
-          {/* Provider BYOK Settings Button */}
-          <button
-            type="button"
-            onClick={() => setIsSettingsModalOpen(true)}
-            data-testid="open-ai-settings-btn"
-            className="rounded p-1 hover:bg-white/10 hover:text-white transition-colors"
-            title="Configure BYOK Model Providers & API Keys"
-          >
-            <Sliders className="h-3.5 w-3.5 text-cyan-400" />
-          </button>
-
+        <div className="flex items-center gap-0.5 shrink-0 text-[#999999]">
           {/* New Session Button */}
           <button
             type="button"
             onClick={() => assistAgentService.createNewSession()}
             data-testid="new-assist-session-btn"
-            className="rounded p-1 hover:bg-white/10 hover:text-white transition-colors"
-            title="New Conversation Session"
+            className="flex h-6 w-6 items-center justify-center rounded hover:bg-white/10 hover:text-white transition-colors"
+            title="New Chat Session"
           >
-            <Columns className="h-3.5 w-3.5" />
+            <Codicon name="plus" className="text-[13px]" />
+          </button>
+
+          {/* Provider BYOK Settings Button */}
+          <button
+            type="button"
+            onClick={() => setIsSettingsModalOpen(true)}
+            data-testid="open-ai-settings-btn"
+            className="flex h-6 w-6 items-center justify-center rounded hover:bg-white/10 hover:text-white transition-colors"
+            title="Configure BYOK Model Providers & API Keys"
+          >
+            <Codicon name="settings" className="text-[13px]" />
           </button>
 
           {/* Search / Session History */}
@@ -326,10 +323,10 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
             type="button"
             onClick={() => setShowHistoryView(!showHistoryView)}
             data-testid="assist-history-btn"
-            className="rounded p-1 hover:bg-white/10 hover:text-white transition-colors"
-            title="Sessions History"
+            className="flex h-6 w-6 items-center justify-center rounded hover:bg-white/10 hover:text-white transition-colors"
+            title="Chat History"
           >
-            <Search className="h-3.5 w-3.5" />
+            <Codicon name="history" className="text-[13px]" />
           </button>
 
           {/* Move to Side Bar / Auxiliary Bar Toggle */}
@@ -338,7 +335,7 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
               type="button"
               onClick={onToggleContainer}
               data-testid="toggle-assist-dock-btn"
-              className="rounded p-1 hover:bg-white/10 hover:text-white transition-colors"
+              className="flex h-6 w-6 items-center justify-center rounded hover:bg-white/10 hover:text-white transition-colors"
               title={
                 currentContainer === 'secondary_sidebar'
                   ? 'Move to Primary Side Bar (Left)'
@@ -347,7 +344,7 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
             >
               <Codicon
                 name={currentContainer === 'secondary_sidebar' ? 'layout-sidebar-left' : 'layout-sidebar-right'}
-                className="text-xs"
+                className="text-[13px]"
               />
             </button>
           )}
@@ -356,10 +353,10 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="rounded p-1 hover:bg-white/10 hover:text-white transition-colors"
-              title="Close Panel"
+              className="flex h-6 w-6 items-center justify-center rounded hover:bg-white/10 hover:text-white transition-colors"
+              title="Close Chat"
             >
-              <X className="h-3.5 w-3.5" />
+              <Codicon name="close" className="text-[13px]" />
             </button>
           )}
         </div>
@@ -482,40 +479,40 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
             ))}
           </div>
         ) : activeSession?.messages.length === 0 && !state.isGenerating ? (
-          /* Empty Initial State */
-          <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
-            <div className="flex h-14 w-14 items-center justify-center text-[var(--foreground)]">
-              <GBAssistIcon size={52} strokeWidth={1.5} className="h-12 w-12" />
+          /* Empty Initial State matching VS Code Web Copilot Chat */
+          <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#252526] border border-[#3c3c3c] text-[#0078d4]">
+              <Codicon name="sparkle" className="text-[26px]" />
             </div>
 
             <div className="max-w-xs space-y-1">
-              <p className="text-xs font-semibold text-slate-200">
-                GB Assist AI Pair Programmer
-              </p>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                Connect your model provider (Gemini, OpenRouter, OpenAI) to chat, inspect your project, and propose safe code edits with Monaco diff review.
+              <h3 className="text-[13px] font-semibold text-[#cccccc]">
+                Build with Agent
+              </h3>
+              <p className="text-[11px] text-[#999999] leading-relaxed">
+                AI responses may be inaccurate. Generate Agent Instructions to onboard AI onto your codebase.
               </p>
             </div>
 
-            {/* Quick action buttons */}
-            <div className="w-full max-w-xs space-y-1.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsSettingsModalOpen(true)}
-                className="flex w-full items-center justify-center gap-1.5 rounded-md border border-white/10 bg-[var(--sidebar)] py-1.5 text-[11px] text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
-              >
-                <Sliders className="h-3 w-3 text-cyan-400" />
-                Configure BYOK Model Provider
-              </button>
+            {/* Quick action prompts */}
+            <div className="w-full max-w-[280px] space-y-1.5 pt-2">
               <button
                 type="button"
                 onClick={() => {
-                  setInputPrompt('Explain the project structure and suggest improvements');
+                  setInputPrompt('Explain this workspace structure and suggest improvements');
                 }}
-                className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-cyan-500/40 bg-cyan-500/5 py-1.5 text-[11px] text-cyan-300 hover:bg-cyan-500/10 transition-colors"
+                className="flex w-full items-center justify-center gap-1.5 rounded-[4px] border border-[#3c3c3c] bg-[#252526] py-1.5 text-[11px] text-[#cccccc] hover:bg-[#313131] hover:text-white transition-colors"
               >
-                <MessageSquare className="h-3 w-3" />
+                <Codicon name="comment" className="text-[12px] text-[#0078d4]" />
                 "Explain the project structure..."
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsSettingsModalOpen(true)}
+                className="flex w-full items-center justify-center gap-1.5 rounded-[4px] border border-[#3c3c3c] bg-[#181818] py-1 text-[10px] text-[#999999] hover:text-[#cccccc] transition-colors"
+              >
+                <Codicon name="settings" className="text-[11px]" />
+                Configure Model Provider (BYOK)
               </button>
             </div>
           </div>
@@ -1042,9 +1039,12 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
         )}
       </div>
 
-      {/* ── Bottom Input Container ── */}
-      <div className="shrink-0 p-2.5 bg-[var(--background)] border-t border-[var(--border)]">
-        <div className="relative rounded-lg border border-[var(--border)] focus-within:border-cyan-500 bg-[var(--background)] shadow-md transition-colors p-2">
+      {/* ── Bottom Input Container matching VS Code Copilot Chat ── */}
+      <div className="shrink-0 p-2.5 bg-[#181818] border-t border-[#2b2b2b]">
+        <div className="text-[10px] text-[#999999] mb-1.5 flex items-center justify-between px-0.5">
+          <span>Tip: Use @file or /help to scaffold agent instructions</span>
+        </div>
+        <div className="relative rounded-lg border border-[#3c3c3c] focus-within:border-[#0078d4] bg-[#252526] shadow-md transition-colors p-2.5">
           {/* Textarea */}
           <AssistContextComposer key={`${state.currentProjectId}:${state.activeSessionId}`}
             project={currentProject()} paths={state.attachedContextPaths} prompt={inputPrompt}
@@ -1065,14 +1065,15 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                     setIsModeMenuOpen(!isModeMenuOpen);
                     setIsModelMenuOpen(false);
                   }}
-                  className="flex items-center gap-1 rounded bg-[var(--sidebar)] hover:bg-[var(--card)] px-2 py-0.5 text-[11px] font-medium text-slate-200 transition-colors border border-white/5"
+                  className="flex items-center gap-1 rounded bg-[#1f1f1f] hover:bg-[#313131] px-2 py-0.5 text-[10px] font-medium text-[#cccccc] transition-colors border border-[#3c3c3c]"
                 >
+                  <Codicon name="sparkle" className="text-[10px] text-[#0078d4]" />
                   <span>{state.selectedMode}</span>
-                  <ChevronDown className="h-2.5 w-2.5 text-slate-400" />
+                  <Codicon name="chevron-down" className="text-[9px] text-[#999999]" />
                 </button>
 
                 {isModeMenuOpen && (
-                  <div className="absolute bottom-8 left-0 z-50 w-64 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] p-1 shadow-2xl text-xs space-y-1">
+                  <div className="absolute bottom-8 left-0 z-50 w-64 rounded-lg border border-[#3c3c3c] bg-[#252526] p-1 shadow-2xl text-xs space-y-1">
                     {AVAILABLE_MODES.map((m) => (
                       <div
                         key={m.id}
@@ -1083,12 +1084,12 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                         }}
                         className={`rounded p-2 cursor-pointer transition-colors ${
                           state.selectedMode === m.id
-                            ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
-                            : 'hover:bg-white/5 text-slate-300'
+                            ? 'bg-[#0078d4] text-white'
+                            : 'hover:bg-white/5 text-[#cccccc]'
                         }`}
                       >
                         <div className="font-semibold">{m.title}</div>
-                        <p className={`text-[10px] mt-0.5 leading-snug ${state.selectedMode === m.id ? 'text-white/80' : 'text-slate-400'}`}>
+                        <p className={`text-[10px] mt-0.5 leading-snug ${state.selectedMode === m.id ? 'text-white/80' : 'text-[#999999]'}`}>
                           {m.desc}
                         </p>
                       </div>
@@ -1106,16 +1107,16 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                     setIsModeMenuOpen(false);
                   }}
                   data-testid="ai-model-selector-pill"
-                  className="flex items-center gap-1 rounded bg-[var(--sidebar)] hover:bg-[var(--card)] px-2 py-0.5 text-[10px] font-medium text-slate-300 transition-colors border border-white/5 max-w-[130px] truncate"
+                  className="flex items-center gap-1 rounded bg-[#1f1f1f] hover:bg-[#313131] px-2 py-0.5 text-[10px] font-medium text-[#999999] hover:text-[#cccccc] transition-colors border border-[#3c3c3c] max-w-[130px] truncate"
                   title={state.selectedModel}
                 >
                   <span className="truncate">{state.selectedModel.split('/').pop()}</span>
-                  <ChevronDown className="h-2.5 w-2.5 text-slate-400 shrink-0" />
+                  <Codicon name="chevron-down" className="text-[9px] text-[#999999] shrink-0" />
                 </button>
 
                 {isModelMenuOpen && (
-                  <div className="absolute bottom-8 left-0 z-50 w-64 max-h-80 overflow-auto rounded-lg border border-[var(--border)] bg-[var(--sidebar)] p-1 shadow-2xl text-xs space-y-0.5">
-                    <div className="px-2 py-1 text-[10px] font-bold text-slate-500 uppercase flex items-center justify-between">
+                  <div className="absolute bottom-8 left-0 z-50 w-64 max-h-80 overflow-auto rounded-lg border border-[#3c3c3c] bg-[#252526] p-1 shadow-2xl text-xs space-y-0.5">
+                    <div className="px-2 py-1 text-[10px] font-bold text-[#999999] uppercase flex items-center justify-between">
                       <span>Available Models</span>
                       <button
                         type="button"
@@ -1123,12 +1124,12 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                           setIsModelMenuOpen(false);
                           setIsSettingsModalOpen(true);
                         }}
-                        className="text-cyan-400 hover:underline"
+                        className="text-[#0078d4] hover:underline"
                       >
                         Settings
                       </button>
                     </div>
-                    <input aria-label="Search available models" value={modelSearch} onChange={(e) => setModelSearch(e.target.value)} className="w-full bg-[var(--background)] p-2" placeholder="Search name or model ID" />
+                    <input aria-label="Search available models" value={modelSearch} onChange={(e) => setModelSearch(e.target.value)} className="w-full bg-[#1f1f1f] border border-[#3c3c3c] rounded p-1.5 text-xs text-[#cccccc]" placeholder="Search model..." />
                     {availableModels.filter((mod) => `${mod.name} ${mod.id}`.toLowerCase().includes(modelSearch.toLowerCase())).slice(0, 100).map((mod) => (
                       <div
                         key={mod.id}
@@ -1138,12 +1139,12 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                         }}
                         className={`flex items-center justify-between rounded px-2 py-1.5 cursor-pointer text-[11px] ${
                           state.selectedModel === mod.id
-                            ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
-                            : 'hover:bg-white/5 text-slate-300'
+                            ? 'bg-[#0078d4] text-white'
+                            : 'hover:bg-white/5 text-[#cccccc]'
                         }`}
                       >
                         <span className="truncate">{mod.name}</span>
-                        {state.selectedModel === mod.id && <Check className="h-3 w-3 shrink-0 ml-1" />}
+                        {state.selectedModel === mod.id && <Codicon name="check" className="text-[12px] shrink-0 ml-1" />}
                       </div>
                     ))}
                   </div>
@@ -1165,10 +1166,10 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                     }
                   }}
                   data-testid={state.selectedMode === 'Agent' ? 'stop-agent-btn' : 'cancel-input-btn'}
-                  className="rounded p-1.5 bg-rose-600/30 text-rose-300 hover:bg-rose-600/50 transition-colors"
+                  className="rounded-full h-6 w-6 flex items-center justify-center bg-rose-600/30 text-rose-300 hover:bg-rose-600/50 transition-colors"
                   title={state.selectedMode === 'Agent' ? 'Stop agent' : 'Stop generation'}
                 >
-                  <StopCircle className="h-3.5 w-3.5" />
+                  <Codicon name="debug-stop" className="text-[13px]" />
                 </button>
               ) : (
                 <button
@@ -1176,14 +1177,14 @@ export const CodeAssistPanel: React.FC<CodeAssistPanelProps> = ({
                   disabled={!inputPrompt.trim()}
                   onClick={handleSend}
                   data-testid="send-ai-prompt-btn"
-                  className={`rounded p-1.5 transition-colors ${
+                  className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
                     inputPrompt.trim()
-                      ? 'bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow'
-                      : 'bg-white/5 text-slate-600 cursor-not-allowed'
+                      ? 'bg-[#0078d4] text-white hover:bg-[#026ec1]'
+                      : 'bg-white/5 text-[#6e7681] cursor-not-allowed'
                   }`}
                   title="Send Prompt (Enter)"
                 >
-                  <Send className="h-3.5 w-3.5" />
+                  <Codicon name="arrow-up" className="text-[13px]" />
                 </button>
               )}
             </div>

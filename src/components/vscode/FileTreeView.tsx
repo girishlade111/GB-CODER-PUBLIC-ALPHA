@@ -251,10 +251,10 @@ const TreeRow: React.FC<RowProps> = ({
         data-testid={node.isDirectory ? 'tree-folder' : 'tree-file'}
         data-path={node.path}
         title={node.path}
-        className={`group relative flex w-full items-center gap-1 py-[3px] pr-2 text-left text-xs transition-colors select-none cursor-pointer ${
+        className={`group relative flex w-[calc(100%-8px)] mx-1 rounded-[3px] items-center gap-1.5 py-[3px] pr-2 text-left text-xs transition-colors select-none cursor-pointer ${
           isActive
-            ? 'bg-product-active text-content-on-dark font-medium'
-            : 'text-vsc-text hover:bg-product-hover hover:text-content-on-dark'
+            ? 'bg-[#04395e] text-white font-medium'
+            : 'text-[#cccccc] hover:bg-white/5 hover:text-white'
         }`}
         style={{ paddingLeft: `${depth * INDENT_PX + 6}px` }}
       >

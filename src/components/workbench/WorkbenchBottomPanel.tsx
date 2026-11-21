@@ -69,15 +69,15 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
     window.addEventListener('pointerup', handlePointerUp);
   };
 
-  const effectiveHeight = isMaximized ? 'calc(100% - 35px)' : `${height}px`;
+  const effectiveHeight = isMaximized ? '100%' : `${height}px`;
 
   const alignmentClass =
     !isMaximized && panelAlignment === 'center'
-      ? 'w-full max-w-[85%] mx-auto border-x border-[#2b2b2b]'
+      ? 'w-full max-w-[85%] mx-auto'
       : !isMaximized && panelAlignment === 'left'
-      ? 'w-full max-w-[75%] mr-auto border-r border-[#2b2b2b]'
+      ? 'w-full max-w-[75%] mr-auto'
       : !isMaximized && panelAlignment === 'right'
-      ? 'w-full max-w-[75%] ml-auto border-l border-[#2b2b2b]'
+      ? 'w-full max-w-[75%] ml-auto'
       : 'w-full';
 
   return (
@@ -85,21 +85,24 @@ export const WorkbenchBottomPanel: React.FC<WorkbenchBottomPanelProps> = ({
       role="region"
       aria-label="Bottom Panel"
       style={{ height: effectiveHeight }}
-      className={`relative flex shrink-0 flex-col overflow-hidden border-t border-[#2b2b2b] bg-[#1f1f1f] text-xs select-none z-10 ${alignmentClass} ${
-        isMaximized ? 'absolute inset-x-0 bottom-6 top-9 z-30 w-full max-w-full' : ''
+      className={`group relative flex shrink-0 flex-col overflow-hidden rounded-lg border border-[#2b2b2b] bg-[#1f1f1f] text-xs select-none shadow-sm z-10 ${alignmentClass} ${
+        isMaximized ? 'absolute inset-0 z-30 w-full max-w-full rounded-none border-0' : ''
       }`}
       data-testid="vscode-terminal-dock"
     >
-      {/* Top Resize Handle */}
+      {/* Modern VS Code Smooth Sash Resizer with Centered Pill Grip */}
       {!isMaximized && (
         <div
           role="separator"
           aria-orientation="horizontal"
           aria-label="Resize Bottom Panel"
           onPointerDown={handlePointerDown}
-          className="absolute left-0 right-0 top-0 h-1 cursor-row-resize hover:bg-[#0078d4] active:bg-[#0078d4] transition-colors z-20"
+          className="relative flex h-2 w-full cursor-row-resize items-center justify-center bg-transparent hover:bg-white/5 active:bg-[#0078d4]/20 transition-colors z-20 select-none"
           data-testid="bottom-panel-resizer"
-        />
+          title="Drag to resize Bottom Panel"
+        >
+          <div className="h-1 w-8 rounded-full bg-[#3c3c3c] group-hover:bg-[#0078d4] transition-colors" />
+        </div>
       )}
 
       {/* VS Code Panel Tab Strip (35px height, underline active indicator) */}
