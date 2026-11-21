@@ -1,20 +1,7 @@
 import React from 'react';
-import {
-  RotateCcw,
-  ChevronLeft,
-  ChevronRight,
-  Lock,
-  Copy,
-  Check,
-  Monitor,
-  Tablet,
-  Smartphone,
-  ExternalLink,
-  Columns,
-  Maximize2,
-} from 'lucide-react';
 import toast from 'react-hot-toast';
 import Tooltip from '../ui/Tooltip';
+import Codicon from '../ui/Codicon';
 import StackBlitzStartupLoader from '../vscode/StackBlitzStartupLoader';
 import { devServerManager } from '../../services/webcontainer/devServerManager';
 import {
@@ -79,63 +66,61 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
   const activePorts = devServerState.ports.filter((p) => p.active);
 
   return (
-    <div className="flex h-full w-full min-h-0 flex-col overflow-hidden bg-[var(--background)] select-none">
-      {/* Live Preview Address Bar / Controls */}
-      <div className="flex h-8 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--sidebar)] px-2 text-xs">
-        {/* Navigation & Reload */}
+    <div className="flex h-full w-full min-h-0 flex-col overflow-hidden bg-[#1f1f1f] select-none">
+      {/* VS Code Simple Browser Header & Controls */}
+      <div className="flex h-[35px] shrink-0 items-center justify-between border-b border-[#2b2b2b] bg-[#181818] px-2 text-xs">
+        {/* Navigation & Refresh */}
         <div className="flex items-center gap-0.5 shrink-0">
-          <button
-            type="button"
-            onClick={() => void onReloadPreview()}
-            disabled={isReloadingPreview || !activePreview?.url}
-            title={
-              !activePreview?.url
-                ? 'Development server not running'
-                : isReloadingPreview
-                ? 'Reloading preview...'
-                : 'Reload Live Preview'
-            }
-            className={`rounded p-1 transition-colors ${
-              !activePreview?.url
-                ? 'text-[var(--muted-foreground)] cursor-not-allowed'
-                : isReloadingPreview
-                ? 'text-cyan-400 bg-white/5 cursor-wait'
-                : 'text-[var(--muted-foreground)] hover:bg-white/10 hover:text-[var(--foreground)]'
-            }`}
-            data-testid="preview-reload-btn"
-          >
-            <RotateCcw className={`h-3 w-3 ${isReloadingPreview ? 'animate-spin' : ''}`} />
-          </button>
-          <Tooltip label="Browser history navigation is disabled across container sandbox origin" side="bottom">
+          <Tooltip label="Back" side="bottom">
             <button
               type="button"
               disabled
               aria-disabled="true"
               aria-label="Back"
-              className="rounded p-1 text-[var(--muted-foreground)] cursor-not-allowed"
+              className="flex h-6 w-6 items-center justify-center rounded text-[#6e7681] cursor-not-allowed"
             >
-              <ChevronLeft className="h-3 w-3" />
+              <Codicon name="arrow-left" className="text-[14px]" />
             </button>
           </Tooltip>
-          <Tooltip label="Browser history navigation is disabled across container sandbox origin" side="bottom">
+          <Tooltip label="Forward" side="bottom">
             <button
               type="button"
               disabled
               aria-disabled="true"
               aria-label="Forward"
-              className="rounded p-1 text-[var(--muted-foreground)] cursor-not-allowed"
+              className="flex h-6 w-6 items-center justify-center rounded text-[#6e7681] cursor-not-allowed"
             >
-              <ChevronRight className="h-3 w-3" />
+              <Codicon name="arrow-right" className="text-[14px]" />
+            </button>
+          </Tooltip>
+          <Tooltip label={!activePreview?.url ? 'Dev server offline' : 'Reload'} side="bottom">
+            <button
+              type="button"
+              onClick={() => void onReloadPreview()}
+              disabled={isReloadingPreview || !activePreview?.url}
+              className={`flex h-6 w-6 items-center justify-center rounded transition-colors ${
+                !activePreview?.url
+                  ? 'text-[#6e7681] cursor-not-allowed'
+                  : isReloadingPreview
+                  ? 'text-[#0078d4] cursor-wait'
+                  : 'text-[#cccccc] hover:bg-white/10'
+              }`}
+              data-testid="preview-reload-btn"
+            >
+              <Codicon
+                name="refresh"
+                className={`text-[14px] ${isReloadingPreview ? 'animate-spin' : ''}`}
+              />
             </button>
           </Tooltip>
         </div>
 
-        {/* URL Pill */}
+        {/* Simple Browser URL Address Bar */}
         <div
-          className="flex min-w-0 flex-1 items-center gap-1.5 rounded border border-[var(--border)] bg-[var(--background)] px-2 py-0.5 text-[10px] text-[var(--foreground)] font-mono shadow-inner mx-1.5 group cursor-pointer hover:border-[var(--ring)] transition-all truncate"
+          className="flex min-w-0 flex-1 items-center gap-1.5 rounded-[2px] border border-[#2b2b2b] bg-[#1f1f1f] px-2.5 h-[22px] text-[11px] text-[#cccccc] font-mono mx-2 group cursor-pointer hover:border-[#0078d4] transition-colors truncate"
           onClick={() => {
             if (!activePreview?.url && !webcontainerState.serverPort) {
-              toast('Development server is offline. No URL to copy.', { icon: 'ℹ️' });
+              toast('Development server is offline. No URL to copy.');
               return;
             }
             const url = activePreview?.url || `http://localhost:${webcontainerState.serverPort}/`;
@@ -157,32 +142,33 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               : 'Development server offline'
           }
         >
-          <Lock
-            className={`h-2.5 w-2.5 shrink-0 ${
-              activePreview?.url || webcontainerState.serverPort ? 'text-emerald-400' : 'text-[var(--muted-foreground)]'
+          <Codicon
+            name={activePreview?.url || webcontainerState.serverPort ? 'lock' : 'circle-slash'}
+            className={`text-[11px] shrink-0 ${
+              activePreview?.url || webcontainerState.serverPort ? 'text-[#4ec9b0]' : 'text-[#6e7681]'
             }`}
           />
-          <span className="truncate text-[var(--foreground)]">
+          <span className="truncate text-[#cccccc] text-[11px]">
             {activePreview?.url
               ? activePreview.url.replace(/^https?:\/\//, '')
               : webcontainerState.serverPort
               ? `localhost:${webcontainerState.serverPort}/`
-              : 'Server Offline'}
+              : 'http://localhost (Offline)'}
           </span>
           {(activePreview?.url || webcontainerState.serverPort) && (
-            <span className="ml-auto opacity-0 group-hover:opacity-100 text-[var(--muted-foreground)] hover:text-[var(--foreground)] shrink-0">
-              {copiedUrl ? <Check className="h-2.5 w-2.5 text-emerald-400" /> : <Copy className="h-2.5 w-2.5" />}
+            <span className="ml-auto opacity-0 group-hover:opacity-100 text-[#999999] hover:text-white shrink-0">
+              <Codicon name={copiedUrl ? 'check' : 'copy'} className={`text-[11px] ${copiedUrl ? 'text-[#4ec9b0]' : ''}`} />
             </span>
           )}
         </div>
 
-        {/* Multi-Port Selector (Phase 1H Finding D) */}
+        {/* Multi-Port Selector */}
         {activePorts.length > 1 && (
           <div
             role="tablist"
             aria-label="Active dev server ports"
             data-testid="preview-port-selector"
-            className="flex items-center rounded border border-[var(--border)] bg-[var(--background)] p-0.5 text-[10px] font-mono shrink-0 mx-1"
+            className="flex items-center rounded border border-[#2b2b2b] bg-[#1f1f1f] p-0.5 text-[10px] font-mono shrink-0 mx-1"
           >
             {activePorts.map((p) => {
               const isSelected =
@@ -195,10 +181,10 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
                   aria-selected={isSelected}
                   data-testid={`preview-port-btn-${p.port}`}
                   onClick={() => devServerManager.selectPort(p.port)}
-                  className={`px-1.5 py-0.5 rounded transition-colors ${
+                  className={`px-1.5 py-0.5 rounded-[2px] transition-colors ${
                     isSelected
-                      ? 'bg-[var(--primary)] text-white font-semibold'
-                      : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/5'
+                      ? 'bg-[#0078d4] text-white font-medium'
+                      : 'text-[#999999] hover:text-[#cccccc] hover:bg-white/5'
                   }`}
                   title={`Switch preview to port ${p.port}`}
                 >
@@ -209,64 +195,59 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
           </div>
         )}
 
-        {/* Right Actions: Viewport mode, Popout, Maximize, Fullscreen */}
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Right Actions: Viewport, Popout, Maximize, Fullscreen */}
+        <div className="flex items-center gap-0.5 shrink-0">
           {/* Responsive Device Viewport Toggles */}
-          <div className="hidden sm:flex items-center rounded bg-[var(--background)] border border-[var(--border)] p-0.5">
+          <div className="hidden sm:flex items-center rounded border border-[#2b2b2b] bg-[#1f1f1f] p-0.5 mr-1">
             <button
               type="button"
               onClick={() => setDeviceViewport('desktop')}
               title="Desktop (100% Fluid)"
-              className={`rounded p-0.5 transition-colors ${
-                deviceViewport === 'desktop' ? 'bg-[var(--primary)] text-white' : 'text-[var(--muted-foreground)] hover:text-white'
+              className={`flex h-5 w-5 items-center justify-center rounded-[2px] transition-colors ${
+                deviceViewport === 'desktop' ? 'bg-[#0078d4] text-white' : 'text-[#999999] hover:text-white'
               }`}
             >
-              <Monitor className="h-3 w-3" />
+              <Codicon name="device-desktop" className="text-[12px]" />
             </button>
             <button
               type="button"
               onClick={() => setDeviceViewport('tablet')}
-              title="Tablet Viewport (768px)"
-              className={`rounded p-0.5 transition-colors ${
-                deviceViewport === 'tablet' ? 'bg-[var(--primary)] text-white' : 'text-[var(--muted-foreground)] hover:text-white'
+              title="Tablet (768px)"
+              className={`flex h-5 w-5 items-center justify-center rounded-[2px] transition-colors ${
+                deviceViewport === 'tablet' ? 'bg-[#0078d4] text-white' : 'text-[#999999] hover:text-white'
               }`}
             >
-              <Tablet className="h-3 w-3" />
+              <Codicon name="tablet" className="text-[12px]" />
             </button>
             <button
               type="button"
               onClick={() => setDeviceViewport('mobile')}
-              title="Mobile Viewport (375px)"
-              className={`rounded p-0.5 transition-colors ${
-                deviceViewport === 'mobile' ? 'bg-[var(--primary)] text-white' : 'text-[var(--muted-foreground)] hover:text-white'
+              title="Mobile (375px)"
+              className={`flex h-5 w-5 items-center justify-center rounded-[2px] transition-colors ${
+                deviceViewport === 'mobile' ? 'bg-[#0078d4] text-white' : 'text-[#999999] hover:text-white'
               }`}
             >
-              <Smartphone className="h-3 w-3" />
+              <Codicon name="device-mobile" className="text-[12px]" />
             </button>
           </div>
 
           {/* Popout */}
           <Tooltip
-            label={!activePreview?.url ? 'Preview not ready (server offline)' : 'Open in New Tab'}
+            label={!activePreview?.url ? 'Preview not ready (server offline)' : 'Open in New Window'}
             side="bottom"
           >
             <button
               type="button"
               onClick={onOpenInNewTab}
               disabled={!activePreview?.url}
-              title={
+              className={`flex h-6 w-6 items-center justify-center rounded transition-colors ${
                 !activePreview?.url
-                  ? 'Development server not running'
-                  : 'Open in New Tab (Live Popout)'
-              }
-              className={`rounded p-1 transition-colors ${
-                !activePreview?.url
-                  ? 'text-[var(--muted-foreground)] cursor-not-allowed'
-                  : 'text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white'
+                  ? 'text-[#6e7681] cursor-not-allowed'
+                  : 'text-[#cccccc] hover:bg-white/10 hover:text-white'
               }`}
               data-testid="preview-open-new-tab-btn"
             >
-              <ExternalLink className="h-3 w-3" />
+              <Codicon name="link-external" className="text-[13px]" />
             </button>
           </Tooltip>
 
@@ -276,9 +257,9 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               <button
                 type="button"
                 onClick={onMaximizeWidth}
-                className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white transition-colors"
+                className="flex h-6 w-6 items-center justify-center rounded text-[#cccccc] hover:bg-white/10 hover:text-white transition-colors"
               >
-                <Columns className="h-3 w-3" />
+                <Codicon name="split-horizontal" className="text-[13px]" />
               </button>
             </Tooltip>
           )}
@@ -289,9 +270,9 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               <button
                 type="button"
                 onClick={onFullscreen}
-                className="rounded p-1 text-[var(--muted-foreground)] hover:bg-white/10 hover:text-white transition-colors"
+                className="flex h-6 w-6 items-center justify-center rounded text-[#cccccc] hover:bg-white/10 hover:text-white transition-colors"
               >
-                <Maximize2 className="h-3 w-3" />
+                <Codicon name="screen-full" className="text-[13px]" />
               </button>
             </Tooltip>
           )}
@@ -299,14 +280,14 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
       </div>
 
       {/* Body */}
-      <div className="min-h-0 flex-1 overflow-hidden relative bg-[var(--background)]">
+      <div className="min-h-0 flex-1 overflow-hidden relative bg-[#1f1f1f]">
         {activePreview?.url ? (
           <div
             className={`h-full w-full flex items-center justify-center ${
               deviceViewport === 'mobile'
-                ? 'p-4 bg-[var(--background)]'
+                ? 'p-4 bg-[#181818]'
                 : deviceViewport === 'tablet'
-                ? 'p-2 bg-[var(--background)]'
+                ? 'p-2 bg-[#181818]'
                 : ''
             }`}
           >
@@ -322,14 +303,14 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               }}
               className={`flex flex-col bg-white overflow-hidden transition-all duration-200 ${
                 deviceViewport !== 'desktop'
-                  ? 'rounded-lg shadow-2xl border border-white/20'
+                  ? 'rounded border border-[#2b2b2b] shadow-xl'
                   : ''
               }`}
             >
               <iframe
                 ref={previewIframeRef}
                 src={activePreview.url}
-                title="Live preview"
+                title="Simple Browser preview"
                 onLoad={onIframeLoad}
                 onError={onIframeError}
                 className="min-h-0 flex-1 border-0 bg-white"
@@ -338,12 +319,15 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
               />
             </div>
             {previewLoadError && (
-              <div className="absolute top-2 inset-x-4 z-20 flex items-center justify-between gap-2 rounded bg-red-950/90 border border-red-500/40 px-3 py-1.5 text-xs text-red-200 backdrop-blur">
-                <span>{previewLoadError}</span>
+              <div className="absolute top-2 inset-x-4 z-20 flex items-center justify-between gap-2 rounded-[2px] bg-[#252526] border border-[#f14c4c] px-3 py-1.5 text-xs text-[#f14c4c] shadow-lg">
+                <span className="flex items-center gap-1.5">
+                  <Codicon name="error" className="text-[14px]" />
+                  {previewLoadError}
+                </span>
                 <button
                   type="button"
                   onClick={() => void onReloadPreview()}
-                  className="rounded bg-red-800/60 hover:bg-red-700/80 px-2 py-0.5 text-[11px] font-medium text-white transition-colors"
+                  className="rounded-[2px] bg-[#f14c4c] hover:bg-red-600 px-2 py-0.5 text-[11px] font-medium text-white transition-colors"
                 >
                   Retry
                 </button>
