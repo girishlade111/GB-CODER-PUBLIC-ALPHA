@@ -265,7 +265,8 @@ const TerminalTab: React.FC<TerminalTabProps> = ({
 
       terminalSessionManager.setActiveSessionId(session.id);
       const currentStage = webcontainerService.getState().startupStage;
-      if (currentStage === 'idle' || currentStage === 'booting' || currentStage === 'mounting_files') {
+      // Do not clobber mounting_files or active installation/server lifecycle
+      if (currentStage === 'idle' || currentStage === 'booting') {
         webcontainerService.setStartupStage('runtime_ready');
       }
     } catch (err) {

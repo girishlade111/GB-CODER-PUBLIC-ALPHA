@@ -31,6 +31,8 @@ export interface ProjectFile {
   path: string;
   content: string;
   language: FileLanguage;
+  /** Content encoding. Defaults to 'utf-8' for text code. Use 'base64' for binary assets. */
+  encoding?: 'utf-8' | 'base64';
 }
 
 export interface MultiFileProject {

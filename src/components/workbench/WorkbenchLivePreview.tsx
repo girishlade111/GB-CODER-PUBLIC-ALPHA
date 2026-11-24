@@ -314,6 +314,7 @@ export const WorkbenchLivePreview: React.FC<WorkbenchLivePreviewProps> = ({
                 onLoad={onIframeLoad}
                 onError={onIframeError}
                 className="min-h-0 flex-1 border-0 bg-white"
+                allow="cross-origin-isolated"
                 sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
                 data-testid="preview-iframe"
               />

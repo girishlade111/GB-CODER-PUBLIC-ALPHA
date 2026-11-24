@@ -80,11 +80,17 @@ export class DevServerManager {
     return true;
   }
 
-  public isRunning(): boolean {
+  public isRunning(projectId?: string): boolean {
+    if (projectId && this.state.projectId && this.state.projectId !== projectId) {
+      return false;
+    }
     return this.state.status === 'running' && Boolean(this.state.serverUrl);
   }
 
-  public isStarting(): boolean {
+  public isStarting(projectId?: string): boolean {
+    if (projectId && this.state.projectId && this.state.projectId !== projectId) {
+      return false;
+    }
     return this.state.status === 'starting';
   }
 
@@ -140,13 +146,31 @@ export class DevServerManager {
     const boundEpoch = targetEpoch !== undefined ? targetEpoch : webcontainerService.getSessionEpoch();
 
     let sessionId = customSessionId;
+    if (sessionId) {
+      const customSess = terminalSessionManager.getSession(sessionId);
+      if (customSess && customSess.projectId && boundProject && customSess.projectId !== boundProject) {
+        sessionId = undefined;
+      }
+    }
     if (!sessionId) {
       // Find or create a terminal session for the dev server (reuse active Terminal 1)
       let session = this.devSessionId ? terminalSessionManager.getSession(this.devSessionId) : undefined;
+      if (session && session.projectId && boundProject && session.projectId !== boundProject) {
+        session = undefined;
+      }
       if (!session) {
         const activeId = terminalSessionManager.getActiveSessionId();
         if (activeId) {
-          session = terminalSessionManager.getSession(activeId);
+          const activeSess = terminalSessionManager.getSession(activeId);
+          if (activeSess && (!activeSess.projectId || !boundProject || activeSess.projectId === boundProject)) {
+            session = activeSess;
+          }
+        }
+      }
+      if (!session && boundProject) {
+        const projectSessions = terminalSessionManager.getSessionsForProject(boundProject);
+        if (projectSessions.length > 0) {
+          session = projectSessions[0];
         }
       }
       if (!session) {
@@ -311,26 +335,27 @@ export class DevServerManager {
     eventEpoch?: number,
   ): void {
     // Stale event guards:
+    const activeProject = this.state.projectId ?? webcontainerService.getActiveProjectId();
     if (
       eventProjectId !== undefined &&
       eventProjectId !== null &&
-      this.state.projectId !== null &&
-      eventProjectId !== this.state.projectId
+      activeProject !== null &&
+      eventProjectId !== activeProject
     ) {
       console.warn(
-        `[DevServerManager] Discarded stale server-ready from project "${eventProjectId}" (active is "${this.state.projectId}")`,
+        `[DevServerManager] Discarded stale server-ready from project "${eventProjectId}" (active is "${activeProject}")`,
       );
       return;
     }
 
+    const activeEpoch = this.state.sessionEpoch !== 0 ? this.state.sessionEpoch : webcontainerService.getSessionEpoch();
     if (
       eventEpoch !== undefined &&
-      this.state.sessionEpoch !== undefined &&
-      this.state.sessionEpoch !== 0 &&
-      eventEpoch !== this.state.sessionEpoch
+      activeEpoch !== 0 &&
+      eventEpoch !== activeEpoch
     ) {
       console.warn(
-        `[DevServerManager] Discarded server-ready from stale epoch ${eventEpoch} (current is ${this.state.sessionEpoch})`,
+        `[DevServerManager] Discarded server-ready from stale epoch ${eventEpoch} (current is ${activeEpoch})`,
       );
       return;
     }

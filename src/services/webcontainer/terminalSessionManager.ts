@@ -78,6 +78,12 @@ export class TerminalSessionManager {
     return this.sessions.get(id);
   }
 
+  public getSessionsForProject(projectId: string): TerminalSession[] {
+    return Array.from(this.sessions.values()).filter(
+      (s) => s.projectId === projectId && !s.isDisposed,
+    );
+  }
+
   public async getOrCreateSession(
     container: WebContainer,
     options?: {
@@ -132,6 +138,7 @@ export class TerminalSessionManager {
 
     const process = await container.spawn('jsh', {
       terminal: { cols, rows },
+      cwd,
     });
 
     const writer = process.input.getWriter();
@@ -251,8 +258,11 @@ export class TerminalSessionManager {
     const cols = options?.cols || session.cols || 80;
     const rows = options?.rows || session.rows || 24;
 
+    const cwd = session.cwd || '/';
+
     const newProcess = await container.spawn('jsh', {
       terminal: { cols, rows },
+      cwd,
     });
 
     session.process = newProcess;

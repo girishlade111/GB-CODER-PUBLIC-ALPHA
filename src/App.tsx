@@ -585,6 +585,8 @@ function App() {
       // has nothing to overwrite.
       readShareLink() ?? createPlainProject(defaultHTML, defaultCSS, defaultJS),
   );
+  const fileProjectRef = React.useRef(fileProject);
+  fileProjectRef.current = fileProject;
 
   const { html, css, javascript } = useMemo(() => projectToTriple(fileProject), [fileProject]);
 
@@ -1349,7 +1351,13 @@ function App() {
     projectId: string;
     files: ProjectFile[];
   } | null> => {
-    const pendingSave = pendingProjectSaveRef.current;
+    let pendingSave = pendingProjectSaveRef.current;
+    if (!pendingSave && activeProjectId) {
+      const currentFiles = fullStackProjectRef.current?.files ?? fileProjectRef.current.files;
+      if (currentFiles && currentFiles.length > 0) {
+        pendingSave = { projectId: activeProjectId, files: currentFiles };
+      }
+    }
     if (!pendingSave) return null;
 
     pendingProjectSaveRef.current = null;
@@ -1364,7 +1372,7 @@ function App() {
     }
     savedFilesRef.current = snapshot;
     return { ok: true, projectId: pendingSave.projectId, files: pendingSave.files };
-  }, []);
+  }, [activeProjectId]);
 
   /**
    * Generation counter for project transitions (open / create / import /
@@ -2914,12 +2922,23 @@ function App() {
         // baseline was reset on switch and must not be touched).
         if (result.projectId === activeProjectId) {
           markFlushedSaved(result.files);
-          setPersistSignal((previous) => ({
-            seq: (previous?.seq ?? 0) + 1,
-            projectId: result.projectId,
-            files: result.files,
-            at: Date.now(),
-          }));
+          setPersistSignal((previous) => {
+            const nextSignal = {
+              seq: (previous?.seq ?? 0) + 1,
+              projectId: result.projectId,
+              files: result.files,
+              at: Date.now(),
+            };
+            if (typeof window !== 'undefined') {
+              (window as unknown as Record<string, unknown>).__GBCODER_LAST_PERSIST__ = nextSignal;
+              window.dispatchEvent(
+                new CustomEvent('gb-coder:autosave-complete', {
+                  detail: { projectId: result.projectId, timestamp: nextSignal.at },
+                }),
+              );
+            }
+            return nextSignal;
+          });
         }
       });
     }, PROJECT_SAVE_DEBOUNCE_MS);
@@ -4416,6 +4435,7 @@ function App() {
           ) : (
             <Suspense fallback={<LazyFallback label="VS Code mode" variant="panel" />}>
               <VSCodeMode
+                key={activeProjectId || 'vscode'}
                 project={fullStackProject ?? EMPTY_VSCODE_PROJECT}
                 entryReason={vsCodeReturn ? 'manual' : 'detected'}
                 onChangeFile={handleFullStackFileChange}
