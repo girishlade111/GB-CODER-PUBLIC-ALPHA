@@ -64,3 +64,6 @@ api/_lib/status-pages.generated.cjs
 supabase/.temp/
 .vercel
 .env*
+
+# Reliability diagnostics
+diagnostics/

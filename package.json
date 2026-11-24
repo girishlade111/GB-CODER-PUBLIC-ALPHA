@@ -48,6 +48,7 @@
     "audit:e2e:workspace-reliability": "node scripts/e2e-workspace-reliability.mjs",
     "audit:e2e:workspace-app": "node scripts/e2e-workspace-app.mjs",
     "audit:e2e:persistence": "node scripts/e2e-editor-persistence.mjs",
+    "health:monitor": "node scripts/production-health-monitor.mjs",
     "audit:integration": "node scripts/audit-integration.mjs",
     "audit:routes": "node scripts/audit-routes.mjs",
     "audit:headers": "node scripts/audit-headers.mjs",
