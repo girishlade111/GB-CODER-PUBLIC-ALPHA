@@ -62,3 +62,5 @@ api/_lib/status-pages.generated.cjs
 
 # Supabase CLI temporary files
 supabase/.temp/
+.vercel
+.env*

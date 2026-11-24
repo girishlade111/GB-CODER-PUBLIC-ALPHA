@@ -77,6 +77,7 @@ export const OPTIMIZED_NPMRC = [
   'prefer-offline=true',
   'progress=false',
   'update-notifier=false',
+  'cache=/tmp/.npm-cache',
   '',
 ].join('\n');
 
@@ -196,6 +197,76 @@ export interface WebContainerState {
   activeProjectId: string | null;
 }
 
+export const BINARY_FILE_EXTENSIONS = new Set([
+  'png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'bmp', 'tiff', 'avif',
+  'woff', 'woff2', 'ttf', 'otf', 'eot',
+  'pdf', 'zip', 'tar', 'gz', '7z', 'rar',
+  'wasm', 'bin', 'exe', 'dll', 'so', 'dylib',
+  'mp3', 'wav', 'ogg', 'mp4', 'webm', 'mov', 'avi',
+]);
+
+export function isBinaryFilePath(path: string): boolean {
+  if (!path) return false;
+  const clean = path.replace(/\\/g, '/').split('/').pop() || '';
+  const dot = clean.lastIndexOf('.');
+  if (dot === -1) return false;
+  const ext = clean.slice(dot + 1).toLowerCase();
+  return BINARY_FILE_EXTENSIONS.has(ext);
+}
+
+export function decodeBinaryContent(
+  content: string | Uint8Array,
+  path?: string,
+  encoding?: string,
+): string | Uint8Array {
+  if (content instanceof Uint8Array) return content;
+  if (typeof content !== 'string') return '';
+
+  if (encoding === 'utf-8') {
+    return content;
+  }
+
+  if (encoding === 'base64' || (content.startsWith('data:') && content.includes(';base64,'))) {
+    try {
+      const b64 = content.startsWith('data:') ? content.split(';base64,')[1] : content.replace(/[\r\n\s]/g, '');
+      const normalized = b64.replace(/-/g, '+').replace(/_/g, '/');
+      const padLen = (4 - (normalized.length % 4)) % 4;
+      const padded = normalized + '='.repeat(padLen);
+      const binaryString = atob(padded);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes;
+    } catch {
+      return content;
+    }
+  }
+
+  if (path && isBinaryFilePath(path)) {
+    try {
+      if (/^[A-Za-z0-9+/= \r\n_-]+$/.test(content) && content.length >= 4) {
+        const cleaned = content.replace(/[\r\n\s]/g, '');
+        const normalized = cleaned.replace(/-/g, '+').replace(/_/g, '/');
+        const padLen = (4 - (normalized.length % 4)) % 4;
+        const padded = normalized + '='.repeat(padLen);
+        const binaryString = atob(padded);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes;
+      }
+    } catch {
+      // Fall through to raw content
+    }
+  }
+
+  return content;
+}
+
 /** Converts a flat array of ProjectFile objects into a nested WebContainer FileSystemTree */
 export function filesToFileSystemTree(
   files: ProjectFile[],
@@ -225,9 +296,13 @@ export function filesToFileSystemTree(
       const isFile = i === segments.length - 1;
 
       if (isFile) {
+        const rawContent = file.content ?? '';
+        const isBin = file.encoding === 'base64' || (isBinaryFilePath(cleanPath) && file.encoding !== 'utf-8');
+        const fileContents = isBin ? decodeBinaryContent(rawContent, cleanPath, file.encoding) : rawContent;
+
         current[segment] = {
           file: {
-            contents: file.content ?? '',
+            contents: fileContents,
           },
         };
       } else {
@@ -375,6 +450,96 @@ console.log(\`
     };
   }
 
+  // Ensure framework Vite projects have index.html and vite.config.js entry points for Vite dev server
+  const isReactProject =
+    projectType === 'react' ||
+    files.some((f) => /\.(jsx|tsx)$/i.test(f.path) || f.content?.includes('react'));
+  const isVueProject =
+    projectType === 'vue' ||
+    files.some((f) => /\.vue$/i.test(f.path) || f.content?.includes('vue'));
+
+  if (!root['index.html'] && files.length > 0) {
+    if (isReactProject) {
+      const match = files.find((f) => /^(src\/)?(main|index)\.(jsx|tsx|js|ts)$/i.test(f.path.replace(/\\/g, '/').replace(/^\/+/, '')));
+      const entryFile = match ? match.path.replace(/\\/g, '/').replace(/^\/+/, '') : 'main.jsx';
+      root['index.html'] = {
+        file: {
+          contents: `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>React App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/${entryFile}"></script>
+  </body>
+</html>
+`,
+        },
+      };
+    } else if (isVueProject) {
+      const match = files.find((f) => /^(src\/)?(main|index)\.(js|ts)$/i.test(f.path.replace(/\\/g, '/').replace(/^\/+/, '')));
+      const entryFile = match ? match.path.replace(/\\/g, '/').replace(/^\/+/, '') : 'main.js';
+      root['index.html'] = {
+        file: {
+          contents: `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue App</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/${entryFile}"></script>
+  </body>
+</html>
+`,
+        },
+      };
+    }
+  }
+
+  if (!root['vite.config.js'] && !root['vite.config.ts'] && files.length > 0) {
+    if (isReactProject) {
+      root['vite.config.js'] = {
+        file: {
+          contents: `import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
+  },
+});
+`,
+        },
+      };
+    } else if (isVueProject) {
+      root['vite.config.js'] = {
+        file: {
+          contents: `import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+  plugins: [vue()],
+  server: {
+    host: '0.0.0.0',
+    port: 5174,
+    strictPort: true,
+  },
+});
+`,
+        },
+      };
+    }
+  }
+
   return root;
 }
 
@@ -389,6 +554,9 @@ class WebContainerManager {
   private eventUnsubscribers: Array<() => void> = [];
   private tornDownInstances = new WeakSet<WebContainer>();
   private isExplicitlyTornDown = false;
+  private currentInstallProcess: WebContainerProcess | null = null;
+  private currentInstallPromise: Promise<{ ok: boolean; exitCode: number; error?: string }> | null = null;
+  private lastMountedProjectId: string | null = null;
 
   public isTornDown(): boolean {
     return this.isExplicitlyTornDown;
@@ -586,7 +754,8 @@ class WebContainerManager {
         await container.fs.mkdir(dir, { recursive: true });
       }
       if (generation !== this.runtimeGeneration) throw new Error('Project changed during write');
-      await container.fs.writeFile(cleanPath, content);
+      const payload = isBinaryFilePath(cleanPath) ? decodeBinaryContent(content, cleanPath) : content;
+      await container.fs.writeFile(cleanPath, payload);
       if (generation !== this.runtimeGeneration) throw new Error('Project changed during write');
     },
     rawDelete: async (cleanPath) => {
@@ -782,6 +951,13 @@ class WebContainerManager {
   }
 
   private retireProjectRuntime(): void {
+    if (this.currentInstallProcess) {
+      try {
+        this.currentInstallProcess.kill();
+      } catch {}
+      this.currentInstallProcess = null;
+    }
+    this.currentInstallPromise = null;
     this.clearAutomaticStartup();
     this.invalidateDependencyCache();
     this.diagnostics.finish(this.diagnosticAttempt, 'cancelled');
@@ -802,6 +978,8 @@ class WebContainerManager {
     this.isShellPromptReady = false;
     this.devServerStartEpoch = null;
     this.devServerStartProjectId = null;
+    this.drainingPorts.clear();
+    this.pendingDrainingCloses.clear();
     devServerManager.reset();
 
     // Server listeners rebind with the new runtimeGeneration
@@ -850,6 +1028,7 @@ class WebContainerManager {
     this.shellSpawnPromise = null;
     this.instance = null;
     this.bootPromise = null;
+    this.lastMountedProjectId = null;
     this.isExplicitlyTornDown = true;
     shared.__GBCODER_WEBCONTAINER_INSTANCE__ = null;
     shared.__GBCODER_WEBCONTAINER_BOOT_PROMISE__ = null;
@@ -1163,6 +1342,18 @@ class WebContainerManager {
     this.isShellPromptReady = ready;
   }
 
+  public checkTerminalPromptReady(): boolean {
+    const activeId = terminalSessionManager.getActiveSessionId();
+    if (activeId) {
+      const sess = terminalSessionManager.getSession(activeId);
+      if (sess?.isPromptReady) return true;
+    }
+    const projectSessions = this.activeProjectId
+      ? terminalSessionManager.getSessionsForProject(this.activeProjectId)
+      : [];
+    return projectSessions.some((s) => s.isPromptReady);
+  }
+
   public writeToShell(data: string): boolean {
     if (this.shellWriter) {
       try {
@@ -1194,7 +1385,7 @@ class WebContainerManager {
     return typeof window !== 'undefined' && Boolean(window.crossOriginIsolated);
   }
 
-  public cleanupServerListeners(): void {
+  public cleanupServerListeners(targetContainer?: WebContainer): void {
     for (const unsub of this.eventUnsubscribers) {
       try {
         unsub();
@@ -1203,13 +1394,17 @@ class WebContainerManager {
       }
     }
     this.eventUnsubscribers = [];
+    const cont = targetContainer ?? this.instance;
+    if (cont) {
+      this.serverListenersAttached.delete(cont);
+    }
   }
 
   private setupServerListeners(container: WebContainer) {
-    if (this.serverListenersAttached.has(container)) return;
+    if (this.serverListenersAttached.has(container) && this.eventUnsubscribers.length > 0) return;
+    this.cleanupServerListeners(container);
     this.serverListenersAttached.add(container);
 
-    this.cleanupServerListeners();
     const generation = this.runtimeGeneration;
     const ownsRuntime = () => generation === this.runtimeGeneration && container === this.instance;
 
@@ -1223,19 +1418,7 @@ class WebContainerManager {
         return;
       }
 
-      // Guard 1: is a dev server starting or active in the current session epoch?
-      const isExpected =
-        this.isDevServerStartingState ||
-        this.isDevServerActive ||
-        this.state.startupStage === 'starting_server';
-
-      if (!isExpected) {
-        console.warn(
-          `[WebContainer] Discarded unsolicited/late server-ready at port ${port} (no dev server starting or active for project "${this.activeProjectId}")`,
-        );
-        return;
-      }
-
+      // If epoch was explicitly tracked for a planned launch, enforce it
       if (
         this.devServerStartEpoch !== null &&
         this.devServerStartEpoch !== this.sessionEpoch
@@ -1269,7 +1452,13 @@ class WebContainerManager {
           draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId;
 
         if (isFromPriorSession) {
-          if (!this.isShellPromptReady) {
+          const isCurrentProjectStarting =
+            this.devServerStartProjectId === this.activeProjectId &&
+            (this.devServerStartEpoch === null || this.devServerStartEpoch === this.sessionEpoch);
+          const isQuiescent = this.isShellPromptReady || this.checkTerminalPromptReady();
+          const isDrainedLongEnough = Date.now() - draining.drainedAt > 1500;
+
+          if (!isQuiescent && !isCurrentProjectStarting && !isDrainedLongEnough) {
             console.warn(
               `[WebContainer] Discarded late server-ready at port ${port} (draining server from project "${draining.projectId}", epoch ${draining.sessionEpoch})`,
             );
@@ -1277,7 +1466,7 @@ class WebContainerManager {
           }
 
           console.log(
-            `[WebContainer] Draining port ${port} reclaimed for project "${this.activeProjectId}" (shell quiescence confirmed)`,
+            `[WebContainer] Draining port ${port} reclaimed for project "${this.activeProjectId}" (dev server active or quiescence confirmed)`,
           );
           this.drainingPorts.delete(port);
           this.pendingDrainingCloses.delete(port);
@@ -1339,7 +1528,13 @@ class WebContainerManager {
         if (this.drainingPorts.has(port)) {
           const draining = this.drainingPorts.get(port)!;
           if (draining.sessionEpoch !== this.sessionEpoch || draining.projectId !== this.activeProjectId) {
-            if (!this.isShellPromptReady) {
+            const isCurrentProjectStarting =
+              this.devServerStartProjectId === this.activeProjectId &&
+              (this.devServerStartEpoch === null || this.devServerStartEpoch === this.sessionEpoch);
+            const isQuiescent = this.isShellPromptReady || this.checkTerminalPromptReady();
+            const isDrainedLongEnough = Date.now() - draining.drainedAt > 1500;
+
+            if (!isQuiescent && !isCurrentProjectStarting && !isDrainedLongEnough) {
               return;
             }
             this.drainingPorts.delete(port);
@@ -1602,6 +1797,27 @@ class WebContainerManager {
   }
 
   /**
+   * Safely clears all files and directories in the WebContainer root virtual filesystem
+   * to ensure strict workspace isolation between projects.
+   */
+  public async clearWorkspace(): Promise<void> {
+    const container = this.getInstance();
+    if (!container) return;
+    try {
+      const entries = await container.fs.readdir('.');
+      for (const entry of entries) {
+        try {
+          await container.fs.rm(entry, { recursive: true });
+        } catch {
+          // ignore individual entry rm errors
+        }
+      }
+    } catch (err) {
+      console.warn('[WebContainer] clearWorkspace error:', err);
+    }
+  }
+
+  /**
    * Mounts all project files into the WebContainer virtual file system.
    */
   public async mountProject(
@@ -1648,6 +1864,10 @@ class WebContainerManager {
       }
 
       this.updateState({ startupStage: 'mounting_files' });
+      if (targetProject) {
+        this.activeProjectId = targetProject;
+        this.state.activeProjectId = targetProject;
+      }
 
       // Barrier: ensure any in-flight writes have settled before mounting files
       const settled = await this.fileSyncCoordinator.barrier();
@@ -1709,6 +1929,14 @@ class WebContainerManager {
       const diagnosticAttempt = this.diagnosticAttempt;
       const mountStarted = Date.now();
       this.diagnostics.record(diagnosticAttempt, 'mount', 'started');
+
+      // Project isolation: if switching projects, clear old VFS files before mounting new tree
+      if (this.lastMountedProjectId && targetProject && this.lastMountedProjectId !== targetProject) {
+        console.log(`[WebContainer] Isolating workspace: clearing stale files from project "${this.lastMountedProjectId}"`);
+        await this.clearWorkspace();
+      }
+      this.lastMountedProjectId = targetProject || this.activeProjectId;
+
       await container.mount(tree);
 
       // Stale mount guard 5: verify project scope after container.mount() completes
@@ -1768,18 +1996,225 @@ class WebContainerManager {
   }
 
   /**
-   * Checks whether the node_modules directory exists and is populated in the container virtual filesystem.
+   * Checks whether dependencies are installed and match the current project.
+   * If project files are provided, delegates to needsDependencyInstall to verify fingerprint.
+   * If called without arguments, verifies that node_modules exists AND a verified install
+   * was completed for the active container/epoch.
    */
-  public async isDependenciesInstalled(): Promise<boolean> {
+  public async isDependenciesInstalled(
+    files?: ProjectFile[],
+    extraDependencies?: Record<string, string>,
+    projectType?: ProjectType,
+  ): Promise<boolean> {
     if (!this.instance) return false;
+    if (files && files.length > 0) {
+      const check = await this.needsDependencyInstall(files, extraDependencies, projectType);
+      return !check.needsInstall;
+    }
     try {
       const entries = await this.instance.fs.readdir('node_modules');
-      return (
-        Array.isArray(entries) && entries.some((name) => !name.startsWith('.'))
-      );
+      const hasEntries = Array.isArray(entries) && entries.some((name) => !name.startsWith('.'));
+      if (!hasEntries) return false;
+      return this.installedManifestFingerprint !== null;
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Dedicated, observable package manager installation process execution.
+   * Spawns real container process, captures exit codes, streams logs, and handles cancellation.
+   */
+  public async installDependencies(options: {
+    command?: string;
+    args?: string[];
+    cwd?: string;
+    onOutput?: (chunk: string) => void;
+    signal?: AbortSignal;
+    timeoutMs?: number;
+  } = {}): Promise<{ ok: boolean; exitCode: number; error?: string }> {
+    const container = await this.boot();
+    if (!container) {
+      const errMsg = 'WebContainer runtime is unavailable. Cannot install dependencies.';
+      this.setStartupStage('error', {
+        phase: 'install',
+        message: errMsg,
+        timestamp: Date.now(),
+        recoverable: true,
+        retryAction: 'reboot_container',
+      });
+      return { ok: false, exitCode: -1, error: errMsg };
+    }
+
+    if (this.currentInstallPromise) {
+      return this.currentInstallPromise;
+    }
+
+    const owner = this.captureStartupOwner();
+    const pkgManager = options.command || 'npm';
+    const rawArgs = options.args || ['install', '--prefer-offline'];
+    const installArgs = [...rawArgs];
+    const cwd = options.cwd || '/';
+    const timeoutMs = options.timeoutMs ?? 300000;
+
+    const runInstall = async (): Promise<{ ok: boolean; exitCode: number; error?: string }> => {
+      try {
+        await container.fs.rm('/home/.npm', { recursive: true }).catch(() => {});
+      } catch {}
+
+      this.setStartupStage('installing');
+      this.diagnostics.record(this.diagnosticAttempt, 'install', 'started');
+
+      const startMsg = `\r\n\x1b[36m⚡ [GB Coder] Running ${pkgManager} ${installArgs.join(' ')}...\x1b[0m\r\n`;
+      if (options.onOutput) options.onOutput(startMsg);
+      const activeTermId = terminalSessionManager.getActiveSessionId();
+      if (activeTermId) {
+        const session = terminalSessionManager.getSession(activeTermId);
+        if (session) {
+          session.outputBuffer.push(startMsg);
+          session.dataListeners.forEach((l) => {
+            try { l(startMsg); } catch {}
+          });
+        }
+      }
+
+      let installProcess: WebContainerProcess;
+      try {
+        installProcess = await container.spawn(pkgManager, installArgs, { cwd });
+        this.currentInstallProcess = installProcess;
+      } catch (err) {
+        const errMsg = `Failed to spawn ${pkgManager}: ${(err as Error)?.message || String(err)}`;
+        this.diagnostics.record(this.diagnosticAttempt, 'install', 'failed', { code: 'UNKNOWN' });
+        this.setStartupStage('error', {
+          phase: 'install',
+          message: errMsg,
+          timestamp: Date.now(),
+          recoverable: true,
+          retryAction: 'retry_install',
+        });
+        return { ok: false, exitCode: -1, error: errMsg };
+      }
+
+      void installProcess.output.pipeTo(
+        new WritableStream({
+          write: (chunk: string) => {
+            if (options.onOutput) options.onOutput(chunk);
+            if (activeTermId) {
+              const session = terminalSessionManager.getSession(activeTermId);
+              if (session) {
+                session.outputBuffer.push(chunk);
+                session.dataListeners.forEach((l) => {
+                  try { l(chunk); } catch {}
+                });
+              }
+            }
+          },
+        }),
+      ).catch(() => {});
+
+      if (options.signal) {
+        if (options.signal.aborted) {
+          try {
+            installProcess.kill();
+          } catch {}
+        } else {
+          options.signal.addEventListener(
+            'abort',
+            () => {
+              try {
+                installProcess.kill();
+              } catch {}
+            },
+            { once: true },
+          );
+        }
+      }
+
+      let timedOut = false;
+      const timer = setTimeout(() => {
+        timedOut = true;
+        try {
+          installProcess.kill();
+        } catch {}
+      }, timeoutMs);
+
+      try {
+        const exitCode = await installProcess.exit;
+        clearTimeout(timer);
+        this.currentInstallProcess = null;
+
+        if (!this.isStartupOwner(owner)) {
+          return { ok: false, exitCode: -1, error: 'Project switched during install' };
+        }
+
+        if (timedOut) {
+          const timeoutMsg = `Dependency installation exceeded ${Math.round(timeoutMs / 1000)}s timeout.`;
+          this.setStartupStage('error', {
+            phase: 'install',
+            message: timeoutMsg,
+            timestamp: Date.now(),
+            recoverable: true,
+            retryAction: 'retry_install',
+          });
+          return { ok: false, exitCode: -1, error: timeoutMsg };
+        }
+
+        if (exitCode === 0) {
+          const successMsg = `\r\n\x1b[32m✔ [GB Coder] Dependencies installed successfully.\x1b[0m\r\n`;
+          if (options.onOutput) options.onOutput(successMsg);
+          if (activeTermId) {
+            const session = terminalSessionManager.getSession(activeTermId);
+            if (session) {
+              session.outputBuffer.push(successMsg);
+              session.dataListeners.forEach((l) => {
+                try { l(successMsg); } catch {}
+              });
+            }
+          }
+          this.diagnostics.record(this.diagnosticAttempt, 'install', 'succeeded');
+          return { ok: true, exitCode: 0 };
+        } else {
+          const failMsg = `\r\n\x1b[31m✖ [GB Coder] Dependency install exited with code ${exitCode}.\x1b[0m\r\n`;
+          if (options.onOutput) options.onOutput(failMsg);
+          if (activeTermId) {
+            const session = terminalSessionManager.getSession(activeTermId);
+            if (session) {
+              session.outputBuffer.push(failMsg);
+              session.dataListeners.forEach((l) => {
+                try { l(failMsg); } catch {}
+              });
+            }
+          }
+          this.diagnostics.record(this.diagnosticAttempt, 'install', 'failed', { exitCode });
+          this.setStartupStage('error', {
+            phase: 'install',
+            message: `npm install exited with code ${exitCode}. Check terminal logs for package errors.`,
+            timestamp: Date.now(),
+            recoverable: true,
+            retryAction: 'retry_install',
+          });
+          return { ok: false, exitCode, error: `Process exited with code ${exitCode}` };
+        }
+      } catch (err) {
+        clearTimeout(timer);
+        this.currentInstallProcess = null;
+        const errMsg = (err as Error)?.message || String(err);
+        this.setStartupStage('error', {
+          phase: 'install',
+          message: `Dependency install error: ${errMsg}`,
+          timestamp: Date.now(),
+          recoverable: true,
+          retryAction: 'retry_install',
+        });
+        return { ok: false, exitCode: -1, error: errMsg };
+      }
+    };
+
+    this.currentInstallPromise = runInstall().finally(() => {
+      this.currentInstallPromise = null;
+    });
+
+    return this.currentInstallPromise;
   }
 
   /**
@@ -2000,7 +2435,7 @@ class WebContainerManager {
    * Enforces strict failure semantics: throws WebContainerWriteError if
    * runtime is unavailable, project is mismatched, path is invalid, or VFS write fails.
    */
-  public async writeFile(path: string, content: string, projectId?: string): Promise<void> {
+  public async writeFile(path: string, content: string | Uint8Array, projectId?: string): Promise<void> {
     if (!path || typeof path !== 'string' || path.trim() === '') {
       throw new WebContainerWriteError(
         'INVALID_PATH',
@@ -2072,7 +2507,11 @@ class WebContainerManager {
     }
 
     try {
-      await container.fs.writeFile(cleanPath, content);
+      const payload =
+        typeof content === 'string' && isBinaryFilePath(cleanPath)
+          ? decodeBinaryContent(content, cleanPath)
+          : content;
+      await container.fs.writeFile(cleanPath, payload);
       console.log('[webcontainerService] writeFile finished for:', cleanPath);
     } catch (err: unknown) {
       throw new WebContainerWriteError(
@@ -2656,6 +3095,10 @@ class WebContainerManager {
 }
 
 export const webcontainerService = new WebContainerManager();
+
+if (typeof globalThis !== 'undefined') {
+  (globalThis as unknown as { __GBCODER_WEBCONTAINER_SERVICE__?: WebContainerManager }).__GBCODER_WEBCONTAINER_SERVICE__ = webcontainerService;
+}
 
 export const subscribeWebContainer = (onChange: () => void) =>
   webcontainerService.subscribe(onChange);

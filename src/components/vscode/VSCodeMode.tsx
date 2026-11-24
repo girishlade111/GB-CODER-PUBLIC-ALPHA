@@ -108,6 +108,7 @@ const subscribeWebContainer = (onChange: () => void) => webcontainerService.subs
 const getWebContainerSnapshot = () => webcontainerService.getState();
 
 const MAX_TABS = 12;
+const DEFAULT_INSTALL_ARGS = ['install', '--prefer-offline', '--no-audit', '--cache', '/tmp/.npm-cache'];
 
 const MONACO_LANGUAGE_BY_EXTENSION: Record<string, string> = {
   html: 'html', htm: 'html',
@@ -145,7 +146,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
   onExit,
   fontFamily,
   fontSize,
-  persistSignal: _persistSignal,
+  persistSignal,
   activeProjectId,
   onAddImport,
   onOpenDependencies: _onOpenDependencies,
@@ -262,6 +263,13 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       });
     }
   }, [effectiveProjectId]);
+
+  // Clear dirtyPaths when persistSignal indicates project files have safely committed to storage
+  useEffect(() => {
+    if (!persistSignal || (persistSignal.projectId && persistSignal.projectId !== effectiveProjectId)) return;
+    dirtyPathsMirrorRef.current.clear();
+    setDirtyPaths(new Set());
+  }, [persistSignal, effectiveProjectId]);
 
   // Modals state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -478,6 +486,9 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
     const bootAndMount = async () => {
       try {
+        if (devServerManager.getState().projectId && devServerManager.getState().projectId !== effectiveProjectId) {
+          await devServerManager.stop();
+        }
         webcontainerService.attachProject(effectiveProjectId);
         const container = await webcontainerService.boot();
         if (isCancelled) return;
@@ -508,17 +519,84 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             project.projectType,
             effectiveProjectId,
           );
+          mountedProjectIdRef.current = effectiveProjectId;
+        } else {
+          mountedProjectIdRef.current = null;
         }
 
         if (isCancelled) return;
 
-        mountedProjectIdRef.current = effectiveProjectId;
-        prevFingerprintRef.current = webcontainerService.computeDependencyFingerprint(
-          project.files,
-          project.dependencies,
-          project.projectType,
-        );
+        if (project.files.length > 0) {
+          prevFingerprintRef.current = webcontainerService.computeDependencyFingerprint(
+            project.files,
+            project.dependencies,
+            project.projectType,
+          );
+        }
 
+        // 1. Ensure primary terminal session is ready and matches current project
+        const activeId = terminalSessionManager.getActiveSessionId();
+        let session = activeId ? terminalSessionManager.getSession(activeId) : undefined;
+        if (session && session.projectId && session.projectId !== effectiveProjectId) {
+          const projectSessions = terminalSessionManager.getSessionsForProject(effectiveProjectId);
+          session = projectSessions.length > 0 ? projectSessions[0] : undefined;
+        }
+        if (!session) {
+          session = await terminalSessionManager.createSession(container, {
+            title: 'Terminal 1',
+            projectId: effectiveProjectId,
+            epoch: webcontainerService.getSessionEpoch(),
+          });
+          terminalSessionManager.setActiveSessionId(session.id);
+        } else {
+          terminalSessionManager.setActiveSessionId(session.id);
+        }
+
+        // 2. Auto-run dependencies install & dev server if package.json/dependencies exist (StackBlitz style)
+        if (project.files.length === 0) {
+          webcontainerService.setStartupStage('runtime_ready');
+        } else {
+          const hasPackageJson = webcontainerService.hasNpmManifest(
+            project.files,
+            project.dependencies,
+            project.projectType,
+          );
+          if (hasPackageJson && !devServerManager.isRunning(effectiveProjectId) && !devServerManager.isStarting(effectiveProjectId)) {
+            const cmdInfo = webcontainerService.detectCommands(project.files);
+            const devCmd = cmdInfo.devCommand || 'npm run dev';
+
+            const depCheck = await webcontainerService.needsDependencyInstall(
+              project.files,
+              project.dependencies,
+              project.projectType,
+            );
+
+            if (depCheck.needsInstall) {
+              webcontainerService.setStartupStage('installing');
+              const installRes = await webcontainerService.installDependencies({
+                command: cmdInfo.packageManager,
+                args: DEFAULT_INSTALL_ARGS,
+              });
+              if (isCancelled) return;
+              if (installRes.ok) {
+                webcontainerService.recordInstallComplete(depCheck.fingerprint);
+                webcontainerService.setStartupStage('starting_server');
+                void devServerManager.start(devCmd, session.id, effectiveProjectId, webcontainerService.getSessionEpoch());
+              } else {
+                console.warn('[VSCodeMode] Dependency install failed, stopping auto-start.');
+              }
+            } else {
+              webcontainerService.setStartupStage('starting_server');
+              void devServerManager.start(devCmd, session.id, effectiveProjectId, webcontainerService.getSessionEpoch());
+            }
+          } else if (!hasPackageJson) {
+            webcontainerService.setStartupStage('runtime_ready');
+          }
+        }
+
+        if (isCancelled) return;
+
+        // 3. Start webcontainer watcher for subsequent user/external changes
         webcontainerWatcher.start(container, {
           projectId: effectiveProjectId,
           getKnownFiles: () => projectFilesMirrorRef.current.map((f) => f.path),
@@ -565,17 +643,38 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
             // If package.json was created or added, automatically trigger dependencies install & dev server (StackBlitz style)
             const isPackageJson = filePath.replace(/\\/g, '/').replace(/^\/+/, '').toLowerCase() === 'package.json';
-            if (isPackageJson && !devServerManager.isRunning() && !devServerManager.isStarting()) {
+            if (isPackageJson && !devServerManager.isRunning(effectiveProjectId) && !devServerManager.isStarting(effectiveProjectId) && !webcontainerService.isDevServerStarting()) {
+              const currentStage = webcontainerService.getState().startupStage;
+              if (currentStage === 'installing' || currentStage === 'booting' || currentStage === 'mounting_files' || currentStage === 'starting_server') {
+                return;
+              }
               const currentFiles = projectFilesMirrorRef.current;
               const cmdInfo = webcontainerService.detectCommands(currentFiles);
               const devCmd = cmdInfo.devCommand || 'npm run dev';
-              const installCmd = cmdInfo.installCommand || 'npm install';
-              void webcontainerService.isDependenciesInstalled().then((hasNodeModules) => {
-                const targetCmd = hasNodeModules ? devCmd : `${installCmd} && ${devCmd}`;
-                webcontainerService.setStartupStage(hasNodeModules ? 'starting_server' : 'installing');
-                const activeId = terminalSessionManager.getActiveSessionId();
-                void devServerManager.start(targetCmd, activeId || undefined, effectiveProjectId, webcontainerService.getSessionEpoch());
-              });
+              void (async () => {
+                const depCheck = await webcontainerService.needsDependencyInstall(
+                  currentFiles,
+                  project.dependencies,
+                  project.projectType,
+                );
+                if (depCheck.needsInstall) {
+                  webcontainerService.setStartupStage('installing');
+                  const installRes = await webcontainerService.installDependencies({
+                    command: cmdInfo.packageManager,
+                    args: DEFAULT_INSTALL_ARGS,
+                  });
+                  if (installRes.ok) {
+                    webcontainerService.recordInstallComplete(depCheck.fingerprint);
+                    webcontainerService.setStartupStage('starting_server');
+                    const activeId = terminalSessionManager.getActiveSessionId();
+                    void devServerManager.start(devCmd, activeId || undefined, effectiveProjectId, webcontainerService.getSessionEpoch());
+                  }
+                } else {
+                  webcontainerService.setStartupStage('starting_server');
+                  const activeId = terminalSessionManager.getActiveSessionId();
+                  void devServerManager.start(devCmd, activeId || undefined, effectiveProjectId, webcontainerService.getSessionEpoch());
+                }
+              })();
             }
           },
           onFileChange: (filePath, content) => {
@@ -613,43 +712,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             );
           },
         });
-
-        if (isCancelled) return;
-
-        // 1. Ensure primary terminal session is ready
-        let session = terminalSessionManager.getSession(terminalSessionManager.getActiveSessionId() || '');
-        if (!session) {
-          session = await terminalSessionManager.createSession(container, {
-            title: 'Terminal 1',
-            projectId: effectiveProjectId,
-            epoch: webcontainerService.getSessionEpoch(),
-          });
-          terminalSessionManager.setActiveSessionId(session.id);
-        }
-
-        // 2. Auto-run dependencies install & dev server if package.json/dependencies exist (StackBlitz style)
-        if (project.files.length === 0) {
-          webcontainerService.setStartupStage('runtime_ready');
-        } else {
-          const hasPackageJson = webcontainerService.hasNpmManifest(
-            project.files,
-            project.dependencies,
-            project.projectType,
-          );
-          if (hasPackageJson && !devServerManager.isRunning() && !devServerManager.isStarting()) {
-            const cmdInfo = webcontainerService.detectCommands(project.files);
-            const devCmd = cmdInfo.devCommand || 'npm run dev';
-            const installCmd = cmdInfo.installCommand || 'npm install';
-
-            const hasNodeModules = await webcontainerService.isDependenciesInstalled();
-            const targetCmd = hasNodeModules ? devCmd : `${installCmd} && ${devCmd}`;
-
-            webcontainerService.setStartupStage(hasNodeModules ? 'starting_server' : 'installing');
-            void devServerManager.start(targetCmd, session.id, effectiveProjectId, webcontainerService.getSessionEpoch());
-          } else if (!hasPackageJson) {
-            webcontainerService.setStartupStage('runtime_ready');
-          }
-        }
       } catch (err) {
         console.warn('[VSCodeMode] WebContainer auto-boot or workspace mount error:', err);
       }
@@ -662,7 +724,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       webcontainerWatcher.stop();
       void webcontainerService.flushFileSync();
     };
-  }, [activeProjectId, project.projectType]);
+  }, [effectiveProjectId, project.projectType, project.files.length > 0]);
 
   // Live dependency change detection when package.json updates in an already mounted project
   useEffect(() => {
@@ -680,7 +742,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       prevFingerprintRef.current = currentFingerprint;
       void (async () => {
         try {
-          const container = await webcontainerService.boot();
+          await webcontainerService.boot();
           const pkgFile = project.files.find(
             (f) => f.path.replace(/\\/g, '/').replace(/^\/+/, '').toLowerCase() === 'package.json',
           );
@@ -689,20 +751,37 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           }
           const cmdInfo = webcontainerService.detectCommands(project.files);
           const devCmd = cmdInfo.devCommand || 'npm run dev';
-          const installCmd = cmdInfo.installCommand || 'npm install';
 
           if (devServerManager.isRunning()) {
             toast('New dependencies detected. Installing & restarting dev server...');
             webcontainerService.setStartupStage('installing');
-            await devServerManager.restart(`${installCmd} && ${devCmd}`);
+            const installRes = await webcontainerService.installDependencies({
+              command: cmdInfo.packageManager,
+              args: DEFAULT_INSTALL_ARGS,
+            });
+            if (installRes.ok) {
+              const depCheck = await webcontainerService.needsDependencyInstall(
+                project.files,
+                project.dependencies,
+                project.projectType,
+              );
+              webcontainerService.recordInstallComplete(depCheck.fingerprint);
+              await devServerManager.restart(devCmd);
+            }
           } else {
             toast('New dependencies detected in package.json. Installing...');
-            const session = await terminalSessionManager.getOrCreateSession(container, {
-              title: 'Terminal 1',
-              projectId: effectiveProjectId,
-              epoch: webcontainerService.getSessionEpoch(),
+            const installRes = await webcontainerService.installDependencies({
+              command: cmdInfo.packageManager,
+              args: DEFAULT_INSTALL_ARGS,
             });
-            terminalSessionManager.writeToSession(session.id, `${installCmd}\r`);
+            if (installRes.ok) {
+              const depCheck = await webcontainerService.needsDependencyInstall(
+                project.files,
+                project.dependencies,
+                project.projectType,
+              );
+              webcontainerService.recordInstallComplete(depCheck.fingerprint);
+            }
           }
         } catch (err) {
           console.warn('[VSCodeMode] Auto-reinstall on dependency modification failed:', err);
@@ -1201,7 +1280,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       updateMarkers();
       monaco.editor.onDidChangeMarkers(updateMarkers);
 
-      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, async () => {
         const curPath = activePathMirrorRef.current;
         if (curPath && editorConflictService.hasConflict(effectiveProjectId, curPath)) {
           toast.error(
@@ -1210,8 +1289,27 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
           );
           return;
         }
-        if (curPath) {
-          toast.success(`Saved ${curPath}`);
+        if (effectiveProjectId && projectFilesMirrorRef.current.length > 0) {
+          const res = await saveProjectFiles(effectiveProjectId, projectFilesMirrorRef.current);
+          if (res.persisted) {
+            dirtyPathsMirrorRef.current.clear();
+            setDirtyPaths(new Set());
+            if (curPath) {
+              toast.success(`Saved ${curPath}`);
+            }
+            if (typeof window !== 'undefined') {
+              (window as unknown as Record<string, unknown>).__GBCODER_LAST_PERSIST__ = {
+                seq: Date.now(),
+                projectId: effectiveProjectId,
+                at: Date.now(),
+              };
+              window.dispatchEvent(
+                new CustomEvent('gb-coder:autosave-complete', {
+                  detail: { projectId: effectiveProjectId, timestamp: Date.now() },
+                }),
+              );
+            }
+          }
         }
       });
 
@@ -1626,24 +1724,39 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
 
     const cmdInfo = webcontainerService.detectCommands(project.files);
     const devCmd = cmdInfo.devCommand || 'npm run dev';
-    const installCmd = cmdInfo.installCommand || 'npm install';
-    const hasNodeModules = await webcontainerService.isDependenciesInstalled();
-    const fullCmd = hasNodeModules ? devCmd : `${installCmd} && ${devCmd}`;
+    const depCheck = await webcontainerService.needsDependencyInstall(
+      project.files,
+      project.dependencies,
+      project.projectType,
+    );
 
-    toast.success(hasNodeModules ? 'Starting development server...' : 'Installing dependencies & starting dev server...');
+    if (depCheck.needsInstall) {
+      toast('Installing dependencies in WebContainer...');
+      const installRes = await webcontainerService.installDependencies({
+        command: cmdInfo.packageManager,
+        args: DEFAULT_INSTALL_ARGS,
+      });
+      if (!installRes.ok) {
+        toast.error('Dependency installation failed. Check terminal for error logs.');
+        return;
+      }
+      webcontainerService.recordInstallComplete(depCheck.fingerprint);
+    }
+
+    toast.success('Starting development server...');
     const session = await terminalSessionManager.getOrCreateSession(container, {
       title: 'Terminal 1',
       projectId: effectiveProjectId,
       epoch: webcontainerService.getSessionEpoch(),
     });
-    const started = await devServerManager.start(fullCmd, session.id, effectiveProjectId, webcontainerService.getSessionEpoch());
+    const started = await devServerManager.start(devCmd, session.id, effectiveProjectId, webcontainerService.getSessionEpoch());
     if (!started) {
       if (devServerManager.isRunning()) {
         const port = devServerManager.getState().serverPort;
         toast.success(port ? `Dev server is running on port ${port}` : 'Dev server is running');
       } else {
         toast('Restarting development server...');
-        const restarted = await devServerManager.restart(fullCmd);
+        const restarted = await devServerManager.restart(devCmd);
         if (!restarted) {
           toast.error('Could not start dev server. Check terminal for error logs.');
         }
@@ -1659,9 +1772,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     openTerminal();
     toast.success('Running npm install...');
     const effectiveProjectId = activeProjectId || (project as { id?: string }).id || 'default-project';
-    const container = await webcontainerService.boot();
-
-    // Ensure project files are mounted before installing
     await webcontainerService.mountProject(
       project.files,
       project.dependencies,
@@ -1670,13 +1780,21 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     );
 
     const cmdInfo = webcontainerService.detectCommands(project.files);
-    const installCmd = cmdInfo.installCommand || 'npm install';
-    const session = await terminalSessionManager.getOrCreateSession(container, {
-      title: 'Terminal 1',
-      projectId: effectiveProjectId,
-      epoch: webcontainerService.getSessionEpoch(),
+    const installRes = await webcontainerService.installDependencies({
+      command: cmdInfo.packageManager,
+      args: DEFAULT_INSTALL_ARGS,
     });
-    terminalSessionManager.writeToSession(session.id, `${installCmd}\r`);
+    if (installRes.ok) {
+      const depCheck = await webcontainerService.needsDependencyInstall(
+        project.files,
+        project.dependencies,
+        project.projectType,
+      );
+      webcontainerService.recordInstallComplete(depCheck.fingerprint);
+      toast.success('npm install completed successfully!');
+    } else {
+      toast.error('npm install failed. Check terminal for error logs.');
+    }
   }, [hasFiles, openTerminal, project.files, project.dependencies, project.projectType, activeProjectId]);
 
   const handleRestartDevServer = useCallback(async () => {
@@ -2483,6 +2601,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
               onLoad={handleIframeLoad}
               onError={handleIframeError}
               className="h-full w-full border-0 bg-white"
+              allow="cross-origin-isolated"
               sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
               data-testid="fullscreen-preview-iframe"
             />
