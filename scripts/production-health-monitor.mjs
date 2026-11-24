@@ -8,9 +8,10 @@
  *    - Cross-Origin Isolation & SharedArrayBuffer
  *    - React + Vite Dev Server & Native HMR via Monaco
  *    - Vue + Vite Dev Server & Native HMR via Monaco
- *    - Multi-Project Switching & Isolation
- *    - IndexedDB Autosave & Reload Persistence
- * 4. Diagnostics & Failure Artifact Capture
+ *    - Multi-Project Switching & Workspace Isolation
+ *    - Direct IndexedDB Storage Inspection (gb-coder-projects-db / projectFiles)
+ *    - Autosave Concurrency & Reload Persistence
+ * 4. Privacy-Preserving Diagnostics & Redacted Failure Artifact Capture
  */
 
 import { chromium } from 'playwright';
@@ -21,6 +22,8 @@ import path from 'node:path';
 const TARGET_URL = (process.argv[2] || process.env.TARGET_URL || 'https://code.ladestack.in').replace(/\/+$/, '');
 const BYPASS_SECRET = process.env.VERCEL_PROTECTION_BYPASS || '';
 const DIAGNOSTICS_DIR = path.resolve(process.cwd(), 'diagnostics');
+const MAX_LOG_ENTRIES = 100;
+const MAX_ERROR_ENTRIES = 50;
 
 const report = {
   timestamp: new Date().toISOString(),
@@ -33,6 +36,15 @@ const report = {
   consoleErrors: [],
   failures: [],
 };
+
+// Sensitive tokens/secrets redaction
+function redactSecrets(str) {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(/(bearer\s+)[a-zA-Z0-9_\-\.]+/gi, '$1[REDACTED]')
+    .replace(/(x-vercel-protection-bypass:\s*)[a-zA-Z0-9_-]+/gi, '$1[REDACTED]')
+    .replace(/(bypass_secret|secret|token|password|apikey|api_key)\s*[:=]\s*["']?[^"'\s,]+/gi, '$1=[REDACTED]');
+}
 
 function ensureDiagnosticsDir() {
   if (!fs.existsSync(DIAGNOSTICS_DIR)) {
@@ -108,7 +120,7 @@ async function runChromiumWebContainerChecks() {
 
   const page = await context.newPage();
 
-  // Route headers if bypass secret is provided for preview deployments
+  // Attach bypass secret header only to Vercel deployment requests if provided
   if (BYPASS_SECRET) {
     await page.route('**/*', (route) => {
       const url = route.request().url();
@@ -125,10 +137,13 @@ async function runChromiumWebContainerChecks() {
   }
 
   page.on('console', (msg) => {
-    const text = msg.text();
+    const rawText = msg.text();
+    const text = redactSecrets(rawText);
     const type = msg.type();
-    report.consoleLogs.push({ type, text, time: new Date().toISOString() });
-    if (type === 'error') {
+    if (report.consoleLogs.length < MAX_LOG_ENTRIES) {
+      report.consoleLogs.push({ type, text, time: new Date().toISOString() });
+    }
+    if (type === 'error' && report.consoleErrors.length < MAX_ERROR_ENTRIES) {
       report.consoleErrors.push({ text, location: msg.location() });
     }
     if (text.includes('[vite]') || text.includes('Contextify') || text.includes('GB Coder')) {
@@ -174,6 +189,57 @@ async function runChromiumWebContainerChecks() {
       throw new Error(`Timeout waiting for ${label} dev server to become ready`);
     };
 
+    // Helper: Inspect actual IndexedDB content for a file in gb-coder-projects-db
+    const readIdbProjectFile = async (projectId, filePath) => {
+      return await page.evaluate(
+        ({ pid, fp }) => {
+          return new Promise((resolve) => {
+            const req = indexedDB.open('gb-coder-projects-db', 1);
+            req.onerror = () => resolve({ error: req.error?.message });
+            req.onsuccess = () => {
+              const db = req.result;
+              try {
+                if (!db.objectStoreNames.contains('projectFiles')) {
+                  resolve({ error: 'projectFiles store not found in gb-coder-projects-db' });
+                  return;
+                }
+                const tx = db.transaction(['projectFiles'], 'readonly');
+                const store = tx.objectStore('projectFiles');
+                const getReq = store.get([pid, fp]);
+                getReq.onsuccess = () => {
+                  resolve({
+                    found: !!getReq.result,
+                    content: getReq.result ? getReq.result.content : null,
+                    projectId: getReq.result ? getReq.result.projectId : null,
+                    path: getReq.result ? getReq.result.path : null,
+                  });
+                };
+                getReq.onerror = () => resolve({ error: getReq.error?.message });
+              } catch (e) {
+                resolve({ error: e.message });
+              }
+            };
+          });
+        },
+        { pid: projectId, fp: filePath }
+      );
+    };
+
+    // Helper: Bounded polling for verified IndexedDB autosave commit
+    const waitForVerifiedIdbAutosave = async (projectId, filePath, expectedSnippet, timeoutMs = 20000) => {
+      console.log(`Verifying IndexedDB storage commit for ${filePath} in project ${projectId}...`);
+      const deadline = Date.now() + timeoutMs;
+      while (Date.now() < deadline) {
+        const record = await readIdbProjectFile(projectId, filePath);
+        if (record && record.found && record.content && record.content.includes(expectedSnippet)) {
+          console.log(`  [IndexedDB] Confirmed: ${filePath} contains "${expectedSnippet}" in store "projectFiles"`);
+          return record;
+        }
+        await page.waitForTimeout(300);
+      }
+      throw new Error(`Timeout waiting for IndexedDB autosave commit of ${filePath} containing "${expectedSnippet}" in project ${projectId}`);
+    };
+
     // 2. Test A: React + Vite Lifecycle
     console.log('\n--- Step 2A: React + Vite Lifecycle Check ---');
     const newBtn = await page.waitForSelector('[data-testid="dashboard-new-project"]', { timeout: 10000 });
@@ -194,6 +260,10 @@ async function runChromiumWebContainerChecks() {
     await createBtn.click();
 
     await page.waitForURL(/\/app\/projects\/[^/]+\/ide/, { timeout: 35000, waitUntil: 'domcontentloaded' });
+    const reactUrl = page.url();
+    const reactProjectId = reactUrl.split('/projects/')[1].split('/ide')[0];
+    assert.ok(reactProjectId, 'Valid project ID parsed from URL');
+
     const reactServerUrl = await waitForDevServer('React');
 
     const reactFrame = page.frameLocator('[data-testid="preview-iframe"]');
@@ -231,16 +301,22 @@ export default function App() {
     await page.keyboard.press('Backspace');
     await page.keyboard.insertText(editedReactCode);
 
-    // Wait for Vite HMR in preview iframe
+    // Wait for native Vite HMR in preview iframe
     await reactFrame.locator(`text=${uniqueReactHeading}`).waitFor({ timeout: 30000 });
     const hmrReactHeading = await reactFrame.locator('#root h1').textContent();
     assert.strictEqual(hmrReactHeading.trim(), uniqueReactHeading);
-    await page.waitForTimeout(2000); // Wait for debounced autosave
+
+    // Hardened IndexedDB autosave inspection (replaces fixed sleep)
+    const idbReactRecord = await waitForVerifiedIdbAutosave(reactProjectId, 'App.jsx', uniqueReactHeading);
+    assert.strictEqual(idbReactRecord.projectId, reactProjectId, 'Record projectId matches active project');
+    assert.strictEqual(idbReactRecord.path, 'App.jsx', 'Record path matches edited file');
 
     recordPhase('React + Vite Lifecycle & HMR', 'PASS', {
+      projectId: reactProjectId,
       serverUrl: reactServerUrl,
       initialHeading: initialReactHeading.trim(),
       updatedHeading: hmrReactHeading.trim(),
+      idbStorageVerified: true,
     });
 
     // 3. Test B: Vue + Vite Lifecycle
@@ -266,6 +342,10 @@ export default function App() {
     await createBtnVue.click();
 
     await page.waitForURL(/\/app\/projects\/[^/]+\/ide/, { timeout: 35000, waitUntil: 'domcontentloaded' });
+    const vueUrl = page.url();
+    const vueProjectId = vueUrl.split('/projects/')[1].split('/ide')[0];
+    assert.ok(vueProjectId, 'Valid project ID parsed from Vue URL');
+
     const vueServerUrl = await waitForDevServer('Vue');
 
     const vueFrame = page.frameLocator('[data-testid="preview-iframe"]');
@@ -303,16 +383,22 @@ import { ref } from 'vue';
     await page.keyboard.press('Backspace');
     await page.keyboard.insertText(editedVueCode);
 
-    // Wait for Vite HMR in Vue preview
+    // Wait for native Vite HMR in Vue preview
     await vueFrame.locator(`text=${uniqueVueHeading}`).waitFor({ timeout: 30000 });
     const hmrVueHeading = await vueFrame.locator('#app h1, h1').textContent();
     assert.strictEqual(hmrVueHeading.trim(), uniqueVueHeading);
-    await page.waitForTimeout(2000); // Wait for debounced autosave
+
+    // Hardened IndexedDB autosave inspection
+    const idbVueRecord = await waitForVerifiedIdbAutosave(vueProjectId, 'App.vue', uniqueVueHeading);
+    assert.strictEqual(idbVueRecord.projectId, vueProjectId, 'Vue record projectId matches active project');
+    assert.strictEqual(idbVueRecord.path, 'App.vue', 'Vue record path matches edited file');
 
     recordPhase('Vue + Vite Lifecycle & HMR', 'PASS', {
+      projectId: vueProjectId,
       serverUrl: vueServerUrl,
       initialHeading: initialVueHeading.trim(),
       updatedHeading: hmrVueHeading.trim(),
+      idbStorageVerified: true,
     });
 
     // 4. Test C: Project Switching Persistence (React -> Vue -> React)
@@ -330,9 +416,14 @@ import { ref } from 'vue';
     const reopenedReactHeading = await reactReopenFrame.locator('#root h1').textContent();
     assert.strictEqual(reopenedReactHeading.trim(), uniqueReactHeading);
 
+    // Confirm IndexedDB still retains exact edited content for React project
+    const recheckedIdbRecord = await readIdbProjectFile(reactProjectId, 'App.jsx');
+    assert.ok(recheckedIdbRecord.content && recheckedIdbRecord.content.includes(uniqueReactHeading), 'React file in IndexedDB survived Vue project editing');
+
     recordPhase('Project Switching Persistence', 'PASS', {
       message: 'Reopened React project rendered edited heading from IndexedDB after Vue switch',
       reopenedHeading: reopenedReactHeading.trim(),
+      idbContentIntegrityVerified: true,
     });
 
     // 5. Test D: Browser Hard Reload Persistence
@@ -396,7 +487,7 @@ function writeSummaryAndMarkdown() {
     if (report.failures.length > 0) {
       markdown.push(`## Failures Encountered`);
       for (const fail of report.failures) {
-        markdown.push(`- ❌ \`${fail}\``);
+        markdown.push(`- ❌ \`${redactSecrets(fail)}\``);
       }
       markdown.push(``);
     }
@@ -428,8 +519,8 @@ async function main() {
     console.log('================================================================');
   } catch (err) {
     report.status = 'FAIL';
-    report.failures.push(err.message || String(err));
-    console.error('\n❌ MONITORING FAILED:', err.message);
+    report.failures.push(redactSecrets(err.message || String(err)));
+    console.error('\n❌ MONITORING FAILED:', redactSecrets(err.message));
     process.exitCode = 1;
   } finally {
     report.durationMs = Date.now() - startTime;
