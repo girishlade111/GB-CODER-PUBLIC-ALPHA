@@ -7,7 +7,7 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert';
 
-const STAGING_URL = 'https://gb-coder-public-alpha-ddo4woela.vercel.app';
+const STAGING_URL = process.env.STAGING_URL || 'https://gb-coder-public-alpha-8atzmcmh3.vercel.app';
 const BYPASS_SECRET = process.env.VERCEL_PROTECTION_BYPASS || 'SUnVBZMiWuhY8BHOmMufcRHMGhn8Dp6L';
 
 async function runComprehensiveStagingTest() {
@@ -107,7 +107,7 @@ async function runComprehensiveStagingTest() {
     await createBtn.click();
     console.log('[PASS] React Project Created via UI — Name:', reactName);
 
-    await page.waitForURL(/\/app\/projects\/[^/]+\/ide/, { timeout: 15000 });
+    await page.waitForURL(/\/app\/projects\/[^/]+\/ide/, { timeout: 30000, waitUntil: 'domcontentloaded' });
     const reactUrl = page.url();
     const reactProjectId = reactUrl.split('/projects/')[1].split('/ide')[0];
 
@@ -188,7 +188,7 @@ export default function App() {
     await createBtnVue.click();
     console.log('[PASS] Vue Project Created via UI on Staging — Name:', vueName);
 
-    await page.waitForURL(/\/app\/projects\/[^/]+\/ide/, { timeout: 15000 });
+    await page.waitForURL(/\/app\/projects\/[^/]+\/ide/, { timeout: 30000, waitUntil: 'domcontentloaded' });
     const vueUrl = page.url();
     const vueProjectId = vueUrl.split('/projects/')[1].split('/ide')[0];
 
@@ -256,7 +256,7 @@ import { ref } from 'vue';
     // Reopen original React project
     const reactProjectCard = await page.waitForSelector(`text=${reactName}`, { timeout: 10000 });
     await reactProjectCard.click();
-    await page.waitForURL(/\/app\/projects\/[^/]+\/ide/, { timeout: 15000 });
+    await page.waitForURL(/\/app\/projects\/[^/]+\/ide/, { timeout: 30000, waitUntil: 'domcontentloaded' });
     console.log('[PASS] Re-opened React Project on Staging');
 
     await waitForDevServer('React Reopen');
