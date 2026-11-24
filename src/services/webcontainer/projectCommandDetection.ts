@@ -27,6 +27,7 @@ export interface ProjectCommandInfo {
   devCommand: string | null;
   buildCommand: string | null;
   installCommand: string;
+  installArgs: string[];
   isStaticProject: boolean;
   hasLockfile: boolean;
   detectedLockfile: string | null;
@@ -36,6 +37,35 @@ export interface ProjectCommandInfo {
   scriptCommand: (scriptName: string) => string;
   supportedActions: Array<'install' | 'dev' | 'build' | 'test'>;
   frameworkInfo?: FrameworkDetectionResult;
+}
+
+/**
+ * Returns package-manager-specific arguments for dependency installation.
+ * Never passes npm-specific arguments (e.g. --no-audit, --cache) to Yarn or pnpm.
+ */
+export function getPackageManagerInstallArgs(
+  packageManager: PackageManagerType,
+  version?: string | null
+): string[] {
+  switch (packageManager) {
+    case 'yarn': {
+      const isBerry = Boolean(version && /^[2-9]/.test(version));
+      if (isBerry) {
+        // Yarn Berry (v2, v3, v4) rejects --prefer-offline, --no-audit, and --cache
+        return ['install'];
+      }
+      // Yarn Classic (v1) supports --prefer-offline and custom cache-folder
+      return ['install', '--prefer-offline', '--cache-folder', '/tmp/.yarn-cache'];
+    }
+    case 'pnpm': {
+      // pnpm supports --prefer-offline
+      return ['install', '--prefer-offline'];
+    }
+    case 'npm':
+    default: {
+      return ['install', '--prefer-offline', '--no-audit', '--cache', '/tmp/.npm-cache'];
+    }
+  }
 }
 
 /**
@@ -140,12 +170,32 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
   let runtimeWarning: string | null = null;
 
   if (packageManager === 'yarn') {
-    const isYarnBerry = Boolean(packageManagerVersion && /^[2-9]/.test(packageManagerVersion));
+    const yarnrcFile = files.find((f) => /^\.?yarnrc(\.ya?ml)?$/i.test((f.path || '').replace(/^\/+/, '')));
+    const yarnLockFile = files.find((f) => (f.path || '').replace(/^\/+/, '').toLowerCase() === 'yarn.lock');
+    const isYarnBerry = Boolean(
+      (packageManagerVersion && /^[2-9]/.test(packageManagerVersion)) ||
+      yarnrcFile ||
+      (yarnLockFile?.content && (yarnLockFile.content.includes('__metadata:') || /yarn lockfile v[2-9]/i.test(yarnLockFile.content)))
+    );
+
     if (isYarnBerry) {
-      runtimeAvailability = 'fallback_required';
-      compatibilityStatus = 'unsupported_version';
-      runtimeWarning =
-        'Yarn Berry (v2+) detected. WebContainers require the node-modules linker; Plug\'n\'Play (PnP) virtual file systems are not supported natively without a .yarnrc.yml configuration.';
+      if (!packageManagerVersion) {
+        packageManagerVersion = '4.0.0';
+      }
+      const hasNodeLinker = Boolean(
+        yarnrcFile?.content && /nodeLinker\s*:\s*["']?node-modules["']?/i.test(yarnrcFile.content)
+      );
+
+      if (hasNodeLinker) {
+        runtimeAvailability = 'native';
+        compatibilityStatus = conflicts.length > 0 ? 'conflict_detected' : 'fully_supported';
+        runtimeWarning = conflicts.length > 0 ? conflicts.join('; ') : null;
+      } else {
+        runtimeAvailability = 'fallback_required';
+        compatibilityStatus = 'unsupported_version';
+        runtimeWarning =
+          'Yarn Berry (v2+) detected. WebContainers require the node-modules linker; Plug\'n\'Play (PnP) virtual file systems are not supported natively without "nodeLinker: node-modules" in .yarnrc.yml.';
+      }
     } else {
       runtimeAvailability = 'native';
       if (conflicts.length > 0) {
@@ -185,13 +235,9 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
     buildCommand = packageManager === 'npm' ? 'npm run build' : `${packageManager} build`;
   }
 
-  // 5. Resolve install command
-  let installCommand = 'npm install --prefer-offline';
-  if (packageManager === 'pnpm') {
-    installCommand = 'pnpm install';
-  } else if (packageManager === 'yarn') {
-    installCommand = 'yarn install';
-  }
+  // 5. Resolve install command & arguments
+  const installArgs = getPackageManagerInstallArgs(packageManager, packageManagerVersion);
+  const installCommand = `${packageManager} ${installArgs.join(' ')}`;
 
   // 6. Detect Framework Metadata
   const manifestEntries: ManifestEntry[] = files.map((f) => ({
@@ -264,6 +310,7 @@ export function detectProjectCommands(files: ProjectFile[]): ProjectCommandInfo 
     devCommand,
     buildCommand,
     installCommand,
+    installArgs,
     isStaticProject,
     hasLockfile: lockfiles.length > 0,
     detectedLockfile,

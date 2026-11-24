@@ -16,7 +16,11 @@ import { FileSyncCoordinator, type FlushResult } from './fileSyncCoordinator';
 import { webcontainerWatcher } from './webcontainerWatcher';
 import { devServerManager } from './devServerManager';
 import { terminalSessionManager, type TerminalSessionSummary, type TerminalSession } from './terminalSessionManager';
-import { detectProjectCommands, type ProjectCommandInfo } from './projectCommandDetection';
+import {
+  detectProjectCommands,
+  getPackageManagerInstallArgs,
+  type ProjectCommandInfo,
+} from './projectCommandDetection';
 export { detectProjectCommands, type ProjectCommandInfo };
 export { FileSyncCoordinator, type FlushResult };
 
@@ -450,6 +454,18 @@ console.log(\`
     };
   }
 
+  // Parse package.json dependencies to check for framework plugins
+  const pkgNode = root['package.json'] as { file?: { contents: string } } | undefined;
+  const pkgFile = files.find((f) => (f.path || '').replace(/^\/+/, '').toLowerCase() === 'package.json');
+  const pkgContent = pkgNode?.file?.contents || pkgFile?.content;
+  let pkgDeps: Record<string, string> = {};
+  if (pkgContent) {
+    try {
+      const parsed = JSON.parse(pkgContent);
+      pkgDeps = { ...(parsed.dependencies || {}), ...(parsed.devDependencies || {}) };
+    } catch {}
+  }
+
   // Ensure framework Vite projects have index.html and vite.config.js entry points for Vite dev server
   const isReactProject =
     projectType === 'react' ||
@@ -461,10 +477,31 @@ console.log(\`
   if (!root['index.html'] && files.length > 0) {
     if (isReactProject) {
       const match = files.find((f) => /^(src\/)?(main|index)\.(jsx|tsx|js|ts)$/i.test(f.path.replace(/\\/g, '/').replace(/^\/+/, '')));
-      const entryFile = match ? match.path.replace(/\\/g, '/').replace(/^\/+/, '') : 'main.jsx';
-      root['index.html'] = {
-        file: {
-          contents: `<!DOCTYPE html>
+      let entryFile: string | null = null;
+      if (match) {
+        entryFile = match.path.replace(/\\/g, '/').replace(/^\/+/, '');
+      } else {
+        // Look for App component to bootstrap entry
+        const appMatch = files.find((f) => /^(src\/)?App\.(jsx|tsx|js|ts)$/i.test(f.path.replace(/\\/g, '/').replace(/^\/+/, '')));
+        if (appMatch) {
+          const cleanAppPath = appMatch.path.replace(/\\/g, '/').replace(/^\/+/, '');
+          const importAppPath = './' + cleanAppPath.replace(/\.(jsx|tsx|js|ts)$/i, '');
+          const bootstrapEntry = 'main.jsx';
+          if (!root[bootstrapEntry]) {
+            root[bootstrapEntry] = {
+              file: {
+                contents: `import React from 'react';\nimport ReactDOM from 'react-dom/client';\nimport App from '${importAppPath}';\n\nconst rootEl = document.getElementById('root');\nif (rootEl) {\n  ReactDOM.createRoot(rootEl).render(\n    <React.StrictMode>\n      <App />\n    </React.StrictMode>\n  );\n}\n`,
+              },
+            };
+          }
+          entryFile = bootstrapEntry;
+        }
+      }
+
+      if (entryFile) {
+        root['index.html'] = {
+          file: {
+            contents: `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -477,14 +514,35 @@ console.log(\`
   </body>
 </html>
 `,
-        },
-      };
+          },
+        };
+      }
     } else if (isVueProject) {
       const match = files.find((f) => /^(src\/)?(main|index)\.(js|ts)$/i.test(f.path.replace(/\\/g, '/').replace(/^\/+/, '')));
-      const entryFile = match ? match.path.replace(/\\/g, '/').replace(/^\/+/, '') : 'main.js';
-      root['index.html'] = {
-        file: {
-          contents: `<!DOCTYPE html>
+      let entryFile: string | null = null;
+      if (match) {
+        entryFile = match.path.replace(/\\/g, '/').replace(/^\/+/, '');
+      } else {
+        const appMatch = files.find((f) => /^(src\/)?App\.vue$/i.test(f.path.replace(/\\/g, '/').replace(/^\/+/, '')));
+        if (appMatch) {
+          const cleanAppPath = appMatch.path.replace(/\\/g, '/').replace(/^\/+/, '');
+          const importAppPath = './' + cleanAppPath;
+          const bootstrapEntry = 'main.js';
+          if (!root[bootstrapEntry]) {
+            root[bootstrapEntry] = {
+              file: {
+                contents: `import { createApp } from 'vue';\nimport App from '${importAppPath}';\n\nconst appEl = document.getElementById('app');\nif (appEl) {\n  createApp(App).mount('#app');\n}\n`,
+              },
+            };
+          }
+          entryFile = bootstrapEntry;
+        }
+      }
+
+      if (entryFile) {
+        root['index.html'] = {
+          file: {
+            contents: `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -497,17 +555,21 @@ console.log(\`
   </body>
 </html>
 `,
-        },
-      };
+          },
+        };
+      }
     }
   }
 
   if (!root['vite.config.js'] && !root['vite.config.ts'] && files.length > 0) {
     if (isReactProject) {
-      root['vite.config.js'] = {
-        file: {
-          contents: `import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+      const hasReactPlugin = Boolean(pkgDeps['@vitejs/plugin-react'] || pkgDeps['@vitejs/plugin-react-swc']);
+      if (hasReactPlugin) {
+        const pluginPkg = pkgDeps['@vitejs/plugin-react-swc'] ? '@vitejs/plugin-react-swc' : '@vitejs/plugin-react';
+        root['vite.config.js'] = {
+          file: {
+            contents: `import { defineConfig } from 'vite';
+import react from '${pluginPkg}';
 
 export default defineConfig({
   plugins: [react()],
@@ -518,12 +580,30 @@ export default defineConfig({
   },
 });
 `,
-        },
-      };
+          },
+        };
+      } else {
+        root['vite.config.js'] = {
+          file: {
+            contents: `import { defineConfig } from 'vite';
+
+export default defineConfig({
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
+  },
+});
+`,
+          },
+        };
+      }
     } else if (isVueProject) {
-      root['vite.config.js'] = {
-        file: {
-          contents: `import { defineConfig } from 'vite';
+      const hasVuePlugin = Boolean(pkgDeps['@vitejs/plugin-vue']);
+      if (hasVuePlugin) {
+        root['vite.config.js'] = {
+          file: {
+            contents: `import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
@@ -535,8 +615,24 @@ export default defineConfig({
   },
 });
 `,
-        },
-      };
+          },
+        };
+      } else {
+        root['vite.config.js'] = {
+          file: {
+            contents: `import { defineConfig } from 'vite';
+
+export default defineConfig({
+  server: {
+    host: '0.0.0.0',
+    port: 5174,
+    strictPort: true,
+  },
+});
+`,
+          },
+        };
+      }
     }
   }
 
@@ -2052,7 +2148,7 @@ class WebContainerManager {
 
     const owner = this.captureStartupOwner();
     const pkgManager = options.command || 'npm';
-    const rawArgs = options.args || ['install', '--prefer-offline'];
+    const rawArgs = options.args || getPackageManagerInstallArgs(pkgManager as any);
     const installArgs = [...rawArgs];
     const cwd = options.cwd || '/';
     const timeoutMs = options.timeoutMs ?? 300000;

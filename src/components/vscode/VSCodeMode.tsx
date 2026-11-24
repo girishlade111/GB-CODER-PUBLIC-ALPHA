@@ -48,6 +48,7 @@ import { webcontainerWatcher } from '../../services/webcontainer/webcontainerWat
 import { terminalSessionManager } from '../../services/webcontainer/terminalSessionManager';
 import { devServerManager } from '../../services/webcontainer/devServerManager';
 import { ataService } from '../../services/ata/ataService';
+import { getPackageManagerInstallArgs } from '../../services/webcontainer/projectCommandDetection';
 import { livePreviewChannel } from '../../services/preview/livePreviewChannel';
 import { previewReloadService } from '../../services/preview/previewReloadService';
 import { codeAssistService } from '../../services/ai/codeAssistService';
@@ -108,7 +109,6 @@ const subscribeWebContainer = (onChange: () => void) => webcontainerService.subs
 const getWebContainerSnapshot = () => webcontainerService.getState();
 
 const MAX_TABS = 12;
-const DEFAULT_INSTALL_ARGS = ['install', '--prefer-offline', '--no-audit', '--cache', '/tmp/.npm-cache'];
 
 const MONACO_LANGUAGE_BY_EXTENSION: Record<string, string> = {
   html: 'html', htm: 'html',
@@ -264,11 +264,42 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     }
   }, [effectiveProjectId]);
 
-  // Clear dirtyPaths when persistSignal indicates project files have safely committed to storage
+  // Clear dirtyPaths only for files whose committed snapshot matches current editor content
   useEffect(() => {
     if (!persistSignal || (persistSignal.projectId && persistSignal.projectId !== effectiveProjectId)) return;
-    dirtyPathsMirrorRef.current.clear();
-    setDirtyPaths(new Set());
+
+    setDirtyPaths((currentDirty) => {
+      if (currentDirty.size === 0) return currentDirty;
+
+      const nextDirty = new Set<string>();
+      const savedFilesMap = new Map<string, string>();
+      for (const f of persistSignal.files || []) {
+        savedFilesMap.set(f.path, f.content ?? '');
+      }
+
+      for (const dirtyPath of currentDirty) {
+        let currentContent: string | undefined;
+        if (activePathMirrorRef.current === dirtyPath && editorRef.current) {
+          const model = editorRef.current.getModel();
+          if (model) currentContent = model.getValue();
+        }
+        if (currentContent === undefined) {
+          const file = projectFilesMirrorRef.current.find((f) => f.path === dirtyPath);
+          currentContent = file?.content;
+        }
+
+        const savedContent = savedFilesMap.get(dirtyPath);
+
+        // Keep dirty if file was not part of the committed save, or if its current content
+        // has newer modifications than the committed snapshot.
+        if (savedContent === undefined || currentContent === undefined || savedContent !== currentContent) {
+          nextDirty.add(dirtyPath);
+        }
+      }
+
+      dirtyPathsMirrorRef.current = nextDirty;
+      return nextDirty;
+    });
   }, [persistSignal, effectiveProjectId]);
 
   // Modals state
@@ -572,10 +603,21 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             );
 
             if (depCheck.needsInstall) {
+              if (cmdInfo.compatibilityStatus === 'unsupported_version') {
+                const warnMsg = cmdInfo.runtimeWarning || 'Unsupported package manager version.';
+                toast.error(warnMsg);
+                webcontainerService.setStartupStage('error', {
+                  phase: 'install',
+                  message: warnMsg,
+                  timestamp: Date.now(),
+                  recoverable: false,
+                });
+                return;
+              }
               webcontainerService.setStartupStage('installing');
               const installRes = await webcontainerService.installDependencies({
                 command: cmdInfo.packageManager,
-                args: DEFAULT_INSTALL_ARGS,
+                args: cmdInfo.installArgs || getPackageManagerInstallArgs(cmdInfo.packageManager, cmdInfo.packageManagerVersion),
               });
               if (isCancelled) return;
               if (installRes.ok) {
@@ -658,10 +700,15 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
                   project.projectType,
                 );
                 if (depCheck.needsInstall) {
+                  if (cmdInfo.compatibilityStatus === 'unsupported_version') {
+                    const warnMsg = cmdInfo.runtimeWarning || 'Unsupported package manager version.';
+                    toast.error(warnMsg);
+                    return;
+                  }
                   webcontainerService.setStartupStage('installing');
                   const installRes = await webcontainerService.installDependencies({
                     command: cmdInfo.packageManager,
-                    args: DEFAULT_INSTALL_ARGS,
+                    args: cmdInfo.installArgs || getPackageManagerInstallArgs(cmdInfo.packageManager, cmdInfo.packageManagerVersion),
                   });
                   if (installRes.ok) {
                     webcontainerService.recordInstallComplete(depCheck.fingerprint);
@@ -757,7 +804,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             webcontainerService.setStartupStage('installing');
             const installRes = await webcontainerService.installDependencies({
               command: cmdInfo.packageManager,
-              args: DEFAULT_INSTALL_ARGS,
+              args: cmdInfo.installArgs || getPackageManagerInstallArgs(cmdInfo.packageManager, cmdInfo.packageManagerVersion),
             });
             if (installRes.ok) {
               const depCheck = await webcontainerService.needsDependencyInstall(
@@ -772,7 +819,7 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
             toast('New dependencies detected in package.json. Installing...');
             const installRes = await webcontainerService.installDependencies({
               command: cmdInfo.packageManager,
-              args: DEFAULT_INSTALL_ARGS,
+              args: cmdInfo.installArgs || getPackageManagerInstallArgs(cmdInfo.packageManager, cmdInfo.packageManagerVersion),
             });
             if (installRes.ok) {
               const depCheck = await webcontainerService.needsDependencyInstall(
@@ -1731,10 +1778,15 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     );
 
     if (depCheck.needsInstall) {
-      toast('Installing dependencies in WebContainer...');
+      if (cmdInfo.compatibilityStatus === 'unsupported_version') {
+        const warnMsg = cmdInfo.runtimeWarning || 'Unsupported package manager version.';
+        toast.error(warnMsg);
+        return;
+      }
+      toast(`Installing dependencies via ${cmdInfo.packageManager}...`);
       const installRes = await webcontainerService.installDependencies({
         command: cmdInfo.packageManager,
-        args: DEFAULT_INSTALL_ARGS,
+        args: cmdInfo.installArgs || getPackageManagerInstallArgs(cmdInfo.packageManager, cmdInfo.packageManagerVersion),
       });
       if (!installRes.ok) {
         toast.error('Dependency installation failed. Check terminal for error logs.');
@@ -1770,7 +1822,6 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
       return;
     }
     openTerminal();
-    toast.success('Running npm install...');
     const effectiveProjectId = activeProjectId || (project as { id?: string }).id || 'default-project';
     await webcontainerService.mountProject(
       project.files,
@@ -1780,9 +1831,15 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
     );
 
     const cmdInfo = webcontainerService.detectCommands(project.files);
+    if (cmdInfo.compatibilityStatus === 'unsupported_version') {
+      const warnMsg = cmdInfo.runtimeWarning || 'Unsupported package manager version.';
+      toast.error(warnMsg);
+      return;
+    }
+    toast.success(`Running ${cmdInfo.packageManager} install...`);
     const installRes = await webcontainerService.installDependencies({
       command: cmdInfo.packageManager,
-      args: DEFAULT_INSTALL_ARGS,
+      args: cmdInfo.installArgs || getPackageManagerInstallArgs(cmdInfo.packageManager, cmdInfo.packageManagerVersion),
     });
     if (installRes.ok) {
       const depCheck = await webcontainerService.needsDependencyInstall(
@@ -1791,9 +1848,11 @@ const VSCodeMode: React.FC<VSCodeModeProps> = ({
         project.projectType,
       );
       webcontainerService.recordInstallComplete(depCheck.fingerprint);
-      toast.success('npm install completed successfully!');
+      webcontainerService.setStartupStage('runtime_ready');
+      toast.success(`${cmdInfo.packageManager} install completed successfully!`);
     } else {
-      toast.error('npm install failed. Check terminal for error logs.');
+      webcontainerService.setStartupStage('runtime_ready');
+      toast.error(`${cmdInfo.packageManager} install failed. Check terminal for error logs.`);
     }
   }, [hasFiles, openTerminal, project.files, project.dependencies, project.projectType, activeProjectId]);
 
